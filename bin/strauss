@@ -21,7 +21,7 @@ call_user_func(function ($version) {
             exit( 1 );
         }
     } else {
-	    include __DIR__ . '/../vendor/autoload.php';
+        include __DIR__ . '/../vendor/autoload.php';
     }
 
     $app = new BrianHenryIE\Strauss\Console\Application($version);
