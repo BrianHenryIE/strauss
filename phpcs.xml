@@ -8,6 +8,7 @@
     <rule ref="PSR1.Methods.CamelCapsMethodName.NotCamelCaps">
         <exclude-pattern>*/tests/*</exclude-pattern>
     </rule>
+    <file>./bin</file>
     <file>./src</file>
     <file>./tests</file>
     <exclude-pattern>/tests/reports/</exclude-pattern>
