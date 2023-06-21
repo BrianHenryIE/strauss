@@ -45,10 +45,16 @@ class Cleanup
         }
 
         if ($this->isDeleteVendorPackages) {
-            $package_dirs = array_unique(array_map(function (string $relativeFilePath): string {
+            $package_dirs = array_filter(array_unique(array_map(function (string $relativeFilePath): string {
                 list( $vendor, $package ) = explode('/', $relativeFilePath);
+
+                // return null is the package is composer
+                if ($package === 'composer') {
+                    return '';
+                }
+
                 return "{$vendor}/{$package}";
-            }, $sourceFiles));
+            }, $sourceFiles)));
 
             foreach ($package_dirs as $package_dir) {
                 $relativeDirectoryPath = $this->vendorDirectory . $package_dir;
