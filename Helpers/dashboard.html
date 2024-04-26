@@ -2,7 +2,7 @@
 <html lang="en">
  <head>
   <meta charset="UTF-8">
-  <title>Dashboard for /home/runner/work/strauss/strauss/src/Types</title>
+  <title>Dashboard for /home/runner/work/strauss/strauss/src/Helpers</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="../_css/bootstrap.min.css?v=9.2.31" rel="stylesheet" type="text/css">
   <link href="../_css/nv.d3.min.css?v=9.2.31" rel="stylesheet" type="text/css">
@@ -17,7 +17,7 @@
       <nav aria-label="breadcrumb">
        <ol class="breadcrumb">
          <li class="breadcrumb-item"><a href="../index.html">/home/runner/work/strauss/strauss/src</a></li>
-         <li class="breadcrumb-item"><a href="index.html">Types</a></li>
+         <li class="breadcrumb-item"><a href="index.html">Helpers</a></li>
          <li class="breadcrumb-item active">(Dashboard)</li>
 
        </ol>
@@ -58,6 +58,7 @@
         </tr>
        </thead>
        <tbody>
+       <tr><td><a href="Path.php.html#5">BrianHenryIE\Strauss\Helpers\Path</a></td><td class="text-right">0%</td></tr>
 
        </tbody>
       </table>
@@ -111,6 +112,7 @@
         </tr>
        </thead>
        <tbody>
+       <tr><td><a href="Path.php.html#7"><abbr title="BrianHenryIE\Strauss\Helpers\Path::normalize">normalize</abbr></a></td><td class="text-right">0%</td></tr>
 
        </tbody>
       </table>
@@ -155,7 +157,7 @@ $(document).ready(function() {
       .yAxis.tickFormat(d3.format('d'));
 
     d3.select('#classCoverageDistribution svg')
-      .datum(getCoverageDistributionData([0,0,0,0,0,0,0,0,0,0,0,3], "Class Coverage"))
+      .datum(getCoverageDistributionData([1,0,0,0,0,0,0,0,0,0,0,0], "Class Coverage"))
       .transition().duration(500).call(chart);
 
     nv.utils.windowResize(chart.update);
@@ -173,7 +175,7 @@ $(document).ready(function() {
       .yAxis.tickFormat(d3.format('d'));
 
     d3.select('#methodCoverageDistribution svg')
-      .datum(getCoverageDistributionData([0,0,0,0,0,0,0,0,0,0,0,0], "Method Coverage"))
+      .datum(getCoverageDistributionData([1,0,0,0,0,0,0,0,0,0,0,0], "Method Coverage"))
       .transition().duration(500).call(chart);
 
     nv.utils.windowResize(chart.update);
@@ -223,7 +225,7 @@ $(document).ready(function() {
     chart.yAxis.axisLabel('Cyclomatic Complexity');
 
     d3.select('#classComplexity svg')
-      .datum(getComplexityData([[100,0,"<a href=\"ClassSymbol.php.html#7\">BrianHenryIE\\Strauss\\Types\\ClassSymbol<\/a>"],[100,0,"<a href=\"ConstantSymbol.php.html#7\">BrianHenryIE\\Strauss\\Types\\ConstantSymbol<\/a>"],[100,0,"<a href=\"NamespaceSymbol.php.html#7\">BrianHenryIE\\Strauss\\Types\\NamespaceSymbol<\/a>"]], 'Class Complexity'))
+      .datum(getComplexityData([[0,1,"<a href=\"Path.php.html#5\">BrianHenryIE\\Strauss\\Helpers\\Path<\/a>"]], 'Class Complexity'))
       .transition()
       .duration(500)
       .call(chart);
@@ -247,7 +249,7 @@ $(document).ready(function() {
     chart.yAxis.axisLabel('Method Complexity');
 
     d3.select('#methodComplexity svg')
-      .datum(getComplexityData([], 'Method Complexity'))
+      .datum(getComplexityData([[0,1,"<a href=\"Path.php.html#7\">BrianHenryIE\\Strauss\\Helpers\\Path::normalize<\/a>"]], 'Method Complexity'))
       .transition()
       .duration(500)
       .call(chart);
