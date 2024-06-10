@@ -248,9 +248,9 @@ class Prefixer
         // For prefixed functions which do not begin with a backslash, add one.
         // I'm not certain this is a good idea.
         // @see https://github.com/BrianHenryIE/strauss/issues/65
-        $functionReplacingPatten = '/\\\\?('.preg_quote(ltrim($replacement, '\\'), '/').'\\\\(?:[a-zA-Z0-9_\x7f-\xff]+\\\\)*[a-zA-Z0-9_\x7f-\xff]+\\()/';
+        $functionReplacingPattern = '/\\\\?('.preg_quote(ltrim($replacement, '\\'), '/').'\\\\(?:[a-zA-Z0-9_\x7f-\xff]+\\\\)*[a-zA-Z0-9_\x7f-\xff]+\\()/';
         $result = preg_replace(
-            $functionReplacingPatten,
+            $functionReplacingPattern,
             "\\\\$1",
             $result
         );

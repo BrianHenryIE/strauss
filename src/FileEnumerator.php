@@ -172,7 +172,7 @@ class FileEnumerator
         $projectRelativePath    = $this->vendorDir . $outputRelativeFilepath;
         $isOutsideProjectDir    = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
 
-        $f = $this->disoveredFiles[$outputRelativeFilepath]
+        $f = $this->discoveredFiles[$outputRelativeFilepath]
               ?? new File($dependency, $packageRelativePath, $sourceAbsoluteFilepath);
 
         $f->addAutoloader($autoloaderType);
