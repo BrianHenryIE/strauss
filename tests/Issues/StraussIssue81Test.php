@@ -19,7 +19,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class StraussIssue81Test extends IntegrationTestCase
 {
-    public function test_snake_case_cli_argument_supercedes_configured_option_false_to_true()
+    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_true()
     {
 
         $composerJsonString = <<<'EOD'
@@ -61,7 +61,7 @@ EOD;
         self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }
 
-    public function test_snkae_case_cli_argument_supercedes_configured_option_true_to_false()
+    public function test_snkae_case_cli_argument_supersedes_configured_option_true_to_false()
     {
 
         $composerJsonString = <<<'EOD'
@@ -104,7 +104,7 @@ EOD;
         self::assertFileExists($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }
 
-    public function test_camel_case_cli_argument_supercedes_configured_option_false_to_true()
+    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_true()
     {
 
         $composerJsonString = <<<'EOD'
@@ -148,7 +148,7 @@ EOD;
         self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }
 
-    public function test_camel_case_cli_argument_supercedes_configured_option_true_to_false()
+    public function test_camel_case_cli_argument_supersedes_configured_option_true_to_false()
     {
 
         $composerJsonString = <<<'EOD'

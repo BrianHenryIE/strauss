@@ -66,7 +66,7 @@ class File
         return substr($this->sourceAbsolutePath, -4) === '.php';
     }
 
-    public function addNamespace(string $namspaceName): void
+    public function addNamespace(string $namespaceName): void
     {
     }
     public function addClass(string $className): void
