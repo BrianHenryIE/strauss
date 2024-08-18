@@ -44,7 +44,7 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $this->runStrauss();
 
         $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/Configuration/ConfigurationResolver.php');
 

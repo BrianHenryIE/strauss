@@ -205,6 +205,7 @@ class Prefixer
             |:\s*                          # In a ternary operator
             |\(string\)\s*                 # casting a namespaced class to a string
             )
+            @?                             # Maybe preceeded by the @ symbol for error suppression
             (?<searchNamespace>
             {$searchNamespace}             # followed by the namespace to replace
             )
