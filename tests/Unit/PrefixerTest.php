@@ -1870,4 +1870,73 @@ EOD;
 
         self::assertEqualsRN($expected, $result);
     }
+
+    /**
+     * @see https://github.com/BrianHenryIE/strauss/issues/114
+     * @see vendor-prefixed/aws/aws-sdk-php/src/Configuration/ConfigurationResolver.php:121
+     */
+    public function testPrefixesFQDNWithMutedErrors(): void
+    {
+        $contents = <<<'EOD'
+<?php
+namespace Aws;
+
+class ConfigurationResolver
+	public static function ini(
+        $key,
+        $expectedType,
+        $profile = null,
+        $filename = null,
+        $options = []
+    ){
+        $filename = $filename ?: (self::getDefaultConfigFilename());
+        $profile = $profile ?: (getenv(self::ENV_PROFILE) ?: 'default');
+
+        if (!@is_readable($filename)) {
+            return null;
+        }
+        // Use INI_SCANNER_NORMAL instead of INI_SCANNER_TYPED for PHP 5.5 compatibility
+        //TODO change after deprecation
+        $data = @\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);
+
+		// ...
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+namespace Company\Project\Aws;
+
+class ConfigurationResolver
+	public static function ini(
+        $key,
+        $expectedType,
+        $profile = null,
+        $filename = null,
+        $options = []
+    ){
+        $filename = $filename ?: (self::getDefaultConfigFilename());
+        $profile = $profile ?: (getenv(self::ENV_PROFILE) ?: 'default');
+
+        if (!@is_readable($filename)) {
+            return null;
+        }
+        // Use INI_SCANNER_NORMAL instead of INI_SCANNER_TYPED for PHP 5.5 compatibility
+        //TODO change after deprecation
+        $data = @\Company\Project\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);
+
+		// ...
+    }
+}
+EOD;
+
+        $config = $this->createMock(StraussConfig::class);
+
+        $replacer = new Prefixer($config, __DIR__);
+
+        $result = $replacer->replaceNamespace($contents, 'Aws', 'Company\\Project\\Aws');
+
+        self::assertEqualsRN($expected, $result);
+    }
 }
