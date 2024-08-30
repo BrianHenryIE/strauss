@@ -1,6 +1,6 @@
 <?php
 /**
- * Was over-eagerly deleteing autoload keys.
+ * Was over-eagerly deleting autoload keys.
  *
  * @see https://github.com/BrianHenryIE/strauss/issues/101#issuecomment-2078702245
  */
