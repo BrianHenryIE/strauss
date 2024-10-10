@@ -43,6 +43,7 @@ EOD;
         $sut = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($validPhp);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -77,6 +78,7 @@ EOD;
         $sut = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($validPhp);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -112,6 +114,7 @@ EOD;
         $sut = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($validPhp);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -155,6 +158,7 @@ EOD;
 
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($validPhp);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -212,6 +216,7 @@ EOD;
 
         try {
             $file = \Mockery::mock(File::class);
+            $file->shouldReceive('isPhpFile')->andReturnTrue();
             $file->shouldReceive('getContents')->andReturn($validPhp);
 
             $file->shouldReceive('getTargetRelativePath');
@@ -250,6 +255,7 @@ EOD;
         $sut = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($validPhp);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -285,6 +291,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -321,6 +328,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -360,6 +368,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -394,6 +403,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -431,6 +441,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -462,6 +473,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -496,6 +508,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -539,6 +552,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -566,6 +580,7 @@ EOD;
         $composerPackage->method('getPackageName')->willReturn('brianhenryie/pdfhelpers');
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn('');
 
         $files = \Mockery::mock(DiscoveredFiles::class)->makePartial();
@@ -590,6 +605,7 @@ EOD;
 
 //        $file = new File($composerPackage, 'path/to/file', 'irrelevantPath');
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn('');
 
         $files = \Mockery::mock(DiscoveredFiles::class)->makePartial();
@@ -624,6 +640,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -676,6 +693,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -717,6 +735,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');
@@ -762,6 +781,7 @@ EOD;
         $fileScanner = new FileScanner($config);
 
         $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getContents')->andReturn($contents);
 
         $file->shouldReceive('getTargetRelativePath');

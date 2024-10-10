@@ -58,6 +58,10 @@ class FileScanner
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
         foreach ($files->getFiles() as $file) {
+            if (!$file->isPhpFile()) {
+                continue;
+            }
+
             $this->find($file->getContents(), $file);
         }
 
