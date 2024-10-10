@@ -16,15 +16,15 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  */
 class StraussIssue119Test extends IntegrationTestCase
 {
-    public function test_muted_errors()
+    public function test_incorrectly_prefixing_class()
     {
 
         $composerJsonString = <<<'EOD'
 {
   "name": "issue/119",
   "require": {
-    "symfony/polyfill-php80": "*",
-    "symfony/console": "*"
+    "symfony/polyfill-php80": "v1.31.0",
+    "symfony/console": "v7.1.5"
   },
   "extra": {
     "strauss": {
