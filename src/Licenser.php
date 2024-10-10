@@ -286,6 +286,12 @@ class Licenser
             );
         }
 
-        return $updatedPhpString;
+        /**
+         * In some cases `preg_replace_callback` returns `null` instead of the string. If that happens, return
+         * the original, unaltered string.
+         *
+         * @see https://github.com/BrianHenryIE/strauss/issues/115
+         */
+        return $updatedPhpString ?? $phpString;
     }
 }
