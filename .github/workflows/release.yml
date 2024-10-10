@@ -48,6 +48,15 @@ jobs:
       - name: Test run strauss
         run: php strauss.phar --version
 
+      - name: Check version
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          CURRENT_VERSION="$(php strauss.phar --version | sed -e 's#^.\+ \([0-9.]\+\)$#\1#')"
+          if [ "${TAG_NAME#v}" != "${CURRENT_VERSION}" ]; then
+            echo "::error::Latest tag differs from current version"
+            exit 10
+          fi
+
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v5
         with:
