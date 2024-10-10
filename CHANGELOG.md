@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.19.4 October 2024
+
+* Fix: out of sync version number in `bin/strauss`
 
 ## 0.19.3 October 2024
 
