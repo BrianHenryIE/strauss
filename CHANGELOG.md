@@ -1,5 +1,12 @@
 # Change Log
 
+
+## 0.19.3 October 2024
+
+* Fix: handle `@` symbol for error suppression
+* Fix: handle `preg_replace...` returning `null` in `Licenser`
+* Fix: only search for symbols in PHP files
+
 ## 0.19.2 June 2024
 
 * Fix: available CLI arguments were overwriting extra.strauss config
