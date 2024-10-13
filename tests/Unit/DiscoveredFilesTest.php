@@ -19,11 +19,12 @@ class DiscoveredFilesTest extends TestCase
     /**
      * Tests that a file can be added and gotten.
      *
-     * @return void
+     * @covers ::add
+     * @covers ::getFiles
      *
      * @author NikolayStrikhar
      */
-    public function testFileCanBeAddedAndGotten()
+    public function testFileCanBeAddedAndGotten(): void
     {
         // Arrange.
 
@@ -47,11 +48,12 @@ class DiscoveredFilesTest extends TestCase
     /**
      * Tests that multiple files with different paths can be added and gotten.
      *
-     * @return void
+     * @covers ::add
+     * @covers ::getFiles
      *
      * @author NikolayStrikhar
      */
-    public function testFileMultipleFilesWithDifferentPathsCanBeAddedAndGotten()
+    public function testFileMultipleFilesWithDifferentPathsCanBeAddedAndGotten(): void
     {
         // Arrange.
 
@@ -82,11 +84,12 @@ class DiscoveredFilesTest extends TestCase
     /**
      * Tests that files are overwritten when they have the same path.
      *
-     * @return void
+     * @covers ::add
+     * @covers ::getFiles
      *
      * @author NikolayStrikhar
      */
-    public function testFilesWithSamePathsAreOverwritten()
+    public function testFilesWithSamePathsAreOverwritten(): void
     {
         // Arrange.
 
