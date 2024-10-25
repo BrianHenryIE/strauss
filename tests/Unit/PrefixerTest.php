@@ -1939,4 +1939,32 @@ EOD;
 
         self::assertEqualsRN($expected, $result);
     }
+    public function testPrefixesAliasedGlobalClass(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+use GlobalClass as Alias;
+
+class MyClass {
+
+}
+EOD;
+        $expected = <<<'EOD'
+<?php
+
+use Prefixed_GlobalClass as Alias;
+
+class MyClass {
+
+}
+EOD;
+
+        $config = $this->createMock(StraussConfig::class);
+
+        $replacer = new Prefixer($config, __DIR__);
+        $result = $replacer->replaceClassname($contents, 'GlobalClass', 'Prefixed_');
+
+        $this->assertEqualsRN($expected, $result);
+    }
 }
