@@ -31,17 +31,17 @@ class StraussIssue111Test extends IntegrationTestCase
 }
 EOD;
 
-	    chdir($this->testsWorkingDir);
+        chdir($this->testsWorkingDir);
 
-	    file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
-	    exec('composer install');
+        exec('composer install');
 
-	    $this->runStrauss();
+        $this->runStrauss();
 
-	    $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/stripe/stripe-php/lib/Payout.php');
+        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/stripe/stripe-php/lib/Payout.php');
 
-	    self::assertStringNotContainsString('@throws \Stripe\Exception\ApiErrorException', $php_string);
-	    self::assertStringContainsString('@throws \Strauss\Issue111\Stripe\Exception\ApiErrorException', $php_string);
+        self::assertStringNotContainsString('@throws \Stripe\Exception\ApiErrorException', $php_string);
+        self::assertStringContainsString('@throws \Strauss\Issue111\Stripe\Exception\ApiErrorException', $php_string);
     }
 }
