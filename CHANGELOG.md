@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.19.5 October 2024
+
+* Fix: `use GlobalClass as Alias;` not prefixed
+* Add: `.gitattributes` file to exclude dev files from distribution
+* CI: Fail releases if `bin/strauss` version number is out of sync
+* Tests: Add first tests for `DiscoveredFiles.php`
+* Improve `README.md`
+* Fix: typos in code
+
 ## 0.19.4 October 2024
 
 * Fix: out of sync version number in `bin/strauss`
