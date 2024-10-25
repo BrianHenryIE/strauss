@@ -23,8 +23,7 @@ class StraussIssue119Test extends IntegrationTestCase
 {
   "name": "issue/119",
   "require": {
-    "symfony/polyfill-php80": "v1.31.0",
-    "symfony/console": "v7.1.5"
+    "symfony/polyfill-php80": "v1.31.0"
   },
   "extra": {
     "strauss": {
