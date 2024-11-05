@@ -32,9 +32,6 @@ class FileEnumerator
     /** @var string */
     protected string $vendorDir;
 
-    /** @var ComposerPackage[] */
-    protected array $dependencies;
-
     /** @var string[]  */
     protected array $excludePackageNames = array();
 
@@ -60,11 +57,10 @@ class FileEnumerator
 
     /**
      * Copier constructor.
-     * @param ComposerPackage[] $dependencies
+     *
      * @param string $workingDir
      */
     public function __construct(
-        array $dependencies,
         string $workingDir,
         StraussConfigInterface $config
     ) {
@@ -72,8 +68,6 @@ class FileEnumerator
 
         $this->workingDir = $workingDir;
         $this->vendorDir = $config->getVendorDirectory();
-
-        $this->dependencies = $dependencies;
 
         $this->excludeNamespaces = $config->getExcludeNamespacesFromCopy();
         $this->excludePackageNames = $config->getExcludePackagesFromCopy();
@@ -86,10 +80,12 @@ class FileEnumerator
      * Read the autoload keys of the dependencies and generate a list of the files referenced.
      *
      * Includes all files in the directories and subdirectories mentioned in the autoloaders.
+     *
+     * /** @var ComposerPackage[]
      */
-    public function compileFileList(): DiscoveredFiles
+    public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
     {
-        foreach ($this->dependencies as $dependency) {
+        foreach ($dependencies as $dependency) {
             if (in_array($dependency->getPackageName(), $this->excludePackageNames)) {
                 continue;
             }
@@ -125,7 +121,7 @@ class FileEnumerator
                         $sourceAbsolutePath = $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
 
                         if (is_file($sourceAbsolutePath)) {
-                            $this->addFile($dependency, $namespaceRelativePath, $type);
+                            $this->addFileWithDependency($dependency, $namespaceRelativePath, $type);
                         } elseif (is_dir($sourceAbsolutePath)) {
                             // trailingslashit(). (to remove duplicates).
                             $sourcePath = Path::normalize($sourceAbsolutePath);
@@ -144,7 +140,7 @@ class FileEnumerator
 
                                 $namespaceRelativePath = Path::normalize($namespaceRelativePath);
 
-                                $this->addFile(
+                                $this->addFileWithDependency(
                                     $dependency,
                                     $namespaceRelativePath . str_replace($sourcePath, '', $sourceAbsoluteFilepath),
                                     $type
@@ -168,7 +164,7 @@ class FileEnumerator
      *@uses \BrianHenryIE\Strauss\Files\DiscoveredFiles::add()
      *
      */
-    protected function addFile(ComposerPackage $dependency, string $packageRelativePath, string $autoloaderType): void
+    protected function addFileWithDependency(ComposerPackage $dependency, string $packageRelativePath, string $autoloaderType): void
     {
         $sourceAbsoluteFilepath = $dependency->getPackageAbsolutePath() . $packageRelativePath;
         $outputRelativeFilepath = $dependency->getRelativePath() . $packageRelativePath;

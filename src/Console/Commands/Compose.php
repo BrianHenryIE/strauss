@@ -186,12 +186,11 @@ class Compose extends Command
         $this->logger->info('Enumerating files...');
 
         $fileEnumerator = new FileEnumerator(
-            $this->flatDependencyTree,
             $this->workingDir,
             $this->config
         );
 
-        $this->discoveredFiles = $fileEnumerator->compileFileList();
+        $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);
     }
 
     // 3. Copy autoloaded files for each
@@ -253,7 +252,6 @@ class Compose extends Command
         $projectReplace = new Prefixer($this->config, $this->workingDir);
 
         $fileEnumerator = new FileEnumerator(
-            $this->flatDependencyTree,
             $this->workingDir,
             $this->config
         );
@@ -280,7 +278,6 @@ class Compose extends Command
         $projectReplace = new Prefixer($this->config, $this->workingDir);
 
         $fileEnumerator = new FileEnumerator(
-            $this->flatDependencyTree,
             $this->workingDir,
             $this->config
         );

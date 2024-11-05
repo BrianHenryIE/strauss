@@ -58,8 +58,8 @@ EOD;
         $config->method('getVendorDirectory')->willReturn($vendorDir);
         $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
 
-        $fileEnumerator = new FileEnumerator($dependencies, $workingDir, $config);
-        $files = $fileEnumerator->compileFileList();
+        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
         $copier = new Copier($files, $workingDir, $config);
 
@@ -119,8 +119,8 @@ EOD;
         $config->method('getVendorDirectory')->willReturn($vendorDir);
         $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
 
-        $fileEnumerator = new FileEnumerator($dependencies, $workingDir, $config);
-        $files = $fileEnumerator->compileFileList();
+        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
         $copier = new Copier($files, $workingDir, $config);
 

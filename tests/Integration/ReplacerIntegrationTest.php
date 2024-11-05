@@ -71,12 +71,12 @@ EOD;
 //        $config = $this->createStub(StraussConfig::class);
 //        $config->method('getTargetDirectory')->willReturn('vendor-prefixed' . DIRECTORY_SEPARATOR);
 
-        $fileEnumerator = new FileEnumerator($dependencies, $workingDir, $config);
-        $files = $fileEnumerator->compileFileList();
+        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
         $phpFileList = $files->getPhpFilesAndDependencyList();
 
-        $fileEnumerator = new FileEnumerator($dependencies, $workingDir, $config);
-        $files = $fileEnumerator->compileFileList();
+        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
         $copier = new Copier($files, $workingDir, $config);
         $copier->prepareTarget();
