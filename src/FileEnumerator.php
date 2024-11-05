@@ -8,7 +8,7 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use BrianHenryIE\Strauss\Helpers\Path;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -64,7 +64,7 @@ class FileEnumerator
     public function __construct(
         array $dependencies,
         string $workingDir,
-        StraussConfig $config
+	    StraussConfigInterface $config
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 

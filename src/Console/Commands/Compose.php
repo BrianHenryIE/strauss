@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\DiscoveredSymbols;
 use BrianHenryIE\Strauss\FileEnumerator;
 use BrianHenryIE\Strauss\Licenser;
 use BrianHenryIE\Strauss\Prefixer;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use Exception;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
@@ -32,8 +32,7 @@ class Compose extends Command
     /** @var string */
     protected string $workingDir;
 
-    /** @var StraussConfig */
-    protected StraussConfig $config;
+    protected StraussConfigInterface $config;
 
     protected ProjectComposerPackage $projectComposerPackage;
 

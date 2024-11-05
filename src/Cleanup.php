@@ -5,7 +5,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use Composer\Json\JsonFile;
 use FilesystemIterator;
 use League\Flysystem\Filesystem;
@@ -27,7 +27,7 @@ class Cleanup
     protected string $vendorDirectory = 'vendor'. DIRECTORY_SEPARATOR;
     protected string $targetDirectory;
 
-    public function __construct(StraussConfig $config, string $workingDir)
+    public function __construct(StraussConfigInterface $config, string $workingDir)
     {
         $this->vendorDirectory = $config->getVendorDirectory();
         $this->targetDirectory = $config->getTargetDirectory();

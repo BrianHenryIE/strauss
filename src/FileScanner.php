@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -22,9 +22,9 @@ class FileScanner
 
     /**
      * FileScanner constructor.
-     * @param \BrianHenryIE\Strauss\Composer\Extra\StraussConfig $config
+     * @param \BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface $config
      */
-    public function __construct(StraussConfig $config)
+    public function __construct(StraussConfigInterface $config)
     {
         $this->discoveredSymbols = new DiscoveredSymbols();
         $this->excludeNamespacesFromPrefixing = $config->getExcludeNamespacesFromPrefixing();

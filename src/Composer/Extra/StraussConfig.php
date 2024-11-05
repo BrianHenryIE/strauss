@@ -11,7 +11,7 @@ use JsonMapper\JsonMapperFactory;
 use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
-class StraussConfig
+class StraussConfig implements StraussConfigInterface
 {
     /**
      * The output directory.

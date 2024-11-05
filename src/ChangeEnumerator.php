@@ -2,16 +2,16 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 
 class ChangeEnumerator
 {
-    protected StraussConfig $config;
+    protected StraussConfigInterface $config;
     protected string $workingDir;
 
-    public function __construct(StraussConfig $config, string $workingDir)
+    public function __construct(StraussConfigInterface $config, string $workingDir)
     {
         $this->config = $config;
         $this->workingDir = $workingDir;

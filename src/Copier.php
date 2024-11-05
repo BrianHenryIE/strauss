@@ -14,7 +14,7 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
@@ -40,9 +40,9 @@ class Copier
      *
      * @param DiscoveredFiles $files
      * @param string $workingDir
-     * @param StraussConfig $config
+     * @param StraussConfigInterface $config
      */
-    public function __construct(DiscoveredFiles $files, string $workingDir, StraussConfig $config)
+    public function __construct(DiscoveredFiles $files, string $workingDir, StraussConfigInterface $config)
     {
         $this->files = $files;
 

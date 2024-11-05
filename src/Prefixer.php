@@ -3,7 +3,7 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Exception;
 use League\Flysystem\Filesystem;
@@ -12,8 +12,7 @@ use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 
 class Prefixer
 {
-    /** @var StraussConfig */
-    protected $config;
+    protected StraussConfigInterface $config;
 
     /** @var Filesystem */
     protected $filesystem;
@@ -39,7 +38,7 @@ class Prefixer
      */
     protected array $changedFiles = array();
 
-    public function __construct(StraussConfig $config, string $workingDir)
+    public function __construct(StraussConfigInterface $config, string $workingDir)
     {
         $this->config = $config;
 
