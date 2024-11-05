@@ -1,10 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss;
-
-use BrianHenryIE\Strauss\Types\ClassSymbol;
-use BrianHenryIE\Strauss\Types\ConstantSymbol;
-use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+namespace BrianHenryIE\Strauss\Types;
 
 class DiscoveredSymbols
 {

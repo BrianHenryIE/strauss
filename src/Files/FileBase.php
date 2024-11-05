@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Files;
 
-use BrianHenryIE\Strauss\DiscoveredSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 
 interface FileBase
 {

@@ -3,7 +3,7 @@
  * A namespace, class, interface or trait discovered in the project.
  */
 
-namespace BrianHenryIE\Strauss;
+namespace BrianHenryIE\Strauss\Types;
 
 use BrianHenryIE\Strauss\Files\File;
 
