@@ -4,7 +4,7 @@ namespace BrianHenryIE\Strauss\Tests\Unit;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\DiscoveredFiles;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\FileScanner;
 use BrianHenryIE\Strauss\TestCase;

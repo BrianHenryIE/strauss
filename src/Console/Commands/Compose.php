@@ -2,20 +2,20 @@
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
-use BrianHenryIE\Strauss\ChangeEnumerator;
-use BrianHenryIE\Strauss\FileScanner;
 use BrianHenryIE\Strauss\Autoload;
+use BrianHenryIE\Strauss\ChangeEnumerator;
 use BrianHenryIE\Strauss\Cleanup;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Copier;
 use BrianHenryIE\Strauss\DependenciesEnumerator;
-use BrianHenryIE\Strauss\DiscoveredFiles;
 use BrianHenryIE\Strauss\DiscoveredSymbols;
 use BrianHenryIE\Strauss\FileEnumerator;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\FileScanner;
 use BrianHenryIE\Strauss\Licenser;
 use BrianHenryIE\Strauss\Prefixer;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use Exception;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;

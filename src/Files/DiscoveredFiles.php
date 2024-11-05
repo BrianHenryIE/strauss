@@ -1,9 +1,8 @@
 <?php
 
-namespace BrianHenryIE\Strauss;
+namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Files\File;
 
 class DiscoveredFiles
 {

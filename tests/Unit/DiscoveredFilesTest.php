@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Unit;
 
-use BrianHenryIE\Strauss\DiscoveredFiles;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\TestCase;
 use Mockery;
@@ -10,7 +10,7 @@ use Mockery;
 /**
  * Class DiscoveredFilesTest.
  *
- * @coversDefaultClass \BrianHenryIE\Strauss\DiscoveredFiles
+ * @coversDefaultClass \BrianHenryIE\Strauss\Files\DiscoveredFiles
  *
  * @package BrianHenryIE\Strauss\Tests\Unit
  */

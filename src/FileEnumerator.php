@@ -9,7 +9,7 @@ namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
-use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Path;
 use League\Flysystem\Filesystem;
@@ -160,12 +160,13 @@ class FileEnumerator
     }
 
     /**
-     * @uses \BrianHenryIE\Strauss\DiscoveredFiles::add()
-     *
      * @param ComposerPackage $dependency
      * @param string $packageRelativePath
      * @param string $autoloaderType
+     *
      * @throws \League\Flysystem\FilesystemException
+     *@uses \BrianHenryIE\Strauss\Files\DiscoveredFiles::add()
+     *
      */
     protected function addFile(ComposerPackage $dependency, string $packageRelativePath, string $autoloaderType): void
     {
