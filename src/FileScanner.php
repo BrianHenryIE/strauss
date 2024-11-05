@@ -15,24 +15,10 @@ use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 class FileScanner
 {
 
-    protected string $namespacePrefix;
-    protected string $classmapPrefix;
-
     /** @var string[]  */
     protected array $excludeNamespacesFromPrefixing = array();
 
-    /** @var string[]  */
-    protected array $excludeFilePatternsFromPrefixing = array();
-
-    /** @var string[]  */
-    protected array $namespaceReplacementPatterns = array();
-
     protected DiscoveredSymbols $discoveredSymbols;
-
-    /**
-     * @var string[]
-     */
-    protected array $excludePackagesFromPrefixing;
 
     /**
      * FileScanner constructor.
@@ -41,15 +27,7 @@ class FileScanner
     public function __construct(StraussConfig $config)
     {
         $this->discoveredSymbols = new DiscoveredSymbols();
-
-        $this->namespacePrefix = $config->getNamespacePrefix();
-        $this->classmapPrefix = $config->getClassmapPrefix();
-
-        $this->excludePackagesFromPrefixing = $config->getExcludePackagesFromPrefixing();
         $this->excludeNamespacesFromPrefixing = $config->getExcludeNamespacesFromPrefixing();
-        $this->excludeFilePatternsFromPrefixing = $config->getExcludeFilePatternsFromPrefixing();
-
-        $this->namespaceReplacementPatterns = $config->getNamespaceReplacementPatterns();
     }
 
     /**
