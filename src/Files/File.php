@@ -5,7 +5,7 @@ namespace BrianHenryIE\Strauss\Files;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\DiscoveredSymbol;
 
-class File
+class File implements FileBase
 {
     /**
      * The project dependency that this file belongs to.
