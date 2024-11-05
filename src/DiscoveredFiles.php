@@ -2,8 +2,8 @@
 
 namespace BrianHenryIE\Strauss;
 
-use ArrayAccess;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Files\File;
 
 class DiscoveredFiles
 {

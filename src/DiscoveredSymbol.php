@@ -5,6 +5,8 @@
 
 namespace BrianHenryIE\Strauss;
 
+use BrianHenryIE\Strauss\Files\File;
+
 abstract class DiscoveredSymbol
 {
     protected ?File $file;

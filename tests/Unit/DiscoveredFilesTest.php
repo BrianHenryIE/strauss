@@ -2,9 +2,9 @@
 
 namespace BrianHenryIE\Strauss\Tests\Unit;
 
-use BrianHenryIE\Strauss\File;
-use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\DiscoveredFiles;
+use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\TestCase;
 use Mockery;
 
 /**

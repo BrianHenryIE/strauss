@@ -2,15 +2,12 @@
 
 namespace BrianHenryIE\Strauss\Tests\Unit;
 
-use BrianHenryIE\Strauss\FileScanner;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\DiscoveredFiles;
-use BrianHenryIE\Strauss\File;
-use BrianHenryIE\Strauss\Prefixer;
-use Composer\Composer;
+use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\FileScanner;
 use BrianHenryIE\Strauss\TestCase;
-use Mockery\Mock;
 
 class FileScannerTest extends TestCase
 {
