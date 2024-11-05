@@ -26,7 +26,6 @@ class ReplacerIntegrationTest extends IntegrationTestCase
 
     public function testReplaceNamespace()
     {
-
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
@@ -37,7 +36,15 @@ class ReplacerIntegrationTest extends IntegrationTestCase
     "strauss": {
       "namespace_prefix": "BrianHenryIE\\Strauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_"
-    }
+    },
+    "google/apiclient-services": [
+	  "Calendar"
+	]
+  },
+  "scripts": {
+    "delete-unused-google-apis": [
+        "Google\\Task\\Composer::cleanup"
+    ]
   }
 }
 EOD;
