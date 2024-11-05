@@ -158,4 +158,106 @@ EOD;
 
         self::assertStringContainsString('class BrianHenryIE_Strauss_FPDF', $updatedFile);
     }
+
+    public function testSimpleRepacementPatterns(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strauss",
+  "require": {
+    "brianhenryie/bh-wp-logger": "*"
+  },
+  "minimum-stability": "dev",
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\MyProject\\",
+      "namespace_replacement_patterns": {
+        "~BrianHenryIE\\\\(.*)~" : "BrianHenryIE\\MyProject\\\\$1"
+      }
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $this->runStrauss();
+
+        $updatedFile = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/class-logger.php');
+
+        self::assertStringContainsString('namespace BrianHenryIE\MyProject\WP_Logger;', $updatedFile);
+    }
+
+    public function testExaggeratedRepacementPatterns(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strauss",
+  "require": {
+    "brianhenryie/bh-wp-logger": "*"
+  },
+  "minimum-stability": "dev",
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\MyProject\\",
+      "namespace_replacement_patterns": {
+        "~BrianHenryIE\\\\WP_Logger~" : "AnotherProject\\Logger"
+      }
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $this->runStrauss();
+
+        $updatedFile = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/class-logger.php');
+
+        self::assertStringContainsString('namespace AnotherProject\Logger;', $updatedFile);
+    }
+
+    public function testRidiculousReplacementPatterns(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strauss",
+  "require": {
+    "brianhenryie/bh-wp-logger": "*"
+  },
+  "minimum-stability": "dev",
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\MyProject\\",
+      "namespace_replacement_patterns": {
+        "~BrianHenryIE\\\\(.*)(\\\\.*)?~" : "AnotherProject\\\\$1\\\\MyProject$2"
+      }
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $this->runStrauss();
+
+        $updatedFile = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/api/class-api.php');
+
+        self::assertStringContainsString('namespace AnotherProject\WP_Logger\MyProject\API;', $updatedFile);
+    }
 }
