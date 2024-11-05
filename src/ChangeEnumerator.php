@@ -43,7 +43,16 @@ class ChangeEnumerator
                     continue;
                 }
 
-                foreach ($this->config->getNamespaceReplacementPatterns() as $namespaceReplacementPattern => $replacement) {
+                $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
+
+                // `namespace_prefix` is just a shorthand for a replacement pattern that applies to all namespaces.
+                if (!isset($namespaceReplacementPatterns['~' . preg_quote($symbol->getOriginalSymbol(), '~') . '~'])) {
+                    $namespaceReplacementPatterns[ '~' . preg_quote($symbol->getOriginalSymbol(), '~') . '~' ]
+                        = "{$this->config->getNamespacePrefix()}\\{$symbol->getOriginalSymbol()}";
+                }
+
+                // `namespace_replacement_patterns` should be ordered by priority.
+                foreach ($namespaceReplacementPatterns as $namespaceReplacementPattern => $replacement) {
                     $prefixed = preg_replace($namespaceReplacementPattern, $replacement, $symbol->getOriginalSymbol());
 
                     if ($prefixed !== $symbol->getOriginalSymbol()) {
@@ -51,9 +60,6 @@ class ChangeEnumerator
                         continue 2;
                     }
                 }
-
-                $prefixed = "{$this->config->getNamespacePrefix()}\\{$symbol->getOriginalSymbol()}";
-                $symbol->setReplacement($prefixed);
             }
 
             if ($symbol instanceof ClassSymbol) {
