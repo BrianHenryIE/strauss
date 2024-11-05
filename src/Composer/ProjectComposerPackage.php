@@ -51,7 +51,7 @@ class ProjectComposerPackage extends ComposerPackage
      * @return StraussConfig
      * @throws \Exception
      */
-    public function getStraussConfig(InputInterface $input): StraussConfigInterface
+    public function getStraussConfig(): StraussConfigInterface
     {
         $config = new StraussConfig($this->composer);
         $config->setVendorDirectory($this->getVendorDirectory());
