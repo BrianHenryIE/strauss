@@ -2,30 +2,15 @@
 
 namespace BrianHenryIE\Strauss\Files;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\DiscoveredSymbol;
 
 class File implements FileBase
 {
     /**
-     * The project dependency that this file belongs to.
-     */
-    protected ComposerPackage $dependency;
-
-    /**
-     * @var string The path to the file relative to the package root.
-     */
-    protected string $packageRelativePath;
-
-    /**
      * @var string The absolute path to the file on disk.
      */
     protected string $sourceAbsolutePath;
 
-    /**
-     * @var string[] The autoloader types that this file is included in.
-     */
-    protected array $autoloaderTypes = [];
 
     /**
      * Should this file be copied to the target directory?
@@ -40,26 +25,14 @@ class File implements FileBase
     /** @var DiscoveredSymbol[] */
     protected array $discoveredSymbols = [];
 
-    public function __construct(ComposerPackage $dependency, string $packageRelativePath, string $sourceAbsolutePath)
+    public function __construct(string $sourceAbsolutePath)
     {
-        $this->packageRelativePath = $packageRelativePath;
-        $this->dependency          = $dependency;
         $this->sourceAbsolutePath  = $sourceAbsolutePath;
-    }
-
-    public function getDependency(): ComposerPackage
-    {
-        return $this->dependency;
     }
 
     public function getSourcePath(string $relativeTo = ''): string
     {
         return str_replace($relativeTo, '', $this->sourceAbsolutePath);
-    }
-
-    public function getTargetRelativePath(): string
-    {
-        return $this->dependency->getRelativePath() . $this->packageRelativePath;
     }
 
     public function isPhpFile(): bool
@@ -123,19 +96,6 @@ class File implements FileBase
     public function getDidDelete(): bool
     {
         return false;
-    }
-
-    /**
-     * Record the autoloader it is found in. Which could be all of them.
-     */
-    public function addAutoloader(string $autoloaderType): void
-    {
-        $this->autoloaderTypes = array_unique(array_merge($this->autoloaderTypes, array($autoloaderType)));
-    }
-
-    public function isFilesAutoloaderFile(): bool
-    {
-        return in_array('files', $this->autoloaderTypes, true);
     }
 
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void

@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Path;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -65,7 +66,7 @@ class FileEnumerator
     public function __construct(
         array $dependencies,
         string $workingDir,
-	    StraussConfigInterface $config
+        StraussConfigInterface $config
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
@@ -174,7 +175,7 @@ class FileEnumerator
         $isOutsideProjectDir    = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
 
         $f = $this->discoveredFiles->getFiles()[$outputRelativeFilepath]
-            ?? new File($dependency, $packageRelativePath, $sourceAbsoluteFilepath);
+            ?? new FileWithDependency($dependency, $packageRelativePath, $sourceAbsoluteFilepath);
 
         $f->addAutoloader($autoloaderType);
         $f->setDoDelete($isOutsideProjectDir);
