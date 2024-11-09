@@ -62,8 +62,6 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $list = array_keys($files->getAllFilesAndDependencyList());
-
-        self::assertContains('google/apiclient/src/aliases.php', $list);
+        $this->assertNotNull($files->getFile($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php'));
     }
 }

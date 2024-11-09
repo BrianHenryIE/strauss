@@ -9,13 +9,11 @@ interface FileBase
 
     public function getSourcePath(string $relativeTo = ''): string;
 
+    public function getAbsoluteTargetPath(string $relativeTo = ''): string;
+
+    public function setAbsoluteTargetPath(string $absoluteTargetPath): void;
+
     public function isPhpFile(): bool;
-
-    public function addNamespace(string $namespaceName): void;
-
-    public function addClass(string $className): void;
-
-    public function addTrait(string $traitName): void;
 
     public function setDoCopy(bool $doCopy): void;
 
@@ -46,6 +44,11 @@ interface FileBase
     public function getDidDelete(): bool;
 
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void;
+
+    /**
+     * @return DiscoveredSymbol[]
+     */
+    public function getDiscoveredSymbols(): array;
 
     public function getContents(): string;
 }

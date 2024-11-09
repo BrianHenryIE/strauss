@@ -13,7 +13,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use League\Flysystem\Filesystem;
@@ -41,9 +41,9 @@ class Copier
      *
      * @param DiscoveredFiles $files
      * @param string $workingDir
-     * @param StraussConfigInterface $config
+     * @param StraussConfig $config
      */
-    public function __construct(DiscoveredFiles $files, string $workingDir, StraussConfigInterface $config)
+    public function __construct(DiscoveredFiles $files, string $workingDir, StraussConfig $config)
     {
         $this->files = $files;
 
@@ -65,7 +65,11 @@ class Copier
             $this->filesystem->setVisibility($this->absoluteTargetDir, 'public');
         } else {
             foreach ($this->files->getFiles() as $file) {
-                $targetAbsoluteFilepath = $this->absoluteTargetDir . $file->getTargetRelativePath();
+                if (!$file->isDoCopy()) {
+                    continue;
+                }
+
+                $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
 
                 if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
                     $this->filesystem->delete($targetAbsoluteFilepath);
@@ -80,9 +84,13 @@ class Copier
          * @var File $file
          */
         foreach ($this->files->getFiles() as $file) {
+            if (!$file->isDoCopy()) {
+                continue;
+            }
+
             $sourceAbsoluteFilepath = $file->getSourcePath();
 
-            $targetAbsolutePath = $this->absoluteTargetDir . $file->getTargetRelativePath();
+            $targetAbsolutePath = $file->getAbsoluteTargetPath();
 
             $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
         }

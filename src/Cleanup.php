@@ -5,7 +5,10 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use Composer\Json\JsonFile;
 use FilesystemIterator;
 use League\Flysystem\Filesystem;
@@ -27,8 +30,12 @@ class Cleanup
     protected string $vendorDirectory = 'vendor'. DIRECTORY_SEPARATOR;
     protected string $targetDirectory;
 
-    public function __construct(StraussConfigInterface $config, string $workingDir)
+    protected StraussConfig $config;
+
+    public function __construct(StraussConfig $config, string $workingDir)
     {
+        $this->config = $config;
+
         $this->vendorDirectory = $config->getVendorDirectory();
         $this->targetDirectory = $config->getTargetDirectory();
         $this->workingDir = $workingDir;
@@ -43,26 +50,41 @@ class Cleanup
      * Maybe delete the source files that were copied (depending on config),
      * then delete empty directories.
      *
-     * @param string[] $sourceFiles Relative filepaths.
+     * @param File[] $files
      */
-    public function cleanup(array $sourceFiles): void
+    public function cleanup(array $files): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
             return;
         }
 
+        $sourceFiles = array_map(
+            fn($file) => $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory()),
+            $files
+        );
+
         if ($this->isDeleteVendorPackages) {
-            $package_dirs = array_unique(array_map(function (string $relativeFilePath): string {
-                list( $vendor, $package ) = explode('/', $relativeFilePath);
-                return "{$vendor}/{$package}";
-            }, $sourceFiles));
+            $packages = [];
+            foreach ($files as $file) {
+                if ($file instanceof FileWithDependency) {
+                    $packages[$file->getDependency()->getPackageName()] = $file->getDependency();
+                }
+            }
 
-            foreach ($package_dirs as $package_dir) {
-                $relativeDirectoryPath = $this->vendorDirectory . $package_dir;
+            /** @var ComposerPackage $package */
+            foreach ($packages as $package) {
+                // Normal package.
+                if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
+                    $packageRelativePath = str_replace($this->workingDir, '', $package->getPackageAbsolutePath());
+                    $this->filesystem->deleteDirectory($packageRelativePath);
+                } else {
+                    // If it's a symlink, remove the symlink in the directory
+                    $symlinkPath =
+                        rtrim(
+                            $this->workingDir . $this->config->getVendorDirectory() . $package->getRelativePath(),
+                            '/'
+                        );
 
-                $absolutePath = $this->workingDir . $relativeDirectoryPath;
-
-                if ($absolutePath !== realpath($absolutePath)) {
                     if (false !== strpos('WIN', PHP_OS)) {
                         /**
                          * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
@@ -71,27 +93,23 @@ class Cleanup
                          * @see https://www.php.net/manual/en/function.is-link.php#113263
                          * @see https://stackoverflow.com/a/18262809/336146
                          */
-                        rmdir($absolutePath);
+                        rmdir($symlinkPath);
                     } else {
-                        unlink($absolutePath);
+                        unlink($symlinkPath);
                     }
-
-                    continue;
                 }
-
-                $this->filesystem->deleteDirectory($relativeDirectoryPath);
             }
         } elseif ($this->isDeleteVendorFiles) {
-            foreach ($sourceFiles as $sourceFile) {
-                $relativeFilepath = $this->vendorDirectory . $sourceFile;
-
-                $absolutePath = $this->workingDir . $relativeFilepath;
-
-                if ($absolutePath !== realpath($absolutePath)) {
+            foreach ($files as $file) {
+                if (!$file->isDoDelete()) {
                     continue;
                 }
 
-                $this->filesystem->delete($relativeFilepath);
+                $sourceRelativePath = $file->getSourcePath($this->workingDir);
+
+                $this->filesystem->delete($sourceRelativePath);
+
+                $file->setDidDelete(true);
             }
 
             $this->cleanupFilesAutoloader();

@@ -25,9 +25,13 @@ class File implements FileBase
     /** @var DiscoveredSymbol[] */
     protected array $discoveredSymbols = [];
 
+    protected string $absoluteTargetPath;
+
+    protected bool $didDelete = false;
+
     public function __construct(string $sourceAbsolutePath)
     {
-        $this->sourceAbsolutePath  = $sourceAbsolutePath;
+        $this->sourceAbsolutePath = $sourceAbsolutePath;
     }
 
     public function getSourcePath(string $relativeTo = ''): string
@@ -40,17 +44,13 @@ class File implements FileBase
         return substr($this->sourceAbsolutePath, -4) === '.php';
     }
 
-    public function addNamespace(string $namespaceName): void
-    {
-    }
-    public function addClass(string $className): void
-    {
-    }
-    public function addTrait(string $traitName): void
-    {
-    }
-    // isTrait();
-
+    /**
+     * Some combination of file copy exclusions and vendor-dir == target-dir
+     *
+     * @param bool $doCopy
+     *
+     * @return void
+     */
     public function setDoCopy(bool $doCopy): void
     {
         $this->doCopy = $doCopy;
@@ -63,6 +63,13 @@ class File implements FileBase
     public function setDoPrefix(bool $doPrefix): void
     {
     }
+
+    /**
+     * Is this correct? Is there ever a time that NO changes should be made to a file? I.e. another file would have its
+     * namespace changed and it needs to be updated throughout.
+     *
+     * Is this really a Symbol level function?
+     */
     public function isDoPrefix(): bool
     {
         return true;
@@ -72,8 +79,6 @@ class File implements FileBase
      * Used to mark files that are symlinked as not-to-be-deleted.
      *
      * @param bool $doDelete
-     *
-     * @return void
      */
     public function setDoDelete(bool $doDelete): void
     {
@@ -92,10 +97,11 @@ class File implements FileBase
 
     public function setDidDelete(bool $didDelete): void
     {
+        $this->didDelete = $didDelete;
     }
     public function getDidDelete(): bool
     {
-        return false;
+        return $this->didDelete;
     }
 
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void
@@ -103,9 +109,30 @@ class File implements FileBase
         $this->discoveredSymbols[$symbol->getOriginalSymbol()] = $symbol;
     }
 
+    /**
+     * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
+     */
+    public function getDiscoveredSymbols(): array
+    {
+        return $this->discoveredSymbols;
+    }
+
+    public function setAbsoluteTargetPath(string $absoluteTargetPath): void
+    {
+        $this->absoluteTargetPath = $absoluteTargetPath;
+    }
+
+    /**
+     * The target path to (maybe) copy the file to, and the target path to perform replacements in (which may be the
+     * original path).
+     */
+    public function getAbsoluteTargetPath(string $relativeTo = ''): string
+    {
+        return str_replace($relativeTo, '', $this->absoluteTargetPath);
+    }
+
     public function getContents(): string
     {
-
         // TODO: use flysystem
         // $contents = $this->filesystem->read($targetFile);
 
@@ -115,5 +142,15 @@ class File implements FileBase
         }
 
         return $contents;
+    }
+
+    protected bool $didUpdate = false;
+    public function setDidUpdate(): void
+    {
+        $this->didUpdate = true;
+    }
+    public function getDidUpdate(): bool
+    {
+        return $this->didUpdate;
     }
 }

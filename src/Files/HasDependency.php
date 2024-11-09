@@ -9,8 +9,6 @@ interface HasDependency
 
     public function getDependency(): ComposerPackage;
 
-    public function getTargetRelativePath(): string;
-
     /**
      * Record the autoloader it is found in. Which could be all of them.
      */

@@ -3,7 +3,8 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\ChangeEnumerator;
-use BrianHenryIE\Strauss\FileScanner;
+use BrianHenryIE\Strauss\FileCopyScanner;
+use BrianHenryIE\Strauss\FileSymbolScanner;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
@@ -42,6 +43,9 @@ class ReplacerIntegrationTest extends IntegrationTestCase
 	]
   },
   "scripts": {
+    "pre-autoload-dump": [
+      "@delete-unused-google-apis"
+    ],
     "delete-unused-google-apis": [
         "Google\\Task\\Composer::cleanup"
     ]
@@ -55,42 +59,42 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
-        $input = $this->createMock(InputInterface::class);
-        $config = $projectComposerPackage->getStraussConfig($input);
-
-        $dependencies = array_map(function ($element) {
-            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
-            return ComposerPackage::fromFile($dir);
-        }, $projectComposerPackage->getRequiresNames());
-
+//        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+//        $input = $this->createMock(InputInterface::class);
+//        $config = $projectComposerPackage->getStraussConfig();
+//
+//        $dependencies = array_map(function ($element) {
+//            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
+//            return ComposerPackage::fromFile($dir);
+//        }, $projectComposerPackage->getRequiresNames());
+//
         $workingDir = $this->testsWorkingDir;
         $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
         $absoluteTargetDir = $workingDir . $relativeTargetDir;
+//
+////        $config = $this->createStub(StraussConfig::class);
+////        $config->method('getTargetDirectory')->willReturn('vendor-prefixed' . DIRECTORY_SEPARATOR);
+//
+//        $fileEnumerator = new FileEnumerator($workingDir, $config);
+//        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+//
+//        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
+//
+//        $copier = new Copier($files, $workingDir, $config);
+//        $copier->prepareTarget();
+//        $copier->copy();
+//
+//        $fileScanner = new FileScanner($config);
+//        $discoveredSymbols = $fileScanner->findInFiles($files);
+//
+//        $changeEnumerator = new ChangeEnumerator($config, $workingDir);
+//        $changeEnumerator->determineReplacements($discoveredSymbols);
+//
+//        $replacer = new Prefixer($config, $workingDir);
+//
+//        $replacer->replaceInFiles($discoveredSymbols, $files->getFiles());
 
-//        $config = $this->createStub(StraussConfig::class);
-//        $config->method('getTargetDirectory')->willReturn('vendor-prefixed' . DIRECTORY_SEPARATOR);
-
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
-        $phpFileList = $files->getPhpFilesAndDependencyList();
-
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
-
-        $copier = new Copier($files, $workingDir, $config);
-        $copier->prepareTarget();
-        $copier->copy();
-
-        $fileScanner = new FileScanner($config);
-        $discoveredSymbols = $fileScanner->findInFiles($files);
-
-        $changeEnumerator = new ChangeEnumerator($config, $workingDir);
-        $changeEnumerator->determineReplacements($discoveredSymbols);
-
-        $replacer = new Prefixer($config, $workingDir);
-
-        $replacer->replaceInFiles($discoveredSymbols, $phpFileList);
+        $this->runStrauss();
 
         $updatedFile = file_get_contents($absoluteTargetDir . 'google/apiclient/src/Client.php');
 

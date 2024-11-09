@@ -158,6 +158,9 @@ class ComposerPackage
         return $this->packageName;
     }
 
+    /**
+     * Is this relative to vendor?
+     */
     public function getRelativePath(): ?string
     {
         return $this->relativePath . DIRECTORY_SEPARATOR;

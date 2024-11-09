@@ -17,7 +17,7 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Symfony\Component\Finder\Finder;
@@ -39,7 +39,7 @@ class Licenser
     protected bool $includeModifiedDate;
 
     /**
-     * @see StraussConfigInterface::isIncludeAuthor()
+     * @see StraussConfig::isIncludeAuthor()
      * @var bool
      */
     protected bool $includeAuthor = true;
@@ -61,7 +61,7 @@ class Licenser
      * @param ComposerPackage[] $dependencies Whose folders are searched for existing license.txt files.
      * @param string $author To add to each modified file's header
      */
-    public function __construct(StraussConfigInterface $config, string $workingDir, array $dependencies, string $author)
+    public function __construct(StraussConfig $config, string $workingDir, array $dependencies, string $author)
     {
         $this->workingDir = $workingDir;
         $this->dependencies = $dependencies;
@@ -129,7 +129,6 @@ class Licenser
             }
         }
     }
-
     /**
      * @return string[]
      */

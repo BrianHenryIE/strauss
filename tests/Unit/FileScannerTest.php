@@ -6,7 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\FileScanner;
+use BrianHenryIE\Strauss\FileSymbolScanner;
 use BrianHenryIE\Strauss\TestCase;
 
 class FileScannerTest extends TestCase
@@ -37,7 +37,7 @@ EOD;
 
         $config = $this->createMock(StraussConfig::class);
         $config->method('getNamespacePrefix')->willReturn('Prefix');
-        $sut = new FileScanner($config);
+        $sut = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -72,7 +72,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $sut = new FileScanner($config);
+        $sut = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -108,7 +108,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $sut = new FileScanner($config);
+        $sut = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -151,7 +151,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $sut = new FileScanner($config);
+        $sut = new FileSymbolScanner($config);
 
 
         $file = \Mockery::mock(File::class);
@@ -209,7 +209,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $sut = new FileScanner($config);
+        $sut = new FileSymbolScanner($config);
 
         try {
             $file = \Mockery::mock(File::class);
@@ -249,7 +249,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $sut = new FileScanner($config);
+        $sut = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -285,7 +285,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -322,7 +322,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -362,7 +362,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -397,7 +397,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -435,7 +435,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -467,7 +467,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -502,7 +502,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -546,7 +546,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -583,7 +583,7 @@ EOD;
         $files = \Mockery::mock(DiscoveredFiles::class)->makePartial();
         $files->shouldReceive('getFiles')->andReturn([$file]);
 
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
         $discoveredSymbols = $fileScanner->findInFiles($files);
 
         self::assertEmpty($discoveredSymbols->getDiscoveredNamespaces());
@@ -608,7 +608,7 @@ EOD;
         $files = \Mockery::mock(DiscoveredFiles::class)->makePartial();
         $files->shouldReceive('getFiles')->andReturn([$file]);
 
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
         $discoveredSymbols = $fileScanner->findInFiles($files);
 
         self::assertEmpty($discoveredSymbols->getDiscoveredNamespaces());
@@ -634,7 +634,7 @@ EOD;
             array('/BrianHenryIE\\\\(PdfHelpers)/'=>'BrianHenryIE\\Prefix\\\\$1')
         );
 
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -687,7 +687,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -729,7 +729,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -775,7 +775,7 @@ EOD;
         $file->expects('addDiscoveredSymbol')->once();
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();

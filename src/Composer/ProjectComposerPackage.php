@@ -6,12 +6,8 @@
 namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
 use Composer\Factory;
 use Composer\IO\NullIO;
-use RecursiveArrayIterator;
-use RecursiveIteratorIterator;
-use Symfony\Component\Console\Input\InputInterface;
 
 class ProjectComposerPackage extends ComposerPackage
 {
@@ -51,7 +47,7 @@ class ProjectComposerPackage extends ComposerPackage
      * @return StraussConfig
      * @throws \Exception
      */
-    public function getStraussConfig(): StraussConfigInterface
+    public function getStraussConfig(): StraussConfig
     {
         $config = new StraussConfig($this->composer);
         $config->setVendorDirectory($this->getVendorDirectory());

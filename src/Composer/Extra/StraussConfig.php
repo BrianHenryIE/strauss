@@ -5,47 +5,45 @@
 
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
+use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use Composer\Composer;
 use Exception;
 use JsonMapper\JsonMapperFactory;
 use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
-class StraussConfig implements StraussConfigInterface
+class StraussConfig implements
+    ReplaceConfigInterface,
+    FileSymbolScannerConfigInterface,
+    FileCopyScannerConfigInterface,
+    ChangeEnumeratorConfigInterface
 {
     /**
      * The output directory.
-     *
-     * Probably `strauss/` or `src/strauss/`.
-     *
-     * @var string
      */
-    protected $targetDirectory = 'vendor-prefixed';
+    protected string $targetDirectory = 'vendor-prefixed';
 
     /**
      * The vendor directory.
      *
      * Probably 'vendor/'
-     *
-     * @var string
      */
-    protected $vendorDirectory = 'vendor';
+    protected string $vendorDirectory = 'vendor';
 
     /**
      * `namespacePrefix` is the prefix to be given to any namespaces.
      * Presumably this will take the form `My_Project_Namespace\dep_directory`.
      *
      * @link https://www.php-fig.org/psr/psr-4/
-     *
-     * @var string
      */
-    protected string $namespacePrefix;
+    protected ?string $namespacePrefix = null;
 
     /**
      * @var string
      */
-    protected string $classmapPrefix;
-
+    protected ?string $classmapPrefix = null;
 
     /**
      * @var ?string
@@ -153,20 +151,20 @@ class StraussConfig implements StraussConfigInterface
      *
      * @throws Exception
      */
-    public function __construct(Composer $composer)
+    public function __construct(?Composer $composer = null)
     {
 
         $configExtraSettings = null;
 
         // Backwards compatibility with Mozart.
-        if (isset($composer->getPackage()->getExtra()['mozart'])) {
+        if (isset($composer, $composer->getPackage()->getExtra()['mozart'])) {
             $configExtraSettings = (object)$composer->getPackage()->getExtra()['mozart'];
 
             // Default setting for Mozart.
             $this->setDeleteVendorFiles(true);
         }
 
-        if (isset($composer->getPackage()->getExtra()['strauss'])) {
+        if (isset($composer, $composer->getPackage()->getExtra()['strauss'])) {
             $configExtraSettings = (object)$composer->getPackage()->getExtra()['strauss'];
         }
 
@@ -197,11 +195,11 @@ class StraussConfig implements StraussConfigInterface
         // * Use PSR-0 autoloader key
         // * Use the package name
         if (! isset($this->namespacePrefix)) {
-            if (isset($composer->getPackage()->getAutoload()['psr-4'])) {
+            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4'])) {
                 $this->setNamespacePrefix(array_key_first($composer->getPackage()->getAutoload()['psr-4']));
-            } elseif (isset($composer->getPackage()->getAutoload()['psr-0'])) {
+            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0'])) {
                 $this->setNamespacePrefix(array_key_first($composer->getPackage()->getAutoload()['psr-0']));
-            } elseif ('__root__' !== $composer->getPackage()->getName()) {
+            } elseif (isset($composer) && '__root__' !== $composer->getPackage()->getName()) {
                 $packageName = $composer->getPackage()->getName();
                 $namespacePrefix = preg_replace('/[^\w\/]+/', '_', $packageName);
                 $namespacePrefix = str_replace('/', '\\', $namespacePrefix) . '\\';
@@ -216,15 +214,15 @@ class StraussConfig implements StraussConfigInterface
         }
 
         if (! isset($this->classmapPrefix)) {
-            if (isset($composer->getPackage()->getAutoload()['psr-4'])) {
+            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4'])) {
                 $autoloadKey = array_key_first($composer->getPackage()->getAutoload()['psr-4']);
                 $classmapPrefix = str_replace("\\", "_", $autoloadKey);
                 $this->setClassmapPrefix($classmapPrefix);
-            } elseif (isset($composer->getPackage()->getAutoload()['psr-0'])) {
+            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0'])) {
                 $autoloadKey = array_key_first($composer->getPackage()->getAutoload()['psr-0']);
                 $classmapPrefix = str_replace("\\", "_", $autoloadKey);
                 $this->setClassmapPrefix($classmapPrefix);
-            } elseif ('__root__' !== $composer->getPackage()->getName()) {
+            } elseif (isset($composer) && '__root__' !== $composer->getPackage()->getName()) {
                 $packageName = $composer->getPackage()->getName();
                 $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $packageName);
                 $classmapPrefix = str_replace('/', '\\', $classmapPrefix);
@@ -241,11 +239,11 @@ class StraussConfig implements StraussConfigInterface
             }
         }
 
-        if (!isset($this->namespacePrefix) || !isset($this->classmapPrefix)) {
-            throw new Exception('Prefix not set. Please set `namespace_prefix`, `classmap_prefix` in composer.json/extra/strauss.');
-        }
+//        if (!isset($this->namespacePrefix) || !isset($this->classmapPrefix)) {
+//            throw new Exception('Prefix not set. Please set `namespace_prefix`, `classmap_prefix` in composer.json/extra/strauss.');
+//        }
 
-        if (empty($this->packages)) {
+        if (isset($composer) && empty($this->packages)) {
             $this->packages = array_map(function (\Composer\Package\Link $element) {
                 return $element->getTarget();
             }, $composer->getPackage()->getRequires());
@@ -255,15 +253,17 @@ class StraussConfig implements StraussConfigInterface
         if (!isset($this->classmapOutput)) {
             $this->classmapOutput = true;
             // Check each autoloader.
-            foreach ($composer->getPackage()->getAutoload() as $autoload) {
-                // To see if one of its paths.
-                foreach ($autoload as $entry) {
-                    $paths = (array) $entry;
-                    foreach ($paths as $path) {
-                        // Matches the target directory.
-                        if (trim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR === $this->getTargetDirectory()) {
-                            $this->classmapOutput = false;
-                            break 3;
+            if (isset($composer)) {
+                foreach ($composer->getPackage()->getAutoload() as $autoload) {
+                    // To see if one of its paths.
+                    foreach ($autoload as $entry) {
+                        $paths = (array) $entry;
+                        foreach ($paths as $path) {
+                            // Matches the target directory.
+                            if (trim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR === $this->getTargetDirectory()) {
+                                $this->classmapOutput = false;
+                                break 3;
+                            }
                         }
                     }
                 }
@@ -274,7 +274,7 @@ class StraussConfig implements StraussConfigInterface
         // https://stackoverflow.com/questions/4440626/how-can-i-validate-regex
         // preg_match('~Valid(Regular)Expression~', null) === false);
 
-        if (isset($configExtraSettings->updateCallSites)) {
+        if (isset($configExtraSettings, $configExtraSettings->updateCallSites)) {
             if (true === $configExtraSettings->updateCallSites) {
                 $this->updateCallSites = null;
             } elseif (false === $configExtraSettings->updateCallSites) {
@@ -329,12 +329,9 @@ class StraussConfig implements StraussConfigInterface
         $this->vendorDirectory = $vendorDirectory;
     }
 
-    /**
-     * @return string
-     */
-    public function getNamespacePrefix(): string
+    public function getNamespacePrefix(): ?string
     {
-        return trim($this->namespacePrefix, '\\');
+        return !isset($this->namespacePrefix) ? null :trim($this->namespacePrefix, '\\');
     }
 
     /**
@@ -348,7 +345,7 @@ class StraussConfig implements StraussConfigInterface
     /**
      * @return string
      */
-    public function getClassmapPrefix(): string
+    public function getClassmapPrefix(): ?string
     {
         return $this->classmapPrefix;
     }
@@ -571,7 +568,6 @@ class StraussConfig implements StraussConfigInterface
     {
         $this->excludeFromPrefix['packages'] = $excludePackages;
     }
-
 
     /**
      * @return array<string,string>

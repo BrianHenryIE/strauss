@@ -9,7 +9,7 @@ use BrianHenryIE\Strauss\Files\File;
 
 abstract class DiscoveredSymbol
 {
-    protected ?File $file;
+    protected ?File $sourceFile;
 
     protected string $symbol;
 
@@ -17,14 +17,14 @@ abstract class DiscoveredSymbol
 
     /**
      * @param string $symbol The classname / namespace etc.
-     * @param File $file The file it was discovered in.
+     * @param File $sourceFile The file it was discovered in.
      */
-    public function __construct(string $symbol, File $file)
+    public function __construct(string $symbol, File $sourceFile)
     {
-        $this->symbol = $symbol;
-        $this->file = $file;
+        $this->symbol     = $symbol;
+        $this->sourceFile = $sourceFile;
 
-        $file->addDiscoveredSymbol($this);
+        $sourceFile->addDiscoveredSymbol($this);
     }
 
     public function getOriginalSymbol(): string
@@ -37,14 +37,19 @@ abstract class DiscoveredSymbol
         $this->symbol = $symbol;
     }
 
-    public function getFile(): ?File
+    public function getSourceFile(): ?File
     {
-        return $this->file;
+        return $this->sourceFile;
     }
 
-    public function setFile(File $file): void
+    /**
+     * @param File $sourceFile
+     *
+     * @see FileSymbolScanner
+     */
+    public function setSourceFile(File $sourceFile): void
     {
-        $this->file = $file;
+        $this->sourceFile = $sourceFile;
     }
 
     public function getReplacement(): string

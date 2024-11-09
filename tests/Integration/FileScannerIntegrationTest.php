@@ -2,7 +2,8 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
-use BrianHenryIE\Strauss\FileScanner;
+use BrianHenryIE\Strauss\FileCopyScanner;
+use BrianHenryIE\Strauss\FileSymbolScanner;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
@@ -65,6 +66,8 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
+        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
+
         $copier = new Copier($files, $workingDir, $config);
 
         $copier->prepareTarget();
@@ -77,7 +80,7 @@ EOD;
         $config->method('getExcludeNamespacesFromPrefixing')->willReturn(array());
         $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
 
-        $fileScanner = new FileScanner($config);
+        $fileScanner = new FileSymbolScanner($config);
 
         $discoveredSymbols = $fileScanner->findInFiles($files);
 

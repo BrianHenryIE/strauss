@@ -6,7 +6,7 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use Exception;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -58,11 +58,11 @@ class DependenciesEnumerator
      * Constructor.
      *
      * @param string $workingDir
-     * @param StraussConfigInterface $config
+     * @param StraussConfig $config
      */
     public function __construct(
         string $workingDir,
-	    StraussConfigInterface $config
+        StraussConfig $config
     ) {
         $this->workingDir = $workingDir;
         $this->vendorDir = $config->getVendorDirectory();

@@ -3,7 +3,8 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
 use League\Flysystem\Filesystem;
@@ -11,14 +12,14 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 
 class Prefixer
 {
-    protected StraussConfigInterface $config;
+    protected StraussConfig $config;
 
     /** @var Filesystem */
     protected $filesystem;
 
     protected string $targetDirectory;
-    protected string $namespacePrefix;
-    protected string $classmapPrefix;
+    protected ?string $namespacePrefix;
+    protected ?string $classmapPrefix;
     protected ?string $constantsPrefix;
 
     /** @var string[]  */
@@ -36,11 +37,13 @@ class Prefixer
      * @var array<string, ?ComposerPackage>
      */
     protected array $changedFiles = array();
+    protected string $workingDir;
 
-    public function __construct(StraussConfigInterface $config, string $workingDir)
+    public function __construct(StraussConfig $config, string $workingDir)
     {
         $this->config = $config;
 
+        $this->workingDir = $workingDir;
         $this->filesystem = new Filesystem(new LocalFilesystemAdapter($workingDir));
 
         $this->targetDirectory = $config->getTargetDirectory();
@@ -59,39 +62,49 @@ class Prefixer
 
     /**
      * @param DiscoveredSymbols $discoveredSymbols
-     * @param array<string,array{dependency:ComposerPackage,sourceAbsoluteFilepath:string,targetRelativeFilepath:string}> $phpFileArrays
+     * ///param array<string,array{dependency:ComposerPackage,sourceAbsoluteFilepath:string,targetRelativeFilepath:string}> $phpFileArrays
+     * @param array<File> $files
      */
-    public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $phpFileArrays): void
+    public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
 
-        foreach ($phpFileArrays as $targetRelativeFilepath => $fileArray) {
-            $package = $fileArray['dependency'];
+        foreach ($files as $file) {
+//          if(!$file->isDoPrefix()) {
+//              continue;
+//          }
+
+//          $package = $file->getDependency()
 
             // Skip excluded namespaces.
-            if (in_array($package->getPackageName(), $this->excludePackageNamesFromPrefixing)) {
-                continue;
-            }
+//            if (in_array($package->getPackageName(), $this->excludePackageNamesFromPrefixing)) {
+//                continue;
+//            }
+//
+//            // Skip files whose filepath matches an excluded pattern.
+//            foreach ($this->excludeFilePatternsFromPrefixing as $excludePattern) {
+//                if (1 === preg_match($excludePattern, $targetRelativeFilepath)) {
+//                    continue 2;
+//                }
+//            }
 
-            // Skip files whose filepath matches an excluded pattern.
-            foreach ($this->excludeFilePatternsFromPrefixing as $excludePattern) {
-                if (1 === preg_match($excludePattern, $targetRelativeFilepath)) {
-                    continue 2;
-                }
-            }
-
-            $targetRelativeFilepathFromProject = $this->targetDirectory. $targetRelativeFilepath;
+            $targetRelativeFilepathFromProject = $file->getAbsoluteTargetPath($this->workingDir);
 
             if (! $this->filesystem->fileExists($targetRelativeFilepathFromProject)) {
+                // Maybe warn here?
                 continue;
             }
 
-            // Throws an exception, but unlikely to happen.
+            /**
+             * Throws an exception, but unlikely to happen.
+             *
+             * TODO: Use {@see File::getContents()} instead?
+             */
             $contents = $this->filesystem->read($targetRelativeFilepathFromProject);
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
-                $this->changedFiles[$targetRelativeFilepath] = $package;
+                $file->setDidUpdate();
                 $this->filesystem->write($targetRelativeFilepathFromProject, $updatedContents);
             }
         }

@@ -6,13 +6,14 @@ use BrianHenryIE\Strauss\Autoload;
 use BrianHenryIE\Strauss\ChangeEnumerator;
 use BrianHenryIE\Strauss\Cleanup;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Copier;
 use BrianHenryIE\Strauss\DependenciesEnumerator;
+use BrianHenryIE\Strauss\FileCopyScanner;
 use BrianHenryIE\Strauss\FileEnumerator;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\FileScanner;
+use BrianHenryIE\Strauss\FileSymbolScanner;
 use BrianHenryIE\Strauss\Licenser;
 use BrianHenryIE\Strauss\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -32,7 +33,7 @@ class Compose extends Command
     /** @var string */
     protected string $workingDir;
 
-    protected StraussConfigInterface $config;
+    protected StraussConfig $config;
 
     protected ProjectComposerPackage $projectComposerPackage;
 
@@ -125,7 +126,7 @@ class Compose extends Command
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
-            return 1;
+            return Command::FAILURE;
         }
 
         return Command::SUCCESS;
@@ -196,6 +197,8 @@ class Compose extends Command
     // 3. Copy autoloaded files for each
     protected function copyFiles(): void
     {
+        (new FileCopyScanner($this->workingDir, $this->config))->scanFiles($this->discoveredFiles);
+
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
             // Nothing to do.
             return;
@@ -209,6 +212,7 @@ class Compose extends Command
             $this->config
         );
 
+
         $copier->prepareTarget();
         $copier->copy();
     }
@@ -218,7 +222,7 @@ class Compose extends Command
     {
         $this->logger->info('Determining changes...');
 
-        $fileScanner = new FileScanner($this->config);
+        $fileScanner = new FileSymbolScanner($this->config);
 
         $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
 
@@ -237,9 +241,7 @@ class Compose extends Command
 
         $this->replacer = new Prefixer($this->config, $this->workingDir);
 
-        $phpFiles = $this->discoveredFiles->getPhpFilesAndDependencyList();
-
-        $this->replacer->replaceInFiles($this->discoveredSymbols, $phpFiles);
+        $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
     }
 
     protected function performReplacementsInComposerFiles(): void
@@ -256,9 +258,11 @@ class Compose extends Command
             $this->config
         );
 
-        $composerPhpFileRelativePaths = $fileEnumerator->findFilesInDirectory(
-            $this->workingDir,
-            $this->config->getVendorDirectory() . 'composer'
+        $files = $fileEnumerator->compileFileListForPaths([$this->config->getVendorDirectory() . 'composer']);
+
+        $composerPhpFileRelativePaths = array_map(
+            fn($file) => $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory()),
+            $files->getFiles()
         );
 
         $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $composerPhpFileRelativePaths);
@@ -282,17 +286,15 @@ class Compose extends Command
             $this->config
         );
 
-        $phpFilesRelativePaths = [];
-        foreach ($callSitePaths as $relativePath) {
-            $absolutePath = $this->workingDir . $relativePath;
-            if (is_dir($absolutePath)) {
-                $phpFilesRelativePaths = array_merge($phpFilesRelativePaths, $fileEnumerator->findFilesInDirectory($this->workingDir, $relativePath));
-            } elseif (is_readable($absolutePath)) {
-                $phpFilesRelativePaths[] = $relativePath;
-            } else {
-                $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
-            }
-        }
+        $phpFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
+
+        $phpFilesRelativePaths = array_map(
+            fn($file) => $file->getSourcePath($this->workingDir),
+            $phpFiles->getFiles()
+        );
+
+        // TODO: Warn when a file that was specified is not found
+        // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
         $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesRelativePaths);
     }
@@ -377,11 +379,9 @@ class Compose extends Command
 
         $cleanup = new Cleanup($this->config, $this->workingDir);
 
-        $sourceFiles = array_keys($this->discoveredFiles->getAllFilesAndDependencyList());
-
         // TODO: For files autoloaders, delete the contents of the file, not the file itself.
 
         // This will check the config to check should it delete or not.
-        $cleanup->cleanup($sourceFiles);
+        $cleanup->cleanup($this->discoveredFiles->getFiles());
     }
 }

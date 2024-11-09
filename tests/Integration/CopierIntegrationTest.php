@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Copier;
+use BrianHenryIE\Strauss\FileCopyScanner;
 use BrianHenryIE\Strauss\FileEnumerator;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use stdClass;
@@ -60,6 +61,8 @@ EOD;
 
         $fileEnumerator = new FileEnumerator($workingDir, $config);
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+
+        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
 
         $copier = new Copier($files, $workingDir, $config);
 
@@ -121,6 +124,8 @@ EOD;
 
         $fileEnumerator = new FileEnumerator($workingDir, $config);
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+
+        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
 
         $copier = new Copier($files, $workingDir, $config);
 

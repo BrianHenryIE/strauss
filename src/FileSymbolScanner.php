@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
+use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 
-class FileScanner
+class FileSymbolScanner
 {
 
     /** @var string[]  */
@@ -25,9 +25,8 @@ class FileScanner
 
     /**
      * FileScanner constructor.
-     * @param \BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface $config
      */
-    public function __construct(StraussConfigInterface $config)
+    public function __construct(FileSymbolScannerConfigInterface $config)
     {
         $this->discoveredSymbols = new DiscoveredSymbols();
         $this->excludeNamespacesFromPrefixing = $config->getExcludeNamespacesFromPrefixing();
@@ -129,10 +128,7 @@ class FileScanner
 
     protected function addDiscoveredClassChange(string $classname, File $file): void
     {
-
-        if ('ReturnTypeWillChange' === $classname) {
-            return;
-        }
+        // This should be inclued but marked not to prefix.
         if (in_array($classname, $this->getBuiltIns())) {
             return;
         }

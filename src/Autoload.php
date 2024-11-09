@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfigInterface;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use Composer\Autoload\ClassMapGenerator;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -20,7 +20,7 @@ class Autoload
 
     protected string $workingDir;
 
-    protected StraussConfigInterface $config;
+    protected StraussConfig $config;
 
     /**
      * The files autolaoders of packages that have been copied by Strauss.
@@ -32,11 +32,11 @@ class Autoload
 
     /**
      * Autoload constructor.
-     * @param StraussConfigInterface $config
+     * @param StraussConfig $config
      * @param string $workingDir
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
-    public function __construct(StraussConfigInterface $config, string $workingDir, array $discoveredFilesAutoloaders)
+    public function __construct(StraussConfig $config, string $workingDir, array $discoveredFilesAutoloaders)
     {
         $this->config = $config;
         $this->workingDir = $workingDir;

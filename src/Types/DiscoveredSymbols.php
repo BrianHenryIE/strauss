@@ -7,7 +7,7 @@ class DiscoveredSymbols
     /**
      * All discovered symbols, grouped by type, indexed by original name.
      *
-     * @var array<string,array<string,DiscoveredSymbol>>
+     * @var array{'BrianHenryIE\\Strauss\\Types\\NamespaceSymbol':array<string,NamespaceSymbol>, 'BrianHenryIE\\Strauss\\Types\\ConstantSymbol':array<string,ConstantSymbol>, 'BrianHenryIE\\Strauss\\Types\\ClassSymbol':array<string,ClassSymbol>}
      */
     protected array $types = [];
 
@@ -63,7 +63,6 @@ class DiscoveredSymbols
     {
         return $this->types[ClassSymbol::class];
     }
-
 
     /**
      * TODO: Order by longest string first. (or instead, record classnames with their namespaces)
