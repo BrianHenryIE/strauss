@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Types;
 
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\FileSymbolScanner;
 
 abstract class DiscoveredSymbol
 {

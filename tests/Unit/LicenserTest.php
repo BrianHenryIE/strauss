@@ -9,8 +9,8 @@ use ArrayIterator;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Licenser;
-use PHPUnit\Framework\Constraint\Callback;
 use BrianHenryIE\Strauss\TestCase;
+use PHPUnit\Framework\Constraint\Callback;
 use Symfony\Component\Finder\Finder;
 
 /**

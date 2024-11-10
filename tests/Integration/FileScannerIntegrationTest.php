@@ -2,13 +2,13 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
-use BrianHenryIE\Strauss\FileCopyScanner;
-use BrianHenryIE\Strauss\FileSymbolScanner;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Copier;
+use BrianHenryIE\Strauss\FileCopyScanner;
 use BrianHenryIE\Strauss\FileEnumerator;
+use BrianHenryIE\Strauss\FileSymbolScanner;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 
 /**
