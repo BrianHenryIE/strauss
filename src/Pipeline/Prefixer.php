@@ -416,6 +416,8 @@ class Prefixer
     }
 
     /**
+     * TODO: This should be a function on {@see DiscoveredFiles}.
+     *
      * @return array<string, ComposerPackage>
      */
     public function getModifiedFiles(): array

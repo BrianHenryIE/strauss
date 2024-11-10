@@ -47,6 +47,14 @@ class ChangeEnumerator
                 // `namespace_prefix` is just a shorthand for a replacement pattern that applies to all namespaces.
 
                 // TODO: Maybe need to preg_quote and add regex delimiters to the patterns here.
+                foreach ($namespaceReplacementPatterns as $pattern => $replacement) {
+                    if (substr($pattern, 0, 1) !== substr($pattern, -1, 1)) {
+                        unset($namespaceReplacementPatterns[$pattern]);
+                        $pattern = '~'. preg_quote($pattern, '~') . '~';
+                        $namespaceReplacementPatterns[$pattern] = $replacement;
+                    }
+                    unset($pattern, $replacement);
+                }
 
                 if (!is_null($this->config->getNamespacePrefix())) {
                     $stripPattern = '~^('.preg_quote($this->config->getNamespacePrefix(), '~') .'\\\\*)*(.*)~';
@@ -57,11 +65,18 @@ class ChangeEnumerator
                     );
                     $namespaceReplacementPatterns[ "~(" . preg_quote($this->config->getNamespacePrefix(), '~') . '\\\\*)*' . preg_quote($strippedSymbol, '~') . '~' ]
                         = "{$this->config->getNamespacePrefix()}\\{$strippedSymbol}";
+                    unset($stripPattern, $strippedSymbol);
                 }
 
                 // `namespace_replacement_patterns` should be ordered by priority.
                 foreach ($namespaceReplacementPatterns as $namespaceReplacementPattern => $replacement) {
-                    $prefixed = preg_replace($namespaceReplacementPattern, $replacement, $symbol->getOriginalSymbol());
+                    $replacement = str_replace('\\', '\\\\', $replacement);
+
+                    $prefixed = preg_replace(
+                        $namespaceReplacementPattern,
+                        $replacement,
+                        $symbol->getOriginalSymbol()
+                    );
 
                     if ($prefixed !== $symbol->getOriginalSymbol()) {
                         $symbol->setReplacement($prefixed);

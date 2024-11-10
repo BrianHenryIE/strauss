@@ -128,7 +128,9 @@ class File implements FileBase
      */
     public function getAbsoluteTargetPath(string $relativeTo = ''): string
     {
-        return str_replace($relativeTo, '', $this->absoluteTargetPath);
+        return isset($this->absoluteTargetPath)
+            ? str_replace($relativeTo, '', $this->absoluteTargetPath)
+            : $this->getSourcePath($relativeTo);
     }
 
     public function getContents(): string

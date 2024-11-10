@@ -3,7 +3,7 @@
 namespace BrianHenryIE\Strauss\Console;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
-use BrianHenryIE\Strauss\Console\Commands\Replace;
+use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 
 class Application extends BaseApplication
@@ -17,6 +17,9 @@ class Application extends BaseApplication
 
         $composeCommand = new DependenciesCommand();
         $this->add($composeCommand);
+
+        $replaceCommand = new ReplaceCommand();
+        $this->add($replaceCommand);
 
         $this->setDefaultCommand('dependencies');
     }
