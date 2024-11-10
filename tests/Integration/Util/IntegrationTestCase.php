@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 
-use BrianHenryIE\Strauss\Console\Commands\Compose;
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -63,7 +63,7 @@ class IntegrationTestCase extends TestCase
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
-        $strauss = new Compose();
+        $strauss = new DependenciesCommand();
 
         return $strauss->run($inputInterfaceMock, $outputInterfaceMock);
     }

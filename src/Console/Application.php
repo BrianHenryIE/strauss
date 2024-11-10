@@ -2,7 +2,8 @@
 
 namespace BrianHenryIE\Strauss\Console;
 
-use BrianHenryIE\Strauss\Console\Commands\Compose;
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Console\Commands\Replace;
 use Symfony\Component\Console\Application as BaseApplication;
 
 class Application extends BaseApplication
@@ -14,9 +15,9 @@ class Application extends BaseApplication
     {
         parent::__construct('strauss', $version);
 
-        $composeCommand = new Compose();
+        $composeCommand = new DependenciesCommand();
         $this->add($composeCommand);
 
-        $this->setDefaultCommand('compose');
+        $this->setDefaultCommand('dependencies');
     }
 }

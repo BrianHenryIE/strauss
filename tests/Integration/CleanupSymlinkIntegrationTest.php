@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
-use BrianHenryIE\Strauss\Console\Commands\Compose;
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -39,7 +39,7 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
 
         assert(is_dir($relative_symlinked_package_dir));
 
-        $strauss = new Compose();
+        $strauss = new DependenciesCommand();
 
         $strauss->run($inputInterfaceMock, $outputInterfaceMock);
 

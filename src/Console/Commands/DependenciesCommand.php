@@ -26,7 +26,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Compose extends Command
+class DependenciesCommand extends Command
 {
     use LoggerAwareTrait;
 
@@ -60,7 +60,7 @@ class Compose extends Command
      */
     protected function configure()
     {
-        $this->setName('compose');
+        $this->setName('dependencies');
         $this->setDescription("Copy composer's `require` and prefix their namespace and classnames.");
         $this->setHelp('');
 
@@ -167,7 +167,7 @@ class Compose extends Command
      *
      * 2.1 Initiate getting dependencies for the project composer.json.
      *
-     * @see Compose::flatDependencyTree
+     * @see DependenciesCommand::flatDependencyTree
      */
     protected function buildDependencyList(): void
     {

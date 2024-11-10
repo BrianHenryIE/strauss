@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
-use BrianHenryIE\Strauss\Console\Commands\Compose;
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -120,7 +120,7 @@ EOD;
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
-        $mozartCompose = new Compose();
+        $mozartCompose = new DependenciesCommand();
 
         $result = $mozartCompose->run($inputInterfaceMock, $outputInterfaceMock);
 

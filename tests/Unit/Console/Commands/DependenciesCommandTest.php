@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Tests\Unit\Console\Commands;
 
-use BrianHenryIE\Strauss\Console\Commands\Compose;
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -35,7 +35,7 @@ class ComposeTest extends TestCase
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends Compose {
+        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
             public function __construct($inputInterfaceMock, $outputInterfaceMock)
             {
                 parent::__construct();
@@ -74,7 +74,7 @@ class ComposeTest extends TestCase
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends Compose {
+        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
             public function __construct($inputInterfaceMock, $outputInterfaceMock)
             {
                 parent::__construct();
@@ -113,7 +113,7 @@ class ComposeTest extends TestCase
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends Compose {
+        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
             public function __construct($inputInterfaceMock, $outputInterfaceMock)
             {
                 parent::__construct();
@@ -153,7 +153,7 @@ class ComposeTest extends TestCase
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends Compose {
+        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
             public function __construct($inputInterfaceMock, $outputInterfaceMock)
             {
                 parent::__construct();
@@ -192,7 +192,7 @@ class ComposeTest extends TestCase
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends Compose {
+        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
             public function __construct($inputInterfaceMock, $outputInterfaceMock)
             {
                 parent::__construct();
@@ -233,7 +233,7 @@ class ComposeTest extends TestCase
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends Compose {
+        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
             public function __construct($inputInterfaceMock, $outputInterfaceMock)
             {
                 parent::__construct();

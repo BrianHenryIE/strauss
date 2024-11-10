@@ -3,7 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Unit\Console;
 
 use BrianHenryIE\Strauss\Console\Application;
-use BrianHenryIE\Strauss\Console\Commands\Compose;
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;
 
 class ApplicationTest extends TestCase
@@ -22,7 +22,7 @@ class ApplicationTest extends TestCase
         $commands = $sut->all();
 
         $containsComposeCommand = array_reduce($commands, function ($carry, $item) {
-            return $carry || $item instanceof Compose;
+            return $carry || $item instanceof DependenciesCommand;
         }, false);
 
         self::assertTrue($containsComposeCommand);

@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Console\Commands\Compose;
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use Mockery;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -50,7 +50,7 @@ EOD;
 
         $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
-        $strauss = new Compose();
+        $strauss = new DependenciesCommand();
 
         assert(file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
 
@@ -93,7 +93,7 @@ EOD;
 
         $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
-        $strauss = new Compose();
+        $strauss = new DependenciesCommand();
 
         assert(file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
 
@@ -137,7 +137,7 @@ EOD;
 
         $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
-        $strauss = new Compose();
+        $strauss = new DependenciesCommand();
 
         assert(file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
 
@@ -181,7 +181,7 @@ EOD;
 
         $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
-        $strauss = new Compose();
+        $strauss = new DependenciesCommand();
 
         assert(file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
 
