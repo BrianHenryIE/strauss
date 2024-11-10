@@ -5,7 +5,7 @@
  * Those recorded are updated in a later step.
  */
 
-namespace BrianHenryIE\Strauss;
+namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;

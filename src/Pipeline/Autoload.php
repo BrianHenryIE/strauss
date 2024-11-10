@@ -5,7 +5,7 @@
  * @see \Composer\Autoload\ClassMapGenerator
  */
 
-namespace BrianHenryIE\Strauss;
+namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use Composer\Autoload\ClassMapGenerator;

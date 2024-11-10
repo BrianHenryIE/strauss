@@ -11,7 +11,7 @@ namespace BrianHenryIE\Strauss\Tests\Unit;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Prefixer;
+use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
@@ -24,7 +24,7 @@ use Symfony\Component\Console\Input\InputInterface;
 /**
  * Class ReplacerTest
  * @package BrianHenryIE\Strauss
- * @covers \BrianHenryIE\Strauss\Prefixer
+ * @covers \BrianHenryIE\Strauss\Pipeline\Prefixer
  */
 class PrefixerTest extends TestCase
 {

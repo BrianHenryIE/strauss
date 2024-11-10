@@ -14,7 +14,7 @@
  * ```
  */
 
-namespace BrianHenryIE\Strauss;
+namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;

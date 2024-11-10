@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\TestCase;
 /**
  * Class FileEnumeratorTest
  * @package BrianHenryIE\Strauss\Tests\Unit
- * @coversDefaultClass \BrianHenryIE\Strauss\FileEnumerator
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\FileEnumerator
  */
 class FileEnumeratorTest extends TestCase
 {

@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
-use BrianHenryIE\Strauss\Prefixer;
+use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
 use Composer\Factory;
 use Composer\IO\NullIO;

@@ -1,6 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss;
+namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Files\FileWithDependency;

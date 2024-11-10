@@ -2,20 +2,20 @@
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
-use BrianHenryIE\Strauss\Autoload;
-use BrianHenryIE\Strauss\ChangeEnumerator;
-use BrianHenryIE\Strauss\Cleanup;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Copier;
-use BrianHenryIE\Strauss\DependenciesEnumerator;
-use BrianHenryIE\Strauss\FileCopyScanner;
-use BrianHenryIE\Strauss\FileEnumerator;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\FileSymbolScanner;
-use BrianHenryIE\Strauss\Licenser;
-use BrianHenryIE\Strauss\Prefixer;
+use BrianHenryIE\Strauss\Pipeline\Autoload;
+use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
+use BrianHenryIE\Strauss\Pipeline\Cleanup;
+use BrianHenryIE\Strauss\Pipeline\Copier;
+use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
+use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
+use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
+use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
+use BrianHenryIE\Strauss\Pipeline\Licenser;
+use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
 use Psr\Log\LoggerAwareTrait;

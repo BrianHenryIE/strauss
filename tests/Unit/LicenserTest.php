@@ -8,7 +8,7 @@ namespace BrianHenryIE\Strauss\Tests\Unit;
 use ArrayIterator;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Licenser;
+use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\TestCase;
 use PHPUnit\Framework\Constraint\Callback;
 use Symfony\Component\Finder\Finder;
@@ -16,7 +16,7 @@ use Symfony\Component\Finder\Finder;
 /**
  * Class LicenserTest
  * @package BrianHenryIE\Strauss\Tests\Unit
- * @coversDefaultClass \BrianHenryIE\Strauss\Licenser
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Licenser
  */
 class LicenserTest extends TestCase
 {

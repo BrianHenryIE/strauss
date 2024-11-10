@@ -3,7 +3,7 @@
  * When the namespace being replaced is a substring of the prefix, the order of replacements
  * is important, otherwise the replacement is performed twice.
  *
- * @see \BrianHenryIE\Strauss\Prefixer::replaceInString()
+ * @see \BrianHenryIE\Strauss\Pipeline\Prefixer::replaceInString()
  * @see asort()
  *
  * @see https://core.trac.wordpress.org/ticket/42670

@@ -5,9 +5,9 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Copier;
-use BrianHenryIE\Strauss\FileCopyScanner;
-use BrianHenryIE\Strauss\FileEnumerator;
+use BrianHenryIE\Strauss\Pipeline\Copier;
+use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
+use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use stdClass;
 
