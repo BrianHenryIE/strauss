@@ -97,8 +97,6 @@ class FileCopyScanner
     {
         $realpath = realpath($file->getSourcePath());
 
-        return ! $realpath
-            ? true
-            : ! str_starts_with($realpath, $this->workingDir);
+        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
     }
 }
