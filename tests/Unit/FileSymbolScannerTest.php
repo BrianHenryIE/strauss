@@ -9,7 +9,7 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\TestCase;
 
-class FileScannerTest extends TestCase
+class FileSymbolScannerTest extends TestCase
 {
 
     // PREG_BACKTRACK_LIMIT_ERROR
