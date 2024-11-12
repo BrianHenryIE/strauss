@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use Exception;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -69,24 +70,6 @@ class Prefixer
     {
 
         foreach ($files as $file) {
-//          if(!$file->isDoPrefix()) {
-//              continue;
-//          }
-
-//          $package = $file->getDependency()
-
-            // Skip excluded namespaces.
-//            if (in_array($package->getPackageName(), $this->excludePackageNamesFromPrefixing)) {
-//                continue;
-//            }
-//
-//            // Skip files whose filepath matches an excluded pattern.
-//            foreach ($this->excludeFilePatternsFromPrefixing as $excludePattern) {
-//                if (1 === preg_match($excludePattern, $targetRelativeFilepath)) {
-//                    continue 2;
-//                }
-//            }
-
             $targetRelativeFilepathFromProject = $file->getAbsoluteTargetPath($this->workingDir);
 
             if (! $this->filesystem->fileExists($targetRelativeFilepathFromProject)) {
@@ -144,12 +127,9 @@ class Prefixer
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
         $classes = $discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix());
         $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
+        $functions = $discoveredSymbols->getDiscoveredFunctions();
 
         foreach ($classes as $originalClassname) {
-            if ('ReturnTypeWillChange' === $originalClassname) {
-                continue;
-            }
-
             $classmapPrefix = $this->classmapPrefix;
 
             $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
@@ -165,6 +145,10 @@ class Prefixer
 
         if (!is_null($this->constantsPrefix)) {
             $contents = $this->replaceConstants($contents, $constants, $this->constantsPrefix);
+        }
+
+        foreach ($functions as $functionSymbol) {
+            $contents = $this->replaceFunctions($contents, $functionSymbol);
         }
 
         return $contents;
@@ -413,6 +397,40 @@ class Prefixer
     protected function replaceConstant(string $contents, string $originalConstant, string $replacementConstant): string
     {
         return str_replace($originalConstant, $replacementConstant, $contents);
+    }
+
+    protected function replaceFunctions(string $contents, FunctionSymbol $functionSymbol): string
+    {
+        $originalFunctionString = $functionSymbol->getOriginalSymbol();
+        $replacementFunctionString = $functionSymbol->getReplacement();
+
+        if ($originalFunctionString === $replacementFunctionString) {
+            return $contents;
+        }
+
+        $pattern = '/
+			(\s*function\s+)('.preg_quote($originalFunctionString, '/').')(\s*\() # function declaration
+			|
+			([\'"])('.preg_quote($originalFunctionString, '/').')([\'"]) # immediately surrounded by quotes
+			|
+			([;\s]+)('.preg_quote($originalFunctionString, '/').')(\s*\() # function call
+			/x'; // x: ignore whitespace in regex.
+
+        $contents = preg_replace_callback(
+            $pattern,
+            function ($matches) use ($originalFunctionString, $replacementFunctionString) {
+                foreach ($matches as $index => $match) {
+                    if ($match == $originalFunctionString) {
+                        $matches[$index] = $replacementFunctionString;
+                    }
+                }
+                unset($matches[0]);
+                return implode('', $matches);
+            },
+            $contents
+        );
+
+        return $contents;
     }
 
     /**
