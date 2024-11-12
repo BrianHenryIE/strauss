@@ -886,4 +886,47 @@ EOD;
 
         self::assertArrayHasKey('collect', $discoveredSymbols->getDiscoveredFunctions());
     }
+
+    public function testDoesNotIncludeBuiltInPhpFunctions(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+// Polyfill
+function mb_convert_case() {
+	return 'This should not be recorded';
+}
+// Polyfill
+function str_starts_with() {
+	return 'This should not be recorded';
+}
+
+function lowerFunction() {
+	return 'This should be recorded';
+}
+EOD;
+
+        $file = \Mockery::mock(File::class);
+        $file->expects('addDiscoveredSymbol')->once();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $fileScanner = new FileSymbolScanner($config);
+
+        $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getContents')->andReturn($contents);
+
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+
+        self::assertArrayNotHasKey('str_starts_with', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayNotHasKey('mb_convert_case', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayHasKey('lowerFunction', $discoveredSymbols->getDiscoveredFunctions());
+    }
 }
