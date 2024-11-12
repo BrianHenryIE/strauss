@@ -62,11 +62,5 @@
     },
     "replace":{
         "coenjacobs/mozart": "*"
-    },
-    "repositories": {
-        "brianhenryie/php-diff-test": {
-            "type": "git",
-            "url": "https://github.com/brianhenryie/php-diff-test"
-        }
     }
 }
