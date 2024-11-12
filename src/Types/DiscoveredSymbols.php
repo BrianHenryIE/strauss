@@ -53,7 +53,8 @@ class DiscoveredSymbols
         return array_merge(
             array_values($this->getNamespaces()),
             array_values($this->getClasses()),
-            array_values($this->getConstants())
+            array_values($this->getConstants()),
+            array_values($this->getDiscoveredFunctions()),
         );
     }
 
