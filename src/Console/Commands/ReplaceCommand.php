@@ -199,7 +199,7 @@ class ReplaceCommand extends Command
             $phpFiles->getFiles()
         );
 
-        // TODO: Warn when a file that was specified is not found
+        // TODO: Warn when a file that was specified is not found (during config validation).
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
         $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesRelativePaths);
@@ -221,8 +221,8 @@ class ReplaceCommand extends Command
             $author = get_current_user();
         }
 
+        // TODO: Update to use DiscoveredFiles
         $dependencies = $this->flatDependencyTree;
-
         $licenser = new Licenser($config, $this->workingDir, $dependencies, $author);
 
         $licenser->copyLicenses();
