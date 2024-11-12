@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 
 class ChangeEnumerator
@@ -73,7 +74,6 @@ class ChangeEnumerator
 
                 // `namespace_replacement_patterns` should be ordered by priority.
                 foreach ($namespaceReplacementPatterns as $namespaceReplacementPattern => $replacement) {
-
                     $prefixed = preg_replace(
                         $namespaceReplacementPattern,
                         $replacement,
@@ -94,6 +94,16 @@ class ChangeEnumerator
                 }
 
                 $symbol->setReplacement($this->config->getClassmapPrefix() . $symbol->getOriginalSymbol());
+            }
+
+            if ($symbol instanceof FunctionSymbol) {
+                // TODO: Add its own config option.
+                $functionPrefix = strtolower($this->config->getClassmapPrefix());
+                if (str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
+                    continue;
+                }
+
+                $symbol->setReplacement($functionPrefix . $symbol->getOriginalSymbol());
             }
         }
     }
