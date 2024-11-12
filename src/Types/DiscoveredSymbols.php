@@ -7,16 +7,16 @@ class DiscoveredSymbols
     /**
      * All discovered symbols, grouped by type, indexed by original name.
      *
-     * @var array{'BrianHenryIE\\Strauss\\Types\\NamespaceSymbol':array<string,NamespaceSymbol>, 'BrianHenryIE\\Strauss\\Types\\ConstantSymbol':array<string,ConstantSymbol>, 'BrianHenryIE\\Strauss\\Types\\ClassSymbol':array<string,ClassSymbol>}
+     * @var array{T_NAME_QUALIFIED:array<string,NamespaceSymbol>, T_CONST:array<string,ConstantSymbol>, T_CLASS:array<string,ClassSymbol>}
      */
     protected array $types = [];
 
     public function __construct()
     {
         $this->types = [
-            ClassSymbol::class => [],
-            ConstantSymbol::class => [],
-            NamespaceSymbol::class => [],
+            T_CLASS => [],
+            T_CONST => [],
+            T_NAME_QUALIFIED => [],
         ];
     }
 
@@ -25,7 +25,20 @@ class DiscoveredSymbols
      */
     public function add(DiscoveredSymbol $symbol): void
     {
-        $this->types[get_class($symbol)][$symbol->getOriginalSymbol()] = $symbol;
+        switch (get_class($symbol)) {
+            case NamespaceSymbol::class:
+                $type = T_NAME_QUALIFIED;
+                break;
+            case ConstantSymbol::class:
+                $type = T_CONST;
+                break;
+            case ClassSymbol::class:
+                $type = T_CLASS;
+                break;
+            default:
+                throw new \InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
+        }
+        $this->types[$type][$symbol->getOriginalSymbol()] = $symbol;
     }
 
     /**
@@ -45,7 +58,7 @@ class DiscoveredSymbols
      */
     public function getConstants()
     {
-        return $this->types[ConstantSymbol::class];
+        return $this->types[T_CONST];
     }
 
     /**
@@ -53,7 +66,7 @@ class DiscoveredSymbols
      */
     public function getNamespaces(): array
     {
-        return $this->types[NamespaceSymbol::class];
+        return $this->types[T_NAME_QUALIFIED];
     }
 
     /**
@@ -61,7 +74,7 @@ class DiscoveredSymbols
      */
     public function getClasses(): array
     {
-        return $this->types[ClassSymbol::class];
+        return $this->types[T_CLASS];
     }
 
     /**
