@@ -13,7 +13,10 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use PhpParser\ParserFactory;
+use PHPStan\Node\ClassMethod;
 
 class FileSymbolScanner
 {
@@ -69,6 +72,7 @@ class FileSymbolScanner
         /x'; //  # x: ignore whitespace in regex.
         if (1 === preg_match($singleNamespacePattern, $contents, $matches)) {
             $this->addDiscoveredNamespaceChange($matches['namespace'], $file);
+
             return;
         }
 
@@ -83,7 +87,6 @@ class FileSymbolScanner
 
         // TODO: Is the ";" in this still correct since it's being taken care of in the regex just above?
         // Looks like with the preceding regex, it will never match.
-
 
         preg_replace_callback(
             '
@@ -124,11 +127,23 @@ class FileSymbolScanner
             },
             $contents
         );
+
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $ast = $parser->parse($contents);
+
+        // Since we're only interested in global functions, they'll be at the top level.
+        // TODO: handle functions inside the declared global namespace `namespace { ... }`.
+        foreach ((array) $ast as $node) {
+            if ($node instanceof \PhpParser\Node\Stmt\Function_) {
+                $functionSymbol = new FunctionSymbol($node->name->name, $file);
+                $this->discoveredSymbols->add($functionSymbol);
+            }
+        }
     }
 
     protected function addDiscoveredClassChange(string $classname, File $file): void
     {
-        // This should be inclued but marked not to prefix.
+        // TODO: This should be included but marked not to prefix.
         if (in_array($classname, $this->getBuiltIns())) {
             return;
         }

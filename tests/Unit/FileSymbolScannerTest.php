@@ -4,6 +4,7 @@ namespace BrianHenryIE\Strauss\Tests\Unit;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
@@ -792,5 +793,50 @@ EOD;
 
         self::assertArrayNotHasKey('WPGraphQL', $discoveredSymbols->getDiscoveredNamespaces());
         self::assertContains('WPGraphQL', $discoveredSymbols->getDiscoveredClasses());
+    }
+
+    public function testDiscoversGlobalFunctions(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+function topFunction() {
+	return 'This should be recorded';
+}
+
+class MyClass {
+    function aMethod() {
+        // This should not be recorded
+	}
+}
+
+function lowerFunction() {
+	return 'This should be recorded';
+}
+EOD;
+
+        $file = \Mockery::mock(File::class);
+        $file->expects('addDiscoveredSymbol')->once();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $fileScanner = new FileSymbolScanner($config);
+
+        $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getContents')->andReturn($contents);
+
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+
+        self::assertArrayHasKey('topFunction', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayNotHasKey('aMethod', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayHasKey('lowerFunction', $discoveredSymbols->getDiscoveredFunctions());
     }
 }
