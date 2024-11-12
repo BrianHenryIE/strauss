@@ -49,40 +49,9 @@ EOD;
 
         exec('composer install');
 
-//        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
-//        $input = $this->createMock(InputInterface::class);
-//        $config = $projectComposerPackage->getStraussConfig();
-//
-//        $dependencies = array_map(function ($element) {
-//            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
-//            return ComposerPackage::fromFile($dir);
-//        }, $projectComposerPackage->getRequiresNames());
-//
         $workingDir = $this->testsWorkingDir;
         $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
         $absoluteTargetDir = $workingDir . $relativeTargetDir;
-//
-////        $config = $this->createStub(StraussConfig::class);
-////        $config->method('getTargetDirectory')->willReturn('vendor-prefixed' . DIRECTORY_SEPARATOR);
-//
-//        $fileEnumerator = new FileEnumerator($workingDir, $config);
-//        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
-//
-//        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
-//
-//        $copier = new Copier($files, $workingDir, $config);
-//        $copier->prepareTarget();
-//        $copier->copy();
-//
-//        $fileScanner = new FileScanner($config);
-//        $discoveredSymbols = $fileScanner->findInFiles($files);
-//
-//        $changeEnumerator = new ChangeEnumerator($config, $workingDir);
-//        $changeEnumerator->determineReplacements($discoveredSymbols);
-//
-//        $replacer = new Prefixer($config, $workingDir);
-//
-//        $replacer->replaceInFiles($discoveredSymbols, $files->getFiles());
 
         $this->runStrauss();
 
@@ -90,7 +59,6 @@ EOD;
 
         self::assertStringContainsString('use BrianHenryIE\Strauss\Google\AccessToken\Revoke;', $updatedFile);
     }
-
 
     public function testReplaceClass()
     {
@@ -124,43 +92,12 @@ EOD;
 
         $result = $mozartCompose->run($inputInterfaceMock, $outputInterfaceMock);
 
-
-//        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
-//        $config = $projectComposerPackage->getStraussConfig();
-//
-//        $dependencies = array_map(function ($element) {
-//            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
-//            return ComposerPackage::fromFile($dir);
-//        }, $projectComposerPackage->getRequiresNames());
-//
-//        $workingDir = $this->testsWorkingDir;
-//        $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
-//        $absoluteTargetDir = $workingDir . $relativeTargetDir;
-//
-//        $fileEnumerator = new FileEnumerator($dependencies, $workingDir);
-//        $fileEnumerator->compileFileList();
-//        $fileList = $fileEnumerator->getAllFilesAndDependencyList();
-//        $phpFileList = $fileEnumerator->getPhpFilesAndDependencyList();
-//
-//        $copier = new Copier($fileList, $workingDir, $relativeTargetDir);
-//        $copier->prepareTarget();
-//        $copier->copy();
-//
-//        $fileScanner = new FileScanner();
-//        $fileScanner->findInFiles($absoluteTargetDir, $phpFileList);
-//        $namespaces = $fileScanner->getDiscoveredNamespaces();
-//        $classes = $fileScanner->getDiscoveredClasses();
-//
-//        $replacer = new Replacer($config, $workingDir);
-//
-//        $replacer->replaceInFiles($namespaces, $classes, $phpFileList);
-
         $updatedFile = file_get_contents($this->testsWorkingDir .'vendor-prefixed/' . 'setasign/fpdf/fpdf.php');
 
         self::assertStringContainsString('class BrianHenryIE_Strauss_FPDF', $updatedFile);
     }
 
-    public function testSimpleRepacementPatterns(): void
+    public function testSimpleReplacementPatterns(): void
     {
 
         $composerJsonString = <<<'EOD'

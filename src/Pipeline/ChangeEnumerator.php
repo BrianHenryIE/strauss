@@ -1,4 +1,7 @@
 <?php
+/**
+ * Determine the replacements to be made to the discovered symbols.
+ */
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
@@ -70,7 +73,6 @@ class ChangeEnumerator
 
                 // `namespace_replacement_patterns` should be ordered by priority.
                 foreach ($namespaceReplacementPatterns as $namespaceReplacementPattern => $replacement) {
-                    $replacement = str_replace('\\', '\\\\', $replacement);
 
                     $prefixed = preg_replace(
                         $namespaceReplacementPattern,
