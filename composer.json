@@ -34,7 +34,6 @@
         }
     },
     "require-dev": {
-        "brianhenryie/php-diff-test": "dev-master",
         "clue/phar-composer": "^1.2",
         "ext-json": "*",
         "jaschilz/php-coverage-badger": "^2.0",
