@@ -10,6 +10,9 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\TestCase;
 
+/**
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
+ */
 class FileSymbolScannerTest extends TestCase
 {
 
@@ -838,5 +841,49 @@ EOD;
         self::assertArrayHasKey('topFunction', $discoveredSymbols->getDiscoveredFunctions());
         self::assertArrayNotHasKey('aMethod', $discoveredSymbols->getDiscoveredFunctions());
         self::assertArrayHasKey('lowerFunction', $discoveredSymbols->getDiscoveredFunctions());
+    }
+
+    /**
+     * @covers ::find
+     */
+    public function testDiscoversGlobalFunctionInFunctionExists(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+if (! function_exists('collect')) {
+    /**
+     * Create a collection from the given value.
+     *
+     * @param  mixed  $value
+     * @return \Custom\Prefix\Illuminate\Support\Collection
+     */
+    function collect($value = null)
+    {
+        return new Collection($value);
+    }
+} 
+EOD;
+
+        $file = \Mockery::mock(File::class);
+        $file->expects('addDiscoveredSymbol')->once();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $fileScanner = new FileSymbolScanner($config);
+
+        $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getContents')->andReturn($contents);
+
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+
+        self::assertArrayHasKey('collect', $discoveredSymbols->getDiscoveredFunctions());
     }
 }

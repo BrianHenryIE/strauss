@@ -15,6 +15,9 @@ use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use PhpParser\Node;
+use PhpParser\NodeAbstract;
+use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
 use PHPStan\Node\ClassMethod;
 
@@ -131,13 +134,34 @@ class FileSymbolScanner
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
         $ast = $parser->parse($contents);
 
-        // Since we're only interested in global functions, they'll be at the top level.
-        // TODO: handle functions inside the declared global namespace `namespace { ... }`.
-        foreach ((array) $ast as $node) {
-            if ($node instanceof \PhpParser\Node\Stmt\Function_) {
-                $functionSymbol = new FunctionSymbol($node->name->name, $file);
-                $this->discoveredSymbols->add($functionSymbol);
+        $traverser = new NodeTraverser();
+        $visitor = new class extends \PhpParser\NodeVisitorAbstract {
+            protected array $functions = [];
+            public function enterNode(Node $node)
+            {
+                if ($node instanceof Node\Stmt\Function_) {
+                    $this->functions[] = $node->name->name;
+                }
+                return $node;
             }
+
+            /**
+             * @return string[] Function names.
+             */
+            public function getFunctions(): array
+            {
+                return $this->functions;
+            }
+        };
+        $traverser->addVisitor($visitor);
+
+        /** @var Node $node */
+        foreach ((array) $ast as $node) {
+            $traverser->traverse([ $node ]);
+        }
+        foreach ($visitor->getFunctions() as $functionName) {
+            $functionSymbol = new FunctionSymbol($functionName, $file);
+            $this->discoveredSymbols->add($functionSymbol);
         }
     }
 
