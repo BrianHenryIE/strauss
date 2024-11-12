@@ -21,6 +21,7 @@ if (!isset($builtins[$currentPhpVersion])) {
         'classes' => [],
         'interfaces' => [],
         'traits' => [],
+        'functions' => [],
     ];
 }
 
@@ -48,6 +49,14 @@ $traits = array_filter(
     }
 );
 
+$functions = array_filter(
+    get_defined_functions()['internal'],
+    function ($functionName): bool {
+        $reflector = new \ReflectionFunction($functionName);
+        return empty($reflector->getFileName());
+    }
+);
+
 
 // Remove classes, interfaces, traits that are built-in in this PHP version from future versions.
 foreach ($builtins as $phpVersion => $builtinsArray) {
@@ -55,6 +64,7 @@ foreach ($builtins as $phpVersion => $builtinsArray) {
         $builtins[$phpVersion]['classes'] = array_diff($builtinsArray['classes'], $classes);
         $builtins[$phpVersion]['interfaces'] = array_diff($builtinsArray['interfaces'], $interfaces);
         $builtins[$phpVersion]['traits'] = array_diff($builtinsArray['traits'], $traits);
+        $builtins[$phpVersion]['functions'] = array_diff($builtinsArray['functions'], $functions);
     }
 }
 
@@ -64,17 +74,20 @@ foreach ($builtins as $phpVersion => $builtinsArray) {
         $classes = array_diff($classes, $builtinsArray['classes']);
         $interfaces = array_diff($interfaces, $builtinsArray['interfaces']);
         $traits = array_diff($traits, $builtinsArray['traits']);
+        $functions = array_diff($functions, $builtinsArray['functions']);
     }
 }
 
 $builtins[$currentPhpVersion]['classes'] = array_unique(array_merge($builtins[$currentPhpVersion]['classes'], $classes));
 $builtins[$currentPhpVersion]['interfaces'] = array_unique(array_merge($builtins[$currentPhpVersion]['interfaces'], $interfaces));
 $builtins[$currentPhpVersion]['traits'] = array_unique(array_merge($builtins[$currentPhpVersion]['traits'], $traits));
+$builtins[$currentPhpVersion]['functions'] = array_unique(array_merge($builtins[$currentPhpVersion]['functions'], $functions));
 
 foreach ($builtins as $phpVersion => $builtinsArray) {
     asort($builtins[$currentPhpVersion]['classes']);
     asort($builtins[$currentPhpVersion]['interfaces']);
     asort($builtins[$currentPhpVersion]['traits']);
+    asort($builtins[$currentPhpVersion]['functions']);
 }
 
 
