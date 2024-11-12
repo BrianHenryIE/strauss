@@ -32,6 +32,10 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: fileinfo
 
+      - name: Setup problem matcher for PHPUnit
+        run: |
+          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
       - name: Debugging
         run: |
           php --version
@@ -50,9 +54,6 @@ jobs:
 
       - name: Run tests with strauss.phar
         run: vendor/bin/phpunit
-
-        # TODO: get GitHub Actions annotations working again.
-#        run: vendor/bin/phpunit --printer mheap\\GithubActionsReporter\\Printer
   lint:
     runs-on: ubuntu-latest
     name: Lint project files
