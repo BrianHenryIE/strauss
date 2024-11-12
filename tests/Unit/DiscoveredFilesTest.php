@@ -31,7 +31,7 @@ class DiscoveredFilesTest extends TestCase
         $discovered_files = new DiscoveredFiles();
 
         $file = Mockery::mock(File::class);
-        $file->shouldReceive('getTargetRelativePath')->andReturn('path/to/file1.php');
+        $file->shouldReceive('getSourcePath')->andReturn('/full/path/to/file1.php');
 
         // Act.
 
@@ -40,7 +40,7 @@ class DiscoveredFilesTest extends TestCase
         // Assert.
 
         $this->assertEquals(
-            ['path/to/file1.php' => $file],
+            ['/full/path/to/file1.php' => $file],
             $discovered_files->getFiles()
         );
     }
@@ -60,10 +60,10 @@ class DiscoveredFilesTest extends TestCase
         $discovered_files = new DiscoveredFiles();
 
         $file1 = Mockery::mock(File::class);
-        $file1->shouldReceive('getTargetRelativePath')->andReturn('path/to/file1.php');
+        $file1->shouldReceive('getSourcePath')->andReturn('/full/path/to/file1.php');
 
         $file2 = Mockery::mock(File::class);
-        $file2->shouldReceive('getTargetRelativePath')->andReturn('path/to/file2.php');
+        $file2->shouldReceive('getSourcePath')->andReturn('/full/path/to/file2.php');
 
         // Act.
 
@@ -74,8 +74,8 @@ class DiscoveredFilesTest extends TestCase
 
         $this->assertEquals(
             [
-                'path/to/file1.php' => $file1,
-                'path/to/file2.php' => $file2,
+                '/full/path/to/file1.php' => $file1,
+                '/full/path/to/file2.php' => $file2,
             ],
             $discovered_files->getFiles()
         );
@@ -96,10 +96,10 @@ class DiscoveredFilesTest extends TestCase
         $discovered_files = new DiscoveredFiles();
 
         $file1 = Mockery::mock(File::class);
-        $file1->shouldReceive('getTargetRelativePath')->andReturn('path/to/file1.php');
+        $file1->shouldReceive('getSourcePath')->andReturn('/full/path/to/file1.php');
 
         $file2 = Mockery::mock(File::class);
-        $file2->shouldReceive('getTargetRelativePath')->andReturn('path/to/file1.php');
+        $file2->shouldReceive('getSourcePath')->andReturn('/full/path/to/file1.php');
 
         // Act.
 
@@ -109,7 +109,7 @@ class DiscoveredFilesTest extends TestCase
         // Assert.
 
         $this->assertEquals(
-            ['path/to/file1.php' => $file2],
+            ['/full/path/to/file1.php' => $file2],
             $discovered_files->getFiles()
         );
     }

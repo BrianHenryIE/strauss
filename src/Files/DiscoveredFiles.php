@@ -6,7 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 
 class DiscoveredFiles
 {
-    /** @var array<string,File> */
+    /** @var array<string,FileBase> */
     protected array $files = [];
 
     public function add(FileBase $file): void
@@ -22,6 +22,11 @@ class DiscoveredFiles
         return $this->files;
     }
 
+    /**
+     * Fetch/check if a file exists in the discovered files.
+     *
+     * @param string $sourceAbsolutePath Full path to the file.
+     */
     public function getFile(string $sourceAbsolutePath): ?FileBase
     {
         return $this->files[$sourceAbsolutePath] ?? null;
