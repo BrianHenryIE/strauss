@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.20.0 November 2024
+
+* Fix: `Generic<\namespaced\class-type>` not prefixed
+* Add `strauss replace` command (e.g. if you fork a project and want to change its namespace)
+
 ## 0.19.5 October 2024
 
 * Fix: `use GlobalClass as Alias;` not prefixed
