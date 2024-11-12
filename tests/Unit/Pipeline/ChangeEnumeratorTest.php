@@ -14,9 +14,9 @@ use Mockery;
  */
 class ChangeEnumeratorTest extends TestCase
 {
-	/**
-	 * @covers ::determineReplacements
-	 */
+    /**
+     * @covers ::determineReplacements
+     */
     public function testFunctionReplacement(): void
     {
         $config = Mockery::mock(\BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface::class);
