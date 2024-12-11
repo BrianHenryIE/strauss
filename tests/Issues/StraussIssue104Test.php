@@ -42,5 +42,9 @@ EOD;
         $result = substr(sprintf('%o', fileperms($this->testsWorkingDir . '/vendor-prefixed')), -4);
 
         self::assertEquals('0755', $result);
+
+		$subfolderResult = substr(sprintf('%o', fileperms($this->testsWorkingDir . '/vendor-prefixed/psr')), -4);
+
+	    self::assertEquals('0755', $subfolderResult);
     }
 }
