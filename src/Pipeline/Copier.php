@@ -49,7 +49,9 @@ class Copier
 
         $this->absoluteTargetDir = $workingDir . $config->getTargetDirectory();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/'));
+        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/'), [
+            'directory_visibility' => 'public',
+        ]);
     }
 
     /**
@@ -62,7 +64,6 @@ class Copier
     {
         if (! is_dir($this->absoluteTargetDir)) {
             $this->filesystem->createDirectory($this->absoluteTargetDir);
-            $this->filesystem->setVisibility($this->absoluteTargetDir, 'public');
         } else {
             foreach ($this->files->getFiles() as $file) {
                 if (!$file->isDoCopy()) {
