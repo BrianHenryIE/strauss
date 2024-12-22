@@ -13,9 +13,9 @@ Have you ever activated a WordPress plugin that has a conflict with another beca
 ## Table of Contents
 
 * [Installation](#installation)
-    * [As a `.phar` file](#as-a-phar-file-within-composerjson-recommended) (recommended)
+    * [As a `.phar` file](#as-a-phar-file-recommended) (recommended)
     * [As a dev dependency via composer](#as-a-dev-dependency-via-composer-not-recommended)  (not recommended)
-    * [Adding `composer dump-autoload`](#adding-composer-dump-autoload)
+    * [Edit `composer.json` scripts](#edit-composerjson-scripts)
 * [Usage](#usage)
 * [Configuration](#configuration)
 * [Autoloading](#autoloading)
