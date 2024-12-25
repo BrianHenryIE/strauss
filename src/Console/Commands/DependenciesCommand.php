@@ -29,6 +29,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class DependenciesCommand extends Command
 {
     use LoggerAwareTrait;
+    // Because DependenciesCommand is the default command, we add the PlainVersionTrait here.
+    use PlainVersionTrait {
+        PlainVersionTrait::configure as plainVersionConfigure;
+        PlainVersionTrait::execute as plainVersionExecute;
+    }
 
     /** @var string */
     protected string $workingDir;
@@ -77,6 +82,8 @@ class DependenciesCommand extends Command
             InputArgument::OPTIONAL,
             'Should original packages be deleted after copying? true|false'
         );
+
+        $this->plainVersionConfigure();
     }
 
     /**
@@ -98,6 +105,12 @@ class DependenciesCommand extends Command
 
         $workingDir       = getcwd() . DIRECTORY_SEPARATOR;
         $this->workingDir = $workingDir;
+
+        $exit_code = $this->plainVersionExecute($input, $output);
+
+        if (isset($exit_code)) {
+            return $exit_code;
+        }
 
         try {
             $this->loadProjectComposerPackage();
