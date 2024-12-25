@@ -248,6 +248,7 @@ I don't have a strong opinion on these. I began using Mozart because it was easy
 
 ## Breaking Changes
 
+* v0.21.0 – will prefix global functions
 * v0.16.0 – will no longer prefix PHP built-in classes seen in polyfill packages
 * v0.14.0 – `psr/*` packages no longer excluded by default
 * v0.12.0 – default output `target_directory` changes from `strauss` to `vendor-prefixed`
