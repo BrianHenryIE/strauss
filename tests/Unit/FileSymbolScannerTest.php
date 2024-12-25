@@ -929,4 +929,55 @@ EOD;
         self::assertArrayNotHasKey('mb_convert_case', $discoveredSymbols->getDiscoveredFunctions());
         self::assertArrayHasKey('lowerFunction', $discoveredSymbols->getDiscoveredFunctions());
     }
+
+    /**
+     * Twig has global functions in the second namespace in its file.
+     *
+     * We were accidentally matching _everything_ using `[\s\S]*` instead of blank space with `[\s\n]*`.
+     *
+     * @covers FileSymbolScanner::find()
+     *
+     * @see https://github.com/twigphp/Twig/blob/v3.8.0/src/Extension/CoreExtension.php
+     */
+    public function test_finds_functions_in_second_namespace(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Twig\Extension {
+	final class CoreExtension extends AbstractExtension {
+		// Whatever.
+	}
+}
+
+namespace {
+	function twig_cycle($values, $position)
+	{
+		// Also whatever.
+	}
+}
+EOD;
+
+        $file = \Mockery::mock(File::class);
+        $file->expects('addDiscoveredSymbol')->once();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $fileScanner = new FileSymbolScanner($config);
+
+        $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getContents')->andReturn($contents);
+
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+
+        self::assertArrayHasKey('twig_cycle', $discoveredSymbols->getDiscoveredFunctions());
+    }
 }

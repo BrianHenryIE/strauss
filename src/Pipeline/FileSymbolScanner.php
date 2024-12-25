@@ -71,7 +71,7 @@ class FileSymbolScanner
         $singleNamespacePattern = '/
             (<?php|\r\n|\n)                                              # A new line or the beginning of the file.
             \s*                                                          # Allow whitespace before
-            namespace\s+(?<namespace>[0-9A-Za-z_\x7f-\xff\\\\]+)[\s\S]*; # Match a single namespace in the file.
+            namespace\s+(?<namespace>[0-9A-Za-z_\x7f-\xff\\\\]+)[\s\n]*; # Match a single namespace in the file.
         /x'; //  # x: ignore whitespace in regex.
         if (1 === preg_match($singleNamespacePattern, $contents, $matches)) {
             $this->addDiscoveredNamespaceChange($matches['namespace'], $file);
