@@ -1,4 +1,7 @@
 <?php
+/**
+ * @see \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
+ */
 
 namespace BrianHenryIE\Strauss\Types;
 
