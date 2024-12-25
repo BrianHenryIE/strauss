@@ -16,6 +16,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use League\Flysystem\Config;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
@@ -49,7 +50,9 @@ class Copier
 
         $this->absoluteTargetDir = $workingDir . $config->getTargetDirectory();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/'));
+        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/'), [
+            Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+        ]);
     }
 
     /**
@@ -62,7 +65,6 @@ class Copier
     {
         if (! is_dir($this->absoluteTargetDir)) {
             $this->filesystem->createDirectory($this->absoluteTargetDir);
-            $this->filesystem->setVisibility($this->absoluteTargetDir, 'public');
         } else {
             foreach ($this->files->getFiles() as $file) {
                 if (!$file->isDoCopy()) {

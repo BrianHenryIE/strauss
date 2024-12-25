@@ -198,6 +198,7 @@ class Prefixer
             |\[\s*                         # In a square array 
             |\?\s*                         # In a ternary operator
             |:\s*                          # In a ternary operator
+            |<                             # In a generic type declaration
             |\(string\)\s*                 # casting a namespaced class to a string
             )
             @?                             # Maybe preceeded by the @ symbol for error suppression
@@ -213,6 +214,7 @@ class Prefixer
             |'                             # or single quote         
             |:                             # or a colon to access a static
             |\\\\{
+            |>                             # In a generic type declaration (end)
             )                            
             /Ux";                          // U: Non-greedy matching, x: ignore whitespace in pattern.
 

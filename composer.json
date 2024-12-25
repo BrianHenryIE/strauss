@@ -58,6 +58,7 @@
             "phpunit"
         ],
         "test-coverage": [
+            "Composer\\Config::disableProcessTimeout",
             "phpunit --coverage-text --coverage-php tests/reports/phpunit.cov"
         ]
     },
