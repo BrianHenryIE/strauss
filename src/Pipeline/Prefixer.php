@@ -411,6 +411,8 @@ class Prefixer
         }
 
         $pattern = '/
+			(\s*use\s+function\s+)('.preg_quote($originalFunctionString, '/').')(\s+as|\s+;) # use function as
+			|
 			(\s*function\s+)('.preg_quote($originalFunctionString, '/').')(\s*\() # function declaration
 			|
 			([\'"])('.preg_quote($originalFunctionString, '/').')([\'"]) # immediately surrounded by quotes
