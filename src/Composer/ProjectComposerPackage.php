@@ -22,7 +22,7 @@ class ProjectComposerPackage extends ComposerPackage
     public function __construct(string $absolutePath, ?array $overrideAutoload = null)
     {
         $absolutePathFile = is_dir($absolutePath)
-            ? $absolutePath . DIRECTORY_SEPARATOR . 'composer.json'
+            ? rtrim($absolutePath, DIRECTORY_SEPARATOR) . '/composer.json'
             : $absolutePath;
         unset($absolutePath);
 
@@ -37,9 +37,8 @@ class ProjectComposerPackage extends ComposerPackage
             $this->author = $authors[0]['name'];
         }
 
-        // In rare cases, the vendor directory will not be a single level of directory. File an issue.
         $this->vendorDirectory = is_string($this->composer->getConfig()->get('vendor-dir'))
-            ? basename($this->composer->getConfig()->get('vendor-dir'))
+            ? ltrim(str_replace(dirname($absolutePathFile), '', $this->composer->getConfig()->get('vendor-dir')), DIRECTORY_SEPARATOR)
             :  'vendor';
     }
 

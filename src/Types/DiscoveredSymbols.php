@@ -1,4 +1,7 @@
 <?php
+/**
+ * @see \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
+ */
 
 namespace BrianHenryIE\Strauss\Types;
 
@@ -16,7 +19,8 @@ class DiscoveredSymbols
         $this->types = [
             T_CLASS => [],
             T_CONST => [],
-            T_NAME_QUALIFIED => [],
+            T_NAMESPACE => [],
+            T_FUNCTION => [],
         ];
     }
 
@@ -27,13 +31,16 @@ class DiscoveredSymbols
     {
         switch (get_class($symbol)) {
             case NamespaceSymbol::class:
-                $type = T_NAME_QUALIFIED;
+                $type = T_NAMESPACE;
                 break;
             case ConstantSymbol::class:
                 $type = T_CONST;
                 break;
             case ClassSymbol::class:
                 $type = T_CLASS;
+                break;
+            case FunctionSymbol::class:
+                $type = T_FUNCTION;
                 break;
             default:
                 throw new \InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
@@ -49,7 +56,8 @@ class DiscoveredSymbols
         return array_merge(
             array_values($this->getNamespaces()),
             array_values($this->getClasses()),
-            array_values($this->getConstants())
+            array_values($this->getConstants()),
+            array_values($this->getDiscoveredFunctions()),
         );
     }
 
@@ -66,7 +74,7 @@ class DiscoveredSymbols
      */
     public function getNamespaces(): array
     {
-        return $this->types[T_NAME_QUALIFIED];
+        return $this->types[T_NAMESPACE];
     }
 
     /**
@@ -100,6 +108,8 @@ class DiscoveredSymbols
     }
 
     /**
+     * TODO: should be called getGlobalClasses?
+     *
      * @return string[]
      */
     public function getDiscoveredClasses(?string $classmapPrefix = ''): array
@@ -130,5 +140,10 @@ class DiscoveredSymbols
         );
 
         return $discoveredConstants;
+    }
+
+    public function getDiscoveredFunctions()
+    {
+        return $this->types[T_FUNCTION];
     }
 }

@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.21.0 January 2025
+
+* Add: prefix global functions
+
+## 0.20.1 December 2024
+
+* Fix: `vendor-prefixed` subdirectories' permissions being copied as 0700 instead of 0755
+
+## 0.20.0 November 2024
+
+* Fix: `Generic<\namespaced\class-type>` not prefixed
+* Add `strauss replace` command (e.g. if you fork a project and want to change its namespace)
+
 ## 0.19.5 October 2024
 
 * Fix: `use GlobalClass as Alias;` not prefixed

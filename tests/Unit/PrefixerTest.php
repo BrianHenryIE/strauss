@@ -16,6 +16,7 @@ use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Composer;
 use Composer\Config;
@@ -1963,6 +1964,59 @@ EOD;
 
         $replacer = new Prefixer($config, __DIR__);
         $result = $replacer->replaceClassname($contents, 'GlobalClass', 'Prefixed_');
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * @covers \BrianHenryIE\Strauss\Pipeline\Prefixer::replaceFunctions
+     */
+    public function testReplaceFunctions(): void
+    {
+        $contents = <<<'EOD'
+<?php
+if (! function_exists('append_config')) {
+    function append_config(array $array)
+    {
+        return $array;
+    }
+}
+
+// elsewhere
+
+$value = append_config($myArray);
+
+// without assignment
+ append_config($myArray);
+EOD;
+        $expected = <<<'EOD'
+<?php
+if (! function_exists('myprefix_append_config')) {
+    function myprefix_append_config(array $array)
+    {
+        return $array;
+    }
+}
+
+// elsewhere
+
+$value = myprefix_append_config($myArray);
+
+// without assignment
+ myprefix_append_config($myArray);
+EOD;
+
+        $config = $this->createMock(StraussConfig::class);
+
+        $symbol = new FunctionSymbol('append_config', $this->createMock(File::class));
+        $symbol->setReplacement('myprefix_append_config');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($symbol);
+
+        $replacer = new Prefixer($config, __DIR__);
+
+        $result = $replacer->replaceInString($symbols, $contents);
 
         $this->assertEqualsRN($expected, $result);
     }

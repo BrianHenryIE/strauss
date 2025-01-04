@@ -33,4 +33,4 @@ call_user_func(function ($version) {
 
     $app = new BrianHenryIE\Strauss\Console\Application($version);
     $app->run();
-}, '0.20.1');
+}, '0.21.0');

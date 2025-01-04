@@ -6,13 +6,13 @@ on:
       - master
       - main
     paths:
-      - '!README.md'
+      - '**.php'
   pull_request:
     branches:
       - master
       - main
     paths:
-      - '!README.md'
+      - '**.php'
 
 jobs:
   tests:

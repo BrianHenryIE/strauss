@@ -4,12 +4,16 @@ namespace BrianHenryIE\Strauss\Tests\Unit;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\TestCase;
 
-class FileScannerTest extends TestCase
+/**
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
+ */
+class FileSymbolScannerTest extends TestCase
 {
 
     // PREG_BACKTRACK_LIMIT_ERROR
@@ -792,5 +796,188 @@ EOD;
 
         self::assertArrayNotHasKey('WPGraphQL', $discoveredSymbols->getDiscoveredNamespaces());
         self::assertContains('WPGraphQL', $discoveredSymbols->getDiscoveredClasses());
+    }
+
+    public function testDiscoversGlobalFunctions(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+function topFunction() {
+	return 'This should be recorded';
+}
+
+class MyClass {
+    function aMethod() {
+        // This should not be recorded
+	}
+}
+
+function lowerFunction() {
+	return 'This should be recorded';
+}
+EOD;
+
+        $file = \Mockery::mock(File::class);
+        $file->expects('addDiscoveredSymbol')->once();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $fileScanner = new FileSymbolScanner($config);
+
+        $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getContents')->andReturn($contents);
+
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+
+        self::assertArrayHasKey('topFunction', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayNotHasKey('aMethod', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayHasKey('lowerFunction', $discoveredSymbols->getDiscoveredFunctions());
+    }
+
+    /**
+     * @covers ::find
+     */
+    public function testDiscoversGlobalFunctionInFunctionExists(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+if (! function_exists('collect')) {
+    /**
+     * Create a collection from the given value.
+     *
+     * @param  mixed  $value
+     * @return \Custom\Prefix\Illuminate\Support\Collection
+     */
+    function collect($value = null)
+    {
+        return new Collection($value);
+    }
+} 
+EOD;
+
+        $file = \Mockery::mock(File::class);
+        $file->expects('addDiscoveredSymbol')->once();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $fileScanner = new FileSymbolScanner($config);
+
+        $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getContents')->andReturn($contents);
+
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+
+        self::assertArrayHasKey('collect', $discoveredSymbols->getDiscoveredFunctions());
+    }
+
+    public function testDoesNotIncludeBuiltInPhpFunctions(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+// Polyfill
+function mb_convert_case() {
+	return 'This should not be recorded';
+}
+// Polyfill
+function str_starts_with() {
+	return 'This should not be recorded';
+}
+
+function lowerFunction() {
+	return 'This should be recorded';
+}
+EOD;
+
+        $file = \Mockery::mock(File::class);
+        $file->expects('addDiscoveredSymbol')->once();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $fileScanner = new FileSymbolScanner($config);
+
+        $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getContents')->andReturn($contents);
+
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+
+        self::assertArrayNotHasKey('str_starts_with', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayNotHasKey('mb_convert_case', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayHasKey('lowerFunction', $discoveredSymbols->getDiscoveredFunctions());
+    }
+
+    /**
+     * Twig has global functions in the second namespace in its file.
+     *
+     * We were accidentally matching _everything_ using `[\s\S]*` instead of blank space with `[\s\n]*`.
+     *
+     * @covers FileSymbolScanner::find()
+     *
+     * @see https://github.com/twigphp/Twig/blob/v3.8.0/src/Extension/CoreExtension.php
+     */
+    public function test_finds_functions_in_second_namespace(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Twig\Extension {
+	final class CoreExtension extends AbstractExtension {
+		// Whatever.
+	}
+}
+
+namespace {
+	function twig_cycle($values, $position)
+	{
+		// Also whatever.
+	}
+}
+EOD;
+
+        $file = \Mockery::mock(File::class);
+        $file->expects('addDiscoveredSymbol')->once();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $fileScanner = new FileSymbolScanner($config);
+
+        $file = \Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getContents')->andReturn($contents);
+
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+
+        self::assertArrayHasKey('twig_cycle', $discoveredSymbols->getDiscoveredFunctions());
     }
 }
