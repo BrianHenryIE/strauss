@@ -19,6 +19,77 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class StraussIssue81Test extends IntegrationTestCase
 {
+
+    public function test_aliased_class(): void
+    {
+
+        // `psr/log` isn't a good example to use because it uses PHPUnit without declaring it as a dependency.
+        $composerJsonString = <<<'EOD'
+{
+  "name": "issue/81",
+  "require": {
+    "brianhenryie/bh-wc-logger": "0.1.1"
+  },
+  "require-dev": {
+    "psr/log": "1.1.4",
+    "phpunit/phpunit": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Strauss\\Alias\\",
+      "delete_vendor_files": true
+    }
+  },
+  "config": {
+    "classmap-authoritative": true,
+    "optimize-autoloader": true
+  }
+}
+EOD;
+
+        $file1 = <<<'EOD'
+<?php
+
+namespace Whatever;
+
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/vendor-prefixed/autoload.php';
+
+// TODO: This is temporary during development. This should be added to vendor/composer/autoload*.php by Strauss.
+require_once __DIR__ . '/autoload_renamed.php';
+
+new \Psr\Log\NullLogger();
+
+new \Strauss\Alias\Psr\Log\NullLogger();
+
+return 0;
+
+EOD;
+
+        chdir($this->testsWorkingDir);
+
+        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        file_put_contents($this->testsWorkingDir . '/file1.php', $file1);
+
+        exec('composer install');
+        exec("cd {$this->testsWorkingDir}; composer dump-autoload");
+
+        $exitCode = $this->runStrauss();
+        assert($exitCode === 0);
+
+        exec("cd {$this->testsWorkingDir}; composer dump-autoload");
+
+        exec('php ' . $this->testsWorkingDir . '/file1.php', $output, $return_var);
+
+        //Fatal error: Uncaught Error: Class "Psr\Log\NullLogger" not found in /private/var/folders/sh/cygymmqn36714790jj3r33200000gn/T/strausstestdir/file1.php:8
+        //Stack trace:
+        //#0 {main}
+        //thrown in /private/var/folders/sh/cygymmqn36714790jj3r33200000gn/T/strausstestdir/file1.php on line 8
+
+        $this->assertEmpty($output, implode(PHP_EOL, $output));
+        $this->assertEquals(0, $return_var);
+    }
+
     public function test_snake_case_cli_argument_supersedes_configured_option_false_to_true()
     {
 
