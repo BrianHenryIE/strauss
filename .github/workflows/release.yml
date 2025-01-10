@@ -43,6 +43,7 @@ jobs:
           mv src build/src
           mv bin build/bin
           mv composer.json build
+          cp CHANGELOG.md build
           php -d phar.readonly=off phar-composer.phar build ./build/
 
       - name: Test run strauss

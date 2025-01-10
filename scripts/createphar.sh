@@ -11,6 +11,7 @@ cp -R vendor build/vendor
 cp -R src build/src
 cp -R bin build/bin
 cp -R composer.json build
+cp CHANGELOG.md build
 php -d phar.readonly=off phar-composer.phar build ./build/
 
 rm phar-composer.phar
