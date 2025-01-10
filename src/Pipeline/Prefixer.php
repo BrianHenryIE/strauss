@@ -410,12 +410,25 @@ class Prefixer
             return $contents;
         }
 
+        $functionsUsingCallable = [
+            'function_exists',
+            'call_user_func',
+            'call_user_func_array',
+            'forward_static_call',
+            'forward_static_call_array',
+            'register_shutdown_function',
+            'register_tick_function',
+            'unregister_tick_function',
+        ];
+// TODO: Immediately surrounded by quotes is sometimes valid, e.g. passing a callable, but not always.
+// Log cases like this and present a list to users. Maybe CLI confirmation to replace?
+
         $pattern = '/
 			(\s*use\s+function\s+)('.preg_quote($originalFunctionString, '/').')(\s+as|\s+;) # use function as
 			|
-			(\s*function\s+)('.preg_quote($originalFunctionString, '/').')(\s*\() # function declaration
+			|('.implode('|', $functionsUsingCallable).')(\s*\(\s*[\'"])('.preg_quote($originalFunctionString, '/').')([\'"]) # function related calls without closing bracket
 			|
-			([\'"])('.preg_quote($originalFunctionString, '/').')([\'"]) # immediately surrounded by quotes
+			(\s*function\s+)('.preg_quote($originalFunctionString, '/').')(\s*\() # function declaration
 			|
 			([;\s]+)('.preg_quote($originalFunctionString, '/').')(\s*\() # function call
 			/x'; // x: ignore whitespace in regex.
