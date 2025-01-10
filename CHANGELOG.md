@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.21.1 January 2025
+
+* Fix: global functions prefixed too liberally when defined as strings
+
 ## 0.21.0 January 2025
 
 * Add: prefix global functions

@@ -1988,6 +1988,18 @@ $value = append_config($myArray);
 
 // without assignment
  append_config($myArray);
+
+// callable
+call_user_func('append_config', $myArray);
+call_user_func_array(
+	'append_config', 
+	$myArray
+);
+forward_static_call('append_config', $myArray);
+forward_static_call_array('append_config', $myArray);
+register_shutdown_function('append_config');
+register_tick_function('append_config' , $myArray);
+unregister_tick_function( 'append_config');
 EOD;
         $expected = <<<'EOD'
 <?php
@@ -2004,6 +2016,18 @@ $value = myprefix_append_config($myArray);
 
 // without assignment
  myprefix_append_config($myArray);
+
+// callable
+call_user_func('myprefix_append_config', $myArray);
+call_user_func_array(
+	'myprefix_append_config', 
+	$myArray
+);
+forward_static_call('myprefix_append_config', $myArray);
+forward_static_call_array('myprefix_append_config', $myArray);
+register_shutdown_function('myprefix_append_config');
+register_tick_function('myprefix_append_config' , $myArray);
+unregister_tick_function( 'myprefix_append_config');
 EOD;
 
         $config = $this->createMock(StraussConfig::class);
