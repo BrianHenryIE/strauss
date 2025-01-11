@@ -18,6 +18,13 @@ use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use PhpParser\Error;
+use PhpParser\Node;
+use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitorAbstract;
+use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter\Standard;
 
 class Aliases
 {
@@ -123,5 +130,73 @@ EOD;
         }
 
         file_put_contents($outputFilename, $fileString);
+    }
+
+    /**
+     * Given the PHP code string for `vendor/composer/autoload_real.php`, add a `require_once autoload_aliases.php`
+     * before the `return` statement of the `getLoader()` method.
+     *
+     * @param string $code
+     */
+    public function addAliasesFileToComposer(string $code): string
+    {
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        try {
+            $ast = $parser->parse($code);
+        } catch (Error $error) {
+            echo "Parse error: {$error->getMessage()}\n";
+            return $code;
+        }
+
+        $getLoaderMethod = null;
+
+        foreach ($ast as $fileLevelNode) {
+//          if ($fileLevelNode instanceof Node::class) {
+            if (get_class($fileLevelNode) === 'PhpParser\Node\Stmt\Class_') {
+                foreach ($fileLevelNode->stmts as $classLevelStatementsNode) {
+                    if (get_class($classLevelStatementsNode) === ClassMethod::class) {
+                        if ($classLevelStatementsNode->name->name === 'getLoader') {
+                            $getLoaderMethod = $classLevelStatementsNode;
+                        }
+                    }
+                }
+            }
+        }
+
+        $traverser = new NodeTraverser();
+        $traverser->addVisitor(new class extends NodeVisitorAbstract {
+            public function leaveNode(Node $node)
+            {
+                if (get_class($node) === \PhpParser\Node\Stmt\Return_::class) {
+                    $requireOnce = new Node\Stmt\Expression(
+                        new Node\Expr\Include_(
+                            new Node\Scalar\String_('autoload_aliases.php'),
+                            Node\Expr\Include_::TYPE_REQUIRE_ONCE
+                        )
+                    );
+//                  $requireOnce->setAttribute('comments', [new \PhpParser\Comment('// Include aliases file. This line added by Strauss')]);
+                    // Add a blank line. Probably not the correct way to do this.
+                    $requireOnce->setAttribute('comments', [new \PhpParser\Comment('')]);
+//                  $requireOnce->setDocComment(new \PhpParser\Comment\Doc('/** @see  */'));
+                    // Add a blank line. Probably not the correct way to do this.
+                    $node->setAttribute('comments', [new \PhpParser\Comment('')]);
+
+                    return [
+                        $requireOnce,
+                        $node
+                    ];
+                }
+                return $node;
+            }
+        });
+
+        $stmts = $getLoaderMethod->stmts;
+        $modifiedStmts = $traverser->traverse($stmts);
+        $getLoaderMethod->stmts = $modifiedStmts;
+
+        $prettyPrinter = new Standard();
+        $phpString = $prettyPrinter->prettyPrintFile($ast);
+
+        return $phpString;
     }
 }
