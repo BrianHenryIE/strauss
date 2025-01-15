@@ -3,7 +3,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
@@ -13,7 +13,7 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 
 class Prefixer
 {
-    protected StraussConfig $config;
+    protected PrefixerConfigInterface $config;
 
     /** @var Filesystem */
     protected $filesystem;
@@ -40,7 +40,7 @@ class Prefixer
     protected array $changedFiles = array();
     protected string $workingDir;
 
-    public function __construct(StraussConfig $config, string $workingDir)
+    public function __construct(PrefixerConfigInterface $config, string $workingDir)
     {
         $this->config = $config;
 
