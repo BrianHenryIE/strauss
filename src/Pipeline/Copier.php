@@ -19,6 +19,8 @@ use BrianHenryIE\Strauss\Files\File;
 use League\Flysystem\Config;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class Copier
 {
@@ -37,6 +39,10 @@ class Copier
     /** @var Filesystem */
     protected Filesystem $filesystem;
 
+    protected StraussConfig $config;
+
+    protected OutputInterface $output;
+
     /**
      * Copier constructor.
      *
@@ -44,9 +50,16 @@ class Copier
      * @param string $workingDir
      * @param StraussConfig $config
      */
-    public function __construct(DiscoveredFiles $files, string $workingDir, StraussConfig $config)
-    {
+    public function __construct(
+        DiscoveredFiles $files,
+        string $workingDir,
+        StraussConfig $config,
+        LoggerInterface $logger
+    ) {
         $this->files = $files;
+
+        $this->config = $config;
+        $this->logger = $logger;
 
         $this->absoluteTargetDir = $workingDir . $config->getTargetDirectory();
 
@@ -87,6 +100,11 @@ class Copier
          */
         foreach ($this->files->getFiles() as $file) {
             if (!$file->isDoCopy()) {
+                continue;
+            }
+
+            if ($this->config->isDryRun()) {
+                $this->logger->info('Would copy ' . $file->getSourcePath() . ' to ' . $file->getAbsoluteTargetPath());
                 continue;
             }
 

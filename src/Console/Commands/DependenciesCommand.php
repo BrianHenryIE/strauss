@@ -209,7 +209,8 @@ class DependenciesCommand extends Command
         $copier = new Copier(
             $this->discoveredFiles,
             $this->workingDir,
-            $this->config
+            $this->config,
+            $this->logger
         );
 
 
@@ -377,7 +378,7 @@ class DependenciesCommand extends Command
 
         $this->logger->info('Cleaning up...');
 
-        $cleanup = new Cleanup($this->config, $this->workingDir);
+        $cleanup = new Cleanup($this->config, $this->workingDir, $this->logger);
 
         // TODO: For files autoloaders, delete the contents of the file, not the file itself.
 

@@ -13,11 +13,14 @@ use Composer\Json\JsonFile;
 use FilesystemIterator;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
 class Cleanup
 {
+    use LoggerAwareTrait;
 
     /** @var Filesystem */
     protected Filesystem $filesystem;
@@ -32,9 +35,13 @@ class Cleanup
 
     protected StraussConfig $config;
 
-    public function __construct(StraussConfig $config, string $workingDir)
-    {
+    public function __construct(
+        StraussConfig $config,
+        string $workingDir,
+        LoggerInterface $logger
+    ) {
         $this->config = $config;
+        $this->logger = $logger;
 
         $this->vendorDirectory = $config->getVendorDirectory();
         $this->targetDirectory = $config->getTargetDirectory();
@@ -76,8 +83,20 @@ class Cleanup
                 // Normal package.
                 if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
                     $packageRelativePath = str_replace($this->workingDir, '', $package->getPackageAbsolutePath());
+
+                    if ($this->config->isDryRun()) {
+                        $this->logger->info('Would delete ' . $packageRelativePath);
+                        continue;
+                    }
+
                     $this->filesystem->deleteDirectory($packageRelativePath);
                 } else {
+                    if ($this->config->isDryRun()) {
+                        // TODO: log _where_ the symlink is pointing to.
+                        $this->logger->info('Would remove symlink at ' . $package->getRelativePath());
+                        continue;
+                    }
+
                     // If it's a symlink, remove the symlink in the directory
                     $symlinkPath =
                         rtrim(
@@ -106,6 +125,11 @@ class Cleanup
                 }
 
                 $sourceRelativePath = $file->getSourcePath($this->workingDir);
+
+                if ($this->config->isDryRun()) {
+                    $this->logger->info('Would delete ' . $sourceRelativePath);
+                    continue;
+                }
 
                 $this->filesystem->delete($sourceRelativePath);
 
@@ -224,6 +248,8 @@ class Cleanup
         if (! file_exists($this->workingDir . 'vendor/composer/autoload_files.php')) {
             return;
         }
+
+        // TODO: dry run.
 
         $files = include $this->workingDir . 'vendor/composer/autoload_files.php';
 
