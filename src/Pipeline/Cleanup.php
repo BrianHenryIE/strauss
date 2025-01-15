@@ -6,7 +6,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use Composer\Json\JsonFile;
@@ -33,10 +33,10 @@ class Cleanup
     protected string $vendorDirectory = 'vendor'. DIRECTORY_SEPARATOR;
     protected string $targetDirectory;
 
-    protected StraussConfig $config;
+    protected CleanupConfigInterface $config;
 
     public function __construct(
-        StraussConfig $config,
+        CleanupConfigInterface $config,
         string $workingDir,
         LoggerInterface $logger
     ) {

@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use Composer\Composer;
@@ -18,7 +19,8 @@ class StraussConfig implements
     ReplaceConfigInterface,
     FileSymbolScannerConfigInterface,
     FileCopyScannerConfigInterface,
-    ChangeEnumeratorConfigInterface
+    ChangeEnumeratorConfigInterface,
+    CleanupConfigInterface
 {
     /**
      * The output directory.
