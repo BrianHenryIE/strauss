@@ -6,8 +6,10 @@
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use Composer\Composer;
 use Exception;
 use JsonMapper\JsonMapperFactory;
@@ -18,7 +20,9 @@ class StraussConfig implements
     ReplaceConfigInterface,
     FileSymbolScannerConfigInterface,
     FileCopyScannerConfigInterface,
-    ChangeEnumeratorConfigInterface
+    ChangeEnumeratorConfigInterface,
+    CleanupConfigInterface,
+    PrefixerConfigInterface
 {
     /**
      * The output directory.
@@ -141,6 +145,11 @@ class StraussConfig implements
      * @var bool
      */
     protected $includeAuthor = true;
+
+    /**
+     * Should the changes be printed to console rather than files modified?
+     */
+    protected bool $dryRun = false;
 
     /**
      * Read any existing Mozart config.
@@ -616,6 +625,22 @@ class StraussConfig implements
     public function setIncludeAuthor(bool $includeAuthor): void
     {
         $this->includeAuthor = $includeAuthor;
+    }
+
+    /**
+     * Should expected changes be printed to console rather than files modified?
+     */
+    public function isDryRun(): bool
+    {
+        return $this->dryRun;
+    }
+
+    /**
+     * Disable making changes to files; output changes to console instead.
+     */
+    public function setDryRun(bool $dryRun): void
+    {
+        $this->dryRun = $dryRun;
     }
 
     /**

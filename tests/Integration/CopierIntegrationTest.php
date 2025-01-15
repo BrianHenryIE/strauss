@@ -5,10 +5,12 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
+use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use Psr\Log\NullLogger;
 use stdClass;
 
 /**
@@ -64,7 +66,7 @@ EOD;
 
         (new FileCopyScanner($workingDir, $config))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config);
+        $copier = new Copier($files, $workingDir, $config, new NullLogger());
 
         $file = 'ContainerAwareTrait.php';
         $relativePath = 'league/container/src/';
@@ -127,7 +129,7 @@ EOD;
 
         (new FileCopyScanner($workingDir, $config))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config);
+        $copier = new Copier($files, $workingDir, $config, new NullLogger());
 
         $file = 'Client.php';
         $relativePath = 'google/apiclient/src/';

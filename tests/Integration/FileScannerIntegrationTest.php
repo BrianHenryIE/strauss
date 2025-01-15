@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use Psr\Log\NullLogger;
 
 /**
  * Class CopierTest
@@ -68,7 +69,7 @@ EOD;
 
         (new FileCopyScanner($workingDir, $config))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config);
+        $copier = new Copier($files, $workingDir, $config, new NullLogger());
 
         $copier->prepareTarget();
 
