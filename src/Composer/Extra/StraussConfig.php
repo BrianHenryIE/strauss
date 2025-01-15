@@ -143,6 +143,11 @@ class StraussConfig implements
     protected $includeAuthor = true;
 
     /**
+     * Should the changes be printed to console rather than files modified?
+     */
+    protected bool $dryRun = false;
+
+    /**
      * Read any existing Mozart config.
      * Overwrite it with any Strauss config.
      * Provide sensible defaults.
@@ -616,6 +621,22 @@ class StraussConfig implements
     public function setIncludeAuthor(bool $includeAuthor): void
     {
         $this->includeAuthor = $includeAuthor;
+    }
+
+    /**
+     * Should expected changes be printed to console rather than files modified?
+     */
+    public function isDryRun(): bool
+    {
+        return $this->dryRun;
+    }
+
+    /**
+     * Disable making changes to files; output changes to console instead.
+     */
+    public function setDryRun(bool $dryRun): void
+    {
+        $this->dryRun = $dryRun;
     }
 
     /**
