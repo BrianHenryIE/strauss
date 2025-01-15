@@ -13,6 +13,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
+use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -28,6 +29,12 @@ use PhpParser\PrettyPrinter\Standard;
 
 class Aliases
 {
+    protected AliasesConfigInterace $config;
+
+    public function __construct(AliasesConfigInterace $config)
+    {
+        $this->config = $config;
+    }
     public function do(DiscoveredSymbols $symbols, string $workingDir): void
     {
 

@@ -65,7 +65,9 @@ class ComposerAutoloaderInit1dbefeff499a0676e84b3a5dceac7c83
 }
 EOD;
 
-        $sut = new Aliases();
+        $config = \Mockery::mock(\BrianHenryIE\Strauss\Config\AliasesConfigInterace::class);
+
+        $sut = new Aliases($config);
 
         $result = $sut->addAliasesFileToComposer($phpString);
 

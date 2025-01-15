@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
+use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
@@ -365,9 +366,9 @@ class DependenciesCommand extends Command
      */
     protected function generateAliasesFile(): void
     {
-        // TODO: check should we be doing this? Is it always ok to do it?!
+        // TODO: check when should we be doing this.
 
-        $aliases = new Aliases();
+        $aliases = new Aliases($this->config);
         $aliases->do($this->discoveredSymbols, $this->workingDir);
     }
 
