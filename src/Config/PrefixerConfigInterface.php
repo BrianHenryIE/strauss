@@ -5,17 +5,17 @@ namespace BrianHenryIE\Strauss\Config;
 interface PrefixerConfigInterface
 {
 
-    public function getTargetDirectory();
+    public function getTargetDirectory(): string;
 
-    public function getNamespacePrefix();
+    public function getNamespacePrefix(): string;
 
-    public function getClassmapPrefix();
+    public function getClassmapPrefix(): string;
 
-    public function getConstantsPrefix();
+    public function getConstantsPrefix(): string;
 
-    public function getExcludePackagesFromPrefixing();
+    public function getExcludePackagesFromPrefixing(): array;
 
-    public function getExcludeNamespacesFromPrefixing();
+    public function getExcludeNamespacesFromPrefixing(): array;
 
-    public function getExcludeFilePatternsFromPrefixing();
+    public function getExcludeFilePatternsFromPrefixing(): array;
 }
