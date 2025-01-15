@@ -11,7 +11,7 @@ interface PrefixerConfigInterface
 
     public function getClassmapPrefix(): string;
 
-    public function getConstantsPrefix(): string;
+    public function getConstantsPrefix(): ?string;
 
     public function getExcludePackagesFromPrefixing(): array;
 
