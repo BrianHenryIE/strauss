@@ -7,9 +7,9 @@ interface PrefixerConfigInterface
 
     public function getTargetDirectory(): string;
 
-    public function getNamespacePrefix(): string;
+    public function getNamespacePrefix(): ?string;
 
-    public function getClassmapPrefix(): string;
+    public function getClassmapPrefix(): ?string;
 
     public function getConstantsPrefix(): ?string;
 
