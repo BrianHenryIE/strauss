@@ -16,9 +16,8 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use League\Flysystem\Config;
 use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -54,6 +53,7 @@ class Copier
         DiscoveredFiles $files,
         string $workingDir,
         StraussConfig $config,
+        Filesystem $filesystem,
         LoggerInterface $logger
     ) {
         $this->files = $files;
@@ -63,9 +63,7 @@ class Copier
 
         $this->absoluteTargetDir = $workingDir . $config->getTargetDirectory();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/'), [
-            Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-        ]);
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -73,6 +71,7 @@ class Copier
      * If it already exists, delete any files we're about to copy.
      *
      * @return void
+     * @throws FilesystemException
      */
     public function prepareTarget(): void
     {
@@ -93,6 +92,9 @@ class Copier
         }
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function copy(): void
     {
         /**

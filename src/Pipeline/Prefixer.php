@@ -10,7 +10,6 @@ use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use Exception;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 
 class Prefixer
 {
@@ -29,11 +28,12 @@ class Prefixer
 
     public function __construct(
         PrefixerConfigInterface $config,
-        string $workingDir
+        string $workingDir,
+        Filesystem $filesystem
     ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($workingDir));
+        $this->filesystem = $filesystem;
     }
 
     // Don't replace a classname if there's an import for a class with the same name.
@@ -52,7 +52,7 @@ class Prefixer
         foreach ($files as $file) {
             $targetRelativeFilepathFromProject = $file->getAbsoluteTargetPath($this->workingDir);
 
-            if (! $this->filesystem->fileExists($targetRelativeFilepathFromProject)) {
+            if (! $this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
                 // Maybe warn here?
                 continue;
             }
@@ -62,13 +62,13 @@ class Prefixer
              *
              * TODO: Use {@see File::getContents()} instead?
              */
-            $contents = $this->filesystem->read($targetRelativeFilepathFromProject);
+            $contents = $this->filesystem->read($file->getAbsoluteTargetPath());
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
                 $file->setDidUpdate();
-                $this->filesystem->write($targetRelativeFilepathFromProject, $updatedContents);
+                $this->filesystem->write($file->getAbsoluteTargetPath(), $updatedContents);
             }
         }
     }
@@ -82,18 +82,18 @@ class Prefixer
     public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, array $relativeFilePaths): void
     {
         foreach ($relativeFilePaths as $workingDirRelativeFilepath) {
-            if (! $this->filesystem->fileExists($workingDirRelativeFilepath)) {
+            if (! $this->filesystem->fileExists($this->workingDir . $workingDirRelativeFilepath)) {
                 continue;
             }
             
             // Throws an exception, but unlikely to happen.
-            $contents = $this->filesystem->read($workingDirRelativeFilepath);
+            $contents = $this->filesystem->read($this->workingDir . $workingDirRelativeFilepath);
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
                 $this->changedFiles[ $workingDirRelativeFilepath ] = null;
-                $this->filesystem->write($workingDirRelativeFilepath, $updatedContents);
+                $this->filesystem->write($this->workingDir . $workingDirRelativeFilepath, $updatedContents);
             }
         }
     }

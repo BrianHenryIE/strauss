@@ -12,7 +12,7 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 use Composer\Json\JsonFile;
 use FilesystemIterator;
 use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use RecursiveDirectoryIterator;
@@ -38,6 +38,7 @@ class Cleanup
     public function __construct(
         CleanupConfigInterface $config,
         string $workingDir,
+        Filesystem $filesystem,
         LoggerInterface $logger
     ) {
         $this->config = $config;
@@ -50,7 +51,7 @@ class Cleanup
         $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getTargetDirectory() !== $config->getVendorDirectory();
         $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getTargetDirectory() !== $config->getVendorDirectory();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($workingDir));
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -58,6 +59,8 @@ class Cleanup
      * then delete empty directories.
      *
      * @param File[] $files
+     *
+     * @throws FilesystemException
      */
     public function cleanup(array $files): void
     {
@@ -89,7 +92,7 @@ class Cleanup
                         continue;
                     }
 
-                    $this->filesystem->deleteDirectory($packageRelativePath);
+                    $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
                 } else {
                     if ($this->config->isDryRun()) {
                         // TODO: log _where_ the symlink is pointing to.
@@ -131,7 +134,7 @@ class Cleanup
                     continue;
                 }
 
-                $this->filesystem->delete($sourceRelativePath);
+                $this->filesystem->delete($file->getSourcePath());
 
                 $file->setDidDelete(true);
             }
@@ -242,6 +245,7 @@ class Cleanup
      * After files are deleted, remove them from the Composer files autoloaders.
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/34#issuecomment-922503813
+     * @throws FilesystemException
      */
     protected function cleanupFilesAutoloader(): void
     {
@@ -262,7 +266,7 @@ class Cleanup
                 // references the non-existent files. This causes a fatal error when the autoloader is included.
                 // TODO: if delete_vendor_packages is true, do not create this file.
                 $this->filesystem->write(
-                    str_replace($this->workingDir, '', $file),
+                    $file,
                     '<?php // This file was deleted by {@see https://github.com/BrianHenryIE/strauss}.'
                 );
             }
@@ -275,7 +279,7 @@ class Cleanup
         $targetDirectory = $this->targetDirectory;
 
         foreach (array('autoload_static.php', 'autoload_files.php') as $autoloadFile) {
-            $autoloadStaticPhp = $this->filesystem->read('vendor/composer/'.$autoloadFile);
+            $autoloadStaticPhp = $this->filesystem->read($this->workingDir . 'vendor/composer/'.$autoloadFile);
 
             $autoloadStaticPhpAsArray = explode(PHP_EOL, $autoloadStaticPhp);
 
@@ -309,7 +313,7 @@ class Cleanup
 
             $newAutoloadStaticPhp = implode(PHP_EOL, $newAutoloadStaticPhpAsArray);
 
-            $this->filesystem->write('vendor/composer/'.$autoloadFile, $newAutoloadStaticPhp);
+            $this->filesystem->write($this->workingDir . 'vendor/composer/'.$autoloadFile, $newAutoloadStaticPhp);
         }
     }
 }

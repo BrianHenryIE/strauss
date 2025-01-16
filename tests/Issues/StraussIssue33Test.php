@@ -8,6 +8,8 @@ namespace BrianHenryIE\Strauss\Tests\Issues;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -72,7 +74,7 @@ EOD;
 
         $exception = null;
 
-        $prefixer = new Prefixer($config, $this->testsWorkingDir);
+        $prefixer = new Prefixer($config, $this->testsWorkingDir, new Filesystem(new LocalFilesystemAdapter('/')));
 
         try {
             $prefixer->replaceClassname($contents, $originalClassname, $classnamePrefix);

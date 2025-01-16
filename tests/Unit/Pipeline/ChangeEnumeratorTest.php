@@ -7,6 +7,8 @@ use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Mockery;
 
 /**
@@ -22,7 +24,7 @@ class ChangeEnumeratorTest extends TestCase
         $config = Mockery::mock(\BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface::class);
         $config->expects('getClassmapPrefix')->andReturn('Prefix_');
 
-        $sut = new ChangeEnumerator($config, '/path/to/vendor');
+        $sut = new ChangeEnumerator($config, '/path/to/vendor', new Filesystem(new LocalFilesystemAdapter('/')));
 
         $discoveredSymbols = new DiscoveredSymbols();
         $symbol = new FunctionSymbol('myFunction', new File('/path/to/file.php'));

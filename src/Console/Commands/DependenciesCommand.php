@@ -18,6 +18,9 @@ use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
+use League\Flysystem\Config;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
@@ -55,6 +58,8 @@ class DependenciesCommand extends Command
     protected DiscoveredFiles $discoveredFiles;
     protected DiscoveredSymbols $discoveredSymbols;
 
+    protected Filesystem $filesystem;
+
     /**
      * @return void
      */
@@ -77,6 +82,11 @@ class DependenciesCommand extends Command
             InputArgument::OPTIONAL,
             'Should original packages be deleted after copying? true|false'
         );
+
+        $this->filesystem =
+            new Filesystem(new LocalFilesystemAdapter('/'), [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]);
     }
 
     /**
@@ -175,7 +185,8 @@ class DependenciesCommand extends Command
 
         $this->dependenciesEnumerator = new DependenciesEnumerator(
             $this->workingDir,
-            $this->config
+            $this->config,
+            $this->filesystem
         );
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 
@@ -188,7 +199,8 @@ class DependenciesCommand extends Command
 
         $fileEnumerator = new FileEnumerator(
             $this->workingDir,
-            $this->config
+            $this->config,
+            $this->filesystem
         );
 
         $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);
@@ -197,7 +209,7 @@ class DependenciesCommand extends Command
     // 3. Copy autoloaded files for each
     protected function copyFiles(): void
     {
-        (new FileCopyScanner($this->workingDir, $this->config))->scanFiles($this->discoveredFiles);
+        (new FileCopyScanner($this->workingDir, $this->config, $this->filesystem))->scanFiles($this->discoveredFiles);
 
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
             // Nothing to do.
@@ -210,6 +222,7 @@ class DependenciesCommand extends Command
             $this->discoveredFiles,
             $this->workingDir,
             $this->config,
+            $this->filesystem,
             $this->logger
         );
 
@@ -229,7 +242,8 @@ class DependenciesCommand extends Command
 
         $changeEnumerator = new ChangeEnumerator(
             $this->config,
-            $this->workingDir
+            $this->workingDir,
+            $this->filesystem
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
@@ -240,7 +254,11 @@ class DependenciesCommand extends Command
     {
         $this->logger->info('Performing replacements...');
 
-        $this->replacer = new Prefixer($this->config, $this->workingDir);
+        $this->replacer = new Prefixer(
+            $this->config,
+            $this->workingDir,
+            $this->filesystem
+        );
 
         $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
     }
@@ -252,11 +270,16 @@ class DependenciesCommand extends Command
             return;
         }
 
-        $projectReplace = new Prefixer($this->config, $this->workingDir);
+        $projectReplace = new Prefixer(
+            $this->config,
+            $this->workingDir,
+            $this->filesystem
+        );
 
         $fileEnumerator = new FileEnumerator(
             $this->workingDir,
-            $this->config
+            $this->config,
+            $this->filesystem
         );
 
         $files = $fileEnumerator->compileFileListForPaths([$this->config->getVendorDirectory() . 'composer']);
@@ -280,11 +303,16 @@ class DependenciesCommand extends Command
             return;
         }
 
-        $projectReplace = new Prefixer($this->config, $this->workingDir);
+        $projectReplace = new Prefixer(
+            $this->config,
+            $this->workingDir,
+            $this->filesystem
+        );
 
         $fileEnumerator = new FileEnumerator(
             $this->workingDir,
-            $this->config
+            $this->config,
+            $this->filesystem
         );
 
         $phpFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
@@ -312,7 +340,13 @@ class DependenciesCommand extends Command
 
         $dependencies = $this->flatDependencyTree;
 
-        $licenser = new Licenser($this->config, $this->workingDir, $dependencies, $author);
+        $licenser = new Licenser(
+            $this->config,
+            $this->workingDir,
+            $dependencies,
+            $author,
+            $this->filesystem
+        );
 
         $licenser->copyLicenses();
 
@@ -378,7 +412,12 @@ class DependenciesCommand extends Command
 
         $this->logger->info('Cleaning up...');
 
-        $cleanup = new Cleanup($this->config, $this->workingDir, $this->logger);
+        $cleanup = new Cleanup(
+            $this->config,
+            $this->workingDir,
+            $this->filesystem,
+            $this->logger
+        );
 
         // TODO: For files autoloaders, delete the contents of the file, not the file itself.
 

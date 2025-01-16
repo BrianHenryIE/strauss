@@ -13,8 +13,8 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Path;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemReader;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
@@ -42,8 +42,7 @@ class FileEnumerator
     /** @var string[]  */
     protected array $excludeFilePatterns = array();
 
-    /** @var Filesystem */
-    protected Filesystem $filesystem;
+    protected FilesystemReader $filesystem;
 
     protected DiscoveredFiles $discoveredFiles;
 
@@ -63,7 +62,8 @@ class FileEnumerator
      */
     public function __construct(
         string $workingDir,
-        StraussConfig $config
+        StraussConfig $config,
+        FilesystemReader $filesystem
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
@@ -74,7 +74,7 @@ class FileEnumerator
         $this->excludePackageNames = $config->getExcludePackagesFromCopy();
         $this->excludeFilePatterns = $config->getExcludeFilePatternsFromCopy();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($this->workingDir));
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -162,7 +162,7 @@ class FileEnumerator
      * @param string $packageRelativePath
      * @param string $autoloaderType
      *
-     * @throws \League\Flysystem\FilesystemException
+     * @throws FilesystemException
      * @uses \BrianHenryIE\Strauss\Files\DiscoveredFiles::add()
      *
      */
@@ -170,7 +170,7 @@ class FileEnumerator
     {
         $sourceAbsoluteFilepath = $dependency->getPackageAbsolutePath() . $packageRelativePath;
         $vendorRelativePath = $dependency->getRelativePath() . $packageRelativePath;
-        $projectRelativePath    = $this->vendorDir . $vendorRelativePath;
+        $projectAbsolutePath    = $this->workingDir . $this->vendorDir . $vendorRelativePath;
         $isOutsideProjectDir    = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
 
         /** @var FileWithDependency $f */
@@ -188,7 +188,7 @@ class FileEnumerator
 
         if ('<?php // This file was deleted by {@see https://github.com/BrianHenryIE/strauss}.'
             ===
-            $this->filesystem->read($projectRelativePath)
+            $this->filesystem->read($projectAbsolutePath)
         ) {
             $f->setDoCopy(false);
         }

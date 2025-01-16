@@ -7,6 +7,8 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * Class FileEnumeratorIntegrationTest
@@ -55,7 +57,7 @@ EOD;
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 

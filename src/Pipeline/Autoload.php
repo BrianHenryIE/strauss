@@ -10,7 +10,6 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use Composer\Autoload\ClassMapGenerator;
 use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 
 class Autoload
 {
@@ -36,13 +35,17 @@ class Autoload
      * @param string $workingDir
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
-    public function __construct(StraussConfig $config, string $workingDir, array $discoveredFilesAutoloaders)
-    {
+    public function __construct(
+        StraussConfig $config,
+        string $workingDir,
+        array $discoveredFilesAutoloaders,
+        Filesystem $filesystem
+    ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
         $this->discoveredFilesAutoloaders = $discoveredFilesAutoloaders;
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($workingDir));
+        $this->filesystem = $filesystem;
     }
 
     public function generate(): void

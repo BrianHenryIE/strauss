@@ -18,6 +18,8 @@ use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
@@ -51,6 +53,8 @@ class ReplaceCommand extends Command
     protected DiscoveredFiles $discoveredFiles;
     protected DiscoveredSymbols $discoveredSymbols;
 
+    protected Filesystem $filesystem;
+
     /**
      * @return void
      */
@@ -81,6 +85,8 @@ class ReplaceCommand extends Command
             'Comma separated list of files and directories to update. Default is the current working directory.',
             getcwd()
         );
+
+        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/')); // TODO: permissions?
     }
 
     /**
@@ -146,7 +152,7 @@ class ReplaceCommand extends Command
     protected function enumerateFiles(ReplaceConfigInterface $config): void
     {
         $this->logger->info('Enumerating files...');
-        $this->discoveredFiles = (new FileEnumerator($this->workingDir, $config))->compileFileListForPaths($config->getUpdateCallSites());
+        $this->discoveredFiles = (new FileEnumerator($this->workingDir, $config, $this->filesystem))->compileFileListForPaths($config->getUpdateCallSites());
     }
 
     // 4. Determine namespace and classname changes
@@ -160,7 +166,8 @@ class ReplaceCommand extends Command
 
         $changeEnumerator = new ChangeEnumerator(
             $config,
-            $this->workingDir
+            $this->workingDir,
+            $this->filesystem
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
@@ -171,7 +178,7 @@ class ReplaceCommand extends Command
     {
         $this->logger->info('Performing replacements...');
 
-        $this->replacer = new Prefixer($config, $this->workingDir);
+        $this->replacer = new Prefixer($config, $this->workingDir, $this->filesystem);
 
         $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
     }
@@ -185,11 +192,12 @@ class ReplaceCommand extends Command
             return;
         }
 
-        $projectReplace = new Prefixer($config, $this->workingDir);
+        $projectReplace = new Prefixer($config, $this->workingDir, $this->filesystem);
 
         $fileEnumerator = new FileEnumerator(
             $this->workingDir,
-            $config
+            $config,
+            $this->filesystem
         );
 
         $phpFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
@@ -223,7 +231,7 @@ class ReplaceCommand extends Command
 
         // TODO: Update to use DiscoveredFiles
         $dependencies = $this->flatDependencyTree;
-        $licenser = new Licenser($config, $this->workingDir, $dependencies, $author);
+        $licenser = new Licenser($config, $this->workingDir, $dependencies, $author, $this->filesystem);
 
         $licenser->copyLicenses();
 

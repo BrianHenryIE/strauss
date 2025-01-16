@@ -10,6 +10,8 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\TestCase;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\Filesystem;
 use PHPUnit\Framework\Constraint\Callback;
 use Symfony\Component\Finder\Finder;
 
@@ -35,7 +37,7 @@ class LicenserTest extends TestCase
         $dependency->method('getPackageAbsolutePath')->willReturn(__DIR__.'/vendor/developer-name/project-name/');
         $dependencies[] = $dependency;
 
-        $sut = new Licenser($config, $workingDir, $dependencies, 'BrianHenryIE');
+        $sut = new Licenser($config, $workingDir, $dependencies, 'BrianHenryIE', new Filesystem(new LocalFilesystemAdapter('/')));
 
         $finder = $this->createStub(Finder::class);
 
@@ -82,7 +84,7 @@ class LicenserTest extends TestCase
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, __DIR__, array(), $author, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $contents = <<<'EOD'
 <?php
@@ -133,7 +135,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(false);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, __DIR__, array(), $author, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $contents = <<<'EOD'
 <?php
@@ -173,7 +175,7 @@ EOD;
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(false);
 
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, __DIR__, array(), $author, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $contents = <<<'EOD'
 <?php
@@ -213,7 +215,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, __DIR__, array(), $author, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $contents = <<<'EOD'
 <?php // phpcs:ignore WordPress.Files.FileName
@@ -271,7 +273,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, __DIR__, array(), $author, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $contents = <<<'EOD'
 <?php
@@ -340,7 +342,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, __DIR__, array(), $author, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $contents = <<<'EOD'
 <?php
@@ -394,7 +396,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, __DIR__, array(), $author, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $contents = <<<'EOD'
 <?php
@@ -462,7 +464,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, __DIR__, array(), $author, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $contents = <<<'EOD'
 <?php
@@ -537,7 +539,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, __DIR__, array(), $author, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $contents = <<<'EOD'
 <?php

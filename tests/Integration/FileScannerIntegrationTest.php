@@ -10,6 +10,8 @@ use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 
 /**
@@ -63,13 +65,13 @@ EOD;
         $config->method('getVendorDirectory')->willReturn($vendorDir);
         $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
+        (new FileCopyScanner($workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/'))))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config, new NullLogger());
+        $copier = new Copier($files, $workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/')), new NullLogger());
 
         $copier->prepareTarget();
 

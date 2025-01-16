@@ -16,10 +16,8 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use PhpParser\Node;
-use PhpParser\NodeAbstract;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
-use PHPStan\Node\ClassMethod;
 
 class FileSymbolScanner
 {
