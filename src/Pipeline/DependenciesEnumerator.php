@@ -99,10 +99,10 @@ class DependenciesEnumerator
 
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
-            if (file_exists($packageComposerFile)) {
+            if ($this->filesystem->fileExists($packageComposerFile)) {
                 $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
             } else {
-                $fileContents           = file_get_contents($this->workingDir . 'composer.lock');
+                $fileContents           = $this->filesystem->read($this->workingDir . 'composer.lock');
                 if (false === $fileContents) {
                     throw new Exception('Failed to read contents of ' . $this->workingDir . 'composer.lock');
                 }
