@@ -13,11 +13,9 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Path;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemReader;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use RegexIterator;
 use Symfony\Component\Finder\Finder;
 
 class FileEnumerator
@@ -220,49 +218,26 @@ class FileEnumerator
      *
      * @return string[]
      */
-    public function findAllFilesAbsolutePaths(string $workingDir, array $relativeFileAndDirPaths, string $regexPattern = '/.+\.php$/'): array
+    protected function findAllFilesAbsolutePaths(string $workingDir, array $relativeFileAndDirPaths, string $regexPattern = '/.+\.php$/'): array
     {
         $files = [];
 
         foreach ($relativeFileAndDirPaths as $path) {
-            if (is_dir($path)) {
-                $path = rtrim($path, '/').'/';
-                $files = array_merge(
-                    $files,
-                    $this->findFilesInDirectory($this->workingDir, str_replace($this->workingDir, '', $path))
-                );
-            } elseif (is_file($path)) {
-                $files[] = $path;
-            } elseif (is_dir($this->workingDir . '/'. $path)) {
-                $files = array_merge(
-                    $files,
-                    $this->findFilesInDirectory($this->workingDir, $path)
-                );
-            } elseif (is_file($this->workingDir . '/'. $path)) {
-                $files[] = $this->workingDir . '/'. $path;
-            }
+            $path = strpos($path, rtrim($workingDir, '/\\')) ===0 ? $path : $workingDir . $path;
+
+            $directoryListing = $this->filesystem->listContents(
+                $path,
+                FilesystemReader::LIST_DEEP
+            );
+
+            /** @var FileAttributes[] $files */
+            $fileAttributesArray = $directoryListing->toArray();
+
+            $f = array_map(fn($file) => '/'.$file->path(), $fileAttributesArray);
+
+            $files = array_merge($files, $f);
         }
 
         return $files;
-    }
-
-    /**
-     * @param string $workingDir Absolute path to the working directory, results will be relative to this.
-     * @param string $relativeDirectory
-     * @param string $regexPattern Default to PHP files.
-     *
-     * @return string[]
-     */
-    protected function findFilesInDirectory(string $workingDir, string $relativeDirectory = '.', string $regexPattern = '/.+\.php$/'): array
-    {
-//      $this->filesystem // TODO
-        $dir = new RecursiveDirectoryIterator($workingDir . $relativeDirectory);
-        $ite = new RecursiveIteratorIterator($dir);
-        $files = new RegexIterator($ite, $regexPattern, RegexIterator::GET_MATCH);
-        $fileList = array();
-        foreach ($files as $file) {
-            $fileList = array_merge($fileList, $file);
-        }
-        return $fileList;
     }
 }
