@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Cleanup;
@@ -113,6 +114,11 @@ class DependenciesCommand extends Command
             $this->loadProjectComposerPackage();
             $this->loadConfigFromComposerJson();
             $this->updateConfigFromCli($input);
+
+            $this->filesystem = new ReadOnlyFileSystem(
+                $this->config,
+                new LocalFilesystemAdapter('/')
+            );
 
             $this->buildDependencyList();
 
