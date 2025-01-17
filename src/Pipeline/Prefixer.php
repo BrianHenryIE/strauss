@@ -59,8 +59,6 @@ class Prefixer
 
             /**
              * Throws an exception, but unlikely to happen.
-             *
-             * TODO: Use {@see File::getContents()} instead?
              */
             $contents = $this->filesystem->read($file->getAbsoluteTargetPath());
 

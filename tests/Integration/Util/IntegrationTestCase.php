@@ -132,6 +132,10 @@ class IntegrationTestCase extends TestCase
             }
         }
 
+        if (!is_dir($dir)) {
+            return;
+        }
+
         $filesystem->deleteDirectory($dir);
     }
 }

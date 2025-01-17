@@ -255,12 +255,13 @@ class FileEnumerator
      */
     protected function findFilesInDirectory(string $workingDir, string $relativeDirectory = '.', string $regexPattern = '/.+\.php$/'): array
     {
+//      $this->filesystem // TODO
         $dir = new RecursiveDirectoryIterator($workingDir . $relativeDirectory);
         $ite = new RecursiveIteratorIterator($dir);
         $files = new RegexIterator($ite, $regexPattern, RegexIterator::GET_MATCH);
         $fileList = array();
         foreach ($files as $file) {
-            $fileList = array_merge($fileList, str_replace($workingDir, '', $file));
+            $fileList = array_merge($fileList, $file);
         }
         return $fileList;
     }

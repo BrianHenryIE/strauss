@@ -236,7 +236,10 @@ class DependenciesCommand extends Command
     {
         $this->logger->info('Determining changes...');
 
-        $fileScanner = new FileSymbolScanner($this->config);
+        $fileScanner = new FileSymbolScanner(
+            $this->config,
+            $this->filesystem
+        );
 
         $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
 
@@ -385,7 +388,12 @@ class DependenciesCommand extends Command
             $filesAutoloaders[$packageName] = $packageFilesAutoloader;
         }
 
-        $classmap = new Autoload($this->config, $this->workingDir, $filesAutoloaders);
+        $classmap = new Autoload(
+            $this->config,
+            $this->workingDir,
+            $filesAutoloaders,
+            $this->filesystem
+        );
 
         $classmap->generate();
     }

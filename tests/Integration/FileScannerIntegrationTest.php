@@ -83,7 +83,7 @@ EOD;
         $config->method('getExcludeNamespacesFromPrefixing')->willReturn(array());
         $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
 
-        $fileScanner = new FileSymbolScanner($config);
+        $fileScanner = new FileSymbolScanner($config, new Filesystem(new LocalFilesystemAdapter('/')));
 
         $discoveredSymbols = $fileScanner->findInFiles($files);
 

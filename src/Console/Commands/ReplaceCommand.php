@@ -160,7 +160,10 @@ class ReplaceCommand extends Command
     {
         $this->logger->info('Determining changes...');
 
-        $fileScanner = new FileSymbolScanner($config);
+        $fileScanner = new FileSymbolScanner(
+            $config,
+            $this->filesystem
+        );
 
         $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
 
