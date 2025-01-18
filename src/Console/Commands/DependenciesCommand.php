@@ -114,10 +114,13 @@ class DependenciesCommand extends Command
             $this->loadConfigFromComposerJson();
             $this->updateConfigFromCli($input);
 
-            $this->filesystem = new ReadOnlyFileSystem(
-                $this->config,
-                new LocalFilesystemAdapter('/')
-            );
+            // if($config->isDryRun()) {
+//            $this->filesystem = new ReadOnlyFileSystem(
+//                $this->config,
+//              $this->workingDir,
+//                new LocalFilesystemAdapter('/')
+//            );
+            // }
 
             $this->buildDependencyList();
 
