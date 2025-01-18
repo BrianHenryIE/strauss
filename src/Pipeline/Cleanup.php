@@ -231,7 +231,7 @@ class Cleanup
                     default: // files, classmap
                         $autoload_key[$type] = array_filter($autoload, function ($file) use ($packageDir) {
                             $filename = $packageDir . $file;
-                            return file_exists($packageDir . $file);
+                            return $this->filesystem->fileExists($packageDir . $file);
                         });
                         break;
                 }
@@ -249,7 +249,7 @@ class Cleanup
      */
     protected function cleanupFilesAutoloader(): void
     {
-        if (! file_exists($this->workingDir . 'vendor/composer/autoload_files.php')) {
+        if (! $this->filesystem->fileExists($this->workingDir . 'vendor/composer/autoload_files.php')) {
             return;
         }
 
@@ -260,7 +260,7 @@ class Cleanup
         $missingFiles = array();
 
         foreach ($files as $file) {
-            if (! file_exists($file)) {
+            if (! $this->filesystem->fileExists($file)) {
                 $missingFiles[] = str_replace([ $this->workingDir, 'vendor/composer/../', 'vendor/' ], '', $file);
                 // When `composer install --no-dev` is run, it creates an index of files autoload files which
                 // references the non-existent files. This causes a fatal error when the autoloader is included.
