@@ -160,7 +160,7 @@ class DependenciesCommand extends Command
     {
         $this->logger->info('Loading package...');
 
-        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir);
+        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . 'composer.json');
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.
@@ -293,14 +293,14 @@ class DependenciesCommand extends Command
             $this->filesystem
         );
 
-        $files = $fileEnumerator->compileFileListForPaths([$this->config->getVendorDirectory() . 'composer']);
+        $files = $fileEnumerator->compileFileListForPaths([$this->config->getVendorDirectory()]);
 
-        $composerPhpFileRelativePaths = array_map(
-            fn($file) => $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory()),
+        $composerPhpFilePaths = array_map(
+            fn($file) => $file->getSourcePath(),
             $files->getFiles()
         );
 
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $composerPhpFileRelativePaths);
+        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $composerPhpFilePaths);
     }
 
     protected function performReplacementsInProjectFiles(): void
@@ -328,15 +328,15 @@ class DependenciesCommand extends Command
 
         $phpFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
 
-        $phpFilesRelativePaths = array_map(
-            fn($file) => $file->getSourcePath($this->workingDir),
+        $phpFilesAbsolutePaths = array_map(
+            fn($file) => $file->getSourcePath(),
             $phpFiles->getFiles()
         );
 
         // TODO: Warn when a file that was specified is not found
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesRelativePaths);
+        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
     protected function writeClassAliasMap(): void

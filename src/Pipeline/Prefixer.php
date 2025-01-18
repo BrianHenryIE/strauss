@@ -73,25 +73,30 @@ class Prefixer
 
     /**
      * @param DiscoveredSymbols $discoveredSymbols
-     * @param string[] $relativeFilePaths
+     * @param string[] $absoluteFilePathsArray
+     *
      * @return void
      * @throws FilesystemException
      */
-    public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, array $relativeFilePaths): void
+    public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, array $absoluteFilePathsArray): void
     {
-        foreach ($relativeFilePaths as $workingDirRelativeFilepath) {
-            if (! $this->filesystem->fileExists($this->workingDir . $workingDirRelativeFilepath)) {
+        foreach ($absoluteFilePathsArray as $workingDirRelativeFilepath) {
+            $fileAbsolutePath = 0 === strpos($workingDirRelativeFilepath, $this->workingDir)
+                    ? $workingDirRelativeFilepath
+                    : $this->workingDir . $workingDirRelativeFilepath;
+
+            if (! $this->filesystem->fileExists($fileAbsolutePath)) {
                 continue;
             }
             
             // Throws an exception, but unlikely to happen.
-            $contents = $this->filesystem->read($this->workingDir . $workingDirRelativeFilepath);
+            $contents = $this->filesystem->read($fileAbsolutePath);
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
                 $this->changedFiles[ $workingDirRelativeFilepath ] = null;
-                $this->filesystem->write($this->workingDir . $workingDirRelativeFilepath, $updatedContents);
+                $this->filesystem->write($fileAbsolutePath, $updatedContents);
             }
         }
     }

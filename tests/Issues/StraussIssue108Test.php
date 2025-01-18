@@ -40,7 +40,8 @@ class StraussIssue108Test extends IntegrationTestCase
 		    "."
 		  ]
 		}
-	  }
+	  },
+	  "update_call_sites": true
     }
   }
 }

@@ -43,7 +43,7 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         // Only one because we haven't run "flat dependency list".
         $dependencies = array_map(function ($element) {

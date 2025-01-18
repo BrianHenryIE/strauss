@@ -47,7 +47,7 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element . '/composer.json';
@@ -110,7 +110,7 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element . '/composer.json';

@@ -203,17 +203,17 @@ class ReplaceCommand extends Command
             $this->filesystem
         );
 
-        $phpFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
-
-        $phpFilesRelativePaths = array_map(
-            fn($file) => $file->getSourcePath($this->workingDir),
-            $phpFiles->getFiles()
-        );
+        $phpFilePaths = $fileEnumerator->compileFileListForPaths($callSitePaths);
 
         // TODO: Warn when a file that was specified is not found (during config validation).
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesRelativePaths);
+        $phpFilesAbsolutePaths = array_map(
+            fn($file) => $file->getSourcePath(),
+            $phpFilePaths->getFiles()
+        );
+
+        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
 

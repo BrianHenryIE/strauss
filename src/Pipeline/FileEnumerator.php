@@ -119,9 +119,7 @@ class FileEnumerator
                     foreach ($namespace_relative_paths as $namespaceRelativePath) {
                         $sourceAbsolutePath = $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
 
-                        if (is_file($sourceAbsolutePath)) {
-                            $this->addFileWithDependency($dependency, $namespaceRelativePath, $type);
-                        } elseif ($this->filesystem->isDir($sourceAbsolutePath)) {
+                        if ($this->filesystem->isDir($sourceAbsolutePath)) {
                             // trailingslashit(). (to remove duplicates).
                             $sourcePath = Path::normalize($sourceAbsolutePath);
 
@@ -145,6 +143,8 @@ class FileEnumerator
                                     $type
                                 );
                             }
+                        } else {
+                            $this->addFileWithDependency($dependency, $namespaceRelativePath, $type);
                         }
                     }
                 }

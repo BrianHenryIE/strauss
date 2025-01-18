@@ -51,6 +51,9 @@ class FileSystem extends FlysystemFilesystem
 
     public function isDir(string $path): bool
     {
+        if (strpos($path, '/.') === strlen($path) - 2) {
+            $path = rtrim($path, '.');
+        }
         $attributes = $this->getAttributes($path);
         return $attributes instanceof DirectoryAttributes;
     }

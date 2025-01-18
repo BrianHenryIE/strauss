@@ -68,7 +68,7 @@ class StraussConfig implements
      *
      * @var ?string[]
      */
-    protected ?array $updateCallSites = null;
+    protected ?array $updateCallSites = array();
 
     /**
      * Packages to copy and (maybe) prefix.
@@ -398,9 +398,16 @@ class StraussConfig implements
     /**
      * @param string[]|null $updateCallSites
      */
-    public function setUpdateCallSites(?array $updateCallSites): void
+    public function setUpdateCallSites($updateCallSites): void
     {
-        $this->updateCallSites = $updateCallSites;
+        if (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === true) {
+            // Setting `null` instructs Strauss to update call sites in the project's autoload key.
+            $this->updateCallSites = null;
+        } elseif (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === false) {
+            $this->updateCallSites = array();
+        } else {
+            $this->updateCallSites = $updateCallSites;
+        }
     }
 
     /**
