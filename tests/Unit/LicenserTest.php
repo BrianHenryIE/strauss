@@ -11,7 +11,7 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\TestCase;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\Filesystem;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use PHPUnit\Framework\Constraint\Callback;
 use Symfony\Component\Finder\Finder;
 

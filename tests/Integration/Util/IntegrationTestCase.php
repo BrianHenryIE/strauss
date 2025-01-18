@@ -9,7 +9,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;
-use League\Flysystem\Filesystem;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;

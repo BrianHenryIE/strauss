@@ -12,9 +12,9 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Path;
 use League\Flysystem\FilesystemException;
-use League\Flysystem\FilesystemReader;
 use Symfony\Component\Finder\Finder;
 
 class FileEnumerator
@@ -39,7 +39,7 @@ class FileEnumerator
     /** @var string[]  */
     protected array $excludeFilePatterns = array();
 
-    protected FilesystemReader $filesystem;
+    protected Filesystem $filesystem;
 
     protected DiscoveredFiles $discoveredFiles;
 
@@ -60,7 +60,7 @@ class FileEnumerator
     public function __construct(
         string $workingDir,
         StraussConfig $config,
-        FilesystemReader $filesystem
+        FileSystem $filesystem
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 

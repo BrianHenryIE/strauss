@@ -7,7 +7,7 @@ use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
-use League\Flysystem\Filesystem;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Mockery;
 
