@@ -61,7 +61,7 @@ class FileSystem extends FlysystemFilesystem
 
         $dirList = $this->listContents($fileDirectory)->toArray();
         foreach ($dirList as $file) { // TODO: use the generator.
-            if ($file->path() === ltrim($absolutePath, DIRECTORY_SEPARATOR)) {
+            if ($file->path() === trim($absolutePath, DIRECTORY_SEPARATOR)) {
                 return $file;
             }
         }
