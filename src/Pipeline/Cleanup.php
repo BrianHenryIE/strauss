@@ -9,9 +9,9 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Json\JsonFile;
 use FilesystemIterator;
-use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -22,7 +22,6 @@ class Cleanup
 {
     use LoggerAwareTrait;
 
-    /** @var Filesystem */
     protected Filesystem $filesystem;
 
     protected string $workingDir;
@@ -205,7 +204,8 @@ class Cleanup
             if (!isset($package['autoload'])) {
                 continue;
             }
-            $packageDir = $this->workingDir . $this->vendorDirectory . ltrim($package['install-path'], '.' . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+            // ./pcre i.e. vendor/composer/pcre
+            $packageDir = realpath($this->workingDir . $this->vendorDirectory . 'composer/' .$package['install-path']);
             if (!$this->filesystem->isDir($packageDir)) {
                 // pcre, xdebug-handler.
                 continue;
@@ -228,10 +228,10 @@ class Cleanup
                             }
                         }
                         break;
-                    default: // files, classmap
+                    default: // files, classmap, psr-0
                         $autoload_key[$type] = array_filter($autoload, function ($file) use ($packageDir) {
-                            $filename = $packageDir . $file;
-                            return $this->filesystem->fileExists($packageDir . $file);
+                            $filename = $packageDir . DIRECTORY_SEPARATOR . $file;
+                            return !is_null($this->filesystem->getAttributes($filename));
                         });
                         break;
                 }
