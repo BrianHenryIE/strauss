@@ -13,7 +13,6 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Path;
-use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemReader;
 use Symfony\Component\Finder\Finder;
@@ -199,7 +198,7 @@ class FileEnumerator
      */
     public function compileFileListForPaths(array $paths): DiscoveredFiles
     {
-        $absoluteFilePaths = $this->findAllFilesAbsolutePaths($this->workingDir, $paths);
+        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths($this->workingDir, $paths);
 
         foreach ($absoluteFilePaths as $sourceAbsolutePath) {
             $f = $this->discoveredFiles->getFile($sourceAbsolutePath)
@@ -209,35 +208,5 @@ class FileEnumerator
         }
 
         return $this->discoveredFiles;
-    }
-
-    /**
-     * @param string $workingDir
-     * @param string[] $relativeFileAndDirPaths
-     * @param string $regexPattern
-     *
-     * @return string[]
-     */
-    protected function findAllFilesAbsolutePaths(string $workingDir, array $relativeFileAndDirPaths, string $regexPattern = '/.+\.php$/'): array
-    {
-        $files = [];
-
-        foreach ($relativeFileAndDirPaths as $path) {
-            $path = strpos($path, rtrim($workingDir, '/\\')) ===0 ? $path : $workingDir . $path;
-
-            $directoryListing = $this->filesystem->listContents(
-                $path,
-                FilesystemReader::LIST_DEEP
-            );
-
-            /** @var FileAttributes[] $files */
-            $fileAttributesArray = $directoryListing->toArray();
-
-            $f = array_map(fn($file) => '/'.$file->path(), $fileAttributesArray);
-
-            $files = array_merge($files, $f);
-        }
-
-        return $files;
     }
 }
