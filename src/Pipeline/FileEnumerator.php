@@ -121,7 +121,7 @@ class FileEnumerator
 
                         if (is_file($sourceAbsolutePath)) {
                             $this->addFileWithDependency($dependency, $namespaceRelativePath, $type);
-                        } elseif (is_dir($sourceAbsolutePath)) {
+                        } elseif ($this->filesystem->isDir($sourceAbsolutePath)) {
                             // trailingslashit(). (to remove duplicates).
                             $sourcePath = Path::normalize($sourceAbsolutePath);
 
@@ -133,7 +133,7 @@ class FileEnumerator
                                 $sourceAbsoluteFilepath = $foundFile->getPathname();
 
                                 // No need to record the directory itself.
-                                if (is_dir($sourceAbsoluteFilepath)) {
+                                if ($this->filesystem->isDir($sourceAbsoluteFilepath)) {
                                     continue;
                                 }
 

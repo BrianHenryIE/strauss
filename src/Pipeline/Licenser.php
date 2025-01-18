@@ -97,7 +97,7 @@ class Licenser
             }
 
             // Don't add licenses to non-existent directories – there were no files copied there!
-            if (! is_dir($targetLicenseFileDir)) {
+            if (! $this->filesystem->isDir($targetLicenseFileDir)) {
                 continue;
             }
 

@@ -157,7 +157,7 @@ class Cleanup
         );
 
         foreach ($rootSourceDirectories as $rootSourceDirectory) {
-            if (!is_dir($rootSourceDirectory) || is_link($rootSourceDirectory)) {
+            if (!$this->filesystem->isDir($rootSourceDirectory) || is_link($rootSourceDirectory)) {
                 continue;
             }
 
@@ -206,7 +206,7 @@ class Cleanup
                 continue;
             }
             $packageDir = $this->workingDir . $this->vendorDirectory . ltrim($package['install-path'], '.' . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-            if (!is_dir($packageDir)) {
+            if (!$this->filesystem->isDir($packageDir)) {
                 // pcre, xdebug-handler.
                 continue;
             }
