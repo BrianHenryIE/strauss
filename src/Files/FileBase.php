@@ -49,6 +49,4 @@ interface FileBase
      * @return DiscoveredSymbol[]
      */
     public function getDiscoveredSymbols(): array;
-
-    public function getContents(): string;
 }

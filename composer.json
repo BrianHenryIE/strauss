@@ -48,7 +48,7 @@
     "scripts": {
         "cs": [
             "phpcs",
-            "phpstan"
+            "phpstan --memory-limit=4G"
         ],
         "cs-fix": [
             "phpcbf || true",

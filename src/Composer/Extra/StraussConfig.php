@@ -6,8 +6,11 @@
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
+use BrianHenryIE\Strauss\Config\ReadOnlyFileSystemConfigInterface;
 use Composer\Composer;
 use Exception;
 use JsonMapper\JsonMapperFactory;
@@ -18,7 +21,10 @@ class StraussConfig implements
     ReplaceConfigInterface,
     FileSymbolScannerConfigInterface,
     FileCopyScannerConfigInterface,
-    ChangeEnumeratorConfigInterface
+    ChangeEnumeratorConfigInterface,
+    CleanupConfigInterface,
+    PrefixerConfigInterface,
+    ReadOnlyFileSystemConfigInterface
 {
     /**
      * The output directory.
@@ -62,7 +68,7 @@ class StraussConfig implements
      *
      * @var ?string[]
      */
-    protected ?array $updateCallSites = null;
+    protected ?array $updateCallSites = array();
 
     /**
      * Packages to copy and (maybe) prefix.
@@ -141,6 +147,11 @@ class StraussConfig implements
      * @var bool
      */
     protected $includeAuthor = true;
+
+    /**
+     * Should the changes be printed to console rather than files modified?
+     */
+    protected bool $dryRun = false;
 
     /**
      * Read any existing Mozart config.
@@ -387,9 +398,16 @@ class StraussConfig implements
     /**
      * @param string[]|null $updateCallSites
      */
-    public function setUpdateCallSites(?array $updateCallSites): void
+    public function setUpdateCallSites($updateCallSites): void
     {
-        $this->updateCallSites = $updateCallSites;
+        if (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === true) {
+            // Setting `null` instructs Strauss to update call sites in the project's autoload key.
+            $this->updateCallSites = null;
+        } elseif (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === false) {
+            $this->updateCallSites = array();
+        } else {
+            $this->updateCallSites = $updateCallSites;
+        }
     }
 
     /**
@@ -616,6 +634,22 @@ class StraussConfig implements
     public function setIncludeAuthor(bool $includeAuthor): void
     {
         $this->includeAuthor = $includeAuthor;
+    }
+
+    /**
+     * Should expected changes be printed to console rather than files modified?
+     */
+    public function isDryRun(): bool
+    {
+        return $this->dryRun;
+    }
+
+    /**
+     * Disable making changes to files; output changes to console instead.
+     */
+    public function setDryRun(bool $dryRun): void
+    {
+        $this->dryRun = $dryRun;
     }
 
     /**

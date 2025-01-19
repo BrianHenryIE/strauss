@@ -9,11 +9,10 @@ namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;
-use League\Flysystem\Filesystem;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
@@ -53,19 +52,24 @@ class IntegrationTestCase extends TestCase
         }
     }
 
-    protected function runStrauss(): int
+    protected function runStrauss(?string &$allOutput = null): int
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             exec('php ' . $this->projectDir . '/strauss.phar', $output, $return_var);
+            $allOutput = $output;
             return $return_var;
         }
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
-        $outputInterfaceMock = $this->createMock(OutputInterface::class);
+        $bufferedOutput = new BufferedOutput(OutputInterface::VERBOSITY_NORMAL);
 
         $strauss = new DependenciesCommand();
 
-        return $strauss->run($inputInterfaceMock, $outputInterfaceMock);
+        $result = $strauss->run($inputInterfaceMock, $bufferedOutput);
+
+        $allOutput = $bufferedOutput->fetch();
+
+        return $result;
     }
 
     /**
@@ -126,6 +130,10 @@ class IntegrationTestCase extends TestCase
                     rmdir($linkPath);
                 }
             }
+        }
+
+        if (!is_dir($dir)) {
+            return;
         }
 
         $filesystem->deleteDirectory($dir);
