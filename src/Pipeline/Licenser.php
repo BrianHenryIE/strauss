@@ -87,7 +87,11 @@ class Licenser
         $this->findLicenseFiles();
 
         foreach ($this->getDiscoveredLicenseFiles() as $licenseFile) {
-            $targetLicenseFile = $this->targetDirectory . $licenseFile;
+            $targetLicenseFile = str_replace(
+                $this->workingDir . $this->vendorDir,
+                $this->workingDir . $this->targetDirectory,
+                $licenseFile
+            );
 
             $targetLicenseFileDir = dirname($targetLicenseFile);
 
@@ -102,7 +106,7 @@ class Licenser
             }
 
             $this->filesystem->copy(
-                $this->vendorDir . $licenseFile,
+                $licenseFile,
                 $targetLicenseFile
             );
         }

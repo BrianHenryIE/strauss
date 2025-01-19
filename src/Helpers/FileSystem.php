@@ -60,8 +60,10 @@ class FileSystem extends FlysystemFilesystem
 
     public function getAttributes(string $absolutePath): ?StorageAttributes
     {
-        $fileDirectory = dirname($absolutePath);
+        $fileDirectory = realpath(dirname($absolutePath));
 
+        // Unsupported symbolic link encountered at location //home
+        // \League\Flysystem\SymbolicLinkEncountered
         $dirList = $this->listContents($fileDirectory)->toArray();
         foreach ($dirList as $file) { // TODO: use the generator.
             if ($file->path() === trim($absolutePath, DIRECTORY_SEPARATOR)) {

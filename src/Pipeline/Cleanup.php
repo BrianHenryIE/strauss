@@ -207,7 +207,6 @@ class Cleanup
             // ./pcre i.e. vendor/composer/pcre
             $packageDir = realpath($this->workingDir . $this->vendorDirectory . 'composer/' .$package['install-path']);
             if (!$this->filesystem->isDir($packageDir)) {
-                // pcre, xdebug-handler.
                 continue;
             }
             $autoload_key = $package['autoload'];
