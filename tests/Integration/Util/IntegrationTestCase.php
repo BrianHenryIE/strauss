@@ -138,4 +138,18 @@ class IntegrationTestCase extends TestCase
 
         $filesystem->deleteDirectory($dir);
     }
+
+    /**
+     * Checks both the PHP version the tests are running under and the system PHP version.
+     */
+    public function markTestSkippedOnPhpVersion(string $php_version, string $operator)
+    {
+        exec('php -v', $output, $return_var);
+        preg_match('/PHP\s([\d\\\.]*)/', $output[0], $php_version_capture);
+        $system_php_version = $php_version_capture[1];
+
+        if (! version_compare(phpversion(), $php_version, $operator) || ! version_compare($system_php_version, $php_version, $operator)) {
+            $this->markTestSkipped("Package specified for test is not PHP 8.2 compatible. Running tests under PHP " . phpversion() . ', ' . $system_php_version);
+        }
+    }
 }
