@@ -28,26 +28,42 @@ class StraussIssue47Test extends IntegrationTestCase
 
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/double-namespace-47",
-  "minimum-stability": "dev",
-  "repositories": {
-    "dragon-public/framework": {
-        "type": "git",
-        "url": "https://gitlab.com/dragon-public/framework/"
+    "name": "brianhenryie/double-namespace-47",
+    "minimum-stability": "dev",
+    "repositories": {
+        "dragon-public/framework": {
+            "type": "git",
+            "url": "https://gitlab.com/dragon-public/framework/"
+        }
+    },
+    "require": {
+        "dragon-public/framework": "1.3.0"
+    },
+    "extra": {
+        "strauss": {
+            "namespace_prefix": "Dragon\\Dependencies\\",
+            "target_directory": "/strauss/",
+            "classmap_prefix": "Dragon_Dependencies_"
+        }
+    },
+    "provide": {
+        "guzzlehttp/guzzle": "*",
+        "ramsey/uuid": "*",
+        "illuminate/config": "*",
+        "illuminate/container": "*",
+        "illuminate/database": "*",
+        "illuminate/filesystem": "*",
+        "illuminate/translation": "*",
+        "illuminate/validation": "*",
+        "illuminate/pagination": "*",
+        "illuminate/view": "*",
+        "league/flysystem": "*",
+        "symfony/var-dumper": "*",
+        "doctrine/dbal": "*",
+        "psr/log": "*",
+        "spatie/guzzle-rate-limiter-middleware": "*"
     }
-  },  
-  "require": {
-	"dragon-public/framework": "1.3.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Dragon\\Dependencies\\",
-      "target_directory": "/strauss/",
-      "classmap_prefix": "Dragon_Dependencies_"
-    }
-  }
 }
-
 EOD;
 
         file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
@@ -74,52 +90,68 @@ EOD;
     {
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/double-namespace-47",
-  "minimum-stability": "dev",
-  "repositories": {
-    "dragon-public/framework": {
-        "type": "git",
-        "url": "https://gitlab.com/dragon-public/framework/"
+    "name": "brianhenryie/double-namespace-47",
+    "minimum-stability": "dev",
+    "repositories": {
+        "dragon-public/framework": {
+            "type": "git",
+            "url": "https://gitlab.com/dragon-public/framework/"
+        }
+    },
+    "require": {
+        "dragon-public/framework": "*"
+    },
+    "extra": {
+        "strauss": {
+            "namespace_prefix": "Dragon\\Dependencies\\",
+            "target_directory": "/strauss/",
+            "classmap_prefix": "Dragon_Dependencies_",
+            "exclude_from_copy": {
+                "packages": [
+                    "guzzlehttp/guzzle",
+                    "ramsey/uuid",
+                    "illuminate/database",
+                    "illuminate/filesystem",
+                    "illuminate/translation",
+                    "illuminate/validation",
+                    "illuminate/pagination",
+                    "symfony/var-dumper",
+                    "doctrine/dbal"
+                ]
+            },
+            "exclude_from_prefix": {
+                "namespaces": [
+                    "voku\\",
+                    "Symfony\\",
+                    "Ramsey\\",
+                    "Illuminate\\",
+                    "GuzzleHttp\\",
+                    "Egulias\\",
+                    "Doctrine\\",
+                    "Carbon",
+                    "Brick\\"
+                ]
+            }
+        }
+    },
+    "provide": {
+        "guzzlehttp/guzzle": "*",
+        "ramsey/uuid": "*",
+        "illuminate/config": "*",
+        "illuminate/container": "*",
+        "illuminate/database": "*",
+        "illuminate/filesystem": "*",
+        "illuminate/translation": "*",
+        "illuminate/validation": "*",
+        "illuminate/pagination": "*",
+        "illuminate/view": "*",
+        "league/flysystem": "*",
+        "symfony/var-dumper": "*",
+        "doctrine/dbal": "*",
+        "psr/log": "*",
+        "spatie/guzzle-rate-limiter-middleware": "*"
     }
-  },  
-  "require": {
-	"dragon-public/framework": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Dragon\\Dependencies\\",
-      "target_directory": "/strauss/",
-      "classmap_prefix": "Dragon_Dependencies_",
-      "exclude_from_copy": {
-        "packages": [
-			"guzzlehttp/guzzle",
-			"ramsey/uuid",
-			"illuminate/database",
-			"illuminate/filesystem",
-			"illuminate/translation",
-			"illuminate/validation",
-			"illuminate/pagination",
-			"symfony/var-dumper",
-			"doctrine/dbal"
-        ]
-      },
-      "exclude_from_prefix": {
-        "namespaces": [
-			"voku\\",
-			"Symfony\\",
-			"Ramsey\\",
-			"Illuminate\\",
-			"GuzzleHttp\\",
-			"Egulias\\",
-			"Doctrine\\",
-			"Carbon",
-			"Brick\\"
-        ]
-      }
-    }
-  }
 }
-
 EOD;
 
         file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
@@ -147,31 +179,47 @@ EOD;
 
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/double-namespace-47",
-  "minimum-stability": "dev",
-  "repositories": {
-    "dragon-public/framework": {
-        "type": "git",
-        "url": "https://gitlab.com/dragon-public/framework/"
+    "name": "brianhenryie/double-namespace-47",
+    "minimum-stability": "dev",
+    "repositories": {
+        "dragon-public/framework": {
+            "type": "git",
+            "url": "https://gitlab.com/dragon-public/framework/"
+        }
+    },
+    "require": {
+        "dragon-public/framework": "*"
+    },
+    "extra": {
+        "strauss": {
+            "namespace_prefix": "Dragon\\Dependencies\\",
+            "target_directory": "/strauss/",
+            "classmap_prefix": "Dragon_Dependencies_",
+            "exclude_from_copy": {
+                "file_patterns": [
+                    "/^((?!Form\/TextArea.php$).)*$/"
+                ]
+            }
+        }
+    },
+    "provide": {
+        "guzzlehttp/guzzle": "*",
+        "ramsey/uuid": "*",
+        "illuminate/config": "*",
+        "illuminate/container": "*",
+        "illuminate/database": "*",
+        "illuminate/filesystem": "*",
+        "illuminate/translation": "*",
+        "illuminate/validation": "*",
+        "illuminate/pagination": "*",
+        "illuminate/view": "*",
+        "league/flysystem": "*",
+        "symfony/var-dumper": "*",
+        "doctrine/dbal": "*",
+        "psr/log": "*",
+        "spatie/guzzle-rate-limiter-middleware": "*"
     }
-  },  
-  "require": {
-	"dragon-public/framework": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Dragon\\Dependencies\\",
-      "target_directory": "/strauss/",
-      "classmap_prefix": "Dragon_Dependencies_",
-      "exclude_from_copy": {
-        "file_patterns": [
-            "/^((?!Form\\/TextArea.php$).)*$/"
-        ]
-	  }
-    }
-  }
 }
-
 EOD;
 
         file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
