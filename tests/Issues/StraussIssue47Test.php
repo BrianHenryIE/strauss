@@ -197,7 +197,7 @@ EOD;
             "classmap_prefix": "Dragon_Dependencies_",
             "exclude_from_copy": {
                 "file_patterns": [
-                    "/^((?!Form\/TextArea.php$).)*$/"
+                    "/^((?!Form\\/TextArea.php$).)*$/"
                 ]
             }
         }
