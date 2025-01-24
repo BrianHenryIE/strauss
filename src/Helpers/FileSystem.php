@@ -67,6 +67,8 @@ class FileSystem extends FlysystemFilesystem
 
     public function isDir(string $path): bool
     {
+        return is_dir($path);
+
         if (strpos($path, '/.') === strlen($path) - 2) {
             $path = rtrim($path, '.');
         }
