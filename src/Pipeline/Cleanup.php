@@ -230,7 +230,7 @@ class Cleanup
                     default: // files, classmap, psr-0
                         $autoload_key[$type] = array_filter($autoload, function ($file) use ($packageDir) {
                             $filename = $packageDir . DIRECTORY_SEPARATOR . $file;
-                            return !is_null($this->filesystem->getAttributes($filename));
+                            return $this->filesystem->isDir($filename) || $this->filesystem->fileExists($filename);
                         });
                         break;
                 }
