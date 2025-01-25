@@ -56,7 +56,7 @@ class IntegrationTestCase extends TestCase
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             exec('php ' . $this->projectDir . '/strauss.phar', $output, $return_var);
-            $allOutput = $output;
+            $allOutput = implode(PHP_EOL, $output);
             return $return_var;
         }
 
