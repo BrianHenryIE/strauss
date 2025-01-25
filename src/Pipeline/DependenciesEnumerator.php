@@ -8,8 +8,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use Exception;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\FilesystemReader;
 
 class DependenciesEnumerator
 {
@@ -29,8 +28,7 @@ class DependenciesEnumerator
      */
     protected array $requiredPackageNames;
 
-    /** @var Filesystem */
-    protected Filesystem $filesystem;
+    protected FilesystemReader $filesystem;
 
     /** @var string[]  */
     protected array $virtualPackages = array(
@@ -62,14 +60,15 @@ class DependenciesEnumerator
      */
     public function __construct(
         string $workingDir,
-        StraussConfig $config
+        StraussConfig $config,
+        FilesystemReader $filesystem
     ) {
         $this->workingDir = $workingDir;
         $this->vendorDir = $config->getVendorDirectory();
         $this->overrideAutoload = $config->getOverrideAutoload();
         $this->requiredPackageNames = $config->getPackages();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($this->workingDir));
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -100,10 +99,10 @@ class DependenciesEnumerator
 
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
-            if (file_exists($packageComposerFile)) {
+            if ($this->filesystem->fileExists($packageComposerFile)) {
                 $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
             } else {
-                $fileContents           = file_get_contents($this->workingDir . 'composer.lock');
+                $fileContents           = $this->filesystem->read($this->workingDir . 'composer.lock');
                 if (false === $fileContents) {
                     throw new Exception('Failed to read contents of ' . $this->workingDir . 'composer.lock');
                 }

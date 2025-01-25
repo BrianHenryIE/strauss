@@ -19,7 +19,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\FilesystemException;
 use Symfony\Component\Finder\Finder;
 
 class Licenser
@@ -51,8 +51,7 @@ class Licenser
      */
     protected array $discoveredLicenseFiles = array();
 
-    /** @var Filesystem */
-    protected $filesystem;
+    protected Filesystem $filesystem;
 
     /**
      * Licenser constructor.
@@ -61,8 +60,13 @@ class Licenser
      * @param ComposerPackage[] $dependencies Whose folders are searched for existing license.txt files.
      * @param string $author To add to each modified file's header
      */
-    public function __construct(StraussConfig $config, string $workingDir, array $dependencies, string $author)
-    {
+    public function __construct(
+        StraussConfig $config,
+        string $workingDir,
+        array $dependencies,
+        string $author,
+        Filesystem $filesystem
+    ) {
         $this->workingDir = $workingDir;
         $this->dependencies = $dependencies;
         $this->author = $author;
@@ -72,15 +76,22 @@ class Licenser
         $this->includeModifiedDate = $config->isIncludeModifiedDate();
         $this->includeAuthor = $config->isIncludeAuthor();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/'));
+        $this->filesystem = $filesystem;
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function copyLicenses(): void
     {
         $this->findLicenseFiles();
 
         foreach ($this->getDiscoveredLicenseFiles() as $licenseFile) {
-            $targetLicenseFile = $this->targetDirectory . $licenseFile;
+            $targetLicenseFile = str_replace(
+                $this->workingDir . $this->vendorDir,
+                $this->workingDir . $this->targetDirectory,
+                $licenseFile
+            );
 
             $targetLicenseFileDir = dirname($targetLicenseFile);
 
@@ -90,12 +101,12 @@ class Licenser
             }
 
             // Don't add licenses to non-existent directories – there were no files copied there!
-            if (! is_dir($targetLicenseFileDir)) {
+            if (! $this->filesystem->isDir($targetLicenseFileDir)) {
                 continue;
             }
 
             $this->filesystem->copy(
-                $this->vendorDir . $licenseFile,
+                $licenseFile,
                 $targetLicenseFile
             );
         }
@@ -141,6 +152,7 @@ class Licenser
      * @param array<string, ComposerPackage> $modifiedFiles
      *
      * @throws \Exception
+     * @throws FilesystemException
      */
     public function addInformationToUpdatedFiles(array $modifiedFiles): void
     {

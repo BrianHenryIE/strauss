@@ -31,7 +31,10 @@
     "autoload-dev": {
         "psr-4": {
             "BrianHenryIE\\Strauss\\Tests\\": "tests/",
-            "BrianHenryIE\\Strauss\\": "tests/"
+            "BrianHenryIE\\Strauss\\": [
+                "tests/",
+                "tests/Integration"
+            ]
         }
     },
     "require-dev": {
@@ -48,7 +51,7 @@
     "scripts": {
         "cs": [
             "phpcs",
-            "phpstan"
+            "phpstan --memory-limit=4G"
         ],
         "cs-fix": [
             "phpcbf || true",

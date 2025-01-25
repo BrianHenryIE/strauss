@@ -6,20 +6,22 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Json\JsonFile;
 use FilesystemIterator;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\FilesystemException;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
 class Cleanup
 {
+    use LoggerAwareTrait;
 
-    /** @var Filesystem */
     protected Filesystem $filesystem;
 
     protected string $workingDir;
@@ -30,11 +32,16 @@ class Cleanup
     protected string $vendorDirectory = 'vendor'. DIRECTORY_SEPARATOR;
     protected string $targetDirectory;
 
-    protected StraussConfig $config;
+    protected CleanupConfigInterface $config;
 
-    public function __construct(StraussConfig $config, string $workingDir)
-    {
+    public function __construct(
+        CleanupConfigInterface $config,
+        string $workingDir,
+        Filesystem $filesystem,
+        LoggerInterface $logger
+    ) {
         $this->config = $config;
+        $this->logger = $logger;
 
         $this->vendorDirectory = $config->getVendorDirectory();
         $this->targetDirectory = $config->getTargetDirectory();
@@ -43,7 +50,7 @@ class Cleanup
         $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getTargetDirectory() !== $config->getVendorDirectory();
         $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getTargetDirectory() !== $config->getVendorDirectory();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($workingDir));
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -51,6 +58,8 @@ class Cleanup
      * then delete empty directories.
      *
      * @param File[] $files
+     *
+     * @throws FilesystemException
      */
     public function cleanup(array $files): void
     {
@@ -76,8 +85,20 @@ class Cleanup
                 // Normal package.
                 if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
                     $packageRelativePath = str_replace($this->workingDir, '', $package->getPackageAbsolutePath());
-                    $this->filesystem->deleteDirectory($packageRelativePath);
+
+                    if ($this->config->isDryRun()) {
+                        $this->logger->info('Would delete ' . $packageRelativePath);
+                        continue;
+                    }
+
+                    $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
                 } else {
+                    if ($this->config->isDryRun()) {
+                        // TODO: log _where_ the symlink is pointing to.
+                        $this->logger->info('Would remove symlink at ' . $package->getRelativePath());
+                        continue;
+                    }
+
                     // If it's a symlink, remove the symlink in the directory
                     $symlinkPath =
                         rtrim(
@@ -107,7 +128,12 @@ class Cleanup
 
                 $sourceRelativePath = $file->getSourcePath($this->workingDir);
 
-                $this->filesystem->delete($sourceRelativePath);
+                if ($this->config->isDryRun()) {
+                    $this->logger->info('Would delete ' . $sourceRelativePath);
+                    continue;
+                }
+
+                $this->filesystem->delete($file->getSourcePath());
 
                 $file->setDidDelete(true);
             }
@@ -130,7 +156,7 @@ class Cleanup
         );
 
         foreach ($rootSourceDirectories as $rootSourceDirectory) {
-            if (!is_dir($rootSourceDirectory) || is_link($rootSourceDirectory)) {
+            if (!$this->filesystem->isDir($rootSourceDirectory) || is_link($rootSourceDirectory)) {
                 continue;
             }
 
@@ -178,9 +204,9 @@ class Cleanup
             if (!isset($package['autoload'])) {
                 continue;
             }
-            $packageDir = $this->workingDir . $this->vendorDirectory . ltrim($package['install-path'], '.' . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-            if (!is_dir($packageDir)) {
-                // pcre, xdebug-handler.
+            // ./pcre i.e. vendor/composer/pcre
+            $packageDir = realpath($this->workingDir . $this->vendorDirectory . 'composer/' .$package['install-path']);
+            if (!$this->filesystem->isDir($packageDir)) {
                 continue;
             }
             $autoload_key = $package['autoload'];
@@ -201,10 +227,10 @@ class Cleanup
                             }
                         }
                         break;
-                    default: // files, classmap
+                    default: // files, classmap, psr-0
                         $autoload_key[$type] = array_filter($autoload, function ($file) use ($packageDir) {
-                            $filename = $packageDir . $file;
-                            return file_exists($packageDir . $file);
+                            $filename = $packageDir . DIRECTORY_SEPARATOR . $file;
+                            return $this->filesystem->isDir($filename) || $this->filesystem->fileExists($filename);
                         });
                         break;
                 }
@@ -218,25 +244,28 @@ class Cleanup
      * After files are deleted, remove them from the Composer files autoloaders.
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/34#issuecomment-922503813
+     * @throws FilesystemException
      */
     protected function cleanupFilesAutoloader(): void
     {
-        if (! file_exists($this->workingDir . 'vendor/composer/autoload_files.php')) {
+        if (! $this->filesystem->fileExists($this->workingDir . 'vendor/composer/autoload_files.php')) {
             return;
         }
+
+        // TODO: dry run.
 
         $files = include $this->workingDir . 'vendor/composer/autoload_files.php';
 
         $missingFiles = array();
 
         foreach ($files as $file) {
-            if (! file_exists($file)) {
+            if (! $this->filesystem->fileExists($file)) {
                 $missingFiles[] = str_replace([ $this->workingDir, 'vendor/composer/../', 'vendor/' ], '', $file);
                 // When `composer install --no-dev` is run, it creates an index of files autoload files which
                 // references the non-existent files. This causes a fatal error when the autoloader is included.
                 // TODO: if delete_vendor_packages is true, do not create this file.
                 $this->filesystem->write(
-                    str_replace($this->workingDir, '', $file),
+                    $file,
                     '<?php // This file was deleted by {@see https://github.com/BrianHenryIE/strauss}.'
                 );
             }
@@ -249,7 +278,7 @@ class Cleanup
         $targetDirectory = $this->targetDirectory;
 
         foreach (array('autoload_static.php', 'autoload_files.php') as $autoloadFile) {
-            $autoloadStaticPhp = $this->filesystem->read('vendor/composer/'.$autoloadFile);
+            $autoloadStaticPhp = $this->filesystem->read($this->workingDir . 'vendor/composer/'.$autoloadFile);
 
             $autoloadStaticPhpAsArray = explode(PHP_EOL, $autoloadStaticPhp);
 
@@ -283,7 +312,7 @@ class Cleanup
 
             $newAutoloadStaticPhp = implode(PHP_EOL, $newAutoloadStaticPhpAsArray);
 
-            $this->filesystem->write('vendor/composer/'.$autoloadFile, $newAutoloadStaticPhp);
+            $this->filesystem->write($this->workingDir . 'vendor/composer/'.$autoloadFile, $newAutoloadStaticPhp);
         }
     }
 }

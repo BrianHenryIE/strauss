@@ -22,6 +22,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use League\Flysystem\FilesystemReader;
 
 class FileCopyScanner
 {
@@ -32,7 +33,8 @@ class FileCopyScanner
 
     public function __construct(
         string $workingDir,
-        FileCopyScannerConfigInterface $config
+        FileCopyScannerConfigInterface $config,
+        FilesystemReader $filesystem
     ) {
         $this->workingDir = $workingDir;
         $this->config = $config;
