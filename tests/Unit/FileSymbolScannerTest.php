@@ -944,7 +944,7 @@ EOD;
      *
      * We were accidentally matching _everything_ using `[\s\S]*` instead of blank space with `[\s\n]*`.
      *
-     * @covers FileSymbolScanner::findInFiles()
+     * @covers ::findInFiles()
      *
      * @see https://github.com/twigphp/Twig/blob/v3.8.0/src/Extension/CoreExtension.php
      */
