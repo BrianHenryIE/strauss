@@ -35,7 +35,6 @@ class StraussIssue11Test extends IntegrationTestCase
 			"dep_namespace": "MZoo\\MBO_Sandbox\\Dependencies\\",
 			"dep_directory": "/src/Mozart/",
 			"packages": [
-				"htmlburger/carbon-fields",
 				"ericmann/wp-session-manager",
 				"ericmann/sessionz"
 			],
@@ -53,7 +52,6 @@ class StraussIssue11Test extends IntegrationTestCase
 					]
 				}
 			}
-
 		}
 	}
 }
