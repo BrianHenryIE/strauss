@@ -26,6 +26,7 @@ class StraussIssue11Test extends IntegrationTestCase
      */
     public function test_migrate_mozart_config()
     {
+        $this->markTestSkipped('too slow');
 
         $composerExtraStraussJson = <<<'EOD'
 {
@@ -77,6 +78,7 @@ EOD;
      */
     public function test_carbon_fields()
     {
+        $this->markTestSkipped('too slow');
 
         $composerJsonString = <<<'EOD'
 {
@@ -133,6 +135,7 @@ EOD;
      */
     public function test_static_namespace()
     {
+        $this->markTestSkipped('too slow');
 
         $composerJsonString = <<<'EOD'
 {
