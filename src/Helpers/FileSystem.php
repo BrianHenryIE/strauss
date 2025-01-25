@@ -3,6 +3,8 @@
  * This class extends Flysystem's Filesystem class to add some additional functionality, particularly around
  * symlinks which are not supported by Flysystem.
  *
+ * TODO: Delete and modify operations on files in symlinked directories should fail with a warning.
+ *
  * @see https://github.com/thephpleague/flysystem/issues/599
  */
 
@@ -42,6 +44,7 @@ class FileSystem extends FlysystemFilesystem
         $files = [];
 
         foreach ($relativeFileAndDirPaths as $path) {
+            // If the path begins with the workingDir just use the path, otherwise concatenate them
             $path = strpos($path, rtrim($workingDir, '/\\')) === 0 ? $path : $workingDir . $path;
 
             if (!$this->isDir($path)) {
