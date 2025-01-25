@@ -1,6 +1,9 @@
 <?php
 /**
  * When running with `--dry-run` the filesystem should be read-only.
+ *
+ * This should work with read operations working as normal but write operations should be
+ * cached so they appear to have been successful but are not actually written to disk.
  */
 
 namespace BrianHenryIE\Strauss\Helpers;
