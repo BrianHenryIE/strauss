@@ -30,7 +30,7 @@ class MozartIssue130Test extends IntegrationTestCase
 {
   "name": "brianhenryie/mozart-issue-130",
   "require": {
-    "htmlburger/carbon-fields": "*"
+    "htmlburger/carbon-fields": "v3.3.3"
   },
   "extra": {
     "mozart":{
