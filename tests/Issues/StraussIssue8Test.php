@@ -24,7 +24,7 @@ class StraussIssue8Test extends IntegrationTestCase
 {
   "name": "brianhenryie/strauss-issue-8",
   "require": {
-    "htmlburger/carbon-fields": "*"
+    "psr/log": "1"
   },
   "extra": {
     "strauss":{
@@ -40,10 +40,12 @@ EOD;
 
         exec('composer install');
 
+        assert(file_exists($this->testsWorkingDir. 'vendor/psr/log/Psr/Log/LogLevel.php'));
+
         $result = $this->runStrauss();
 
-        self::assertEqualsRN(0, $result);
+        assert(0 === $result);
 
-        self::assertFileDoesNotExist($this->testsWorkingDir. 'vendor/htmlburger/carbon-fields/core/Carbon_Fields.php');
+        self::assertFileDoesNotExist($this->testsWorkingDir. 'vendor/psr/log/Psr/Log/LogLevel.php');
     }
 }
