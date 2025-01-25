@@ -7,7 +7,7 @@ composer.lock
 
 *.phar
 
-tests/reports
+tests/_reports
 
 temptestdir
 build
