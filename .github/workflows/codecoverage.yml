@@ -69,9 +69,9 @@ jobs:
       - name: Generate diff coverage report
         if: ${{ matrix.php-version == '8.2' && github.event_name == 'pull_request' }}
         run: |
-          git pull origin master
+          BRANCHED_COMMIT=$(git rev-list $(git rev-parse HEAD) ^master | tail -n 1)
           # Filter the code coverage report to only include the files that have changed.
-          ./tools/php-diff-test coverage --input-files "tests/_reports/php.cov" --diff-from origin/master --diff-to ${{ github.event.pull_request.head.sha }} --output-file tests/_reports/branch/branch.cov
+          ./tools/php-diff-test coverage --input-files "tests/_reports/php.cov" --diff-from $BRANCHED_COMMIT --diff-to ${{ github.event.pull_request.head.sha }} --output-file tests/_reports/branch/branch.cov
           # Generate the HTML report for the filtered code coverage report.
           ./tools/phpcov merge tests/_reports/branch/ --html tests/_reports/diff/html
 
