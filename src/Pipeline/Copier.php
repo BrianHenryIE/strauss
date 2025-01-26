@@ -18,11 +18,14 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
+use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Copier
 {
+    use LoggerAwareTrait;
+
     /**
      * The only path variable with a leading slash.
      * All directories in project end with a slash.
