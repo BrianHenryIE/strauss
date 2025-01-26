@@ -88,7 +88,7 @@
         "test-coverage": [
             "Composer\\Config::disableProcessTimeout",
             "if [ \"$XDEBUG_MODE\" != \"coverage\" ]; then echo \"Run with 'XDEBUG_MODE=coverage composer test-coverage'\"; exit 1; fi;",
-            "phpunit --coverage-text --coverage-html tests/_reports/html --coverage-clover tests/_reports/clover.xml --coverage-php tests/_reports/php.cov -d memory_limit=-1 --order-by=random",
+            "phpunit --filter=\"unit|integration\" --coverage-text --coverage-html tests/_reports/html --coverage-clover tests/_reports/clover.xml --coverage-php tests/_reports/php.cov -d memory_limit=-1 --order-by=random",
             "php-coverage-badger tests/_reports/clover.xml .github/coverage.svg",
             "if [ $(command -v ./tools/phpcov) ]; then git diff master...head > /tmp/master.diff; ./tools/phpcov patch-coverage --path-prefix $(pwd) ./tests/_reports/php.cov /tmp/master.diff || true; fi;",
             "# Run 'open ./tests/_reports/html/index.html' to view report."

@@ -64,7 +64,7 @@ jobs:
           rm -rf *
 
       - name: Generate code coverage
-        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html tests/_reports/html --coverage-clover tests/_reports/clover.xml --coverage-php tests/_reports/php.cov -d memory_limit=-1 --order-by=random
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --filter="unit|integration" --coverage-html tests/_reports/html --coverage-clover tests/_reports/clover.xml --coverage-php tests/_reports/php.cov -d memory_limit=-1 --order-by=random
 
       - name: Generate diff coverage report
         if: ${{ matrix.php-version == '8.2' && github.event_name == 'pull_request' }}
