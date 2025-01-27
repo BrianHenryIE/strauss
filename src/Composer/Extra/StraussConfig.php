@@ -10,7 +10,6 @@ use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
-use BrianHenryIE\Strauss\Config\ReadOnlyFileSystemConfigInterface;
 use Composer\Composer;
 use Exception;
 use JsonMapper\JsonMapperFactory;
@@ -23,8 +22,7 @@ class StraussConfig implements
     FileCopyScannerConfigInterface,
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
-    PrefixerConfigInterface,
-    ReadOnlyFileSystemConfigInterface
+    PrefixerConfigInterface
 {
     /**
      * The output directory.
