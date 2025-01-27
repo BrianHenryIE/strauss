@@ -10,19 +10,26 @@ namespace BrianHenryIE\Strauss\Helpers;
 
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
-use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\UnableToReadFile;
 
-class ReadOnlyFileSystem extends Filesystem
+class ReadOnlyFileSystem implements FilesystemOperator
 {
+    protected FilesystemOperator $filesystem;
+
     protected array $files = [];
 
     protected array $deleted = [];
 
+    public function __construct(FilesystemOperator $filesystem)
+    {
+        $this->filesystem = $filesystem;
+    }
+
     public function fileExists(string $location): bool
     {
         return !isset($this->deleted[$location]) &&
-               (isset($this->files[$location]) || parent::fileExists($location));
+               (isset($this->files[$location]) || $this->filesystem->fileExists($location));
     }
 
     public function write(string $location, string $contents, array $config = []): void
@@ -41,7 +48,7 @@ class ReadOnlyFileSystem extends Filesystem
         if (isset($this->deleted[$location])) {
             throw UnableToReadFile::fromLocation($location);
         }
-        return $this->files[ $location ] ?? parent::read($location);
+        return $this->files[ $location ] ?? $this->filesystem->read($location);
     }
 
     public function readStream(string $location)
@@ -71,7 +78,7 @@ class ReadOnlyFileSystem extends Filesystem
     public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
     {
         /** @var FileAttributes[] $actual */
-        $actual = parent::listContents($location, $deep)->toArray();
+        $actual = $this->filesystem->listContents($location, $deep)->toArray();
 
         $toAdd = array_filter($this->files, function ($key) use ($location) {
             return strpos($key, $location) === 0;
