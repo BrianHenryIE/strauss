@@ -67,79 +67,16 @@ class Cleanup
             return;
         }
 
+        if ($this->isDeleteVendorPackages) {
+            $this->doIsDeleteVendorPackages($files);
+        } elseif ($this->isDeleteVendorFiles) {
+            $this->doIsDeleteVendorFiles($files);
+        }
+
         $sourceFiles = array_map(
             fn($file) => $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory()),
             $files
         );
-
-        if ($this->isDeleteVendorPackages) {
-            $packages = [];
-            foreach ($files as $file) {
-                if ($file instanceof FileWithDependency) {
-                    $packages[$file->getDependency()->getPackageName()] = $file->getDependency();
-                }
-            }
-
-            /** @var ComposerPackage $package */
-            foreach ($packages as $package) {
-                // Normal package.
-                if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
-                    $packageRelativePath = str_replace($this->workingDir, '', $package->getPackageAbsolutePath());
-
-                    if ($this->config->isDryRun()) {
-                        $this->logger->info('Would delete ' . $packageRelativePath);
-                        continue;
-                    }
-
-                    $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
-                } else {
-                    if ($this->config->isDryRun()) {
-                        // TODO: log _where_ the symlink is pointing to.
-                        $this->logger->info('Would remove symlink at ' . $package->getRelativePath());
-                        continue;
-                    }
-
-                    // If it's a symlink, remove the symlink in the directory
-                    $symlinkPath =
-                        rtrim(
-                            $this->workingDir . $this->config->getVendorDirectory() . $package->getRelativePath(),
-                            '/'
-                        );
-
-                    if (false !== strpos('WIN', PHP_OS)) {
-                        /**
-                         * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
-                         * "On windows, take care that `is_link()` returns false for Junctions."
-                         *
-                         * @see https://www.php.net/manual/en/function.is-link.php#113263
-                         * @see https://stackoverflow.com/a/18262809/336146
-                         */
-                        rmdir($symlinkPath);
-                    } else {
-                        unlink($symlinkPath);
-                    }
-                }
-            }
-        } elseif ($this->isDeleteVendorFiles) {
-            foreach ($files as $file) {
-                if (!$file->isDoDelete()) {
-                    continue;
-                }
-
-                $sourceRelativePath = $file->getSourcePath($this->workingDir);
-
-                if ($this->config->isDryRun()) {
-                    $this->logger->info('Would delete ' . $sourceRelativePath);
-                    continue;
-                }
-
-                $this->filesystem->delete($file->getSourcePath());
-
-                $file->setDidDelete(true);
-            }
-
-            $this->cleanupFilesAutoloader();
-        }
 
         // Get the root folders of the moved files.
         $rootSourceDirectories = [];
@@ -314,5 +251,86 @@ class Cleanup
 
             $this->filesystem->write($this->workingDir . 'vendor/composer/'.$autoloadFile, $newAutoloadStaticPhp);
         }
+    }
+
+    /**
+     * @param array $files
+     */
+    protected function doIsDeleteVendorPackages(array $files)
+    {
+        $packages = [];
+        foreach ($files as $file) {
+            if ($file instanceof FileWithDependency) {
+                $packages[ $file->getDependency()->getPackageName() ] = $file->getDependency();
+            }
+        }
+
+        /** @var ComposerPackage $package */
+        foreach ($packages as $package) {
+            // Normal package.
+            if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
+                $packageRelativePath = str_replace($this->workingDir, '', $package->getPackageAbsolutePath());
+
+                if ($this->config->isDryRun()) {
+                    $this->logger->info('Would delete ' . $packageRelativePath);
+                    continue;
+                }
+
+                $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
+            } else {
+                if ($this->config->isDryRun()) {
+                    // TODO: log _where_ the symlink is pointing to.
+                    $this->logger->info('Would remove symlink at ' . $package->getRelativePath());
+                    continue;
+                }
+
+                // If it's a symlink, remove the symlink in the directory
+                $symlinkPath =
+                    rtrim(
+                        $this->workingDir . $this->config->getVendorDirectory() . $package->getRelativePath(),
+                        '/'
+                    );
+
+                if (false !== strpos('WIN', PHP_OS)) {
+                    /**
+                     * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
+                     * "On windows, take care that `is_link()` returns false for Junctions."
+                     *
+                     * @see https://www.php.net/manual/en/function.is-link.php#113263
+                     * @see https://stackoverflow.com/a/18262809/336146
+                     */
+                    rmdir($symlinkPath);
+                } else {
+                    unlink($symlinkPath);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param array $files
+     *
+     * @throws FilesystemException
+     */
+    public function doIsDeleteVendorFiles(array $files)
+    {
+        foreach ($files as $file) {
+            if (! $file->isDoDelete()) {
+                continue;
+            }
+
+            $sourceRelativePath = $file->getSourcePath($this->workingDir);
+
+            if ($this->config->isDryRun()) {
+                $this->logger->info('Would delete ' . $sourceRelativePath);
+                continue;
+            }
+
+            $this->filesystem->delete($file->getSourcePath());
+
+            $file->setDidDelete(true);
+        }
+
+        $this->cleanupFilesAutoloader();
     }
 }
