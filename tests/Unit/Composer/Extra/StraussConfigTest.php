@@ -857,6 +857,8 @@ EOD;
         $input->expects('hasOption')->with('deleteVendorPackages')->andReturn(false);
         $input->expects('hasOption')->with('delete_vendor_packages')->andReturn(false);
 
+        $input->expects('hasOption')->with('dry-run')->andReturn(false);
+
         $sut = new StraussConfig($composer);
         $sut->updateFromCli($input);
 
@@ -888,6 +890,8 @@ EOD;
 
         $input->expects('hasOption')->with('deleteVendorPackages')->andReturn(false);
         $input->expects('hasOption')->with('delete_vendor_packages')->andReturn(false);
+
+        $input->expects('hasOption')->with('dry-run')->andReturn(false);
 
         $sut = new StraussConfig($composer);
         $sut->updateFromCli($input);
@@ -922,6 +926,8 @@ EOD;
 
         $input->expects('hasOption')->with('deleteVendorPackages')->andReturn(false);
         $input->expects('hasOption')->with('delete_vendor_packages')->andReturn(false);
+
+        $input->expects('hasOption')->with('dry-run')->andReturn(false);
 
         $sut = new StraussConfig($composer);
         $sut->updateFromCli($input);
