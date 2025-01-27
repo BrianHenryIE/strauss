@@ -8,64 +8,120 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use BrianHenryIE\Strauss\Config\ReadOnlyFileSystemConfigInterface;
+use League\Flysystem\DirectoryListing;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemAdapter;
-use League\Flysystem\PathNormalizer;
+use League\Flysystem\UnableToReadFile;
 
 class ReadOnlyFileSystem extends Filesystem
 {
+    protected array $files = [];
 
-    protected ReadOnlyFileSystemConfigInterface $config;
-
-    public function __construct(
-        ReadOnlyFileSystemConfigInterface $readOnlyFileSystemConfig,
-        string $workingDir,
-        FilesystemAdapter $adapter,
-        array $config = [],
-        PathNormalizer $pathNormalizer = null
-    ) {
-        parent::__construct($adapter, $config, $pathNormalizer);
-
-        $this->config = $readOnlyFileSystemConfig;
-        $this->workingDir = $workingDir;
-    }
-
-    protected function replaceTargetDirWithSourceDir(string $dir): string
-    {
-        if (strpos($dir, $this->workingDir . $this->config->getTargetDirectory()) === 0) {
-            $dir = str_replace($this->workingDir . $this->config->getTargetDirectory(), $this->workingDir . $this->config->getVendorDirectory(), $dir);
-        }
-        return $dir;
-    }
+    protected array $deleted = [];
 
     public function fileExists(string $location): bool
     {
-        return parent::fileExists(
-            $this->replaceTargetDirWithSourceDir($location)
-        );
-    }
-
-    public function read(string $location): string
-    {
-        return parent::read(
-            $this->replaceTargetDirWithSourceDir($location)
-        );
+        return !isset($this->deleted[$location]) &&
+               (isset($this->files[$location]) || parent::fileExists($location));
     }
 
     public function write(string $location, string $contents, array $config = []): void
     {
+        $this->files[$location] = $contents;
+        unset($this->deleted[$location]);
+    }
+
+    public function writeStream(string $location, $contents, array $config = []): void
+    {
+        throw new \BadMethodCallException('Not yet implemented');
+    }
+
+    public function read(string $location): string
+    {
+        if (isset($this->deleted[$location])) {
+            throw UnableToReadFile::fromLocation($location);
+        }
+        return $this->files[ $location ] ?? parent::read($location);
+    }
+
+    public function readStream(string $location)
+    {
+        throw new \BadMethodCallException('Not yet implemented');
     }
 
     public function delete(string $location): void
     {
+        unset($this->files[$location]);
+        $this->deleted[$location] = true;
     }
 
     public function deleteDirectory(string $location): void
     {
+        unset($this->files[$location]);
+        $this->deleted[$location] = true;
     }
+
 
     public function createDirectory(string $location, array $config = []): void
     {
+        $this->files[$location] = true;
+        unset($this->deleted[$location]);
+    }
+
+    public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
+    {
+        /** @var FileAttributes[] $actual */
+        $actual = parent::listContents($location, $deep)->toArray();
+
+        $toAdd = array_filter($this->files, function ($key) use ($location) {
+            return strpos($key, $location) === 0;
+        }, ARRAY_FILTER_USE_KEY);
+
+        foreach ($toAdd as $path => $contents) {
+            $actual[] = new FileAttributes($path, strlen($contents), 'public');
+        }
+
+        $afterFilterDeleted = array_filter(
+            $actual,
+            fn($item) => ! in_array('/'.$item->path(), array_keys($this->deleted))
+        );
+
+        return new DirectoryListing($afterFilterDeleted);
+    }
+
+    public function move(string $source, string $destination, array $config = []): void
+    {
+        throw new \BadMethodCallException('Not yet implemented');
+    }
+
+    public function copy(string $source, string $destination, array $config = []): void
+    {
+        $this->files[$destination] = $this->read($source);
+        unset($this->deleted[$destination]);
+    }
+
+    public function lastModified(string $path): int
+    {
+        throw new \BadMethodCallException('Not yet implemented');
+    }
+
+    public function fileSize(string $path): int
+    {
+        throw new \BadMethodCallException('Not yet implemented');
+    }
+
+    public function mimeType(string $path): string
+    {
+        throw new \BadMethodCallException('Not yet implemented');
+    }
+
+    public function setVisibility(string $path, string $visibility): void
+    {
+        throw new \BadMethodCallException('Not yet implemented');
+    }
+
+    public function visibility(string $path): string
+    {
+        throw new \BadMethodCallException('Not yet implemented');
     }
 }
