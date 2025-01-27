@@ -11,12 +11,9 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Json\JsonFile;
-use FilesystemIterator;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 
 class Cleanup
 {
@@ -105,17 +102,24 @@ class Cleanup
                 continue;
             }
 
-            $it = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator(
-                    $this->workingDir . $rootSourceDirectory,
-                    FilesystemIterator::SKIP_DOTS
-                ),
-                RecursiveIteratorIterator::CHILD_FIRST
+            $dirList = $this->filesystem->listContents($this->workingDir . $rootSourceDirectory, true);
+
+            $allFilePaths = array_map(
+                fn($file) => $file->path(),
+                $dirList->toArray()
             );
 
-            foreach ($it as $file) {
-                if ($file->isDir() && $this->dirIsEmpty((string) $file)) {
-                    rmdir((string)$file);
+            // Sort by longest path first, so subdirectories are deleted before the parent directories are checked.
+            usort(
+                $allFilePaths,
+                fn($a, $b) => strlen($b) - strlen($a)
+            );
+
+            foreach ($allFilePaths as $filePath) {
+                if ($this->filesystem->isDir($filePath)
+                    && $this->dirIsEmpty($filePath)
+                ) {
+                    $this->filesystem->deleteDirectory($filePath);
                 }
             }
         }
