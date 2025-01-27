@@ -170,4 +170,24 @@ class FileSystem implements FilesystemOperator
     {
         $this->flysystem->copy($source, $destination, $config);
     }
+
+    // Some version of Flysystem has:
+    // directoryExists
+    public function directoryExists(string $location): bool
+    {
+        if (method_exists($this->flysystem, 'directoryExists')) {
+            return $this->flysystem->directoryExists($location);
+        }
+        return is_dir($location);
+    }
+
+    // Some version of Flysystem has:
+    // has
+    public function has(string $location): bool
+    {
+        if (method_exists($this->flysystem, 'has')) {
+            return $this->flysystem->has($location);
+        }
+        return $this->fileExists($location) || $this->directoryExists($location);
+    }
 }
