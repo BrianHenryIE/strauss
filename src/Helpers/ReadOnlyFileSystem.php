@@ -131,4 +131,15 @@ class ReadOnlyFileSystem implements FilesystemOperator
     {
         throw new \BadMethodCallException('Not yet implemented');
     }
+
+
+    public function directoryExists(string $location): bool
+    {
+        throw new \BadMethodCallException('Not yet implemented');
+    }
+
+    public function has(string $location): bool
+    {
+        throw new \BadMethodCallException('Not yet implemented');
+    }
 }
