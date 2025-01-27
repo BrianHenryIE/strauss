@@ -121,11 +121,9 @@ class Cleanup
         }
     }
 
-    // TODO: Use Symfony or Flysystem functions.
     protected function dirIsEmpty(string $dir): bool
     {
-        $di = new RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS);
-        return iterator_count($di) === 0;
+        return empty($this->filesystem->listContents($dir));
     }
 
     /**
