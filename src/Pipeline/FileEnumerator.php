@@ -15,7 +15,6 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Path;
 use League\Flysystem\FilesystemException;
-use Symfony\Component\Finder\Finder;
 
 class FileEnumerator
 {
@@ -117,19 +116,19 @@ class FileEnumerator
                     }
 
                     foreach ($namespace_relative_paths as $namespaceRelativePath) {
-                        $sourceAbsolutePath = $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
+                        $sourceAbsoluteDirPath = in_array($namespaceRelativePath, ['.','./'])
+                            ? $dependency->getPackageAbsolutePath()
+                            : $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
 
-                        if ($this->filesystem->isDir($sourceAbsolutePath)) {
+                        if ($this->filesystem->isDir($sourceAbsoluteDirPath)) {
                             // trailingslashit(). (to remove duplicates).
-                            $sourcePath = Path::normalize($sourceAbsolutePath);
+                            $sourcePath = Path::normalize($sourceAbsoluteDirPath);
 
-//                          $this->findFilesInDirectory()
-                            $finder = new Finder();
-                            $finder->files()->in($sourcePath)->followLinks();
+                            $fileList = $this->filesystem->listContents($sourcePath, true);
+                            $actualFileList = $fileList->toArray();
 
-                            foreach ($finder as $foundFile) {
-                                $sourceAbsoluteFilepath = $foundFile->getPathname();
-
+                            foreach ($actualFileList as $foundFile) {
+                                $sourceAbsoluteFilepath = '/'. $foundFile->path();
                                 // No need to record the directory itself.
                                 if ($this->filesystem->isDir($sourceAbsoluteFilepath)) {
                                     continue;
