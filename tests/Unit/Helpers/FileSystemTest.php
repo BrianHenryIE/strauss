@@ -19,10 +19,14 @@ class FileSystemTest extends TestCase
      */
     public function testFileAttributes(): void
     {
-        $sut = new Filesystem(new LocalFilesystemAdapter('/'), [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ]);
-
+        $sut = new Filesystem(
+            new \League\Flysystem\Filesystem(
+                new LocalFilesystemAdapter('/'),
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ]
+            )
+        );
 
         $result = $sut->getAttributes(__FILE__);
 
@@ -31,9 +35,14 @@ class FileSystemTest extends TestCase
 
     public function testIsDirTrue()
     {
-        $sut = new Filesystem(new LocalFilesystemAdapter('/'), [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ]);
+        $sut = new Filesystem(
+            new \League\Flysystem\Filesystem(
+                new LocalFilesystemAdapter('/'),
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ]
+            )
+        );
 
         $result = $sut->isDir(__DIR__);
 
