@@ -73,6 +73,14 @@ class Cleanup
             $this->doIsDeleteVendorFiles($files);
         }
 
+        $this->deleteEmptyDirectories($files);
+
+        $this->cleanupInstalledJson();
+    }
+
+    protected function deleteEmptyDirectories(array $files)
+    {
+
         $sourceFiles = array_map(
             fn($file) => $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory()),
             $files
@@ -111,8 +119,6 @@ class Cleanup
                 }
             }
         }
-
-        $this->cleanupInstalledJson();
     }
 
     // TODO: Use Symfony or Flysystem functions.
