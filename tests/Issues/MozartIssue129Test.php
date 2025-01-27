@@ -40,7 +40,7 @@ class MozartIssue129Test extends TestCase
         $original = 'Example\Sdk\Endpoints';
         $replacement = 'Strauss\Example\Sdk\Endpoints';
 
-        $replacer = new Prefixer($config, __DIR__, new Filesystem(new LocalFilesystemAdapter('/')));
+        $replacer = new Prefixer($config, __DIR__, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
 
         $result = $replacer->replaceNamespace($phpString, $original, $replacement);
 

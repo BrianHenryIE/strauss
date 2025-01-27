@@ -16,8 +16,8 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -38,8 +38,7 @@ class Copier
 
     protected DiscoveredFiles $files;
 
-    /** @var Filesystem */
-    protected Filesystem $filesystem;
+    protected FilesystemOperator $filesystem;
 
     protected StraussConfig $config;
 
@@ -56,7 +55,7 @@ class Copier
         DiscoveredFiles $files,
         string $workingDir,
         StraussConfig $config,
-        Filesystem $filesystem,
+        FilesystemOperator $filesystem,
         LoggerInterface $logger
     ) {
         $this->files = $files;

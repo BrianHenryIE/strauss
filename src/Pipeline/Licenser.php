@@ -18,8 +18,8 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 
 class Licenser
 {
@@ -50,7 +50,7 @@ class Licenser
      */
     protected array $discoveredLicenseFiles = array();
 
-    protected Filesystem $filesystem;
+    protected FilesystemOperator $filesystem;
 
     /**
      * Licenser constructor.
@@ -64,7 +64,7 @@ class Licenser
         string $workingDir,
         array $dependencies,
         string $author,
-        Filesystem $filesystem
+        FilesystemOperator $filesystem
     ) {
         $this->workingDir = $workingDir;
         $this->dependencies = $dependencies;

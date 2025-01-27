@@ -86,7 +86,10 @@ class ReplaceCommand extends Command
             getcwd()
         );
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/')); // TODO: permissions?
+        // TODO: permissions?
+        $this->filesystem = new Filesystem(
+            new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))
+        );
     }
 
     /**

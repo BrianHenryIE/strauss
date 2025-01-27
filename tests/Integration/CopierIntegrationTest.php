@@ -62,12 +62,12 @@ EOD;
         $config->method('getVendorDirectory')->willReturn($vendorDir);
         $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/')));
+        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/'))))->scanFiles($files);
+        (new FileCopyScanner($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')))))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/')), new NullLogger());
+        $copier = new Copier($files, $workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))), new NullLogger());
 
         $file = 'ContainerAwareTrait.php';
         $relativePath = 'league/container/src/';
@@ -125,12 +125,12 @@ EOD;
         $config->method('getVendorDirectory')->willReturn($vendorDir);
         $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/')));
+        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/'))))->scanFiles($files);
+        (new FileCopyScanner($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')))))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/')), new NullLogger());
+        $copier = new Copier($files, $workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))), new NullLogger());
 
         $file = 'Client.php';
         $relativePath = 'google/apiclient/src/';

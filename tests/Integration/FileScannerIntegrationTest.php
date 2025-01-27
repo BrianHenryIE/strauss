@@ -65,13 +65,13 @@ EOD;
         $config->method('getVendorDirectory')->willReturn($vendorDir);
         $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/')));
+        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/'))))->scanFiles($files);
+        (new FileCopyScanner($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')))))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config, new Filesystem(new LocalFilesystemAdapter('/')), new NullLogger());
+        $copier = new Copier($files, $workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))), new NullLogger());
 
         $copier->prepareTarget();
 
@@ -83,7 +83,7 @@ EOD;
         $config->method('getExcludeNamespacesFromPrefixing')->willReturn(array());
         $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
 
-        $fileScanner = new FileSymbolScanner($config, new Filesystem(new LocalFilesystemAdapter('/')));
+        $fileScanner = new FileSymbolScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
 
         $discoveredSymbols = $fileScanner->findInFiles($files);
 

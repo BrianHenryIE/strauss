@@ -74,7 +74,7 @@ EOD;
 
         $exception = null;
 
-        $prefixer = new Prefixer($config, $this->testsWorkingDir, new Filesystem(new LocalFilesystemAdapter('/')));
+        $prefixer = new Prefixer($config, $this->testsWorkingDir, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
 
         try {
             $prefixer->replaceClassname($contents, $originalClassname, $classnamePrefix);
