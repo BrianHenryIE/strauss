@@ -162,11 +162,11 @@ class Cleanup
                             if (is_array($dirs)) {
                                 $autoload_key[$type][$namespace] = array_filter($dirs, function ($dir) use ($packageDir) {
                                     $dir = $packageDir . $dir;
-                                    return is_readable($dir);
+                                    return $this->filesystem->isDir($dir) || $this->filesystem->fileExists($dir);
                                 });
                             } else {
                                 $dir = $packageDir . $dirs;
-                                if (! is_readable($dir)) {
+                                if (! ($this->filesystem->isDir($dir) || $this->filesystem->fileExists($dir))) {
                                     unset($autoload_key[$type][$namespace]);
                                 }
                             }
