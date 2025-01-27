@@ -120,7 +120,7 @@ class FileEnumerator
                             ? $dependency->getPackageAbsolutePath()
                             : $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
 
-                        if ($this->filesystem->isDir($sourceAbsoluteDirPath)) {
+                        if ($this->filesystem->directoryExists($sourceAbsoluteDirPath)) {
                             // trailingslashit(). (to remove duplicates).
                             $sourcePath = Path::normalize($sourceAbsoluteDirPath);
 
@@ -130,7 +130,7 @@ class FileEnumerator
                             foreach ($actualFileList as $foundFile) {
                                 $sourceAbsoluteFilepath = '/'. $foundFile->path();
                                 // No need to record the directory itself.
-                                if ($this->filesystem->isDir($sourceAbsoluteFilepath)) {
+                                if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
                                     continue;
                                 }
 

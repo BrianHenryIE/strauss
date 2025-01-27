@@ -98,7 +98,7 @@ class Cleanup
         );
 
         foreach ($rootSourceDirectories as $rootSourceDirectory) {
-            if (!$this->filesystem->isDir($rootSourceDirectory) || is_link($rootSourceDirectory)) {
+            if (!$this->filesystem->directoryExists($rootSourceDirectory) || is_link($rootSourceDirectory)) {
                 continue;
             }
 
@@ -116,7 +116,7 @@ class Cleanup
             );
 
             foreach ($allFilePaths as $filePath) {
-                if ($this->filesystem->isDir($filePath)
+                if ($this->filesystem->directoryExists($filePath)
                     && $this->dirIsEmpty($filePath)
                 ) {
                     $this->filesystem->deleteDirectory($filePath);
@@ -151,7 +151,7 @@ class Cleanup
             }
             // ./pcre i.e. vendor/composer/pcre
             $packageDir = realpath($this->workingDir . $this->vendorDirectory . 'composer/' .$package['install-path']);
-            if (!$this->filesystem->isDir($packageDir)) {
+            if (!$this->filesystem->directoryExists($packageDir)) {
                 continue;
             }
             $autoload_key = $package['autoload'];
@@ -162,11 +162,11 @@ class Cleanup
                             if (is_array($dirs)) {
                                 $autoload_key[$type][$namespace] = array_filter($dirs, function ($dir) use ($packageDir) {
                                     $dir = $packageDir . $dir;
-                                    return $this->filesystem->isDir($dir) || $this->filesystem->fileExists($dir);
+                                    return $this->filesystem->directoryExists($dir) || $this->filesystem->fileExists($dir);
                                 });
                             } else {
                                 $dir = $packageDir . $dirs;
-                                if (! ($this->filesystem->isDir($dir) || $this->filesystem->fileExists($dir))) {
+                                if (! ($this->filesystem->directoryExists($dir) || $this->filesystem->fileExists($dir))) {
                                     unset($autoload_key[$type][$namespace]);
                                 }
                             }
@@ -175,7 +175,7 @@ class Cleanup
                     default: // files, classmap, psr-0
                         $autoload_key[$type] = array_filter($autoload, function ($file) use ($packageDir) {
                             $filename = $packageDir . DIRECTORY_SEPARATOR . $file;
-                            return $this->filesystem->isDir($filename) || $this->filesystem->fileExists($filename);
+                            return $this->filesystem->directoryExists($filename) || $this->filesystem->fileExists($filename);
                         });
                         break;
                 }

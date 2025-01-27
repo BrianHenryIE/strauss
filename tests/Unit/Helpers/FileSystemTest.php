@@ -44,7 +44,7 @@ class FileSystemTest extends TestCase
             )
         );
 
-        $result = $sut->isDir(__DIR__);
+        $result = $sut->directoryExists(__DIR__);
 
         $this->assertTrue($result);
     }
@@ -60,7 +60,7 @@ class FileSystemTest extends TestCase
             )
         );
 
-        $result = $sut->isDir(__FILE__);
+        $result = $sut->directoryExists(__FILE__);
 
         $this->assertFalse($result);
     }

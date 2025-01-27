@@ -25,8 +25,8 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         mkdir($dir);
 
-        $this->assertTrue($fs->isDir($dir));
-        $this->assertFalse($fs->isDir($this->testsWorkingDir . 'nonexistent'));
+        $this->assertTrue($fs->directoryExists($dir));
+        $this->assertFalse($fs->directoryExists($this->testsWorkingDir . 'nonexistent'));
     }
 
     /**

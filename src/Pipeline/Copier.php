@@ -77,7 +77,7 @@ class Copier
      */
     public function prepareTarget(): void
     {
-        if (! $this->filesystem->isDir($this->absoluteTargetDir)) {
+        if (! $this->filesystem->directoryExists($this->absoluteTargetDir)) {
             $this->filesystem->createDirectory($this->absoluteTargetDir);
         } else {
             foreach ($this->files->getFiles() as $file) {

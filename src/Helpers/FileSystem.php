@@ -43,7 +43,7 @@ class FileSystem implements FilesystemOperator
             // If the path begins with the workingDir just use the path, otherwise concatenate them
             $path = strpos($path, rtrim($workingDir, '/\\')) === 0 ? $path : $workingDir . $path;
 
-            if (!$this->isDir($path)) {
+            if (!$this->directoryExists($path)) {
                 $files[] = $path;
                 continue;
             }
@@ -62,17 +62,6 @@ class FileSystem implements FilesystemOperator
         }
 
         return $files;
-    }
-
-    public function isDir(string $path): bool
-    {
-        return is_dir($path);
-
-        if (strpos($path, '/.') === strlen($path) - 2) {
-            $path = rtrim($path, '.');
-        }
-        $attributes = $this->getAttributes($path);
-        return $attributes instanceof DirectoryAttributes;
     }
 
     public function getAttributes(string $absolutePath): ?StorageAttributes
