@@ -8,8 +8,8 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use Exception;
-use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 
 class Prefixer
 {
@@ -17,7 +17,7 @@ class Prefixer
 
     protected string $workingDir;
 
-    protected Filesystem $filesystem;
+    protected FilesystemOperator $filesystem;
 
     /**
      * array<$workingDirRelativeFilepath, $package> or null if the file is not from a dependency (i.e. a project file).
@@ -29,7 +29,7 @@ class Prefixer
     public function __construct(
         PrefixerConfigInterface $config,
         string $workingDir,
-        Filesystem $filesystem
+        FilesystemOperator $filesystem
     ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
