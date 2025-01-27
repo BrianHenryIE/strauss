@@ -60,6 +60,36 @@ EOD;
      */
     public function test_cli_argument(): void
     {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strauss",
+  "require": {
+    "league/container": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "classmap_prefix": "BrianHenryIE_Strauss_",
+      "delete_vendor_files": true
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $params = '--dry-run';
+
+        $this->runStrauss($output, $params);
+
+        $this->assertStringContainsString('Would copy', $output);
+
+        $this->assertFileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
+        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
     }
 
     /**
@@ -67,5 +97,35 @@ EOD;
      */
     public function test_cli_argument_overrides_composer_json(): void
     {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strauss",
+  "require": {
+    "league/container": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "classmap_prefix": "BrianHenryIE_Strauss_",
+      "delete_vendor_files": true,
+      "dry_run": true
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $params = '--dry-run=false';
+
+        $this->runStrauss($output, $params);
+
+        $this->assertStringNotContainsString('Would copy', $output);
+
+        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
     }
 }

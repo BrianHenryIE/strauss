@@ -11,6 +11,8 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mockery;
+use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -52,20 +54,26 @@ class IntegrationTestCase extends TestCase
         }
     }
 
-    protected function runStrauss(?string &$allOutput = null): int
+    protected function runStrauss(?string &$allOutput = null, ?string $params = null): int
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
-            exec('php ' . $this->projectDir . '/strauss.phar', $output, $return_var);
+            exec('php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             return $return_var;
         }
 
-        $inputInterfaceMock = $this->createMock(InputInterface::class);
+        if (!empty($params)) {
+            $argv = array_merge(['strauss'], explode(' ', $params));
+            $inputInterface = new ArgvInput($argv);
+        } else {
+            $inputInterface = $this->createMock(InputInterface::class);
+        }
+
         $bufferedOutput = new BufferedOutput(OutputInterface::VERBOSITY_NORMAL);
 
         $strauss = new DependenciesCommand();
 
-        $result = $strauss->run($inputInterfaceMock, $bufferedOutput);
+        $result = $strauss->run($inputInterface, $bufferedOutput);
 
         $allOutput = $bufferedOutput->fetch();
 

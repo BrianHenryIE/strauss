@@ -7,6 +7,7 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Cleanup;
@@ -81,6 +82,14 @@ class DependenciesCommand extends Command
             null,
             InputArgument::OPTIONAL,
             'Should original packages be deleted after copying? true|false'
+        );
+
+        $this->addOption(
+            'dry-run',
+            null,
+            4,
+            'Do not actually make any changes',
+            false
         );
 
         $this->filesystem = new Filesystem(

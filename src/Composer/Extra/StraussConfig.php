@@ -679,5 +679,12 @@ class StraussConfig implements
             $isDeleteVendorPackagesCommandLine = $input->getOption('delete_vendor_packages') === 'true';
             $this->setDeleteVendorPackages($isDeleteVendorPackagesCommandLine);
         }
+
+        if ($input->hasOption('dry-run')) {
+            // If we're here, the parameter was passed in the CLI command.
+            $this->dryRun = is_null($input->getOption('dry-run'))
+                ? true
+                : filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
     }
 }
