@@ -11,31 +11,27 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
-use League\Flysystem\Filesystem as FlysystemFilesystem;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 
-class FileSystem extends FlysystemFilesystem
+class FileSystem implements FilesystemOperator
 {
+    protected FilesystemOperator $flysystem;
+
     /**
-     * Restrict the constructor to only accept a LocalFilesystemAdapter.
-     *
-     * @param LocalFilesystemAdapter $adapter
-     * @param array $config
-     * @param PathNormalizer|null $pathNormalizer
+     * TODO: maybe restrict the constructor to only accept a LocalFilesystemAdapter.
      */
-    public function __construct(LocalFilesystemAdapter $adapter, array $config = [], PathNormalizer $pathNormalizer = null)
+    public function __construct(FilesystemOperator $flysystem)
     {
-        parent::__construct($adapter, $config, $pathNormalizer);
+        $this->flysystem = $flysystem;
     }
 
     /**
      * @param string $workingDir
      * @param string[] $relativeFileAndDirPaths
-     * @param string $regexPattern
      *
      * @return string[]
      */
@@ -93,5 +89,85 @@ class FileSystem extends FlysystemFilesystem
         }
 
         return null;
+    }
+
+    public function fileExists(string $location): bool
+    {
+        return $this->flysystem->fileExists($location);
+    }
+
+    public function read(string $location): string
+    {
+        return $this->flysystem->read($location);
+    }
+
+    public function readStream(string $location)
+    {
+        return $this->flysystem->readStream($location);
+    }
+
+    public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
+    {
+        return $this->flysystem->listContents($location, $deep);
+    }
+
+    public function lastModified(string $path): int
+    {
+        return $this->flysystem->lastModified($path);
+    }
+
+    public function fileSize(string $path): int
+    {
+        return $this->flysystem->fileSize($path);
+    }
+
+    public function mimeType(string $path): string
+    {
+        return $this->flysystem->mimeType($path);
+    }
+
+    public function visibility(string $path): string
+    {
+        return $this->flysystem->visibility($path);
+    }
+
+    public function write(string $location, string $contents, array $config = []): void
+    {
+        $this->flysystem->write($location, $contents, $config);
+    }
+
+    public function writeStream(string $location, $contents, array $config = []): void
+    {
+        $this->flysystem->writeStream($location, $contents, $config);
+    }
+
+    public function setVisibility(string $path, string $visibility): void
+    {
+        $this->flysystem->setVisibility($path, $visibility);
+    }
+
+    public function delete(string $location): void
+    {
+        $this->flysystem->delete($location);
+    }
+
+    public function deleteDirectory(string $location): void
+    {
+        $this->flysystem->deleteDirectory($location);
+    }
+
+    public function createDirectory(string $location, array $config = []): void
+    {
+        $this->flysystem->createDirectory($location, $config);
+    }
+
+    public function move(string $source, string $destination, array $config = []): void
+    {
+        $this->flysystem->move($source, $destination, $config);
+    }
+
+    public function copy(string $source, string $destination, array $config = []): void
+    {
+        $this->flysystem->copy($source, $destination, $config);
     }
 }

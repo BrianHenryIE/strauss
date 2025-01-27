@@ -83,10 +83,14 @@ class DependenciesCommand extends Command
             'Should original packages be deleted after copying? true|false'
         );
 
-        $this->filesystem =
-            new Filesystem(new LocalFilesystemAdapter('/'), [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ]);
+        $this->filesystem = new Filesystem(
+            new \League\Flysystem\Filesystem(
+                new LocalFilesystemAdapter('/'),
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ]
+            )
+        );
     }
 
     /**

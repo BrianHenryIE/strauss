@@ -15,7 +15,11 @@ class FileSystemIntegrationTest extends IntegrationTestCase
      */
     public function test_is_dir(): void
     {
-        $fs = new FileSystem(new LocalFilesystemAdapter('/'));
+        $fs = new Filesystem(
+            new \League\Flysystem\Filesystem(
+                new LocalFilesystemAdapter('/')
+            )
+        );
 
         $dir = $this->testsWorkingDir . 'dir';
 
@@ -30,7 +34,11 @@ class FileSystemIntegrationTest extends IntegrationTestCase
      */
     public function test_find_all_files_absolute_paths(): void
     {
-        $fs = new FileSystem(new LocalFilesystemAdapter('/'));
+        $fs = new Filesystem(
+            new \League\Flysystem\Filesystem(
+                new LocalFilesystemAdapter('/')
+            )
+        );
 
         $dir = $this->testsWorkingDir . 'dir';
 
