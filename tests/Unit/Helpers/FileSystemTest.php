@@ -39,11 +39,17 @@ class FileSystemTest extends TestCase
 
         $this->assertTrue($result);
     }
+
     public function testIsDirFalse()
     {
-        $sut = new Filesystem(new LocalFilesystemAdapter('/'), [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ]);
+        $sut = new Filesystem(
+            new \League\Flysystem\Filesystem(
+                new LocalFilesystemAdapter('/'),
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ]
+            )
+        );
 
         $result = $sut->isDir(__FILE__);
 
