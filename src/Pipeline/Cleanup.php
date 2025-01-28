@@ -197,9 +197,7 @@ class Cleanup
             return;
         }
 
-        // TODO: dry run.
-
-        $files = include $this->workingDir . 'vendor/composer/autoload_files.php';
+        $files = include sprintf("%s%scomposer/autoload_files.php", $this->workingDir, $this->vendorDirectory);
 
         $missingFiles = array();
 
