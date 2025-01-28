@@ -151,4 +151,46 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $this->assertFileDoesNotExist($destination);
     }
+
+    /**
+     * @covers ::directoryExists
+     */
+    public function testDirectoryExists(): void
+    {
+        $newDir = $this->testsWorkingDir . 'dir1';
+        mkdir($newDir);
+
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+
+        $this->assertTrue($sut->directoryExists($newDir));
+    }
+
+    /**
+     * @covers ::directoryExists
+     */
+    public function testDirectoryExistsDelete(): void
+    {
+        $newDir = $this->testsWorkingDir . 'dir1';
+        mkdir($newDir);
+
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+
+        $sut->deleteDirectory($newDir);
+
+        $this->assertFalse($sut->directoryExists($newDir));
+    }
+
+    /**
+     * @covers ::directoryExists
+     */
+    public function testDirectoryExistsPhantomDir(): void
+    {
+        $newDir = $this->testsWorkingDir . 'dir1';
+
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+
+        $sut->createDirectory($newDir);
+
+        $this->assertTrue($sut->directoryExists($newDir));
+    }
 }

@@ -132,10 +132,29 @@ class ReadOnlyFileSystem implements FilesystemOperator
         throw new \BadMethodCallException('Not yet implemented');
     }
 
-
     public function directoryExists(string $location): bool
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        if (isset($this->deleted[$location])) {
+            return false;
+        }
+
+        if (isset($this->files[$location])) {
+            return true;
+        }
+
+        if (method_exists($this->filesystem, 'directoryExists')) {
+            return $this->filesystem->directoryExists($location);
+        }
+
+        $parentDirectoryContents = $this->listContents(dirname($location));
+        /** @var FileAttributes $entry */
+        foreach ($parentDirectoryContents as $entry) {
+            if ($entry->path()) {
+                return $entry->isDir();
+            }
+        }
+
+        return false;
     }
 
     public function has(string $location): bool
