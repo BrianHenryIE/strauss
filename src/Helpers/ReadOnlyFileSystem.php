@@ -8,71 +8,103 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use League\Flysystem\Config;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
+use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use League\Flysystem\UnableToReadFile;
+use Traversable;
 
 class ReadOnlyFileSystem implements FilesystemOperator
 {
     protected FilesystemOperator $filesystem;
-
-    protected array $files = [];
-
-    protected array $deleted = [];
+    protected InMemoryFilesystemAdapter $inMemoryFiles;
+    protected InMemoryFilesystemAdapter $deletedFiles;
 
     public function __construct(FilesystemOperator $filesystem)
     {
         $this->filesystem = $filesystem;
+
+        $this->inMemoryFiles = new InMemoryFilesystemAdapter();
+        $this->deletedFiles = new InMemoryFilesystemAdapter();
     }
 
     public function fileExists(string $location): bool
     {
-        return !isset($this->deleted[$location]) &&
-               (isset($this->files[$location]) || $this->filesystem->fileExists($location));
+        if ($this->deletedFiles->fileExists($location)) {
+            return false;
+        }
+        return $this->inMemoryFiles->fileExists($location)
+                || $this->filesystem->fileExists($location);
     }
 
     public function write(string $location, string $contents, array $config = []): void
     {
-        $this->files[$location] = $contents;
-        unset($this->deleted[$location]);
+        $config = new \League\Flysystem\Config($config);
+        $this->inMemoryFiles->write($location, $contents, $config);
+
+        if ($this->deletedFiles->fileExists($location)) {
+            $this->deletedFiles->delete($location);
+        }
     }
 
     public function writeStream(string $location, $contents, array $config = []): void
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        $config = new \League\Flysystem\Config($config);
+        $this->inMemoryFiles->writeStream($location, $contents, $config);
+
+        if ($this->deletedFiles->fileExists($location)) {
+            $this->deletedFiles->delete($location);
+        }
     }
 
     public function read(string $location): string
     {
-        if (isset($this->deleted[$location])) {
+        if ($this->deletedFiles->fileExists($location)) {
             throw UnableToReadFile::fromLocation($location);
         }
-        return $this->files[ $location ] ?? $this->filesystem->read($location);
+        if ($this->inMemoryFiles->fileExists($location)) {
+            return $this->inMemoryFiles->read($location);
+        }
+        return $this->filesystem->read($location);
     }
 
     public function readStream(string $location)
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        if ($this->deletedFiles->fileExists($location)) {
+            throw UnableToReadFile::fromLocation($location);
+        }
+        if ($this->inMemoryFiles->fileExists($location)) {
+            return $this->inMemoryFiles->readStream($location);
+        }
+        return $this->filesystem->readStream($location);
     }
 
     public function delete(string $location): void
     {
-        unset($this->files[$location]);
-        $this->deleted[$location] = true;
+        if ($this->fileExists($location)) {
+            $file = $this->read($location);
+            $this->deletedFiles->write($location, $file, new Config([]));
+        }
+        if ($this->inMemoryFiles->fileExists($location)) {
+            $this->inMemoryFiles->delete($location);
+        }
     }
 
     public function deleteDirectory(string $location): void
     {
-        unset($this->files[$location]);
-        $this->deleted[$location] = true;
+        $fileContents = $this->read($location);
+        $this->deletedFiles->write($location, $fileContents, new Config([]));
+        $this->inMemoryFiles->delete($location);
     }
 
 
     public function createDirectory(string $location, array $config = []): void
     {
-        $this->files[$location] = true;
-        unset($this->deleted[$location]);
+        $this->inMemoryFiles->createDirectory($location, new Config($config));
+
+        $this->deletedFiles->deleteDirectory($location);
     }
 
     public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
@@ -80,20 +112,25 @@ class ReadOnlyFileSystem implements FilesystemOperator
         /** @var FileAttributes[] $actual */
         $actual = $this->filesystem->listContents($location, $deep)->toArray();
 
-        $toAdd = array_filter($this->files, function ($key) use ($location) {
-            return strpos($key, $location) === 0;
-        }, ARRAY_FILTER_USE_KEY);
+        $inMemoryFilesGenerator = $this->inMemoryFiles->listContents($location, $deep);
+        $inMemoryFilesArray = $inMemoryFilesGenerator instanceof Traversable
+            ? iterator_to_array($inMemoryFilesGenerator, false)
+            : (array) $inMemoryFilesGenerator;
 
-        foreach ($toAdd as $path => $contents) {
-            $actual[] = new FileAttributes($path, strlen($contents), 'public');
-        }
+        $inMemoryFilePaths = array_map(fn($file) => $file->path(), $inMemoryFilesArray);
 
-        $afterFilterDeleted = array_filter(
-            $actual,
-            fn($item) => ! in_array('/'.$item->path(), array_keys($this->deleted))
-        );
+        $deletedFilesGenerator = $this->deletedFiles->listContents($location, $deep);
+        $deletedFilesArray = $inMemoryFilesGenerator instanceof Traversable
+            ? iterator_to_array($deletedFilesGenerator, false)
+            : (array) $deletedFilesGenerator;
+        $deletedFilePaths = array_map(fn($file) => $file->path(), $deletedFilesArray);
 
-        return new DirectoryListing($afterFilterDeleted);
+        $actual = array_filter($actual, fn($file) => !in_array($file->path(), $inMemoryFilePaths));
+        $actual = array_filter($actual, fn($file) => !in_array($file->path(), $deletedFilePaths));
+
+        $good = array_merge($actual, $inMemoryFilesArray);
+
+        return new DirectoryListing($good);
     }
 
     public function move(string $source, string $destination, array $config = []): void
@@ -103,8 +140,13 @@ class ReadOnlyFileSystem implements FilesystemOperator
 
     public function copy(string $source, string $destination, array $config = []): void
     {
-        $this->files[$destination] = $this->read($source);
-        unset($this->deleted[$destination]);
+        $sourceFile = $this->read($source);
+
+        $this->inMemoryFiles->write($destination, $sourceFile, new Config($config));
+
+        if ($this->deletedFiles->fileExists($destination)) {
+            $this->deletedFiles->delete($destination);
+        }
     }
 
     public function lastModified(string $path): int
@@ -134,16 +176,19 @@ class ReadOnlyFileSystem implements FilesystemOperator
 
     public function directoryExists(string $location): bool
     {
-        if (isset($this->deleted[$location])) {
+        if (method_exists($this->deletedFiles, 'directoryExists')
+            && $this->deletedFiles->directoryExists($location)) {
             return false;
         }
 
-        if (isset($this->files[$location])) {
+        if (method_exists($this->inMemoryFiles, 'directoryExists')
+            && $this->inMemoryFiles->directoryExists($location)) {
             return true;
         }
 
-        if (method_exists($this->filesystem, 'directoryExists')) {
-            return $this->filesystem->directoryExists($location);
+        if (method_exists($this->filesystem, 'directoryExists')
+            && $this->filesystem->directoryExists($location)) {
+            return true;
         }
 
         $parentDirectoryContents = $this->listContents(dirname($location));
