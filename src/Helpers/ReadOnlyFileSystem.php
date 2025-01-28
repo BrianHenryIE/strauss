@@ -120,7 +120,7 @@ class ReadOnlyFileSystem implements FilesystemOperator
         $inMemoryFilePaths = array_map(fn($file) => $file->path(), $inMemoryFilesArray);
 
         $deletedFilesGenerator = $this->deletedFiles->listContents($location, $deep);
-        $deletedFilesArray = $inMemoryFilesGenerator instanceof Traversable
+        $deletedFilesArray = $deletedFilesGenerator instanceof Traversable
             ? iterator_to_array($deletedFilesGenerator, false)
             : (array) $deletedFilesGenerator;
         $deletedFilePaths = array_map(fn($file) => $file->path(), $deletedFilesArray);
