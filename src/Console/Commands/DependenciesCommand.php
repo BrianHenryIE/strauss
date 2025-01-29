@@ -115,6 +115,7 @@ class DependenciesCommand extends Command
         $this->setLogger(
             new ConsoleLogger(
                 $output,
+                // TODO: default to Notice, use Info for dry-run.
                 [ LogLevel::INFO => OutputInterface::VERBOSITY_NORMAL ]
             )
         );
@@ -172,7 +173,7 @@ class DependenciesCommand extends Command
      */
     protected function loadProjectComposerPackage(): void
     {
-        $this->logger->info('Loading package...');
+        $this->logger->notice('Loading package...');
 
         $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . 'composer.json');
 
@@ -182,14 +183,14 @@ class DependenciesCommand extends Command
 
     protected function loadConfigFromComposerJson(): void
     {
-        $this->logger->info('Loading composer.json config...');
+        $this->logger->notice('Loading composer.json config...');
 
         $this->config = $this->projectComposerPackage->getStraussConfig();
     }
 
     protected function updateConfigFromCli(InputInterface $input): void
     {
-        $this->logger->info('Loading cli config...');
+        $this->logger->notice('Loading cli config...');
 
         $this->config->updateFromCli($input);
     }
@@ -203,7 +204,7 @@ class DependenciesCommand extends Command
      */
     protected function buildDependencyList(): void
     {
-        $this->logger->info('Building dependency list...');
+        $this->logger->notice('Building dependency list...');
 
         $this->dependenciesEnumerator = new DependenciesEnumerator(
             $this->workingDir,
@@ -217,7 +218,7 @@ class DependenciesCommand extends Command
 
     protected function enumerateFiles(): void
     {
-        $this->logger->info('Enumerating files...');
+        $this->logger->notice('Enumerating files...');
 
         $fileEnumerator = new FileEnumerator(
             $this->workingDir,
@@ -238,7 +239,7 @@ class DependenciesCommand extends Command
             return;
         }
 
-        $this->logger->info('Copying files...');
+        $this->logger->notice('Copying files...');
 
         $copier = new Copier(
             $this->discoveredFiles,
@@ -256,7 +257,7 @@ class DependenciesCommand extends Command
     // 4. Determine namespace and classname changes
     protected function determineChanges(): void
     {
-        $this->logger->info('Determining changes...');
+        $this->logger->notice('Determining changes...');
 
         $fileScanner = new FileSymbolScanner(
             $this->config,
@@ -277,7 +278,7 @@ class DependenciesCommand extends Command
     // Replace references to updated namespaces and classnames throughout the dependencies.
     protected function performReplacements(): void
     {
-        $this->logger->info('Performing replacements...');
+        $this->logger->notice('Performing replacements...');
 
         $this->replacer = new Prefixer(
             $this->config,
@@ -359,7 +360,7 @@ class DependenciesCommand extends Command
 
     protected function addLicenses(): void
     {
-        $this->logger->info('Adding licenses...');
+        $this->logger->notice('Adding licenses...');
 
         $author = $this->projectComposerPackage->getAuthor();
 
@@ -385,7 +386,7 @@ class DependenciesCommand extends Command
     protected function generateAutoloader(): void
     {
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            $this->logger->info('Skipping autoloader generation as target directory is vendor directory.');
+            $this->logger->notice('Skipping autoloader generation as target directory is vendor directory.');
             return;
         }
         if (isset($this->projectComposerPackage->getAutoload()['classmap'])
@@ -395,11 +396,11 @@ class DependenciesCommand extends Command
                 true
             )
         ) {
-            $this->logger->info('Skipping autoloader generation as target directory is in Composer classmap. Run `composer dump-autoload`.');
+            $this->logger->notice('Skipping autoloader generation as target directory is in Composer classmap. Run `composer dump-autoload`.');
             return;
         }
 
-        $this->logger->info('Generating autoloader...');
+        $this->logger->notice('Generating autoloader...');
 
         $allFilesAutoloaders = $this->dependenciesEnumerator->getAllFilesAutoloaders();
         $filesAutoloaders = array();
@@ -440,7 +441,7 @@ class DependenciesCommand extends Command
             return;
         }
 
-        $this->logger->info('Cleaning up...');
+        $this->logger->notice('Cleaning up...');
 
         $cleanup = new Cleanup(
             $this->config,
