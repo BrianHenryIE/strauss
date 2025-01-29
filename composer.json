@@ -1,6 +1,6 @@
 {
     "name": "brianhenryie/strauss",
-    "description": "Composes all dependencies as a package inside a WordPress plugin",
+    "description": "Prefixes dependencies namespaces so they are unique to your plugin",
     "authors": [
         {
             "name": "Brian Henry",
