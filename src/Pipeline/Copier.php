@@ -16,12 +16,16 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use League\Flysystem\Config;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class Copier
 {
+    use LoggerAwareTrait;
+
     /**
      * The only path variable with a leading slash.
      * All directories in project end with a slash.
@@ -34,8 +38,11 @@ class Copier
 
     protected DiscoveredFiles $files;
 
-    /** @var Filesystem */
-    protected Filesystem $filesystem;
+    protected FilesystemOperator $filesystem;
+
+    protected StraussConfig $config;
+
+    protected OutputInterface $output;
 
     /**
      * Copier constructor.
@@ -44,15 +51,21 @@ class Copier
      * @param string $workingDir
      * @param StraussConfig $config
      */
-    public function __construct(DiscoveredFiles $files, string $workingDir, StraussConfig $config)
-    {
+    public function __construct(
+        DiscoveredFiles $files,
+        string $workingDir,
+        StraussConfig $config,
+        FilesystemOperator $filesystem,
+        LoggerInterface $logger
+    ) {
         $this->files = $files;
+
+        $this->config = $config;
+        $this->logger = $logger;
 
         $this->absoluteTargetDir = $workingDir . $config->getTargetDirectory();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/'), [
-            Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-        ]);
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -60,10 +73,11 @@ class Copier
      * If it already exists, delete any files we're about to copy.
      *
      * @return void
+     * @throws FilesystemException
      */
     public function prepareTarget(): void
     {
-        if (! is_dir($this->absoluteTargetDir)) {
+        if (! $this->filesystem->directoryExists($this->absoluteTargetDir)) {
             $this->filesystem->createDirectory($this->absoluteTargetDir);
         } else {
             foreach ($this->files->getFiles() as $file) {
@@ -80,6 +94,9 @@ class Copier
         }
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function copy(): void
     {
         /**
@@ -87,6 +104,11 @@ class Copier
          */
         foreach ($this->files->getFiles() as $file) {
             if (!$file->isDoCopy()) {
+                continue;
+            }
+
+            if ($this->config->isDryRun()) {
+                $this->logger->info('Would copy ' . $file->getSourcePath() . ' to ' . $file->getAbsoluteTargetPath());
                 continue;
             }
 

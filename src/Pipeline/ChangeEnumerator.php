@@ -11,16 +11,22 @@ use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use League\Flysystem\FilesystemReader;
 
 class ChangeEnumerator
 {
     protected ChangeEnumeratorConfigInterface $config;
     protected string $workingDir;
+    protected FilesystemReader $filesystem;
 
-    public function __construct(ChangeEnumeratorConfigInterface $config, string $workingDir)
-    {
+    public function __construct(
+        ChangeEnumeratorConfigInterface $config,
+        string $workingDir,
+        FilesystemReader $filesystem
+    ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
+        $this->filesystem = $filesystem;
     }
 
     public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void
