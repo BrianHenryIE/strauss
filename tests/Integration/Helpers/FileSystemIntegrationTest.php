@@ -11,7 +11,7 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 class FileSystemIntegrationTest extends IntegrationTestCase
 {
     /**
-     * @covers ::isDir
+     * @covers ::directoryExists
      */
     public function test_is_dir(): void
     {
