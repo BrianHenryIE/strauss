@@ -56,7 +56,7 @@ In your `composer.json`, add `strauss` to the `scripts` section:
     "prefix-namespaces": [
         "sh -c 'test -f ./bin/strauss.phar || curl -o bin/strauss.phar -L -C - https://github.com/BrianHenryIE/strauss/releases/latest/download/strauss.phar'",
         "@php bin/strauss.phar",
-        "@php composer dump-autoload"
+        "@composer dump-autoload"
     ],
     "post-install-cmd": [
         "@prefix-namespaces"
