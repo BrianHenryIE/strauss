@@ -13,9 +13,11 @@ use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
+use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToReadFile;
 use League\Flysystem\UnableToRetrieveMetadata;
+use League\Flysystem\WhitespacePathNormalizer;
 use Traversable;
 
 class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInterface
@@ -25,12 +27,16 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
     protected InMemoryFilesystemAdapter $inMemoryFiles;
     protected InMemoryFilesystemAdapter $deletedFiles;
 
-    public function __construct(FilesystemOperator $filesystem)
+    protected PathNormalizer $pathNormalizer;
+
+    public function __construct(FilesystemOperator $filesystem, ?PathNormalizer $pathNormalizer = null)
     {
         $this->filesystem = $filesystem;
 
         $this->inMemoryFiles = new InMemoryFilesystemAdapter();
         $this->deletedFiles = new InMemoryFilesystemAdapter();
+
+        $this->pathNormalizer = $pathNormalizer ?? new WhitespacePathNormalizer();
     }
 
     public function fileExists(string $location): bool
@@ -97,8 +103,9 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function deleteDirectory(string $location): void
     {
-        $fileContents = $this->read($location);
-        $this->deletedFiles->write($location, $fileContents, new Config([]));
+        $location = $this->pathNormalizer->normalizePath($location);
+
+        $this->deletedFiles->createDirectory($location, new Config([]));
         $this->inMemoryFiles->delete($location);
     }
 
@@ -176,9 +183,7 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
         if ($this->inMemoryFiles->fileExists($path)) {
             $filesize = $this->inMemoryFiles->fileSize($path);
-        }
-
-        if ($this->filesystem->fileExists($path)) {
+        } elseif ($this->filesystem->fileExists($path)) {
             $filesize = $this->filesystem->fileSize($path);
         }
 
@@ -201,6 +206,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function visibility(string $path): string
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         if (!$this->fileExists($path) && !$this->directoryExists($path)) {
             throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
         }
@@ -220,6 +227,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function directoryExists(string $location): bool
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         if ($this->directoryExistsIn($location, $this->deletedFiles)) {
             return false;
         }

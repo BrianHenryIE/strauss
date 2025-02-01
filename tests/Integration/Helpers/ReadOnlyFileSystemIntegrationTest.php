@@ -177,6 +177,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $sut->deleteDirectory($newDir);
 
+        $this->assertDirectoryExists($newDir);
         $this->assertFalse($sut->directoryExists($newDir));
     }
 
@@ -191,6 +192,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $sut->createDirectory($newDir);
 
+        $this->assertDirectoryDoesNotExist($newDir);
         $this->assertTrue($sut->directoryExists($newDir));
     }
 }
