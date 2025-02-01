@@ -15,11 +15,10 @@ use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use League\Flysystem\FilesystemReader;
 use PhpParser\Node;
-use PhpParser\NodeAbstract;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
-use PHPStan\Node\ClassMethod;
 
 class FileSymbolScanner
 {
@@ -29,13 +28,19 @@ class FileSymbolScanner
 
     protected DiscoveredSymbols $discoveredSymbols;
 
+    protected FilesystemReader $filesystem;
+
     /**
      * FileScanner constructor.
      */
-    public function __construct(FileSymbolScannerConfigInterface $config)
-    {
+    public function __construct(
+        FileSymbolScannerConfigInterface $config,
+        FilesystemReader $filesystem
+    ) {
         $this->discoveredSymbols = new DiscoveredSymbols();
         $this->excludeNamespacesFromPrefixing = $config->getExcludeNamespacesFromPrefixing();
+
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -48,7 +53,10 @@ class FileSymbolScanner
                 continue;
             }
 
-            $this->find($file->getContents(), $file);
+            $this->find(
+                $this->filesystem->read($file->getSourcePath()),
+                $file
+            );
         }
 
         return $this->discoveredSymbols;

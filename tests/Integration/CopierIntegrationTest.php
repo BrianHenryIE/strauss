@@ -5,10 +5,13 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use Psr\Log\NullLogger;
 use stdClass;
 
 /**
@@ -44,11 +47,11 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
-            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
-            return ComposerPackage::fromFile($dir);
+            $composerFile = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element . '/composer.json';
+            return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
@@ -59,12 +62,12 @@ EOD;
         $config->method('getVendorDirectory')->willReturn($vendorDir);
         $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
+        (new FileCopyScanner($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')))))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config);
+        $copier = new Copier($files, $workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))), new NullLogger());
 
         $file = 'ContainerAwareTrait.php';
         $relativePath = 'league/container/src/';
@@ -107,11 +110,11 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
-            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
-            return ComposerPackage::fromFile($dir);
+            $composerFile = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element . '/composer.json';
+            return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
@@ -122,12 +125,12 @@ EOD;
         $config->method('getVendorDirectory')->willReturn($vendorDir);
         $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
+        (new FileCopyScanner($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')))))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config);
+        $copier = new Copier($files, $workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))), new NullLogger());
 
         $file = 'Client.php';
         $relativePath = 'google/apiclient/src/';
