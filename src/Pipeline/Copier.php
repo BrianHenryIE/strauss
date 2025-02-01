@@ -16,6 +16,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerAwareTrait;
@@ -38,7 +39,7 @@ class Copier
 
     protected DiscoveredFiles $files;
 
-    protected FilesystemOperator $filesystem;
+    protected FileSystem $filesystem;
 
     protected StraussConfig $config;
 
@@ -99,24 +100,28 @@ class Copier
      */
     public function copy(): void
     {
+        $this->logger->info('Copying files');
+
         /**
          * @var File $file
          */
         foreach ($this->files->getFiles() as $file) {
             if (!$file->isDoCopy()) {
-                continue;
-            }
+                $this->logger->debug('Skipping ' . $file->getSourcePath());
 
-            if ($this->config->isDryRun()) {
-                $this->logger->info('Would copy ' . $file->getSourcePath() . ' to ' . $file->getAbsoluteTargetPath());
                 continue;
             }
 
             $sourceAbsoluteFilepath = $file->getSourcePath();
-
             $targetAbsolutePath = $file->getAbsoluteTargetPath();
 
-            $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
+            $this->logger->info('Copying ' . $sourceAbsoluteFilepath . ' to ' . $targetAbsolutePath);
+
+            if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+                $this->filesystem->createDirectory($targetAbsolutePath);
+            } else {
+                $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
+            }
         }
     }
 }

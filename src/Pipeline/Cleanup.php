@@ -92,7 +92,7 @@ class Cleanup
         }
         $rootSourceDirectories = array_map(
             function (string $path): string {
-                return $this->vendorDirectory . $path;
+                return $this->workingDir . $this->vendorDirectory . $path;
             },
             array_keys($rootSourceDirectories)
         );
@@ -139,7 +139,7 @@ class Cleanup
      */
     public function cleanupInstalledJson(): void
     {
-        $installedJsonFile = new JsonFile($this->workingDir . '/vendor/composer/installed.json');
+        $installedJsonFile = new JsonFile('mem:/' . $this->workingDir . 'vendor/composer/installed.json');
         if (!$installedJsonFile->exists()) {
             return;
         }
@@ -149,8 +149,7 @@ class Cleanup
             if (!isset($package['autoload'])) {
                 continue;
             }
-            // ./pcre i.e. vendor/composer/pcre
-            $packageDir = realpath($this->workingDir . $this->vendorDirectory . 'composer/' .$package['install-path']);
+            $packageDir = $this->workingDir . $this->vendorDirectory . 'composer/' .$package['install-path'] . '/';
             if (!$this->filesystem->directoryExists($packageDir)) {
                 continue;
             }
@@ -182,6 +181,7 @@ class Cleanup
             }
             $installedJsonArray['packages'][$key]['autoload'] = array_filter($autoload_key);
         }
+
         $installedJsonFile->write($installedJsonArray);
     }
 
@@ -255,7 +255,10 @@ class Cleanup
 
             $newAutoloadStaticPhp = implode(PHP_EOL, $newAutoloadStaticPhpAsArray);
 
-            $this->filesystem->write($this->workingDir . 'vendor/composer/'.$autoloadFile, $newAutoloadStaticPhp);
+            $this->filesystem->write(
+                sprintf("%s%scomposer/%s", $this->workingDir, $this->vendorDirectory, $autoloadFile),
+                $newAutoloadStaticPhp
+            );
         }
     }
 

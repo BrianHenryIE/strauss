@@ -13,11 +13,14 @@ use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
+use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToReadFile;
+use League\Flysystem\UnableToRetrieveMetadata;
 use Traversable;
 
-class ReadOnlyFileSystem implements FilesystemOperator
+class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 {
+//  use FlysystemBackCompatTrait;
     protected FilesystemOperator $filesystem;
     protected InMemoryFilesystemAdapter $inMemoryFiles;
     protected InMemoryFilesystemAdapter $deletedFiles;
@@ -149,14 +152,41 @@ class ReadOnlyFileSystem implements FilesystemOperator
         }
     }
 
+    private function getAttributes(string $path): StorageAttributes
+    {
+        $parentDirectoryContents = $this->listContents(dirname($path), false);
+        /** @var FileAttributes $entry */
+        foreach ($parentDirectoryContents as $entry) {
+            if ($entry->path() == $path) {
+                return $entry;
+            }
+        }
+        throw UnableToReadFile::fromLocation($path);
+    }
+
     public function lastModified(string $path): int
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        $attributes = $this->getAttributes($path);
+        return $attributes->lastModified() ?? 0;
     }
 
     public function fileSize(string $path): int
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        $filesize = 0;
+
+        if ($this->inMemoryFiles->fileExists($path)) {
+            $filesize = $this->inMemoryFiles->fileSize($path);
+        }
+
+        if ($this->filesystem->fileExists($path)) {
+            $filesize = $this->filesystem->fileSize($path);
+        }
+
+        if ($filesize instanceof FileAttributes) {
+            return $filesize->fileSize();
+        }
+
+        return $filesize;
     }
 
     public function mimeType(string $path): string
@@ -171,30 +201,44 @@ class ReadOnlyFileSystem implements FilesystemOperator
 
     public function visibility(string $path): string
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        if (!$this->fileExists($path) && !$this->directoryExists($path)) {
+            throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
+        }
+
+        if ($this->deletedFiles->fileExists($path)) {
+            throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
+        }
+        if ($this->inMemoryFiles->fileExists($path)) {
+            $attribtes = $this->inMemoryFiles->visibility($path);
+            return $attribtes->visibility();
+        }
+        if ($this->filesystem->fileExists($path)) {
+            return $this->filesystem->visibility($path);
+        }
+        return \League\Flysystem\Visibility::PUBLIC;
     }
 
     public function directoryExists(string $location): bool
     {
-        if (method_exists($this->deletedFiles, 'directoryExists')
-            && $this->deletedFiles->directoryExists($location)) {
+        if ($this->directoryExistsIn($location, $this->deletedFiles)) {
             return false;
         }
 
-        if (method_exists($this->inMemoryFiles, 'directoryExists')
-            && $this->inMemoryFiles->directoryExists($location)) {
+        return  $this->directoryExistsIn($location, $this->inMemoryFiles)
+            || $this->directoryExistsIn($location, $this->filesystem);
+    }
+
+    protected function directoryExistsIn(string $location, $filesystem): bool
+    {
+        if (method_exists($filesystem, 'directoryExists')
+            && $filesystem->directoryExists($location)) {
             return true;
         }
 
-        if (method_exists($this->filesystem, 'directoryExists')
-            && $this->filesystem->directoryExists($location)) {
-            return true;
-        }
-
-        $parentDirectoryContents = $this->listContents(dirname($location));
+        $parentDirectoryContents = $filesystem->listContents(dirname($location), false);
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
-            if ($entry->path()) {
+            if ($entry->path() == $location) {
                 return $entry->isDir();
             }
         }

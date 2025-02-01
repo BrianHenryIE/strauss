@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Mockery;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -92,6 +93,13 @@ class IntegrationTestCase extends TestCase
         $dir = $this->testsWorkingDir;
 
         $this->deleteDir($dir);
+
+        /** @var FilesystemRegistry $registry */
+        try {
+            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+            $registry->unregister('mem');
+        } catch (\Exception $e) {
+        }
     }
 
     protected function deleteDir($dir)

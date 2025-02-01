@@ -9,7 +9,9 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use Composer\Autoload\ClassMapGenerator;
+use Composer\ClassMapGenerator\ClassMapGenerator;
+use Elazar\Flystream\FilesystemRegistry;
+use League\Flysystem\StorageAttributes;
 
 class Autoload
 {
@@ -20,7 +22,7 @@ class Autoload
     protected StraussConfig $config;
 
     /**
-     * The files autolaoders of packages that have been copied by Strauss.
+     * The files autoloaders of packages that have been copied by Strauss.
      * Keyed by package path.
      *
      * @var array<string, array<string>> $discoveredFilesAutoloaders Array of packagePath => array of relativeFilePaths.
@@ -85,14 +87,28 @@ class Autoload
             . DIRECTORY_SEPARATOR
             . ltrim($this->config->getTargetDirectory(), '/\\');
 
-        $dirMap = ClassMapGenerator::createMap($targetDirectory);
+
+        $targetDir = 'mem:/' . $targetDirectory;
+
+        $paths =
+            array_map(
+                function ($file) {
+                    return new \SplFileInfo('mem://'.$file->path());
+                },
+                array_filter(
+                    $this->filesystem->listContents($targetDir, true)->toArray(),
+                    fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
+                )
+            );
+
+        $dirMap = ClassMapGenerator::createMap($paths);
 
         array_walk(
             $dirMap,
-            function (&$filepath, $_class) use ($targetDirectory) {
+            function (&$filepath, $_class) use ($targetDir) {
                 $filepath = "\$strauss_src . '"
                     . DIRECTORY_SEPARATOR
-                    . ltrim(str_replace($targetDirectory, '', $filepath), '/\\') . "'";
+                    . ltrim(str_replace($targetDir, '', $filepath), '/\\') . "'";
             }
         );
 

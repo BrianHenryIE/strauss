@@ -3,7 +3,10 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Pipeline\Autoload;
+use BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use Composer\ClassMapGenerator\ClassMapGenerator;
 
 class DryRunFeatureTest extends IntegrationTestCase
 {
@@ -49,8 +52,6 @@ EOD;
 
         $this->runStrauss($output);
 
-        $this->assertStringContainsString('Would copy', $output);
-
         $this->assertFileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
     }
@@ -85,8 +86,6 @@ EOD;
         $params = '--dry-run';
 
         $this->runStrauss($output, $params);
-
-        $this->assertStringContainsString('Would copy', $output);
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
@@ -127,5 +126,82 @@ EOD;
         $this->assertStringNotContainsString('Would copy', $output);
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
+    }
+
+    /**
+     *
+     *
+     * @see Autoload::generateClassmap()
+     */
+    public function testGenerateAutoload():void
+    {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strauss",
+  "require": {
+    "league/container": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "classmap_prefix": "BrianHenryIE_Strauss_",
+      "delete_vendor_packages": true,
+      "dry_run": true
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $this->runStrauss($output);
+
+        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/autoload-classmap.php');
+    }
+
+    /**
+     * Composer
+     *
+     * @see Cleanup::cleanupInstalledJson()
+     */
+    public function test_composer_files_not_modified(): void
+    {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strauss",
+  "require": {
+    "league/container": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "classmap_prefix": "BrianHenryIE_Strauss_",
+      "delete_vendor_packages": true,
+      "dry_run": true
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $expected = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
+
+        $this->runStrauss($output);
+
+        $this->assertEquals(
+            $expected,
+            file_get_contents(
+                $this->testsWorkingDir . 'vendor/composer/installed.json'
+            )
+        );
     }
 }

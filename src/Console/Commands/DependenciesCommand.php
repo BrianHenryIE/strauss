@@ -19,6 +19,7 @@ use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use Elazar\Flystream\FilesystemRegistry;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -135,6 +136,17 @@ class DependenciesCommand extends Command
                            $this->filesystem
                        )
                    );
+            }
+
+            /** @var FilesystemRegistry $registry */
+            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+
+            // Register a file stream mem:// to handle file operations by third party libraries.
+            // This exception handling probably doesn't matter in real life but does in unit tests.
+            try {
+                $registry->get('mem');
+            } catch (\Exception $e) {
+                $registry->register('mem', $this->filesystem);
             }
 
             $this->buildDependencyList();

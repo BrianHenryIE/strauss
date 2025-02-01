@@ -10,23 +10,30 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use League\Flysystem\DirectoryAttributes;
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
+use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 
-class FileSystem implements FilesystemOperator
+class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 {
+    use FlysystemBackCompatTrait;
+
     protected FilesystemOperator $flysystem;
+    protected PathNormalizer $normalizer;
 
     /**
      * TODO: maybe restrict the constructor to only accept a LocalFilesystemAdapter.
+     *
+     * TODO: Check are any of these methods unused
      */
     public function __construct(FilesystemOperator $flysystem)
     {
         $this->flysystem = $flysystem;
+        $this->normalizer = new StripProtocolPathNormalizer('mem');
     }
 
     /**
@@ -82,101 +89,124 @@ class FileSystem implements FilesystemOperator
 
     public function fileExists(string $location): bool
     {
-        return $this->flysystem->fileExists($location);
+        return $this->flysystem->fileExists(
+            $this->normalizer->normalizePath($location)
+        );
     }
 
     public function read(string $location): string
     {
-        return $this->flysystem->read($location);
+        return $this->flysystem->read(
+            $this->normalizer->normalizePath($location)
+        );
     }
 
     public function readStream(string $location)
     {
-        return $this->flysystem->readStream($location);
+        return $this->flysystem->readStream(
+            $this->normalizer->normalizePath($location)
+        );
     }
 
     public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
     {
-        return $this->flysystem->listContents($location, $deep);
+        return $this->flysystem->listContents(
+            $this->normalizer->normalizePath($location),
+            $deep
+        );
     }
 
     public function lastModified(string $path): int
     {
-        return $this->flysystem->lastModified($path);
+        return $this->flysystem->lastModified(
+            $this->normalizer->normalizePath($path)
+        );
     }
 
     public function fileSize(string $path): int
     {
-        return $this->flysystem->fileSize($path);
+        return $this->flysystem->fileSize(
+            $this->normalizer->normalizePath($path)
+        );
     }
 
     public function mimeType(string $path): string
     {
-        return $this->flysystem->mimeType($path);
+        return $this->flysystem->mimeType(
+            $this->normalizer->normalizePath($path)
+        );
     }
 
     public function visibility(string $path): string
     {
-        return $this->flysystem->visibility($path);
+        return $this->flysystem->visibility(
+            $this->normalizer->normalizePath($path)
+        );
     }
 
     public function write(string $location, string $contents, array $config = []): void
     {
-        $this->flysystem->write($location, $contents, $config);
+        $this->flysystem->write(
+            $this->normalizer->normalizePath($location),
+            $contents,
+            $config
+        );
     }
 
     public function writeStream(string $location, $contents, array $config = []): void
     {
-        $this->flysystem->writeStream($location, $contents, $config);
+        $this->flysystem->writeStream(
+            $this->normalizer->normalizePath($location),
+            $contents,
+            $config
+        );
     }
 
     public function setVisibility(string $path, string $visibility): void
     {
-        $this->flysystem->setVisibility($path, $visibility);
+        $this->flysystem->setVisibility(
+            $this->normalizer->normalizePath($path),
+            $visibility
+        );
     }
 
     public function delete(string $location): void
     {
-        $this->flysystem->delete($location);
+        $this->flysystem->delete(
+            $this->normalizer->normalizePath($location)
+        );
     }
 
     public function deleteDirectory(string $location): void
     {
-        $this->flysystem->deleteDirectory($location);
+        $this->flysystem->deleteDirectory(
+            $this->normalizer->normalizePath($location)
+        );
     }
 
     public function createDirectory(string $location, array $config = []): void
     {
-        $this->flysystem->createDirectory($location, $config);
+        $this->flysystem->createDirectory(
+            $this->normalizer->normalizePath($location),
+            $config
+        );
     }
 
     public function move(string $source, string $destination, array $config = []): void
     {
-        $this->flysystem->move($source, $destination, $config);
+        $this->flysystem->move(
+            $this->normalizer->normalizePath($source),
+            $this->normalizer->normalizePath($destination),
+            $config
+        );
     }
 
     public function copy(string $source, string $destination, array $config = []): void
     {
-        $this->flysystem->copy($source, $destination, $config);
-    }
-
-    // Some version of Flysystem has:
-    // directoryExists
-    public function directoryExists(string $location): bool
-    {
-        if (method_exists($this->flysystem, 'directoryExists')) {
-            return $this->flysystem->directoryExists($location);
-        }
-        return is_dir($location);
-    }
-
-    // Some version of Flysystem has:
-    // has
-    public function has(string $location): bool
-    {
-        if (method_exists($this->flysystem, 'has')) {
-            return $this->flysystem->has($location);
-        }
-        return $this->fileExists($location) || $this->directoryExists($location);
+        $this->flysystem->copy(
+            $this->normalizer->normalizePath($source),
+            $this->normalizer->normalizePath($destination),
+            $config
+        );
     }
 }
