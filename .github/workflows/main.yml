@@ -69,7 +69,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          tools: composer, cs2pr
+          tools: composer, cs2pr, phive
+
+      - name: Install Phive tools
+        uses: ngmy/phive-install-action@master
 
       - name: Debugging
         run: |
