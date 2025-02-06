@@ -16,6 +16,7 @@
     "prefer-stable": true,
     "license": "MIT",
     "require": {
+        "composer/class-map-generator": "^1.6.0",
         "composer/composer": "*",
         "elazar/flystream": "*",
         "json-mapper/json-mapper": "^2.2",
