@@ -131,24 +131,23 @@ class DependenciesCommand extends Command
 
             if ($this->config->isDryRun()) {
                 $this->filesystem =
-                   new FileSystem(
-                       new ReadOnlyFileSystem(
-                           $this->filesystem
-                       )
-                   );
+                    new FileSystem(
+                        new ReadOnlyFileSystem(
+                            $this->filesystem
+                        )
+                    );
+
+                /** @var FilesystemRegistry $registry */
+                $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+
+                // Register a file stream mem:// to handle file operations by third party libraries.
+                // This exception handling probably doesn't matter in real life but does in unit tests.
+                try {
+                    $registry->get('mem');
+                } catch (\Exception $e) {
+                    $registry->register('mem', $this->filesystem);
+                }
             }
-
-            /** @var FilesystemRegistry $registry */
-            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-
-            // Register a file stream mem:// to handle file operations by third party libraries.
-            // This exception handling probably doesn't matter in real life but does in unit tests.
-            try {
-                $registry->get('mem');
-            } catch (\Exception $e) {
-                $registry->register('mem', $this->filesystem);
-            }
-
             $this->buildDependencyList();
 
             $this->enumerateFiles();

@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\ClassMapGenerator\ClassMapGenerator;
+use Composer\Json\JsonFile;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\StorageAttributes;
 
@@ -87,13 +88,16 @@ class Autoload
             . DIRECTORY_SEPARATOR
             . ltrim($this->config->getTargetDirectory(), '/\\');
 
-
-        $targetDir = 'mem:/' . $targetDirectory;
+        $targetDir = $this->config->isDryRun()
+                ? 'mem:/' . $targetDirectory
+                : $targetDirectory;
 
         $paths =
             array_map(
                 function ($file) {
-                    return new \SplFileInfo('mem://'.$file->path());
+                    return $this->config->isDryRun()
+                    ? new \SplFileInfo('mem://'.$file->path())
+                    : new \SplFileInfo('/'.$file->path());
                 },
                 array_filter(
                     $this->filesystem->listContents($targetDir, true)->toArray(),

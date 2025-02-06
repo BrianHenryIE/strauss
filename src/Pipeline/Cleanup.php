@@ -139,7 +139,13 @@ class Cleanup
      */
     public function cleanupInstalledJson(): void
     {
-        $installedJsonFile = new JsonFile('mem:/' . $this->workingDir . 'vendor/composer/installed.json');
+        $installedJsonFile = new JsonFile(
+            sprintf(
+                '%s%svendor/composer/installed.json',
+                $this->config->isDryRun() ? 'mem:/' : '',
+                $this->workingDir
+            )
+        );
         if (!$installedJsonFile->exists()) {
             return;
         }
