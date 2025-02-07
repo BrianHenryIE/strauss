@@ -12,9 +12,7 @@ use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Mockery;
 use Symfony\Component\Console\Input\ArgvInput;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
@@ -36,7 +34,7 @@ class IntegrationTestCase extends TestCase
 
         $this->projectDir = getcwd();
 
-        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir') );
+        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
 
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = DIRECTORY_SEPARATOR . 'private' . $this->testsWorkingDir;
@@ -54,20 +52,17 @@ class IntegrationTestCase extends TestCase
         }
     }
 
-    protected function runStrauss(?string &$allOutput = null, ?string $params = null): int
+    protected function runStrauss(?string &$allOutput = null, string $params = ''): int
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
+            // TODO add xdebug to the command
             exec('php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             return $return_var;
         }
 
-        if (!empty($params)) {
-            $argv = array_merge(['strauss'], explode(' ', $params));
-            $inputInterface = new ArgvInput($argv);
-        } else {
-            $inputInterface = $this->createMock(InputInterface::class);
-        }
+        $argv = array_merge(['strauss'], array_filter(explode(' ', $params)));
+        $inputInterface = new ArgvInput($argv);
 
         $bufferedOutput = new BufferedOutput(OutputInterface::VERBOSITY_NORMAL);
 

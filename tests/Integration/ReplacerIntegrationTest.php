@@ -85,12 +85,7 @@ EOD;
 
         exec('composer install');
 
-        $inputInterfaceMock = $this->createMock(InputInterface::class);
-        $outputInterfaceMock = $this->createMock(OutputInterface::class);
-
-        $mozartCompose = new DependenciesCommand();
-
-        $result = $mozartCompose->run($inputInterfaceMock, $outputInterfaceMock);
+        $result = $this->runStrauss();
 
         $updatedFile = file_get_contents($this->testsWorkingDir .'vendor-prefixed/' . 'setasign/fpdf/fpdf.php');
 
