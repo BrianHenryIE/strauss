@@ -19,6 +19,7 @@ use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use Composer\Console\Input\InputOption;
 use Elazar\Flystream\FilesystemRegistry;
 use Exception;
 use League\Flysystem\Config;
@@ -81,8 +82,17 @@ class DependenciesCommand extends Command
         $this->addOption(
             'deleteVendorPackages',
             null,
-            InputArgument::OPTIONAL,
-            'Should original packages be deleted after copying? true|false'
+            4,
+            'Should original packages be deleted after copying? true|false',
+            false
+        );
+        // Is there a nicer way to add aliases?
+        $this->addOption(
+            'delete_vendor_packages',
+            null,
+            4,
+            '',
+            false
         );
 
         $this->addOption(

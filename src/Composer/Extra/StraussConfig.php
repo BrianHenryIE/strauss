@@ -672,15 +672,17 @@ class StraussConfig implements
             }
         }
 
-        if ($input->hasOption('deleteVendorPackages') && $input->getOption('deleteVendorPackages') !== null) {
-            $isDeleteVendorPackagesCommandLine = $input->getOption('deleteVendorPackages') === 'true';
+        if ($input->getOption('deleteVendorPackages') !== false) {
+            $isDeleteVendorPackagesCommandLine = $input->getOption('deleteVendorPackages') === 'true'
+                || $input->getOption('deleteVendorPackages') === null;
             $this->setDeleteVendorPackages($isDeleteVendorPackagesCommandLine);
-        } elseif ($input->hasOption('delete_vendor_packages') && $input->getOption('delete_vendor_packages') !== null) {
-            $isDeleteVendorPackagesCommandLine = $input->getOption('delete_vendor_packages') === 'true';
+        } elseif ($input->getOption('delete_vendor_packages') !== false) {
+            $isDeleteVendorPackagesCommandLine = $input->getOption('delete_vendor_packages') === 'true'
+                || $input->getOption('delete_vendor_packages') === null;
             $this->setDeleteVendorPackages($isDeleteVendorPackagesCommandLine);
         }
 
-        if ($input->hasOption('dry-run')) {
+        if ($input->getOption('dry-run') !== false) {
             // If we're here, the parameter was passed in the CLI command.
             $this->dryRun = empty($input->getOption('dry-run'))
                 ? true
