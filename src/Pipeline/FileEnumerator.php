@@ -172,7 +172,7 @@ class FileEnumerator
      */
     protected function addFileWithDependency(ComposerPackage $dependency, string $packageRelativePath, string $autoloaderType): void
     {
-        $sourceAbsoluteFilepath = $dependency->getPackageAbsolutePath() . $packageRelativePath;
+        $sourceAbsoluteFilepath = rtrim($dependency->getPackageAbsolutePath(), '/\\') . DIRECTORY_SEPARATOR . ltrim($packageRelativePath, '/\\');
         $vendorRelativePath = $dependency->getRelativePath() . $packageRelativePath;
         $projectAbsolutePath    = $this->workingDir . $this->vendorDir . $vendorRelativePath;
         $isOutsideProjectDir    = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
@@ -199,7 +199,7 @@ class FileEnumerator
 
         $this->discoveredFiles->add($f);
 
-        $this->logger->info("Found file {$sourceAbsoluteFilepath}");
+        $this->logger->info("Found file " . $f->getAbsoluteTargetPath($this->workingDir));
     }
 
     /**

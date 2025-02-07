@@ -26,7 +26,7 @@ class FileWithDependency extends File implements HasDependency
     {
         parent::__construct($sourceAbsolutePath);
 
-        $this->vendorRelativePath = $vendorRelativePath;
+        $this->vendorRelativePath = ltrim($vendorRelativePath, '/\\');
         $this->dependency         = $dependency;
     }
 
