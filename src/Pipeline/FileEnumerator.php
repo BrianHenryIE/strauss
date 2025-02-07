@@ -15,9 +15,14 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Path;
 use League\Flysystem\FilesystemException;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class FileEnumerator
 {
+    use LoggerAwareTrait;
+
     /**
      * The only path variable with a leading slash.
      * All directories in project end with a slash.
@@ -59,7 +64,8 @@ class FileEnumerator
     public function __construct(
         string $workingDir,
         StraussConfig $config,
-        FileSystem $filesystem
+        FileSystem $filesystem,
+        ?LoggerInterface $logger
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
@@ -71,6 +77,8 @@ class FileEnumerator
         $this->excludeFilePatterns = $config->getExcludeFilePatternsFromCopy();
 
         $this->filesystem = $filesystem;
+
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
