@@ -19,9 +19,13 @@ use League\Flysystem\FilesystemReader;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class FileSymbolScanner
 {
+    use LoggerAwareTrait;
 
     /** @var string[]  */
     protected array $excludeNamespacesFromPrefixing = array();
@@ -35,12 +39,14 @@ class FileSymbolScanner
      */
     public function __construct(
         FileSymbolScannerConfigInterface $config,
-        FilesystemReader $filesystem
+        FilesystemReader $filesystem,
+        ?LoggerInterface $logger = null
     ) {
         $this->discoveredSymbols = new DiscoveredSymbols();
         $this->excludeNamespacesFromPrefixing = $config->getExcludeNamespacesFromPrefixing();
 
         $this->filesystem = $filesystem;
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**

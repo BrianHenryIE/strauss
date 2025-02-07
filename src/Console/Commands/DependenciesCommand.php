@@ -282,7 +282,8 @@ class DependenciesCommand extends Command
 
         $fileScanner = new FileSymbolScanner(
             $this->config,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
