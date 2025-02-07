@@ -286,18 +286,12 @@ class Cleanup
             if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
                 $packageRelativePath = str_replace($this->workingDir, '', $package->getPackageAbsolutePath());
 
-                if ($this->config->isDryRun()) {
-                    $this->logger->info('Would delete ' . $packageRelativePath);
-                    continue;
-                }
+                $this->logger->info('Deleting ' . $packageRelativePath);
 
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
             } else {
-                if ($this->config->isDryRun()) {
-                    // TODO: log _where_ the symlink is pointing to.
-                    $this->logger->info('Would remove symlink at ' . $package->getRelativePath());
-                    continue;
-                }
+                // TODO: log _where_ the symlink is pointing to.
+                $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
 
                 // If it's a symlink, remove the symlink in the directory
                 $symlinkPath =
@@ -336,10 +330,7 @@ class Cleanup
 
             $sourceRelativePath = $file->getSourcePath($this->workingDir);
 
-            if ($this->config->isDryRun()) {
-                $this->logger->info('Would delete ' . $sourceRelativePath);
-                continue;
-            }
+            $this->logger->info('Deleting ' . $sourceRelativePath);
 
             $this->filesystem->delete($file->getSourcePath());
 
