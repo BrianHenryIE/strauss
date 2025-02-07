@@ -57,10 +57,8 @@ class Prefixer
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
         foreach ($files as $file) {
-            $targetRelativeFilepathFromProject = $file->getAbsoluteTargetPath($this->workingDir);
-
             if (! $this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
-                // Maybe warn here?
+                $this->logger->warning("Expected file does not exist: {$file->getAbsoluteTargetPath()}");
                 continue;
             }
 
@@ -72,8 +70,10 @@ class Prefixer
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
+                // TODO: diff here and debug log.
                 $file->setDidUpdate();
                 $this->filesystem->write($file->getAbsoluteTargetPath(), $updatedContents);
+                $this->logger->info('Updated contents of file: ' . $file->getAbsoluteTargetPath($this->workingDir));
             }
         }
     }
@@ -87,6 +87,7 @@ class Prefixer
      */
     public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, array $absoluteFilePathsArray): void
     {
+
         foreach ($absoluteFilePathsArray as $workingDirRelativeFilepath) {
             $fileAbsolutePath = 0 === strpos($workingDirRelativeFilepath, $this->workingDir)
                     ? $workingDirRelativeFilepath
@@ -104,6 +105,7 @@ class Prefixer
             if ($updatedContents !== $contents) {
                 $this->changedFiles[ $workingDirRelativeFilepath ] = null;
                 $this->filesystem->write($fileAbsolutePath, $updatedContents);
+                $this->logger->info('Updated contents of file: ' . str_replace($this->workingDir, '', $fileAbsolutePath));
             }
         }
     }
