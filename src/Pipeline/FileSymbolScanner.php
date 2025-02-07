@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -35,6 +36,11 @@ class FileSymbolScanner
     protected FilesystemReader $filesystem;
 
     /**
+     * @var string[]
+     */
+    protected array $loggedSymbols = [];
+
+    /**
      * FileScanner constructor.
      */
     public function __construct(
@@ -47,6 +53,34 @@ class FileSymbolScanner
 
         $this->filesystem = $filesystem;
         $this->logger = $logger ?? new NullLogger();
+    }
+
+    protected function add(DiscoveredSymbol $symbol): void
+    {
+        $this->discoveredSymbols->add($symbol);
+
+        if (in_array($symbol->getOriginalSymbol(), $this->loggedSymbols)) {
+            return;
+        }
+
+        $this->loggedSymbols[] = $symbol->getOriginalSymbol();
+
+        switch (get_class($symbol)) {
+            case NamespaceSymbol::class:
+                $this->logger->info('Discovered: namespace  ' . $symbol->getOriginalSymbol());
+                break;
+            case ConstantSymbol::class:
+                $this->logger->info('Discovered: constant   ' . $symbol->getOriginalSymbol());
+                break;
+            case ClassSymbol::class:
+                $this->logger->info('Discovered: class.     ' . $symbol->getOriginalSymbol());
+                break;
+            case FunctionSymbol::class:
+                $this->logger->info('Discovered: function   ' . $symbol->getOriginalSymbol());
+                break;
+            default:
+                $this->logger->info('Discovered: ' .get_class($symbol) . ' ' . $symbol->getOriginalSymbol());
+        }
     }
 
     /**
@@ -96,7 +130,7 @@ class FileSymbolScanner
         if (0 < preg_match_all('/\s*define\s*\(\s*["\']([^"\']*)["\']\s*,\s*["\'][^"\']*["\']\s*\)\s*;/', $contents, $constants)) {
             foreach ($constants[1] as $constant) {
                 $constantObj = new ConstantSymbol($constant, $file);
-                $this->discoveredSymbols->add($constantObj);
+                $this->add($constantObj);
             }
         }
 
@@ -178,7 +212,7 @@ class FileSymbolScanner
                 continue;
             }
             $functionSymbol = new FunctionSymbol($functionName, $file);
-            $this->discoveredSymbols->add($functionSymbol);
+            $this->add($functionSymbol);
         }
     }
 
@@ -190,7 +224,7 @@ class FileSymbolScanner
         }
 
         $classSymbol = new ClassSymbol($classname, $file);
-        $this->discoveredSymbols->add($classSymbol);
+        $this->add($classSymbol);
     }
 
     protected function addDiscoveredNamespaceChange(string $namespace, File $file): void
@@ -203,7 +237,7 @@ class FileSymbolScanner
         }
 
         $namespaceObj = new NamespaceSymbol($namespace, $file);
-        $this->discoveredSymbols->add($namespaceObj);
+        $this->add($namespaceObj);
     }
 
     /**
