@@ -304,7 +304,8 @@ class DependenciesCommand extends Command
         $this->replacer = new Prefixer(
             $this->config,
             $this->workingDir,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
@@ -320,7 +321,8 @@ class DependenciesCommand extends Command
         $projectReplace = new Prefixer(
             $this->config,
             $this->workingDir,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $fileEnumerator = new FileEnumerator(
@@ -353,7 +355,8 @@ class DependenciesCommand extends Command
         $projectReplace = new Prefixer(
             $this->config,
             $this->workingDir,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $fileEnumerator = new FileEnumerator(

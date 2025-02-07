@@ -10,9 +10,14 @@ use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use Exception;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class Prefixer
 {
+    use LoggerAwareTrait;
+
     protected PrefixerConfigInterface $config;
 
     protected string $workingDir;
@@ -29,11 +34,13 @@ class Prefixer
     public function __construct(
         PrefixerConfigInterface $config,
         string $workingDir,
-        FilesystemOperator $filesystem
+        FilesystemOperator $filesystem,
+        ?LoggerInterface $logger = null
     ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
         $this->filesystem = $filesystem;
+        $this->logger = $logger ?? new NullLogger();
     }
 
     // Don't replace a classname if there's an import for a class with the same name.
