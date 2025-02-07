@@ -244,7 +244,8 @@ class DependenciesCommand extends Command
         $fileEnumerator = new FileEnumerator(
             $this->workingDir,
             $this->config,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);

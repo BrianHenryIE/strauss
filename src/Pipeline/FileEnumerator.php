@@ -65,7 +65,7 @@ class FileEnumerator
         string $workingDir,
         StraussConfig $config,
         FileSystem $filesystem,
-        ?LoggerInterface $logger
+        ?LoggerInterface $logger = null
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
@@ -198,6 +198,8 @@ class FileEnumerator
         }
 
         $this->discoveredFiles->add($f);
+
+        $this->logger->info("Found file {$sourceAbsoluteFilepath}");
     }
 
     /**
