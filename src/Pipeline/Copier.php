@@ -67,6 +67,7 @@ class Copier
         $this->absoluteTargetDir = $workingDir . $config->getTargetDirectory();
 
         $this->filesystem = $filesystem;
+        $this->workingDir = $workingDir;
     }
 
     /**
@@ -79,6 +80,7 @@ class Copier
     public function prepareTarget(): void
     {
         if (! $this->filesystem->directoryExists($this->absoluteTargetDir)) {
+            $this->logger->info('Creating directory at ' . $this->absoluteTargetDir);
             $this->filesystem->createDirectory($this->absoluteTargetDir);
         } else {
             foreach ($this->files->getFiles() as $file) {
@@ -89,6 +91,7 @@ class Copier
                 $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
 
                 if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
+                    $this->logger->info('Deleting file at ' . str_replace($this->workingDir, '', $targetAbsoluteFilepath));
                     $this->filesystem->delete($targetAbsoluteFilepath);
                 }
             }
@@ -100,7 +103,7 @@ class Copier
      */
     public function copy(): void
     {
-        $this->logger->info('Copying files');
+        $this->logger->notice('Copying files');
 
         /**
          * @var File $file
@@ -108,14 +111,16 @@ class Copier
         foreach ($this->files->getFiles() as $file) {
             if (!$file->isDoCopy()) {
                 $this->logger->debug('Skipping ' . $file->getSourcePath());
-
                 continue;
             }
 
             $sourceAbsoluteFilepath = $file->getSourcePath();
             $targetAbsolutePath = $file->getAbsoluteTargetPath();
 
-            $this->logger->info('Copying ' . $sourceAbsoluteFilepath . ' to ' . $targetAbsolutePath);
+            $this->logger->info(sprintf(
+                'Copying file to %s',
+                $file->getAbsoluteTargetPath($this->workingDir)
+            ));
 
             if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
                 $this->filesystem->createDirectory($targetAbsolutePath);
