@@ -7,6 +7,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Exception;
 use League\Flysystem\FilesystemReader;
 use Psr\Log\LoggerAwareTrait;
@@ -33,7 +34,7 @@ class DependenciesEnumerator
      */
     protected array $requiredPackageNames;
 
-    protected FilesystemReader $filesystem;
+    protected FileSystem $filesystem;
 
     /** @var string[]  */
     protected array $virtualPackages = array(
@@ -97,6 +98,12 @@ class DependenciesEnumerator
     {
         $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
 
+        $absoluteVendorDir = sprintf(
+            '%s%s',
+            $this->workingDir,
+            $this->vendorDir,
+        );
+
         foreach ($requiredPackageNames as $requiredPackageName) {
             // Avoid infinite recursion.
             if (isset($this->flatDependencyTree[$requiredPackageName])) {
@@ -104,9 +111,8 @@ class DependenciesEnumerator
             }
 
             $packageComposerFile = sprintf(
-                '%s%s%s/composer.json',
-                $this->workingDir,
-                $this->vendorDir,
+                '%s/composer.json',
+                $absoluteVendorDir,
                 $requiredPackageName
             );
 
@@ -145,7 +151,11 @@ class DependenciesEnumerator
                     continue;
                 }
 
-                if (!isset($requiredPackageComposerJson['autoload']) && $requiredPackageComposerJson['type'] != 'metapackage') {
+                if (!isset($requiredPackageComposerJson['autoload'])
+                    && empty($requiredPackageComposerJson['require'])
+                    && $requiredPackageComposerJson['type'] != 'metapackage'
+                    && ! $this->filesystem->directoryExists(dirname($packageComposerFile))
+                ) {
                     // e.g. symfony/polyfill-php72 when installed on PHP 7.2 or later.
                     $this->logger->info('Skipping ' . $requiredPackageName . ' as it is has no autoload key (possibly a polyfill unnecessary for this version of PHP).');
                     continue;
