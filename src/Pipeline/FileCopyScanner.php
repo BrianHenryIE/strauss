@@ -55,23 +55,24 @@ class FileCopyScanner
 
             if ($file instanceof FileWithDependency) {
                 if (in_array($file->getDependency()->getPackageName(), $this->config->getExcludePackagesFromCopy(), true)) {
+                    $this->logger->debug("File {$file->getSourcePath($this->workingDir)} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.");
                     $copy = false;
                 }
             }
 
             if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+                $this->logger->debug("The target directory is the same as the vendor directory."); // TODO: surely this should be outside the loop/class.
                 $copy = false;
             }
 
-            $fileSymbols = $file->getDiscoveredSymbols();
-            $excludedNamespaces = $this->config->getExcludeNamespacesFromCopy();
             /** @var DiscoveredSymbol $symbol */
-            foreach ($fileSymbols as $symbol) {
-                foreach ($excludedNamespaces as $namespace) {
+            foreach ($file->getDiscoveredSymbols() as $symbol) {
+                foreach ($this->config->getExcludeNamespacesFromCopy() as $namespace) {
                     if ($symbol->getSourceFile() === $file
-                    && $symbol instanceof NamespaceSymbol
+                        && $symbol instanceof NamespaceSymbol
                         && str_starts_with($symbol->getOriginalSymbol(), $namespace)
                     ) {
+                        $this->logger->debug("File {$file->getSourcePath($this->workingDir)} will not be copied because namespace {$namespace} is excluded from copy.");
                         $copy = false;
                     }
                 }
@@ -80,8 +81,13 @@ class FileCopyScanner
             $filePath = $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory());
             foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
                 if (1 == preg_match($pattern, $filePath)) {
+                    $this->logger->debug("File {$file->getSourcePath($this->workingDir)} will not be copied because it matches pattern {$pattern}.");
                     $copy = false;
                 }
+            }
+
+            if ($copy) {
+                $this->logger->debug("Marking file {$file->getSourcePath($this->workingDir)} to be copied.");
             }
 
             $file->setDoCopy($copy);
@@ -90,11 +96,10 @@ class FileCopyScanner
                 ? $this->workingDir . $this->config->getTargetDirectory() . $file->getVendorRelativePath()
                 : $file->getSourcePath();
 
-            $file->setAbsoluteTargetPath(
-                $target
-            );
+            $file->setAbsoluteTargetPath($target);
 
-            $file->setDoDelete($this->config->isDeleteVendorFiles() && ! $this->isSymlinkedFile($file));
+            $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->isSymlinkedFile($file);
+            $file->setDoDelete($shouldDelete);
         };
     }
 
