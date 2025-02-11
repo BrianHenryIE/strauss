@@ -230,7 +230,8 @@ class DependenciesCommand extends Command
         $this->dependenciesEnumerator = new DependenciesEnumerator(
             $this->workingDir,
             $this->config,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 

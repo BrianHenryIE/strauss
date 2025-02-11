@@ -9,9 +9,14 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use Exception;
 use League\Flysystem\FilesystemReader;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class DependenciesEnumerator
 {
+    use LoggerAwareTrait;
+
     /**
      * The only path variable with a leading slash.
      * All directories in project end with a slash.
@@ -61,7 +66,8 @@ class DependenciesEnumerator
     public function __construct(
         string $workingDir,
         StraussConfig $config,
-        FilesystemReader $filesystem
+        FilesystemReader $filesystem,
+        ?LoggerInterface $logger = null
     ) {
         $this->workingDir = $workingDir;
         $this->vendorDir = $config->getVendorDirectory();
@@ -69,6 +75,8 @@ class DependenciesEnumerator
         $this->requiredPackageNames = $config->getPackages();
 
         $this->filesystem = $filesystem;
+
+        $this->setLogger($logger ?? new NullLogger());
     }
 
     /**
