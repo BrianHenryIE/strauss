@@ -123,7 +123,7 @@ class DependenciesEnumerator
                 $composerJsonString = $this->filesystem->read($this->workingDir . 'composer.json');
                 $composerJson       = json_decode($composerJsonString, true);
 
-                if (in_array($requiredPackageName, array_keys($composerJson['provide']))) {
+                if (isset($composerJson['provide']) && in_array($requiredPackageName, array_keys($composerJson['provide']))) {
                     $this->logger->info('Skipping ' . $requiredPackageName . ' as it is in the composer.json provide list');
                     continue;
                 }
