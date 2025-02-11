@@ -111,7 +111,7 @@ class DependenciesEnumerator
             }
 
             $packageComposerFile = sprintf(
-                '%s/composer.json',
+                '%s%s/composer.json',
                 $absoluteVendorDir,
                 $requiredPackageName
             );
