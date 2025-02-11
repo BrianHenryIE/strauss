@@ -74,6 +74,8 @@ class Prefixer
                 $file->setDidUpdate();
                 $this->filesystem->write($file->getAbsoluteTargetPath(), $updatedContents);
                 $this->logger->info('Updated contents of file: ' . $file->getAbsoluteTargetPath($this->workingDir));
+            } else {
+                $this->logger->debug('No changes to file: ' . $file->getAbsoluteTargetPath($this->workingDir));
             }
         }
     }
@@ -94,6 +96,7 @@ class Prefixer
                     : $this->workingDir . $workingDirRelativeFilepath;
 
             if (! $this->filesystem->fileExists($fileAbsolutePath)) {
+                $this->logger->warning("Expected file does not exist: {$fileAbsolutePath}");
                 continue;
             }
             
@@ -106,6 +109,8 @@ class Prefixer
                 $this->changedFiles[ $workingDirRelativeFilepath ] = null;
                 $this->filesystem->write($fileAbsolutePath, $updatedContents);
                 $this->logger->info('Updated contents of file: ' . str_replace($this->workingDir, '', $fileAbsolutePath));
+            } else {
+                $this->logger->debug('No changes to file: ' . str_replace($this->workingDir, '', $fileAbsolutePath));
             }
         }
     }
@@ -131,6 +136,7 @@ class Prefixer
 
         foreach ($namespacesChanges as $originalNamespace => $namespaceSymbol) {
             if (in_array($originalNamespace, $this->config->getExcludeNamespacesFromPrefixing())) {
+                $this->logger->info("Skipping namespace: $originalNamespace");
                 continue;
             }
 
