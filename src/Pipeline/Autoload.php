@@ -117,9 +117,23 @@ class Autoload
         array_walk(
             $dirMap,
             function (&$filepath, $_class) use ($targetDir) {
-                $filepath = "\$strauss_src . '"
-                    . DIRECTORY_SEPARATOR
-                    . ltrim(str_replace($targetDir, '', $filepath), '/\\') . "'";
+                // TODO: maybe check is the target directory string present twice in the path
+                $filepath = sprintf(
+                    "\$strauss_src . '/%s';'",
+                    substr(
+                        $filepath,
+                        (
+                            strpos(
+                                $filepath,
+                                basename($this->config->getTargetDirectory())
+                            )
+                            +
+                            strlen(
+                                $this->config->getTargetDirectory()
+                            )
+                        )
+                    )
+                );
             }
         );
 

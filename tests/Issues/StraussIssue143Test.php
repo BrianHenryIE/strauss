@@ -55,5 +55,8 @@ EOD;
         $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $phpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Strauss\\Issue143\\Psr\\Log;', $phpString);
+
+        $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/autoload-classmap.php');
+        $this->assertStringNotContainsString($this->testsWorkingDir, $classmapString);
     }
 }
