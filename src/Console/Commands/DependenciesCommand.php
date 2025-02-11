@@ -255,7 +255,7 @@ class DependenciesCommand extends Command
     // 3. Copy autoloaded files for each
     protected function copyFiles(): void
     {
-        (new FileCopyScanner($this->workingDir, $this->config, $this->filesystem))->scanFiles($this->discoveredFiles);
+        (new FileCopyScanner($this->workingDir, $this->config, $this->filesystem, $this->logger))->scanFiles($this->discoveredFiles);
 
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
             // Nothing to do.

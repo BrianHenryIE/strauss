@@ -23,9 +23,13 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use League\Flysystem\FilesystemReader;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class FileCopyScanner
 {
+    use LoggerAwareTrait;
 
     protected FileCopyScannerConfigInterface $config;
 
@@ -34,10 +38,13 @@ class FileCopyScanner
     public function __construct(
         string $workingDir,
         FileCopyScannerConfigInterface $config,
-        FilesystemReader $filesystem
+        FilesystemReader $filesystem,
+        ?LoggerInterface $logger = null
     ) {
         $this->workingDir = $workingDir;
         $this->config = $config;
+
+        $this->setLogger($logger ?? new NullLogger());
     }
 
     public function scanFiles(DiscoveredFiles $files): void
@@ -94,6 +101,8 @@ class FileCopyScanner
     /**
      * Check does the filepath point to a file outside the working directory.
      * If `realpath()` fails to resolve the path, assume it's a symlink.
+     *
+     * TODO: This should not be here. It's a filesystem operation.
      */
     protected function isSymlinkedFile(FileBase $file): bool
     {
