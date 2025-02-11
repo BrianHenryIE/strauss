@@ -237,7 +237,7 @@ class ReplaceCommand extends Command
 
         // TODO: Update to use DiscoveredFiles
         $dependencies = $this->flatDependencyTree;
-        $licenser = new Licenser($config, $this->workingDir, $dependencies, $author, $this->filesystem);
+        $licenser = new Licenser($config, $this->workingDir, $dependencies, $author, $this->filesystem, $this->logger);
 
         $licenser->copyLicenses();
 

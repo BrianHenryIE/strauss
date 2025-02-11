@@ -20,9 +20,14 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class Licenser
 {
+    use LoggerAwareTrait;
+
     protected string $workingDir;
 
     protected string $vendorDir;
@@ -64,7 +69,8 @@ class Licenser
         string $workingDir,
         array $dependencies,
         string $author,
-        FilesystemOperator $filesystem
+        FilesystemOperator $filesystem,
+        ?LoggerInterface $logger = null
     ) {
         $this->workingDir = $workingDir;
         $this->dependencies = $dependencies;
@@ -76,6 +82,8 @@ class Licenser
         $this->includeAuthor = $config->isIncludeAuthor();
 
         $this->filesystem = $filesystem;
+
+        $this->setLogger($logger ?? new NullLogger());
     }
 
     /**

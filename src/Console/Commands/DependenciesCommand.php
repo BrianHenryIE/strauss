@@ -399,7 +399,8 @@ class DependenciesCommand extends Command
             $this->workingDir,
             $dependencies,
             $author,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $licenser->copyLicenses();
