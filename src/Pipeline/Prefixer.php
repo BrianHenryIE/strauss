@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use Exception;
@@ -22,7 +23,7 @@ class Prefixer
 
     protected string $workingDir;
 
-    protected FilesystemOperator $filesystem;
+    protected FileSystem $filesystem;
 
     /**
      * array<$workingDirRelativeFilepath, $package> or null if the file is not from a dependency (i.e. a project file).
@@ -95,11 +96,16 @@ class Prefixer
                     ? $workingDirRelativeFilepath
                     : $this->workingDir . $workingDirRelativeFilepath;
 
+            if ($this->filesystem->directoryExists($fileAbsolutePath)) {
+                $this->logger->debug("is_dir() / nothing to do : {$fileAbsolutePath}");
+                continue;
+            }
+
             if (! $this->filesystem->fileExists($fileAbsolutePath)) {
                 $this->logger->warning("Expected file does not exist: {$fileAbsolutePath}");
                 continue;
             }
-            
+
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
 
