@@ -86,6 +86,7 @@ class DependenciesEnumerator
     public function getAllDependencies(): array
     {
         $this->recursiveGetAllDependencies($this->requiredPackageNames);
+
         return $this->flatDependencyTree;
     }
 
@@ -102,19 +103,34 @@ class DependenciesEnumerator
                 continue;
             }
 
-            $packageComposerFile = $this->workingDir . $this->vendorDir
-                                   . $requiredPackageName . DIRECTORY_SEPARATOR . 'composer.json';
+            $packageComposerFile = sprintf(
+                '%s%s%s/composer.json',
+                $this->workingDir,
+                $this->vendorDir,
+                $requiredPackageName
+            );
 
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
             if ($this->filesystem->fileExists($packageComposerFile)) {
                 $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
             } else {
-                $fileContents           = $this->filesystem->read($this->workingDir . 'composer.lock');
-                if (false === $fileContents) {
-                    throw new Exception('Failed to read contents of ' . $this->workingDir . 'composer.lock');
+                // Some packages download with NO `composer.json`! E.g. woocommerce/action-scheduler.
+                // Some packages download to a different directory than the package name.
+                $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock');
+
+                // TODO: These (.json, .lock) should be read once and reused.
+                $composerJsonString = $this->filesystem->read($this->workingDir . 'composer.json');
+                $composerJson       = json_decode($composerJsonString, true);
+
+                if (in_array($requiredPackageName, array_keys($composerJson['provide']))) {
+                    $this->logger->info('Skipping ' . $requiredPackageName . ' as it is in the composer.json provide list');
+                    continue;
                 }
-                $composerLock           = json_decode($fileContents, true);
+
+                $composerLockString           = $this->filesystem->read($this->workingDir . 'composer.lock');
+                $composerLock           = json_decode($composerLockString, true);
+
                 $requiredPackageComposerJson = null;
                 foreach ($composerLock['packages'] as $packageJson) {
                     if ($requiredPackageName === $packageJson['name']) {
@@ -122,18 +138,50 @@ class DependenciesEnumerator
                         break;
                     }
                 }
+
                 if (is_null($requiredPackageComposerJson)) {
                     // e.g. composer-plugin-api.
+                    $this->logger->info('Skipping ' . $requiredPackageName . ' as it is not in composer.lock');
+                    continue;
+                }
+
+                if (!isset($requiredPackageComposerJson['autoload']) && $requiredPackageComposerJson['type'] != 'metapackage') {
+                    // e.g. symfony/polyfill-php72 when installed on PHP 7.2 or later.
+                    $this->logger->info('Skipping ' . $requiredPackageName . ' as it is has no autoload key (possibly a polyfill unnecessary for this version of PHP).');
                     continue;
                 }
 
                 $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
             }
 
+            $this->logger->info('Analysing package ' . $requiredComposerPackage->getPackageName());
             $this->flatDependencyTree[$requiredComposerPackage->getPackageName()] = $requiredComposerPackage;
-            $nextRequiredPackageNames                                             = $requiredComposerPackage->getRequiresNames();
 
-            $this->recursiveGetAllDependencies($nextRequiredPackageNames);
+            $nextRequiredPackageNames = $requiredComposerPackage->getRequiresNames();
+
+            if (0 !== count($nextRequiredPackageNames)) {
+                $packageRequiresString = $requiredComposerPackage->getPackageName() . ' requires packages: ';
+                $this->logger->debug($packageRequiresString . implode(', ', $nextRequiredPackageNames));
+            } else {
+                $this->logger->debug($requiredComposerPackage->getPackageName() . ' requires no packages.');
+                continue;
+            }
+
+            $newPackages = array_diff($nextRequiredPackageNames, array_keys($this->flatDependencyTree));
+
+            $newPackagesString = implode(', ', $newPackages);
+            if (!empty($newPackagesString)) {
+                $this->logger->debug(sprintf(
+                    'New packages: %s%s',
+                    str_repeat(' ', strlen($packageRequiresString) - strlen('New packages: ')),
+                    $newPackagesString
+                ));
+            } else {
+                $this->logger->debug('No new packages.');
+                continue;
+            }
+
+            $this->recursiveGetAllDependencies($newPackages);
         }
     }
 
@@ -162,7 +210,8 @@ class DependenciesEnumerator
     {
         return ! (
             0 === strpos($requiredPackageName, 'ext')
-            || 'php' === $requiredPackageName
+            // E.g. `php`, `php-64bit`.
+            || (0 === strpos($requiredPackageName, 'php') && false === strpos($requiredPackageName, '/'))
             || in_array($requiredPackageName, $this->virtualPackages)
         );
     }
