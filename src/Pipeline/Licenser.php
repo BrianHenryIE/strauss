@@ -112,6 +112,13 @@ class Licenser
                 continue;
             }
 
+            $this->logger->info(
+                sprintf(
+                    "Copying license file from %s to %s",
+                    $licenseFile,
+                    $targetLicenseFile
+                )
+            );
             $this->filesystem->copy(
                 $licenseFile,
                 $targetLicenseFile
@@ -188,6 +195,7 @@ class Licenser
             );
 
             if ($updatedContents !== $contents) {
+                $this->logger->info("Adding change declaration to {$filepath}");
                 $this->filesystem->write($filepath, $updatedContents);
             }
         }
