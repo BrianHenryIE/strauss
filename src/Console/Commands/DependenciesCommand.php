@@ -292,7 +292,8 @@ class DependenciesCommand extends Command
         $changeEnumerator = new ChangeEnumerator(
             $this->config,
             $this->workingDir,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
