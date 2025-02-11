@@ -56,7 +56,7 @@ class Copier
         DiscoveredFiles $files,
         string $workingDir,
         StraussConfig $config,
-        FilesystemOperator $filesystem,
+        FileSystem $filesystem,
         LoggerInterface $logger
     ) {
         $this->files = $files;
@@ -117,14 +117,17 @@ class Copier
             $sourceAbsoluteFilepath = $file->getSourcePath();
             $targetAbsolutePath = $file->getAbsoluteTargetPath();
 
-            $this->logger->info(sprintf(
-                'Copying file to %s',
-                $file->getAbsoluteTargetPath($this->workingDir)
-            ));
-
             if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+                $this->logger->info(sprintf(
+                    'Creating directory at %s',
+                    $file->getAbsoluteTargetPath($this->workingDir)
+                ));
                 $this->filesystem->createDirectory($targetAbsolutePath);
             } else {
+                $this->logger->info(sprintf(
+                    'Copying file to %s',
+                    $file->getAbsoluteTargetPath($this->workingDir)
+                ));
                 $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
             }
         }
