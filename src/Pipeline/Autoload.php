@@ -37,6 +37,7 @@ class Autoload
 
     /**
      * Autoload constructor.
+     *
      * @param StraussConfig $config
      * @param string $workingDir
      * @param array<string, array<string>> $discoveredFilesAutoloaders
@@ -61,6 +62,7 @@ class Autoload
         // Do not overwrite Composer's autoload.php.
         // The correct solution is to add "classmap": ["vendor"] to composer.json, then run composer dump-autoload.
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+            $this->logger->debug('Strauss is not generating autoload.php because the target directory is the vendor directory.');
             return;
         }
 
@@ -116,7 +118,7 @@ class Autoload
 
         array_walk(
             $dirMap,
-            function (&$filepath, $_class) use ($targetDir) {
+            function (&$filepath, $_class) {
                 // TODO: maybe check is the target directory string present twice in the path
                 $filepath = sprintf(
                     "\$strauss_src . '/%s';'",
