@@ -10,8 +10,6 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\ClassMapGenerator\ClassMapGenerator;
-use Composer\Json\JsonFile;
-use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\StorageAttributes;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -105,8 +103,8 @@ class Autoload
             array_map(
                 function ($file) {
                     return $this->config->isDryRun()
-                    ? new \SplFileInfo('mem://'.$file->path())
-                    : new \SplFileInfo('/'.$file->path());
+                        ? new \SplFileInfo('mem://'.$file->path())
+                        : new \SplFileInfo('/'.$file->path());
                 },
                 array_filter(
                     $this->filesystem->listContents($targetDir, true)->toArray(),
@@ -152,6 +150,7 @@ class Autoload
         }
         echo ");";
 
+        $this->logger->info('Writing classmap to ' . basename($targetDirectory) . '/' . $output_filename);
         $this->filesystem->write(
             $targetDirectory . $output_filename,
             ob_get_clean()
@@ -194,6 +193,7 @@ class Autoload
             }
         }
 
+        $this->logger->info('Writing files autoloader to ' . basename($targetDirectory) . '/' . $outputFilename);
         $this->filesystem->write(
             $targetDirectory . $outputFilename,
             ob_get_clean()
@@ -229,6 +229,7 @@ EOD;
         $relativeFilepath = $this->config->getTargetDirectory() . 'autoload.php';
         $absoluteFilepath = $this->workingDir . $relativeFilepath;
 
+        $this->logger->info("Writing autoload.php to $relativeFilepath");
         $this->filesystem->write(
             $absoluteFilepath,
             $autoloadPhp
