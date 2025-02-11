@@ -442,7 +442,8 @@ class DependenciesCommand extends Command
             $this->config,
             $this->workingDir,
             $filesAutoloaders,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $classmap->generate();

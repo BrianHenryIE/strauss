@@ -13,9 +13,14 @@ use Composer\ClassMapGenerator\ClassMapGenerator;
 use Composer\Json\JsonFile;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\StorageAttributes;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class Autoload
 {
+    use LoggerAwareTrait;
+
     protected FileSystem $filesystem;
 
     protected string $workingDir;
@@ -40,13 +45,15 @@ class Autoload
         StraussConfig $config,
         string $workingDir,
         array $discoveredFilesAutoloaders,
-        Filesystem $filesystem
+        Filesystem $filesystem,
+        ?LoggerInterface $logger = null
     ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
         $this->discoveredFilesAutoloaders = $discoveredFilesAutoloaders;
 
         $this->filesystem = $filesystem;
+        $this->setLogger($logger ?? new NullLogger());
     }
 
     public function generate(): void
