@@ -92,6 +92,7 @@ class FileEnumerator
     {
         foreach ($dependencies as $dependency) {
             if (in_array($dependency->getPackageName(), $this->excludePackageNames)) {
+                $this->logger->info("Excluding package " . $dependency->getPackageName());
                 continue;
             }
 
@@ -116,12 +117,14 @@ class FileEnumerator
 
                 foreach ($value as $namespace => $namespace_relative_paths) {
                     if (!empty($namespace) && in_array($namespace, $this->excludeNamespaces)) {
+                        $this->logger->info("Excluding namespace " . $namespace);
                         continue;
                     }
 
-                    if (! is_array($namespace_relative_paths)) {
-                        $namespace_relative_paths = array( $namespace_relative_paths );
-                    }
+                    $namespace_relative_paths = (array) $namespace_relative_paths;
+//                    if (! is_array($namespace_relative_paths)) {
+//                        $namespace_relative_paths = array( $namespace_relative_paths );
+//                    }
 
                     foreach ($namespace_relative_paths as $namespaceRelativePath) {
                         $sourceAbsoluteDirPath = in_array($namespaceRelativePath, ['.','./'])
