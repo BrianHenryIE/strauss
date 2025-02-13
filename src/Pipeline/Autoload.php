@@ -57,8 +57,7 @@ class Autoload
 
     public function generate(): void
     {
-        // Do not overwrite Composer's autoload.php.
-        // The correct solution is to add "classmap": ["vendor"] to composer.json, then run composer dump-autoload.
+        // Use native Composer's `autoload.php` etc. when the target directory is the vendor directory.
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
             $this->logger->debug('Strauss is not generating autoload.php because the target directory is the vendor directory.');
             return;
@@ -67,8 +66,6 @@ class Autoload
         if (! $this->config->isClassmapOutput()) {
             return;
         }
-
-        // TODO Don't do this if vendor is the target dir (i.e. in-situ updating).
 
         $this->generateClassmap();
 
@@ -91,12 +88,14 @@ class Autoload
         // Hyphen used to match WordPress Coding Standards.
         $output_filename = "autoload-classmap.php";
 
-        $targetDirectory = getcwd() // TODO: Why is this not $this->workingDir?
-            . DIRECTORY_SEPARATOR
-            . ltrim($this->config->getTargetDirectory(), '/\\');
+        $targetDirectory = ltrim( sprintf(
+            '%s/%s/',
+            trim($this->workingDir, '/\\'),
+            trim($this->config->getTargetDirectory(), '/\\')
+        ), '/\\');
 
         $targetDir = $this->config->isDryRun()
-                ? 'mem:/' . $targetDirectory
+                ? 'mem://' . ltrim($targetDirectory, '/')
                 : $targetDirectory;
 
         $paths =
@@ -116,23 +115,10 @@ class Autoload
 
         array_walk(
             $dirMap,
-            function (&$filepath, $_class) {
-                // TODO: maybe check is the target directory string present twice in the path
+            function (&$filepath, $_class) use ($targetDir) {
                 $filepath = sprintf(
-                    "\$strauss_src . '/%s';'",
-                    substr(
-                        $filepath,
-                        (
-                            strpos(
-                                $filepath,
-                                basename($this->config->getTargetDirectory())
-                            )
-                            +
-                            strlen(
-                                $this->config->getTargetDirectory()
-                            )
-                        )
-                    )
+                    "\$strauss_src . '/%s'",
+                    str_replace($targetDir, '', $filepath)
                 );
             }
         );
