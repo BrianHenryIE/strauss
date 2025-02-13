@@ -130,4 +130,48 @@ class AutoloadTest extends \PHPUnit\Framework\TestCase
 
         $this->assertStringContainsString("'Psr\Log\Test\TestLogger' => \$strauss_src . '/psr/log/Psr/Log/Test/TestLogger.php',". PHP_EOL, $autoloadClassmap);
     }
+
+    /**
+     * @covers ::generateFilesAutoloader
+     */
+    public function testGenerateFilesAutoloader(): void
+    {
+
+        $config = \Mockery::mock(StraussConfig::class);
+        $config->expects('getTargetDirectory')->andReturn('vendor-prefixed')->once();
+        $config->expects('getVendorDirectory')->andReturn('vendor')->once();
+        $config->expects('isClassmapOutput')->andReturnTrue()->once();
+        $config->expects('isDryRun')->andReturnTrue()->once();
+
+        $absoluteWorkingDir = '/';
+        $discoveredFilesAutoloaders = array (
+            'rubix/tensor' =>
+                array (
+                    0 => 'src/constants.php',
+                ),
+        );
+        $filesystem = $this->getStreamWrappedFilesystem();
+        $logger = new TestLogger();
+
+        $filesystem->write(
+            'vendor-prefixed/rubix/tensor/src/constants.php',
+            '<?php '
+        );
+
+        $sut = new Autoload(
+            $config,
+            $absoluteWorkingDir,
+            $discoveredFilesAutoloaders,
+            $filesystem,
+            $logger
+        );
+
+        $sut->generate();
+
+        $this->assertTrue($filesystem->fileExists('vendor-prefixed/autoload-files.php'));
+
+        $autoloadClassmap = $filesystem->read('vendor-prefixed/autoload-files.php');
+
+        $this->assertStringContainsString("require_once __DIR__ . '/rubix/tensor/src/constants.php';" . PHP_EOL, $autoloadClassmap);
+    }
 }
