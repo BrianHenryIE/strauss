@@ -146,7 +146,7 @@ class Autoload
         foreach ($dirMap as $class => $file) {
             // Always use `/` in paths.
             $file = str_replace(DIRECTORY_SEPARATOR, '/', $file);
-            echo "   '{$class}' => {$file},\n";
+            echo "\t'{$class}' => {$file},\n";
         }
         echo ");";
 

@@ -60,5 +60,11 @@ EOD;
         $this->assertStringNotContainsString($this->testsWorkingDir, $classmapString);
         $this->assertStringNotContainsString('$strauss_src . \'//psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
         $this->assertStringContainsString('$strauss_src . \'/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
+
+        // Check the lines of the classmap are indented by tabs, not spaced. Chosen per WPCS standard.
+        $this->assertStringNotContainsString("   'Strauss\Issue143\Psr\Log\LoggerAwareInterface' => \$strauss_src . '/psr/log/Psr/Log/LoggerAwareInterface.php',
+", $classmapString);
+        $this->assertStringContainsString("	'Strauss\Issue143\Psr\Log\LoggerAwareInterface' => \$strauss_src . '/psr/log/Psr/Log/LoggerAwareInterface.php',
+", $classmapString);
     }
 }
