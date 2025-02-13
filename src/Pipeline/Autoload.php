@@ -122,7 +122,7 @@ class Autoload
             function (&$filepath, $_class) use ($targetDir) {
                 $filepath = sprintf(
                     "\$strauss_src . '/%s'",
-                    str_replace($targetDir, '', $filepath)
+                    ltrim(str_replace($targetDir, '', $filepath), '/')
                 );
             }
         );

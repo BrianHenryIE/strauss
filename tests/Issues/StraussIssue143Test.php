@@ -58,5 +58,7 @@ EOD;
 
         $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/autoload-classmap.php');
         $this->assertStringNotContainsString($this->testsWorkingDir, $classmapString);
+        $this->assertStringNotContainsString('$strauss_src . \'//psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
+        $this->assertStringContainsString('$strauss_src . \'/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
     }
 }
