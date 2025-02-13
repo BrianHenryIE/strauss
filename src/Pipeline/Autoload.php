@@ -34,6 +34,8 @@ class Autoload
      */
     protected array $discoveredFilesAutoloaders;
 
+    protected string $absoluteTargetDirectory;
+
     /**
      * Autoload constructor.
      *
@@ -54,6 +56,22 @@ class Autoload
 
         $this->filesystem = $filesystem;
         $this->setLogger($logger ?? new NullLogger());
+
+
+        $targetDirectory = ltrim(sprintf(
+            '%s/%s/',
+            trim($this->workingDir, '/\\'),
+            trim($this->config->getTargetDirectory(), '/\\')
+        ), '/\\');
+
+        $pathNormalizer = new WhitespacePathNormalizer();
+        $targetDirectory = $pathNormalizer->normalizePath($targetDirectory) . '/';
+
+        $targetDir = $this->config->isDryRun()
+            ? 'mem://' . ltrim($targetDirectory, '/')
+            : $targetDirectory;
+
+        $this->absoluteTargetDirectory = $targetDir;
     }
 
     public function generate(): void
@@ -86,22 +104,8 @@ class Autoload
      */
     protected function generateClassmap(): void
     {
-
         // Hyphen used to match WordPress Coding Standards.
         $output_filename = "autoload-classmap.php";
-
-        $targetDirectory = ltrim(sprintf(
-            '%s/%s/',
-            trim($this->workingDir, '/\\'),
-            trim($this->config->getTargetDirectory(), '/\\')
-        ), '/\\');
-
-        $pathNormalizer = new WhitespacePathNormalizer();
-        $targetDirectory = $pathNormalizer->normalizePath($targetDirectory) . '/';
-
-        $targetDir = $this->config->isDryRun()
-                ? 'mem://' . ltrim($targetDirectory, '/')
-                : $targetDirectory;
 
         // TODO: This should be created from the discoveredFiles list?
         $paths =
@@ -112,7 +116,7 @@ class Autoload
                         : new \SplFileInfo('/'.$file->path());
                 },
                 array_filter(
-                    $this->filesystem->listContents($targetDir, true)->toArray(),
+                    $this->filesystem->listContents($this->absoluteTargetDirectory, true)->toArray(),
                     fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
                 )
             );
@@ -121,10 +125,10 @@ class Autoload
 
         array_walk(
             $dirMap,
-            function (&$filepath, $_class) use ($targetDir) {
+            function (&$filepath, $_class) {
                 $filepath = sprintf(
                     "\$strauss_src . '/%s'",
-                    ltrim(str_replace($targetDir, '', $filepath), '/')
+                    ltrim(str_replace($this->absoluteTargetDirectory, '', $filepath), '/')
                 );
             }
         );
@@ -142,9 +146,9 @@ class Autoload
         }
         echo ");";
 
-        $this->logger->info('Writing classmap to ' . basename($targetDirectory) . '/' . $output_filename);
+        $this->logger->info('Writing classmap to ' . basename($this->absoluteTargetDirectory) . '/' . $output_filename);
         $this->filesystem->write(
-            $targetDirectory . $output_filename,
+            $this->absoluteTargetDirectory . $output_filename,
             ob_get_clean()
         );
     }
@@ -159,10 +163,6 @@ class Autoload
         // Hyphen used to match WordPress Coding Standards.
         $outputFilename = "autoload-files.php";
 
-        $targetDirectory = getcwd()  // TODO: Why is this not $this->workingDir?
-            . DIRECTORY_SEPARATOR
-            . ltrim($this->config->getTargetDirectory(), '/\\');
-
         ob_start();
 
         echo "<?php\n\n";
@@ -171,21 +171,20 @@ class Autoload
 
         foreach ($this->discoveredFilesAutoloaders as $packagePath => $files) {
             foreach ($files as $file) {
-                $filepath = DIRECTORY_SEPARATOR . $packagePath . DIRECTORY_SEPARATOR . $file;
-                // TODO: is it bad that this is not using the Fly FileSystem?
-                $filePathinfo = pathinfo(__DIR__ . $filepath); // TODO: Why is this not $this->workingDir?
+                $targetRelativeFilepath = "/{$packagePath}/{$file}";
+                $filePathinfo = pathinfo($this->absoluteTargetDirectory . $targetRelativeFilepath);
                 if (!isset($filePathinfo['extension']) || 'php' !== $filePathinfo['extension']) {
                     continue;
                 }
                 // Always use `/` in paths.
-                $filepath = str_replace(DIRECTORY_SEPARATOR, '/', $filepath);
-                echo "require_once __DIR__ . '{$filepath}';\n";
+                $targetRelativeFilepath = str_replace(DIRECTORY_SEPARATOR, '/', $targetRelativeFilepath);
+                echo "require_once __DIR__ . '{$targetRelativeFilepath}';\n";
             }
         }
 
-        $this->logger->info('Writing files autoloader to ' . basename($targetDirectory) . '/' . $outputFilename);
+        $this->logger->info('Writing files autoloader to ' . basename($this->absoluteTargetDirectory) . '/' . $outputFilename);
         $this->filesystem->write(
-            $targetDirectory . $outputFilename,
+            $this->absoluteTargetDirectory . $outputFilename,
             ob_get_clean()
         );
     }
@@ -220,10 +219,10 @@ if ( file_exists( __DIR__ . '/autoload-files.php' ) ) {
 }
 EOD;
 
-        $relativeFilepath = $this->config->getTargetDirectory() . 'autoload.php';
-        $absoluteFilepath = $this->workingDir . $relativeFilepath;
+        $filename = 'autoload.php';
+        $absoluteFilepath = $this->absoluteTargetDirectory . $filename;
 
-        $this->logger->info("Writing autoload.php to $relativeFilepath");
+        $this->logger->info("Writing autoload.php to $filename");
         $this->filesystem->write(
             $absoluteFilepath,
             $autoloadPhp
