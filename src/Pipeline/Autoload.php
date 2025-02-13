@@ -72,6 +72,8 @@ class Autoload
             : $targetDirectory;
 
         $this->absoluteTargetDirectory = $targetDir;
+
+        $this->logger->debug('Using target directory: ' . $this->absoluteTargetDirectory);
     }
 
     public function generate(): void
@@ -122,6 +124,8 @@ class Autoload
             );
 
         $dirMap = ClassMapGenerator::createMap($paths);
+
+        $this->logger->info('Composer\\ClassMapGenerator\\ClassMapGenerator::createMap() found ' . count($dirMap) . ' classes.');
 
         array_walk(
             $dirMap,
