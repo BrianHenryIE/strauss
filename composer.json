@@ -18,7 +18,7 @@
     "require": {
         "composer/class-map-generator": "^1.6.0",
         "composer/composer": "*",
-        "elazar/flystream": "0.x-dev#c1b48e3d446bcf90cfbc5258798b79c73577bc43 as 0.4.1",
+        "elazar/flystream": "^0.x-dev",
         "json-mapper/json-mapper": "^2.2",
         "league/flysystem": "^2.1|^3.0",
         "league/flysystem-memory": "*",
