@@ -11,6 +11,7 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\ClassMapGenerator\ClassMapGenerator;
 use League\Flysystem\StorageAttributes;
+use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -88,11 +89,14 @@ class Autoload
         // Hyphen used to match WordPress Coding Standards.
         $output_filename = "autoload-classmap.php";
 
-        $targetDirectory = ltrim( sprintf(
+        $targetDirectory = ltrim(sprintf(
             '%s/%s/',
             trim($this->workingDir, '/\\'),
             trim($this->config->getTargetDirectory(), '/\\')
         ), '/\\');
+
+        $pathNormalizer = new WhitespacePathNormalizer();
+        $targetDirectory = $pathNormalizer->normalizePath($targetDirectory) . '/';
 
         $targetDir = $this->config->isDryRun()
                 ? 'mem://' . ltrim($targetDirectory, '/')
