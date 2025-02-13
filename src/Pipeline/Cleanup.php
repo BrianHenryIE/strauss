@@ -61,8 +61,11 @@ class Cleanup
     public function cleanup(array $files): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
+            $this->logger->info('No cleanup required.');
             return;
         }
+
+        $this->logger->info('Beginning cleanup.');
 
         if ($this->isDeleteVendorPackages) {
             $this->doIsDeleteVendorPackages($files);
@@ -269,10 +272,12 @@ class Cleanup
     }
 
     /**
-     * @param array $files
+     * @param array<File> $files
      */
     protected function doIsDeleteVendorPackages(array $files)
     {
+        $this->logger->info('Deleting original vendor packages.');
+
         $packages = [];
         foreach ($files as $file) {
             if ($file instanceof FileWithDependency) {
@@ -323,6 +328,8 @@ class Cleanup
      */
     public function doIsDeleteVendorFiles(array $files)
     {
+        $this->logger->info('Deleting original vendor files.');
+
         foreach ($files as $file) {
             if (! $file->isDoDelete()) {
                 continue;
