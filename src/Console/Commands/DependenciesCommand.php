@@ -5,9 +5,11 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
+use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Cleanup;
@@ -224,6 +226,9 @@ class DependenciesCommand extends Command
             $this->generateAutoloader();
 
             $this->cleanUp();
+
+            // After file have been deleted, we may need to add aliases.
+            $this->generateAliasesFile();
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
@@ -502,8 +507,12 @@ class DependenciesCommand extends Command
      * When namespaces are prefixed which are used by by require and require-dev dependencies,
      * the require-dev dependencies need class aliases specified to point to the new class names/namespaces.
      */
-    protected function generateClassAliasList(): void
+    protected function generateAliasesFile(): void
     {
+        // TODO: check when should we be doing this.
+
+        $aliases = new Aliases($this->config);
+        $aliases->do($this->discoveredSymbols, $this->workingDir);
     }
 
     /**

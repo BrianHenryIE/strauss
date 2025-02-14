@@ -5,6 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
+use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
@@ -17,12 +18,13 @@ use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
 class StraussConfig implements
-    ReplaceConfigInterface,
-    FileSymbolScannerConfigInterface,
-    FileCopyScannerConfigInterface,
+    AliasesConfigInterace,
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
-    PrefixerConfigInterface
+    FileSymbolScannerConfigInterface,
+    FileCopyScannerConfigInterface,
+    PrefixerConfigInterface,
+    ReplaceConfigInterface
 {
     /**
      * The output directory.
