@@ -95,6 +95,7 @@ class FileEnumerator
                 $this->logger->info("Excluding package " . $dependency->getPackageName());
                 continue;
             }
+            $this->logger->info("Scanning for files for package " . $dependency->getPackageName());
 
             /**
              * Where $dependency->autoload is ~
