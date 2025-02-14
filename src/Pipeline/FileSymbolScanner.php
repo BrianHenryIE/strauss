@@ -61,27 +61,27 @@ class FileSymbolScanner
     {
         $this->discoveredSymbols->add($symbol);
 
-        if (in_array($symbol->getOriginalSymbol(), $this->loggedSymbols)) {
-            return;
-        }
+        $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
+        $newText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '' : 'new ';
+        $noNewText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '   ' : '';
 
         $this->loggedSymbols[] = $symbol->getOriginalSymbol();
 
         switch (get_class($symbol)) {
             case NamespaceSymbol::class:
-                $this->logger->info('Discovered: namespace  ' . $symbol->getOriginalSymbol());
+                $this->logger->log($level, "Found {$newText}namespace:  {$noNewText}" . $symbol->getOriginalSymbol());
                 break;
             case ConstantSymbol::class:
-                $this->logger->info('Discovered: constant   ' . $symbol->getOriginalSymbol());
+                $this->logger->log($level, "Found {$newText}constant:   {$noNewText}" . $symbol->getOriginalSymbol());
                 break;
             case ClassSymbol::class:
-                $this->logger->info('Discovered: class.     ' . $symbol->getOriginalSymbol());
+                $this->logger->log($level, "Found {$newText}class.     {$noNewText}" . $symbol->getOriginalSymbol());
                 break;
             case FunctionSymbol::class:
-                $this->logger->info('Discovered: function   ' . $symbol->getOriginalSymbol());
+                $this->logger->log($level, "Found {$newText}function    {$noNewText}" . $symbol->getOriginalSymbol());
                 break;
             default:
-                $this->logger->info('Discovered: ' .get_class($symbol) . ' ' . $symbol->getOriginalSymbol());
+                $this->logger->log($level, "Found {$newText} " . get_class($symbol) . $noNewText . ' ' . $symbol->getOriginalSymbol());
         }
     }
 
@@ -92,9 +92,11 @@ class FileSymbolScanner
     {
         foreach ($files->getFiles() as $file) {
             if (!$file->isPhpFile()) {
+                $this->logger->debug('Skipping non-PHP file: ' . $file->getSourcePath(getcwd()));
                 continue;
             }
 
+            $this->logger->info('Scanning file:        ' . $file->getSourcePath(getcwd()));
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
                 $file
@@ -109,8 +111,6 @@ class FileSymbolScanner
      *
      * @uses self::addDiscoveredNamespaceChange()
      * @uses self::addDiscoveredClassChange()
-     *
-     * @param string $contents
      */
     protected function find(string $contents, File $file): void
     {
