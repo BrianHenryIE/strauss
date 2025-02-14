@@ -103,6 +103,30 @@ class DependenciesCommand extends Command
             false
         );
 
+        $this->addOption(
+            'info',
+            null,
+            4,
+            'output level',
+            false
+        );
+
+        $this->addOption(
+            'debug',
+            null,
+            4,
+            'output level',
+            false
+        );
+
+        $this->addOption(
+            'silent',
+            's',
+            4,
+            'output level',
+            false
+        );
+
         $this->filesystem = new Filesystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter('/'),
@@ -111,6 +135,32 @@ class DependenciesCommand extends Command
                 ]
             )
         );
+    }
+
+    protected function getLogLevel(InputInterface $input): array
+    {
+
+        $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
+
+        if ($input->hasOption('info') && $input->getOption('info') !== false) {
+            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        if ($input->hasOption('debug') && $input->getOption('debug') !== false) {
+            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
+            $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        if (isset($this->config) && $this->config->isDryRun()) {
+            $logLevel[LogLevel::INFO] = OutputInterface::VERBOSITY_NORMAL;
+            $logLevel[LogLevel::DEBUG] = OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        if ($input->hasOption('silent') && $input->getOption('silent') !== false) {
+            return [];
+        }
+
+        return $logLevel;
     }
 
     /**
@@ -123,18 +173,14 @@ class DependenciesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->setLogger(
-            new ConsoleLogger(
-                $output,
-                // TODO: default to Notice, use Info for dry-run.
-                [ LogLevel::INFO => OutputInterface::VERBOSITY_NORMAL ]
-            )
-        );
+        $this->setLogger(new ConsoleLogger($output, $this->getLogLevel($input)));
 
         $workingDir       = getcwd() . DIRECTORY_SEPARATOR;
         $this->workingDir = $workingDir;
 
         try {
+            $this->logger->notice('Starting... ' /** version */); // + PHP version
+
             $this->loadProjectComposerPackage();
             $this->loadConfigFromComposerJson();
             $this->updateConfigFromCli($input);
@@ -157,6 +203,7 @@ class DependenciesCommand extends Command
                 } catch (\Exception $e) {
                     $registry->register('mem', $this->filesystem);
                 }
+                $this->setLogger(new ConsoleLogger($output, $this->getLogLevel($input)));
             }
             $this->buildDependencyList();
 
