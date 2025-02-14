@@ -149,12 +149,12 @@ class FileEnumerator
 
                                 $this->addFileWithDependency(
                                     $dependency,
-                                    $namespaceRelativePath . str_replace($sourcePath, '', $sourceAbsoluteFilepath),
+                                    $sourceAbsoluteFilepath,
                                     $type
                                 );
                             }
                         } else {
-                            $this->addFileWithDependency($dependency, $namespaceRelativePath, $type);
+                            $this->addFileWithDependency($dependency, $sourceAbsoluteDirPath, $type);
                         }
                     }
                 }
@@ -173,12 +173,10 @@ class FileEnumerator
      * @uses \BrianHenryIE\Strauss\Files\DiscoveredFiles::add()
      *
      */
-    protected function addFileWithDependency(ComposerPackage $dependency, string $packageRelativePath, string $autoloaderType): void
+    protected function addFileWithDependency(ComposerPackage $dependency, string $sourceAbsoluteFilepath, string $autoloaderType): void
     {
-        $sourceAbsoluteFilepath = rtrim($dependency->getPackageAbsolutePath(), '/\\') . DIRECTORY_SEPARATOR . ltrim($packageRelativePath, '/\\');
-        $vendorRelativePath = $dependency->getRelativePath() . $packageRelativePath;
-        $projectAbsolutePath    = $this->workingDir . $this->vendorDir . $vendorRelativePath;
-        $isOutsideProjectDir    = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
+        $vendorRelativePath = substr($sourceAbsoluteFilepath, strpos($sourceAbsoluteFilepath, $dependency->getRelativePath()));
+        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
@@ -195,7 +193,7 @@ class FileEnumerator
 
         if ('<?php // This file was deleted by {@see https://github.com/BrianHenryIE/strauss}.'
             ===
-            $this->filesystem->read($projectAbsolutePath)
+            $this->filesystem->read($sourceAbsoluteFilepath)
         ) {
             $f->setDoCopy(false);
         }
