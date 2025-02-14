@@ -85,13 +85,14 @@ class Copier
         } else {
             foreach ($this->files->getFiles() as $file) {
                 if (!$file->isDoCopy()) {
+                    $this->logger->debug('Skipping ' . $file->getSourcePath($this->workingDir));
                     continue;
                 }
 
                 $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
 
                 if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
-                    $this->logger->info('Deleting file at ' . str_replace($this->workingDir, '', $targetAbsoluteFilepath));
+                    $this->logger->info('Deleting existing destination file at ' . str_replace($this->workingDir, '', $targetAbsoluteFilepath));
                     $this->filesystem->delete($targetAbsoluteFilepath);
                 }
             }
