@@ -5,7 +5,6 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
@@ -434,10 +433,6 @@ class DependenciesCommand extends Command
         $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
-    protected function writeClassAliasMap(): void
-    {
-    }
-
     protected function addLicenses(): void
     {
         $this->logger->notice('Adding licenses...');
@@ -511,8 +506,12 @@ class DependenciesCommand extends Command
     {
         // TODO: check when should we be doing this.
 
-        $aliases = new Aliases($this->config);
-        $aliases->do($this->discoveredSymbols, $this->workingDir);
+        $aliases = new Aliases(
+            $this->config,
+            $this->workingDir,
+            $this->filesystem
+        );
+        $aliases->write_aliases_file_for_symbols($this->discoveredSymbols);
     }
 
     /**
