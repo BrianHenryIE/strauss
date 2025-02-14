@@ -36,7 +36,8 @@
             "BrianHenryIE\\Strauss\\Tests\\": "tests/",
             "BrianHenryIE\\Strauss\\": [
                 "tests/",
-                "tests/Integration"
+                "tests/Integration",
+                "tests/Unit"
             ]
         }
     },
