@@ -11,6 +11,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
@@ -18,6 +19,7 @@ use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
@@ -51,6 +53,8 @@ class ReplaceCommand extends Command
     protected DiscoveredFiles $discoveredFiles;
     protected DiscoveredSymbols $discoveredSymbols;
 
+    protected Filesystem $filesystem;
+
     /**
      * @return void
      */
@@ -80,6 +84,11 @@ class ReplaceCommand extends Command
             InputArgument::OPTIONAL,
             'Comma separated list of files and directories to update. Default is the current working directory.',
             getcwd()
+        );
+
+        // TODO: permissions?
+        $this->filesystem = new Filesystem(
+            new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))
         );
     }
 
@@ -146,7 +155,7 @@ class ReplaceCommand extends Command
     protected function enumerateFiles(ReplaceConfigInterface $config): void
     {
         $this->logger->info('Enumerating files...');
-        $this->discoveredFiles = (new FileEnumerator($this->workingDir, $config))->compileFileListForPaths($config->getUpdateCallSites());
+        $this->discoveredFiles = (new FileEnumerator($this->workingDir, $config, $this->filesystem))->compileFileListForPaths($config->getUpdateCallSites());
     }
 
     // 4. Determine namespace and classname changes
@@ -154,13 +163,17 @@ class ReplaceCommand extends Command
     {
         $this->logger->info('Determining changes...');
 
-        $fileScanner = new FileSymbolScanner($config);
+        $fileScanner = new FileSymbolScanner(
+            $config,
+            $this->filesystem
+        );
 
         $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
 
         $changeEnumerator = new ChangeEnumerator(
             $config,
-            $this->workingDir
+            $this->workingDir,
+            $this->filesystem
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
@@ -171,7 +184,7 @@ class ReplaceCommand extends Command
     {
         $this->logger->info('Performing replacements...');
 
-        $this->replacer = new Prefixer($config, $this->workingDir);
+        $this->replacer = new Prefixer($config, $this->workingDir, $this->filesystem);
 
         $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
     }
@@ -185,24 +198,25 @@ class ReplaceCommand extends Command
             return;
         }
 
-        $projectReplace = new Prefixer($config, $this->workingDir);
+        $projectReplace = new Prefixer($config, $this->workingDir, $this->filesystem);
 
         $fileEnumerator = new FileEnumerator(
             $this->workingDir,
-            $config
+            $config,
+            $this->filesystem
         );
 
-        $phpFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
-
-        $phpFilesRelativePaths = array_map(
-            fn($file) => $file->getSourcePath($this->workingDir),
-            $phpFiles->getFiles()
-        );
+        $phpFilePaths = $fileEnumerator->compileFileListForPaths($callSitePaths);
 
         // TODO: Warn when a file that was specified is not found (during config validation).
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesRelativePaths);
+        $phpFilesAbsolutePaths = array_map(
+            fn($file) => $file->getSourcePath(),
+            $phpFilePaths->getFiles()
+        );
+
+        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
 
@@ -223,7 +237,7 @@ class ReplaceCommand extends Command
 
         // TODO: Update to use DiscoveredFiles
         $dependencies = $this->flatDependencyTree;
-        $licenser = new Licenser($config, $this->workingDir, $dependencies, $author);
+        $licenser = new Licenser($config, $this->workingDir, $dependencies, $author, $this->filesystem, $this->logger);
 
         $licenser->copyLicenses();
 

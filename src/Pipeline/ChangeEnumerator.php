@@ -1,6 +1,8 @@
 <?php
 /**
  * Determine the replacements to be made to the discovered symbols.
+ *
+ * Typically this will just be a prefix, but more complex rules allow for replacements specific to individual symbols/namespaces.
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -11,16 +13,29 @@ use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use League\Flysystem\FilesystemReader;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class ChangeEnumerator
 {
+    use LoggerAwareTrait;
+
     protected ChangeEnumeratorConfigInterface $config;
     protected string $workingDir;
+    protected FilesystemReader $filesystem;
 
-    public function __construct(ChangeEnumeratorConfigInterface $config, string $workingDir)
-    {
+    public function __construct(
+        ChangeEnumeratorConfigInterface $config,
+        string $workingDir,
+        FilesystemReader $filesystem,
+        ?LoggerInterface $logger = null
+    ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
+        $this->filesystem = $filesystem;
+        $this->setLogger($logger ?? new NullLogger());
     }
 
     public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void

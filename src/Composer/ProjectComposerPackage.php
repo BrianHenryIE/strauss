@@ -19,13 +19,8 @@ class ProjectComposerPackage extends ComposerPackage
      * @param string $absolutePath
      * @param ?array{files?:array<string>,classmap?:array<string>,"psr-4"?:array<string,string|array<string>>} $overrideAutoload
      */
-    public function __construct(string $absolutePath, ?array $overrideAutoload = null)
+    public function __construct(string $absolutePathFile, ?array $overrideAutoload = null)
     {
-        $absolutePathFile = is_dir($absolutePath)
-            ? rtrim($absolutePath, DIRECTORY_SEPARATOR) . '/composer.json'
-            : $absolutePath;
-        unset($absolutePath);
-
         $composer = Factory::create(new NullIO(), $absolutePathFile, true);
 
         parent::__construct($composer, $overrideAutoload);

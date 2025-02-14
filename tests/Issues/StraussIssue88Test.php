@@ -51,7 +51,7 @@ EOD;
 
         $result = $this->runStrauss();
 
-        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/S3/S3Client.php');
+        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/aws/aws-sdk-php/src/S3/S3Client.php');
 
         self::assertStringNotContainsString('return (string) \Aws\serialize($command)->getUri();', $php_string);
         self::assertStringContainsString('return (string) \Company\Project\Aws\serialize($command)->getUri();', $php_string);

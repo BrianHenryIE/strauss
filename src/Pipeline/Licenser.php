@@ -18,12 +18,16 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use Symfony\Component\Finder\Finder;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class Licenser
 {
+    use LoggerAwareTrait;
+
     protected string $workingDir;
 
     protected string $vendorDir;
@@ -51,8 +55,7 @@ class Licenser
      */
     protected array $discoveredLicenseFiles = array();
 
-    /** @var Filesystem */
-    protected $filesystem;
+    protected FilesystemOperator $filesystem;
 
     /**
      * Licenser constructor.
@@ -61,8 +64,14 @@ class Licenser
      * @param ComposerPackage[] $dependencies Whose folders are searched for existing license.txt files.
      * @param string $author To add to each modified file's header
      */
-    public function __construct(StraussConfig $config, string $workingDir, array $dependencies, string $author)
-    {
+    public function __construct(
+        StraussConfig $config,
+        string $workingDir,
+        array $dependencies,
+        string $author,
+        FilesystemOperator $filesystem,
+        ?LoggerInterface $logger = null
+    ) {
         $this->workingDir = $workingDir;
         $this->dependencies = $dependencies;
         $this->author = $author;
@@ -72,30 +81,56 @@ class Licenser
         $this->includeModifiedDate = $config->isIncludeModifiedDate();
         $this->includeAuthor = $config->isIncludeAuthor();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/'));
+        $this->filesystem = $filesystem;
+
+        $this->setLogger($logger ?? new NullLogger());
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function copyLicenses(): void
     {
         $this->findLicenseFiles();
 
         foreach ($this->getDiscoveredLicenseFiles() as $licenseFile) {
-            $targetLicenseFile = $this->targetDirectory . $licenseFile;
+            $targetLicenseFile = str_replace(
+                $this->workingDir . $this->vendorDir,
+                $this->workingDir . $this->targetDirectory,
+                $licenseFile
+            );
 
             $targetLicenseFileDir = dirname($targetLicenseFile);
 
             // Don't try copy it if it's already there.
             if ($this->filesystem->fileExists($targetLicenseFile)) {
+                $this->logger->debug(sprintf(
+                    "Skipping %s because it already exists at %s",
+                    basename($licenseFile),
+                    str_replace($this->workingDir, '', $targetLicenseFile)
+                ));
                 continue;
             }
 
             // Don't add licenses to non-existent directories – there were no files copied there!
-            if (! is_dir($targetLicenseFileDir)) {
+            if (! $this->filesystem->directoryExists($targetLicenseFileDir)) {
+                $this->logger->debug(sprintf(
+                    "Skipping %s because the directory %s does not exist",
+                    basename($licenseFile),
+                    str_replace($this->workingDir, '', $targetLicenseFileDir)
+                ));
                 continue;
             }
 
+            $this->logger->info(
+                sprintf(
+                    "Copying license file from %s to %s",
+                    basename($licenseFile),
+                    str_replace($this->workingDir, '', $targetLicenseFile)
+                )
+            );
             $this->filesystem->copy(
-                $this->vendorDir . $licenseFile,
+                $licenseFile,
                 $targetLicenseFile
             );
         }
@@ -104,23 +139,28 @@ class Licenser
     /**
      * @see https://www.phpliveregex.com/p/A5y
      */
-    public function findLicenseFiles(?Finder $finder = null): void
+    public function findLicenseFiles(): void
     {
         // Include all license files in the dependency path.
-        $finder = $finder ?? new Finder();
 
         /** @var ComposerPackage $dependency */
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
 
-            // If packages happen to have their vendor dir, i.e. locally required packages, don't included the licenses
-            // from their vendor dir (they should be included otherwise anyway).
-            // $dependency->getVendorDir()
-            $finder->files()->in($packagePath)->followLinks()->exclude(array( 'vendor' ))->name('/^.*licen.e.*/i');
+            $files = $this->filesystem->listContents($packagePath, true);
+            foreach ($files as $file) {
+                $filePath = '/' . $file->path();
 
-            /** @var \SplFileInfo $foundFile */
-            foreach ($finder as $foundFile) {
-                $filePath = $foundFile->getPathname();
+                // If packages happen to have their vendor dir, i.e. locally required packages, don't included the licenses
+                // from their vendor dir (they should be included otherwise anyway).
+                // I.e. in symlinked packages, the vendor dir might still exist.
+                if (0 === strpos($packagePath . '/vendor', $filePath)) {
+                    continue;
+                }
+
+                if (!preg_match('/^.*licen.e.*/i', $filePath)) {
+                    continue;
+                }
 
                 // Replace multiple \ and/or / with OS native DIRECTORY_SEPARATOR.
                 $filePath = preg_replace('#[\\\/]+#', DIRECTORY_SEPARATOR, $filePath);
@@ -141,6 +181,7 @@ class Licenser
      * @param array<string, ComposerPackage> $modifiedFiles
      *
      * @throws \Exception
+     * @throws FilesystemException
      */
     public function addInformationToUpdatedFiles(array $modifiedFiles): void
     {
@@ -164,6 +205,7 @@ class Licenser
             );
 
             if ($updatedContents !== $contents) {
+                $this->logger->info("Adding change declaration to {$filepath}");
                 $this->filesystem->write($filepath, $updatedContents);
             }
         }

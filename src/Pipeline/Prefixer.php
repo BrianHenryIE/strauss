@@ -3,34 +3,27 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use Exception;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class Prefixer
 {
-    protected StraussConfig $config;
+    use LoggerAwareTrait;
 
-    /** @var Filesystem */
-    protected $filesystem;
+    protected PrefixerConfigInterface $config;
 
-    protected string $targetDirectory;
-    protected ?string $namespacePrefix;
-    protected ?string $classmapPrefix;
-    protected ?string $constantsPrefix;
+    protected string $workingDir;
 
-    /** @var string[]  */
-    protected array $excludePackageNamesFromPrefixing;
-
-    /** @var string[]  */
-    protected array $excludeNamespacesFromPrefixing;
-
-    /** @var string[]  */
-    protected array $excludeFilePatternsFromPrefixing;
+    protected FileSystem $filesystem;
 
     /**
      * array<$workingDirRelativeFilepath, $package> or null if the file is not from a dependency (i.e. a project file).
@@ -38,82 +31,92 @@ class Prefixer
      * @var array<string, ?ComposerPackage>
      */
     protected array $changedFiles = array();
-    protected string $workingDir;
 
-    public function __construct(StraussConfig $config, string $workingDir)
-    {
+    public function __construct(
+        PrefixerConfigInterface $config,
+        string $workingDir,
+        FilesystemOperator $filesystem,
+        ?LoggerInterface $logger = null
+    ) {
         $this->config = $config;
-
         $this->workingDir = $workingDir;
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($workingDir));
-
-        $this->targetDirectory = $config->getTargetDirectory();
-        $this->namespacePrefix = $config->getNamespacePrefix();
-        $this->classmapPrefix = $config->getClassmapPrefix();
-        $this->constantsPrefix = $config->getConstantsPrefix();
-
-        $this->excludePackageNamesFromPrefixing = $config->getExcludePackagesFromPrefixing();
-        $this->excludeNamespacesFromPrefixing = $config->getExcludeNamespacesFromPrefixing();
-        $this->excludeFilePatternsFromPrefixing = $config->getExcludeFilePatternsFromPrefixing();
+        $this->filesystem = $filesystem;
+        $this->logger = $logger ?? new NullLogger();
     }
 
     // Don't replace a classname if there's an import for a class with the same name.
     // but do replace \Classname always
 
-
     /**
      * @param DiscoveredSymbols $discoveredSymbols
      * ///param array<string,array{dependency:ComposerPackage,sourceAbsoluteFilepath:string,targetRelativeFilepath:string}> $phpFileArrays
      * @param array<File> $files
+     *
+     * @throws FilesystemException
+     * @throws FilesystemException
      */
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
-
         foreach ($files as $file) {
-            $targetRelativeFilepathFromProject = $file->getAbsoluteTargetPath($this->workingDir);
-
-            if (! $this->filesystem->fileExists($targetRelativeFilepathFromProject)) {
-                // Maybe warn here?
+            if (! $this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
+                $this->logger->warning("Expected file does not exist: {$file->getAbsoluteTargetPath()}");
                 continue;
             }
 
             /**
              * Throws an exception, but unlikely to happen.
-             *
-             * TODO: Use {@see File::getContents()} instead?
              */
-            $contents = $this->filesystem->read($targetRelativeFilepathFromProject);
+            $contents = $this->filesystem->read($file->getAbsoluteTargetPath());
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
+                // TODO: diff here and debug log.
                 $file->setDidUpdate();
-                $this->filesystem->write($targetRelativeFilepathFromProject, $updatedContents);
+                $this->filesystem->write($file->getAbsoluteTargetPath(), $updatedContents);
+                $this->logger->info('Updated contents of file: ' . $file->getAbsoluteTargetPath($this->workingDir));
+            } else {
+                $this->logger->debug('No changes to file: ' . $file->getAbsoluteTargetPath($this->workingDir));
             }
         }
     }
 
     /**
      * @param DiscoveredSymbols $discoveredSymbols
-     * @param string[] $relativeFilePaths
+     * @param string[] $absoluteFilePathsArray
+     *
      * @return void
-     * @throws \League\Flysystem\FilesystemException
+     * @throws FilesystemException
      */
-    public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, array $relativeFilePaths): void
+    public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, array $absoluteFilePathsArray): void
     {
-        foreach ($relativeFilePaths as $workingDirRelativeFilepath) {
-            if (! $this->filesystem->fileExists($workingDirRelativeFilepath)) {
+
+        foreach ($absoluteFilePathsArray as $workingDirRelativeFilepath) {
+            $fileAbsolutePath = 0 === strpos($workingDirRelativeFilepath, $this->workingDir)
+                    ? $workingDirRelativeFilepath
+                    : $this->workingDir . $workingDirRelativeFilepath;
+
+            if ($this->filesystem->directoryExists($fileAbsolutePath)) {
+                $this->logger->debug("is_dir() / nothing to do : {$fileAbsolutePath}");
                 continue;
             }
-            
+
+            if (! $this->filesystem->fileExists($fileAbsolutePath)) {
+                $this->logger->warning("Expected file does not exist: {$fileAbsolutePath}");
+                continue;
+            }
+
             // Throws an exception, but unlikely to happen.
-            $contents = $this->filesystem->read($workingDirRelativeFilepath);
+            $contents = $this->filesystem->read($fileAbsolutePath);
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
                 $this->changedFiles[ $workingDirRelativeFilepath ] = null;
-                $this->filesystem->write($workingDirRelativeFilepath, $updatedContents);
+                $this->filesystem->write($fileAbsolutePath, $updatedContents);
+                $this->logger->info('Updated contents of file: ' . str_replace($this->workingDir, '', $fileAbsolutePath));
+            } else {
+                $this->logger->debug('No changes to file: ' . str_replace($this->workingDir, '', $fileAbsolutePath));
             }
         }
     }
@@ -121,6 +124,8 @@ class Prefixer
     /**
      * @param DiscoveredSymbols $discoveredSymbols
      * @param string $contents
+     *
+     * @throws Exception
      */
     public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents): string
     {
@@ -130,21 +135,22 @@ class Prefixer
         $functions = $discoveredSymbols->getDiscoveredFunctions();
 
         foreach ($classes as $originalClassname) {
-            $classmapPrefix = $this->classmapPrefix;
+            $classmapPrefix = $this->config->getClassmapPrefix();
 
             $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
         }
 
         foreach ($namespacesChanges as $originalNamespace => $namespaceSymbol) {
-            if (in_array($originalNamespace, $this->excludeNamespacesFromPrefixing)) {
+            if (in_array($originalNamespace, $this->config->getExcludeNamespacesFromPrefixing())) {
+                $this->logger->info("Skipping namespace: $originalNamespace");
                 continue;
             }
 
             $contents = $this->replaceNamespace($contents, $originalNamespace, $namespaceSymbol->getReplacement());
         }
 
-        if (!is_null($this->constantsPrefix)) {
-            $contents = $this->replaceConstants($contents, $constants, $this->constantsPrefix);
+        if (!is_null($this->config->getConstantsPrefix())) {
+            $contents = $this->replaceConstants($contents, $constants, $this->config->getConstantsPrefix());
         }
 
         foreach ($functions as $functionSymbol) {
@@ -162,6 +168,7 @@ class Prefixer
      * @param string $replacement
      *
      * @return string The updated text.
+     * @throws Exception
      */
     public function replaceNamespace(string $contents, string $originalNamespace, string $replacement): string
     {
@@ -227,9 +234,7 @@ class Prefixer
                 $replacement = str_replace($singleBackslash, $doubleBackslash, $replacement);
             }
 
-            $replaced = str_replace($originalNamespace, $replacement, $matches[0]);
-
-            return $replaced;
+            return str_replace($originalNamespace, $replacement, $matches[0]);
         };
 
         $result = preg_replace_callback($pattern, $replacingFunction, $contents);
@@ -247,13 +252,12 @@ class Prefixer
         // I'm not certain this is a good idea.
         // @see https://github.com/BrianHenryIE/strauss/issues/65
         $functionReplacingPattern = '/\\\\?('.preg_quote(ltrim($replacement, '\\'), '/').'\\\\(?:[a-zA-Z0-9_\x7f-\xff]+\\\\)*[a-zA-Z0-9_\x7f-\xff]+\\()/';
-        $result = preg_replace(
+
+        return preg_replace(
             $functionReplacingPattern,
             "\\\\$1",
             $result
         );
-
-        return $result;
     }
 
     /**
@@ -267,7 +271,8 @@ class Prefixer
      * @param string $contents
      * @param string $originalClassname
      * @param string $classnamePrefix
-     * @throws \Exception
+     *
+     * @throws Exception
      */
     public function replaceClassname(string $contents, string $originalClassname, string $classnamePrefix): string
     {
@@ -291,13 +296,11 @@ class Prefixer
 
             // If we're inside a namespace other than the global namespace:
             if (1 === preg_match('/\s*namespace\s+[a-zA-Z0-9_\x7f-\xff\\\\]+[;{\s\n]{1}.*/', $matches[0])) {
-                $updated = $this->replaceGlobalClassInsideNamedNamespace(
+                return $this->replaceGlobalClassInsideNamedNamespace(
                     $matches[0],
                     $originalClassname,
                     $classnamePrefix
                 );
-
-                return $updated;
             } else {
                 $newContents = '';
                 foreach ($matches as $index => $captured) {
@@ -342,8 +345,11 @@ class Prefixer
      * @param string $classnamePrefix
      * @return string
      */
-    protected function replaceGlobalClassInsideNamedNamespace($contents, $originalClassname, $classnamePrefix): string
-    {
+    protected function replaceGlobalClassInsideNamedNamespace(
+        string $contents,
+        string $originalClassname,
+        string $classnamePrefix
+    ): string {
         $replacement = $classnamePrefix . $originalClassname;
 
         // use Prefixed_Class as Class;
@@ -368,15 +374,13 @@ class Prefixer
 			([^\\\;]{1})               # Not a backslash or semicolon which might indicate a namespace
 			/x'; //                    # x: ignore whitespace in regex.
 
-        $contents = preg_replace_callback(
+        return preg_replace_callback(
             $bodyPattern,
             function ($matches) use ($replacement) {
                 return $matches[1] . $replacement . $matches[3];
             },
             $contents
         );
-
-        return $contents;
     }
 
     /**
@@ -433,7 +437,7 @@ class Prefixer
 			([;\s]+)('.preg_quote($originalFunctionString, '/').')(\s*\() # function call
 			/x'; // x: ignore whitespace in regex.
 
-        $contents = preg_replace_callback(
+        return preg_replace_callback(
             $pattern,
             function ($matches) use ($originalFunctionString, $replacementFunctionString) {
                 foreach ($matches as $index => $match) {
@@ -446,8 +450,6 @@ class Prefixer
             },
             $contents
         );
-
-        return $contents;
     }
 
     /**

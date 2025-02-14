@@ -133,19 +133,6 @@ class File implements FileBase
             : $this->getSourcePath($relativeTo);
     }
 
-    public function getContents(): string
-    {
-        // TODO: use flysystem
-        // $contents = $this->filesystem->read($targetFile);
-
-        $contents = file_get_contents($this->sourceAbsolutePath);
-        if (false === $contents) {
-            throw new \Exception("Failed to read file at {$this->sourceAbsolutePath}");
-        }
-
-        return $contents;
-    }
-
     protected bool $didUpdate = false;
     public function setDidUpdate(): void
     {
