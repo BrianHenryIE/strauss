@@ -2,11 +2,13 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
+use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
 use BrianHenryIE\Strauss\TestCase;
+use Mockery;
 
 class AliasesTest extends TestCase
 {
-    public function test_a(): void
+    public function test_add_aliases_file_to_true_composer(): void
     {
 
         $phpString = <<<'EOD'
@@ -65,7 +67,7 @@ class ComposerAutoloaderInit1dbefeff499a0676e84b3a5dceac7c83
 }
 EOD;
 
-        $config = \Mockery::mock(\BrianHenryIE\Strauss\Config\AliasesConfigInterace::class);
+        $config = Mockery::mock(AliasesConfigInterace::class);
 
         $sut = new Aliases($config);
 
