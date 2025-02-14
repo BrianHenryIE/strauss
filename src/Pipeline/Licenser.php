@@ -104,19 +104,29 @@ class Licenser
 
             // Don't try copy it if it's already there.
             if ($this->filesystem->fileExists($targetLicenseFile)) {
+                $this->logger->debug(sprintf(
+                    "Skipping %s because it already exists at %s",
+                    basename($licenseFile),
+                    str_replace($this->workingDir, '', $targetLicenseFile)
+                ));
                 continue;
             }
 
             // Don't add licenses to non-existent directories – there were no files copied there!
             if (! $this->filesystem->directoryExists($targetLicenseFileDir)) {
+                $this->logger->debug(sprintf(
+                    "Skipping %s because the directory %s does not exist",
+                    basename($licenseFile),
+                    str_replace($this->workingDir, '', $targetLicenseFileDir)
+                ));
                 continue;
             }
 
             $this->logger->info(
                 sprintf(
                     "Copying license file from %s to %s",
-                    $licenseFile,
-                    $targetLicenseFile
+                    basename($licenseFile),
+                    str_replace($this->workingDir, '', $targetLicenseFile)
                 )
             );
             $this->filesystem->copy(
