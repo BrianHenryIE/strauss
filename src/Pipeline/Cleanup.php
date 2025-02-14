@@ -80,6 +80,7 @@ class Cleanup
 
     protected function deleteEmptyDirectories(array $files)
     {
+        $this->logger->info('Deleting empty directories.');
 
         $sourceFiles = array_map(
             fn($file) => $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory()),
@@ -122,12 +123,14 @@ class Cleanup
                 if ($this->filesystem->directoryExists($filePath)
                     && $this->dirIsEmpty($filePath)
                 ) {
+                    $this->logger->debug('Deleting directory ' . str_replace($this->workingDir, '', $filePath));
                     $this->filesystem->deleteDirectory($filePath);
                 }
             }
         }
     }
 
+    // TODO: Move to FileSystem class.
     protected function dirIsEmpty(string $dir): bool
     {
         return empty($this->filesystem->listContents($dir));
@@ -142,6 +145,8 @@ class Cleanup
      */
     public function cleanupInstalledJson(): void
     {
+        $this->logger->info('Cleaning up vendor/composer/installed.json');
+
         $installedJsonFile = new JsonFile(
             sprintf(
                 '%s%svendor/composer/installed.json',
@@ -203,8 +208,11 @@ class Cleanup
     protected function cleanupFilesAutoloader(): void
     {
         if (! $this->filesystem->fileExists($this->workingDir . 'vendor/composer/autoload_files.php')) {
+            $this->logger->debug('vendor/composer/autoload_files.php does not exist.');
             return;
         }
+
+        $this->logger->info('Cleaning up autoload_files.php');
 
         $files = include sprintf("%s%scomposer/autoload_files.php", $this->workingDir, $this->vendorDirectory);
 
@@ -332,6 +340,7 @@ class Cleanup
 
         foreach ($files as $file) {
             if (! $file->isDoDelete()) {
+                $this->logger->debug('Skipping/preserving ' . $file->getSourcePath($this->workingDir));
                 continue;
             }
 
