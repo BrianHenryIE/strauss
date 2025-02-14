@@ -7,7 +7,7 @@ composer.lock
 
 *.phar
 
-tests/reports
+tests/_reports
 
 temptestdir
 build
@@ -18,3 +18,4 @@ pcov.sh
 xdebug.sh
 7.4linux.sh
 scripts/builtins.php
+/tools

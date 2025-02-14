@@ -115,24 +115,46 @@ EOD;
 
         exec('composer install');
 
-        $inputInterfaceMock = Mockery::mock(ArgvInput::class)->makePartial();
-        $inputInterfaceMock->expects('hasOption')->with('deleteVendorPackages')->andReturn(true)->once();
-        $inputInterfaceMock->expects('getOption')->with('deleteVendorPackages')->andReturn('true')->once();
-
-        $outputInterfaceMock = $this->createMock(OutputInterface::class);
-
-        $strauss = new DependenciesCommand();
-
-        assert(file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
-
-        $result = $strauss->run($inputInterfaceMock, $outputInterfaceMock);
+        $result = $this->runStrauss($output, '--delete_vendor_packages=true');
 
         self::assertEquals(0, $result);
 
         self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }
 
-    public function test_snkae_case_cli_argument_supersedes_configured_option_true_to_false()
+    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_flag()
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "issue/80",
+  "require": {
+    "psr/log": "1.0"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Company\\Project\\",
+      "classmap_prefix": "Issue_81_",
+      "delete_vendor_packages": false
+    }
+  }
+}
+EOD;
+
+        chdir($this->testsWorkingDir);
+
+        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        exec('composer install');
+
+        $result = $this->runStrauss($output, '--delete_vendor_packages');
+
+        self::assertEquals(0, $result);
+
+        self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+    }
+
+    public function test_snake_case_cli_argument_supersedes_configured_option_true_to_false()
     {
 
         $composerJsonString = <<<'EOD'
@@ -157,18 +179,7 @@ EOD;
 
         exec('composer install');
 
-        // InputInterface
-        $inputInterfaceMock = Mockery::mock(ArgvInput::class)->makePartial();
-        $inputInterfaceMock->expects('hasOption')->with('deleteVendorPackages')->andReturn(true)->once();
-        $inputInterfaceMock->expects('getOption')->with('deleteVendorPackages')->andReturn('false')->once();
-
-        $outputInterfaceMock = $this->createMock(OutputInterface::class);
-
-        $strauss = new DependenciesCommand();
-
-        assert(file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
-
-        $result = $strauss->run($inputInterfaceMock, $outputInterfaceMock);
+        $result = $this->runStrauss($output, '--delete_vendor_packages=false');
 
         self::assertEquals(0, $result);
 
@@ -200,19 +211,38 @@ EOD;
 
         exec('composer install');
 
-        // InputInterface
-        $inputInterfaceMock = Mockery::mock(ArgvInput::class)->makePartial();
-        $inputInterfaceMock->expects('hasOption')->with('deleteVendorPackages')->andReturn(false)->once();
-        $inputInterfaceMock->expects('hasOption')->with('delete_vendor_packages')->andReturn(true)->once();
-        $inputInterfaceMock->expects('getOption')->with('delete_vendor_packages')->andReturn('true')->once();
+        $result = $this->runStrauss($output, '--deleteVendorPackages=true');
 
-        $outputInterfaceMock = $this->createMock(OutputInterface::class);
+        self::assertEquals(0, $result);
 
-        $strauss = new DependenciesCommand();
+        self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+    }
+    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_flag()
+    {
 
-        assert(file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
+        $composerJsonString = <<<'EOD'
+{
+  "name": "issue/80",
+  "require": {
+    "psr/log": "1.0"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Company\\Project\\",
+      "classmap_prefix": "Issue_81_",
+      "delete_vendor_packages": false
+    }
+  }
+}
+EOD;
 
-        $result = $strauss->run($inputInterfaceMock, $outputInterfaceMock);
+        chdir($this->testsWorkingDir);
+
+        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        exec('composer install');
+
+        $result = $this->runStrauss($output, '--deleteVendorPackages');
 
         self::assertEquals(0, $result);
 
@@ -244,19 +274,7 @@ EOD;
 
         exec('composer install');
 
-        // InputInterface
-        $inputInterfaceMock = Mockery::mock(ArgvInput::class)->makePartial();
-        $inputInterfaceMock->expects('hasOption')->with('deleteVendorPackages')->andReturn(false)->once();
-        $inputInterfaceMock->expects('hasOption')->with('delete_vendor_packages')->andReturn(true)->once();
-        $inputInterfaceMock->expects('getOption')->with('delete_vendor_packages')->andReturn('false')->once();
-
-        $outputInterfaceMock = $this->createMock(OutputInterface::class);
-
-        $strauss = new DependenciesCommand();
-
-        assert(file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
-
-        $result = $strauss->run($inputInterfaceMock, $outputInterfaceMock);
+        $result = $this->runStrauss($output, '--deleteVendorPackages=false');
 
         self::assertEquals(0, $result);
 

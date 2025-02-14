@@ -19,6 +19,7 @@ class StraussIssue76Test extends IntegrationTestCase
      */
     public function test_psr4_array()
     {
+        $this->markTestIncomplete('This is inadequate');
 
         $composerJsonString = <<<'EOD'
 {

@@ -8,56 +8,86 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use Composer\Autoload\ClassMapGenerator;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Composer\ClassMapGenerator\ClassMapGenerator;
+use League\Flysystem\StorageAttributes;
+use League\Flysystem\WhitespacePathNormalizer;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class Autoload
 {
+    use LoggerAwareTrait;
 
-    /** @var Filesystem */
-    protected $filesystem;
+    protected FileSystem $filesystem;
 
     protected string $workingDir;
 
     protected StraussConfig $config;
 
     /**
-     * The files autolaoders of packages that have been copied by Strauss.
+     * The files autoloaders of packages that have been copied by Strauss.
      * Keyed by package path.
      *
      * @var array<string, array<string>> $discoveredFilesAutoloaders Array of packagePath => array of relativeFilePaths.
      */
     protected array $discoveredFilesAutoloaders;
 
+    protected string $absoluteTargetDirectory;
+
     /**
      * Autoload constructor.
+     *
      * @param StraussConfig $config
      * @param string $workingDir
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
-    public function __construct(StraussConfig $config, string $workingDir, array $discoveredFilesAutoloaders)
-    {
+    public function __construct(
+        StraussConfig $config,
+        string $workingDir,
+        array $discoveredFilesAutoloaders,
+        Filesystem $filesystem,
+        ?LoggerInterface $logger = null
+    ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
         $this->discoveredFilesAutoloaders = $discoveredFilesAutoloaders;
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($workingDir));
+        $this->filesystem = $filesystem;
+        $this->setLogger($logger ?? new NullLogger());
+
+
+        $targetDirectory = ltrim(sprintf(
+            '%s/%s/',
+            trim($this->workingDir, '/\\'),
+            trim($this->config->getTargetDirectory(), '/\\')
+        ), '/\\');
+
+        $pathNormalizer = new WhitespacePathNormalizer();
+        $targetDirectory = $pathNormalizer->normalizePath($targetDirectory) . '/';
+
+        $targetDir = $this->config->isDryRun()
+            ? 'mem://' . ltrim($targetDirectory, '/')
+            : $targetDirectory;
+
+        $this->absoluteTargetDirectory = $targetDir;
+
+        $this->logger->debug('Using target directory: ' . $this->absoluteTargetDirectory);
     }
 
     public function generate(): void
     {
-        // Do not overwrite Composer's autoload.php.
-        // The correct solution is to add "classmap": ["vendor"] to composer.json, then run composer dump-autoload.
+        // Use native Composer's `autoload.php` etc. when the target directory is the vendor directory.
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+            $this->logger->debug('Strauss is not generating autoload.php because the target directory is the vendor directory.');
             return;
         }
 
         if (! $this->config->isClassmapOutput()) {
+            $this->logger->debug('Strauss is not generating autoload.php because classmap output is disabled.');
             return;
         }
-
-        // TODO Don't do this if vendor is the target dir (i.e. in-situ updating).
 
         $this->generateClassmap();
 
@@ -76,68 +106,66 @@ class Autoload
      */
     protected function generateClassmap(): void
     {
-
         // Hyphen used to match WordPress Coding Standards.
         $output_filename = "autoload-classmap.php";
 
-        $targetDirectory = getcwd()
-            . DIRECTORY_SEPARATOR
-            . ltrim($this->config->getTargetDirectory(), DIRECTORY_SEPARATOR);
-
-        $dirs = array(
-            $targetDirectory
-        );
-
-        foreach ($dirs as $dir) {
-            if (!is_dir($dir)) {
-                continue;
-            }
-
-            $dirMap = ClassMapGenerator::createMap($dir);
-
-            array_walk(
-                $dirMap,
-                function (&$filepath, $_class) use ($dir) {
-                    $filepath = "\$strauss_src . '"
-                        . DIRECTORY_SEPARATOR
-                        . ltrim(str_replace($dir, '', $filepath), DIRECTORY_SEPARATOR) . "'";
-                }
+        // TODO: This should be created from the discoveredFiles list?
+        $paths =
+            array_map(
+                function ($file) {
+                    return $this->config->isDryRun()
+                        ? new \SplFileInfo('mem://'.$file->path())
+                        : new \SplFileInfo('/'.$file->path());
+                },
+                array_filter(
+                    $this->filesystem->listContents($this->absoluteTargetDirectory, true)->toArray(),
+                    fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
+                )
             );
 
-            ob_start();
+        $dirMap = ClassMapGenerator::createMap($paths);
 
-            echo "<?php\n\n";
-            echo "// {$output_filename} @generated by Strauss\n\n";
-            echo "\$strauss_src = dirname(__FILE__);\n\n";
-            echo "return array(\n";
-            foreach ($dirMap as $class => $file) {
-                // Always use `/` in paths.
-                $file = str_replace(DIRECTORY_SEPARATOR, '/', $file);
-                echo "   '{$class}' => {$file},\n";
+        $this->logger->info('Composer\\ClassMapGenerator\\ClassMapGenerator::createMap() found ' . count($dirMap) . ' classes.');
+
+        array_walk(
+            $dirMap,
+            function (&$filepath, $_class) {
+                $filepath = sprintf(
+                    "\$strauss_src . '/%s'",
+                    ltrim(str_replace($this->absoluteTargetDirectory, '', $filepath), '/')
+                );
             }
-            echo ");";
+        );
 
-            file_put_contents($dir . $output_filename, ob_get_clean());
+        ob_start();
+
+        echo "<?php\n\n";
+        echo "// {$output_filename} @generated by Strauss\n\n";
+        echo "\$strauss_src = dirname(__FILE__);\n\n";
+        echo "return array(\n";
+        foreach ($dirMap as $class => $file) {
+            // Always use `/` in paths.
+            $file = str_replace(DIRECTORY_SEPARATOR, '/', $file);
+            echo "\t'{$class}' => {$file},\n";
         }
+        echo ");";
+
+        $this->logger->info('Writing classmap to ' . basename($this->absoluteTargetDirectory) . '/' . $output_filename);
+        $this->filesystem->write(
+            $this->absoluteTargetDirectory . $output_filename,
+            ob_get_clean()
+        );
     }
 
     protected function generateFilesAutoloader(): void
     {
-
-        // Hyphen used to match WordPress Coding Standards.
-        $outputFilename = "autoload-files.php";
-
-        $filesAutoloaders = $this->discoveredFilesAutoloaders;
-
-        if (empty($filesAutoloaders)) {
+        if (empty($this->discoveredFilesAutoloaders)) {
+            $this->logger->info('Skipping generating autoload-files.php because no packages contained files autoloaders.');
             return;
         }
 
-        $targetDirectory = getcwd()
-            . DIRECTORY_SEPARATOR
-            . ltrim($this->config->getTargetDirectory(), DIRECTORY_SEPARATOR);
-
-//        $dirname = preg_replace('/[^a-z]/i', '', str_replace(getcwd(), '', $targetDirectory));
+        // Hyphen used to match WordPress Coding Standards.
+        $outputFilename = "autoload-files.php";
 
         ob_start();
 
@@ -145,22 +173,30 @@ class Autoload
         echo "// {$outputFilename} @generated by Strauss\n";
         echo "// @see https://github.com/BrianHenryIE/strauss/\n\n";
 
-        foreach ($filesAutoloaders as $packagePath => $files) {
+        foreach ($this->discoveredFilesAutoloaders as $packagePath => $files) {
             foreach ($files as $file) {
-                $filepath = DIRECTORY_SEPARATOR . $packagePath . DIRECTORY_SEPARATOR . $file;
-                $filePathinfo = pathinfo(__DIR__ . $filepath);
+                $targetRelativeFilepath = "/{$packagePath}/{$file}";
+                $filePathinfo = pathinfo($this->absoluteTargetDirectory . $targetRelativeFilepath);
                 if (!isset($filePathinfo['extension']) || 'php' !== $filePathinfo['extension']) {
                     continue;
                 }
                 // Always use `/` in paths.
-                $filepath = str_replace(DIRECTORY_SEPARATOR, '/', $filepath);
-                echo "require_once __DIR__ . '{$filepath}';\n";
+                $targetRelativeFilepath = str_replace(DIRECTORY_SEPARATOR, '/', $targetRelativeFilepath);
+                echo "require_once __DIR__ . '{$targetRelativeFilepath}';\n";
             }
         }
 
-        file_put_contents($targetDirectory . $outputFilename, ob_get_clean());
+        $this->logger->info('Writing files autoloader to ' . basename($this->absoluteTargetDirectory) . '/' . $outputFilename);
+        $this->filesystem->write(
+            $this->absoluteTargetDirectory . $outputFilename,
+            ob_get_clean()
+        );
     }
 
+    /**
+     * TODO: check does `autoload-files.php` exist before including it in the output. `autoload-classmap.php` will
+     * always exist (or this tool has done nothing).
+     */
     protected function generateAutoloadPhp(): void
     {
 
@@ -187,9 +223,13 @@ if ( file_exists( __DIR__ . '/autoload-files.php' ) ) {
 }
 EOD;
 
-        $relativeFilepath = $this->config->getTargetDirectory() . 'autoload.php';
-        $absoluteFilepath = $this->workingDir . $relativeFilepath;
+        $filename = 'autoload.php';
+        $absoluteFilepath = $this->absoluteTargetDirectory . $filename;
 
-        file_put_contents($absoluteFilepath, $autoloadPhp);
+        $this->logger->info("Writing autoload.php to $filename");
+        $this->filesystem->write(
+            $absoluteFilepath,
+            $autoloadPhp
+        );
     }
 }

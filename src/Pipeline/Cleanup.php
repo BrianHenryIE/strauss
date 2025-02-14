@@ -6,20 +6,19 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Json\JsonFile;
-use FilesystemIterator;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use League\Flysystem\FilesystemException;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 
 class Cleanup
 {
+    use LoggerAwareTrait;
 
-    /** @var Filesystem */
     protected Filesystem $filesystem;
 
     protected string $workingDir;
@@ -30,11 +29,16 @@ class Cleanup
     protected string $vendorDirectory = 'vendor'. DIRECTORY_SEPARATOR;
     protected string $targetDirectory;
 
-    protected StraussConfig $config;
+    protected CleanupConfigInterface $config;
 
-    public function __construct(StraussConfig $config, string $workingDir)
-    {
+    public function __construct(
+        CleanupConfigInterface $config,
+        string $workingDir,
+        Filesystem $filesystem,
+        LoggerInterface $logger
+    ) {
         $this->config = $config;
+        $this->logger = $logger;
 
         $this->vendorDirectory = $config->getVendorDirectory();
         $this->targetDirectory = $config->getTargetDirectory();
@@ -43,7 +47,7 @@ class Cleanup
         $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getTargetDirectory() !== $config->getVendorDirectory();
         $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getTargetDirectory() !== $config->getVendorDirectory();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($workingDir));
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -51,69 +55,37 @@ class Cleanup
      * then delete empty directories.
      *
      * @param File[] $files
+     *
+     * @throws FilesystemException
      */
     public function cleanup(array $files): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
+            $this->logger->info('No cleanup required.');
             return;
         }
+
+        $this->logger->info('Beginning cleanup.');
+
+        if ($this->isDeleteVendorPackages) {
+            $this->doIsDeleteVendorPackages($files);
+        } elseif ($this->isDeleteVendorFiles) {
+            $this->doIsDeleteVendorFiles($files);
+        }
+
+        $this->deleteEmptyDirectories($files);
+
+        $this->cleanupInstalledJson();
+    }
+
+    protected function deleteEmptyDirectories(array $files)
+    {
+        $this->logger->info('Deleting empty directories.');
 
         $sourceFiles = array_map(
             fn($file) => $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory()),
             $files
         );
-
-        if ($this->isDeleteVendorPackages) {
-            $packages = [];
-            foreach ($files as $file) {
-                if ($file instanceof FileWithDependency) {
-                    $packages[$file->getDependency()->getPackageName()] = $file->getDependency();
-                }
-            }
-
-            /** @var ComposerPackage $package */
-            foreach ($packages as $package) {
-                // Normal package.
-                if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
-                    $packageRelativePath = str_replace($this->workingDir, '', $package->getPackageAbsolutePath());
-                    $this->filesystem->deleteDirectory($packageRelativePath);
-                } else {
-                    // If it's a symlink, remove the symlink in the directory
-                    $symlinkPath =
-                        rtrim(
-                            $this->workingDir . $this->config->getVendorDirectory() . $package->getRelativePath(),
-                            '/'
-                        );
-
-                    if (false !== strpos('WIN', PHP_OS)) {
-                        /**
-                         * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
-                         * "On windows, take care that `is_link()` returns false for Junctions."
-                         *
-                         * @see https://www.php.net/manual/en/function.is-link.php#113263
-                         * @see https://stackoverflow.com/a/18262809/336146
-                         */
-                        rmdir($symlinkPath);
-                    } else {
-                        unlink($symlinkPath);
-                    }
-                }
-            }
-        } elseif ($this->isDeleteVendorFiles) {
-            foreach ($files as $file) {
-                if (!$file->isDoDelete()) {
-                    continue;
-                }
-
-                $sourceRelativePath = $file->getSourcePath($this->workingDir);
-
-                $this->filesystem->delete($sourceRelativePath);
-
-                $file->setDidDelete(true);
-            }
-
-            $this->cleanupFilesAutoloader();
-        }
 
         // Get the root folders of the moved files.
         $rootSourceDirectories = [];
@@ -124,39 +96,44 @@ class Cleanup
         }
         $rootSourceDirectories = array_map(
             function (string $path): string {
-                return $this->vendorDirectory . $path;
+                return $this->workingDir . $this->vendorDirectory . $path;
             },
             array_keys($rootSourceDirectories)
         );
 
         foreach ($rootSourceDirectories as $rootSourceDirectory) {
-            if (!is_dir($rootSourceDirectory) || is_link($rootSourceDirectory)) {
+            if (!$this->filesystem->directoryExists($rootSourceDirectory) || is_link($rootSourceDirectory)) {
                 continue;
             }
 
-            $it = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator(
-                    $this->workingDir . $rootSourceDirectory,
-                    FilesystemIterator::SKIP_DOTS
-                ),
-                RecursiveIteratorIterator::CHILD_FIRST
+            $dirList = $this->filesystem->listContents($this->workingDir . $rootSourceDirectory, true);
+
+            $allFilePaths = array_map(
+                fn($file) => $file->path(),
+                $dirList->toArray()
             );
 
-            foreach ($it as $file) {
-                if ($file->isDir() && $this->dirIsEmpty((string) $file)) {
-                    rmdir((string)$file);
+            // Sort by longest path first, so subdirectories are deleted before the parent directories are checked.
+            usort(
+                $allFilePaths,
+                fn($a, $b) => strlen($b) - strlen($a)
+            );
+
+            foreach ($allFilePaths as $filePath) {
+                if ($this->filesystem->directoryExists($filePath)
+                    && $this->dirIsEmpty($filePath)
+                ) {
+                    $this->logger->debug('Deleting directory ' . str_replace($this->workingDir, '', $filePath));
+                    $this->filesystem->deleteDirectory($filePath);
                 }
             }
         }
-
-        $this->cleanupInstalledJson();
     }
 
-    // TODO: Use Symfony or Flysystem functions.
+    // TODO: Move to FileSystem class.
     protected function dirIsEmpty(string $dir): bool
     {
-        $di = new RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS);
-        return iterator_count($di) === 0;
+        return empty($this->filesystem->listContents($dir));
     }
 
     /**
@@ -168,7 +145,15 @@ class Cleanup
      */
     public function cleanupInstalledJson(): void
     {
-        $installedJsonFile = new JsonFile($this->workingDir . '/vendor/composer/installed.json');
+        $this->logger->info('Cleaning up vendor/composer/installed.json');
+
+        $installedJsonFile = new JsonFile(
+            sprintf(
+                '%s%svendor/composer/installed.json',
+                $this->config->isDryRun() ? 'mem:/' : '',
+                $this->workingDir
+            )
+        );
         if (!$installedJsonFile->exists()) {
             return;
         }
@@ -178,9 +163,8 @@ class Cleanup
             if (!isset($package['autoload'])) {
                 continue;
             }
-            $packageDir = $this->workingDir . $this->vendorDirectory . ltrim($package['install-path'], '.' . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-            if (!is_dir($packageDir)) {
-                // pcre, xdebug-handler.
+            $packageDir = $this->workingDir . $this->vendorDirectory . 'composer/' .$package['install-path'] . '/';
+            if (!$this->filesystem->directoryExists($packageDir)) {
                 continue;
             }
             $autoload_key = $package['autoload'];
@@ -191,26 +175,27 @@ class Cleanup
                             if (is_array($dirs)) {
                                 $autoload_key[$type][$namespace] = array_filter($dirs, function ($dir) use ($packageDir) {
                                     $dir = $packageDir . $dir;
-                                    return is_readable($dir);
+                                    return $this->filesystem->directoryExists($dir) || $this->filesystem->fileExists($dir);
                                 });
                             } else {
                                 $dir = $packageDir . $dirs;
-                                if (! is_readable($dir)) {
+                                if (! ($this->filesystem->directoryExists($dir) || $this->filesystem->fileExists($dir))) {
                                     unset($autoload_key[$type][$namespace]);
                                 }
                             }
                         }
                         break;
-                    default: // files, classmap
+                    default: // files, classmap, psr-0
                         $autoload_key[$type] = array_filter($autoload, function ($file) use ($packageDir) {
-                            $filename = $packageDir . $file;
-                            return file_exists($packageDir . $file);
+                            $filename = $packageDir . DIRECTORY_SEPARATOR . $file;
+                            return $this->filesystem->directoryExists($filename) || $this->filesystem->fileExists($filename);
                         });
                         break;
                 }
             }
             $installedJsonArray['packages'][$key]['autoload'] = array_filter($autoload_key);
         }
+
         $installedJsonFile->write($installedJsonArray);
     }
 
@@ -218,25 +203,29 @@ class Cleanup
      * After files are deleted, remove them from the Composer files autoloaders.
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/34#issuecomment-922503813
+     * @throws FilesystemException
      */
     protected function cleanupFilesAutoloader(): void
     {
-        if (! file_exists($this->workingDir . 'vendor/composer/autoload_files.php')) {
+        if (! $this->filesystem->fileExists($this->workingDir . 'vendor/composer/autoload_files.php')) {
+            $this->logger->debug('vendor/composer/autoload_files.php does not exist.');
             return;
         }
 
-        $files = include $this->workingDir . 'vendor/composer/autoload_files.php';
+        $this->logger->info('Cleaning up autoload_files.php');
+
+        $files = include sprintf("%s%scomposer/autoload_files.php", $this->workingDir, $this->vendorDirectory);
 
         $missingFiles = array();
 
         foreach ($files as $file) {
-            if (! file_exists($file)) {
+            if (! $this->filesystem->fileExists($file)) {
                 $missingFiles[] = str_replace([ $this->workingDir, 'vendor/composer/../', 'vendor/' ], '', $file);
                 // When `composer install --no-dev` is run, it creates an index of files autoload files which
                 // references the non-existent files. This causes a fatal error when the autoloader is included.
                 // TODO: if delete_vendor_packages is true, do not create this file.
                 $this->filesystem->write(
-                    str_replace($this->workingDir, '', $file),
+                    $file,
                     '<?php // This file was deleted by {@see https://github.com/BrianHenryIE/strauss}.'
                 );
             }
@@ -249,7 +238,7 @@ class Cleanup
         $targetDirectory = $this->targetDirectory;
 
         foreach (array('autoload_static.php', 'autoload_files.php') as $autoloadFile) {
-            $autoloadStaticPhp = $this->filesystem->read('vendor/composer/'.$autoloadFile);
+            $autoloadStaticPhp = $this->filesystem->read($this->workingDir . 'vendor/composer/'.$autoloadFile);
 
             $autoloadStaticPhpAsArray = explode(PHP_EOL, $autoloadStaticPhp);
 
@@ -283,7 +272,87 @@ class Cleanup
 
             $newAutoloadStaticPhp = implode(PHP_EOL, $newAutoloadStaticPhpAsArray);
 
-            $this->filesystem->write('vendor/composer/'.$autoloadFile, $newAutoloadStaticPhp);
+            $this->filesystem->write(
+                sprintf("%s%scomposer/%s", $this->workingDir, $this->vendorDirectory, $autoloadFile),
+                $newAutoloadStaticPhp
+            );
         }
+    }
+
+    /**
+     * @param array<File> $files
+     */
+    protected function doIsDeleteVendorPackages(array $files)
+    {
+        $this->logger->info('Deleting original vendor packages.');
+
+        $packages = [];
+        foreach ($files as $file) {
+            if ($file instanceof FileWithDependency) {
+                $packages[ $file->getDependency()->getPackageName() ] = $file->getDependency();
+            }
+        }
+
+        /** @var ComposerPackage $package */
+        foreach ($packages as $package) {
+            // Normal package.
+            if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
+                $packageRelativePath = str_replace($this->workingDir, '', $package->getPackageAbsolutePath());
+
+                $this->logger->info('Deleting ' . $packageRelativePath);
+
+                $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
+            } else {
+                // TODO: log _where_ the symlink is pointing to.
+                $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
+
+                // If it's a symlink, remove the symlink in the directory
+                $symlinkPath =
+                    rtrim(
+                        $this->workingDir . $this->config->getVendorDirectory() . $package->getRelativePath(),
+                        '/'
+                    );
+
+                if (false !== strpos('WIN', PHP_OS)) {
+                    /**
+                     * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
+                     * "On windows, take care that `is_link()` returns false for Junctions."
+                     *
+                     * @see https://www.php.net/manual/en/function.is-link.php#113263
+                     * @see https://stackoverflow.com/a/18262809/336146
+                     */
+                    rmdir($symlinkPath);
+                } else {
+                    unlink($symlinkPath);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param array $files
+     *
+     * @throws FilesystemException
+     */
+    public function doIsDeleteVendorFiles(array $files)
+    {
+        $this->logger->info('Deleting original vendor files.');
+
+        foreach ($files as $file) {
+            if (! $file->isDoDelete()) {
+                $this->logger->debug('Skipping/preserving ' . $file->getSourcePath($this->workingDir));
+                continue;
+            }
+
+            $sourceRelativePath = $file->getSourcePath($this->workingDir);
+
+            $this->logger->info('Deleting ' . $sourceRelativePath);
+
+            $this->filesystem->delete($file->getSourcePath());
+
+            $file->setDidDelete(true);
+        }
+
+        $this->cleanupFilesAutoloader();
     }
 }

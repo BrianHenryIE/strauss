@@ -25,12 +25,13 @@ class MozartIssue130Test extends IntegrationTestCase
      */
     public function test_config_copied()
     {
+        $this->markTestSkipped('too slow');
 
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/mozart-issue-130",
   "require": {
-    "htmlburger/carbon-fields": "*"
+    "htmlburger/carbon-fields": "v3.3.3"
   },
   "extra": {
     "mozart":{

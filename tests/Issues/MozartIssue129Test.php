@@ -16,6 +16,8 @@ namespace BrianHenryIE\Strauss\Tests\Issues;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * Class MozartIssue129Test
@@ -38,7 +40,7 @@ class MozartIssue129Test extends TestCase
         $original = 'Example\Sdk\Endpoints';
         $replacement = 'Strauss\Example\Sdk\Endpoints';
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, __DIR__, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
 
         $result = $replacer->replaceNamespace($phpString, $original, $replacement);
 
