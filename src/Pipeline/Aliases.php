@@ -188,14 +188,14 @@ class Aliases
                     foreach ($namespaceInOriginalClassmap as $originalFqdnClassName => $absoluteFilePath) {
                         $localName = array_reverse(explode('\\', $originalFqdnClassName))[0];
 
-                        $newFqdnClassName = 0 === strpos($originalFqdnClassName, $symbol->getOriginalSymbol()) && 0 !== strpos($originalFqdnClassName, $symbol->getReplacement())
-                            ? preg_replace('/^'.$symbol->getOriginalSymbol().'/', $symbol->getReplacement(), $originalFqdnClassName)
-                            : $originalFqdnClassName;
+                        if (0 !== strpos($originalFqdnClassName, $symbol->getReplacement())) {
+                            $newFqdnClassName = $symbol->getReplacement() . '\\' . $localName;
+                        } else {
+                            $newFqdnClassName = $originalFqdnClassName;
+                        }
 
                         if (!isset($prefixedClassmap[$newFqdnClassName])) {
-                            $this->logger->error("errorrrr");
                             throw new \Exception("errorrrr");
-                            continue;
                         }
 
                         $symbolFilepath = $prefixedClassmap[$newFqdnClassName];
