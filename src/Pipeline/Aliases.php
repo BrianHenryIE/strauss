@@ -123,11 +123,13 @@ class Aliases
 
         $this->fileSystem->write($outputFilepath, $fileString);
 
-        $composerFileString = $this->fileSystem->read($this->workingDir . 'vendor/composer/autoload_real.php');
+        $autoloadRealFilepath = $this->workingDir . $this->config->getVendorDirectory() . 'composer/autoload_real.php';
+
+        $composerFileString = $this->fileSystem->read($autoloadRealFilepath);
 
         $newComposerAutoloadReal = $this->addAliasesFileToComposer($composerFileString);
 
-        $this->fileSystem->write($this->workingDir . 'vendor/composer/autoload_real.php', $newComposerAutoloadReal);
+        $this->fileSystem->write($autoloadRealFilepath, $newComposerAutoloadReal);
     }
 
     /**
