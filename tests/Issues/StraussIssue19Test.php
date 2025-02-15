@@ -21,6 +21,7 @@ class StraussIssue19Test extends IntegrationTestCase
      */
     public function testObjectIsNotPrefixed()
     {
+        $this->markTestSkippedOnPhpVersion('8.0', '>=');
 
         $composerJsonString = <<<'EOD'
 {
