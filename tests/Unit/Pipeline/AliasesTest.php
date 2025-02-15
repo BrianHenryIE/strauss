@@ -7,8 +7,14 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use Mockery;
 
+/**
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Aliases
+ */
 class AliasesTest extends TestCase
 {
+    /**
+     * @covers ::addAliasesFileToComposer
+     */
     public function test_add_aliases_file_to_true_composer(): void
     {
 
