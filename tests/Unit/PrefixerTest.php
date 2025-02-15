@@ -853,6 +853,7 @@ EOD;
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $constants = array('FPDF_VERSION','ANOTHER_CONSTANT');
@@ -1466,6 +1467,7 @@ EOD;
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $classSymbol = new ClassSymbol('Normalizer', $file);
@@ -1704,6 +1706,7 @@ EOD;
 
         $file = \Mockery::mock(File::class);
         $file->expects('addDiscoveredSymbol')->once();
+        $file->expects('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
 
