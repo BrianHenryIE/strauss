@@ -8,6 +8,9 @@ use BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use Composer\ClassMapGenerator\ClassMapGenerator;
 
+/**
+ * @coversNothing
+ */
 class DryRunFeatureTest extends IntegrationTestCase
 {
     /**

@@ -7,6 +7,9 @@ use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use Mockery;
 
+/**
+ * @coversNothing
+ */
 class AliasesFeatureTest extends IntegrationTestCase
 {
 
