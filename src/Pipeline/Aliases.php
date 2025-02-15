@@ -183,7 +183,10 @@ class Aliases
 
                     foreach ($namespaceInOriginalClassmap as $originalFqdnClassName => $absoluteFilePath) {
                         $localName = array_reverse(explode('\\', $originalFqdnClassName))[0];
-                        $newFqdnClassName = str_replace($symbol->getOriginalSymbol(), $symbol->getReplacement(), $originalFqdnClassName);
+
+                        $newFqdnClassName = 0 === strpos($originalFqdnClassName, $symbol->getOriginalSymbol())
+                            ? str_replace($symbol->getOriginalSymbol(), $symbol->getReplacement(), $originalFqdnClassName)
+                            : $originalFqdnClassName;
 
                         $isClass = class_exists($newFqdnClassName);
                         $isInterface = interface_exists($newFqdnClassName);
