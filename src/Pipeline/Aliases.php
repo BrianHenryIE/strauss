@@ -81,14 +81,18 @@ class Aliases
      */
     protected function getTargetClassmap(): array
     {
-        $paths = $this->fileSystem->listContents($this->workingDir . $this->config->getTargetDirectory())->toArray();
-
-        // This could be done in config.
-        if ($this->config->isDryRun()) {
-            foreach ($paths as $index => $path) {
-                $paths[$index] = new \SplFileInfo('mem://'.$path->path());
-            }
-        }
+        $paths =
+            array_map(
+                function ($file) {
+                    return $this->config->isDryRun()
+                        ? new \SplFileInfo('mem://'.$file->path())
+                        : new \SplFileInfo('/'.$file->path());
+                },
+                array_filter(
+                    $this->fileSystem->listContents($this->workingDir . $this->config->getTargetDirectory(), \League\Flysystem\FilesystemReader::LIST_DEEP)->toArray(),
+                    fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
+                )
+            );
 
          return ClassMapGenerator::createMap($paths);
     }
