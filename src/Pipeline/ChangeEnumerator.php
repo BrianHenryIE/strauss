@@ -41,7 +41,9 @@ class ChangeEnumerator
     public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void
     {
         foreach ($discoveredSymbols->getSymbols() as $symbol) {
-            $symbolSourceFile = $symbol->getSourceFile();
+            // TODO: this is a bit of a mess. Should be reconsidered. Previously there was 1-1 relationship between symbols and files.
+            $symbolSourceFiles = $symbol->getSourceFiles();
+            $symbolSourceFile = $symbolSourceFiles[array_key_first($symbolSourceFiles)];
             if ($symbolSourceFile instanceof FileWithDependency) {
                 if (in_array(
                     $symbolSourceFile->getDependency()->getPackageName(),

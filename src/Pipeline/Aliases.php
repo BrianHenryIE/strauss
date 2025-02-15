@@ -21,6 +21,7 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\ClassMapGenerator\ClassMapGenerator;
+use League\Flysystem\StorageAttributes;
 use PhpParser\Error;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -28,9 +29,14 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class Aliases
 {
+    use LoggerAwareTrait;
+
     protected AliasesConfigInterace $config;
     protected string $workingDir;
     protected FileSystem $fileSystem;
@@ -38,62 +44,72 @@ class Aliases
     public function __construct(
         AliasesConfigInterace $config,
         string $workingDir,
-        FileSystem $fileSystem
+        FileSystem $fileSystem,
+        ?LoggerInterface $logger = null
     ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
         $this->fileSystem = $fileSystem;
+
+        $this->setLogger($logger ?? new NullLogger());
     }
 
-    public function getVendorClassmap(): array
+    protected function getVendorClassmap(): array
     {
         // TODO: mem:// as appropriate
-        $vendorAbsoluteDirectory = $this->config->getVendorDirectory();
-        $targetAbsoluteDirectory = $this->config->getTargetDirectory();
+        $vendorAbsoluteDirectory = $this->workingDir . $this->config->getVendorDirectory();
 
-        $vendorClassmap = ClassMapGenerator::createMap($vendorAbsoluteDirectory);
-        $targetClassmap = $vendorAbsoluteDirectory !== $targetAbsoluteDirectory
-            ? $this->getTargetClassmap()
-            : [];
+        $paths =
+            array_map(
+                function ($file) {
+                    return $this->config->isDryRun()
+                        ? new \SplFileInfo('mem://'.$file->path())
+                        : new \SplFileInfo('/'.$file->path());
+                },
+                array_filter(
+                    $this->fileSystem->listContents($vendorAbsoluteDirectory, true)->toArray(),
+                    fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
+                )
+            );
 
-//        $cmg = new ClassMapGenerator();
-//        $cmg->scanPaths(
-//            $vendorAbsoluteDirectory,
-//            null, // $excluded Regex that matches file paths to be excluded from the classmap
-//            'classmap', //  $autoloadType
-//            null, // ?string $namespace = null,
-//            [$targetAbsoluteDirectory], // array $excludedDirs = [
-//        );
-//        $cm = $cmg->getClassMap();
+        $vendorClassmap = ClassMapGenerator::createMap($paths);
 
-        // The classmap is class=>file, we want to return the classes that are in the vendor directory but not in the target directory.
-        return array_diff($vendorClassmap, $targetClassmap);
+        return $vendorClassmap;
     }
 
+    /**
+     * @return array<string,string> FQDN => absolute path
+     */
     protected function getTargetClassmap(): array
     {
          return ClassMapGenerator::createMap($this->config->getTargetDirectory());
     }
 
-    public function write_aliases_file_for_symbols(DiscoveredSymbols $symbols): void
+    /**
+     * We will create `vendor/composer/autoload_aliases.php` alongside other autoload files, e.g. `autoload_real.php`.
+     */
+    protected function getAliasFilepath(): string
     {
-
-        // For development, we'll just put it in the project root and manually load the file.
-        // TODO Need to edit autoload_real.php to load the file.
-        $outputFilename = sprintf(
+        return  sprintf(
             '%s%scomposer/autoload_aliases.php',
             $this->workingDir,
             $this->config->getVendorDirectory()
         );
+    }
 
-        $fileString = $this->build_string_of_aliases($symbols, $outputFilename);
+    public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
+    {
+
+        $outputFilepath = $this->getAliasFilepath();
+
+        $fileString = $this->buildStringOfAliases($symbols, basename($outputFilepath));
 
         if (empty($fileString)) {
             // Log?
             return;
         }
 
-        $this->fileSystem->write($outputFilename, $fileString);
+        $this->fileSystem->write($outputFilepath, $fileString);
 
         $composerFileString = $this->fileSystem->read($this->workingDir . 'vendor/composer/autoload_real.php');
 
@@ -102,14 +118,30 @@ class Aliases
         $this->fileSystem->write($this->workingDir . 'vendor/composer/autoload_real.php', $newComposerAutoloadReal);
     }
 
+    /**
+     * @param DiscoveredSymbols $symbols
+     * @return array<NamespaceSymbol|ConstantSymbol|ClassSymbol|FunctionSymbol>
+     */
+    protected function getModifiedSymbols(DiscoveredSymbols $symbols): array
+    {
+        $modifiedSymbols = [];
+        foreach ($symbols->getSymbols() as $symbol) {
+            if ($symbol->getOriginalSymbol() !== $symbol->getReplacement()) {
+                $modifiedSymbols[] = $symbol;
+            }
+        }
+        return $modifiedSymbols;
+    }
 
-    protected function build_string_of_aliases(DiscoveredSymbols $symbols, string $outputFilename): string
+    protected function buildStringOfAliases(DiscoveredSymbols $symbols, string $outputFilename): string
     {
 
-        $fileString = '<?php' . PHP_EOL . PHP_EOL . '// ' . basename($outputFilename) . '} @generated by Strauss' . PHP_EOL . PHP_EOL;
+        $originalClassmap = $this->getVendorClassmap();
 
-        // Must be the authoritative classmap to work.
-        $classmap = $this->getVendorClassmap();
+        $fileString = '<?php' . PHP_EOL . PHP_EOL . '// ' . $outputFilename . ' @generated by Strauss' . PHP_EOL . PHP_EOL;
+
+        $modifiedSymbols = $this->getModifiedSymbols($symbols);
+
         $prefixedClassmap = $this->getTargetClassmap();
         spl_autoload_register(
             function ($classname) use ($prefixedClassmap) {
@@ -119,41 +151,46 @@ class Aliases
             }
         );
 
-        foreach ($symbols->getSymbols() as $symbol) {
+        foreach ($modifiedSymbols as $symbol) {
             $originalSymbol = $symbol->getOriginalSymbol();
             $replacementSymbol = $symbol->getReplacement();
 
-            $php = null;
+
+            if ($originalSymbol === $replacementSymbol) {
+                $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
+                continue;
+            }
 
             switch (get_class($symbol)) {
                 case NamespaceSymbol::class:
                     // TODO: namespaced constants?
+
+                    $symbolSourceFiles = $symbol->getSourceFiles();
+
+                    $namespaceInOriginalClassmap = array_filter(
+                        $originalClassmap,
+                        fn($filepath) => in_array($filepath, array_keys($symbolSourceFiles))
+                    );
 
                     // The original namespace before it was modified by Strauss.
                     $namespace = $symbol->getOriginalSymbol();
 
                     $php = "namespace {$symbol->getOriginalSymbol()} {" . PHP_EOL;
 
-                    foreach ($classmap as $originalFqdnClassName => $absoluteFilePath) {
-                        $originalNamespace = (function () use ($originalFqdnClassName) {
-                            $parts = explode('\\', $originalFqdnClassName);
-                            array_pop($parts);
-                            return implode('\\', $parts);
-                        })();
+                    foreach ($namespaceInOriginalClassmap as $originalFqdnClassName => $absoluteFilePath) {
                         $localName = array_reverse(explode('\\', $originalFqdnClassName))[0];
                         $newFqdnClassName = str_replace($namespace, $symbol->getReplacement(), $originalFqdnClassName);
-                        if ($originalNamespace === $namespace) {
-                            $isClass = class_exists($newFqdnClassName);
-                            $isInterface = interface_exists($newFqdnClassName);
-                            $isTrait = trait_exists($newFqdnClassName);
 
-                            if ($isClass) {
-                                $php .= "  class_alias(\\$newFqdnClassName::class, \\$originalFqdnClassName::class);" . PHP_EOL;
-                            } elseif ($isInterface) {
-                                $php .= "  interface $localName extends \\$newFqdnClassName {};" . PHP_EOL;
-                            } elseif ($isTrait) {
-                                $php .= "  trait $localName { use \\$newFqdnClassName; }" . PHP_EOL;
-                            }
+                        $isClass = class_exists($newFqdnClassName);
+                        $isInterface = interface_exists($newFqdnClassName);
+                        $isTrait = trait_exists($newFqdnClassName);
+
+                        if ($isClass) {
+                            $php .= "  class_alias(\\$newFqdnClassName::class, \\$originalFqdnClassName::class);" . PHP_EOL;
+                        } elseif ($isInterface) {
+                            $php .= "  interface $localName extends \\$newFqdnClassName {};" . PHP_EOL;
+                        } elseif ($isTrait) {
+                            $php .= "  trait $localName { use \\$newFqdnClassName; }" . PHP_EOL;
                         }
                     }
 
@@ -209,7 +246,7 @@ EOD;
         try {
             $ast = $parser->parse($code);
         } catch (Error $error) {
-            echo "Parse error: {$error->getMessage()}\n";
+            $this->logger->error("Parse error: {$error->getMessage()}");
             return $code;
         }
 

@@ -177,11 +177,29 @@ class FileEnumerator
     protected function addFileWithDependency(ComposerPackage $dependency, string $sourceAbsoluteFilepath, string $autoloaderType): void
     {
         $vendorRelativePath = substr($sourceAbsoluteFilepath, strpos($sourceAbsoluteFilepath, $dependency->getRelativePath()));
+
+        if ($vendorRelativePath === $sourceAbsoluteFilepath) {
+//            $workingDirParts = explode('/', $this->workingDir);
+//            $sourceDirParts = explode('/', $sourceAbsoluteFilepath);
+//            foreach ($workingDirParts as $key => $part) {
+//                if ($part === $sourceDirParts[$key]) {
+//                    unset($sourceDirParts[$key]);
+//                    unset($workingDirParts[$key]);
+//                }
+//            }
+//            $vendorRelativePath = implode('/', $sourceDirParts);
+//            $vendorRelativePath = str_repeat('../', count($workingDirParts) - 1) . $vendorRelativePath;
+
+            $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
+        }
+
         $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
             ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
+
+        $f->setAbsoluteTargetPath($this->workingDir . $this->vendorDir . $vendorRelativePath);
 
         $f->addAutoloader($autoloaderType);
         $f->setDoDelete($isOutsideProjectDir);

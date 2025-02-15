@@ -1,8 +1,19 @@
 # Change Log
 
+## 0.22.0 February 2025
+
+* Add: `--info`, `--debug` and `--silent` verbosity levels
+* Add: `--dry-run` which runs with `--debug` output but does not write files
+* Add: `--aliases` `autoload_aliases.php` file for dev dependencies to load modified classes using their original fqdn
+* Fix: allow vendor and target directories to be in parent directory of `composer.json`
+* Dev: major refactor to use `thephpleague/Flysystem` and `elazar/flystream` for file operations
+* Dev: print diff code coverage report on PRs
+* Dev: skip / speed-up some tests
+* Docs: improve installation instructions in `README.md` 
 ## 0.21.1 January 2025
 
 * Fix: global functions prefixed too liberally when defined as strings
+* Add: include changelog in phar
 
 ## 0.21.0 January 2025
 

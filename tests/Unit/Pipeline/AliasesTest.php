@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use Mockery;
 
@@ -69,10 +70,12 @@ EOD;
 
         $config = Mockery::mock(AliasesConfigInterace::class);
 
-        $sut = new Aliases($config);
+        $fileSystem = Mockery::mock(FileSystem::class);
+
+        $sut = new Aliases($config, '/', $fileSystem);
 
         $result = $sut->addAliasesFileToComposer($phpString);
 
-        $this->assertEqualsRN($expected, $result);
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
 }

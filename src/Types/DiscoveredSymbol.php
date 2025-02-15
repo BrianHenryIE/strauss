@@ -10,7 +10,8 @@ use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 
 abstract class DiscoveredSymbol
 {
-    protected ?File $sourceFile;
+    /** @var array<File> $sourceFiles */
+    protected array $sourceFiles = [];
 
     protected string $symbol;
 
@@ -22,9 +23,9 @@ abstract class DiscoveredSymbol
      */
     public function __construct(string $symbol, File $sourceFile)
     {
-        $this->symbol     = $symbol;
-        $this->sourceFile = $sourceFile;
+        $this->symbol = $symbol;
 
+        $this->addSourceFile($sourceFile);
         $sourceFile->addDiscoveredSymbol($this);
     }
 
@@ -33,14 +34,12 @@ abstract class DiscoveredSymbol
         return $this->symbol;
     }
 
-    public function setSymbol(string $symbol): void
+    /**
+     * @return File[]
+     */
+    public function getSourceFiles(): array
     {
-        $this->symbol = $symbol;
-    }
-
-    public function getSourceFile(): ?File
-    {
-        return $this->sourceFile;
+        return $this->sourceFiles;
     }
 
     /**
@@ -48,9 +47,9 @@ abstract class DiscoveredSymbol
      *
      * @see FileSymbolScanner
      */
-    public function setSourceFile(File $sourceFile): void
+    public function addSourceFile(File $sourceFile): void
     {
-        $this->sourceFile = $sourceFile;
+        $this->sourceFiles[$sourceFile->getSourcePath()] = $sourceFile;
     }
 
     public function getReplacement(): string

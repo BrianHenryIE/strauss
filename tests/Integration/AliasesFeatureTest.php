@@ -30,7 +30,8 @@ class AliasesFeatureTest extends IntegrationTestCase
     "psr/log": "*"
   },
   "require-dev": {
-    "brianhenryie/color-logger": "*"
+    "brianhenryie/color-logger": "*",
+    "phpunit/phpunit": "*"
   },
   "extra": {
     "strauss": {
@@ -53,7 +54,11 @@ EOD;
 
         $this->assertStringContainsString('autoload_aliases.php', $autoloadRealPhpString);
 
-        exec('php -r "require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
+        /**
+         * `php -r "require_once 'vendor-prefixed/autoload.php'; require_once 'vendor/autoload.php'; new \BrianHenryIE\ColorLogger\ColorLogger();"`
+         * `cat vendor/composer/autoload_aliases.php`
+         */
+        exec('php -r "require_once \'vendor-prefixed/autoload.php\'; require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
         $output = implode(PHP_EOL, $output);
 
         $this->assertEmpty($output, $output);

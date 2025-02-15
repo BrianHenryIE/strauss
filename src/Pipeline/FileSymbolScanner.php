@@ -237,7 +237,14 @@ class FileSymbolScanner
             }
         }
 
-        $namespaceObj = new NamespaceSymbol($namespace, $file);
+        $namespaceObj = $this->discoveredSymbols->getNamespace($namespace);
+        if ($namespaceObj) {
+            $namespaceObj->addSourceFile($file);
+            return;
+        } else {
+            $namespaceObj = new NamespaceSymbol($namespace, $file);
+        }
+
         $this->add($namespaceObj);
     }
 

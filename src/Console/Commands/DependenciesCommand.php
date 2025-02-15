@@ -128,9 +128,16 @@ class DependenciesCommand extends Command
             false
         );
 
+        $localFilesystemAdapter = new LocalFilesystemAdapter(
+            '/',
+            null,
+            LOCK_EX,
+            LocalFilesystemAdapter::SKIP_LINKS
+        );
+
         $this->filesystem = new Filesystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                $localFilesystemAdapter,
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -224,10 +231,10 @@ class DependenciesCommand extends Command
 
             $this->generateAutoloader();
 
-            $this->cleanUp();
-
-            // After file have been deleted, we may need to add aliases.
+            // After file have been deleted, we may need aliases.
             $this->generateAliasesFile();
+
+            $this->cleanUp();
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
@@ -236,7 +243,6 @@ class DependenciesCommand extends Command
 
         return Command::SUCCESS;
     }
-
 
     /**
      * 1. Load the composer.json.
@@ -511,7 +517,7 @@ class DependenciesCommand extends Command
             $this->workingDir,
             $this->filesystem
         );
-        $aliases->write_aliases_file_for_symbols($this->discoveredSymbols);
+        $aliases->writeAliasesFileForSymbols($this->discoveredSymbols);
     }
 
     /**
