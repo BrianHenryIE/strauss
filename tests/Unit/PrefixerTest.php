@@ -24,7 +24,7 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 /**
  * Class ReplacerTest
  * @package BrianHenryIE\Strauss
- * @covers \BrianHenryIE\Strauss\Pipeline\Prefixer
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Prefixer
  */
 class PrefixerTest extends TestCase
 {
@@ -1945,7 +1945,7 @@ EOD;
     }
 
     /**
-     * @covers \BrianHenryIE\Strauss\Pipeline\Prefixer::replaceFunctions
+     * @covers ::replaceFunctions
      */
     public function testReplaceFunctions(): void
     {
