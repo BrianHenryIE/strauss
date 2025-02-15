@@ -188,21 +188,15 @@ class Aliases
                             ? str_replace($symbol->getOriginalSymbol(), $symbol->getReplacement(), $originalFqdnClassName)
                             : $originalFqdnClassName;
 
-                        $isClass = class_exists($newFqdnClassName);
-                        $isInterface = interface_exists($newFqdnClassName);
-                        $isTrait = trait_exists($newFqdnClassName);
+                        $ambiguousSymbolFilepath = $prefixedClassmap[$newFqdnClassName];
 
-                        if (!$isClass && !$isInterface && !$isTrait) {
-                            $ambiguousSymbolFilepath = $prefixedClassmap[$newFqdnClassName];
+                        $ambiguousSymbolFileString = $this->fileSystem->read($ambiguousSymbolFilepath);
 
-                            $ambiguousSymbolFileString = $this->fileSystem->read($ambiguousSymbolFilepath);
-
-                            // This should be improved with a check for non-class-valid characters after the name.
-                            // Eventually it should be in the File object itself.
-                            $isClass = 1 === preg_match('/class '.$localName.'/', $ambiguousSymbolFileString);
-                            $isInterface = 1 === preg_match('/interface '.$localName.'/', $ambiguousSymbolFileString);
-                            $isTrait = 1 === preg_match('/trait '.$localName.'/', $ambiguousSymbolFileString);
-                        }
+                        // This should be improved with a check for non-class-valid characters after the name.
+                        // Eventually it should be in the File object itself.
+                        $isClass = 1 === preg_match('/class '.$localName.'/', $ambiguousSymbolFileString);
+                        $isInterface = 1 === preg_match('/interface '.$localName.'/', $ambiguousSymbolFileString);
+                        $isTrait = 1 === preg_match('/trait '.$localName.'/', $ambiguousSymbolFileString);
 
                         if (!$isClass && !$isInterface && !$isTrait) {
                             $this->logger->error("Skipping $newFqdnClassName because it doesn't exist.");
