@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\NamespaceSort;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use Exception;
@@ -148,11 +149,8 @@ class Prefixer
             }
             $namespacesChangesStrings[$originalNamespace] = $namespaceSymbol->getReplacement();
         }
-        // Sort by longest first
-        uksort(
-            $namespacesChangesStrings,
-            fn($a, $b) => strlen($b) - strlen($a)
-        );
+        // This matters... it shouldn't.
+        uksort($namespacesChangesStrings, new NamespaceSort(NamespaceSort::SHORTEST));
         foreach ($namespacesChangesStrings as $originalNamespace => $replacementNamespace) {
             $contents = $this->replaceNamespace($contents, $originalNamespace, $replacementNamespace);
         }
