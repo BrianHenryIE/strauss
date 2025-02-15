@@ -24,8 +24,9 @@ class FileSymbolScannerTest extends TestCase
     // Single explicit global namespace.
     // Multiple namespaces.
 
-
-
+    /**
+     * @covers ::findInFiles
+     */
     public function testSingleNamespace()
     {
 
@@ -65,6 +66,9 @@ EOD;
         self::assertNotContains('MyClass', $discoveredSymbols->getDiscoveredClasses());
     }
 
+    /**
+     * @covers ::findInFiles
+     */
     public function testGlobalNamespace()
     {
 
@@ -97,7 +101,7 @@ EOD;
     }
 
     /**
-     *
+     * @covers ::findInFiles
      */
     public function testMultipleNamespace()
     {
@@ -135,9 +139,8 @@ EOD;
         self::assertContains('MyClass', $discoveredSymbols->getDiscoveredClasses());
     }
 
-
     /**
-     *
+     * @covers ::findInFiles
      */
     public function testMultipleNamespaceGlobalFirst()
     {
@@ -180,6 +183,9 @@ EOD;
         self::assertNotContains('MyOtherClass', $discoveredSymbols->getDiscoveredClasses());
     }
 
+    /**
+     * @covers ::findInFiles
+     */
     public function testItDoesNotFindNamespaceInComment(): void
     {
 
@@ -239,7 +245,7 @@ EOD;
     }
 
     /**
-     *
+     * @covers ::findInFiles
      */
     public function testMultipleClasses()
     {
@@ -276,8 +282,7 @@ EOD;
     }
 
     /**
-     *
-     * @author BrianHenryIE
+     * @covers ::findInFiles
      */
     public function test_it_does_not_treat_comments_as_classes()
     {
@@ -293,7 +298,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -305,15 +310,14 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
         self::assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
         self::assertContains('Whatever', $discoveredSymbols->getDiscoveredClasses());
     }
 
     /**
-     *
-     * @author BrianHenryIE
+     * @covers ::findInFiles
      */
     public function test_it_does_not_treat_multiline_comments_as_classes()
     {
@@ -330,7 +334,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -342,7 +346,7 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
         self::assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
         self::assertContains('Whatever', $discoveredSymbols->getDiscoveredClasses());
@@ -353,7 +357,7 @@ EOD;
      *
      * // \s*\\/?\\*{2,}[^\n]* |                        # Skip multiline comment bodies
      *
-     * @author BrianHenryIE
+     * @covers ::findInFiles
      */
     public function test_it_does_not_treat_multiline_comments_opening_line_as_classes()
     {
@@ -370,7 +374,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -382,16 +386,14 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
         self::assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
         self::assertContains('Whatever', $discoveredSymbols->getDiscoveredClasses());
     }
 
-
     /**
-     *
-     * @author BrianHenryIE
+     * @covers ::findInFiles
      */
     public function test_it_does_not_treat_multiline_comments_on_one_line_as_classes()
     {
@@ -405,7 +407,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -417,7 +419,7 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
         self::assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
         self::assertContains('Whatever_Trevor', $discoveredSymbols->getDiscoveredClasses());
@@ -426,9 +428,7 @@ EOD;
     /**
      * If someone were to put a semicolon in the comment it would mess with the previous fix.
      *
-     * @author BrianHenryIE
-     *
-     * @test
+     * @covers ::findInFiles
      */
     public function test_it_does_not_treat_comments_with_semicolons_as_classes()
     {
@@ -443,7 +443,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -455,14 +455,14 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
         self::assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
         self::assertContains('Whatever_Ever', $discoveredSymbols->getDiscoveredClasses());
     }
 
     /**
-     * @author BrianHenryIE
+     * @covers ::findInFiles
      */
     public function test_it_parses_classes_after_semicolon()
     {
@@ -475,7 +475,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -487,14 +487,13 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertContains('Pear', $discoveredSymbols->getDiscoveredClasses());
+        self::assertContains('Pear', $result->getDiscoveredClasses());
     }
 
-
     /**
-     * @author BrianHenryIE
+     * @covers ::findInFiles
      */
     public function test_it_parses_classes_followed_by_comment()
     {
@@ -510,7 +509,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -522,9 +521,9 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertContains('WP_Dependency_Installer', $discoveredSymbols->getDiscoveredClasses());
+        self::assertContains('WP_Dependency_Installer', $result->getDiscoveredClasses());
     }
 
 
@@ -533,9 +532,7 @@ EOD;
      *
      * To have two classes in one file, one in a namespace and the other not, the global namespace needs to be explicit.
      *
-     * @author BrianHenryIE
-     *
-     * @test
+     * @covers ::findInFiles
      */
     public function it_does_not_replace_inside_named_namespace_but_does_inside_explicit_global_namespace_a(): void
     {
@@ -554,7 +551,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -566,12 +563,15 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertNotContains('A_Class', $discoveredSymbols->getDiscoveredClasses());
-        self::assertContains('B_Class', $discoveredSymbols->getDiscoveredClasses());
+        self::assertNotContains('A_Class', $result->getDiscoveredClasses());
+        self::assertContains('B_Class', $result->getDiscoveredClasses());
     }
 
+    /**
+     * @covers ::findInFiles
+     */
     public function testExcludePackagesFromPrefix()
     {
 
@@ -593,13 +593,15 @@ EOD;
         $files = \Mockery::mock(DiscoveredFiles::class)->makePartial();
         $files->shouldReceive('getFiles')->andReturn([$file]);
 
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
-        $discoveredSymbols = $fileScanner->findInFiles($files);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
+        $result = $sut->findInFiles($files);
 
-        self::assertEmpty($discoveredSymbols->getDiscoveredNamespaces());
+        self::assertEmpty($result->getDiscoveredNamespaces());
     }
 
-
+    /**
+     * @covers ::findInFiles
+     */
     public function testExcludeFilePatternsFromPrefix()
     {
         $filesystemReaderMock = \Mockery::mock(FilesystemReader::class);
@@ -621,18 +623,19 @@ EOD;
         $files = \Mockery::mock(DiscoveredFiles::class)->makePartial();
         $files->shouldReceive('getFiles')->andReturn([$file]);
 
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
-        $discoveredSymbols = $fileScanner->findInFiles($files);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
+        $result = $sut->findInFiles($files);
 
-        self::assertEmpty($discoveredSymbols->getDiscoveredNamespaces());
+        self::assertEmpty($result->getDiscoveredNamespaces());
     }
 
     /**
      * Test custom replacements
+     *
+     * @covers ::findInFiles
      */
     public function testNamespaceReplacementPatterns()
     {
-
         $contents = "
 		namespace BrianHenryIE\PdfHelpers {
 			class A_Class { }
@@ -648,7 +651,7 @@ EOD;
             array('/BrianHenryIE\\\\(PdfHelpers)/'=>'BrianHenryIE\\Prefix\\\\$1')
         );
 
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -660,15 +663,17 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertArrayHasKey('BrianHenryIE\PdfHelpers', $discoveredSymbols->getDiscoveredNamespaces());
+        self::assertArrayHasKey('BrianHenryIE\PdfHelpers', $result->getDiscoveredNamespaces());
 //        self::assertContains('BrianHenryIE\Prefix\PdfHelpers', $fileScanner->getDiscoveredNamespaces());
 //        self::assertNotContains('BrianHenryIE\Prefix\BrianHenryIE\PdfHelpers', $fileScanner->getDiscoveredNamespaces());
     }
 
     /**
      * @see https://github.com/BrianHenryIE/strauss/issues/19
+     *
+     * @covers ::findInFiles
      */
     public function testPhraseClassObjectIsNotMistaken()
     {
@@ -701,7 +706,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -713,11 +718,14 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertNotContains('object', $discoveredSymbols->getDiscoveredClasses());
+        self::assertNotContains('object', $result->getDiscoveredClasses());
     }
 
+    /**
+     * @covers ::findInFiles
+     */
     public function testDefineConstant()
     {
 
@@ -743,7 +751,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -755,14 +763,17 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        $constants = $discoveredSymbols->getDiscoveredConstants();
+        $constants = $result->getDiscoveredConstants();
 
         self::assertContains('FPDF_VERSION', $constants);
         self::assertContains('ANOTHER_CONSTANT', $constants);
     }
 
+    /**
+     * @covers ::findInFiles
+     */
     public function test_commented_namespace_is_invalid(): void
     {
 
@@ -789,7 +800,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(StraussConfig::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -801,12 +812,15 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertArrayNotHasKey('WPGraphQL', $discoveredSymbols->getDiscoveredNamespaces());
-        self::assertContains('WPGraphQL', $discoveredSymbols->getDiscoveredClasses());
+        self::assertArrayNotHasKey('WPGraphQL', $result->getDiscoveredNamespaces());
+        self::assertContains('WPGraphQL', $result->getDiscoveredClasses());
     }
 
+    /**
+     * @covers ::findInFiles
+     */
     public function testDiscoversGlobalFunctions(): void
     {
 
@@ -833,7 +847,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -845,14 +859,15 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertArrayHasKey('topFunction', $discoveredSymbols->getDiscoveredFunctions());
-        self::assertArrayNotHasKey('aMethod', $discoveredSymbols->getDiscoveredFunctions());
-        self::assertArrayHasKey('lowerFunction', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayHasKey('topFunction', $result->getDiscoveredFunctions());
+        self::assertArrayNotHasKey('aMethod', $result->getDiscoveredFunctions());
+        self::assertArrayHasKey('lowerFunction', $result->getDiscoveredFunctions());
     }
 
     /**
+     * @covers ::findInFiles
      * @covers ::find
      */
     public function testDiscoversGlobalFunctionInFunctionExists(): void
@@ -879,7 +894,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -891,11 +906,14 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertArrayHasKey('collect', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayHasKey('collect', $result->getDiscoveredFunctions());
     }
 
+    /**
+     * @covers ::findInFiles
+     */
     public function testDoesNotIncludeBuiltInPhpFunctions(): void
     {
 
@@ -920,7 +938,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -932,11 +950,11 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertArrayNotHasKey('str_starts_with', $discoveredSymbols->getDiscoveredFunctions());
-        self::assertArrayNotHasKey('mb_convert_case', $discoveredSymbols->getDiscoveredFunctions());
-        self::assertArrayHasKey('lowerFunction', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayNotHasKey('str_starts_with', $result->getDiscoveredFunctions());
+        self::assertArrayNotHasKey('mb_convert_case', $result->getDiscoveredFunctions());
+        self::assertArrayHasKey('lowerFunction', $result->getDiscoveredFunctions());
     }
 
     /**
@@ -973,7 +991,7 @@ EOD;
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
-        $fileScanner = new FileSymbolScanner($config, $filesystemReaderMock);
+        $sut = new FileSymbolScanner($config, $filesystemReaderMock);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -985,8 +1003,8 @@ EOD;
         $discoveredFiles = \Mockery::mock(DiscoveredFiles::class);
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
-        $discoveredSymbols = $fileScanner->findInFiles($discoveredFiles);
+        $result = $sut->findInFiles($discoveredFiles);
 
-        self::assertArrayHasKey('twig_cycle', $discoveredSymbols->getDiscoveredFunctions());
+        self::assertArrayHasKey('twig_cycle', $result->getDiscoveredFunctions());
     }
 }
