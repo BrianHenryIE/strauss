@@ -14,7 +14,7 @@ class DiscoveredSymbolTest extends TestCase
 {
 
     /**
-     * @covers __construct
+     * @covers ::__construct
      * @covers ::getOriginalSymbol
      */
     public function testCreate(): void
