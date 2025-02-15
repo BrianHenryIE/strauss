@@ -146,7 +146,14 @@ class Aliases
         spl_autoload_register(
             function ($classname) use ($prefixedClassmap) {
                 if (isset($prefixedClassmap[ $classname ]) && file_exists($prefixedClassmap[ $classname ])) {
-                    require_once $prefixedClassmap[ $classname ];
+                    // It's possible the file for the class exists, but it is extending a class that doesn't exist.
+                    // Or the file itself uses `require_once`/`include` and the file it is trying to include doesn't exist.
+                    try {
+                        require_once $prefixedClassmap[$classname];
+                    } catch (\Throwable $e) {
+                        $this->logger->debug("Failed to require_once $classname: " . $e->getMessage());
+                        // Ignore
+                    }
                 }
             }
         );
@@ -172,18 +179,32 @@ class Aliases
                         fn($filepath) => in_array($filepath, array_keys($symbolSourceFiles))
                     );
 
-                    // The original namespace before it was modified by Strauss.
-                    $namespace = $symbol->getOriginalSymbol();
-
                     $php = "namespace {$symbol->getOriginalSymbol()} {" . PHP_EOL;
 
                     foreach ($namespaceInOriginalClassmap as $originalFqdnClassName => $absoluteFilePath) {
                         $localName = array_reverse(explode('\\', $originalFqdnClassName))[0];
-                        $newFqdnClassName = str_replace($namespace, $symbol->getReplacement(), $originalFqdnClassName);
+                        $newFqdnClassName = str_replace($symbol->getOriginalSymbol(), $symbol->getReplacement(), $originalFqdnClassName);
 
                         $isClass = class_exists($newFqdnClassName);
                         $isInterface = interface_exists($newFqdnClassName);
                         $isTrait = trait_exists($newFqdnClassName);
+
+                        if (!$isClass && !$isInterface && !$isTrait) {
+                            $ambiguousSymbolFilepath = $prefixedClassmap[$newFqdnClassName];
+
+                            $ambiguousSymbolFileString = $this->fileSystem->read($ambiguousSymbolFilepath);
+
+                            // This should be improved with a check for non-class-valid characters after the name.
+                            // Eventually it should be in the File object itself.
+                            $isClass = 1 === preg_match('/class '.$localName.'/', $ambiguousSymbolFileString);
+                            $isInterface = 1 === preg_match('/interface '.$localName.'/', $ambiguousSymbolFileString);
+                            $isTrait = 1 === preg_match('/trait '.$localName.'/', $ambiguousSymbolFileString);
+                        }
+
+                        if (!$isClass && !$isInterface && !$isTrait) {
+                            $this->logger->error("Skipping $newFqdnClassName because it doesn't exist.");
+                            throw new \Exception("Skipping $newFqdnClassName because it doesn't exist.");
+                        }
 
                         if ($isClass) {
                             $php .= "  class_alias(\\$newFqdnClassName::class, \\$originalFqdnClassName::class);" . PHP_EOL;
