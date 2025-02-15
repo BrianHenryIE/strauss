@@ -143,25 +143,29 @@ class Aliases
         $modifiedSymbols = $this->getModifiedSymbols($symbols);
 
         $prefixedClassmap = $this->getTargetClassmap();
-        spl_autoload_register(
-            function ($classname) use ($prefixedClassmap) {
-                if (isset($prefixedClassmap[ $classname ]) && file_exists($prefixedClassmap[ $classname ])) {
-                    // It's possible the file for the class exists, but it is extending a class that doesn't exist.
-                    // Or the file itself uses `require_once`/`include` and the file it is trying to include doesn't exist.
-                    try {
-                        require_once $prefixedClassmap[$classname];
-                    } catch (\Throwable $e) {
-                        $this->logger->debug("Failed to require_once $classname: " . $e->getMessage());
-                        // Ignore
-                    }
-                }
-            }
-        );
+//        spl_autoload_register(
+//            function ($classname) use ($prefixedClassmap) {
+//                if (isset($prefixedClassmap[ $classname ]) && file_exists($prefixedClassmap[ $classname ])) {
+//                    // It's possible the file for the class exists, but it is extending a class that doesn't exist.
+//                    // Or the file itself uses `require_once`/`include` and the file it is trying to include doesn't exist.
+//                    try {
+//                        require_once $prefixedClassmap[$classname];
+//                    } catch (\Throwable $e) {
+//                        $this->logger->debug("Failed to require_once $classname: " . $e->getMessage());
+//                        // Ignore
+//                    }
+//                }
+//            }
+//        );
 
         foreach ($modifiedSymbols as $symbol) {
             $originalSymbol = $symbol->getOriginalSymbol();
             $replacementSymbol = $symbol->getReplacement();
 
+//            if (!$symbol->getSourceFile()->isDoDelete()) {
+//                $this->logger->debug("Skipping {$originalSymbol} because it is not marked for deletion.");
+//                continue;
+//            }
 
             if ($originalSymbol === $replacementSymbol) {
                 $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
@@ -184,19 +188,24 @@ class Aliases
                     foreach ($namespaceInOriginalClassmap as $originalFqdnClassName => $absoluteFilePath) {
                         $localName = array_reverse(explode('\\', $originalFqdnClassName))[0];
 
-                        $newFqdnClassName = 0 === strpos($originalFqdnClassName, $symbol->getOriginalSymbol())
-                            ? str_replace($symbol->getOriginalSymbol(), $symbol->getReplacement(), $originalFqdnClassName)
+                        $newFqdnClassName = 0 === strpos($originalFqdnClassName, $symbol->getOriginalSymbol()) && 0 !== strpos($originalFqdnClassName, $symbol->getReplacement())
+                            ? preg_replace('/^'.$symbol->getOriginalSymbol().'/', $symbol->getReplacement(), $originalFqdnClassName)
                             : $originalFqdnClassName;
 
-                        $ambiguousSymbolFilepath = $prefixedClassmap[$newFqdnClassName];
+                        if (!isset($prefixedClassmap[$newFqdnClassName])) {
+                            $this->logger->error("errorrrr");
+                            throw new \Exception("errorrrr");
+                            continue;
+                        }
 
-                        $ambiguousSymbolFileString = $this->fileSystem->read($ambiguousSymbolFilepath);
+                        $symbolFilepath = $prefixedClassmap[$newFqdnClassName];
+                        $symbolFileString = $this->fileSystem->read($symbolFilepath);
 
                         // This should be improved with a check for non-class-valid characters after the name.
                         // Eventually it should be in the File object itself.
-                        $isClass = 1 === preg_match('/class '.$localName.'/', $ambiguousSymbolFileString);
-                        $isInterface = 1 === preg_match('/interface '.$localName.'/', $ambiguousSymbolFileString);
-                        $isTrait = 1 === preg_match('/trait '.$localName.'/', $ambiguousSymbolFileString);
+                        $isClass = 1 === preg_match('/class '.$localName.'/', $symbolFileString);
+                        $isInterface = 1 === preg_match('/interface '.$localName.'/', $symbolFileString);
+                        $isTrait = 1 === preg_match('/trait '.$localName.'/', $symbolFileString);
 
                         if (!$isClass && !$isInterface && !$isTrait) {
                             $this->logger->error("Skipping $newFqdnClassName because it doesn't exist.");
