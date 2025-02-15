@@ -140,13 +140,21 @@ class Prefixer
             $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
         }
 
+        $namespacesChangesStrings = [];
         foreach ($namespacesChanges as $originalNamespace => $namespaceSymbol) {
             if (in_array($originalNamespace, $this->config->getExcludeNamespacesFromPrefixing())) {
                 $this->logger->info("Skipping namespace: $originalNamespace");
                 continue;
             }
-
-            $contents = $this->replaceNamespace($contents, $originalNamespace, $namespaceSymbol->getReplacement());
+            $namespacesChangesStrings[$originalNamespace] = $namespaceSymbol->getReplacement();
+        }
+        // Sort by longest first
+        uksort(
+            $namespacesChangesStrings,
+            fn($a, $b) => strlen($b) - strlen($a)
+        );
+        foreach ($namespacesChangesStrings as $originalNamespace => $replacementNamespace) {
+            $contents = $this->replaceNamespace($contents, $originalNamespace, $replacementNamespace);
         }
 
         if (!is_null($this->config->getConstantsPrefix())) {
