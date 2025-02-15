@@ -17,4 +17,6 @@ interface AliasesConfigInterace
      * absolute? relative?
      */
     public function getTargetDirectory(): string;
+
+    public function isDryRun(): bool;
 }
