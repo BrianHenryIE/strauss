@@ -4,7 +4,7 @@
 
 * Add: `--info`, `--debug` and `--silent` verbosity levels
 * Add: `--dry-run` which runs with `--debug` output but does not write files
-* Add: `--aliases` `autoload_aliases.php` file for dev dependencies to load modified classes using their original fqdn
+* Add: `autoload_aliases.php` file for dev dependencies to load modified classes using their original fqdn
 * Fix: allow vendor and target directories to be in parent directory of `composer.json`
 * Dev: major refactor to use `thephpleague/Flysystem` and `elazar/flystream` for file operations
 * Dev: print diff code coverage report on PRs
