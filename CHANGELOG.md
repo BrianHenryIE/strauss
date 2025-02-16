@@ -9,7 +9,9 @@
 * Dev: major refactor to use `thephpleague/Flysystem` and `elazar/flystream` for file operations
 * Dev: print diff code coverage report on PRs
 * Dev: skip / speed-up some tests
+* Dev: improvements to tests' names and coverage reporting specificity 
 * Docs: improve installation instructions in `README.md` 
+
 ## 0.21.1 January 2025
 
 * Fix: global functions prefixed too liberally when defined as strings

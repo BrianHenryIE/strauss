@@ -27,7 +27,7 @@ class MozartIssue108Test extends IntegrationTestCase
     /**
      * WooCommerce Action Scheduler ... has no autoload key. But also needs some Mozart patches to work correctly.
      */
-    public function test_it_does_not_make_classname_replacement_inside_namespaced_file()
+    public function test_woocommerce_actionscheduler()
     {
 
         $composerJsonString = <<<'EOD'

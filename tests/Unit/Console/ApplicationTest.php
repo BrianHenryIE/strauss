@@ -1,6 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Tests\Unit\Console;
+namespace BrianHenryIE\Strauss\Console;
 
 use BrianHenryIE\Strauss\Console\Application;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;

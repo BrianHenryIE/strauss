@@ -30,7 +30,7 @@ class FileScannerIntegrationTest extends IntegrationTestCase
 
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/strauss",
+  "name": "brianhenryie/filescannerintegrationtest",
   "require": {
     "google/apiclient": "*"
   },

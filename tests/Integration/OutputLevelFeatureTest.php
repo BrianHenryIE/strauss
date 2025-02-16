@@ -45,7 +45,7 @@ EOD;
 
         $this->runStrauss($output, $params);
 
-        $this->assertEmpty($output);
+        $this->assertEmpty($output, $output);
     }
 
     public function test_normal_output_level(): void

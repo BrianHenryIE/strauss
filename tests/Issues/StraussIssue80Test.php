@@ -18,7 +18,7 @@ class StraussIssue80Test extends IntegrationTestCase
 
     /**
      */
-    public function test_namespace_keyword_on_opening_line()
+    public function test_issue_80()
     {
 
         $composerJsonString = <<<'EOD'

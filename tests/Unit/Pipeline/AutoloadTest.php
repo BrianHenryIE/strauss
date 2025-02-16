@@ -10,7 +10,7 @@ use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use Psr\Log\Test\TestLogger;
 
 /**
- * @coversDefaultClass Autoload
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Autoload
  */
 class AutoloadTest extends \PHPUnit\Framework\TestCase
 {

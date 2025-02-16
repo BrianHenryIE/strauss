@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace BrianHenryIE\Strauss\Tests\Unit\Console\Commands;
+namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;

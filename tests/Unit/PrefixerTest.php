@@ -6,12 +6,13 @@
  * @author https://github.com/stephenharris
  */
 
-namespace BrianHenryIE\Strauss\Tests\Unit;
+namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
+use BrianHenryIE\Strauss\Tests\Issues\MozartIssue93Test;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -336,7 +337,7 @@ EOD;
 
 
     /**
-     * @see ClassmapReplacerIntegrationTest::test_it_does_not_make_classname_replacement_inside_namespaced_file()
+     * @see MozartIssue93Test
      * @see https://github.com/coenjacobs/mozart/issues/93
      *
      * @author BrianHenryIE
@@ -370,7 +371,7 @@ EOD;
     }
 
     /**
-     * @see ClassmapReplacerIntegrationTest::test_it_does_not_make_classname_replacement_inside_namespaced_file()
+     * @see MozartIssue93Test
      * @see https://github.com/coenjacobs/mozart/issues/93
      *
      * @author BrianHenryIE
