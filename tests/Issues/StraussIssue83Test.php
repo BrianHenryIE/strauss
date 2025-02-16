@@ -16,7 +16,7 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 class StraussIssue83Test extends IntegrationTestCase
 {
-    public function test_namespace_keyword_on_opening_line()
+    public function test_issue_83()
     {
         $composerJsonString = <<<'EOD'
 {
