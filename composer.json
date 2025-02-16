@@ -39,7 +39,10 @@
                 "tests/Integration",
                 "tests/Unit"
             ]
-        }
+        },
+        "files": [
+            "bootstrap.php"
+        ]
     },
     "require-dev": {
         "php": "^7.4|^8.0",
