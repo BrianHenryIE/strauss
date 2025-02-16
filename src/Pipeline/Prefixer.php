@@ -141,6 +141,7 @@ class Prefixer
             $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
         }
 
+        // TODO: Move this out of the loop.
         $namespacesChangesStrings = [];
         foreach ($namespacesChanges as $originalNamespace => $namespaceSymbol) {
             if (in_array($originalNamespace, $this->config->getExcludeNamespacesFromPrefixing())) {
