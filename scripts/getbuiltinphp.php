@@ -1,6 +1,8 @@
 <?php
 /**
  * Get all built-in PHP classes, interfaces, traits.
+ *
+ * TODO: consider using JetBrains/phpstorm-stubs or PhpStan stubs to build the list of built-in classes, interfaces, traits.
  */
 
 $outputFile = __DIR__ . '/builtins.php';
