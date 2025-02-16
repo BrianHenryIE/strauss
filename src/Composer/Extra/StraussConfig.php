@@ -691,4 +691,12 @@ class StraussConfig implements
                 : filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
     }
+
+    /**
+     * Should we create the `autoload_aliases.php` file in `vendor/composer`?
+     */
+    public function isCreateAliases(): bool
+    {
+        return $this->deleteVendorPackages || $this->deleteVendorFiles;
+    }
 }

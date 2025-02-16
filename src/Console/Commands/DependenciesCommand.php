@@ -505,12 +505,14 @@ class DependenciesCommand extends Command
     }
 
     /**
-     * When namespaces are prefixed which are used by by require and require-dev dependencies,
+     * When namespaces are prefixed which are used by both require and require-dev dependencies,
      * the require-dev dependencies need class aliases specified to point to the new class names/namespaces.
      */
     protected function generateAliasesFile(): void
     {
-        // TODO: check when should we be doing this.
+        if (!$this->config->isCreateAliases()) {
+            return;
+        }
 
         $aliases = new Aliases(
             $this->config,

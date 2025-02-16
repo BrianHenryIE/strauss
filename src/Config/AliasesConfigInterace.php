@@ -19,4 +19,6 @@ interface AliasesConfigInterace
     public function getTargetDirectory(): string;
 
     public function isDryRun(): bool;
+
+    public function isCreateAliases(): bool;
 }
