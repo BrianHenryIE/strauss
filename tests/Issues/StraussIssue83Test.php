@@ -16,6 +16,7 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 class StraussIssue83Test extends IntegrationTestCase
 {
+    // Excludes everything except aws from copy.
     public function test_issue_83()
     {
         $composerJsonString = <<<'EOD'
