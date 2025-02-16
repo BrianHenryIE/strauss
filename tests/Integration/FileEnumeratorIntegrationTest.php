@@ -23,7 +23,7 @@ class FileEnumeratorIntegrationTest extends IntegrationTestCase
 
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/strauss",
+  "name": "brianhenryie/fileenumeratorintegrationtest",
   "require": {
     "google/apiclient": "*"
   },
