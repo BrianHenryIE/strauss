@@ -233,6 +233,7 @@ class FileSymbolScanner
 
         foreach ($this->excludeNamespacesFromPrefixing as $excludeNamespace) {
             if (0 === strpos($namespace, $excludeNamespace)) {
+                // TODO: Log.
                 return;
             }
         }
