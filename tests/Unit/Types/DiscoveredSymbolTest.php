@@ -1,6 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Tests\Unit\Types;
+namespace BrianHenryIE\Strauss\Types;
 
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\TestCase;
