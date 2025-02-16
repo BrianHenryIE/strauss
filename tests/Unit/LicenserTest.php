@@ -3,7 +3,7 @@
  * @author BrianHenryIE
  */
 
-namespace BrianHenryIE\Strauss\Tests\Unit;
+namespace BrianHenryIE\Strauss;
 
 use ArrayIterator;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
@@ -18,7 +18,7 @@ use Mockery;
 
 /**
  * Class LicenserTest
- * @package BrianHenryIE\Strauss\Tests\Unit
+ * @package BrianHenryIE\Strauss
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Licenser
  */
 class LicenserTest extends TestCase
