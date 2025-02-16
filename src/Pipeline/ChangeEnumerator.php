@@ -102,6 +102,7 @@ class ChangeEnumerator
                         continue 2;
                     }
                 }
+                $this->logger->debug("Namespace {$symbol->getOriginalSymbol()} not changed.");
             }
 
             if ($symbol instanceof ClassSymbol) {
