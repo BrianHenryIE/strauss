@@ -2,10 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
-use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
-use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use Mockery;
 
 /**
  * @coversNothing
