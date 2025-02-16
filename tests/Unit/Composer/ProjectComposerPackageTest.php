@@ -23,8 +23,7 @@ class ProjectComposerPackageTest extends TestCase
 
         $composer = new ProjectComposerPackage($testFile);
 
-        $input = $this->createMock(InputInterface::class);
-        $config = $composer->getStraussConfig($input);
+        $config = $composer->getStraussConfig();
 
         self::assertInstanceOf(StraussConfig::class, $config);
     }
