@@ -52,11 +52,8 @@ EOD;
 
 namespace Whatever;
 
-require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/vendor-prefixed/autoload.php';
-
-// TODO: This is temporary during development. This should be added to vendor/composer/autoload*.php by Strauss.
-require_once __DIR__ . '/autoload_renamed.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 new \Psr\Log\NullLogger();
 
@@ -72,12 +69,9 @@ EOD;
         file_put_contents($this->testsWorkingDir . '/file1.php', $file1);
 
         exec('composer install');
-        exec("cd {$this->testsWorkingDir}; composer dump-autoload");
 
         $exitCode = $this->runStrauss();
         assert($exitCode === 0);
-
-        exec("cd {$this->testsWorkingDir}; composer dump-autoload");
 
         exec('php ' . $this->testsWorkingDir . '/file1.php', $output, $return_var);
 
