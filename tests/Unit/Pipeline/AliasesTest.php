@@ -75,6 +75,7 @@ class ComposerAutoloaderInit1dbefeff499a0676e84b3a5dceac7c83
 EOD;
 
         $config = Mockery::mock(AliasesConfigInterace::class);
+        $config->shouldReceive('isDryRun')->andReturnFalse();
 
         $fileSystem = Mockery::mock(FileSystem::class);
 
