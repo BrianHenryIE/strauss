@@ -216,9 +216,9 @@ class Aliases
 
                         // This should be improved with a check for non-class-valid characters after the name.
                         // Eventually it should be in the File object itself.
-                        $isClass = 1 === preg_match('/class '.$localName.'/', $symbolFileString);
-                        $isInterface = 1 === preg_match('/interface '.$localName.'/', $symbolFileString);
-                        $isTrait = 1 === preg_match('/trait '.$localName.'/', $symbolFileString);
+                        $isClass = 1 === preg_match('/class '.$localName.'/i', $symbolFileString);
+                        $isInterface = 1 === preg_match('/interface '.$localName.'/i', $symbolFileString);
+                        $isTrait = 1 === preg_match('/trait '.$localName.'/i', $symbolFileString);
 
                         if (!$isClass && !$isInterface && !$isTrait) {
                             $isEnum = 1 === preg_match('/enum '.$localName.'/', $symbolFileString);
