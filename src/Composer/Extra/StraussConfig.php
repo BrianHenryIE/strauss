@@ -694,6 +694,13 @@ class StraussConfig implements
 
     /**
      * Should we create the `autoload_aliases.php` file in `vendor/composer`?
+     *
+     * TODO:
+     * [x] YES when we are deleting vendor packages or files
+     * [ ] NO when we are running composer install `--no-dev`
+     * [ ] SOMETIMES: see https://github.com/BrianHenryIE/strauss/issues/144
+     * [ ] Add `aliases` to `extra` in `composer.json`
+     * [ ] Add `--aliases=true` CLI option
      */
     public function isCreateAliases(): bool
     {
