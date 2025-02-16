@@ -15,9 +15,12 @@ class StraussIssue65Test extends IntegrationTestCase
 {
 
     /**
+     * This passes on 8.4 but fails on 7.4 with an infinite loop in php-parser.
      */
     public function test_aws_prefixed_functions()
     {
+        $this->markTestSkippedOnPhpVersion('8.0', "<");
+
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss-issue-65-aws-prefixed-functions",
