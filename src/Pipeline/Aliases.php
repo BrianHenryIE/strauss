@@ -267,6 +267,7 @@ EOD;
                     break;
                 case FunctionSymbol::class:
                     // TODO: Do we need to check for `void`? Or will it just be ignored?
+                    // TODO: check `function_exists()`
                     // Is it possible to inherit PHPDoc from the original function?
                     $php = <<<EOD
 function $originalSymbol(...\$args) { return \\$replacementSymbol(...\$args); }
@@ -285,6 +286,8 @@ EOD;
     /**
      * Given the PHP code string for `vendor/composer/autoload_real.php`, add a `require_once autoload_aliases.php`
      * before the `return` statement of the `getLoader()` method.
+     *
+     * Ideally we want to load after the files autoloaders
      *
      * @param string $code
      */
