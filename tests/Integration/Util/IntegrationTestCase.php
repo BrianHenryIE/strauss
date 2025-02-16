@@ -164,8 +164,8 @@ class IntegrationTestCase extends TestCase
         $testPhpVersionConstraintMatch = version_compare(phpversion(), $php_version, $operator);
         $systemPhpVersionConstraintMatch = version_compare($system_php_version, $php_version, $operator);
 
-        if ($testPhpVersionConstraintMatch || $systemPhpVersionConstraintMatch) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.2 compatible. Running tests under PHP " . phpversion() . ', ' . $system_php_version);
+        if (! ($testPhpVersionConstraintMatch && $systemPhpVersionConstraintMatch)) {
+            $this->markTestSkipped("Package specified for test requires PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version);
         }
     }
 }
