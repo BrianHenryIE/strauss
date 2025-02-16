@@ -221,6 +221,14 @@ class Aliases
                         $isTrait = 1 === preg_match('/trait '.$localName.'/', $symbolFileString);
 
                         if (!$isClass && !$isInterface && !$isTrait) {
+                            $isEnum = 1 === preg_match('/enum '.$localName.'/', $symbolFileString);
+
+                            if ($isEnum) {
+                                $this->logger->warning("Skipping $newFqdnClassName – enum aliasing not yet implemented.");
+                                // TODO: enums
+                                continue;
+                            }
+
                             $this->logger->error("Skipping $newFqdnClassName because it doesn't exist.");
                             throw new \Exception("Skipping $newFqdnClassName because it doesn't exist.");
                         }
