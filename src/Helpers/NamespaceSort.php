@@ -2,7 +2,8 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-class NamespaceSort {
+class NamespaceSort
+{
 
     const LONGEST = false;
     const SHORTEST = true;
@@ -21,7 +22,8 @@ class NamespaceSort {
             : $this->sort($b, $a);
     }
 
-    protected function sort($a, $b) {
+    protected function sort($a, $b)
+    {
 
         $aParts = explode('\\', $a);
         $bParts = explode('\\', $b);
