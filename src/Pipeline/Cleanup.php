@@ -11,6 +11,7 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\AutoloadFiles;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\AutoloadStatic;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use Composer\Json\JsonFile;
 use League\Flysystem\FilesystemException;
@@ -88,6 +89,13 @@ class Cleanup
             $this->filesystem,
             $this->logger
         ))->cleanupInstalledJson();
+
+        (new AutoloadStatic(
+            $this->workingDir,
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        ))->cleanupAutoloadStatic();
     }
 
     /**
