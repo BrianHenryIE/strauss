@@ -226,7 +226,7 @@ class Aliases
                             /** @var File $b */
                             $b = array_pop($a); // There's gotta be at least one.
 
-                            throw new \Exception("errorrrr " . ' ' . basename($b->getAbsoluteTargetPath()) . ' ' . $originalFqdnClassName . ' ' . $newFqdnClassName . PHP_EOL. PHP_EOL);
+                            throw new \Exception("errorrrr " . ' ' . basename($b->getAbsoluteTargetPath()) . ' ' . $originalFqdnClassName . ' ' . $newFqdnClassName . PHP_EOL . PHP_EOL);
                         }
 
                         $symbolFilepath = $targetDirClasssmap[$newFqdnClassName] ?? $sourceDirClassmap[$originalFqdnClassName];
@@ -234,12 +234,12 @@ class Aliases
 
                         // This should be improved with a check for non-class-valid characters after the name.
                         // Eventually it should be in the File object itself.
-                        $isClass = 1 === preg_match('/class '.$localName.'/i', $symbolFileString);
-                        $isInterface = 1 === preg_match('/interface '.$localName.'/i', $symbolFileString);
-                        $isTrait = 1 === preg_match('/trait '.$localName.'/i', $symbolFileString);
+                        $isClass = 1 === preg_match('/class ' . $localName . '/i', $symbolFileString);
+                        $isInterface = 1 === preg_match('/interface ' . $localName . '/i', $symbolFileString);
+                        $isTrait = 1 === preg_match('/trait ' . $localName . '/i', $symbolFileString);
 
                         if (!$isClass && !$isInterface && !$isTrait) {
-                            $isEnum = 1 === preg_match('/enum '.$localName.'/', $symbolFileString);
+                            $isEnum = 1 === preg_match('/enum ' . $localName . '/', $symbolFileString);
 
                             if ($isEnum) {
                                 $this->logger->warning("Skipping $newFqdnClassName – enum aliasing not yet implemented.");
@@ -300,6 +300,7 @@ EOD;
 
         return $autoloadAliasesFileString;
     }
+
 
     /**
      * Given the PHP code string for `vendor/composer/autoload_real.php`, add a `require_once autoload_aliases.php`
