@@ -96,7 +96,12 @@ class Aliases
                 )
             );
 
-         return ClassMapGenerator::createMap($paths);
+        $classMap = ClassMapGenerator::createMap($paths);
+
+        // To make it easier when viewing in xdebug.
+        uksort($classMap, new NamespaceSort());
+
+         return $classMap;
     }
 
     /**
@@ -160,8 +165,6 @@ class Aliases
 
         $targetDirClasssmap = $this->getTargetClassmap();
 
-        // To make it easier when viewing in xdebug.
-        uksort($targetDirClasssmap, new NamespaceSort());
 
         foreach ($modifiedSymbols as $symbol) {
             $originalSymbol = $symbol->getOriginalSymbol();
