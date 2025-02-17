@@ -8,6 +8,9 @@ use League\Flysystem\Config;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use Psr\Log\NullLogger;
 
+/**
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Cleanup\AutoloadStatic
+ */
 class AutoloadStaticTest extends TestCase
 {
     public function test_add_autoload_static_file_to_true_composer(): void
@@ -71,7 +74,7 @@ EOD;
         $filesystem->write('vendor/composer/autoload_static.php', $phpString);
 
         $config = \Mockery::mock(\BrianHenryIE\Strauss\Config\CleanupConfigInterface::class);
-        $config->expects()->getVendorDirectory()->andReturns('vendor');
+        $config->expects()->getVendorDirectory()->andReturns('vendor/');
 
         $sut = new AutoloadStatic(
             '/',
