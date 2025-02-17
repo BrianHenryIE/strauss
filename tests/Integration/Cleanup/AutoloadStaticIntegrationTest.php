@@ -8,8 +8,6 @@ class AutoloadStaticIntegrationTest extends IntegrationTestCase
 {
     public function tearDown(): void
     {
-        parent::tearDown();
-
         /**
          * Smoke test.
          *
@@ -19,6 +17,8 @@ class AutoloadStaticIntegrationTest extends IntegrationTestCase
         $output = implode(PHP_EOL, $output);
 
         $this->assertEmpty($output, $output);
+
+        parent::tearDown();
     }
 
     public function test_happy_path(): void
@@ -54,6 +54,38 @@ EOD;
 
         $this->assertStringContainsString('autoload_aliases.php', $autoloadStaticPhpStringAfter);
         $this->assertStringNotContainsString('autoload_aliases.php', $autoloadStaticPhpStringAfter);
+    }
 
+    /**
+     * @coversNothing
+     */
+    public function testFilesAutoloader(): void
+    {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/autoloadstaticintegrationtest",
+  "require": {
+    "ralouphie/getallheaders": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "delete_vendor_packages": true
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $this->runStrauss();
+
+        $autoloadStaticPhpStringAfter = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_static.php');
+
+        $this->assertStringNotContainsString('ralouphie/getallheaders/src/getallheaders.php', $autoloadStaticPhpStringAfter);
     }
 }
