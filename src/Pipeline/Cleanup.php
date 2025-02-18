@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\AutoloadFiles;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\AutoloadStatic;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Json\JsonFile;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
@@ -66,7 +67,7 @@ class Cleanup
      *
      * @throws FilesystemException
      */
-    public function cleanup(array $files): void
+    public function cleanup(array $files, array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
             $this->logger->info('No cleanup required.');
@@ -88,7 +89,7 @@ class Cleanup
             $this->config,
             $this->filesystem,
             $this->logger
-        ))->cleanupInstalledJson();
+        ))->cleanupInstalledJson($flatDependencyTree, $discoveredSymbols);
 
         (new AutoloadStatic(
             $this->workingDir,
@@ -152,14 +153,14 @@ class Cleanup
             }
         }
 
-        foreach ($this->filesystem->listContents($this->getAbsoluteVendorDir()) as $dirEntry) {
-            if ($dirEntry->isDir() && $this->dirIsEmpty($dirEntry->path()) && !is_link($dirEntry->path())) {
-                $this->logger->info('Deleting empty directory ' . str_replace($this->workingDir, '', $dirEntry->path()));
-                $this->filesystem->deleteDirectory($dirEntry->path());
-            } else {
-                $this->logger->debug('Skipping non-empty directory ' . str_replace($this->workingDir, '', $dirEntry->path()));
-            }
-        }
+//        foreach ($this->filesystem->listContents($this->getAbsoluteVendorDir()) as $dirEntry) {
+//            if ($dirEntry->isDir() && $this->dirIsEmpty($dirEntry->path()) && !is_link($dirEntry->path())) {
+//                $this->logger->info('Deleting empty directory ' . str_replace($this->workingDir, '', $dirEntry->path()));
+//                $this->filesystem->deleteDirectory($dirEntry->path());
+//            } else {
+//                $this->logger->debug('Skipping non-empty directory ' . str_replace($this->workingDir, '', $dirEntry->path()));
+//            }
+//        }
     }
 
     // TODO: Move to FileSystem class.
@@ -215,6 +216,10 @@ class Cleanup
                 } else {
                     unlink($symlinkPath);
                 }
+            }
+            if ($this->dirIsEmpty(dirname($package->getPackageAbsolutePath()))) {
+                $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));
+                $this->filesystem->deleteDirectory(dirname($package->getPackageAbsolutePath()));
             }
         }
     }
