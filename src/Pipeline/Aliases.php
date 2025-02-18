@@ -340,7 +340,20 @@ EOD;
             public function leaveNode(Node $node)
             {
                 if (get_class($node) === \PhpParser\Node\Stmt\Return_::class) {
-                    $requireOnce = new Node\Stmt\Expression(
+                    // require_once __DIR__ . '/../../vendor-prefixed/autoload.php';
+                    // TODO __DIR__ ('./` is NOT enough)
+                    $requireOnceStraussAutoload = new Node\Stmt\Expression(
+                        new Node\Expr\Include_(
+                            new \PhpParser\Node\Expr\BinaryOp\Concat(
+                                new \PhpParser\Node\Scalar\MagicConst\Dir(),
+                                // TODO: obviously update to match the config.
+                                new Node\Scalar\String_('/../../vendor-prefixed/autoload.php')
+                            ),
+                            Node\Expr\Include_::TYPE_REQUIRE_ONCE
+                        )
+                    );
+
+                    $requireOnceAutoloadAliases = new Node\Stmt\Expression(
                         new Node\Expr\Include_(
                             new Node\Scalar\String_('autoload_aliases.php'),
                             Node\Expr\Include_::TYPE_REQUIRE_ONCE
@@ -348,13 +361,14 @@ EOD;
                     );
 //                  $requireOnce->setAttribute('comments', [new \PhpParser\Comment('// Include aliases file. This line added by Strauss')]);
                     // Add a blank line. Probably not the correct way to do this.
-                    $requireOnce->setAttribute('comments', [new \PhpParser\Comment('')]);
+                    $requireOnceAutoloadAliases->setAttribute('comments', [new \PhpParser\Comment('')]);
 //                  $requireOnce->setDocComment(new \PhpParser\Comment\Doc('/** @see  */'));
                     // Add a blank line. Probably not the correct way to do this.
                     $node->setAttribute('comments', [new \PhpParser\Comment('')]);
 
                     return [
-                        $requireOnce,
+                        $requireOnceStraussAutoload,
+                        $requireOnceAutoloadAliases,
                         $node
                     ];
                 }
