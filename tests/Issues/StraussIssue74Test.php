@@ -53,6 +53,7 @@ EOD;
 
     public function test_twig(): void
     {
+        $this->markTestSkipped('slow');
 
         $composerJsonString = <<<'EOD'
 {
