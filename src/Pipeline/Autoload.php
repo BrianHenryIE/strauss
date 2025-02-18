@@ -80,12 +80,12 @@ class Autoload
     {
         // Use native Composer's `autoload.php` etc. when the target directory is the vendor directory.
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            $this->logger->debug('Strauss is not generating autoload.php because the target directory is the vendor directory.');
+            $this->logger->debug('Not generating autoload.php because the target directory is the vendor directory.');
             return;
         }
 
         if (! $this->config->isClassmapOutput()) {
-            $this->logger->debug('Strauss is not generating autoload.php because classmap output is disabled.');
+            $this->logger->debug('Not generating autoload.php because classmap output is disabled.');
             return;
         }
 
