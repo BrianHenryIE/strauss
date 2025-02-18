@@ -16,17 +16,18 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     public static function assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $actual, string $message = ''): void
     {
-        if (is_string($expected) && is_string($actual)) {
-            $expected = str_replace("\r\n", "\n", $expected);
-            $actual = str_replace("\r\n", "\n", $actual);
+        self::assertEquals(
+            self::stripWhitespaceAndBlankLines($expected),
+            self::stripWhitespaceAndBlankLines($actual),
+            $message
+        );
+    }
 
-            $expected = preg_replace('/^\s*/m', '', $expected);
-            $actual = preg_replace('/^\s*/m', '', $actual);
-
-            $expected = preg_replace('/\n\s*\n/', "\n", $expected);
-            $actual = preg_replace('/\n\s*\n/', "\n", $actual);
-        }
-
-        self::assertEquals($expected, $actual, $message);
+    protected static function stripWhitespaceAndBlankLines(string $string): string
+    {
+        $string = str_replace("\r\n", "\n", $string);
+        $string = preg_replace('/^\s*/m', '', $string);
+        $string = preg_replace('/\n\s*\n/', "\n", $string);
+        return $string;
     }
 }
