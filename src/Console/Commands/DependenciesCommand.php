@@ -514,6 +514,8 @@ class DependenciesCommand extends Command
             return;
         }
 
+        $this->logger->info('Generating aliases file...');
+
         $aliases = new Aliases(
             $this->config,
             $this->workingDir,
@@ -546,6 +548,6 @@ class DependenciesCommand extends Command
         // TODO: For files autoloaders, delete the contents of the file, not the file itself.
 
         // This will check the config to check should it delete or not.
-        $cleanup->cleanup($this->discoveredFiles->getFiles());
+        $cleanup->cleanup($this->discoveredFiles->getFiles(), $this->flatDependencyTree, $this->discoveredSymbols);
     }
 }
