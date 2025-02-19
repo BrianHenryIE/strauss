@@ -251,10 +251,12 @@ class InstalledJson
         return $installedJsonArray;
     }
 
+    /**
+     * @param array $flatDependencyTree
+     * @param DiscoveredSymbols $discoveredSymbols
+     */
     public function createAndCleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
-        $this->copyInstalledJson();
-
         $this->copyInstalledJson();
 
         $vendorDir = $this->getTargetDirectory();
