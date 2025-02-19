@@ -48,9 +48,6 @@ class MozartIssue66Test extends IntegrationTestCase
     }
   },
   "autoload": {
-    "classmap": [
-      "lib/Mozart/classmaps/"
-    ],
     "psr-4": {
         "MarkJaquith\\MozartFileAutoloaderBug\\Mozart\\": "lib/Mozart/",
         "MarkJaquith\\MozartFileAutoloaderBug\\": "app/"
