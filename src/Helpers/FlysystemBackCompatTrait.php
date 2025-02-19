@@ -2,6 +2,8 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use Elazar\Flystream\PassThruPathNormalizer;
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\WhitespacePathNormalizer;
 
@@ -20,6 +22,7 @@ trait FlysystemBackCompatTrait
         }
 
         $normalizer = new WhitespacePathNormalizer();
+        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
         $location = $normalizer->normalizePath($location);
 
         $parentDirectoryContents = $this->listContents(dirname($location));
