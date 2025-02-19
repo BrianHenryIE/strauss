@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
 use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
+use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
@@ -19,6 +20,7 @@ use Symfony\Component\Console\Input\InputInterface;
 
 class StraussConfig implements
     AliasesConfigInterace,
+    AutoloadConfigInterace,
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     FileSymbolScannerConfigInterface,
