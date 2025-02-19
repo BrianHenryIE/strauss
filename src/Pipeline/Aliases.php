@@ -51,9 +51,34 @@ class Aliases
         $this->setLogger($logger ?? new NullLogger());
     }
 
+    public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
+    {
+        $outputFilepath = $this->getAliasFilepath();
+
+        $fileString = $this->buildStringOfAliases($symbols, basename($outputFilepath));
+
+        if (empty($fileString)) {
+            // Log?
+            return;
+        }
+
+        $this->fileSystem->write($outputFilepath, $fileString);
+
+        return;
+    }
+
+    protected function getVendorDirectory(): string {
+        $vendorAbsoluteDirectory = $this->workingDir . $this->config->getVendorDirectory();
+        return $vendorAbsoluteDirectory;
+    }
+
+    protected function getTargetDirectory(): string {
+        $vendorAbsoluteDirectory = $this->workingDir . $this->config->getTargetDirectory();
+        return $vendorAbsoluteDirectory;
+    }
+
     protected function getVendorClassmap(): array
     {
-        $vendorAbsoluteDirectory = $this->workingDir . $this->config->getVendorDirectory();
         $paths = array_map(
             function ($file) {
                 return $this->config->isDryRun()
@@ -61,7 +86,7 @@ class Aliases
                     : new \SplFileInfo('/'.$file->path());
             },
             array_filter(
-                $this->fileSystem->listContents($vendorAbsoluteDirectory, true)->toArray(),
+                $this->fileSystem->listContents($this->getVendorDirectory(), true)->toArray(),
                 fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
             )
         );
@@ -84,7 +109,7 @@ class Aliases
                         : new \SplFileInfo('/'.$file->path());
                 },
                 array_filter(
-                    $this->fileSystem->listContents($this->workingDir . $this->config->getTargetDirectory(), \League\Flysystem\FilesystemReader::LIST_DEEP)->toArray(),
+                    $this->fileSystem->listContents($this->getTargetDirectory(), \League\Flysystem\FilesystemReader::LIST_DEEP)->toArray(),
                     fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
                 )
             );
@@ -94,7 +119,7 @@ class Aliases
         // To make it easier when viewing in xdebug.
         uksort($classMap, new NamespaceSort());
 
-         return $classMap;
+        return $classMap;
     }
 
     /**
@@ -103,27 +128,9 @@ class Aliases
     protected function getAliasFilepath(): string
     {
         return  sprintf(
-            '%s%scomposer/autoload_aliases.php',
-            $this->workingDir,
-            $this->config->getVendorDirectory()
+            '%scomposer/autoload_aliases.php',
+            $this->getVendorDirectory()
         );
-    }
-
-    public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
-    {
-
-        $outputFilepath = $this->getAliasFilepath();
-
-        $fileString = $this->buildStringOfAliases($symbols, basename($outputFilepath));
-
-        if (empty($fileString)) {
-            // Log?
-            return;
-        }
-
-        $this->fileSystem->write($outputFilepath, $fileString);
-
-        return;
     }
 
     /**
@@ -164,7 +171,7 @@ class Aliases
         return $autoloadAliasesFileString;
     }
 
-    public function appendAliasString(array $modifiedSymbols, array $sourceDirClassmap, array $targetDirClasssmap, string $autoloadAliasesFileString): string
+    protected function appendAliasString(array $modifiedSymbols, array $sourceDirClassmap, array $targetDirClasssmap, string $autoloadAliasesFileString): string
     {
         // TODO: `class_alias()` doesn't work in cases where the class extends an unavailable class, e.g. WP_List_Table
 
