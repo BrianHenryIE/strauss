@@ -503,7 +503,7 @@ class DependenciesCommand extends Command
             $this->logger
         );
 
-        $classmap->generate();
+        $classmap->generate($this->flatDependencyTree, $this->discoveredSymbols);
     }
 
     /**

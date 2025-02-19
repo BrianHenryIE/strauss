@@ -61,7 +61,11 @@ class DumpAutoload
         $composer = Factory::create(new NullIO(), $workingDir . 'composer.json');
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
-        $config = $composer->getConfig();
+
+        /**
+         * Cannot use `$composer->getConfig()`, need to create a new one so the vendor-dir is correct.
+         */
+        $config = new \Composer\Config(false, $workingDir);
 
         $generator = $composer->getAutoloadGenerator();
         $generator->setDryRun($this->config->isDryRun());
@@ -76,7 +80,7 @@ class DumpAutoload
         $generator->setDevMode(false);
 
         // If delete vendor files is false, we shouldn't be editing this. Maybe we should create a second one.
-        $localRepo = new InstalledFilesystemRepository(new JsonFile($workingDir . '/vendor/composer/installed.json'));
+        $localRepo = new InstalledFilesystemRepository(new JsonFile($workingDir . $relativeTargetDir . 'composer/installed.json'));
 
         // This will output the autoload_static.php etc files to vendor-prefixed/composer
         $generator->dump(

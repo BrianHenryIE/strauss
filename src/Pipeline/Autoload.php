@@ -12,6 +12,8 @@ use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -77,7 +79,7 @@ class Autoload
         $this->logger->debug('Using target directory: ' . $this->absoluteTargetDirectory);
     }
 
-    public function generate(): void
+    public function generate(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         // Use native Composer's `autoload.php` etc. when the target directory is the vendor directory.
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
@@ -90,12 +92,24 @@ class Autoload
             return;
         }
 
+        $this->logger->info('Generating autoload files for ' . $this->config->getTargetDirectory());
+
+        $installedJson = new InstalledJson(
+            $this->workingDir,
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+        $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+
         (new DumpAutoload(
             $this->workingDir,
             $this->config,
             $this->filesystem,
             $this->logger
         ))->generatedPrefixedAutoloader($this->workingDir, $this->config->getTargetDirectory());
+
+        // TODO: Only sometimes.
 
         $vendorComposerAutoload = new VendorComposerAutoload($this->config, $this->workingDir, $this->filesystem, $this->logger);
         $vendorComposerAutoload->addAliasesFileToComposer();
