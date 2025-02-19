@@ -36,7 +36,7 @@ class AliasesFeatureTest extends IntegrationTestCase
   "extra": {
     "strauss": {
       "namespace_prefix": "BrianHenryIE\\Strauss\\",
-      "delete_vendor_packages": true
+      "delete_vendor_files": true
     }
   }
 }
@@ -50,15 +50,21 @@ EOD;
 
         $this->runStrauss();
 
-        $autoloadRealPhpString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
+        $autoloadPhpString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
 
-        $this->assertStringContainsString('autoload_aliases.php', $autoloadRealPhpString);
+        $this->assertStringContainsString('autoload_aliases.php', $autoloadPhpString);
+
+        exec('composer dump-autoload');
 
         /**
+         * `php -r "require_once 'vendor-prefixed/autoload.php'; require_once 'vendor/composer/autoload_aliases.php'; require_once 'vendor/autoload.php'; new \BrianHenryIE\ColorLogger\ColorLogger();"`
          * `php -r "require_once 'vendor/autoload.php'; new \BrianHenryIE\ColorLogger\ColorLogger();"`
          * `cat vendor/composer/autoload_aliases.php`
          */
-        exec('php -r "require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
+        // TODO: This shows that the alias file does work.
+        exec('php -r "require_once \'vendor-prefixed/autoload.php\'; require_once \'vendor/composer/autoload_aliases.php\';  require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
+        // TODO: This would show that running `composer dump-autoload` doesn't break the loading of the alias file.
+//        exec('php -r "require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
         $output = implode(PHP_EOL, $output);
 
         $this->assertEmpty($output, $output);
