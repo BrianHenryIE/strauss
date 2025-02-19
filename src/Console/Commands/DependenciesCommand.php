@@ -49,7 +49,7 @@ class DependenciesCommand extends Command
 
     protected DependenciesEnumerator $dependenciesEnumerator;
 
-    /** @var ComposerPackage[] */
+    /** @var array<string,ComposerPackage> */
     protected array $flatDependencyTree = [];
 
     /**
@@ -229,12 +229,14 @@ class DependenciesCommand extends Command
 
             $this->addLicenses();
 
-            $this->generateAutoloader();
 
             // After file have been deleted, we may need aliases.
             $this->generateAliasesFile();
 
             $this->cleanUp();
+
+            // This runs after cleanup because cleanup edits installed.json
+            $this->generateAutoloader();
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
