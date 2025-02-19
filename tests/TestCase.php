@@ -33,7 +33,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $string = str_replace("\r\n", "\n", $string);
         $string = preg_replace('/^\s*/m', '', $string);
         $string = preg_replace('/\n\s*\n/', "\n", $string);
-        return $string;
+        return trim($string);
     }
 
     protected function getFileSystem(): FileSystem
