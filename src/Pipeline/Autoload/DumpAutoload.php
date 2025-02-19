@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Composer\Autoload\AutoloadGenerator;
 use Composer\ClassMapGenerator\ClassMapGenerator;
 use Composer\Config;
 use Composer\Factory;
@@ -79,12 +80,25 @@ class DumpAutoload
             $installationManager,
             'composer',
             $optimize,
-            null,
+            $this->getSuffix(),
             $composer->getLocker(),
             false, // $input->getOption('strict-ambiguous')
         );
 
         // Tests fail if this is absent.
         Config::$defaultConfig['vendor-dir'] = $defaultVendorDirBefore;
+    }
+
+    /**
+     * If there is an existing autoloader, it will use the same suffix. If there is not, it pulls the suffix from
+     * {Composer::getLocker()} and clashes with the existing autoloader.
+     *
+     * @see AutoloadGenerator::dump() 412:431
+     */
+    protected function getSuffix(): ?string
+    {
+        return !$this->filesystem->fileExists($this->config->getTargetDirectory() . 'autoload.php')
+            ? bin2hex(random_bytes(16))
+            : null;
     }
 }
