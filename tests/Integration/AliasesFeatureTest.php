@@ -50,15 +50,15 @@ EOD;
 
         $this->runStrauss();
 
-        $autoloadRealPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_real.php');
+        $autoloadRealPhpString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
 
         $this->assertStringContainsString('autoload_aliases.php', $autoloadRealPhpString);
 
         /**
-         * `php -r "require_once 'vendor-prefixed/autoload.php'; require_once 'vendor/autoload.php'; new \BrianHenryIE\ColorLogger\ColorLogger();"`
+         * `php -r "require_once 'vendor/autoload.php'; new \BrianHenryIE\ColorLogger\ColorLogger();"`
          * `cat vendor/composer/autoload_aliases.php`
          */
-        exec('php -r "require_once \'vendor-prefixed/autoload.php\'; require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
+        exec('php -r "require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
         $output = implode(PHP_EOL, $output);
 
         $this->assertEmpty($output, $output);
