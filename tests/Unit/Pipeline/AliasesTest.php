@@ -175,5 +175,4 @@ spl_autoload_register( 'autoloadAliases' );
 EOD;
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
-
 }

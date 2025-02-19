@@ -60,8 +60,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
 
-        self::assertNotEquals(1, $result);
+        self::assertEquals(0, $exitCode, $output);
     }
 }

@@ -48,9 +48,8 @@ EOD;
         /**
          * @see DependenciesCommand::execute()
          */
-        $exitCode = $this->runStrauss();
-
-        $this->assertEquals(0, $exitCode);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $phpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');

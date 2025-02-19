@@ -52,7 +52,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir .'vendor-prefixed/pear/pear_exception/PEAR/Exception.php');
 
@@ -93,7 +94,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir .'vendor-prefixed/afragen/wp-dependency-installer/wp-dependency-installer.php');
 

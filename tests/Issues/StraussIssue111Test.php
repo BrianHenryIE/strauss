@@ -37,7 +37,8 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/stripe/stripe-php/lib/Payout.php');
 

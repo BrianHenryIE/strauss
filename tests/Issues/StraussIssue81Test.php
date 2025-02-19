@@ -70,8 +70,8 @@ EOD;
 
         exec('composer install');
 
-        $exitCode = $this->runStrauss();
-        assert($exitCode === 0);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         exec('php ' . $this->testsWorkingDir . '/file1.php', $output, $return_var);
 
@@ -109,9 +109,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss($output, '--delete_vendor_packages=true');
-
-        self::assertEquals(0, $result);
+        $exitCode = $this->runStrauss($output, '--delete_vendor_packages=true');
+        assert($exitCode === 0, $output);
 
         self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }
@@ -141,9 +140,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss($output, '--delete_vendor_packages');
-
-        self::assertEquals(0, $result);
+        $exitCode = $this->runStrauss($output, '--delete_vendor_packages');
+        assert($exitCode === 0, $output);
 
         self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }
@@ -173,9 +171,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss($output, '--delete_vendor_packages=false');
-
-        self::assertEquals(0, $result);
+        $exitCode = $this->runStrauss($output, '--delete_vendor_packages=false');
+        assert($exitCode === 0, $output);
 
         self::assertFileExists($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }
@@ -205,9 +202,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss($output, '--deleteVendorPackages=true');
-
-        self::assertEquals(0, $result);
+        $exitCode = $this->runStrauss($output, '--deleteVendorPackages=true');
+        assert($exitCode === 0, $output);
 
         self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }
@@ -236,9 +232,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss($output, '--deleteVendorPackages');
-
-        self::assertEquals(0, $result);
+        $exitCode = $this->runStrauss($output, '--deleteVendorPackages');
+        assert($exitCode === 0, $output);
 
         self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }
@@ -268,9 +263,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss($output, '--deleteVendorPackages=false');
-
-        self::assertEquals(0, $result);
+        $exitCode = $this->runStrauss($output, '--deleteVendorPackages=false');
+        assert($exitCode === 0, $output);
 
         self::assertFileExists($this->testsWorkingDir . 'vendor/psr/log/composer.json');
     }

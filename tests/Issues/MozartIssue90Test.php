@@ -49,9 +49,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
-
-        self::assertEqualsRN(0, $result);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         // This test would only fail on Windows?
         self::assertDirectoryDoesNotExist($this->testsWorkingDir .'strauss/iio/libmergepdf/vendor/iio/libmergepdf/tcpdi');

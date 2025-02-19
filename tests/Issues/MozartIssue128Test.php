@@ -48,9 +48,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
-
-        assert(0 === $result);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $mpdf_php = file_get_contents($this->testsWorkingDir .'strauss/setasign/fpdi/src/FpdfTpl.php');
 

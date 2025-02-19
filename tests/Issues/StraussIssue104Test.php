@@ -37,7 +37,8 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $result = substr(sprintf('%o', fileperms($this->testsWorkingDir . 'vendor-prefixed')), -4);
 
