@@ -1,20 +1,33 @@
 <?php
 /**
- * Currently deletes autoload keys where the files no longer exist at those paths.
+ * Changes "install-path" to point to vendor-prefixed target directory.
  *
- * Should it change "install-path" to the new path?
+ * TODO: create new vendor-prefixed/composer/installed.json file with copied packages
+ * TODO: when delete is enabled, update package paths in the original vendor/composer/installed.json (~done)
+ * TODO: when delete is enabled, remove dead entries in the original vendor/composer/installed.json
+ *
+ * @see vendor/composer/installed.json
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use Composer\Config;
+use Composer\Factory;
+use Composer\IO\NullIO;
 use Composer\Json\JsonFile;
+use Composer\Repository\InstalledFilesystemRepository;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
+/**
+ * @phpstan-type InstalledJsonPackageArray = array{name:string, version:string, version_normalized:string, source:array, dist:array, require:array, time:string, type:string, installation-source:string, autoload:array, notification-url:string, license:array, authors:array, description:string, homepage:string, keywords:array, support:array, install-path:string}
+ * @phpstan-type InstalledJson array{packages:array<InstalledJsonPackageArray>, dev:bool, dev-package-names:array<string>}
+ */
 class InstalledJson
 {
     use LoggerAwareTrait;
@@ -43,30 +56,43 @@ class InstalledJson
             : $this->workingDir . $this->config->getVendorDirectory();
     }
 
-    /**
-     * Composer creates a file `vendor/composer/installed.json` which is uses when running `composer dump-autoload`.
-     * When `delete-vendor-packages` or `delete-vendor-files` is true, files and directories which have been deleted
-     * must also be removed from `installed.json` or Composer will throw an error.
-     *
-     * TODO: {@see AutoloadFiles} might be redundant if we run this function and then run `composer dump-autoload`.
-     */
-    public function cleanupInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    protected function getTargetDirectory(): string
     {
-        $this->logger->info('Cleaning up vendor/composer/installed.json');
+        return $this->config->isDryRun()
+            ? 'mem:/' . $this->workingDir . $this->config->getTargetDirectory()
+            : $this->workingDir . $this->config->getTargetDirectory();
+    }
 
+    protected function copyInstalledJson(): void
+    {
+        $this->logger->info('Copying vendor/composer/installed.json to vendor-prefixed/composer/installed.json');
+
+        $this->filesystem->copy(
+            $this->getVendorDirectory() . 'composer/installed.json',
+            $this->getTargetDirectory() . 'composer/installed.json'
+        );
+    }
+
+    protected function getJsonFile(string $vendorDir): JsonFile
+    {
         $installedJsonFile = new JsonFile(
             sprintf(
-                '%s/composer/installed.json',
-                $this->getVendorDirectory()
+                '%scomposer/installed.json',
+                $vendorDir
             )
         );
         if (!$installedJsonFile->exists()) {
-            $this->logger->warning('Expected vendor/composer/installed.json does not exist.');
-            return;
+            $this->logger->error('Expected vendor/composer/installed.json does not exist.');
+            throw new \Exception('Expected vendor/composer/installed.json does not exist.');
         }
-        $installedJsonArray = $installedJsonFile->read();
 
-        $discoveredNamespaces = $discoveredSymbols->getNamespaces();
+        $this->logger->info('Loaded installed.json file: ' . $installedJsonFile->getPath());
+
+        return $installedJsonFile;
+    }
+
+    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree): array
+    {
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
             // Skip packages that were never copied in the first place.
@@ -79,20 +105,52 @@ class InstalledJson
             // `composer/` is here because the install-path is relative to the `vendor/composer` directory.
             $packageDir = $this->getVendorDirectory() . 'composer/' . $package['install-path'] . '/';
             if (!$this->filesystem->directoryExists($packageDir)) {
-//                $package['install-path'] = '../../' . $this->config->getTargetDirectory() . $package['install-path'];
+                $newInstallPath = $this->getTargetDirectory() . str_replace('../', '', $package['install-path']);
 
-                $installedJsonArray['packages'][$key]['install-path'] = str_replace(
-                    '../',
-                    '/../../' . $this->config->getTargetDirectory(),
-                    $package['install-path']
+                if (!$this->filesystem->directoryExists($newInstallPath)) {
+                    $this->logger->warning('Package directory unexpectedly does not exist: ' . $newInstallPath);
+                    continue;
+                }
+
+                $newRelativePath = $this->filesystem->getRelativePath(
+                    $this->getVendorDirectory() . 'composer/',
+                    $newInstallPath
                 );
-//                $this->logger->info('Package directory does not exist: ' . $packageDir . ', removing autoload key.');
-//                unset($installedJsonArray['packages'][$key]['autoload']);
-//                continue;
-            }
 
+                $installedJsonArray['packages'][$key]['install-path'] = $newRelativePath;
+            }
+        }
+        return $installedJsonArray;
+    }
+
+
+    /**
+     * Remove packages from `installed.json` whose target directory does not exist
+     *
+     * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
+     */
+    protected function removeMissingPackages(array $installedJsonArray, string $vendorDir): array
+    {
+        foreach ($installedJsonArray['packages'] as $key => $package) {
+            $path = $vendorDir . 'composer/' . $package['install-path'];
+            $pathExists = $this->filesystem->directoryExists($path);
+            if (!$pathExists) {
+                $this->logger->info('Removing package from installed.json: ' . $package['name']);
+                unset($installedJsonArray['packages'][$key]);
+            }
+        }
+        return $installedJsonArray;
+    }
+
+
+    protected function updateNamespaces(array $installedJsonArray, DiscoveredSymbols $discoveredSymbols): array
+    {
+        $discoveredNamespaces = $discoveredSymbols->getNamespaces();
+
+        foreach ($installedJsonArray['packages'] as $key => $package) {
             if (!isset($package['autoload'])) {
-                $this->logger->debug('Package has no autoload key: ' . $package['name']);
+                // woocommerce/action-scheduler
+                $this->logger->debug('Package has no autoload key: ' . $package['name'] . ' ' . $package['type']);
                 continue;
             }
 
@@ -107,22 +165,34 @@ class InstalledJson
                          * * {"psr-4":{"Symfony\\Polyfill\\Mbstring\\":""}}
                          */
                         foreach ($autoload_key[$type] as $originalNamespace => $packageRelativeDirectory) {
-                            // TODO replace $originalNamespace with updated namespace
-                            // $installedJsonArray['packages'][$key]['autoload'][$type][$original]
+                            // Replace $originalNamespace with updated namespace
 
-                            // space added here because the `\\` was causing `</info>` to be printed.
-                            $this->logger->info('Checking PSR-4 namespace: ' . $originalNamespace . ' ');
+                            // Just for dev – find a package like this and write a test for it.
+                            if (empty($originalNamespace)) {
+                                // nesbot/carbon
+                                continue;
+                                throw new \Exception($package['name']);
+                            }
 
-                            $trimmedOrigianlNamespace = trim($originalNamespace, '\\');
-                            if (isset($discoveredNamespaces[$trimmedOrigianlNamespace])) {
-                                $namespaceSymbol = $discoveredNamespaces[$trimmedOrigianlNamespace];
+                            $trimmedOriginalNamespace = trim($originalNamespace, '\\');
+
+                            $this->logger->info('Checking PSR-4 namespace: ' . $trimmedOriginalNamespace);
+
+                            if (isset($discoveredNamespaces[$trimmedOriginalNamespace])) {
+                                $namespaceSymbol = $discoveredNamespaces[$trimmedOriginalNamespace];
                             } else {
+                                $this->logger->debug('Namespace not found in list of changes: ' . $trimmedOriginalNamespace);
+                                continue;
+                            }
+
+                            if ($trimmedOriginalNamespace === trim($namespaceSymbol->getReplacement(), '\\')) {
+                                $this->logger->debug('Namespace is unchanged: ' . $trimmedOriginalNamespace);
                                 continue;
                             }
 
                             // Update the namespace if it has changed.
-                            // TODO log if/else.
-                            $autoload_key[$type][$namespaceSymbol->getReplacement()] = $autoload_key[$type][$originalNamespace];
+                            $this->logger->info('Updating namespace: ' . $trimmedOriginalNamespace . ' => ' . $namespaceSymbol->getReplacement());
+                            $autoload_key[$type][str_replace($trimmedOriginalNamespace, $namespaceSymbol->getReplacement(), $originalNamespace)] = $autoload_key[$type][$originalNamespace];
                             unset($autoload_key[$type][$originalNamespace]);
 
 //                            if (is_array($packageRelativeDirectory)) {
@@ -159,7 +229,7 @@ class InstalledJson
                          * * {"psr-0":{"PayPal":"lib\/"}}
                          * * {"files":["src\/functions.php"]}
                          *
-                         * Also, but not really relevant:
+                         * Also:
                          * * {"exclude-from-classmap":["\/Tests\/"]}
                          */
 
@@ -177,6 +247,68 @@ class InstalledJson
             }
             $installedJsonArray['packages'][$key]['autoload'] = array_filter($autoload_key);
         }
+
+        return $installedJsonArray;
+    }
+
+    public function createAndCleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    {
+        $this->copyInstalledJson();
+
+        $this->copyInstalledJson();
+
+        $vendorDir = $this->getTargetDirectory();
+
+        $installedJsonFile = $this->getJsonFile($vendorDir);
+
+        /**
+         * @var InstalledJson $installedJsonArray
+         */
+        $installedJsonArray = $installedJsonFile->read();
+
+        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
+
+        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $vendorDir);
+
+        $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
+
+        foreach ($installedJsonArray['packages'] as $index => $package) {
+            if (!in_array($package['name'], array_keys($flatDependencyTree))) {
+                unset($installedJsonArray['packages'][$index]);
+            }
+        }
+        $installedJsonArray['dev'] = false;
+        $installedJsonArray['dev-package-names'] = [];
+
+        $installedJsonFile->write($installedJsonArray);
+    }
+
+
+    /**
+     * Composer creates a file `vendor/composer/installed.json` which is uses when running `composer dump-autoload`.
+     * When `delete-vendor-packages` or `delete-vendor-files` is true, files and directories which have been deleted
+     * must also be removed from `installed.json` or Composer will throw an error.
+     *
+     * TODO: {@see AutoloadFiles} might be redundant if we run this function and then run `composer dump-autoload`.
+     */
+    public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    {
+        $this->logger->info('Cleaning up installed.json');
+
+        $vendorDir = $this->getVendorDirectory();
+
+        $installedJsonFile = $this->getJsonFile($vendorDir);
+
+        /**
+         * @var InstalledJson $installedJsonArray
+         */
+        $installedJsonArray = $installedJsonFile->read();
+
+        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
+
+        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $vendorDir);
+
+        $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
         $installedJsonFile->write($installedJsonArray);
     }

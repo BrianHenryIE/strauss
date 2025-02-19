@@ -84,19 +84,21 @@ class Cleanup
 
         $this->deleteEmptyDirectories($files);
 
-        (new InstalledJson(
+        $installedJson = new InstalledJson(
             $this->workingDir,
             $this->config,
             $this->filesystem,
             $this->logger
-        ))->cleanupInstalledJson($flatDependencyTree, $discoveredSymbols);
+        );
+        $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+        $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
 
-        (new AutoloadStatic(
-            $this->workingDir,
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        ))->cleanupAutoloadStatic();
+//        (new AutoloadStatic(
+//            $this->workingDir,
+//            $this->config,
+//            $this->filesystem,
+//            $this->logger
+//        ))->cleanupAutoloadStatic();
     }
 
     /**

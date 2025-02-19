@@ -25,13 +25,6 @@ use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\ClassMapGenerator\ClassMapGenerator;
 use League\Flysystem\StorageAttributes;
-use PhpParser\Error;
-use PhpParser\Node;
-use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitorAbstract;
-use PhpParser\ParserFactory;
-use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -130,13 +123,7 @@ class Aliases
 
         $this->fileSystem->write($outputFilepath, $fileString);
 
-        $autoloadRealFilepath = $this->workingDir . $this->config->getVendorDirectory() . 'composer/autoload_real.php';
-
-        $composerFileString = $this->fileSystem->read($autoloadRealFilepath);
-
-        $newComposerAutoloadReal = $this->addAliasesFileToComposer($composerFileString);
-
-        $this->fileSystem->write($autoloadRealFilepath, $newComposerAutoloadReal);
+        return;
     }
 
     /**
@@ -273,14 +260,14 @@ class Aliases
                     // Does it matter since all references to use the constant should have been updated to the new name anyway.
                     // TODO: global `const`.
                     $php = <<<EOD
-if(defined('$originalSymbol')) { define('$replacementSymbol', $originalSymbol); }
+  if(defined('$originalSymbol')) { define('$replacementSymbol', $originalSymbol); }
 EOD;
                     break;
                 case ClassSymbol::class:
                     $alias = $symbol->getOriginalSymbol(); // We want the original to continue to work, so it is the alias.
                     $concreteClass = $symbol->getReplacement();
                     $php = <<<EOD
-class_alias($concreteClass, $alias);
+  class_alias($concreteClass, $alias);
 EOD;
                     break;
                 case FunctionSymbol::class:
@@ -288,7 +275,7 @@ EOD;
                     // TODO: check `function_exists()`
                     // Is it possible to inherit PHPDoc from the original function?
                     $php = <<<EOD
-function $originalSymbol(...\$args) { return \\$replacementSymbol(...\$args); }
+  function $originalSymbol(...\$args) { return \\$replacementSymbol(...\$args); }
 EOD;
                     break;
                 default:
@@ -299,90 +286,5 @@ EOD;
         }
 
         return $autoloadAliasesFileString;
-    }
-
-
-    /**
-     * Given the PHP code string for `vendor/composer/autoload_real.php`, add a `require_once autoload_aliases.php`
-     * before the `return` statement of the `getLoader()` method.
-     *
-     * Ideally we want to load after the files autoloaders
-     *
-     * @param string $code
-     */
-    public function addAliasesFileToComposer(string $code): string
-    {
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        try {
-            $ast = $parser->parse($code);
-        } catch (Error $error) {
-            $this->logger->error("Parse error: {$error->getMessage()}");
-            return $code;
-        }
-
-        $getLoaderMethod = null;
-
-        foreach ($ast as $fileLevelNode) {
-//          if ($fileLevelNode instanceof Node::class) {
-            if (get_class($fileLevelNode) === 'PhpParser\Node\Stmt\Class_') {
-                foreach ($fileLevelNode->stmts as $classLevelStatementsNode) {
-                    if (get_class($classLevelStatementsNode) === ClassMethod::class) {
-                        if ($classLevelStatementsNode->name->name === 'getLoader') {
-                            $getLoaderMethod = $classLevelStatementsNode;
-                        }
-                    }
-                }
-            }
-        }
-
-        $traverser = new NodeTraverser();
-        $traverser->addVisitor(new class extends NodeVisitorAbstract {
-            public function leaveNode(Node $node)
-            {
-                if (get_class($node) === \PhpParser\Node\Stmt\Return_::class) {
-                    // require_once __DIR__ . '/../../vendor-prefixed/autoload.php';
-                    // TODO __DIR__ ('./` is NOT enough)
-                    $requireOnceStraussAutoload = new Node\Stmt\Expression(
-                        new Node\Expr\Include_(
-                            new \PhpParser\Node\Expr\BinaryOp\Concat(
-                                new \PhpParser\Node\Scalar\MagicConst\Dir(),
-                                // TODO: obviously update to match the config.
-                                new Node\Scalar\String_('/../../vendor-prefixed/autoload.php')
-                            ),
-                            Node\Expr\Include_::TYPE_REQUIRE_ONCE
-                        )
-                    );
-
-                    $requireOnceAutoloadAliases = new Node\Stmt\Expression(
-                        new Node\Expr\Include_(
-                            new Node\Scalar\String_('autoload_aliases.php'),
-                            Node\Expr\Include_::TYPE_REQUIRE_ONCE
-                        )
-                    );
-//                  $requireOnce->setAttribute('comments', [new \PhpParser\Comment('// Include aliases file. This line added by Strauss')]);
-                    // Add a blank line. Probably not the correct way to do this.
-                    $requireOnceAutoloadAliases->setAttribute('comments', [new \PhpParser\Comment('')]);
-//                  $requireOnce->setDocComment(new \PhpParser\Comment\Doc('/** @see  */'));
-                    // Add a blank line. Probably not the correct way to do this.
-                    $node->setAttribute('comments', [new \PhpParser\Comment('')]);
-
-                    return [
-                        $requireOnceStraussAutoload,
-                        $requireOnceAutoloadAliases,
-                        $node
-                    ];
-                }
-                return $node;
-            }
-        });
-
-        $stmts = $getLoaderMethod->stmts;
-        $modifiedStmts = $traverser->traverse($stmts);
-        $getLoaderMethod->stmts = $modifiedStmts;
-
-        $prettyPrinter = new Standard();
-        $phpString = $prettyPrinter->prettyPrintFile($ast);
-
-        return $phpString;
     }
 }
