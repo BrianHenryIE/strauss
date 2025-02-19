@@ -6,7 +6,6 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use Composer\ClassMapGenerator\ClassMapGenerator;
 
 /**
  * @coversNothing
@@ -163,13 +162,13 @@ EOD;
 
         $this->runStrauss($output);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/autoload-classmap.php');
+        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
     }
 
     /**
      * Composer
      *
-     * @see Cleanup::cleanupInstalledJson()
+     * @see Cleanup\InstalledJson::cleanupVendorInstalledJson()
      */
     public function test_composer_files_not_modified(): void
     {
