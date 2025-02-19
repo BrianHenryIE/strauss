@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -24,7 +25,7 @@ class Autoload
 
     protected string $workingDir;
 
-    protected StraussConfig $config;
+    protected AutoloadConfigInterace $config;
 
     /**
      * The files autoloaders of packages that have been copied by Strauss.
@@ -44,7 +45,7 @@ class Autoload
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
     public function __construct(
-        StraussConfig $config,
+        AutoloadConfigInterace $config,
         string $workingDir,
         array $discoveredFilesAutoloaders,
         Filesystem $filesystem,
