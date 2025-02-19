@@ -6,13 +6,11 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Autoload\AutoloadGenerator;
-use Composer\ClassMapGenerator\ClassMapGenerator;
 use Composer\Config;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Json\JsonFile;
 use Composer\Repository\InstalledFilesystemRepository;
-use League\Flysystem\StorageAttributes;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -46,6 +44,11 @@ class DumpAutoload
         $this->setLogger($logger ?? new NullLogger());
     }
 
+    protected function getTargetDirectory(): string
+    {
+        return $this->workingDir . $this->config->getTargetDirectory();
+    }
+
     /**
      * Uses `vendor/composer/installed.json` to output autoload files to `vendor-prefixed/composer`.
      */
@@ -62,7 +65,10 @@ class DumpAutoload
 
         $generator = $composer->getAutoloadGenerator();
         $generator->setDryRun($this->config->isDryRun());
-//        $generator->setClassMapAuthoritative($authoritative);
+
+        //        $generator->setClassMapAuthoritative($authoritative);
+        $generator->setClassMapAuthoritative(true);
+
         $generator->setRunScripts(false);
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
@@ -97,7 +103,7 @@ class DumpAutoload
      */
     protected function getSuffix(): ?string
     {
-        return !$this->filesystem->fileExists($this->config->getTargetDirectory() . 'autoload.php')
+        return !$this->filesystem->fileExists($this->getTargetDirectory() . 'autoload.php')
             ? bin2hex(random_bytes(16))
             : null;
     }
