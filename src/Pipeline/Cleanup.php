@@ -249,12 +249,5 @@ class Cleanup
 
             $file->setDidDelete(true);
         }
-
-        (new AutoloadFiles(
-            $this->workingDir,
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        ))->cleanupFilesAutoloader();
     }
 }
