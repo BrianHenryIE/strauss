@@ -36,10 +36,11 @@ class VendorComposerAutoload
      */
     public function __construct(
         AutoloadConfigInterace $config,
-        string $workingDir,
-        Filesystem $filesystem,
-        LoggerInterface $logger
-    ) {
+        string                 $workingDir,
+        Filesystem             $filesystem,
+        LoggerInterface        $logger
+    )
+    {
         $this->config = $config;
         $this->workingDir = $workingDir;
         $this->fileSystem = $filesystem;
@@ -54,19 +55,25 @@ class VendorComposerAutoload
      */
     public function addAliasesFileToComposer(): void
     {
+        $autoloadPhpFilepath = $this->workingDir . $this->config->getVendorDirectory() . 'autoload.php';
 
-        $autoloadRealFilepath = $this->workingDir . $this->config->getVendorDirectory() . 'autoload.php';
-
-        if (!$this->fileSystem->fileExists($autoloadRealFilepath)) {
-            $this->logger->info("No autoload.php found:" . $autoloadRealFilepath);
+        if (!$this->fileSystem->fileExists($autoloadPhpFilepath)) {
+            $this->logger->info("No autoload.php found:" . $autoloadPhpFilepath);
             return;
         }
 
-        $composerFileString = $this->fileSystem->read($autoloadRealFilepath);
+        $this->logger->info('Modifying original autoload.php to add new autoload.php, autoload_aliases.php in ' . $this->config->getVendorDirectory());
 
-        $newComposerAutoloadReal = $this->addAliasesFileToComposerAutoload($composerFileString);
+        $composerAutoloadPhpFileString = $this->fileSystem->read($autoloadPhpFilepath);
 
-        $this->fileSystem->write($autoloadRealFilepath, $newComposerAutoloadReal);
+        $newComposerAutoloadPhpFileString = $this->addAliasesFileToComposerAutoload($composerAutoloadPhpFileString);
+
+        if ($newComposerAutoloadPhpFileString !== $composerAutoloadPhpFileString) {
+            $this->logger->info('Writing new autoload.php');
+            $this->fileSystem->write($autoloadPhpFilepath, $newComposerAutoloadPhpFileString);
+        } else {
+            $this->logger->debug('No changes to autoload.php');
+        }
     }
 
     /**

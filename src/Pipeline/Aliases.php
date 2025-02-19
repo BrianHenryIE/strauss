@@ -178,11 +178,8 @@ class Aliases
         }
 
         if (count($functionSymbols)>0) {
-//            $autoloadAliasesFileString .= PHP_EOL . PHP_EOL . 'namespace {' . PHP_EOL;
             $autoloadAliasesFileString = $this->appendFunctionAliases($functionSymbols, $autoloadAliasesFileString);
         }
-
-
 
         return $autoloadAliasesFileString;
     }
@@ -216,15 +213,16 @@ class Aliases
             switch (get_class($symbol)) {
                 case NamespaceSymbol::class:
                     // TODO: namespaced constants?
+                    $namespace = $symbol->getOriginalSymbol();
 
                     $symbolSourceFiles = $symbol->getSourceFiles();
 
-                    $namespaceInOriginalClassmap = array_filter(
+                    $namespacesInOriginalClassmap = array_filter(
                         $sourceDirClassmap,
                         fn($filepath) => in_array($filepath, array_keys($symbolSourceFiles))
                     );
 
-                    foreach ($namespaceInOriginalClassmap as $originalFqdnClassName => $absoluteFilePath) {
+                    foreach ($namespacesInOriginalClassmap as $originalFqdnClassName => $absoluteFilePath) {
                         if ($symbol->getOriginalSymbol() === $symbol->getReplacement()) {
                             continue;
                         }
@@ -267,24 +265,30 @@ class Aliases
                             throw new \Exception("Skipping $newFqdnClassName because it doesn't exist.");
                         }
 
-                        $aliasesPhpString .= "    case '$originalFqdnClassName':" . PHP_EOL;
+                        $escapedOriginalFqdnClassName = str_replace('\\', '\\\\', $originalFqdnClassName);
+                        $aliasesPhpString .= "    case '$escapedOriginalFqdnClassName':" . PHP_EOL;
 
                         if ($isClass) {
                             $aliasesPhpString .= "      class_alias(\\$newFqdnClassName::class, \\$originalFqdnClassName::class);" . PHP_EOL;
                         } elseif ($isInterface) {
-                            $aliasesPhpString .= "      interface $localName extends \\$newFqdnClassName {};" . PHP_EOL;
+                            $aliasesPhpString .= "      \$includeFile = '<?php namespace $namespace; interface $localName extends \\$newFqdnClassName {};';" . PHP_EOL;
+                            $aliasesPhpString .= "      include \"data://text/plain;base64,\" . base64_encode(\$includeFile);" . PHP_EOL;
                         } elseif ($isTrait) {
-                            $aliasesPhpString .= "      trait $localName { use \\$newFqdnClassName; }" . PHP_EOL;
+                            $aliasesPhpString .= "      \$includeFile = '<?php namespace $namespace; trait $localName { use \\$newFqdnClassName };';" . PHP_EOL;
+                            $aliasesPhpString .= "      include \"data://text/plain;base64,\" . base64_encode(\$includeFile);" . PHP_EOL;
                         }
 
                         $aliasesPhpString .= "      break;" . PHP_EOL;
                     }
                     break;
                 case ClassSymbol::class:
+                    // TODO: Do we handle global traits or interfaces? at all?
                     $alias = $symbol->getOriginalSymbol(); // We want the original to continue to work, so it is the alias.
                     $concreteClass = $symbol->getReplacement();
                     $aliasesPhpString = <<<EOD
-  class_alias($concreteClass, $alias);
+    case '$alias':
+      class_alias($concreteClass::class, $alias::class);
+      break;
 EOD;
                     break;
 
@@ -292,8 +296,6 @@ EOD;
                     // Functions and constants addressed below.
                     break;
             }
-
-//            !empty($aliasesPhpString) && $autoloadAliasesFileString .= $aliasesPhpString;
         }
 
         $autoloadAliasesFileString .= $aliasesPhpString;
