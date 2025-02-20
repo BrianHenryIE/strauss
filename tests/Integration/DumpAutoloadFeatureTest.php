@@ -41,7 +41,8 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
 
         exec('composer dump-autoload');
 

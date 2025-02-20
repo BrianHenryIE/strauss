@@ -52,7 +52,8 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
@@ -160,7 +161,8 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
 
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
     }
@@ -197,7 +199,8 @@ EOD;
 
         $expected = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
 
-        $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
 
         $this->assertEquals(
             $expected,
