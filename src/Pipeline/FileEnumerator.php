@@ -199,14 +199,6 @@ class FileEnumerator
             }
         }
 
-        if ($this->filesystem->fileExists($sourceAbsoluteFilepath)
-            && '<?php // This file was deleted by {@see https://github.com/BrianHenryIE/strauss}.'
-            ===
-            $this->filesystem->read($sourceAbsoluteFilepath)
-        ) {
-            $f->setDoCopy(false);
-        }
-
         $this->discoveredFiles->add($f);
 
         $this->logger->info("Found file " . $f->getAbsoluteTargetPath($this->workingDir));
