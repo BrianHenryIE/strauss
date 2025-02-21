@@ -79,10 +79,9 @@ class DumpAutoload
         $optimize = false; // $input->getOption('optimize') || $config->get('optimize-autoloader');
         $generator->setDevMode(false);
 
-        // If delete vendor files is false, we shouldn't be editing this. Maybe we should create a second one.
         $localRepo = new InstalledFilesystemRepository(new JsonFile($workingDir . $relativeTargetDir . 'composer/installed.json'));
 
-        // This will output the autoload_static.php etc files to vendor-prefixed/composer
+        // This will output the autoload_static.php etc. files to `vendor-prefixed/composer`.
         $generator->dump(
             $config,
             $localRepo,
@@ -95,7 +94,12 @@ class DumpAutoload
             false, // $input->getOption('strict-ambiguous')
         );
 
-        // Tests fail if this is absent.
+        /**
+         * Tests fail if this is absent.
+         *
+         * Arguably this should be in ::setUp() and tearDown() in the test classes, but if other tools run after Strauss
+         * then they might expect it to be unmodified.
+         */
         Config::$defaultConfig['vendor-dir'] = $defaultVendorDirBefore;
     }
 
@@ -104,6 +108,7 @@ class DumpAutoload
      * {Composer::getLocker()} and clashes with the existing autoloader.
      *
      * @see AutoloadGenerator::dump() 412:431
+     * @see https://github.com/composer/composer/blob/ae208dc1e182bd45d99fcecb956501da212454a1/src/Composer/Autoload/AutoloadGenerator.php#L429
      */
     protected function getSuffix(): ?string
     {
