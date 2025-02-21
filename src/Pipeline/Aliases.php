@@ -64,8 +64,6 @@ class Aliases
         }
 
         $this->fileSystem->write($outputFilepath, $fileString);
-
-        return;
     }
 
     protected function getVendorDirectory(): string
@@ -337,7 +335,7 @@ EOD;
                     // TODO: check `function_exists()`
                     // Is it possible to inherit PHPDoc from the original function?
                     $aliasesPhpString = <<<EOD
-        function $originalSymbol(...\$args) { return $replacementSymbol(...\$args); }
+        function $originalSymbol(...\$args) { return $replacementSymbol(func_get_args()); }
         
         EOD;
                     break;
