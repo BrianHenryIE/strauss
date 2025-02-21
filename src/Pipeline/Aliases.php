@@ -286,7 +286,7 @@ class Aliases
                     // TODO: Do we handle global traits or interfaces? at all?
                     $alias = $symbol->getOriginalSymbol(); // We want the original to continue to work, so it is the alias.
                     $concreteClass = $symbol->getReplacement();
-                    $aliasesPhpString = <<<EOD
+                    $aliasesPhpString .= <<<EOD
     case '$alias':
       class_alias($concreteClass::class, $alias::class);
       break;
@@ -315,6 +315,7 @@ EOD;
 
     protected function appendFunctionAliases(array $modifiedSymbols, string $autoloadAliasesFileString): string
     {
+        $aliasesPhpString = '';
 
         foreach ($modifiedSymbols as $symbol) {
             $originalSymbol = $symbol->getOriginalSymbol();
