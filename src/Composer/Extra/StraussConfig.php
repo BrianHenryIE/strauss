@@ -706,6 +706,6 @@ class StraussConfig implements
      */
     public function isCreateAliases(): bool
     {
-        return $this->deleteVendorPackages || $this->deleteVendorFiles;
+        return $this->deleteVendorPackages || $this->deleteVendorFiles || $this->targetDirectory === 'vendor';
     }
 }
