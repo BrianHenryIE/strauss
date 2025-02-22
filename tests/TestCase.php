@@ -4,8 +4,10 @@ namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
+use League\Flysystem\WhitespacePathNormalizer;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
@@ -41,13 +43,16 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         $inMemoryFilesystem = new \BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter();
 
+        $normalizer = new WhitespacePathNormalizer();
+        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+
         $filesystem = new Filesystem(
             new \League\Flysystem\Filesystem(
                 $inMemoryFilesystem,
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ],
-                new \Elazar\Flystream\StripProtocolPathNormalizer()
+                $normalizer
             )
         );
 
