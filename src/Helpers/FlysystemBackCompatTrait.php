@@ -2,7 +2,6 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use Elazar\Flystream\PassThruPathNormalizer;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\WhitespacePathNormalizer;
