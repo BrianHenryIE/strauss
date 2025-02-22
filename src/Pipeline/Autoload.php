@@ -87,7 +87,7 @@ class Autoload
             return;
         }
 
-        if (! $this->config->isClassmapOutput()) {
+        if (!$this->config->isClassmapOutput()) {
             $this->logger->debug('Not generating autoload.php because classmap output is disabled.');
             return;
         }
@@ -108,10 +108,5 @@ class Autoload
             $this->filesystem,
             $this->logger
         ))->generatedPrefixedAutoloader($this->workingDir, $this->config->getTargetDirectory());
-
-        // TODO: Only sometimes.
-
-        $vendorComposerAutoload = new VendorComposerAutoload($this->config, $this->workingDir, $this->filesystem, $this->logger);
-        $vendorComposerAutoload->addAliasesFileToComposer();
     }
 }

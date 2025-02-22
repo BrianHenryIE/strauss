@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
+use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Copier;
@@ -524,6 +525,14 @@ class DependenciesCommand extends Command
             $this->filesystem
         );
         $aliases->writeAliasesFileForSymbols($this->discoveredSymbols);
+
+        $vendorComposerAutoload = new VendorComposerAutoload(
+            $this->config,
+            $this->workingDir,
+            $this->filesystem,
+            $this->logger
+        );
+        $vendorComposerAutoload->addAliasesFileToComposer();
     }
 
     /**
