@@ -16,11 +16,7 @@ namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use Composer\Config;
-use Composer\Factory;
-use Composer\IO\NullIO;
 use Composer\Json\JsonFile;
-use Composer\Repository\InstalledFilesystemRepository;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
