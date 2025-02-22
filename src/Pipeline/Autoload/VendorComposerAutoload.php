@@ -39,8 +39,7 @@ class VendorComposerAutoload
         string                 $workingDir,
         Filesystem             $filesystem,
         LoggerInterface        $logger
-    )
-    {
+    ) {
         $this->config = $config;
         $this->workingDir = $workingDir;
         $this->fileSystem = $filesystem;
@@ -76,7 +75,11 @@ class VendorComposerAutoload
             return;
         }
 
-        $this->logger->info('Modifying original autoload.php to add new autoload.php, autoload_aliases.php in ' . $this->config->getVendorDirectory());
+        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+            $this->logger->info('Modifying original autoload.php to add autoload_aliases.php in ' . $this->config->getVendorDirectory());
+        } else {
+            $this->logger->info('Modifying original autoload.php to add new autoload.php, autoload_aliases.php in ' . $this->config->getVendorDirectory());
+        }
 
         $composerAutoloadPhpFileString = $this->fileSystem->read($autoloadPhpFilepath);
 
@@ -91,10 +94,16 @@ class VendorComposerAutoload
     }
 
     /**
-     * `require_once __DIR__ . '/composer/autoload_real.php';`
+     * This is a very over-engineered way to do a string replace.
+     *
+     * `require_once __DIR__ . '/composer/autoload_aliases.php';`
      */
     protected function addAliasesFileToComposerAutoload(string $code): string
     {
+        if (false !== strpos($code, '/composer/autoload_aliases.php')) {
+            $this->logger->info('vendor/autoload.php already includes autoload_aliases.php');
+            return $code;
+        }
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
         try {
@@ -104,15 +113,19 @@ class VendorComposerAutoload
             return $code;
         }
 
-        $targetDirectoryName = trim($this->config->getTargetDirectory());
+        $targetDirAutoload = $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
+            // TODO: test this relative path
+//            ? $this->fileSystem->getRelativePath($this->getVendorDirectory(), $this->getTargetDirectory()) . 'autoload.php'
+            ? '/../'.trim($this->config->getTargetDirectory()).'autoload.php'
+            : null;
 
         $traverser = new NodeTraverser();
-        $traverser->addVisitor(new class($targetDirectoryName) extends NodeVisitorAbstract {
+        $traverser->addVisitor(new class($targetDirAutoload) extends NodeVisitorAbstract {
 
-            protected string $targetDirectoryName;
-            public function __construct(string $targetDirectoryName)
+            protected ?string $targetDirectoryAutoload;
+            public function __construct(?string $targetDirectoryAutoload)
             {
-                $this->targetDirectoryName = $targetDirectoryName;
+                $this->targetDirectoryAutoload = $targetDirectoryAutoload;
             }
 
             public function leaveNode(Node $node)
@@ -127,13 +140,11 @@ class VendorComposerAutoload
                         return $node;
                     }
 
-
                     $requireOnceStraussAutoload = new Node\Stmt\Expression(
                         new Node\Expr\Include_(
                             new \PhpParser\Node\Expr\BinaryOp\Concat(
                                 new \PhpParser\Node\Scalar\MagicConst\Dir(),
-                                // TODO: obviously update path to match the config.
-                                new Node\Scalar\String_('/../'.$this->targetDirectoryName.'autoload.php')
+                                new Node\Scalar\String_($this->targetDirectoryAutoload)
                             ),
                             Node\Expr\Include_::TYPE_REQUIRE_ONCE
                         )
@@ -155,11 +166,18 @@ class VendorComposerAutoload
                     // Add a blank line. Probably not the correct way to do this.
                     $node->setAttribute('comments', [new \PhpParser\Comment('')]);
 
-                    return [
-                        $requireOnceStraussAutoload,
-                        $requireOnceAutoloadAliases,
-                        $node
-                    ];
+                    if ($this->targetDirectoryAutoload) {
+                        return [
+                            $requireOnceStraussAutoload,
+                            $requireOnceAutoloadAliases,
+                            $node
+                        ];
+                    } else {
+                        return [
+                            $requireOnceAutoloadAliases,
+                            $node
+                        ];
+                    }
                 }
                 return $node;
             }
