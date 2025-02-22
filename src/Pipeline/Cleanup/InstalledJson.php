@@ -17,8 +17,10 @@ use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Json\JsonFile;
+use Composer\Json\JsonValidationException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+use Seld\JsonLint\ParsingException;
 
 /**
  * @phpstan-type InstalledJsonPackageArray = array{name:string, version:string, version_normalized:string, source:array, dist:array, require:array, time:string, type:string, installation-source:string, autoload:array, notification-url:string, license:array, authors:array, description:string, homepage:string, keywords:array, support:array, install-path:string}
@@ -72,6 +74,10 @@ class InstalledJson
         $this->logger->debug($this->filesystem->read($this->getTargetDirectory() . 'composer/installed.json'));
     }
 
+    /**
+     * @throws JsonValidationException
+     * @throws ParsingException
+     */
     protected function getJsonFile(string $vendorDir): JsonFile
     {
         $installedJsonFile = new JsonFile(
@@ -106,12 +112,12 @@ class InstalledJson
             // `composer/` is here because the install-path is relative to the `vendor/composer` directory.
             $packageDir = $this->getVendorDirectory() . 'composer/' . $package['install-path'] . '/';
             if (!$this->filesystem->directoryExists($packageDir)) {
-                $this->logger->debug('Package directory does not exist at : ' . $packageDir);
+                $this->logger->debug('Original package directory does not exist at : ' . $packageDir);
 
                 $newInstallPath = $this->getTargetDirectory() . str_replace('../', '', $package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
-                    $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
+                    $this->logger->warning('Target package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
                     continue;
                 }
 
@@ -271,6 +277,8 @@ class InstalledJson
          */
         $installedJsonArray = $installedJsonFile->read();
 
+        $this->logger->debug('Installed.json before: ' . json_encode($installedJsonArray));
+
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
 
         $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $vendorDir);
@@ -284,6 +292,10 @@ class InstalledJson
         }
         $installedJsonArray['dev'] = false;
         $installedJsonArray['dev-package-names'] = [];
+
+        $this->logger->debug('Installed.json after: ' . json_encode($installedJsonArray));
+
+        $this->logger->info('Writing installed.json to ' . $vendorDir);
 
         $installedJsonFile->write($installedJsonArray);
     }
