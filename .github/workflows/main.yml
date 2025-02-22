@@ -74,7 +74,7 @@ jobs:
         if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
         with:
           message-id: strauss-phar
-          message: ${{ steps.artifact-upload-step.outputs.artifact-url }} ${{ github.event.pull_request.head.sha }}
+          message: "[strauss.phar.zip]("${{ steps.artifact-upload-step.outputs.artifact-url }}") @"${{ github.event.pull_request.head.sha }}
 
       - name: Run tests with strauss.phar
         run: vendor/bin/phpunit
