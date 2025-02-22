@@ -58,6 +58,7 @@ class IntegrationTestCase extends TestCase
             // TODO add xdebug to the command
             exec('php ' . $this->projectDir . '/strauss.phar ' . $params . ' --debug', $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
+            echo $allOutput;
             return $return_var;
         }
 
