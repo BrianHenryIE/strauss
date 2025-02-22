@@ -56,7 +56,7 @@ class IntegrationTestCase extends TestCase
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             // TODO add xdebug to the command
-            exec('php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+            exec('php ' . $this->projectDir . '/strauss.phar ' . $params . ' --debug', $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             return $return_var;
         }
