@@ -67,6 +67,9 @@ class InstalledJson
             $this->getVendorDirectory() . 'composer/installed.json',
             $this->getTargetDirectory() . 'composer/installed.json'
         );
+
+        $this->logger->debug('Copied vendor/composer/installed.json to vendor-prefixed/composer/installed.json');
+        $this->logger->debug($this->filesystem->read($this->getTargetDirectory() . 'composer/installed.json'));
     }
 
     protected function getJsonFile(string $vendorDir): JsonFile
@@ -103,10 +106,12 @@ class InstalledJson
             // `composer/` is here because the install-path is relative to the `vendor/composer` directory.
             $packageDir = $this->getVendorDirectory() . 'composer/' . $package['install-path'] . '/';
             if (!$this->filesystem->directoryExists($packageDir)) {
+                $this->logger->debug('Package directory does not exist at : ' . $packageDir);
+
                 $newInstallPath = $this->getTargetDirectory() . str_replace('../', '', $package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
-                    $this->logger->warning('Package directory unexpectedly does not exist: ' . $newInstallPath);
+                    $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
                     continue;
                 }
 
