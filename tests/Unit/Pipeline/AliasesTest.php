@@ -11,6 +11,10 @@ use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\NullLogger;
 
+/**
+ * @coversNothing
+ * @see Aliases
+ */
 class AliasesTest extends TestCase
 {
 
