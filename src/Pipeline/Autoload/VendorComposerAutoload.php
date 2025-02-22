@@ -47,6 +47,15 @@ class VendorComposerAutoload
         $this->setLogger($logger);
     }
 
+    protected function getVendorDirectory(): string
+    {
+        return $this->workingDir . $this->config->getVendorDirectory();
+    }
+    protected function getTargetDirectory(): string
+    {
+        return $this->workingDir . $this->config->getTargetDirectory();
+    }
+
     /**
      * Given the PHP code string for `vendor/autoload.php`, add a `require_once autoload_aliases.php`
      * before require autoload_real.php.
@@ -55,6 +64,11 @@ class VendorComposerAutoload
      */
     public function addAliasesFileToComposer(): void
     {
+        if ($this->isComposerInstalled()) {
+            $this->logger->info("Strauss installed via Composer, no need to modify vendor/autoload.php");
+            return;
+        }
+
         $autoloadPhpFilepath = $this->workingDir . $this->config->getVendorDirectory() . 'autoload.php';
 
         if (!$this->fileSystem->fileExists($autoloadPhpFilepath)) {
@@ -156,5 +170,19 @@ class VendorComposerAutoload
         $prettyPrinter = new Standard();
 
         return $prettyPrinter->prettyPrintFile($modifiedStmts);
+    }
+
+    /**
+     * Determine is Strauss installed via Composer (otherwise presumably run via phar).
+     */
+    protected function isComposerInstalled(): bool
+    {
+        if (!$this->fileSystem->fileExists($this->getVendorDirectory() . 'composer/installed.json')) {
+            return false;
+        }
+
+        $installedJsonArray = json_decode($this->fileSystem->read($this->getVendorDirectory() . 'composer/installed.json'));
+
+        return isset($installedJsonArray['dev-package-names']['brianhenryie/strauss']);
     }
 }
