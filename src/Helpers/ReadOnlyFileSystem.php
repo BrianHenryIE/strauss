@@ -12,7 +12,6 @@ use League\Flysystem\Config;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
-use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToReadFile;
@@ -58,13 +57,23 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         }
     }
 
-    public function writeStream(string $location, $contents, array $config = []): void
+    public function writeStream(string $location, $contents, $config = []): void
     {
         $config = new \League\Flysystem\Config($config);
+        $this->rewindStream($contents);
         $this->inMemoryFiles->writeStream($location, $contents, $config);
 
         if ($this->deletedFiles->fileExists($location)) {
             $this->deletedFiles->delete($location);
+        }
+    }
+    /**
+     * @param resource $resource
+     */
+    private function rewindStream($resource): void
+    {
+        if (ftell($resource) !== 0 && stream_get_meta_data($resource)['seekable']) {
+            rewind($resource);
         }
     }
 
@@ -148,11 +157,20 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         throw new \BadMethodCallException('Not yet implemented');
     }
 
-    public function copy(string $source, string $destination, array $config = []): void
+    public function copy(string $source, string $destination, $config = null): void
     {
         $sourceFile = $this->read($source);
 
-        $this->inMemoryFiles->write($destination, $sourceFile, new Config($config));
+        $this->inMemoryFiles->write(
+            $destination,
+            $sourceFile,
+            $config instanceof Config ? $config : new Config($config ?? [])
+        );
+
+        $a = $this->inMemoryFiles->read($destination);
+        if ($sourceFile !== $a) {
+            throw new \Exception('Copy failed');
+        }
 
         if ($this->deletedFiles->fileExists($destination)) {
             $this->deletedFiles->delete($destination);
@@ -239,9 +257,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     protected function directoryExistsIn(string $location, $filesystem): bool
     {
-        if (method_exists($filesystem, 'directoryExists')
-            && $filesystem->directoryExists($location)) {
-            return true;
+        if (method_exists($filesystem, 'directoryExists')) {
+            return $filesystem->directoryExists($location);
         }
 
         $parentDirectoryContents = $filesystem->listContents(dirname($location), false);
