@@ -199,7 +199,7 @@ class VendorComposerAutoload
             return false;
         }
 
-        $installedJsonArray = json_decode($this->fileSystem->read($this->getVendorDirectory() . 'composer/installed.json'));
+        $installedJsonArray = json_decode($this->fileSystem->read($this->getVendorDirectory() . 'composer/installed.json'), true);
 
         return isset($installedJsonArray['dev-package-names']['brianhenryie/strauss']);
     }
