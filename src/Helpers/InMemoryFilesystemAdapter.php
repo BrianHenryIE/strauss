@@ -35,17 +35,29 @@ class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter
         return parent::lastModified($path);
     }
 
+    public function copy(string $source, string $destination, Config $config): void
+    {
+        $this->createDirectories($destination, $config);
+
+        parent::copy($source, $destination, $config);
+    }
+
     public function write(string $path, string $contents, Config $config): void
     {
         // Make sure there is a directory for the file to be written to.
         if (false === strpos($path, '______DUMMY_FILE_FOR_FORCED_LISTING_IN_FLYSYSTEM_TEST')) {
-            $pathDirs = explode('/', dirname($path));
-            for ($level = 0; $level < count($pathDirs); $level++) {
-                $dir = implode('/', array_slice($pathDirs, 0, $level + 1));
-                $this->createDirectory($dir, $config);
-            }
+            $this->createDirectories($path, $config);
         }
 
         parent::write($path, $contents, $config);
+    }
+
+    protected function createDirectories(string $path, Config $config): void
+    {
+        $pathDirs = explode('/', dirname($path));
+        for ($level = 0; $level < count($pathDirs); $level++) {
+            $dir = implode('/', array_slice($pathDirs, 0, $level + 1));
+            $this->createDirectory($dir, $config);
+        }
     }
 }
