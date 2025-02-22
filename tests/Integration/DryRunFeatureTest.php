@@ -33,7 +33,7 @@ class DryRunFeatureTest extends IntegrationTestCase
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
@@ -68,7 +68,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
@@ -103,7 +103,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
@@ -142,7 +142,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
@@ -178,7 +178,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
