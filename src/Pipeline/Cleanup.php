@@ -10,11 +10,8 @@ use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Pipeline\Cleanup\AutoloadFiles;
-use BrianHenryIE\Strauss\Pipeline\Cleanup\AutoloadStatic;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use Composer\Json\JsonFile;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -92,13 +89,6 @@ class Cleanup
         );
         $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
         $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
-
-//        (new AutoloadStatic(
-//            $this->workingDir,
-//            $this->config,
-//            $this->filesystem,
-//            $this->logger
-//        ))->cleanupAutoloadStatic();
     }
 
     /**
