@@ -59,15 +59,14 @@ jobs:
           ./scripts/createphar.sh
 
       - uses: actions/upload-artifact@v4
+        if: ${{ matrix.php-version == '7.4' && github.event_name == 'pull_request' }}
         id: artifact-upload-step
         with:
           name: strauss.phar
           path: strauss.phar
 
-      - id: print-artifact-url
-        run: echo "::set-output name=artifact-url::$(echo ${{ steps.artifact-upload-step.outputs.artifact-url }})"
-
       - name: Output artifact URL
+        if: ${{ matrix.php-version == '7.4' && github.event_name == 'pull_request' }}
         run:  echo 'Artifact URL is ${{ steps.artifact-upload-step.outputs.artifact-url }}'
 
       - name: Add phar to PR comment
