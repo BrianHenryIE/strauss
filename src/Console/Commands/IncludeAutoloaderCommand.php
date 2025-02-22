@@ -30,7 +30,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class IncludeAliasesCommand extends Command
+class IncludeAutoloaderCommand extends Command
 {
     use LoggerAwareTrait;
 
@@ -39,12 +39,6 @@ class IncludeAliasesCommand extends Command
 
     protected StraussConfig $config;
 
-    /** @var Prefixer */
-    protected Prefixer $replacer;
-
-    /** @var ComposerPackage[] */
-    protected array $flatDependencyTree = [];
-
     protected Filesystem $filesystem;
 
     /**
@@ -52,8 +46,8 @@ class IncludeAliasesCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('include-aliases'); // What's the convention? include-aliases or includeAliases?
-        $this->setDescription("Adds `require autoload_aliases.php` to `vendor/autoload.php` during dev.");
+        $this->setName('include-autoloader');
+        $this->setDescription("Adds `require autoload_aliases.php` and `require vendor-prefixed/autoload.php` to `vendor/autoload.php`.");
 
         // TODO: permissions?
         $this->filesystem = new Filesystem(

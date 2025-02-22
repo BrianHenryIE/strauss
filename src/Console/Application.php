@@ -3,7 +3,7 @@
 namespace BrianHenryIE\Strauss\Console;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
-use BrianHenryIE\Strauss\Console\Commands\IncludeAliasesCommand;
+use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 
@@ -22,7 +22,7 @@ class Application extends BaseApplication
         $replaceCommand = new ReplaceCommand();
         $this->add($replaceCommand);
 
-        $this->add(new IncludeAliasesCommand());
+        $this->add(new IncludeAutoloaderCommand());
 
         $this->setDefaultCommand('dependencies');
     }
