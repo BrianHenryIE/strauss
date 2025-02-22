@@ -35,7 +35,7 @@ jobs:
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
-          php: ${{ matrix.php }}
+          php-version: ${{ matrix.php }}
           tools: composer:v2, phive
           extensions: fileinfo
 
@@ -91,7 +91,7 @@ jobs:
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
-          php: '7.4'
+          php-version: '7.4'
           tools: composer, cs2pr, phive
 
       - name: Install Phive tools
