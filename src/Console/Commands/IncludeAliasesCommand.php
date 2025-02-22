@@ -95,7 +95,6 @@ class IncludeAliasesCommand extends Command
             );
 
             $vendorComposerAutoload->addAliasesFileToComposer();
-
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
