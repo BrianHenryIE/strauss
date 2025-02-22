@@ -86,6 +86,8 @@ class InstalledJson
             throw new \Exception('Expected vendor/composer/installed.json does not exist.');
         }
 
+        $installedJsonFile->validateSchema(JsonFile::LAX_SCHEMA);
+
         $this->logger->info('Loaded installed.json file: ' . $installedJsonFile->getPath());
 
         return $installedJsonFile;
