@@ -18,7 +18,7 @@ class InstalledJsonIntegrationTest extends IntegrationTestCase
     {
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/autoloadstaticintegrationtest",
+  "name": "brianhenryie/testComposerDumpAutoloadOnTargetDirectory",
   "require": {
     "chillerlan/php-qrcode": "^4"
   },
@@ -46,6 +46,40 @@ EOD;
         $vendorPrefixedInstalledJsonPsr4PhpStringAfter = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
 
         $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
+        $this->assertStringNotContainsString('"chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
+    }
+
+    /**
+     */
+    public function testComposerDumpAutoloadOnTargetDirectoryIsVendorDir(): void
+    {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/testComposerDumpAutoloadOnTargetDirectoryIsVendorDir",
+  "require": {
+    "chillerlan/php-qrcode": "^4"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "target_directory": "vendor"
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
+
+        $vendorInstalledJsonStringAfter = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
+
+        $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
         $this->assertStringNotContainsString('"chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
     }
 }
