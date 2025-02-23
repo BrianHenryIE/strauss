@@ -115,7 +115,7 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         $location = $this->pathNormalizer->normalizePath($location);
 
         $this->deletedFiles->createDirectory($location, new Config([]));
-        $this->inMemoryFiles->delete($location);
+        $this->inMemoryFiles->deleteDirectory($location);
     }
 
 
