@@ -33,7 +33,7 @@ class ProjectComposerPackage extends ComposerPackage
         }
 
         $this->vendorDirectory = is_string($this->composer->getConfig()->get('vendor-dir'))
-            ? ltrim(str_replace(dirname($absolutePathFile), '', $this->composer->getConfig()->get('vendor-dir')), DIRECTORY_SEPARATOR)
+            ? ltrim(str_replace(dirname($absolutePathFile), '', $this->composer->getConfig()->get('vendor-dir')), '\\/')
             :  'vendor';
     }
 
@@ -59,7 +59,7 @@ class ProjectComposerPackage extends ComposerPackage
      */
     public function getVendorDirectory(): string
     {
-        return rtrim($this->vendorDirectory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        return rtrim($this->vendorDirectory, '\\/') . '/';
     }
 
     /**

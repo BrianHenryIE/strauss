@@ -71,7 +71,7 @@ class IncludeAutoloaderCommand extends Command
 
         $this->setLogger($logger);
 
-        $workingDir       = getcwd() . DIRECTORY_SEPARATOR;
+        $workingDir       = getcwd() . '/';
         $this->workingDir = $workingDir;
 
         try {

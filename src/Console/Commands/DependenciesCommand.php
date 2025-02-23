@@ -184,7 +184,7 @@ class DependenciesCommand extends Command
     {
         $this->setLogger(new ConsoleLogger($output, $this->getLogLevel($input)));
 
-        $workingDir       = getcwd() . DIRECTORY_SEPARATOR;
+        $workingDir       = getcwd() . '/';
         $this->workingDir = $workingDir;
 
         try {

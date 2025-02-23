@@ -75,11 +75,13 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     {
         $fileDirectory = realpath(dirname($absolutePath));
 
+        $absolutePath = $this->normalizer->normalizePath($absolutePath);
+
         // Unsupported symbolic link encountered at location //home
         // \League\Flysystem\SymbolicLinkEncountered
         $dirList = $this->listContents($fileDirectory)->toArray();
         foreach ($dirList as $file) { // TODO: use the generator.
-            if ($file->path() === trim($absolutePath, DIRECTORY_SEPARATOR)) {
+            if ($file->path() === $absolutePath) {
                 return $file;
             }
         }

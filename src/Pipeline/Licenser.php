@@ -162,9 +162,6 @@ class Licenser
                     continue;
                 }
 
-                // Replace multiple \ and/or / with OS native DIRECTORY_SEPARATOR.
-                $filePath = preg_replace('#[\\\/]+#', DIRECTORY_SEPARATOR, $filePath);
-
                 $this->discoveredLicenseFiles[$filePath] = $dependency->getPackageName();
             }
         }

@@ -273,7 +273,7 @@ class StraussConfig implements
                         $paths = (array) $entry;
                         foreach ($paths as $path) {
                             // Matches the target directory.
-                            if (trim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR === $this->getTargetDirectory()) {
+                            if (trim($path, '\\/') . '/' === $this->getTargetDirectory()) {
                                 $this->classmapOutput = false;
                                 break 3;
                             }
@@ -307,7 +307,7 @@ class StraussConfig implements
      */
     public function getTargetDirectory(): string
     {
-        return trim($this->targetDirectory, DIRECTORY_SEPARATOR . '\\/') . DIRECTORY_SEPARATOR;
+        return trim($this->targetDirectory, '\\/') . '/';
     }
 
     /**
@@ -315,15 +315,7 @@ class StraussConfig implements
      */
     public function setTargetDirectory(string $targetDirectory): void
     {
-        $this->targetDirectory = trim(
-            preg_replace(
-                '/[\/\\\\]+/',
-                DIRECTORY_SEPARATOR,
-                $targetDirectory
-            ),
-            DIRECTORY_SEPARATOR
-        )
-            . DIRECTORY_SEPARATOR ;
+        $this->targetDirectory = $targetDirectory;
     }
 
     /**
@@ -331,7 +323,7 @@ class StraussConfig implements
      */
     public function getVendorDirectory(): string
     {
-        return trim($this->vendorDirectory, DIRECTORY_SEPARATOR . '\\/') . DIRECTORY_SEPARATOR;
+        return trim($this->vendorDirectory, '\\/') . '/';
     }
 
     /**

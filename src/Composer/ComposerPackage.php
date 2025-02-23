@@ -109,13 +109,13 @@ class ComposerPackage
 
         $absolutePath = realpath(dirname($composerJsonFileAbsolute));
         if (false !== $absolutePath) {
-            $this->packageAbsolutePath = $absolutePath . DIRECTORY_SEPARATOR;
+            $this->packageAbsolutePath = $absolutePath . '/';
         }
 
         $vendorDirectory = $this->composer->getConfig()->get('vendor-dir');
-        if (file_exists($vendorDirectory . DIRECTORY_SEPARATOR . $this->packageName)) {
+        if (file_exists($vendorDirectory . '/' . $this->packageName)) {
             $this->relativePath = $this->packageName;
-            $this->packageAbsolutePath = realpath($vendorDirectory . DIRECTORY_SEPARATOR . $this->packageName) . DIRECTORY_SEPARATOR;
+            $this->packageAbsolutePath = realpath($vendorDirectory . '/' . $this->packageName) . '/';
         // If the package is symlinked, the path will be outside the working directory.
         } elseif (0 !== strpos($absolutePath, getcwd()) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorDirectory, $output_array)) {
             $this->relativePath = $output_array[1];
@@ -157,7 +157,7 @@ class ComposerPackage
      */
     public function getRelativePath(): ?string
     {
-        return $this->relativePath . DIRECTORY_SEPARATOR;
+        return $this->relativePath . '/';
     }
 
     public function getPackageAbsolutePath(): ?string
