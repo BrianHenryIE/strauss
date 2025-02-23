@@ -241,6 +241,10 @@ class VendorComposerAutoload
             ? '/../'.trim($this->config->getTargetDirectory()).'autoload.php'
             : null;
 
+        if (is_null($targetDirAutoload)) {
+            return $code;
+        }
+
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new class($targetDirAutoload) extends NodeVisitorAbstract {
 
