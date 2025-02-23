@@ -11,7 +11,6 @@ class File implements FileBase
      */
     protected string $sourceAbsolutePath;
 
-
     /**
      * Should this file be copied to the target directory?
      */
@@ -34,9 +33,9 @@ class File implements FileBase
         $this->sourceAbsolutePath = $sourceAbsolutePath;
     }
 
-    public function getSourcePath(string $relativeTo = ''): string
+    public function getSourcePath(): string
     {
-        return str_replace($relativeTo, '', $this->sourceAbsolutePath);
+        return $this->sourceAbsolutePath;
     }
 
     public function isPhpFile(): bool

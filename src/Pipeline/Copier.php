@@ -85,7 +85,7 @@ class Copier
         } else {
             foreach ($this->files->getFiles() as $file) {
                 if (!$file->isDoCopy()) {
-                    $this->logger->debug('Skipping ' . $file->getSourcePath($this->workingDir));
+                    $this->logger->debug('Skipping ' . $file->getSourcePath());
                     continue;
                 }
 

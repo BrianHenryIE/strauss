@@ -99,7 +99,7 @@ class Cleanup
         $this->logger->info('Deleting empty directories.');
 
         $sourceFiles = array_map(
-            fn($file) => $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory()),
+            fn($file) => $file->getSourcePath(),
             $files
         );
 
@@ -227,11 +227,11 @@ class Cleanup
 
         foreach ($files as $file) {
             if (! $file->isDoDelete()) {
-                $this->logger->debug('Skipping/preserving ' . $file->getSourcePath($this->workingDir));
+                $this->logger->debug('Skipping/preserving ' . $file->getSourcePath());
                 continue;
             }
 
-            $sourceRelativePath = $file->getSourcePath($this->workingDir);
+            $sourceRelativePath = $file->getSourcePath();
 
             $this->logger->info('Deleting ' . $sourceRelativePath);
 
