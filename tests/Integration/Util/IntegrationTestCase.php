@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
@@ -62,12 +63,21 @@ class IntegrationTestCase extends TestCase
             return $return_var;
         }
 
-        $argv = array_merge(['strauss'], array_filter(explode(' ', $params)));
+        $paramsSplit = explode(' ', trim($params));
+
+        switch ($paramsSplit[0]) {
+            case 'include-autoloader':
+                $strauss = new IncludeAutoloaderCommand();
+                unset($paramsSplit[0]);
+                break;
+            default:
+                $strauss = new DependenciesCommand();
+        }
+
+        $argv = array_merge(['strauss'], $paramsSplit);
         $inputInterface = new ArgvInput($argv);
 
         $bufferedOutput = new BufferedOutput(OutputInterface::VERBOSITY_NORMAL);
-
-        $strauss = new DependenciesCommand();
 
         $result = $strauss->run($inputInterface, $bufferedOutput);
 

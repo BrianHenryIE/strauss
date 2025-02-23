@@ -283,6 +283,8 @@ class VendorComposerAutoload
                     // Add a blank line. Probably not the correct way to do this.
                     $requireOnceStraussAutoload->setAttribute('comments', [new \PhpParser\Comment('')]);
 
+                    $this->added = true;
+
                     return [
                         $requireOnceStraussAutoload,
                         $node
