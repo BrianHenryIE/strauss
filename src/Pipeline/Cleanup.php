@@ -112,7 +112,7 @@ class Cleanup
         }
         $rootSourceDirectories = array_map(
             function (string $path): string {
-                return $this->workingDir . $this->vendorDirectory . $path;
+                return $this->getAbsoluteVendorDir() . $path;
             },
             array_keys($rootSourceDirectories)
         );
@@ -139,7 +139,7 @@ class Cleanup
                 if ($this->filesystem->directoryExists($filePath)
                     && $this->dirIsEmpty($filePath)
                 ) {
-                    $this->logger->debug('Deleting empty directory ' . str_replace($this->workingDir, '', $filePath));
+                    $this->logger->debug('Deleting empty directory ' . $filePath);
                     $this->filesystem->deleteDirectory($filePath);
                 }
             }
@@ -147,10 +147,10 @@ class Cleanup
 
 //        foreach ($this->filesystem->listContents($this->getAbsoluteVendorDir()) as $dirEntry) {
 //            if ($dirEntry->isDir() && $this->dirIsEmpty($dirEntry->path()) && !is_link($dirEntry->path())) {
-//                $this->logger->info('Deleting empty directory ' . str_replace($this->workingDir, '', $dirEntry->path()));
+//                $this->logger->info('Deleting empty directory ' .  $dirEntry->path());
 //                $this->filesystem->deleteDirectory($dirEntry->path());
 //            } else {
-//                $this->logger->debug('Skipping non-empty directory ' . str_replace($this->workingDir, '', $dirEntry->path()));
+//                $this->logger->debug('Skipping non-empty directory ' . $dirEntry->path());
 //            }
 //        }
     }
@@ -180,9 +180,7 @@ class Cleanup
         foreach ($packages as $package) {
             // Normal package.
             if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
-                $packageRelativePath = str_replace($this->workingDir, '', $package->getPackageAbsolutePath());
-
-                $this->logger->info('Deleting ' . $packageRelativePath);
+                $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
             } else {

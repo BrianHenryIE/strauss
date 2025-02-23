@@ -115,9 +115,9 @@ class Prefixer
             if ($updatedContents !== $contents) {
                 $this->changedFiles[ $workingDirRelativeFilepath ] = null;
                 $this->filesystem->write($fileAbsolutePath, $updatedContents);
-                $this->logger->info('Updated contents of file: ' . str_replace($this->workingDir, '', $fileAbsolutePath));
+                $this->logger->info('Updated contents of file: ' . $fileAbsolutePath);
             } else {
-                $this->logger->debug('No changes to file: ' . str_replace($this->workingDir, '', $fileAbsolutePath));
+                $this->logger->debug('No changes to file: ' . $fileAbsolutePath);
             }
         }
     }

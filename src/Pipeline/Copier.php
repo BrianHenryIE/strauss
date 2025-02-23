@@ -92,7 +92,7 @@ class Copier
                 $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
 
                 if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
-                    $this->logger->info('Deleting existing destination file at ' . str_replace($this->workingDir, '', $targetAbsoluteFilepath));
+                    $this->logger->info('Deleting existing destination file at ' . $targetAbsoluteFilepath);
                     $this->filesystem->delete($targetAbsoluteFilepath);
                 }
             }

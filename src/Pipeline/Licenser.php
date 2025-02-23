@@ -107,8 +107,8 @@ class Licenser
                 $this->logger->debug(sprintf(
                     "Skipping %s because it already exists at %s",
                     basename($licenseFile),
-                    str_replace($this->workingDir, '', $targetLicenseFile)
-                ));
+                    $targetLicenseFile
+                );
                 continue;
             }
 
@@ -117,7 +117,7 @@ class Licenser
                 $this->logger->debug(sprintf(
                     "Skipping %s because the directory %s does not exist",
                     basename($licenseFile),
-                    str_replace($this->workingDir, '', $targetLicenseFileDir)
+                    $targetLicenseFileDir
                 ));
                 continue;
             }
@@ -126,7 +126,7 @@ class Licenser
                 sprintf(
                     "Copying license file from %s to %s",
                     basename($licenseFile),
-                    str_replace($this->workingDir, '', $targetLicenseFile)
+                    $targetLicenseFile
                 )
             );
             $this->filesystem->copy(
