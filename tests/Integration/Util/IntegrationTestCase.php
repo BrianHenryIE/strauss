@@ -74,7 +74,7 @@ class IntegrationTestCase extends TestCase
                 $strauss = new DependenciesCommand();
         }
 
-        $argv = array_merge(['strauss'], $paramsSplit);
+        $argv = array_merge(['strauss'], array_filter($paramsSplit));
         $inputInterface = new ArgvInput($argv);
 
         $bufferedOutput = new BufferedOutput(OutputInterface::VERBOSITY_NORMAL);
