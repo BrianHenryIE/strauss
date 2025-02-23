@@ -178,9 +178,12 @@ class InstalledJson
 
                             // Just for dev – find a package like this and write a test for it.
                             if (empty($originalNamespace)) {
-                                // nesbot/carbon
+                                // In the case of `nesbot/carbon`, it uses an empty namespace but the classes are in the `Carbon`
+                                // namespace, so using `override_autoload` should be a good solution if this proves to be an issue.
+                                // The package directory will be updated, so for whatever reason the original empty namespace
+                                // works, maybe the updated namespace will work too.
+                                $this->logger->warning('Empty namespace found in autoload. Behaviour is not fully documented: ' . $package['name']);
                                 continue;
-                                throw new \Exception($package['name']);
                             }
 
                             $trimmedOriginalNamespace = trim($originalNamespace, '\\');
