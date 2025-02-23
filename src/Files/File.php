@@ -127,7 +127,8 @@ class File implements FileBase
      */
     public function getAbsoluteTargetPath(): string
     {
-        return $this->absoluteTargetPath;
+        // TODO: Maybe this is a mistake and should better be an exception.
+        return isset($this->absoluteTargetPath) ?? $this->sourceAbsolutePath;
     }
 
     protected bool $didUpdate = false;
