@@ -543,7 +543,7 @@ class DependenciesCommand extends Command
     protected function cleanUp(): void
     {
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            // Nothing to do.
+            // TODO: update installed.json, run composer dump-autoload.
             return;
         }
 
