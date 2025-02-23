@@ -61,7 +61,6 @@ if (PHP_VERSION_ID < 50600) {
     trigger_error($err, E_USER_ERROR);
 }
 
-require_once __DIR__ . '/../vendor-prefixed/autoload.php';
 require_once __DIR__ . '/composer/autoload_aliases.php';
 
 require_once __DIR__ . '/composer/autoload_real.php';
@@ -83,6 +82,7 @@ EOD;
         );
 
         $fileSystem->write('vendor/autoload.php', $phpString);
+        $fileSystem->write('vendor/composer/installed.json', '{"dev":true}');
 
         $sut->addAliasesFileToComposer();
 

@@ -89,6 +89,7 @@ class IncludeAutoloaderCommand extends Command
             );
 
             $vendorComposerAutoload->addAliasesFileToComposer();
+            $vendorComposerAutoload->addVendorPrefixedAutoloadToVendorAutoload();
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 

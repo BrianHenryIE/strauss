@@ -533,6 +533,7 @@ class DependenciesCommand extends Command
             $this->logger
         );
         $vendorComposerAutoload->addAliasesFileToComposer();
+        $vendorComposerAutoload->addVendorPrefixedAutoloadToVendorAutoload();
     }
 
     /**

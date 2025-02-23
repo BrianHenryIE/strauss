@@ -55,31 +55,53 @@ class VendorComposerAutoload
         return $this->workingDir . $this->config->getTargetDirectory();
     }
 
-    /**
-     * Given the PHP code string for `vendor/autoload.php`, add a `require_once autoload_aliases.php`
-     * before require autoload_real.php.
-     *
-     * @param string $code
-     */
-    public function addAliasesFileToComposer(): void
+    public function addVendorPrefixedAutoloadToVendorAutoload(): void
     {
-        if ($this->isComposerInstalled()) {
-            $this->logger->info("Strauss installed via Composer, no need to modify vendor/autoload.php");
-            return;
-        }
-
-        $autoloadPhpFilepath = $this->workingDir . $this->config->getVendorDirectory() . 'autoload.php';
+        $autoloadPhpFilepath = $this->getVendorDirectory() . 'autoload.php';
 
         if (!$this->fileSystem->fileExists($autoloadPhpFilepath)) {
             $this->logger->info("No autoload.php found:" . $autoloadPhpFilepath);
             return;
         }
 
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
-            $this->logger->info('Modifying original autoload.php to add autoload_aliases.php in ' . $this->config->getVendorDirectory());
+        $this->logger->info('Modifying original autoload.php to add `' . $this->getTargetDirectory() . '/autoload.php`');
+
+        $composerAutoloadPhpFileString = $this->fileSystem->read($autoloadPhpFilepath);
+
+        $newComposerAutoloadPhpFileString = $this->addVendorPrefixedAutoloadToComposerAutoload($composerAutoloadPhpFileString);
+
+        if ($newComposerAutoloadPhpFileString !== $composerAutoloadPhpFileString) {
+            $this->logger->info('Writing new autoload.php');
+            $this->fileSystem->write($autoloadPhpFilepath, $newComposerAutoloadPhpFileString);
         } else {
-            $this->logger->info('Modifying original autoload.php to add new autoload.php, autoload_aliases.php in ' . $this->config->getVendorDirectory());
+            $this->logger->debug('No changes to autoload.php');
         }
+    }
+
+    /**
+     * Given the PHP code string for `vendor/autoload.php`, add a `require_once autoload_aliases.php`
+     * before require autoload_real.php.
+     */
+    public function addAliasesFileToComposer(): void
+    {
+        if ($this->isComposerInstalled()) {
+            $this->logger->info("Strauss installed via Composer, no need to add `autoload_aliases.php` to `vendor/autoload.php`");
+            return;
+        }
+
+        $autoloadPhpFilepath = $this->getVendorDirectory() . 'autoload.php';
+
+        if (!$this->fileSystem->fileExists($autoloadPhpFilepath)) {
+            $this->logger->info("No autoload.php found:" . $autoloadPhpFilepath);
+            return;
+        }
+
+        if ($this->isComposerNoDev()) {
+            $this->logger->info("Composer was run with `--no-dev`, no need to add `autoload_aliases.php` to `vendor/autoload.php`");
+            return;
+        }
+
+        $this->logger->info('Modifying original autoload.php to add autoload_aliases.php in ' . $this->config->getVendorDirectory());
 
         $composerAutoloadPhpFileString = $this->fileSystem->read($autoloadPhpFilepath);
 
@@ -91,6 +113,36 @@ class VendorComposerAutoload
         } else {
             $this->logger->debug('No changes to autoload.php');
         }
+    }
+
+    /**
+     * Determine is Strauss installed via Composer (otherwise presumably run via phar).
+     */
+    protected function isComposerInstalled(): bool
+    {
+        if (!$this->fileSystem->fileExists($this->getVendorDirectory() . 'composer/installed.json')) {
+            return false;
+        }
+
+        $installedJsonArray = json_decode($this->fileSystem->read($this->getVendorDirectory() . 'composer/installed.json'), true);
+
+        return isset($installedJsonArray['dev-package-names']['brianhenryie/strauss']);
+    }
+
+    /**
+     * Read `vendor/composer/installed.json` to determine if the composer was run with `--no-dev`.
+     *
+     * {
+     *   "packages": [],
+     *   "dev": true,
+     *   "dev-package-names": []
+     * }
+     */
+    protected function isComposerNoDev(): bool
+    {
+        $installedJson = $this->fileSystem->read($this->getVendorDirectory() . 'composer/installed.json');
+        $installedJsonArray = json_decode($installedJson, true);
+        return !$installedJsonArray['dev'];
     }
 
     /**
@@ -113,6 +165,76 @@ class VendorComposerAutoload
             return $code;
         }
 
+        $traverser = new NodeTraverser();
+        $traverser->addVisitor(new class() extends NodeVisitorAbstract {
+
+            public function leaveNode(Node $node)
+            {
+                if (get_class($node) === \PhpParser\Node\Stmt\Expression::class) {
+                    $prettyPrinter = new Standard();
+                    $maybeRequireAutoloadReal = $prettyPrinter->prettyPrintExpr($node->expr);
+
+                    // Every `vendor/autoload.php` should have this line.
+                    $target = "require_once __DIR__ . '/composer/autoload_real.php'";
+
+                    // If this node isn't the one we want to insert before, continue.
+                    if ($maybeRequireAutoloadReal !== $target) {
+                        return $node;
+                    }
+
+                    $requireOnceAutoloadAliases = new Node\Stmt\Expression(
+                        new \PhpParser\Node\Expr\Include_(
+                            new \PhpParser\Node\Expr\BinaryOp\Concat(
+                                new \PhpParser\Node\Scalar\MagicConst\Dir(),
+                                new \PhpParser\Node\Scalar\String_('/composer/autoload_aliases.php')
+                            ),
+                            \PhpParser\Node\Expr\Include_::TYPE_REQUIRE_ONCE
+                        )
+                    );
+
+                    // Add a blank line. Probably not the correct way to do this.
+                    $node->setAttribute('comments', [new \PhpParser\Comment('')]);
+
+                    return [
+                        $requireOnceAutoloadAliases,
+                        $node
+                    ];
+                }
+                return $node;
+            }
+        });
+
+        $modifiedStmts = $traverser->traverse($ast);
+
+        $prettyPrinter = new Standard();
+
+        return $prettyPrinter->prettyPrintFile($modifiedStmts);
+    }
+
+    /**
+     * `require_once __DIR__ . '/../vendor-prefixed/autoload.php';`
+     */
+    protected function addVendorPrefixedAutoloadToComposerAutoload(string $code): string
+    {
+        $targetDirAutoload = $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
+            // TODO: test this relative path
+//            ? $this->fileSystem->getRelativePath($this->getVendorDirectory(), $this->getTargetDirectory()) . 'autoload.php'
+            ? '/../'.trim($this->config->getTargetDirectory()).'autoload.php'
+            : null;
+
+        if (false !== strpos($code, $targetDirAutoload)) {
+            $this->logger->info('vendor/autoload.php already includes ' . $targetDirAutoload);
+            return $code;
+        }
+
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        try {
+            $ast = $parser->parse($code);
+        } catch (Error $error) {
+            $this->logger->error("Parse error: {$error->getMessage()}");
+            return $code;
+        }
+
         $targetDirAutoload = $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
             // TODO: test this relative path
 //            ? $this->fileSystem->getRelativePath($this->getVendorDirectory(), $this->getTargetDirectory()) . 'autoload.php'
@@ -122,6 +244,7 @@ class VendorComposerAutoload
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new class($targetDirAutoload) extends NodeVisitorAbstract {
 
+            protected bool $added = false;
             protected ?string $targetDirectoryAutoload;
             public function __construct(?string $targetDirectoryAutoload)
             {
@@ -130,13 +253,20 @@ class VendorComposerAutoload
 
             public function leaveNode(Node $node)
             {
+                if ($this->added) {
+                    return $node;
+                }
+
                 if (get_class($node) === \PhpParser\Node\Stmt\Expression::class) {
                     $prettyPrinter = new Standard();
-                    $maybeRequireAutoloadReal = $prettyPrinter->prettyPrintExpr($node->expr);
+                    $nodeText = $prettyPrinter->prettyPrintExpr($node->expr);
 
-                    $target = "require_once __DIR__ . '/composer/autoload_real.php'";
+                    $targets = [
+                        "require_once __DIR__ . '/composer/autoload_real.php'",
+                        "require_once __DIR__ . '/composer/autoload_aliases.php'"
+                    ];
 
-                    if ($maybeRequireAutoloadReal !== $target) {
+                    if (!in_array($nodeText, $targets)) {
                         return $node;
                     }
 
@@ -153,31 +283,10 @@ class VendorComposerAutoload
                     // Add a blank line. Probably not the correct way to do this.
                     $requireOnceStraussAutoload->setAttribute('comments', [new \PhpParser\Comment('')]);
 
-                    $requireOnceAutoloadAliases = new Node\Stmt\Expression(
-                        new \PhpParser\Node\Expr\Include_(
-                            new \PhpParser\Node\Expr\BinaryOp\Concat(
-                                new \PhpParser\Node\Scalar\MagicConst\Dir(),
-                                new \PhpParser\Node\Scalar\String_('/composer/autoload_aliases.php')
-                            ),
-                            \PhpParser\Node\Expr\Include_::TYPE_REQUIRE_ONCE
-                        )
-                    );
-
-                    // Add a blank line. Probably not the correct way to do this.
-                    $node->setAttribute('comments', [new \PhpParser\Comment('')]);
-
-                    if ($this->targetDirectoryAutoload) {
-                        return [
-                            $requireOnceStraussAutoload,
-                            $requireOnceAutoloadAliases,
-                            $node
-                        ];
-                    } else {
-                        return [
-                            $requireOnceAutoloadAliases,
-                            $node
-                        ];
-                    }
+                    return [
+                        $requireOnceStraussAutoload,
+                        $node
+                    ];
                 }
                 return $node;
             }
@@ -188,19 +297,5 @@ class VendorComposerAutoload
         $prettyPrinter = new Standard();
 
         return $prettyPrinter->prettyPrintFile($modifiedStmts);
-    }
-
-    /**
-     * Determine is Strauss installed via Composer (otherwise presumably run via phar).
-     */
-    protected function isComposerInstalled(): bool
-    {
-        if (!$this->fileSystem->fileExists($this->getVendorDirectory() . 'composer/installed.json')) {
-            return false;
-        }
-
-        $installedJsonArray = json_decode($this->fileSystem->read($this->getVendorDirectory() . 'composer/installed.json'), true);
-
-        return isset($installedJsonArray['dev-package-names']['brianhenryie/strauss']);
     }
 }
