@@ -126,11 +126,9 @@ class File implements FileBase
      * The target path to (maybe) copy the file to, and the target path to perform replacements in (which may be the
      * original path).
      */
-    public function getAbsoluteTargetPath(string $relativeTo = ''): string
+    public function getAbsoluteTargetPath(): string
     {
-        return isset($this->absoluteTargetPath)
-            ? str_replace($relativeTo, '', $this->absoluteTargetPath)
-            : $this->getSourcePath($relativeTo);
+        return $this->absoluteTargetPath;
     }
 
     protected bool $didUpdate = false;

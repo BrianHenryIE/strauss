@@ -7,9 +7,9 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 interface FileBase
 {
 
-    public function getSourcePath(string $relativeTo = ''): string;
+    public function getSourcePath(): string;
 
-    public function getAbsoluteTargetPath(string $relativeTo = ''): string;
+    public function getAbsoluteTargetPath(): string;
 
     public function setAbsoluteTargetPath(string $absoluteTargetPath): void;
 

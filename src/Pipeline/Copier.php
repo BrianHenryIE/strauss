@@ -121,13 +121,13 @@ class Copier
             if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
                 $this->logger->info(sprintf(
                     'Creating directory at %s',
-                    $file->getAbsoluteTargetPath($this->workingDir)
+                    $file->getAbsoluteTargetPath()
                 ));
                 $this->filesystem->createDirectory($targetAbsolutePath);
             } else {
                 $this->logger->info(sprintf(
                     'Copying file to %s',
-                    $file->getAbsoluteTargetPath($this->workingDir)
+                    $file->getAbsoluteTargetPath()
                 ));
                 $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
             }

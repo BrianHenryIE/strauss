@@ -199,7 +199,7 @@ class FileEnumerator
 
         $this->discoveredFiles->add($f);
 
-        $this->logger->info("Found file " . $f->getAbsoluteTargetPath($this->workingDir));
+        $this->logger->info("Found file " . $f->getAbsoluteTargetPath());
     }
 
     /**

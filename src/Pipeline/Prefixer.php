@@ -75,9 +75,9 @@ class Prefixer
                 // TODO: diff here and debug log.
                 $file->setDidUpdate();
                 $this->filesystem->write($file->getAbsoluteTargetPath(), $updatedContents);
-                $this->logger->info('Updated contents of file: ' . $file->getAbsoluteTargetPath($this->workingDir));
+                $this->logger->info('Updated contents of file: ' . $file->getAbsoluteTargetPath());
             } else {
-                $this->logger->debug('No changes to file: ' . $file->getAbsoluteTargetPath($this->workingDir));
+                $this->logger->debug('No changes to file: ' . $file->getAbsoluteTargetPath());
             }
         }
     }
