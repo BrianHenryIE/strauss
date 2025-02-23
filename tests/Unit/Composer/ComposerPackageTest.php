@@ -2,12 +2,13 @@
 
 namespace BrianHenryIE\Strauss\Composer;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use BrianHenryIE\Strauss\TestCase;
 
+/**
+ * @coversDefaultClass \BrianHenryIE\Strauss\Composer\ComposerPackage
+ */
 class ComposerPackageTest extends TestCase
 {
 

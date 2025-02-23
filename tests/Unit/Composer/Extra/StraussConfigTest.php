@@ -17,7 +17,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 
 /**
- * @covers \BrianHenryIE\Strauss\Composer\Extra\StraussConfig
+ * @coversDefaultClass \BrianHenryIE\Strauss\Composer\Extra\StraussConfig
  */
 class StraussConfigTest extends TestCase
 {
