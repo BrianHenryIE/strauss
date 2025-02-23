@@ -142,10 +142,12 @@ class FileEnumerator
                             foreach ($actualFileList as $foundFile) {
                                 $sourceAbsoluteFilepath = '/'. $foundFile->path();
                                 // No need to record the directory itself.
-                                if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+                                if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)
+                                    ||
+                                    $this->filesystem->directoryExists($sourceAbsoluteFilepath)
+                                ) {
                                     continue;
                                 }
-
                                 $namespaceRelativePath = Path::normalize($namespaceRelativePath);
 
                                 $this->addFileWithDependency(
