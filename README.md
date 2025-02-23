@@ -65,7 +65,7 @@ In your `composer.json`, add `strauss` to the `scripts` section:
         "@prefix-namespaces"
     ],
     "post-autoload-dump": [
-        "@php bin/strauss.phar include-aliases",
+        "@php bin/strauss.phar include-autoloader",
     ]
 }
 ```
