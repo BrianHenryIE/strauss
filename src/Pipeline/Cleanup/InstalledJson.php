@@ -2,11 +2,13 @@
 /**
  * Changes "install-path" to point to vendor-prefixed target directory.
  *
- * TODO: create new vendor-prefixed/composer/installed.json file with copied packages
- * TODO: when delete is enabled, update package paths in the original vendor/composer/installed.json (~done)
- * TODO: when delete is enabled, remove dead entries in the original vendor/composer/installed.json
+ * * create new vendor-prefixed/composer/installed.json file with copied packages
+ * * when delete is enabled, update package paths in the original vendor/composer/installed.json
+ * * when delete is enabled, remove dead entries in the original vendor/composer/installed.jso
  *
  * @see vendor/composer/installed.json
+ *
+ * TODO: when delete_vendor_files is used, the original directory still exists so the paths are not updated.
  *
  * @package brianhenryie/strauss
  */
