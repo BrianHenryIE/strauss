@@ -38,7 +38,7 @@ class IntegrationTestCase extends TestCase
         $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
 
         if ('Darwin' === PHP_OS) {
-            $this->testsWorkingDir = DIRECTORY_SEPARATOR . 'private' . $this->testsWorkingDir;
+            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
         }
 
         if (file_exists($this->testsWorkingDir)) {

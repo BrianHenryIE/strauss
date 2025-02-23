@@ -52,7 +52,7 @@ EOD;
         exec('composer install');
 
         $workingDir = $this->testsWorkingDir;
-        $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
+        $relativeTargetDir = 'vendor-prefixed/';
         $absoluteTargetDir = $workingDir . $relativeTargetDir;
 
         $exitCode = $this->runStrauss($output);
