@@ -127,6 +127,8 @@ class InstalledJson
                 );
 
                 $installedJsonArray['packages'][$key]['install-path'] = $newRelativePath;
+            } else {
+                $this->logger->debug('Original package directory exists at : ' . $packageDir);
             }
         }
         return $installedJsonArray;
@@ -301,6 +303,8 @@ class InstalledJson
         $this->logger->info('Writing installed.json to ' . $vendorDir);
 
         $installedJsonFile->write($installedJsonArray);
+
+        $this->logger->info('Installed.json written to ' . $vendorDir);
     }
 
 
