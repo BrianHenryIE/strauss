@@ -367,7 +367,6 @@ class DependenciesCommand extends Command
 
         $this->replacer = new Prefixer(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );
@@ -384,7 +383,6 @@ class DependenciesCommand extends Command
 
         $projectReplace = new Prefixer(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );

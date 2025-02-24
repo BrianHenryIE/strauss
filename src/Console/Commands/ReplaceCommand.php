@@ -184,7 +184,7 @@ class ReplaceCommand extends Command
     {
         $this->logger->info('Performing replacements...');
 
-        $this->replacer = new Prefixer($config, $this->workingDir, $this->filesystem);
+        $this->replacer = new Prefixer($config, $this->filesystem, $this->logger);
 
         $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
     }
@@ -198,7 +198,7 @@ class ReplaceCommand extends Command
             return;
         }
 
-        $projectReplace = new Prefixer($config, $this->workingDir, $this->filesystem);
+        $projectReplace = new Prefixer($config, $this->filesystem, $this->logger);
 
         $fileEnumerator = new FileEnumerator(
             $this->workingDir,
