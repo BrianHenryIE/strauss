@@ -86,6 +86,16 @@ class Licenser
         $this->setLogger($logger ?? new NullLogger());
     }
 
+    protected function getTargetDirectory():string
+    {
+        return $this->workingDir . $this->targetDirectory;
+    }
+
+    protected function getVendorDirectory():string
+    {
+        return $this->workingDir . $this->vendorDir;
+    }
+
     /**
      * @throws FilesystemException
      */
@@ -95,8 +105,8 @@ class Licenser
 
         foreach ($this->getDiscoveredLicenseFiles() as $licenseFile) {
             $targetLicenseFile = str_replace(
-                $this->workingDir . $this->vendorDir,
-                $this->workingDir . $this->targetDirectory,
+                $this->getVendorDirectory(),
+                $this->getTargetDirectory(),
                 $licenseFile
             );
 
@@ -108,7 +118,7 @@ class Licenser
                     "Skipping %s because it already exists at %s",
                     basename($licenseFile),
                     $targetLicenseFile
-                );
+                ));
                 continue;
             }
 
@@ -186,7 +196,7 @@ class Licenser
         $date = gmdate("d-F-Y", time());
 
         foreach ($modifiedFiles as $relativeFilePath => $package) {
-            $filepath = $this->workingDir . $this->targetDirectory . $relativeFilePath;
+            $filepath = $this->getTargetDirectory() . $relativeFilePath;
 
             if (!$this->filesystem->fileExists($filepath)) {
                 continue;
