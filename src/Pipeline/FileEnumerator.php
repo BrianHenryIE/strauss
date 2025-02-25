@@ -184,7 +184,7 @@ class FileEnumerator
             $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
         }
 
-        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
+        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->getVendorDirectory());
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
