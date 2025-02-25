@@ -35,8 +35,6 @@ class Copier
      */
     protected string $workingDir;
 
-    protected string $absoluteTargetDir;
-
     protected DiscoveredFiles $files;
 
     protected FileSystem $filesystem;
@@ -64,10 +62,13 @@ class Copier
         $this->config = $config;
         $this->logger = $logger;
 
-        $this->absoluteTargetDir = $workingDir . $config->getTargetDirectory();
-
         $this->filesystem = $filesystem;
         $this->workingDir = $workingDir;
+    }
+    
+    protected function getTargetDirectory(): string
+    {
+        return $this->workingDir . $this->config->getTargetDirectory();
     }
 
     /**
@@ -79,22 +80,22 @@ class Copier
      */
     public function prepareTarget(): void
     {
-        if (! $this->filesystem->directoryExists($this->absoluteTargetDir)) {
-            $this->logger->info('Creating directory at ' . $this->absoluteTargetDir);
-            $this->filesystem->createDirectory($this->absoluteTargetDir);
-        } else {
-            foreach ($this->files->getFiles() as $file) {
-                if (!$file->isDoCopy()) {
-                    $this->logger->debug('Skipping ' . $file->getSourcePath());
-                    continue;
-                }
+        if (! $this->filesystem->directoryExists($this->getTargetDirectory())) {
+            $this->logger->info('Creating directory at ' . $this->getTargetDirectory());
+            $this->filesystem->createDirectory($this->getTargetDirectory());
+        }
 
-                $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
+        foreach ($this->files->getFiles() as $file) {
+            if (!$file->isDoCopy()) {
+                $this->logger->debug('Skipping ' . $file->getSourcePath());
+                continue;
+            }
 
-                if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
-                    $this->logger->info('Deleting existing destination file at ' . $targetAbsoluteFilepath);
-                    $this->filesystem->delete($targetAbsoluteFilepath);
-                }
+            $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
+
+            if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
+                $this->logger->info('Deleting existing destination file at ' . $targetAbsoluteFilepath);
+                $this->filesystem->delete($targetAbsoluteFilepath);
             }
         }
     }
