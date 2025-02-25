@@ -60,7 +60,11 @@ class Autoload
         $this->filesystem = $filesystem;
         $this->setLogger($logger ?? new NullLogger());
 
-
+        $this->logger->debug('Using target directory: ' . $this->getTargetDirectory());
+    }
+    
+    protected function getTargetDirectory(): string
+    {
         $targetDirectory = ltrim(sprintf(
             '%s/%s/',
             trim($this->workingDir, '/\\'),
@@ -74,9 +78,7 @@ class Autoload
             ? 'mem://' . ltrim($targetDirectory, '/')
             : $targetDirectory;
 
-        $this->absoluteTargetDirectory = $targetDir;
-
-        $this->logger->debug('Using target directory: ' . $this->absoluteTargetDirectory);
+        return $targetDir;
     }
 
     public function generate(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
@@ -107,6 +109,12 @@ class Autoload
             $this->config,
             $this->filesystem,
             $this->logger
-        ))->generatedPrefixedAutoloader($this->workingDir, $this->config->getTargetDirectory());
+        ))->generatedPrefixedAutoloader(
+            $this->workingDir,
+            $this->filesystem->getRelativePath(
+                $this->workingDir,
+                $this->getTargetDirectory()
+            )
+        );
     }
 }
