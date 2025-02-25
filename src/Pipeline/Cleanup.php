@@ -51,7 +51,7 @@ class Cleanup
         $this->filesystem = $filesystem;
     }
 
-    protected function getAbsoluteVendorDir(): string
+    protected function getVendorDirectory(): string
     {
         return $this->workingDir . $this->vendorDirectory;
     }
@@ -112,7 +112,7 @@ class Cleanup
         }
         $rootSourceDirectories = array_map(
             function (string $path): string {
-                return $this->getAbsoluteVendorDir() . $path;
+                return $this->getVendorDirectory() . $path;
             },
             array_keys($rootSourceDirectories)
         );
@@ -179,7 +179,7 @@ class Cleanup
         /** @var ComposerPackage $package */
         foreach ($packages as $package) {
             // Normal package.
-            if (str_starts_with($package->getPackageAbsolutePath(), $this->workingDir)) {
+            if (str_starts_with($package->getPackageAbsolutePath(), $this->getVendorDirectory())) {
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
@@ -190,7 +190,7 @@ class Cleanup
                 // If it's a symlink, remove the symlink in the directory
                 $symlinkPath =
                     rtrim(
-                        $this->workingDir . $this->config->getVendorDirectory() . $package->getRelativePath(),
+                        $this->getVendorDirectory() . $package->getRelativePath(),
                         '/'
                     );
 
