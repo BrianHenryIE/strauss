@@ -117,6 +117,8 @@ EOD;
         $vendorPrefixedInstalledJsonPsr4PhpStringAfter = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
 
         $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
+
+        // Since we're not deleting the original files, don't change their vendor/composer/installed.json entries
         $this->assertStringNotContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
         $this->assertStringContainsString('"chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
     }

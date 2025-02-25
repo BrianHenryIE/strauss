@@ -29,7 +29,6 @@ class LicenserTest extends TestCase
     public function testFindLicenceFilesPathsAreRelative()
     {
         $config = $this->createStub(StraussConfig::class);
-        $workingDir = __DIR__ . '/';
 
         $dependencies = array();
 
@@ -53,7 +52,7 @@ class LicenserTest extends TestCase
 
         $filesystemMock->expects('listContents')->andReturn($directoryListingMock);
 
-        $sut = new Licenser($config, $workingDir, $dependencies, 'BrianHenryIE', $filesystemMock);
+        $sut = new Licenser($config, $dependencies, 'BrianHenryIE', $filesystemMock);
 
         $sut->findLicenseFiles();
 
@@ -82,7 +81,7 @@ class LicenserTest extends TestCase
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, __DIR__, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -133,7 +132,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(false);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, __DIR__, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -173,7 +172,7 @@ EOD;
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(false);
 
-        $sut = new Licenser($config, __DIR__, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -213,7 +212,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php // phpcs:ignore WordPress.Files.FileName
@@ -271,7 +270,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -340,7 +339,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -394,7 +393,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -462,7 +461,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -537,7 +536,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php

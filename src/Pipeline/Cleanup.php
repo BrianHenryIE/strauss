@@ -22,38 +22,23 @@ class Cleanup
 
     protected Filesystem $filesystem;
 
-    protected string $workingDir;
-
     protected bool $isDeleteVendorFiles;
     protected bool $isDeleteVendorPackages;
-
-    protected string $vendorDirectory;
-    protected string $targetDirectory;
 
     protected CleanupConfigInterface $config;
 
     public function __construct(
         CleanupConfigInterface $config,
-        string $workingDir,
         Filesystem $filesystem,
         LoggerInterface $logger
     ) {
         $this->config = $config;
         $this->logger = $logger;
 
-        $this->vendorDirectory = $config->getVendorDirectory();
-        $this->targetDirectory = $config->getTargetDirectory();
-        $this->workingDir = $workingDir;
-
         $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getTargetDirectory() !== $config->getVendorDirectory();
         $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getTargetDirectory() !== $config->getVendorDirectory();
 
         $this->filesystem = $filesystem;
-    }
-
-    protected function getVendorDirectory(): string
-    {
-        return $this->workingDir . $this->vendorDirectory;
     }
 
     /**
@@ -64,7 +49,7 @@ class Cleanup
      *
      * @throws FilesystemException
      */
-    public function cleanup(array $files, array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    public function cleanup(array $files): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
             $this->logger->info('No cleanup required.');
@@ -80,15 +65,29 @@ class Cleanup
         }
 
         $this->deleteEmptyDirectories($files);
+    }
 
+    public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    {
         $installedJson = new InstalledJson(
-            $this->workingDir,
             $this->config,
             $this->filesystem,
             $this->logger
         );
-        $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
-        $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
+
+        if ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
+        && !$this->config->isDeleteVendorFiles() && !$this->config->isDeleteVendorPackages()
+        ) {
+            $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+        } elseif ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
+            &&
+            ($this->config->isDeleteVendorFiles() ||$this->config->isDeleteVendorPackages())
+        ) {
+            $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+            $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
+        } elseif ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+            $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
+        }
     }
 
     /**
@@ -112,7 +111,7 @@ class Cleanup
         }
         $rootSourceDirectories = array_map(
             function (string $path): string {
-                return $this->getVendorDirectory() . $path;
+                return $this->config->getVendorDirectory() . $path;
             },
             array_keys($rootSourceDirectories)
         );
@@ -179,7 +178,7 @@ class Cleanup
         /** @var ComposerPackage $package */
         foreach ($packages as $package) {
             // Normal package.
-            if (str_starts_with($package->getPackageAbsolutePath(), $this->getVendorDirectory())) {
+            if (str_starts_with($package->getPackageAbsolutePath(), $this->config->getVendorDirectory())) {
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
@@ -190,7 +189,7 @@ class Cleanup
                 // If it's a symlink, remove the symlink in the directory
                 $symlinkPath =
                     rtrim(
-                        $this->getVendorDirectory() . $package->getRelativePath(),
+                        $this->config->getVendorDirectory() . $package->getRelativePath(),
                         '/'
                     );
 

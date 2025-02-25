@@ -58,7 +58,6 @@ EOD;
         $config->method('getVendorDirectory')->willReturn($vendorDir);
 
         $fileEnumerator = new FileEnumerator(
-            $workingDir,
             $config,
             new Filesystem(
                 new \League\Flysystem\Filesystem(

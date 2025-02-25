@@ -34,26 +34,17 @@ class FileCopyScanner
 
     protected FileCopyScannerConfigInterface $config;
 
-    protected string $workingDir;
-
     protected FileSystem $fileSystem;
 
     public function __construct(
-        string $workingDir,
         FileCopyScannerConfigInterface $config,
         FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
-        $this->workingDir = $workingDir;
         $this->config = $config;
         $this->fileSystem = $filesystem;
 
         $this->setLogger($logger ?? new NullLogger());
-    }
-
-    protected function getTargetDirectory(): string
-    {
-        return $this->workingDir . $this->config->getTargetDirectory();
     }
 
     public function scanFiles(DiscoveredFiles $files): void
@@ -102,7 +93,7 @@ class FileCopyScanner
             $file->setDoCopy($copy);
 
             $target = $copy && $file instanceof FileWithDependency
-                ? $this->getTargetDirectory() . $file->getVendorRelativePath()
+                ? $this->config->getTargetDirectory() . $file->getVendorRelativePath()
                 : $file->getSourcePath();
 
             $file->setAbsoluteTargetPath($target);

@@ -27,14 +27,6 @@ class Copier
 {
     use LoggerAwareTrait;
 
-    /**
-     * The only path variable with a leading slash.
-     * All directories in project end with a slash.
-     *
-     * @var string
-     */
-    protected string $workingDir;
-
     protected DiscoveredFiles $files;
 
     protected FileSystem $filesystem;
@@ -47,30 +39,20 @@ class Copier
      * Copier constructor.
      *
      * @param DiscoveredFiles $files
-     * @param string $workingDir
      * @param StraussConfig $config
      */
     public function __construct(
         DiscoveredFiles $files,
-        string $workingDir,
         StraussConfig $config,
         FileSystem $filesystem,
         LoggerInterface $logger
     ) {
         $this->files = $files;
-
         $this->config = $config;
         $this->logger = $logger;
-
         $this->filesystem = $filesystem;
-        $this->workingDir = $workingDir;
     }
     
-    protected function getTargetDirectory(): string
-    {
-        return $this->workingDir . $this->config->getTargetDirectory();
-    }
-
     /**
      * If the target dir does not exist, create it.
      * If it already exists, delete any files we're about to copy.
@@ -80,9 +62,9 @@ class Copier
      */
     public function prepareTarget(): void
     {
-        if (! $this->filesystem->directoryExists($this->getTargetDirectory())) {
-            $this->logger->info('Creating directory at ' . $this->getTargetDirectory());
-            $this->filesystem->createDirectory($this->getTargetDirectory());
+        if (! $this->filesystem->directoryExists($this->config->getTargetDirectory())) {
+            $this->logger->info('Creating directory at ' . $this->config->getTargetDirectory());
+            $this->filesystem->createDirectory($this->config->getTargetDirectory());
         }
 
         foreach ($this->files->getFiles() as $file) {

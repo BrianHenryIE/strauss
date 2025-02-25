@@ -313,7 +313,7 @@ class StraussConfig implements
      */
     public function getTargetDirectory(): string
     {
-        return trim($this->targetDirectory, '\\/') . '/';
+        return $this->getProjectDirectory() . trim($this->targetDirectory, '\\/') . '/';
     }
 
     /**
@@ -329,7 +329,7 @@ class StraussConfig implements
      */
     public function getVendorDirectory(): string
     {
-        return trim($this->vendorDirectory, '\\/') . '/';
+        return $this->getProjectDirectory() . trim($this->vendorDirectory, '\\/') . '/';
     }
 
     /**

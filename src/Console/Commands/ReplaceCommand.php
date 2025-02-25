@@ -162,7 +162,7 @@ class ReplaceCommand extends Command
             fn($path) => false !== strpos($path, trim($this->workingDir, '/')) ? $path : $this->workingDir . $path,
             $relativeUpdateCallSites
         );
-        $fileEnumerator = new FileEnumerator($this->workingDir, $config, $this->filesystem);
+        $fileEnumerator = new FileEnumerator($config, $this->filesystem);
         $this->discoveredFiles = $fileEnumerator->compileFileListForPaths($updateCallSites);
     }
 
@@ -213,7 +213,6 @@ class ReplaceCommand extends Command
         $projectReplace = new Prefixer($config, $this->filesystem, $this->logger);
 
         $fileEnumerator = new FileEnumerator(
-            $this->workingDir,
             $config,
             $this->filesystem
         );
@@ -249,7 +248,7 @@ class ReplaceCommand extends Command
 
         // TODO: Update to use DiscoveredFiles
         $dependencies = $this->flatDependencyTree;
-        $licenser = new Licenser($config, $this->workingDir, $dependencies, $author, $this->filesystem, $this->logger);
+        $licenser = new Licenser($config, $dependencies, $author, $this->filesystem, $this->logger);
 
         $licenser->copyLicenses();
 

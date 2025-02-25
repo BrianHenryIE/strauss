@@ -24,7 +24,6 @@ class InstalledJsonTest extends \BrianHenryIE\Strauss\TestCase
         $config = \Mockery::mock(CleanupConfigInterface::class);
 
         $sut = new InstalledJson(
-            '/',
             $config,
             $fileSystem,
             new NullLogger()
@@ -53,7 +52,6 @@ EOD;
         $config->expects()->getVendorDirectory()->once()->andReturn('vendor/');
 
         $sut = new InstalledJson(
-            '/',
             $config,
             $fileSystem,
             new NullLogger()
@@ -86,12 +84,10 @@ EOD;
         $fileSystem->write('vendor-prefixed/psr/container/src/ContainerInterface.php', '<?php namespace Psr\Container;');
 
         $config = \Mockery::mock(CleanupConfigInterface::class);
-        $config->expects()->isDryRun()->once()->andReturn(true);
-        $config->expects()->getVendorDirectory()->once()->andReturn('vendor/');
-        $config->expects()->getTargetDirectory()->once()->andReturn('vendor-prefixed/');
+        $config->expects()->getVendorDirectory()->once()->andReturn('mem://vendor/');
+        $config->expects()->getTargetDirectory()->once()->andReturn('mem://vendor-prefixed/');
 
         $sut = new InstalledJson(
-            '/',
             $config,
             $fileSystem,
             new NullLogger()
@@ -134,12 +130,10 @@ EOD;
         $fileSystem->write('vendor-prefixed/psr/container/src/ContainerInterface.php', '<?php namespace Psr\Container;');
 
         $config = \Mockery::mock(CleanupConfigInterface::class);
-        $config->expects()->isDryRun()->once()->andReturn(true);
-        $config->expects()->getVendorDirectory()->once()->andReturn('vendor/');
-        $config->expects()->getTargetDirectory()->once()->andReturn('vendor-prefixed/');
+        $config->expects()->getVendorDirectory()->once()->andReturn('mem://vendor/');
+        $config->expects()->getTargetDirectory()->once()->andReturn('mem://vendor-prefixed/');
 
         $sut = new InstalledJson(
-            '/',
             $config,
             $fileSystem,
             new NullLogger()

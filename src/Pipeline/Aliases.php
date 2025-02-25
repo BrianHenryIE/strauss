@@ -34,20 +34,16 @@ class Aliases
     use LoggerAwareTrait;
 
     protected AliasesConfigInterace $config;
-    protected string $workingDir;
+
     protected FileSystem $fileSystem;
 
     public function __construct(
         AliasesConfigInterace $config,
-        string $workingDir,
         FileSystem $fileSystem,
         ?LoggerInterface $logger = null
     ) {
         $this->config = $config;
-
-        $this->workingDir = $config->isDryRun() ? 'mem://' . ltrim($workingDir, '/') : $workingDir;
         $this->fileSystem = $fileSystem;
-
         $this->setLogger($logger ?? new NullLogger());
     }
 
@@ -66,18 +62,6 @@ class Aliases
         $this->fileSystem->write($outputFilepath, $fileString);
     }
 
-    protected function getVendorDirectory(): string
-    {
-        $vendorAbsoluteDirectory = $this->workingDir . $this->config->getVendorDirectory();
-        return $vendorAbsoluteDirectory;
-    }
-
-    protected function getTargetDirectory(): string
-    {
-        $vendorAbsoluteDirectory = $this->workingDir . $this->config->getTargetDirectory();
-        return $vendorAbsoluteDirectory;
-    }
-
     protected function getVendorClassmap(): array
     {
         $paths = array_map(
@@ -87,7 +71,7 @@ class Aliases
                     : new \SplFileInfo('/'.$file->path());
             },
             array_filter(
-                $this->fileSystem->listContents($this->getVendorDirectory(), true)->toArray(),
+                $this->fileSystem->listContents($this->config->getVendorDirectory(), true)->toArray(),
                 fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
             )
         );
@@ -112,7 +96,7 @@ class Aliases
                         : new \SplFileInfo('/'.$file->path());
                 },
                 array_filter(
-                    $this->fileSystem->listContents($this->getTargetDirectory(), \League\Flysystem\FilesystemReader::LIST_DEEP)->toArray(),
+                    $this->fileSystem->listContents($this->config->getTargetDirectory(), \League\Flysystem\FilesystemReader::LIST_DEEP)->toArray(),
                     fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
                 )
             );
@@ -134,7 +118,7 @@ class Aliases
     {
         return  sprintf(
             '%scomposer/autoload_aliases.php',
-            $this->getVendorDirectory()
+            $this->config->getVendorDirectory()
         );
     }
 

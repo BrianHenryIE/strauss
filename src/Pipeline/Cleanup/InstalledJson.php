@@ -32,35 +32,19 @@ class InstalledJson
 {
     use LoggerAwareTrait;
 
-    protected string $workingDir;
     protected CleanupConfigInterface $config;
+
     protected FileSystem $filesystem;
 
     public function __construct(
-        string $workingDir,
         CleanupConfigInterface $config,
         FileSystem $filesystem,
         LoggerInterface $logger
     ) {
-        $this->workingDir = $workingDir;
         $this->config = $config;
         $this->filesystem = $filesystem;
 
         $this->setLogger($logger);
-    }
-
-    protected function getVendorDirectory(): string
-    {
-        return $this->config->isDryRun()
-            ? 'mem:/' . $this->workingDir . $this->config->getVendorDirectory()
-            : $this->workingDir . $this->config->getVendorDirectory();
-    }
-
-    protected function getTargetDirectory(): string
-    {
-        return $this->config->isDryRun()
-            ? 'mem:/' . $this->workingDir . $this->config->getTargetDirectory()
-            : $this->workingDir . $this->config->getTargetDirectory();
     }
 
     protected function copyInstalledJson(): void
@@ -68,12 +52,12 @@ class InstalledJson
         $this->logger->info('Copying vendor/composer/installed.json to vendor-prefixed/composer/installed.json');
 
         $this->filesystem->copy(
-            $this->getVendorDirectory() . 'composer/installed.json',
-            $this->getTargetDirectory() . 'composer/installed.json'
+            $this->config->getVendorDirectory() . 'composer/installed.json',
+            $this->config->getTargetDirectory() . 'composer/installed.json'
         );
 
         $this->logger->debug('Copied vendor/composer/installed.json to vendor-prefixed/composer/installed.json');
-        $this->logger->debug($this->filesystem->read($this->getTargetDirectory() . 'composer/installed.json'));
+        $this->logger->debug($this->filesystem->read($this->config->getTargetDirectory() . 'composer/installed.json'));
     }
 
     /**
@@ -112,11 +96,11 @@ class InstalledJson
             $this->logger->info('Checking package: ' . $package['name']);
 
             // `composer/` is here because the install-path is relative to the `vendor/composer` directory.
-            $packageDir = $this->getVendorDirectory() . 'composer/' . $package['install-path'] . '/';
+            $packageDir = $this->config->getVendorDirectory() . 'composer/' . $package['install-path'] . '/';
             if (!$this->filesystem->directoryExists($packageDir)) {
                 $this->logger->debug('Original package directory does not exist at : ' . $packageDir);
 
-                $newInstallPath = $this->getTargetDirectory() . str_replace('../', '', $package['install-path']);
+                $newInstallPath = $this->config->getTargetDirectory() . str_replace('../', '', $package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
                     $this->logger->warning('Target package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
@@ -124,7 +108,7 @@ class InstalledJson
                 }
 
                 $newRelativePath = $this->filesystem->getRelativePath(
-                    $this->getVendorDirectory() . 'composer/',
+                    $this->config->getVendorDirectory() . 'composer/',
                     $newInstallPath
                 );
 
@@ -275,7 +259,7 @@ class InstalledJson
     {
         $this->copyInstalledJson();
 
-        $vendorDir = $this->getTargetDirectory();
+        $vendorDir = $this->config->getTargetDirectory();
 
         $installedJsonFile = $this->getJsonFile($vendorDir);
 
@@ -314,28 +298,26 @@ class InstalledJson
      * Composer creates a file `vendor/composer/installed.json` which is uses when running `composer dump-autoload`.
      * When `delete-vendor-packages` or `delete-vendor-files` is true, files and directories which have been deleted
      * must also be removed from `installed.json` or Composer will throw an error.
-     *
-     * TODO: {@see AutoloadFiles} might be redundant if we run this function and then run `composer dump-autoload`.
      */
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $this->logger->info('Cleaning up installed.json');
 
-        $vendorDir = $this->getVendorDirectory();
+        $vendorDir = $this->config->getVendorDirectory();
 
-        $installedJsonFile = $this->getJsonFile($vendorDir);
+        $vendorInstalledJsonFile = $this->getJsonFile($vendorDir);
 
         /**
          * @var InstalledJson $installedJsonArray
          */
-        $installedJsonArray = $installedJsonFile->read();
+        $installedJsonArray = $vendorInstalledJsonFile->read();
 
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
 
-        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $vendorDir);
-
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
-        $installedJsonFile->write($installedJsonArray);
+        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $vendorDir);
+
+        $vendorInstalledJsonFile->write($installedJsonArray);
     }
 }

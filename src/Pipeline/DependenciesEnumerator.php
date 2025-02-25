@@ -19,14 +19,6 @@ class DependenciesEnumerator
     use LoggerAwareTrait;
 
     /**
-     * The only path variable with a leading slash.
-     * All directories in project end with a slash.
-     *
-     * @var string
-     */
-    protected string $workingDir;
-
-    /**
      * @var string[]
      */
     protected array $requiredPackageNames;
@@ -59,16 +51,13 @@ class DependenciesEnumerator
     /**
      * Constructor.
      *
-     * @param string $workingDir
      * @param StraussConfig $config
      */
     public function __construct(
-        string $workingDir,
         StraussConfig $config,
         FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
-        $this->workingDir = $workingDir;
         $this->overrideAutoload = $config->getOverrideAutoload();
         $this->requiredPackageNames = $config->getPackages();
 
@@ -76,15 +65,6 @@ class DependenciesEnumerator
         $this->config = $config;
 
         $this->setLogger($logger ?? new NullLogger());
-    }
-
-    public function getVendorDirectory(): string
-    {
-        return sprintf(
-            '%s%s',
-            $this->workingDir,
-            $this->config->getVendorDirectory()
-        );
     }
 
     /**
@@ -113,9 +93,10 @@ class DependenciesEnumerator
 
             $packageComposerFile = sprintf(
                 '%s%s/composer.json',
-                $this->getVendorDirectory(),
+                $this->config->getVendorDirectory(),
                 $requiredPackageName
             );
+            $packageComposerFile = str_replace('mem://', '/', $packageComposerFile);
 
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 

@@ -34,7 +34,6 @@ class AliasesTest extends TestCase
 
         $sut = new Aliases(
             $config,
-            '/',
             $fileSystem,
             new NullLogger()
         );
@@ -92,7 +91,6 @@ EOD;
 
         $sut = new Aliases(
             $config,
-            '/',
             $fileSystem,
             new NullLogger()
         );
@@ -136,7 +134,6 @@ EOD;
 
         $sut = new Aliases(
             $config,
-            '/',
             $fileSystem,
             new NullLogger()
         );

@@ -20,32 +20,22 @@ class DumpAutoload
 
     protected AutoloadConfigInterace $config;
 
-    protected string $workingDir;
-
     protected FileSystem $filesystem;
 
     /**
      * Autoload constructor.
      *
      * @param AutoloadConfigInterace $config
-     * @param string $workingDir
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
     public function __construct(
-        string $workingDir,
         AutoloadConfigInterace $config,
         Filesystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
-        $this->workingDir = $workingDir;
         $this->config = $config;
         $this->filesystem = $filesystem;
         $this->setLogger($logger ?? new NullLogger());
-    }
-
-    protected function getTargetDirectory(): string
-    {
-        return $this->workingDir . $this->config->getTargetDirectory();
     }
 
     /**
@@ -62,7 +52,7 @@ class DumpAutoload
 
         $relativeTargetDir = $this->filesystem->getRelativePath(
             $this->config->getProjectDirectory(),
-            $this->getTargetDirectory()
+            $this->config->getTargetDirectory()
         );
 
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
@@ -90,7 +80,7 @@ class DumpAutoload
         $optimize = false; // $input->getOption('optimize') || $config->get('optimize-autoloader');
         $generator->setDevMode(false);
 
-        $localRepo = new InstalledFilesystemRepository(new JsonFile($this->getTargetDirectory() . 'composer/installed.json'));
+        $localRepo = new InstalledFilesystemRepository(new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json'));
 
         // This will output the autoload_static.php etc. files to `vendor-prefixed/composer`.
         $generator->dump(
@@ -123,7 +113,7 @@ class DumpAutoload
      */
     protected function getSuffix(): ?string
     {
-        return !$this->filesystem->fileExists($this->getTargetDirectory() . 'autoload.php')
+        return !$this->filesystem->fileExists($this->config->getTargetDirectory() . 'autoload.php')
             ? bin2hex(random_bytes(16))
             : null;
     }

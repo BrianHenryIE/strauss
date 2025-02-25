@@ -22,15 +22,6 @@ class FileEnumerator
 {
     use LoggerAwareTrait;
 
-    /**
-     * The only path variable with a leading slash.
-     * All directories in project end with a slash.
-     *
-     * @var string
-     */
-    protected string $workingDir;
-
-    /** @var string */
     protected string $vendorDir;
 
     /** @var string[]  */
@@ -55,21 +46,21 @@ class FileEnumerator
      */
     protected array $filesAutoloaders = [];
 
+    protected StraussConfig $config;
+
     /**
      * Copier constructor.
-     *
-     * @param string $workingDir
      */
     public function __construct(
-        string $workingDir,
         StraussConfig $config,
         FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
-        $this->workingDir = $workingDir;
         $this->vendorDir = $config->getVendorDirectory();
+
+        $this->config = $config;
 
         $this->excludeNamespaces = $config->getExcludeNamespacesFromCopy();
         $this->excludePackageNames = $config->getExcludePackagesFromCopy();
@@ -78,11 +69,6 @@ class FileEnumerator
         $this->filesystem = $filesystem;
 
         $this->logger = $logger ?? new NullLogger();
-    }
-
-    protected function getVendorDirectory(): string
-    {
-        return $this->workingDir . $this->vendorDir;
     }
 
     /**
@@ -184,13 +170,13 @@ class FileEnumerator
             $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
         }
 
-        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->getVendorDirectory());
+        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getVendorDirectory());
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
             ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
 
-        $f->setAbsoluteTargetPath($this->getVendorDirectory() . $vendorRelativePath);
+        $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
 
         $f->addAutoloader($autoloaderType);
         $f->setDoDelete($isOutsideProjectDir);

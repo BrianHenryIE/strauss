@@ -84,7 +84,6 @@ class IncludeAutoloaderCommand extends Command
 
             $vendorComposerAutoload = new VendorComposerAutoload(
                 $config,
-                $workingDir,
                 $this->filesystem,
                 $logger
             );
