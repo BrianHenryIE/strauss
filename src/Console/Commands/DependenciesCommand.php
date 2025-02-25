@@ -352,7 +352,6 @@ class DependenciesCommand extends Command
 
         $changeEnumerator = new ChangeEnumerator(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );

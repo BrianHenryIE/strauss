@@ -179,7 +179,6 @@ class ReplaceCommand extends Command
 
         $changeEnumerator = new ChangeEnumerator(
             $config,
-            $this->workingDir,
             $this->filesystem
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);

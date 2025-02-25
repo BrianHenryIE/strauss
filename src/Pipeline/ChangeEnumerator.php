@@ -23,17 +23,14 @@ class ChangeEnumerator
     use LoggerAwareTrait;
 
     protected ChangeEnumeratorConfigInterface $config;
-    protected string $workingDir;
     protected FilesystemReader $filesystem;
 
     public function __construct(
         ChangeEnumeratorConfigInterface $config,
-        string $workingDir,
         FilesystemReader $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->config = $config;
-        $this->workingDir = $workingDir;
         $this->filesystem = $filesystem;
         $this->setLogger($logger ?? new NullLogger());
     }
