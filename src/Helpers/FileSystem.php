@@ -245,6 +245,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             str_repeat('../', count($fromDirectoryParts))
             . implode('/', $toPathParts);
 
+        if($this->directoryExists($toAbsolutePath)) {
+            $relativePath .= '/';
+        }
+
         return $relativePath;
     }
 
