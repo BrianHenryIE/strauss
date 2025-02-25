@@ -109,12 +109,6 @@ class Autoload
             $this->config,
             $this->filesystem,
             $this->logger
-        ))->generatedPrefixedAutoloader(
-            $this->workingDir,
-            $this->filesystem->getRelativePath(
-                $this->workingDir,
-                $this->getTargetDirectory()
-            )
-        );
+        ))->generatedPrefixedAutoloader();
     }
 }

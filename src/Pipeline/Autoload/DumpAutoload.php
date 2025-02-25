@@ -2,7 +2,6 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Autoload\AutoloadGenerator;
@@ -28,7 +27,7 @@ class DumpAutoload
     /**
      * Autoload constructor.
      *
-     * @param StraussConfig $config
+     * @param AutoloadConfigInterace $config
      * @param string $workingDir
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
@@ -52,20 +51,32 @@ class DumpAutoload
     /**
      * Uses `vendor/composer/installed.json` to output autoload files to `vendor-prefixed/composer`.
      */
-    public function generatedPrefixedAutoloader(string $workingDir, string $relativeTargetDir)
+    public function generatedPrefixedAutoloader(): void
     {
+        /**
+         * Unfortunately, `::dump()` creates the target directories if they don't exist, even though it otherwise respects `::setDryRun()`.
+         */
+        if ($this->config->isDryRun()) {
+            return;
+        }
+
+        $relativeTargetDir = $this->filesystem->getRelativePath(
+            $this->config->getProjectDirectory(),
+            $this->getTargetDirectory()
+        );
+
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
 
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
-        $composer = Factory::create(new NullIO(), $workingDir . 'composer.json');
+        $composer = Factory::create(new NullIO(), $this->config->getProjectDirectory() . 'composer.json');
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
 
         /**
          * Cannot use `$composer->getConfig()`, need to create a new one so the vendor-dir is correct.
          */
-        $config = new \Composer\Config(false, $workingDir);
+        $config = new \Composer\Config(false, $this->config->getProjectDirectory());
 
         $generator = $composer->getAutoloadGenerator();
         $generator->setDryRun($this->config->isDryRun());
@@ -79,7 +90,7 @@ class DumpAutoload
         $optimize = false; // $input->getOption('optimize') || $config->get('optimize-autoloader');
         $generator->setDevMode(false);
 
-        $localRepo = new InstalledFilesystemRepository(new JsonFile($workingDir . $relativeTargetDir . 'composer/installed.json'));
+        $localRepo = new InstalledFilesystemRepository(new JsonFile($this->getTargetDirectory() . 'composer/installed.json'));
 
         // This will output the autoload_static.php etc. files to `vendor-prefixed/composer`.
         $generator->dump(
