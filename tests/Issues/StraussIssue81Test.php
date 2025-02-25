@@ -20,6 +20,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class StraussIssue81Test extends IntegrationTestCase
 {
 
+    /**
+     * TODO: figure out what to do for delete_vendor_files
+     */
     public function test_aliased_class(): void
     {
 
@@ -37,7 +40,7 @@ class StraussIssue81Test extends IntegrationTestCase
   "extra": {
     "strauss": {
       "namespace_prefix": "Strauss\\Alias\\",
-      "delete_vendor_files": true
+      "delete_vendor_packages": true
     }
   },
   "config": {
@@ -53,6 +56,7 @@ EOD;
 namespace Whatever;
 
 require_once __DIR__ . '/vendor-prefixed/autoload.php';
+require_once __DIR__ . '/vendor/composer/autoload_aliases.php';
 require_once __DIR__ . '/vendor/autoload.php';
 
 new \Psr\Log\NullLogger();
@@ -72,6 +76,8 @@ EOD;
 
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
+
+        exec('composer dump-autoload');
 
         exec('php ' . $this->testsWorkingDir . '/file1.php', $output, $return_var);
 
