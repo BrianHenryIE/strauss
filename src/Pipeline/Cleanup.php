@@ -122,7 +122,7 @@ class Cleanup
                 continue;
             }
 
-            $dirList = $this->filesystem->listContents($this->workingDir . $rootSourceDirectory, true);
+            $dirList = $this->filesystem->listContents($rootSourceDirectory, true);
 
             $allFilePaths = array_map(
                 fn($file) => $file->path(),
