@@ -53,7 +53,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ],
                 $normalizer
-            )
+            ),
+            __DIR__
         );
 
         /** @var FilesystemRegistry $registry */
