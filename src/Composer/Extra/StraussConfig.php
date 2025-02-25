@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use Composer\Composer;
+use Composer\Factory;
 use Exception;
 use JsonMapper\JsonMapperFactory;
 use JsonMapper\Middleware\Rename\Rename;
@@ -28,6 +29,11 @@ class StraussConfig implements
     PrefixerConfigInterface,
     ReplaceConfigInterface
 {
+    /**
+     * The directory containing `composer.json`. Probably `cwd()`.
+     */
+    protected string $projectDirectory;
+
     /**
      * The output directory.
      */
@@ -699,5 +705,14 @@ class StraussConfig implements
     public function isCreateAliases(): bool
     {
         return $this->deleteVendorPackages || $this->deleteVendorFiles || $this->targetDirectory === 'vendor';
+    }
+
+    public function getProjectDirectory(): string
+    {
+        $projectDirectory = $this->projectDirectory ?? getcwd() . '/';
+
+        return $this->isDryRun()
+            ? 'mem:/' . $projectDirectory
+            : $projectDirectory;
     }
 }
