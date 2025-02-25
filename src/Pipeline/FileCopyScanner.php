@@ -20,6 +20,7 @@ use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use League\Flysystem\FilesystemReader;
@@ -35,14 +36,17 @@ class FileCopyScanner
 
     protected string $workingDir;
 
+    protected FileSystem $fileSystem;
+
     public function __construct(
         string $workingDir,
         FileCopyScannerConfigInterface $config,
-        FilesystemReader $filesystem,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->workingDir = $workingDir;
         $this->config = $config;
+        $this->fileSystem = $filesystem;
 
         $this->setLogger($logger ?? new NullLogger());
     }
@@ -98,21 +102,8 @@ class FileCopyScanner
 
             $file->setAbsoluteTargetPath($target);
 
-            $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->isSymlinkedFile($file);
+            $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->fileSystem->isSymlinkedFile($file);
             $file->setDoDelete($shouldDelete);
         };
-    }
-
-    /**
-     * Check does the filepath point to a file outside the working directory.
-     * If `realpath()` fails to resolve the path, assume it's a symlink.
-     *
-     * TODO: This should not be here. It's a filesystem operation.
-     */
-    protected function isSymlinkedFile(FileBase $file): bool
-    {
-        $realpath = realpath($file->getSourcePath());
-
-        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
     }
 }

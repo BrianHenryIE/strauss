@@ -10,6 +10,7 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use BrianHenryIE\Strauss\Files\FileBase;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
@@ -241,5 +242,17 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             . implode('/', $toPathParts);
 
         return $relativePath;
+    }
+
+
+    /**
+     * Check does the filepath point to a file outside the working directory.
+     * If `realpath()` fails to resolve the path, assume it's a symlink.
+     */
+    public function isSymlinkedFile(FileBase $file): bool
+    {
+        $realpath = realpath($file->getSourcePath());
+
+        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
     }
 }
