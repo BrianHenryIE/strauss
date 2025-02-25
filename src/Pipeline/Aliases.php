@@ -332,11 +332,11 @@ EOD;
             switch (get_class($symbol)) {
                 case FunctionSymbol::class:
                     // TODO: Do we need to check for `void`? Or will it just be ignored?
-                    // TODO: check `function_exists()`
                     // Is it possible to inherit PHPDoc from the original function?
                     $aliasesPhpString = <<<EOD
-        function $originalSymbol(...\$args) { return $replacementSymbol(func_get_args()); }
-        
+        if(!function_exists('$originalSymbol')){
+            function $originalSymbol(...\$args) { return $replacementSymbol(func_get_args()); }
+        }
         EOD;
                     break;
                 case ConstantSymbol::class:
