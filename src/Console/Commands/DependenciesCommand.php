@@ -142,7 +142,8 @@ class DependenciesCommand extends Command
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
-            )
+            ),
+            getcwd() . '/'
         );
     }
 
@@ -199,7 +200,8 @@ class DependenciesCommand extends Command
                     new FileSystem(
                         new ReadOnlyFileSystem(
                             $this->filesystem
-                        )
+                        ),
+                        $this->workingDir
                     );
 
                 /** @var FilesystemRegistry $registry */

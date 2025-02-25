@@ -115,7 +115,8 @@ class IntegrationTestCase extends TestCase
         $filesystem = new Filesystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter('/')
-            )
+            ),
+            $this->testsWorkingDir
         );
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();

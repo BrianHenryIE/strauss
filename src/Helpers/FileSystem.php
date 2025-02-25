@@ -26,15 +26,19 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     protected FilesystemOperator $flysystem;
     protected PathNormalizer $normalizer;
 
+    protected string $workingDir;
+
     /**
      * TODO: maybe restrict the constructor to only accept a LocalFilesystemAdapter.
      *
      * TODO: Check are any of these methods unused
      */
-    public function __construct(FilesystemOperator $flysystem)
+    public function __construct(FilesystemOperator $flysystem, string $workingDir)
     {
         $this->flysystem = $flysystem;
         $this->normalizer = new StripProtocolPathNormalizer('mem');
+
+        $this->workingDir = $workingDir;
     }
 
     /**
