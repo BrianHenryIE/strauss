@@ -132,7 +132,7 @@ class Cleanup
             // Sort by longest path first, so subdirectories are deleted before the parent directories are checked.
             usort(
                 $allFilePaths,
-                fn($a, $b) => strlen($b) - strlen($a)
+                fn($a, $b) => count(explode('/', $b)) - count(explode('/', $a))
             );
 
             foreach ($allFilePaths as $filePath) {
