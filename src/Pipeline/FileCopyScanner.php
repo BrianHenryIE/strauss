@@ -77,7 +77,7 @@ class FileCopyScanner
             /** @var DiscoveredSymbol $symbol */
             foreach ($file->getDiscoveredSymbols() as $symbol) {
                 foreach ($this->config->getExcludeNamespacesFromCopy() as $namespace) {
-                    if ($symbol->getSourceFile() === $file
+                    if (in_array($file->getSourcePath(), array_keys($symbol->getSourceFiles()), true)
                         && $symbol instanceof NamespaceSymbol
                         && str_starts_with($symbol->getOriginalSymbol(), $namespace)
                     ) {
