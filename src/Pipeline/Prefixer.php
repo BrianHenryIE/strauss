@@ -65,6 +65,10 @@ class Prefixer
                 continue;
             }
 
+            if(!$file->isPhpFile()) {
+                continue;
+            }
+
             /**
              * Throws an exception, but unlikely to happen.
              */
