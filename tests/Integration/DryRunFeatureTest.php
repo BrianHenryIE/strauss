@@ -261,5 +261,7 @@ EOD;
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
+
+        $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed');
     }
 }
