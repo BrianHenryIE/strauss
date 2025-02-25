@@ -385,6 +385,8 @@ class DependenciesCommand extends Command
             return;
         }
 
+        return;
+
         $projectReplace = new Prefixer(
             $this->config,
             $this->filesystem,
