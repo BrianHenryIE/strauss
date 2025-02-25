@@ -413,7 +413,7 @@ class DependenciesCommand extends Command
             $this->config->getUpdateCallSites()
             ?? $this->projectComposerPackage->getFlatAutoloadKey();
 
-        if (empty($callSitePaths)) {
+        if (empty($relativeCallSitePaths)) {
             return;
         }
 
