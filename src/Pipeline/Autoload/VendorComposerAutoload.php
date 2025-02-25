@@ -216,11 +216,12 @@ class VendorComposerAutoload
      */
     protected function addVendorPrefixedAutoloadToComposerAutoload(string $code): string
     {
-        $targetDirAutoload = $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
-            // TODO: test this relative path
-//            ? $this->fileSystem->getRelativePath($this->getVendorDirectory(), $this->getTargetDirectory()) . 'autoload.php'
-            ? '/../'.trim($this->config->getTargetDirectory()).'autoload.php'
-            : null;
+        if ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
+            $this->logger->info('Vendor directory is target directory, no autoloader to add.');
+            return $code;
+        }
+
+        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->getVendorDirectory(), $this->getTargetDirectory()) . '/autoload.php';
 
         if (false !== strpos($code, $targetDirAutoload)) {
             $this->logger->info('vendor/autoload.php already includes ' . $targetDirAutoload);
@@ -232,16 +233,6 @@ class VendorComposerAutoload
             $ast = $parser->parse($code);
         } catch (Error $error) {
             $this->logger->error("Parse error: {$error->getMessage()}");
-            return $code;
-        }
-
-        $targetDirAutoload = $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
-            // TODO: test this relative path
-//            ? $this->fileSystem->getRelativePath($this->getVendorDirectory(), $this->getTargetDirectory()) . 'autoload.php'
-            ? '/../'.trim($this->config->getTargetDirectory()).'autoload.php'
-            : null;
-
-        if (is_null($targetDirAutoload)) {
             return $code;
         }
 
