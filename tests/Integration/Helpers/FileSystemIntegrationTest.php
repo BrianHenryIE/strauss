@@ -18,7 +18,8 @@ class FileSystemIntegrationTest extends IntegrationTestCase
         $fs = new Filesystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter('/')
-            )
+            ),
+            $this->testsWorkingDir
         );
 
         $dir = $this->testsWorkingDir . 'dir';
@@ -37,7 +38,8 @@ class FileSystemIntegrationTest extends IntegrationTestCase
         $fs = new Filesystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter('/')
-            )
+            ),
+            $this->testsWorkingDir
         );
 
         $dir = $this->testsWorkingDir . 'dir';
@@ -55,7 +57,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
         file_put_contents($file2, 'file2');
         file_put_contents($file3, 'file3');
 
-        $files = $fs->findAllFilesAbsolutePaths($this->testsWorkingDir, ['dir']);
+        $files = $fs->findAllFilesAbsolutePaths([ $dir ]);
 
         $this->assertContains($file1, $files);
         $this->assertContains($file2, $files);
