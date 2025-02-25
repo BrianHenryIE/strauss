@@ -51,6 +51,11 @@ class FileCopyScanner
         $this->setLogger($logger ?? new NullLogger());
     }
 
+    protected function getTargetDirectory(): string
+    {
+        return $this->workingDir . $this->config->getTargetDirectory();
+    }
+
     public function scanFiles(DiscoveredFiles $files): void
     {
         /** @var FileBase $file */
@@ -97,7 +102,7 @@ class FileCopyScanner
             $file->setDoCopy($copy);
 
             $target = $copy && $file instanceof FileWithDependency
-                ? $this->workingDir . $this->config->getTargetDirectory() . $file->getVendorRelativePath()
+                ? $this->getTargetDirectory() . $file->getVendorRelativePath()
                 : $file->getSourcePath();
 
             $file->setAbsoluteTargetPath($target);
