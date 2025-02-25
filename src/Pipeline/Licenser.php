@@ -108,7 +108,7 @@ class Licenser
                     "Skipping %s because it already exists at %s",
                     basename($licenseFile),
                     $targetLicenseFile
-                );
+                ));
                 continue;
             }
 
