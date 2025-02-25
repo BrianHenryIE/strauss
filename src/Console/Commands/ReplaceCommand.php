@@ -113,6 +113,7 @@ class ReplaceCommand extends Command
 
         try {
             $config = $this->createConfig($input);
+            $this->config = $config;
 
             // Pipeline
 
@@ -155,7 +156,13 @@ class ReplaceCommand extends Command
     protected function enumerateFiles(ReplaceConfigInterface $config): void
     {
         $this->logger->info('Enumerating files...');
-        $this->discoveredFiles = (new FileEnumerator($this->workingDir, $config, $this->filesystem))->compileFileListForPaths($config->getUpdateCallSites());
+        $relativeUpdateCallSites = $config->getUpdateCallSites();
+        $updateCallSites = array_map(
+            fn($path) => false !== strpos($path, trim($this->workingDir, '/')) ? $path : $this->workingDir . $path,
+            $relativeUpdateCallSites
+        );
+        $fileEnumerator = new FileEnumerator($this->workingDir, $config, $this->filesystem);
+        $this->discoveredFiles = $fileEnumerator->compileFileListForPaths($updateCallSites);
     }
 
     // 4. Determine namespace and classname changes
@@ -192,11 +199,16 @@ class ReplaceCommand extends Command
     protected function performReplacementsInProjectFiles(ReplaceConfigInterface $config): void
     {
 
-        $callSitePaths = $config->getUpdateCallSites();
+        $relativeCallSitePaths = $this->config->getUpdateCallSites();
 
-        if (empty($callSitePaths)) {
+        if (empty($relativeCallSitePaths)) {
             return;
         }
+
+        $callSitePaths = array_map(
+            fn($path) => false !== strpos($path, trim($this->workingDir, '/')) ? $path : $this->workingDir . $path,
+            $relativeCallSitePaths
+        );
 
         $projectReplace = new Prefixer($config, $this->filesystem, $this->logger);
 

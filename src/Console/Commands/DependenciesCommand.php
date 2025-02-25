@@ -393,7 +393,7 @@ class DependenciesCommand extends Command
             $this->filesystem
         );
 
-        $files = $fileEnumerator->compileFileListForPaths([$this->config->getVendorDirectory()]);
+        $files = $fileEnumerator->compileFileListForPaths([$this->workingDir . $this->config->getVendorDirectory()]);
 
         $composerPhpFilePaths = array_map(
             fn($file) => $file->getSourcePath(),
@@ -406,7 +406,7 @@ class DependenciesCommand extends Command
     protected function performReplacementsInProjectFiles(): void
     {
 
-        $callSitePaths =
+        $relativeCallSitePaths =
             $this->config->getUpdateCallSites()
             ?? $this->projectComposerPackage->getFlatAutoloadKey();
 
@@ -414,9 +414,13 @@ class DependenciesCommand extends Command
             return;
         }
 
+        $callSitePaths = array_map(
+            fn($path) => $this->workingDir . $path,
+            $relativeCallSitePaths
+        );
+
         $projectReplace = new Prefixer(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );

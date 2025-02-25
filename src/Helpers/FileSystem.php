@@ -37,19 +37,15 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     }
 
     /**
-     * @param string $workingDir
-     * @param string[] $relativeFileAndDirPaths
+     * @param string[] $fileAndDirPaths
      *
      * @return string[]
      */
-    public function findAllFilesAbsolutePaths(string $workingDir, array $relativeFileAndDirPaths): array
+    public function findAllFilesAbsolutePaths(array $fileAndDirPaths): array
     {
         $files = [];
 
-        foreach ($relativeFileAndDirPaths as $path) {
-            // If the path begins with the workingDir just use the path, otherwise concatenate them
-            $path = strpos($path, rtrim($workingDir, '/\\')) === 0 ? $path : $workingDir . $path;
-
+        foreach ($fileAndDirPaths as $path) {
             if (!$this->directoryExists($path)) {
                 $files[] = $path;
                 continue;

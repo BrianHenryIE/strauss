@@ -13,7 +13,6 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\Path;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -79,6 +78,11 @@ class FileEnumerator
         $this->filesystem = $filesystem;
 
         $this->logger = $logger ?? new NullLogger();
+    }
+
+    protected function getVendorDirectory(): string
+    {
+        return $this->workingDir . $this->vendorDir;
     }
 
     /**
@@ -186,7 +190,7 @@ class FileEnumerator
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
             ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
 
-        $f->setAbsoluteTargetPath($this->workingDir . $this->vendorDir . $vendorRelativePath);
+        $f->setAbsoluteTargetPath($this->getVendorDirectory() . $vendorRelativePath);
 
         $f->addAutoloader($autoloaderType);
         $f->setDoDelete($isOutsideProjectDir);
@@ -207,7 +211,7 @@ class FileEnumerator
      */
     public function compileFileListForPaths(array $paths): DiscoveredFiles
     {
-        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths($this->workingDir, $paths);
+        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths($paths);
 
         foreach ($absoluteFilePaths as $sourceAbsolutePath) {
             $f = $this->discoveredFiles->getFile($sourceAbsolutePath)
