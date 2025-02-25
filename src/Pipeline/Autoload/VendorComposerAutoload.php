@@ -216,7 +216,7 @@ class VendorComposerAutoload
      */
     protected function addVendorPrefixedAutoloadToComposerAutoload(string $code): string
     {
-        if ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
+        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
             $this->logger->info('Vendor directory is target directory, no autoloader to add.');
             return $code;
         }
