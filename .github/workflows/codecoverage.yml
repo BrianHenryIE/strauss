@@ -33,6 +33,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
+          tools: composer:v2, phive
           coverage: xdebug
 
       - name: Checkout GitHub Pages branch for code coverage report
