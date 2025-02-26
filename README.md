@@ -65,7 +65,7 @@ In your `composer.json`, add `strauss` to the `scripts` section:
         "@prefix-namespaces"
     ],
     "post-autoload-dump": [
-        "@php bin/strauss.phar include-autoloader",
+        "@php bin/strauss.phar include-autoloader"
     ]
 }
 ```
@@ -97,6 +97,9 @@ composer require --dev brianhenryie/strauss
     ],
     "post-update-cmd": [
         "@prefix-namespaces"
+    ],
+    "post-autoload-dump": [
+        "strauss include-autoloader"
     ]
 }
 ```
