@@ -387,7 +387,7 @@ class Prefixer
                 return $matches[1] . $replacement . $matches[3];
             },
             $contents
-        );
+        ) ?? $contents; // TODO: If this happens, it should raise an exception.
     }
 
     /**
