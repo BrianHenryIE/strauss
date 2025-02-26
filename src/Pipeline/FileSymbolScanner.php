@@ -35,6 +35,7 @@ class FileSymbolScanner
 
     protected FilesystemReader $filesystem;
 
+    /** @var string[] */
     protected array $builtIns = [];
 
     /**
