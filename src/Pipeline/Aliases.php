@@ -62,6 +62,9 @@ class Aliases
         $this->fileSystem->write($outputFilepath, $fileString);
     }
 
+    /**
+     * @return array<string,string> FQDN => relative path
+     */
     protected function getVendorClassmap(): array
     {
         $paths = array_map(
