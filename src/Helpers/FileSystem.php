@@ -263,4 +263,15 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
         return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
     }
+
+    /**
+     * Does the subdir path start with the dir path?
+     */
+    public function isSubDirOf(string $dir, string $subdir): bool
+    {
+        return str_starts_with(
+            $this->normalizer->normalizePath($subdir),
+            $this->normalizer->normalizePath($dir)
+        );
+    }
 }
