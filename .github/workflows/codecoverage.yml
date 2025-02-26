@@ -39,29 +39,33 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: gh-pages
-          path: tests/reports/html
+          path: tests/_reports/html
+
+      - name: Install Phive tools
+        uses: ngmy/phive-install-action@master
 
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress
 
       - name: Clear previous code coverage
-        working-directory: tests/reports/html
+        working-directory: tests/_reports/html
         run: |
           rm -rf *
 
       - name: Generate code coverage
-        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover tests/reports/clover.xml --coverage-html tests/reports/html
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover tests/_reports/clover.xml --coverage-html tests/_reports/html
 
       - name: Add code coverage output to gh-pages
-        working-directory: tests/reports/html
+        working-directory: tests/_reports/html
         run: |
           touch .nojekyll
           git add -- .nojekyll *
 
       - name: Commit code coverage to gh-pages
+        if: ${{ github.ref == 'refs/heads/master' && matrix.php-version == '7.4' }} # only commit on master, once
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          repository: tests/reports/html
+          repository: tests/_reports/html
           branch: gh-pages
           commit_message: "🤖 Update code coverage to gh-pages"
           commit_options: ""
@@ -69,9 +73,10 @@ jobs:
           GITHUB_TOKEN: "${{ github.token }}"
 
       - name: Update README badge
-        run: vendor/bin/php-coverage-badger tests/reports/clover.xml .github/coverage.svg
+        run: vendor/bin/php-coverage-badger tests/_reports/clover.xml .github/coverage.svg
 
       - name: Commit code coverage badge
+        if: ${{ github.ref == 'refs/heads/master' && matrix.php-version == '7.4' }} # only commit on master, once
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "🤖 Update code coverage badge"
