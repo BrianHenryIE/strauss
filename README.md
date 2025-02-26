@@ -257,6 +257,12 @@ I don't have a strong opinion on these. I began using Mozart because it was easy
 
 Please open issues to suggest possible breaking changes. I think we can probably move to 1.0.0 soon.
 
+### Backward Compatibility Promise
+
+This project will not increase its minimum required PHP version ahead of WordPress.
+
+https://core.trac.wordpress.org/ticket/62622
+
 ## Changes before v1.0
 
 * Comprehensive attribution of code forked from Mozart – changes have been drastic and `git blame` is now useless, so I intend to add more attributions
