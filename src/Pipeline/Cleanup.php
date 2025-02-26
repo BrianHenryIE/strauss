@@ -10,7 +10,8 @@ use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use Composer\Json\JsonFile;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -26,7 +27,7 @@ class Cleanup
     protected bool $isDeleteVendorFiles;
     protected bool $isDeleteVendorPackages;
 
-    protected string $vendorDirectory = 'vendor'. DIRECTORY_SEPARATOR;
+    protected string $vendorDirectory;
     protected string $targetDirectory;
 
     protected CleanupConfigInterface $config;
@@ -50,6 +51,11 @@ class Cleanup
         $this->filesystem = $filesystem;
     }
 
+    protected function getAbsoluteVendorDir(): string
+    {
+        return $this->workingDir . $this->vendorDirectory;
+    }
+
     /**
      * Maybe delete the source files that were copied (depending on config),
      * then delete empty directories.
@@ -58,7 +64,7 @@ class Cleanup
      *
      * @throws FilesystemException
      */
-    public function cleanup(array $files): void
+    public function cleanup(array $files, array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
             $this->logger->info('No cleanup required.');
@@ -75,9 +81,19 @@ class Cleanup
 
         $this->deleteEmptyDirectories($files);
 
-        $this->cleanupInstalledJson();
+        $installedJson = new InstalledJson(
+            $this->workingDir,
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+        $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+        $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
     }
 
+    /**
+     * @throws FilesystemException
+     */
     protected function deleteEmptyDirectories(array $files)
     {
         $this->logger->info('Deleting empty directories.');
@@ -123,160 +139,27 @@ class Cleanup
                 if ($this->filesystem->directoryExists($filePath)
                     && $this->dirIsEmpty($filePath)
                 ) {
-                    $this->logger->debug('Deleting directory ' . str_replace($this->workingDir, '', $filePath));
+                    $this->logger->debug('Deleting empty directory ' . str_replace($this->workingDir, '', $filePath));
                     $this->filesystem->deleteDirectory($filePath);
                 }
             }
         }
+
+//        foreach ($this->filesystem->listContents($this->getAbsoluteVendorDir()) as $dirEntry) {
+//            if ($dirEntry->isDir() && $this->dirIsEmpty($dirEntry->path()) && !is_link($dirEntry->path())) {
+//                $this->logger->info('Deleting empty directory ' . str_replace($this->workingDir, '', $dirEntry->path()));
+//                $this->filesystem->deleteDirectory($dirEntry->path());
+//            } else {
+//                $this->logger->debug('Skipping non-empty directory ' . str_replace($this->workingDir, '', $dirEntry->path()));
+//            }
+//        }
     }
 
     // TODO: Move to FileSystem class.
     protected function dirIsEmpty(string $dir): bool
     {
-        return empty($this->filesystem->listContents($dir));
-    }
-
-    /**
-     * Composer creates a file `vendor/composer/installed.json` which is uses when running `composer dump-autoload`.
-     * When `delete-vendor-packages` or `delete-vendor-files` is true, files and directories which have been deleted
-     * must also be removed from `installed.json` or Composer will throw an error.
-     *
-     * TODO: {@see self::cleanupFilesAutoloader()} might be redundant if we run this function and then run `composer dump-autoload`.
-     */
-    public function cleanupInstalledJson(): void
-    {
-        $this->logger->info('Cleaning up vendor/composer/installed.json');
-
-        $installedJsonFile = new JsonFile(
-            sprintf(
-                '%s%svendor/composer/installed.json',
-                $this->config->isDryRun() ? 'mem:/' : '',
-                $this->workingDir
-            )
-        );
-        if (!$installedJsonFile->exists()) {
-            return;
-        }
-        $installedJsonArray = $installedJsonFile->read();
-
-        foreach ($installedJsonArray['packages'] as $key => $package) {
-            if (!isset($package['autoload'])) {
-                continue;
-            }
-            $packageDir = $this->workingDir . $this->vendorDirectory . 'composer/' .$package['install-path'] . '/';
-            if (!$this->filesystem->directoryExists($packageDir)) {
-                continue;
-            }
-            $autoload_key = $package['autoload'];
-            foreach ($autoload_key as $type => $autoload) {
-                switch ($type) {
-                    case 'psr-4':
-                        foreach ($autoload_key[$type] as $namespace => $dirs) {
-                            if (is_array($dirs)) {
-                                $autoload_key[$type][$namespace] = array_filter($dirs, function ($dir) use ($packageDir) {
-                                    $dir = $packageDir . $dir;
-                                    return $this->filesystem->directoryExists($dir) || $this->filesystem->fileExists($dir);
-                                });
-                            } else {
-                                $dir = $packageDir . $dirs;
-                                if (! ($this->filesystem->directoryExists($dir) || $this->filesystem->fileExists($dir))) {
-                                    unset($autoload_key[$type][$namespace]);
-                                }
-                            }
-                        }
-                        break;
-                    default: // files, classmap, psr-0
-                        $autoload_key[$type] = array_filter($autoload, function ($file) use ($packageDir) {
-                            $filename = $packageDir . DIRECTORY_SEPARATOR . $file;
-                            return $this->filesystem->directoryExists($filename) || $this->filesystem->fileExists($filename);
-                        });
-                        break;
-                }
-            }
-            $installedJsonArray['packages'][$key]['autoload'] = array_filter($autoload_key);
-        }
-
-        $installedJsonFile->write($installedJsonArray);
-    }
-
-    /**
-     * After files are deleted, remove them from the Composer files autoloaders.
-     *
-     * @see https://github.com/BrianHenryIE/strauss/issues/34#issuecomment-922503813
-     * @throws FilesystemException
-     */
-    protected function cleanupFilesAutoloader(): void
-    {
-        if (! $this->filesystem->fileExists($this->workingDir . 'vendor/composer/autoload_files.php')) {
-            $this->logger->debug('vendor/composer/autoload_files.php does not exist.');
-            return;
-        }
-
-        $this->logger->info('Cleaning up autoload_files.php');
-
-        $files = include sprintf("%s%scomposer/autoload_files.php", $this->workingDir, $this->vendorDirectory);
-
-        $missingFiles = array();
-
-        foreach ($files as $file) {
-            if (! $this->filesystem->fileExists($file)) {
-                $missingFiles[] = str_replace([ $this->workingDir, 'vendor/composer/../', 'vendor/' ], '', $file);
-                // When `composer install --no-dev` is run, it creates an index of files autoload files which
-                // references the non-existent files. This causes a fatal error when the autoloader is included.
-                // TODO: if delete_vendor_packages is true, do not create this file.
-                $this->filesystem->write(
-                    $file,
-                    '<?php // This file was deleted by {@see https://github.com/BrianHenryIE/strauss}.'
-                );
-            }
-        }
-
-        if (empty($missingFiles)) {
-            return;
-        }
-
-        $targetDirectory = $this->targetDirectory;
-
-        foreach (array('autoload_static.php', 'autoload_files.php') as $autoloadFile) {
-            $autoloadStaticPhp = $this->filesystem->read($this->workingDir . 'vendor/composer/'.$autoloadFile);
-
-            $autoloadStaticPhpAsArray = explode(PHP_EOL, $autoloadStaticPhp);
-
-            $newAutoloadStaticPhpAsArray = array_map(
-                function (string $line) use ($missingFiles, $targetDirectory): string {
-                    $containsFile = array_reduce(
-                        $missingFiles,
-                        function (bool $carry, string $filepath) use ($line): bool {
-                            return $carry || false !== strpos($line, $filepath);
-                        },
-                        false
-                    );
-
-                    if (!$containsFile) {
-                        return $line;
-                    }
-
-                    // TODO: Check the file does exist at the new location. It definitely should be.
-                    // TODO: If the Strauss autoloader is being created, just return an empty string here.
-
-                    return str_replace([
-                        "=> __DIR__ . '/..' . '/",
-                        "=> \$vendorDir . '/"
-                    ], [
-                        "=> __DIR__ . '/../../$targetDirectory' . '/",
-                        "=> \$baseDir . '/$targetDirectory"
-                    ], $line);
-                },
-                $autoloadStaticPhpAsArray
-            );
-
-            $newAutoloadStaticPhp = implode(PHP_EOL, $newAutoloadStaticPhpAsArray);
-
-            $this->filesystem->write(
-                sprintf("%s%scomposer/%s", $this->workingDir, $this->vendorDirectory, $autoloadFile),
-                $newAutoloadStaticPhp
-            );
-        }
+        // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
+        return empty($this->filesystem->listContents($dir)->toArray());
     }
 
     /**
@@ -326,6 +209,10 @@ class Cleanup
                     unlink($symlinkPath);
                 }
             }
+            if ($this->dirIsEmpty(dirname($package->getPackageAbsolutePath()))) {
+                $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));
+                $this->filesystem->deleteDirectory(dirname($package->getPackageAbsolutePath()));
+            }
         }
     }
 
@@ -352,7 +239,5 @@ class Cleanup
 
             $file->setDidDelete(true);
         }
-
-        $this->cleanupFilesAutoloader();
     }
 }

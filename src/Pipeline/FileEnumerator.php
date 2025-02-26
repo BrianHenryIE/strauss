@@ -142,10 +142,12 @@ class FileEnumerator
                             foreach ($actualFileList as $foundFile) {
                                 $sourceAbsoluteFilepath = '/'. $foundFile->path();
                                 // No need to record the directory itself.
-                                if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+                                if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)
+                                    ||
+                                    $this->filesystem->directoryExists($sourceAbsoluteFilepath)
+                                ) {
                                     continue;
                                 }
-
                                 $namespaceRelativePath = Path::normalize($namespaceRelativePath);
 
                                 $this->addFileWithDependency(
@@ -177,11 +179,18 @@ class FileEnumerator
     protected function addFileWithDependency(ComposerPackage $dependency, string $sourceAbsoluteFilepath, string $autoloaderType): void
     {
         $vendorRelativePath = substr($sourceAbsoluteFilepath, strpos($sourceAbsoluteFilepath, $dependency->getRelativePath()));
+
+        if ($vendorRelativePath === $sourceAbsoluteFilepath) {
+            $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
+        }
+
         $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
             ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
+
+        $f->setAbsoluteTargetPath($this->workingDir . $this->vendorDir . $vendorRelativePath);
 
         $f->addAutoloader($autoloaderType);
         $f->setDoDelete($isOutsideProjectDir);
@@ -190,13 +199,6 @@ class FileEnumerator
             if (1 === preg_match($excludePattern, $vendorRelativePath)) {
                 $f->setDoCopy(false);
             }
-        }
-
-        if ('<?php // This file was deleted by {@see https://github.com/BrianHenryIE/strauss}.'
-            ===
-            $this->filesystem->read($sourceAbsoluteFilepath)
-        ) {
-            $f->setDoCopy(false);
         }
 
         $this->discoveredFiles->add($f);

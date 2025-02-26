@@ -53,7 +53,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir .'strauss/brianhenryie/wp-logger/src/class-logger.php');
 

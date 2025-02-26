@@ -15,9 +15,12 @@ class StraussIssue65Test extends IntegrationTestCase
 {
 
     /**
+     * This passes on 8.4 but fails on 7.4 with an infinite loop in php-parser.
      */
     public function test_aws_prefixed_functions()
     {
+        $this->markTestSkippedOnPhpVersion('8.0', "<");
+
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss-issue-65-aws-prefixed-functions",
@@ -45,11 +48,10 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         // vendor/aws/aws-sdk-php/src/Endpoint/UseDualstackEndpoint/Configuration.php
-
-        self::assertNotEquals(1, $result);
 
         $php_string = file_get_contents($this->testsWorkingDir .'vendor-prefixed/aws/aws-sdk-php/src/Endpoint/UseDualstackEndpoint/Configuration.php');
 

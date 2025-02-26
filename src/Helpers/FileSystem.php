@@ -209,4 +209,39 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             $config
         );
     }
+
+    /**
+     *
+     * /path/to/this/dir, /path/to/file.php => ../../file.php
+     * /path/to/here, /path/to/here/dir/file.php => dir/file.php
+     *
+     * @param string $fromAbsoluteDirectory
+     * @param string $toAbsolutePath
+     * @return string
+     */
+    public function getRelativePath(string $fromAbsoluteDirectory, string $toAbsolutePath): string
+    {
+        $fromAbsoluteDirectory = $this->normalizer->normalizePath($fromAbsoluteDirectory);
+        $toAbsolutePath = $this->normalizer->normalizePath($toAbsolutePath);
+
+        $fromDirectoryParts = array_filter(explode('/', $fromAbsoluteDirectory));
+        $toPathParts = array_filter(explode('/', $toAbsolutePath));
+        foreach ($fromDirectoryParts as $key => $part) {
+            if ($part === $toPathParts[$key]) {
+                unset($toPathParts[$key]);
+                unset($fromDirectoryParts[$key]);
+            } else {
+                break;
+            }
+            if (count($fromDirectoryParts) === 0 || count($toPathParts) === 0) {
+                break;
+            }
+        }
+
+        $relativePath =
+            str_repeat('../', count($fromDirectoryParts))
+            . implode('/', $toPathParts);
+
+        return $relativePath;
+    }
 }

@@ -14,6 +14,11 @@ on:
     paths:
       - '**.php'
 
+concurrency:
+  # Cancel previous runs of this workflow if they are testing the same branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     strategy:
@@ -52,6 +57,20 @@ jobs:
       - name: Build phar
         run:
           ./scripts/createphar.sh
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
+        id: artifact-upload-step
+        with:
+          name: strauss.phar
+          path: strauss.phar
+
+      - name: Add phar to PR comment
+        uses: mshick/add-pr-comment@v2
+        if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
+        with:
+          message-id: strauss-phar
+          message: ${{ format('[strauss.phar.zip]({0}) @ {1}', steps.artifact-upload-step.outputs.artifact-url, github.event.pull_request.head.sha) }}
 
       - name: Run tests with strauss.phar
         run: vendor/bin/phpunit

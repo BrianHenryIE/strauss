@@ -48,23 +48,16 @@ EOD;
         /**
          * @see DependenciesCommand::execute()
          */
-        $exitCode = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
-        $this->assertEquals(0, $exitCode);
-
-        $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $phpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Strauss\\Issue143\\Psr\\Log;', $phpString);
 
-        $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/autoload-classmap.php');
-        $this->assertStringNotContainsString($this->testsWorkingDir, $classmapString);
-        $this->assertStringNotContainsString('$strauss_src . \'//psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
-        $this->assertStringContainsString('$strauss_src . \'/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
+        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
 
-        // Check the lines of the classmap are indented by tabs, not spaced. Chosen per WPCS standard.
-        $this->assertStringNotContainsString("   'Strauss\Issue143\Psr\Log\LoggerAwareInterface' => \$strauss_src . '/psr/log/Psr/Log/LoggerAwareInterface.php',
-", $classmapString);
-        $this->assertStringContainsString("	'Strauss\Issue143\Psr\Log\LoggerAwareInterface' => \$strauss_src . '/psr/log/Psr/Log/LoggerAwareInterface.php',
-", $classmapString);
+        $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
+        $this->assertStringContainsString('/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
     }
 }

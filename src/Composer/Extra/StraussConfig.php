@@ -5,6 +5,8 @@
 
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
+use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
+use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
@@ -17,12 +19,14 @@ use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
 class StraussConfig implements
-    ReplaceConfigInterface,
-    FileSymbolScannerConfigInterface,
-    FileCopyScannerConfigInterface,
+    AliasesConfigInterace,
+    AutoloadConfigInterace,
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
-    PrefixerConfigInterface
+    FileSymbolScannerConfigInterface,
+    FileCopyScannerConfigInterface,
+    PrefixerConfigInterface,
+    ReplaceConfigInterface
 {
     /**
      * The output directory.
@@ -688,5 +692,20 @@ class StraussConfig implements
                 ? true
                 : filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
+    }
+
+    /**
+     * Should we create the `autoload_aliases.php` file in `vendor/composer`?
+     *
+     * TODO:
+     * [x] YES when we are deleting vendor packages or files
+     * [ ] NO when we are running composer install `--no-dev`
+     * [ ] SOMETIMES: see https://github.com/BrianHenryIE/strauss/issues/144
+     * [ ] Add `aliases` to `extra` in `composer.json`
+     * [ ] Add `--aliases=true` CLI option
+     */
+    public function isCreateAliases(): bool
+    {
+        return $this->deleteVendorPackages || $this->deleteVendorFiles || $this->targetDirectory === 'vendor';
     }
 }

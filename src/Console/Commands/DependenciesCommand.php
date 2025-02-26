@@ -8,7 +8,9 @@ use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
+use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Copier;
@@ -48,7 +50,7 @@ class DependenciesCommand extends Command
 
     protected DependenciesEnumerator $dependenciesEnumerator;
 
-    /** @var ComposerPackage[] */
+    /** @var array<string,ComposerPackage> */
     protected array $flatDependencyTree = [];
 
     /**
@@ -127,9 +129,16 @@ class DependenciesCommand extends Command
             false
         );
 
+        $localFilesystemAdapter = new LocalFilesystemAdapter(
+            '/',
+            null,
+            LOCK_EX,
+            LocalFilesystemAdapter::SKIP_LINKS
+        );
+
         $this->filesystem = new Filesystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                $localFilesystemAdapter,
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -221,9 +230,14 @@ class DependenciesCommand extends Command
 
             $this->addLicenses();
 
-            $this->generateAutoloader();
+
+            // After file have been deleted, we may need aliases.
+            $this->generateAliasesFile();
 
             $this->cleanUp();
+
+            // This runs after cleanup because cleanup edits installed.json
+            $this->generateAutoloader();
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
@@ -232,7 +246,6 @@ class DependenciesCommand extends Command
 
         return Command::SUCCESS;
     }
-
 
     /**
      * 1. Load the composer.json.
@@ -429,10 +442,6 @@ class DependenciesCommand extends Command
         $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
-    protected function writeClassAliasMap(): void
-    {
-    }
-
     protected function addLicenses(): void
     {
         $this->logger->notice('Adding licenses...');
@@ -495,15 +504,36 @@ class DependenciesCommand extends Command
             $this->logger
         );
 
-        $classmap->generate();
+        $classmap->generate($this->flatDependencyTree, $this->discoveredSymbols);
     }
 
     /**
-     * When namespaces are prefixed which are used by by require and require-dev dependencies,
+     * When namespaces are prefixed which are used by both require and require-dev dependencies,
      * the require-dev dependencies need class aliases specified to point to the new class names/namespaces.
      */
-    protected function generateClassAliasList(): void
+    protected function generateAliasesFile(): void
     {
+        if (!$this->config->isCreateAliases()) {
+            return;
+        }
+
+        $this->logger->info('Generating aliases file...');
+
+        $aliases = new Aliases(
+            $this->config,
+            $this->workingDir,
+            $this->filesystem
+        );
+        $aliases->writeAliasesFileForSymbols($this->discoveredSymbols);
+
+        $vendorComposerAutoload = new VendorComposerAutoload(
+            $this->config,
+            $this->workingDir,
+            $this->filesystem,
+            $this->logger
+        );
+        $vendorComposerAutoload->addAliasesFileToComposer();
+        $vendorComposerAutoload->addVendorPrefixedAutoloadToVendorAutoload();
     }
 
     /**
@@ -514,7 +544,7 @@ class DependenciesCommand extends Command
     protected function cleanUp(): void
     {
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            // Nothing to do.
+            // TODO: update installed.json, run composer dump-autoload.
             return;
         }
 
@@ -527,9 +557,7 @@ class DependenciesCommand extends Command
             $this->logger
         );
 
-        // TODO: For files autoloaders, delete the contents of the file, not the file itself.
-
         // This will check the config to check should it delete or not.
-        $cleanup->cleanup($this->discoveredFiles->getFiles());
+        $cleanup->cleanup($this->discoveredFiles->getFiles(), $this->flatDependencyTree, $this->discoveredSymbols);
     }
 }

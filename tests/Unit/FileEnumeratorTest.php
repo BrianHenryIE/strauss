@@ -8,13 +8,13 @@
 
 // paths outside project directory
 
-namespace BrianHenryIE\Strauss\Tests\Unit;
+namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\TestCase;
 
 /**
  * Class FileEnumeratorTest
- * @package BrianHenryIE\Strauss\Tests\Unit
+ * @package BrianHenryIE\Strauss
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\FileEnumerator
  */
 class FileEnumeratorTest extends TestCase

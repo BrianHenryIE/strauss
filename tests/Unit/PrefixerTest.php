@@ -6,12 +6,13 @@
  * @author https://github.com/stephenharris
  */
 
-namespace BrianHenryIE\Strauss\Tests\Unit;
+namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
+use BrianHenryIE\Strauss\Tests\Issues\MozartIssue93Test;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -24,7 +25,7 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 /**
  * Class ReplacerTest
  * @package BrianHenryIE\Strauss
- * @covers \BrianHenryIE\Strauss\Pipeline\Prefixer
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Prefixer
  */
 class PrefixerTest extends TestCase
 {
@@ -336,7 +337,7 @@ EOD;
 
 
     /**
-     * @see ClassmapReplacerIntegrationTest::test_it_does_not_make_classname_replacement_inside_namespaced_file()
+     * @see MozartIssue93Test
      * @see https://github.com/coenjacobs/mozart/issues/93
      *
      * @author BrianHenryIE
@@ -370,7 +371,7 @@ EOD;
     }
 
     /**
-     * @see ClassmapReplacerIntegrationTest::test_it_does_not_make_classname_replacement_inside_namespaced_file()
+     * @see MozartIssue93Test
      * @see https://github.com/coenjacobs/mozart/issues/93
      *
      * @author BrianHenryIE
@@ -853,6 +854,7 @@ EOD;
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $constants = array('FPDF_VERSION','ANOTHER_CONSTANT');
@@ -1466,6 +1468,7 @@ EOD;
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $classSymbol = new ClassSymbol('Normalizer', $file);
@@ -1704,6 +1707,7 @@ EOD;
 
         $file = \Mockery::mock(File::class);
         $file->expects('addDiscoveredSymbol')->once();
+        $file->expects('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -1942,7 +1946,7 @@ EOD;
     }
 
     /**
-     * @covers \BrianHenryIE\Strauss\Pipeline\Prefixer::replaceFunctions
+     * @covers ::replaceFunctions
      */
     public function testReplaceFunctions(): void
     {

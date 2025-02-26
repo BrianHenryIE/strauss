@@ -53,9 +53,7 @@ class MozartIssue89Test extends IntegrationTestCase
      */
     public function it_moves_each_file_once_per_namespace()
     {
-        if (version_compare(phpversion(), '7.1', '>')) {
-            $this->markTestSkipped("Package specified for test requires PHP 7.1. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersion('7.1', '<');
 
         $composerJsonString = <<<'EOD'
 {

@@ -233,11 +233,20 @@ class FileSymbolScanner
 
         foreach ($this->excludeNamespacesFromPrefixing as $excludeNamespace) {
             if (0 === strpos($namespace, $excludeNamespace)) {
+                // TODO: Log.
                 return;
             }
         }
 
-        $namespaceObj = new NamespaceSymbol($namespace, $file);
+        $namespaceObj = $this->discoveredSymbols->getNamespace($namespace);
+        if ($namespaceObj) {
+            $namespaceObj->addSourceFile($file);
+            $file->addDiscoveredSymbol($namespaceObj);
+            return;
+        } else {
+            $namespaceObj = new NamespaceSymbol($namespace, $file);
+        }
+
         $this->add($namespaceObj);
     }
 

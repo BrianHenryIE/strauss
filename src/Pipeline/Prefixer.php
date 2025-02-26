@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\NamespaceSort;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use Exception;
@@ -140,13 +141,19 @@ class Prefixer
             $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
         }
 
+        // TODO: Move this out of the loop.
+        $namespacesChangesStrings = [];
         foreach ($namespacesChanges as $originalNamespace => $namespaceSymbol) {
             if (in_array($originalNamespace, $this->config->getExcludeNamespacesFromPrefixing())) {
                 $this->logger->info("Skipping namespace: $originalNamespace");
                 continue;
             }
-
-            $contents = $this->replaceNamespace($contents, $originalNamespace, $namespaceSymbol->getReplacement());
+            $namespacesChangesStrings[$originalNamespace] = $namespaceSymbol->getReplacement();
+        }
+        // This matters... it shouldn't.
+        uksort($namespacesChangesStrings, new NamespaceSort(NamespaceSort::SHORTEST));
+        foreach ($namespacesChangesStrings as $originalNamespace => $replacementNamespace) {
+            $contents = $this->replaceNamespace($contents, $originalNamespace, $replacementNamespace);
         }
 
         if (!is_null($this->config->getConstantsPrefix())) {

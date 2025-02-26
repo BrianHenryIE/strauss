@@ -1,11 +1,13 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Tests\Unit\Console;
+namespace BrianHenryIE\Strauss\Console;
 
-use BrianHenryIE\Strauss\Console\Application;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;
 
+/**
+ * @coversDefaultClass \BrianHenryIE\Strauss\Console\Application
+ */
 class ApplicationTest extends TestCase
 {
 

@@ -63,6 +63,9 @@ In your `composer.json`, add `strauss` to the `scripts` section:
     ],
     "post-update-cmd": [
         "@prefix-namespaces"
+    ],
+    "post-autoload-dump": [
+        "@php bin/strauss.phar include-autoloader"
     ]
 }
 ```
@@ -94,6 +97,9 @@ composer require --dev brianhenryie/strauss
     ],
     "post-update-cmd": [
         "@prefix-namespaces"
+    ],
+    "post-autoload-dump": [
+        "strauss include-autoloader"
     ]
 }
 ```
@@ -117,6 +123,18 @@ or
 ```bash
 composer -- prefix-namespaces --updateCallSites=includes,templates
 ```
+
+To try it out without making changes, you can use the `--dry-run` flag:
+
+<details>
+
+<summary>strauss --dry-run</summary>
+
+![](.github/strauss.mp4)
+
+</details>
+
+Verbosity can be controlled with `--notice` (default), `--info`, `--debug` and `--silent`.
 
 ## Configuration
 
@@ -192,21 +210,17 @@ The remainder is empty:
 
 ## Autoloading
 
-Strauss uses Composer's own tools to generate a classmap file in the `target_directory` and creates an `autoload.php` alongside it, so in many projects autoloading is just a matter of:
+Strauss uses Composer's own tools to generate a set of autoload files in the `target_directory` and creates an `autoload.php` alongside it, so in many projects autoloading is just a matter of:
 
 ```php
 require_once __DIR__ . '/strauss/autoload.php';
 ```
 
-If you prefer to use Composer's autoloader, add your `target_directory` (default `vendor-prefixed`) to your `autoload` `classmap` and Strauss will not create its own `autoload.php` when run. Then run `composer dump-autoload` to include the newly copied and prefixed files in Composer's own classmap.
+If you plan to continue using Composer's autoloader you probably want to turn on `delete_vendor_packages` or set `target_directory` to `vendor`.
 
-```
-"autoload": {
-    "classmap": [
-        "vendor-prefixed/"
-    ]
-},
-```
+You can use `strauss include-autoloader` to add a line to `vendor/autoload.php` which includes the autoloader for the new files. 
+
+When `delete_vendor_packages` is enabled, `vendor/composer/autoload_aliases.php` is created to allow modified classes to be loaded with their old name during development. This file should not be included in your production code.
 
 ## Motivation & Comparison to Mozart
 
@@ -245,6 +259,7 @@ I don't have a strong opinion on these. I began using Mozart because it was easy
 * [sdrobov/autopsr4](https://github.com/sdrobov/autopsr4)
 * [jaem3l/unfuck](https://github.com/jaem3l/unfuck)
 * [bamarni/composer-bin-plugin](https://github.com/bamarni/composer-bin-plugin)
+* [phar-io/composer-distributor](https://github.com/phar-io/composer-distributor)
 
 ## Breaking Changes
 
@@ -254,6 +269,12 @@ I don't have a strong opinion on these. I began using Mozart because it was easy
 * v0.12.0 – default output `target_directory` changes from `strauss` to `vendor-prefixed`
 
 Please open issues to suggest possible breaking changes. I think we can probably move to 1.0.0 soon.
+
+### Backward Compatibility Promise
+
+This project will not increase its minimum required PHP version ahead of WordPress.
+
+https://core.trac.wordpress.org/ticket/62622
 
 ## Changes before v1.0
 

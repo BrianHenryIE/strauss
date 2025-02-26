@@ -45,12 +45,13 @@ EOD;
 
         $this->runStrauss($output, $params);
 
-        $this->assertEmpty($output);
+        $this->assertEmpty($output, $output);
     }
 
     public function test_normal_output_level(): void
     {
-        $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
 
         $this->assertStringContainsString('[notice]', $output);
         $this->assertStringNotContainsString('[info]', $output);

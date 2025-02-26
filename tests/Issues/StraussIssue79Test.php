@@ -17,10 +17,7 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  */
 class StraussIssue79Test extends IntegrationTestCase
 {
-
-    /**
-     */
-    public function test_namespace_keyword_on_opening_line()
+    public function test_issue_79()
     {
 
         $composerJsonString = <<<'EOD'
@@ -44,12 +41,15 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
-
-        self::assertEqualsRN(0, $result);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/json-mapper/json-mapper/src/JsonMapper.php');
         self::assertStringNotContainsString('throw new \BH_Strauss_Issue79_JsonException(json_last_error_msg()', $php_string);
         self::assertStringContainsString('throw new \JsonException(json_last_error_msg(), \json_last_error());', $php_string);
+
+        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/json-mapper/json-mapper/src/Middleware/AbstractMiddleware.php');
+        self::assertStringNotContainsString(' JsonMapper\Middleware;', $php_string);
+        self::assertStringContainsString(' BrianHenryIE\Issue79\JsonMapper\Middleware;', $php_string);
     }
 }

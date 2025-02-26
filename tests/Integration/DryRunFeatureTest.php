@@ -6,8 +6,10 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use Composer\ClassMapGenerator\ClassMapGenerator;
 
+/**
+ * @coversNothing
+ */
 class DryRunFeatureTest extends IntegrationTestCase
 {
     /**
@@ -22,6 +24,39 @@ class DryRunFeatureTest extends IntegrationTestCase
         $this->assertFalse($config->isDryRun());
     }
 
+    protected function getDirectoryMd5s(string $directory): array
+    {
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory)
+        );
+
+        $hashes = [];
+
+        /** @var \SplFileInfo $file */
+        foreach ($files as $file) {
+            if ($file->isFile()) {
+                $hashes[$file->getPath()] = md5_file($file->getPathname());
+            }
+        }
+
+        return [md5(implode('', $hashes)), $hashes];
+    }
+
+    protected function assertEqualsDirectoryHashes(array $hashesBefore, array $hashesAfter): void
+    {
+        if ($hashesBefore[0] === $hashesAfter[0]) {
+            // Pass test!
+            return;
+        }
+
+        $diff = array_merge(
+            array_diff_assoc(array_keys($hashesBefore[1]), array_keys($hashesAfter[1])),
+            array_diff_assoc(array_keys($hashesAfter[1]), array_keys($hashesBefore[1]))
+        );
+
+        $this->fail('Hashes do not match. Files changed: ' . implode(', ', $diff));
+    }
+
     /**
      * Test using composer.json config disables changes and outputs to console.
      */
@@ -31,7 +66,7 @@ class DryRunFeatureTest extends IntegrationTestCase
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
@@ -50,10 +85,16 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss($output);
+        $hashesBefore = $this->getDirectoryMd5s($this->testsWorkingDir);
+
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
+
+        $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
+        $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
     }
 
     /**
@@ -65,7 +106,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
@@ -85,10 +126,15 @@ EOD;
 
         $params = '--dry-run';
 
+        $hashesBefore = $this->getDirectoryMd5s($this->testsWorkingDir);
+
         $this->runStrauss($output, $params);
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
+
+        $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
+        $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
     }
 
     /**
@@ -100,7 +146,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
@@ -139,7 +185,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
@@ -158,15 +204,21 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss($output);
+        $hashesBefore = $this->getDirectoryMd5s($this->testsWorkingDir);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/autoload-classmap.php');
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
+
+        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
+
+        $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
+        $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
     }
 
     /**
      * Composer
      *
-     * @see Cleanup::cleanupInstalledJson()
+     * @see Cleanup\InstalledJson::cleanupVendorInstalledJson()
      */
     public function test_composer_files_not_modified(): void
     {
@@ -174,7 +226,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "league/container": "*"
+    "league/container": "4.2.4"
   },
   "extra": {
     "strauss": {
@@ -195,7 +247,10 @@ EOD;
 
         $expected = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
 
-        $this->runStrauss($output);
+        $hashesBefore = $this->getDirectoryMd5s($this->testsWorkingDir);
+
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
 
         $this->assertEquals(
             $expected,
@@ -203,5 +258,8 @@ EOD;
                 $this->testsWorkingDir . 'vendor/composer/installed.json'
             )
         );
+
+        $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
+        $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
     }
 }

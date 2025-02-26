@@ -90,7 +90,7 @@ EOD;
 
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/strauss",
+  "name": "brianhenryie/copierintegrationtest",
   "require": {
     "google/apiclient": "*"
   },

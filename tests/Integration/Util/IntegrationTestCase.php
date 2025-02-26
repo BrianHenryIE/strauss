@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
@@ -58,15 +59,25 @@ class IntegrationTestCase extends TestCase
             // TODO add xdebug to the command
             exec('php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
+            echo $allOutput;
             return $return_var;
         }
 
-        $argv = array_merge(['strauss'], array_filter(explode(' ', $params)));
+        $paramsSplit = explode(' ', trim($params));
+
+        switch ($paramsSplit[0]) {
+            case 'include-autoloader':
+                $strauss = new IncludeAutoloaderCommand();
+                unset($paramsSplit[0]);
+                break;
+            default:
+                $strauss = new DependenciesCommand();
+        }
+
+        $argv = array_merge(['strauss'], array_filter($paramsSplit));
         $inputInterface = new ArgvInput($argv);
 
         $bufferedOutput = new BufferedOutput(OutputInterface::VERBOSITY_NORMAL);
-
-        $strauss = new DependenciesCommand();
 
         $result = $strauss->run($inputInterface, $bufferedOutput);
 
@@ -161,8 +172,11 @@ class IntegrationTestCase extends TestCase
         preg_match('/PHP\s([\d\\\.]*)/', $output[0], $php_version_capture);
         $system_php_version = $php_version_capture[1];
 
-        if (! version_compare(phpversion(), $php_version, $operator) || ! version_compare($system_php_version, $php_version, $operator)) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.2 compatible. Running tests under PHP " . phpversion() . ', ' . $system_php_version);
+        $testPhpVersionConstraintMatch = version_compare(phpversion(), $php_version, $operator);
+        $systemPhpVersionConstraintMatch = version_compare($system_php_version, $php_version, $operator);
+
+        if (! ($testPhpVersionConstraintMatch && $systemPhpVersionConstraintMatch)) {
+            $this->markTestSkipped("Package specified for test requires PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version);
         }
     }
 }

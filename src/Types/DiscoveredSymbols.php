@@ -77,6 +77,11 @@ class DiscoveredSymbols
         return $this->types[T_NAMESPACE];
     }
 
+    public function getNamespace(string $namespace): ?NamespaceSymbol
+    {
+        return $this->types[T_NAMESPACE][$namespace] ?? null;
+    }
+
     /**
      * @return array<string, ClassSymbol>
      */

@@ -1,6 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Tests\Unit;
+namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
@@ -12,7 +12,7 @@ use Mockery;
  *
  * @coversDefaultClass \BrianHenryIE\Strauss\Files\DiscoveredFiles
  *
- * @package BrianHenryIE\Strauss\Tests\Unit
+ * @package BrianHenryIE\Strauss
  */
 class DiscoveredFilesTest extends TestCase
 {
