@@ -19,98 +19,49 @@ on:
       - master
     paths:
       - '**.php'
-  pull_request:
-    types: [ opened, reopened, ready_for_review, synchronize ]
-  workflow_dispatch:
-
-concurrency:
-  # Cancel previous runs of this workflow if they are testing the same branch
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   tests:
     runs-on: ubuntu-latest
 
-    permissions:
-      pull-requests: write # For mshick/add-pr-comment
-
-    strategy:
-      matrix:
-        php-version: ['8.2']
-
     steps:
 
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
-          tools: composer:v2, phive
+          php-version: '7.4'
           coverage: xdebug
-
-      - name: Install Phive tools
-        uses: ngmy/phive-install-action@master
 
       - name: Checkout GitHub Pages branch for code coverage report
         uses: actions/checkout@v4
         with:
           ref: gh-pages
-          path: tests/_reports/html
+          path: tests/reports/html
 
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress
 
-      - name: Ensure we use Phive installed phpcov
-        run: composer remove --dev phpunit/phpcov
-
       - name: Clear previous code coverage
-        working-directory: tests/_reports/html
+        working-directory: tests/reports/html
         run: |
           rm -rf *
 
       - name: Generate code coverage
-        run: |
-          XDEBUG_MODE=coverage vendor/bin/phpunit ./tests/Unit --coverage-text --coverage-clover tests/_reports/partial/unitclover.xml --coverage-php tests/_reports/partial/unitphp.cov -d memory_limit=-1 --order-by=random
-          XDEBUG_MODE=coverage vendor/bin/phpunit --filter=\"integration\" --coverage-text --coverage-clover tests/_reports/plartial/integrationclover.xml --coverage-php tests/_reports/partial/integrationphp.cov -d memory_limit=-1 --order-by=random
-          XDEBUG_MODE=coverage tools/phpcov merge --php tests/_reports/php.cov --clover tests/_reports/clover.xml --html tests/_reports/html tests/_reports/partial
-
-      - name: Generate diff coverage report
-        if: ${{ matrix.php-version == '8.2' && github.event_name == 'pull_request' }}
-        run: |
-          BRANCHED_COMMIT=$(git rev-list $(git rev-parse HEAD) ^origin/master | tail -n 1)
-          # Filter the code coverage report to only include the files that have changed.
-          ./tools/php-diff-test coverage --input-files "tests/_reports/php.cov" --diff-from $BRANCHED_COMMIT --diff-to ${{ github.event.pull_request.head.sha }} --output-file tests/_reports/branch/branch.cov
-          # Generate the HTML report for the filtered code coverage report.
-          ./tools/phpcov merge tests/_reports/branch/ --html tests/_reports/diff/html
-
-      - name: Generate code coverage markdown report
-        if: ${{ matrix.php-version == '8.2' && github.event_name == 'pull_request' }}
-        run: |
-          ./tools/php-diff-test markdown-report --input-file "./tests/_reports/branch/branch.cov" --output-file code-coverage.md
-
-      - name: Add code coverage comment to PR
-        uses: mshick/add-pr-comment@v2
-        if: ${{ matrix.php-version == '8.2' && github.event_name == 'pull_request' }}
-        with:
-          message-path: |
-            code-coverage.md
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover tests/reports/clover.xml --coverage-html tests/reports/html
 
       - name: Add code coverage output to gh-pages
-        working-directory: tests/_reports/html
+        working-directory: tests/reports/html
         run: |
           touch .nojekyll
           git add -- .nojekyll *
 
       - name: Commit code coverage to gh-pages
-        if: ${{ github.ref == 'refs/heads/master' && matrix.php-version == '8.2' }} # only commit on master, once
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          repository: tests/_reports/html
+          repository: tests/reports/html
           branch: gh-pages
           commit_message: "🤖 Update code coverage to gh-pages"
           commit_options: ""
@@ -118,12 +69,9 @@ jobs:
           GITHUB_TOKEN: "${{ github.token }}"
 
       - name: Update README badge
-        run: vendor/bin/php-coverage-badger tests/_reports/clover.xml .github/coverage.svg
+        run: vendor/bin/php-coverage-badger tests/reports/clover.xml .github/coverage.svg
 
       - name: Commit code coverage badge
-        if: ${{ github.ref == 'refs/heads/master' && matrix.php-version == '8.2' }} # only commit on master, once
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "🤖 Update code coverage badge"
-
-
