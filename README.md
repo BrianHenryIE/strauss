@@ -126,6 +126,14 @@ composer -- prefix-namespaces --updateCallSites=includes,templates
 
 To try it out without making changes, you can use the `--dry-run` flag:
 
+<details>
+
+<summary>strauss --dry-run</summary>
+
+![](.github/strauss.mp4)
+
+</details>
+
 Verbosity can be controlled with `--notice` (default), `--info`, `--debug` and `--silent`.
 
 ## Configuration
