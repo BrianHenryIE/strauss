@@ -247,6 +247,7 @@ I don't have a strong opinion on these. I began using Mozart because it was easy
 * [sdrobov/autopsr4](https://github.com/sdrobov/autopsr4)
 * [jaem3l/unfuck](https://github.com/jaem3l/unfuck)
 * [bamarni/composer-bin-plugin](https://github.com/bamarni/composer-bin-plugin)
+* [phar-io/composer-distributor](https://github.com/phar-io/composer-distributor)
 
 ## Breaking Changes
 
