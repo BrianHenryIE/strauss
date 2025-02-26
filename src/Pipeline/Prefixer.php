@@ -65,7 +65,7 @@ class Prefixer
                 continue;
             }
 
-            if(!$file->isPhpFile()) {
+            if (!$file->isPhpFile()) {
                 continue;
             }
 
