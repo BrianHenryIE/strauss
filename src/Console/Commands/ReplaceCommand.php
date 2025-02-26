@@ -35,7 +35,7 @@ class ReplaceCommand extends Command
     /** @var string */
     protected string $workingDir;
 
-    protected StraussConfig $config;
+    protected ReplaceConfigInterface $config;
 
     /** @var Prefixer */
     protected Prefixer $replacer;

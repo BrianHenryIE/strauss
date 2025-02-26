@@ -102,7 +102,7 @@ class IncludeAutoloaderCommand extends Command
     /**
      * TODO: This should be in a shared parent class/trait.
      */
-    protected function createConfig(InputInterface $input): ReplaceConfigInterface
+    protected function createConfig(InputInterface $input): StraussConfig
     {
         $config = new StraussConfig();
         return $config;

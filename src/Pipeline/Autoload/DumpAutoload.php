@@ -22,12 +22,6 @@ class DumpAutoload
 
     protected FileSystem $filesystem;
 
-    /**
-     * Autoload constructor.
-     *
-     * @param AutoloadConfigInterace $config
-     * @param array<string, array<string>> $discoveredFilesAutoloaders
-     */
     public function __construct(
         AutoloadConfigInterace $config,
         Filesystem $filesystem,

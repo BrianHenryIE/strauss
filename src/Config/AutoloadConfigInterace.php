@@ -22,4 +22,8 @@ interface AutoloadConfigInterace
      * The directory containing `composer.json`.
      */
     public function getProjectDirectory(): string;
+
+    public function isClassmapOutput(): bool;
+
+    public function isDryRun(): bool;
 }

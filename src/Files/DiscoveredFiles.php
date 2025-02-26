@@ -6,7 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 
 class DiscoveredFiles
 {
-    /** @var array<string,FileBase> */
+    /** @var array<string,FileBase|File|FileWithDependency> */
     protected array $files = [];
 
     public function add(FileBase $file): void
@@ -15,7 +15,7 @@ class DiscoveredFiles
     }
 
     /**
-     * @return array<File|FileWithDependency>
+     * @return array<string,FileBase|File|FileWithDependency>
      */
     public function getFiles(): array
     {

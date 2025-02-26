@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use Composer\Composer;
@@ -25,6 +26,7 @@ class StraussConfig implements
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     FileSymbolScannerConfigInterface,
+    FileEnumeratorConfig,
     FileCopyScannerConfigInterface,
     PrefixerConfigInterface,
     ReplaceConfigInterface

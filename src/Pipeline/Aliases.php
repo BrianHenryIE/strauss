@@ -124,7 +124,7 @@ class Aliases
 
     /**
      * @param DiscoveredSymbol[] $symbols
-     * @return array<NamespaceSymbol|ConstantSymbol|ClassSymbol|FunctionSymbol>
+     * @return DiscoveredSymbol[]
      */
     protected function getModifiedSymbols(array $symbols): array
     {

@@ -67,6 +67,7 @@ class Cleanup
         $this->deleteEmptyDirectories($files);
     }
 
+    /** @param array<string,ComposerPackage> $flatDependencyTree */
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $installedJson = new InstalledJson(

@@ -11,7 +11,6 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use Exception;
 use League\Flysystem\FilesystemException;
-use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -33,7 +32,7 @@ class Prefixer
 
     public function __construct(
         PrefixerConfigInterface $config,
-        FilesystemOperator $filesystem,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->config = $config;

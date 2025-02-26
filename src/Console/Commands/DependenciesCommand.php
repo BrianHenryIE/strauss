@@ -149,6 +149,10 @@ class DependenciesCommand extends Command
         );
     }
 
+    /**
+     * @param InputInterface $input
+     * @return array<string, int>
+     */
     protected function getLogLevel(InputInterface $input): array
     {
 
@@ -231,8 +235,6 @@ class DependenciesCommand extends Command
             $this->determineChanges();
 
             $this->performReplacements();
-
-            $this->performReplacementsInComposerFiles();
 
             $this->performReplacementsInProjectFiles();
 
@@ -376,36 +378,6 @@ class DependenciesCommand extends Command
         );
 
         $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
-    }
-
-    protected function performReplacementsInComposerFiles(): void
-    {
-        if ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
-            // Nothing to do.
-            return;
-        }
-
-        return;
-
-        $projectReplace = new Prefixer(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-
-        $fileEnumerator = new FileEnumerator(
-            $this->config,
-            $this->filesystem
-        );
-
-        $files = $fileEnumerator->compileFileListForPaths([$this->workingDir . $this->config->getVendorDirectory()]);
-
-        $composerPhpFilePaths = array_map(
-            fn($file) => $file->getSourcePath(),
-            $files->getFiles()
-        );
-
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $composerPhpFilePaths);
     }
 
     protected function performReplacementsInProjectFiles(): void

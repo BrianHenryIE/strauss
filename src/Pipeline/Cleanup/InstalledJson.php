@@ -15,6 +15,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -25,8 +26,15 @@ use Psr\Log\LoggerInterface;
 use Seld\JsonLint\ParsingException;
 
 /**
- * @phpstan-type InstalledJsonPackageArray = array{name:string, version:string, version_normalized:string, source:array, dist:array, require:array, time:string, type:string, installation-source:string, autoload:array, notification-url:string, license:array, authors:array, description:string, homepage:string, keywords:array, support:array, install-path:string}
- * @phpstan-type InstalledJson array{packages:array<InstalledJsonPackageArray>, dev:bool, dev-package-names:array<string>}
+ * @phpstan-type InstalledJsonPackageSourceArray array{type:string, url:string, reference:string}
+ * @phpstan-type InstalledJsonPackageDistArray array{type:string, url:string, reference:string, shasum:string}
+ * @phpstan-type InstalledJsonPackageAutoloadArray array<string,array<string,string>>
+ * @phpstan-type InstalledJsonPackageAuthorArray array{name:string,email:string}
+ * @phpstan-type InstalledJsonPackageSupportArray array{issues:string, source:string}
+ *
+ * @phpstan-type InstalledJsonPackageArray array{name:string, version:string, version_normalized:string, source:InstalledJsonPackageSourceArray, dist:InstalledJsonPackageDistArray, require:array<string,string>, require-dev:array<string,string>, time:string, type:string, installation-source:string, autoload:InstalledJsonPackageAutoloadArray, notification-url:string, license:array<string>, authors:array<InstalledJsonPackageAuthorArray>, description:string, homepage:string, keywords:array<string>, support:InstalledJsonPackageSupportArray, install-path:string}
+ *
+ * @phpstan-type InstalledJsonArray array{packages:array<InstalledJsonPackageArray>, dev:bool, dev-package-names:array<string>}
  */
 class InstalledJson
 {
@@ -84,6 +92,10 @@ class InstalledJson
         return $installedJsonFile;
     }
 
+    /**
+     * @param InstalledJsonArray $installedJsonArray
+     * @param array<string,ComposerPackage> $flatDependencyTree
+     */
     protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree): array
     {
 
@@ -250,9 +262,8 @@ class InstalledJson
 
         return $installedJsonArray;
     }
-
     /**
-     * @param array $flatDependencyTree
+     * @param array<string,ComposerPackage> $flatDependencyTree
      * @param DiscoveredSymbols $discoveredSymbols
      */
     public function createAndCleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
@@ -264,7 +275,7 @@ class InstalledJson
         $installedJsonFile = $this->getJsonFile($vendorDir);
 
         /**
-         * @var InstalledJson $installedJsonArray
+         * @var InstalledJsonArray $installedJsonArray
          */
         $installedJsonArray = $installedJsonFile->read();
 
@@ -298,6 +309,8 @@ class InstalledJson
      * Composer creates a file `vendor/composer/installed.json` which is uses when running `composer dump-autoload`.
      * When `delete-vendor-packages` or `delete-vendor-files` is true, files and directories which have been deleted
      * must also be removed from `installed.json` or Composer will throw an error.
+     *
+     * @param array<string,ComposerPackage> $flatDependencyTree
      */
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
@@ -308,7 +321,7 @@ class InstalledJson
         $vendorInstalledJsonFile = $this->getJsonFile($vendorDir);
 
         /**
-         * @var InstalledJson $installedJsonArray
+         * @var InstalledJsonArray $installedJsonArray
          */
         $installedJsonArray = $vendorInstalledJsonFile->read();
 

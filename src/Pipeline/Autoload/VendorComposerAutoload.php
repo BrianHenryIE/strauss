@@ -25,12 +25,6 @@ class VendorComposerAutoload
 
     protected AutoloadConfigInterace $config;
 
-    /**
-     * VendorComposerAutoload constructor.
-     *
-     * @param StraussConfig $config
-     * @param array<string, array<string>> $discoveredFilesAutoloaders
-     */
     public function __construct(
         AutoloadConfigInterace $config,
         Filesystem             $filesystem,

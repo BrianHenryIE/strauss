@@ -46,18 +46,15 @@ class NamespaceSort
             $bb = implode('/', array_slice($bParts, -2));
 
             return strlen($bb) - strlen($aa);
-            //                    return (compare na
         }
 
         if ($aPathLength !== $bPathLength) {
             return $bPathLength - $aPathLength;
         }
 
-        // TODO: first sort by the namespace, then by the class name.
-
         $bPop = array_pop($bPathParts);
         $aPop = array_pop($aPathParts);
 
-        return (strlen($bPop) ?? 0) - (strlen($aPop) ?? 0);
+        return strlen($bPop) - strlen($aPop);
     }
 }

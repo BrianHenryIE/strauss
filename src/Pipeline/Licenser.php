@@ -18,8 +18,8 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\FilesystemException;
-use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -49,7 +49,7 @@ class Licenser
      */
     protected array $discoveredLicenseFiles = array();
 
-    protected FilesystemOperator $filesystem;
+    protected FileSystem $filesystem;
 
     protected StraussConfig $config;
 
@@ -63,7 +63,7 @@ class Licenser
         StraussConfig $config,
         array $dependencies,
         string $author,
-        FilesystemOperator $filesystem,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->dependencies = $dependencies;

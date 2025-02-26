@@ -155,15 +155,18 @@ class FileEnumerator
 
     /**
      * @param ComposerPackage $dependency
-     * @param string $packageRelativePath
+     * @param string $sourceAbsoluteFilepath
      * @param string $autoloaderType
      *
      * @throws FilesystemException
      * @uses \BrianHenryIE\Strauss\Files\DiscoveredFiles::add()
      *
      */
-    protected function addFileWithDependency(ComposerPackage $dependency, string $sourceAbsoluteFilepath, string $autoloaderType): void
-    {
+    protected function addFileWithDependency(
+        ComposerPackage $dependency,
+        string $sourceAbsoluteFilepath,
+        string $autoloaderType
+    ): void {
         $vendorRelativePath = substr($sourceAbsoluteFilepath, strpos($sourceAbsoluteFilepath, $dependency->getRelativePath()));
 
         if ($vendorRelativePath === $sourceAbsoluteFilepath) {
