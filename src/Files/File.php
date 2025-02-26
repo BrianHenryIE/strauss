@@ -11,7 +11,6 @@ class File implements FileBase
      */
     protected string $sourceAbsolutePath;
 
-
     /**
      * Should this file be copied to the target directory?
      */
@@ -34,9 +33,9 @@ class File implements FileBase
         $this->sourceAbsolutePath = $sourceAbsolutePath;
     }
 
-    public function getSourcePath(string $relativeTo = ''): string
+    public function getSourcePath(): string
     {
-        return str_replace($relativeTo, '', $this->sourceAbsolutePath);
+        return $this->sourceAbsolutePath;
     }
 
     public function isPhpFile(): bool
@@ -126,11 +125,10 @@ class File implements FileBase
      * The target path to (maybe) copy the file to, and the target path to perform replacements in (which may be the
      * original path).
      */
-    public function getAbsoluteTargetPath(string $relativeTo = ''): string
+    public function getAbsoluteTargetPath(): string
     {
-        return isset($this->absoluteTargetPath)
-            ? str_replace($relativeTo, '', $this->absoluteTargetPath)
-            : $this->getSourcePath($relativeTo);
+        // TODO: Maybe this is a mistake and should better be an exception.
+        return isset($this->absoluteTargetPath) ? $this->absoluteTargetPath : $this->sourceAbsolutePath;
     }
 
     protected bool $didUpdate = false;

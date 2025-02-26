@@ -50,13 +50,13 @@ EOD;
         $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
-            $composerFile = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element . '/composer.json';
+            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
             return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
-        $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
-        $vendorDir = 'vendor' . DIRECTORY_SEPARATOR;
+        $relativeTargetDir = 'vendor-prefixed/';
+        $vendorDir = 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);
@@ -74,7 +74,7 @@ EOD;
         $targetPath = $this->testsWorkingDir . $relativeTargetDir . $relativePath;
         $targetFile = $targetPath . $file;
 
-        mkdir(rtrim($targetPath, DIRECTORY_SEPARATOR), 0777, true);
+        mkdir(rtrim($targetPath, '\\/'), 0777, true);
 
         file_put_contents($targetFile, 'dummy file');
 
@@ -113,13 +113,13 @@ EOD;
         $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
-            $composerFile = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element . '/composer.json';
+            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
             return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
-        $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
-        $vendorDir = 'vendor' . DIRECTORY_SEPARATOR;
+        $relativeTargetDir = 'vendor-prefixed/';
+        $vendorDir = 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);
@@ -272,10 +272,9 @@ EOD;
 
         $packages = array();
         foreach ($this->config->getPackages() as $packageString) {
-            $testDummyComposerDir = $this->testsWorkingDir  . 'vendor'
-                . DIRECTORY_SEPARATOR . $packageString;
+            $testDummyComposerDir = $this->testsWorkingDir  . 'vendor/' . $packageString;
             @mkdir($testDummyComposerDir, 0777, true);
-            $testDummyComposerPath = $testDummyComposerDir . DIRECTORY_SEPARATOR . 'composer.json';
+            $testDummyComposerPath = $testDummyComposerDir . '/composer.json';
             $testDummyComposerContents = json_encode(new stdClass());
 
             file_put_contents($testDummyComposerPath, $testDummyComposerContents);

@@ -85,14 +85,14 @@ class Copier
         } else {
             foreach ($this->files->getFiles() as $file) {
                 if (!$file->isDoCopy()) {
-                    $this->logger->debug('Skipping ' . $file->getSourcePath($this->workingDir));
+                    $this->logger->debug('Skipping ' . $file->getSourcePath());
                     continue;
                 }
 
                 $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
 
                 if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
-                    $this->logger->info('Deleting existing destination file at ' . str_replace($this->workingDir, '', $targetAbsoluteFilepath));
+                    $this->logger->info('Deleting existing destination file at ' . $targetAbsoluteFilepath);
                     $this->filesystem->delete($targetAbsoluteFilepath);
                 }
             }
@@ -121,13 +121,13 @@ class Copier
             if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
                 $this->logger->info(sprintf(
                     'Creating directory at %s',
-                    $file->getAbsoluteTargetPath($this->workingDir)
+                    $file->getAbsoluteTargetPath()
                 ));
                 $this->filesystem->createDirectory($targetAbsolutePath);
             } else {
                 $this->logger->info(sprintf(
                     'Copying file to %s',
-                    $file->getAbsoluteTargetPath($this->workingDir)
+                    $file->getAbsoluteTargetPath()
                 ));
                 $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
             }

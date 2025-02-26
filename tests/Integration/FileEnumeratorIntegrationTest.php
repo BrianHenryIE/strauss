@@ -47,12 +47,12 @@ EOD;
 
         // Only one because we haven't run "flat dependency list".
         $dependencies = array_map(function ($element) {
-            $composerFile = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element . '/composer.json';
+            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
             return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
-        $vendorDir = 'vendor' . DIRECTORY_SEPARATOR;
+        $vendorDir = 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);

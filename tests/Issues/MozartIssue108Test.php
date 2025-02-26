@@ -61,6 +61,7 @@ EOD;
 
         // The file we're going to move and check.
         assert(file_exists($this->testsWorkingDir . 'vendor/deliciousbrains/wp-background-processing/classes/wp-async-request.php'));
+
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
 

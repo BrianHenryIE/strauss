@@ -250,7 +250,7 @@ class InstalledJson
                          */
 
 //                        $autoload_key[$type] = array_filter($autoload, function ($file) use ($packageDir) {
-//                            $filename = $packageDir . DIRECTORY_SEPARATOR . $file;
+//                            $filename = $packageDir . '/' . $file;
 //                            $exists = $this->filesystem->directoryExists($filename) || $this->filesystem->fileExists($filename);
 //                            if (!$exists) {
 //                                $this->logger->info('Removing non-existent file from autoload: ' . $filename);

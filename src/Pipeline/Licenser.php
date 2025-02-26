@@ -107,7 +107,7 @@ class Licenser
                 $this->logger->debug(sprintf(
                     "Skipping %s because it already exists at %s",
                     basename($licenseFile),
-                    str_replace($this->workingDir, '', $targetLicenseFile)
+                    $targetLicenseFile
                 ));
                 continue;
             }
@@ -117,7 +117,7 @@ class Licenser
                 $this->logger->debug(sprintf(
                     "Skipping %s because the directory %s does not exist",
                     basename($licenseFile),
-                    str_replace($this->workingDir, '', $targetLicenseFileDir)
+                    $targetLicenseFileDir
                 ));
                 continue;
             }
@@ -126,7 +126,7 @@ class Licenser
                 sprintf(
                     "Copying license file from %s to %s",
                     basename($licenseFile),
-                    str_replace($this->workingDir, '', $targetLicenseFile)
+                    $targetLicenseFile
                 )
             );
             $this->filesystem->copy(
@@ -161,9 +161,6 @@ class Licenser
                 if (!preg_match('/^.*licen.e.*/i', $filePath)) {
                     continue;
                 }
-
-                // Replace multiple \ and/or / with OS native DIRECTORY_SEPARATOR.
-                $filePath = preg_replace('#[\\\/]+#', DIRECTORY_SEPARATOR, $filePath);
 
                 $this->discoveredLicenseFiles[$filePath] = $dependency->getPackageName();
             }

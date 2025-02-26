@@ -92,11 +92,11 @@ class FileSymbolScanner
     {
         foreach ($files->getFiles() as $file) {
             if (!$file->isPhpFile()) {
-                $this->logger->debug('Skipping non-PHP file: ' . $file->getSourcePath(getcwd()));
+                $this->logger->debug('Skipping non-PHP file: ' . $file->getSourcePath());
                 continue;
             }
 
-            $this->logger->info('Scanning file:        ' . $file->getSourcePath(getcwd()));
+            $this->logger->info('Scanning file:        ' . $file->getSourcePath());
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
                 $file

@@ -108,7 +108,7 @@ class ReplaceCommand extends Command
             )
         );
 
-        $workingDir       = getcwd() . DIRECTORY_SEPARATOR;
+        $workingDir       = getcwd() . '/';
         $this->workingDir = $workingDir;
 
         try {

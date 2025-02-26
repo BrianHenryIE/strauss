@@ -56,7 +56,7 @@ class ChangeEnumerator
                 foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
                     // TODO: This source relative path should be from the vendor dir.
                     // TODO: Should the target path be used here?
-                    if (1 === preg_match($excludeFilePattern, $symbolSourceFile->getSourcePath($this->workingDir))) {
+                    if (1 === preg_match($excludeFilePattern, $symbolSourceFile->getSourcePath())) {
                         continue 2;
                     }
                 }

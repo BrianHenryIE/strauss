@@ -53,13 +53,13 @@ EOD;
         $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
-            $composerFile = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element . '/composer.json';
+            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
             return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
-        $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
-        $vendorDir = 'vendor' . DIRECTORY_SEPARATOR;
+        $relativeTargetDir = 'vendor-prefixed/';
+        $vendorDir = 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);

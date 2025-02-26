@@ -29,7 +29,7 @@ class LicenserTest extends TestCase
     public function testFindLicenceFilesPathsAreRelative()
     {
         $config = $this->createStub(StraussConfig::class);
-        $workingDir = __DIR__ . DIRECTORY_SEPARATOR;
+        $workingDir = __DIR__ . '/';
 
         $dependencies = array();
 
@@ -60,7 +60,7 @@ class LicenserTest extends TestCase
         $result = $sut->getDiscoveredLicenseFiles();
 
         // Currently contains an array entry: /Users/brianhenry/Sites/mozart/mozart/tests/Unit/developer-name/project-name/license.md
-        self::assertStringContainsString('developer-name' . DIRECTORY_SEPARATOR . 'project-name' . DIRECTORY_SEPARATOR . 'license.md', $result[0]);
+        self::assertStringContainsString('developer-name/project-name/license.md', $result[0]);
     }
 
     /**

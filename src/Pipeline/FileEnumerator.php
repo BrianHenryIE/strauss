@@ -133,10 +133,7 @@ class FileEnumerator
                             : $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
 
                         if ($this->filesystem->directoryExists($sourceAbsoluteDirPath)) {
-                            // trailingslashit(). (to remove duplicates).
-                            $sourcePath = Path::normalize($sourceAbsoluteDirPath);
-
-                            $fileList = $this->filesystem->listContents($sourcePath, true);
+                            $fileList = $this->filesystem->listContents($sourceAbsoluteDirPath, true);
                             $actualFileList = $fileList->toArray();
 
                             foreach ($actualFileList as $foundFile) {
@@ -148,7 +145,6 @@ class FileEnumerator
                                 ) {
                                     continue;
                                 }
-                                $namespaceRelativePath = Path::normalize($namespaceRelativePath);
 
                                 $this->addFileWithDependency(
                                     $dependency,
@@ -203,7 +199,7 @@ class FileEnumerator
 
         $this->discoveredFiles->add($f);
 
-        $this->logger->info("Found file " . $f->getAbsoluteTargetPath($this->workingDir));
+        $this->logger->info("Found file " . $f->getAbsoluteTargetPath());
     }
 
     /**

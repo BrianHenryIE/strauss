@@ -55,7 +55,7 @@ class FileCopyScanner
 
             if ($file instanceof FileWithDependency) {
                 if (in_array($file->getDependency()->getPackageName(), $this->config->getExcludePackagesFromCopy(), true)) {
-                    $this->logger->debug("File {$file->getSourcePath($this->workingDir)} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.");
+                    $this->logger->debug("File {$file->getSourcePath()} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.");
                     $copy = false;
                 }
             }
@@ -72,22 +72,22 @@ class FileCopyScanner
                         && $symbol instanceof NamespaceSymbol
                         && str_starts_with($symbol->getOriginalSymbol(), $namespace)
                     ) {
-                        $this->logger->debug("File {$file->getSourcePath($this->workingDir)} will not be copied because namespace {$namespace} is excluded from copy.");
+                        $this->logger->debug("File {$file->getSourcePath()} will not be copied because namespace {$namespace} is excluded from copy.");
                         $copy = false;
                     }
                 }
             }
 
-            $filePath = $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory());
+            $filePath = $file->getSourcePath();
             foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
                 if (1 == preg_match($pattern, $filePath)) {
-                    $this->logger->debug("File {$file->getSourcePath($this->workingDir)} will not be copied because it matches pattern {$pattern}.");
+                    $this->logger->debug("File {$file->getSourcePath()} will not be copied because it matches pattern {$pattern}.");
                     $copy = false;
                 }
             }
 
             if ($copy) {
-                $this->logger->debug("Marking file {$file->getSourcePath($this->workingDir)} to be copied.");
+                $this->logger->debug("Marking file {$file->getSourcePath()} to be copied.");
             }
 
             $file->setDoCopy($copy);
