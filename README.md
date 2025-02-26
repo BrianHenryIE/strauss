@@ -198,21 +198,17 @@ The remainder is empty:
 
 ## Autoloading
 
-Strauss uses Composer's own tools to generate a classmap file in the `target_directory` and creates an `autoload.php` alongside it, so in many projects autoloading is just a matter of:
+Strauss uses Composer's own tools to generate a set of autoload files in the `target_directory` and creates an `autoload.php` alongside it, so in many projects autoloading is just a matter of:
 
 ```php
 require_once __DIR__ . '/strauss/autoload.php';
 ```
 
-If you prefer to use Composer's autoloader, add your `target_directory` (default `vendor-prefixed`) to your `autoload` `classmap` and Strauss will not create its own `autoload.php` when run. Then run `composer dump-autoload` to include the newly copied and prefixed files in Composer's own classmap.
+If you plan to continue using Composer's autoloader you probably want to turn on `delete_vendor_packages` or set `target_directory` to `vendor`.
 
-```
-"autoload": {
-    "classmap": [
-        "vendor-prefixed/"
-    ]
-},
-```
+You can use `strauss include-autoloader` to add a line to `vendor/autoload.php` which includes the autoloader for the new files. 
+
+When `delete_vendor_packages` is enabled, `vendor/composer/autoload_aliases.php` is created to allow modified classes to be loaded with their old name during development. This file should not be included in your production code.
 
 ## Motivation & Comparison to Mozart
 
