@@ -8,7 +8,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
@@ -46,13 +46,13 @@ class FileEnumerator
      */
     protected array $filesAutoloaders = [];
 
-    protected StraussConfig $config;
+    protected FileEnumeratorConfig $config;
 
     /**
      * Copier constructor.
      */
     public function __construct(
-        StraussConfig $config,
+        FileEnumeratorConfig $config,
         FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
