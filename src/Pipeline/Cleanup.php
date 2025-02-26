@@ -179,7 +179,7 @@ class Cleanup
         /** @var ComposerPackage $package */
         foreach ($packages as $package) {
             // Normal package.
-            if (str_starts_with($package->getPackageAbsolutePath(), $this->config->getVendorDirectory())) {
+            if ($this->filesystem->isSubDirOf($this->config->getVendorDirectory(), $package->getPackageAbsolutePath())) {
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
