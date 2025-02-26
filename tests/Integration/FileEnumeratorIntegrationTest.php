@@ -57,7 +57,15 @@ EOD;
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))));
+        $fileEnumerator = new FileEnumerator(
+            $config,
+            new Filesystem(
+                new \League\Flysystem\Filesystem(
+                    new LocalFilesystemAdapter('/')
+                ),
+                $this->testsWorkingDir
+            )
+        );
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 

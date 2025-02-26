@@ -52,7 +52,6 @@ class AutoloadTest extends TestCase
 
         $sut = new Autoload(
             $config,
-            $absoluteWorkingDir,
             $discoveredFilesAutoloaders,
             $filesystem,
             $logger
@@ -94,7 +93,6 @@ class AutoloadTest extends TestCase
 
         $sut = new Autoload(
             $config,
-            $absoluteWorkingDir,
             $discoveredFilesAutoloaders,
             $filesystem,
             $logger
@@ -139,7 +137,6 @@ class AutoloadTest extends TestCase
 
         $sut = new Autoload(
             $config,
-            $absoluteWorkingDir,
             $discoveredFilesAutoloaders,
             $filesystem,
             $logger

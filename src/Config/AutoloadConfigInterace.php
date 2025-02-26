@@ -17,4 +17,9 @@ interface AutoloadConfigInterace
      * absolute? relative?
      */
     public function getTargetDirectory(): string;
+
+    /**
+     * The directory containing `composer.json`.
+     */
+    public function getProjectDirectory(): string;
 }

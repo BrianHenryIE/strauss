@@ -28,17 +28,11 @@ class Licenser
 {
     use LoggerAwareTrait;
 
-    protected string $workingDir;
-
-    protected string $vendorDir;
-
     /** @var ComposerPackage[]  */
     protected array $dependencies;
 
     // The author of the current project who is running Strauss to make the changes to the required libraries.
     protected string $author;
-
-    protected string $targetDirectory;
 
     protected bool $includeModifiedDate;
 
@@ -57,31 +51,30 @@ class Licenser
 
     protected FilesystemOperator $filesystem;
 
+    protected StraussConfig $config;
+
     /**
      * Licenser constructor.
      *
-     * @param string $workingDir
      * @param ComposerPackage[] $dependencies Whose folders are searched for existing license.txt files.
      * @param string $author To add to each modified file's header
      */
     public function __construct(
         StraussConfig $config,
-        string $workingDir,
         array $dependencies,
         string $author,
         FilesystemOperator $filesystem,
         ?LoggerInterface $logger = null
     ) {
-        $this->workingDir = $workingDir;
         $this->dependencies = $dependencies;
         $this->author = $author;
 
-        $this->targetDirectory = $config->getTargetDirectory();
-        $this->vendorDir = $config->getVendorDirectory();
         $this->includeModifiedDate = $config->isIncludeModifiedDate();
         $this->includeAuthor = $config->isIncludeAuthor();
 
         $this->filesystem = $filesystem;
+
+        $this->config = $config;
 
         $this->setLogger($logger ?? new NullLogger());
     }
@@ -95,8 +88,8 @@ class Licenser
 
         foreach ($this->getDiscoveredLicenseFiles() as $licenseFile) {
             $targetLicenseFile = str_replace(
-                $this->workingDir . $this->vendorDir,
-                $this->workingDir . $this->targetDirectory,
+                $this->config->getVendorDirectory(),
+                $this->config->getTargetDirectory(),
                 $licenseFile
             );
 
@@ -186,7 +179,7 @@ class Licenser
         $date = gmdate("d-F-Y", time());
 
         foreach ($modifiedFiles as $relativeFilePath => $package) {
-            $filepath = $this->workingDir . $this->targetDirectory . $relativeFilePath;
+            $filepath = $this->config->getTargetDirectory() . $relativeFilePath;
 
             if (!$this->filesystem->fileExists($filepath)) {
                 continue;

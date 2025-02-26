@@ -10,6 +10,7 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use BrianHenryIE\Strauss\Files\FileBase;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
@@ -25,31 +26,31 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     protected FilesystemOperator $flysystem;
     protected PathNormalizer $normalizer;
 
+    protected string $workingDir;
+
     /**
      * TODO: maybe restrict the constructor to only accept a LocalFilesystemAdapter.
      *
      * TODO: Check are any of these methods unused
      */
-    public function __construct(FilesystemOperator $flysystem)
+    public function __construct(FilesystemOperator $flysystem, string $workingDir)
     {
         $this->flysystem = $flysystem;
         $this->normalizer = new StripProtocolPathNormalizer('mem');
+
+        $this->workingDir = $workingDir;
     }
 
     /**
-     * @param string $workingDir
-     * @param string[] $relativeFileAndDirPaths
+     * @param string[] $fileAndDirPaths
      *
      * @return string[]
      */
-    public function findAllFilesAbsolutePaths(string $workingDir, array $relativeFileAndDirPaths): array
+    public function findAllFilesAbsolutePaths(array $fileAndDirPaths): array
     {
         $files = [];
 
-        foreach ($relativeFileAndDirPaths as $path) {
-            // If the path begins with the workingDir just use the path, otherwise concatenate them
-            $path = strpos($path, rtrim($workingDir, '/\\')) === 0 ? $path : $workingDir . $path;
-
+        foreach ($fileAndDirPaths as $path) {
             if (!$this->directoryExists($path)) {
                 $files[] = $path;
                 continue;
@@ -244,6 +245,22 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             str_repeat('../', count($fromDirectoryParts))
             . implode('/', $toPathParts);
 
+        if ($this->directoryExists($toAbsolutePath)) {
+            $relativePath .= '/';
+        }
+
         return $relativePath;
+    }
+
+
+    /**
+     * Check does the filepath point to a file outside the working directory.
+     * If `realpath()` fails to resolve the path, assume it's a symlink.
+     */
+    public function isSymlinkedFile(FileBase $file): bool
+    {
+        $realpath = realpath($file->getSourcePath());
+
+        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
     }
 }

@@ -25,7 +25,8 @@ class FileSystemTest extends TestCase
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
-            )
+            ),
+            __DIR__
         );
 
         $result = $sut->getAttributes(__FILE__);
@@ -41,7 +42,8 @@ class FileSystemTest extends TestCase
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
-            )
+            ),
+            __DIR__
         );
 
         $result = $sut->directoryExists(__DIR__);
@@ -57,7 +59,8 @@ class FileSystemTest extends TestCase
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
-            )
+            ),
+            __DIR__
         );
 
         $result = $sut->directoryExists(__FILE__);

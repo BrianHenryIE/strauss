@@ -51,7 +51,8 @@ class IncludeAutoloaderCommand extends Command
 
         // TODO: permissions?
         $this->filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/'))
+            new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')),
+            getcwd() . '/'
         );
     }
 
@@ -83,7 +84,6 @@ class IncludeAutoloaderCommand extends Command
 
             $vendorComposerAutoload = new VendorComposerAutoload(
                 $config,
-                $workingDir,
                 $this->filesystem,
                 $logger
             );

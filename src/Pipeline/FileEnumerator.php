@@ -13,7 +13,6 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\Path;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -23,15 +22,6 @@ class FileEnumerator
 {
     use LoggerAwareTrait;
 
-    /**
-     * The only path variable with a leading slash.
-     * All directories in project end with a slash.
-     *
-     * @var string
-     */
-    protected string $workingDir;
-
-    /** @var string */
     protected string $vendorDir;
 
     /** @var string[]  */
@@ -56,21 +46,21 @@ class FileEnumerator
      */
     protected array $filesAutoloaders = [];
 
+    protected StraussConfig $config;
+
     /**
      * Copier constructor.
-     *
-     * @param string $workingDir
      */
     public function __construct(
-        string $workingDir,
         StraussConfig $config,
         FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
-        $this->workingDir = $workingDir;
         $this->vendorDir = $config->getVendorDirectory();
+
+        $this->config = $config;
 
         $this->excludeNamespaces = $config->getExcludeNamespacesFromCopy();
         $this->excludePackageNames = $config->getExcludePackagesFromCopy();
@@ -180,13 +170,13 @@ class FileEnumerator
             $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
         }
 
-        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
+        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getVendorDirectory());
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
             ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
 
-        $f->setAbsoluteTargetPath($this->workingDir . $this->vendorDir . $vendorRelativePath);
+        $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
 
         $f->addAutoloader($autoloaderType);
         $f->setDoDelete($isOutsideProjectDir);
@@ -207,7 +197,7 @@ class FileEnumerator
      */
     public function compileFileListForPaths(array $paths): DiscoveredFiles
     {
-        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths($this->workingDir, $paths);
+        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths($paths);
 
         foreach ($absoluteFilePaths as $sourceAbsolutePath) {
             $f = $this->discoveredFiles->getFile($sourceAbsolutePath)

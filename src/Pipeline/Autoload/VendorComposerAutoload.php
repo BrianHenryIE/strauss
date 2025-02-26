@@ -23,48 +23,34 @@ class VendorComposerAutoload
 
     protected FileSystem $fileSystem;
 
-    protected string $workingDir;
-
     protected AutoloadConfigInterace $config;
 
     /**
      * VendorComposerAutoload constructor.
      *
      * @param StraussConfig $config
-     * @param string $workingDir
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
     public function __construct(
         AutoloadConfigInterace $config,
-        string                 $workingDir,
         Filesystem             $filesystem,
         LoggerInterface        $logger
     ) {
         $this->config = $config;
-        $this->workingDir = $workingDir;
         $this->fileSystem = $filesystem;
         $this->setLogger($logger);
     }
 
-    protected function getVendorDirectory(): string
-    {
-        return $this->workingDir . $this->config->getVendorDirectory();
-    }
-    protected function getTargetDirectory(): string
-    {
-        return $this->workingDir . $this->config->getTargetDirectory();
-    }
-
     public function addVendorPrefixedAutoloadToVendorAutoload(): void
     {
-        $autoloadPhpFilepath = $this->getVendorDirectory() . 'autoload.php';
+        $autoloadPhpFilepath = $this->config->getVendorDirectory() . 'autoload.php';
 
         if (!$this->fileSystem->fileExists($autoloadPhpFilepath)) {
             $this->logger->info("No autoload.php found:" . $autoloadPhpFilepath);
             return;
         }
 
-        $this->logger->info('Modifying original autoload.php to add `' . $this->getTargetDirectory() . '/autoload.php`');
+        $this->logger->info('Modifying original autoload.php to add `' . $this->config->getTargetDirectory() . '/autoload.php`');
 
         $composerAutoloadPhpFileString = $this->fileSystem->read($autoloadPhpFilepath);
 
@@ -89,7 +75,7 @@ class VendorComposerAutoload
             return;
         }
 
-        $autoloadPhpFilepath = $this->getVendorDirectory() . 'autoload.php';
+        $autoloadPhpFilepath = $this->config->getVendorDirectory() . 'autoload.php';
 
         if (!$this->fileSystem->fileExists($autoloadPhpFilepath)) {
             $this->logger->info("No autoload.php found:" . $autoloadPhpFilepath);
@@ -120,11 +106,11 @@ class VendorComposerAutoload
      */
     protected function isComposerInstalled(): bool
     {
-        if (!$this->fileSystem->fileExists($this->getVendorDirectory() . 'composer/installed.json')) {
+        if (!$this->fileSystem->fileExists($this->config->getVendorDirectory() . 'composer/installed.json')) {
             return false;
         }
 
-        $installedJsonArray = json_decode($this->fileSystem->read($this->getVendorDirectory() . 'composer/installed.json'), true);
+        $installedJsonArray = json_decode($this->fileSystem->read($this->config->getVendorDirectory() . 'composer/installed.json'), true);
 
         return isset($installedJsonArray['dev-package-names']['brianhenryie/strauss']);
     }
@@ -140,7 +126,7 @@ class VendorComposerAutoload
      */
     protected function isComposerNoDev(): bool
     {
-        $installedJson = $this->fileSystem->read($this->getVendorDirectory() . 'composer/installed.json');
+        $installedJson = $this->fileSystem->read($this->config->getVendorDirectory() . 'composer/installed.json');
         $installedJsonArray = json_decode($installedJson, true);
         return !$installedJsonArray['dev'];
     }
@@ -216,11 +202,12 @@ class VendorComposerAutoload
      */
     protected function addVendorPrefixedAutoloadToComposerAutoload(string $code): string
     {
-        $targetDirAutoload = $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
-            // TODO: test this relative path
-//            ? $this->fileSystem->getRelativePath($this->getVendorDirectory(), $this->getTargetDirectory()) . 'autoload.php'
-            ? '/../'.trim($this->config->getTargetDirectory()).'autoload.php'
-            : null;
+        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+            $this->logger->info('Vendor directory is target directory, no autoloader to add.');
+            return $code;
+        }
+
+        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->config->getVendorDirectory(), $this->config->getTargetDirectory()) . '/autoload.php';
 
         if (false !== strpos($code, $targetDirAutoload)) {
             $this->logger->info('vendor/autoload.php already includes ' . $targetDirAutoload);
@@ -232,16 +219,6 @@ class VendorComposerAutoload
             $ast = $parser->parse($code);
         } catch (Error $error) {
             $this->logger->error("Parse error: {$error->getMessage()}");
-            return $code;
-        }
-
-        $targetDirAutoload = $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
-            // TODO: test this relative path
-//            ? $this->fileSystem->getRelativePath($this->getVendorDirectory(), $this->getTargetDirectory()) . 'autoload.php'
-            ? '/../'.trim($this->config->getTargetDirectory()).'autoload.php'
-            : null;
-
-        if (is_null($targetDirAutoload)) {
             return $code;
         }
 

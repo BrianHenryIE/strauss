@@ -22,12 +22,10 @@ class Prefixer
 
     protected PrefixerConfigInterface $config;
 
-    protected string $workingDir;
-
     protected FileSystem $filesystem;
 
     /**
-     * array<$workingDirRelativeFilepath, $package> or null if the file is not from a dependency (i.e. a project file).
+     * array<$filePath, $package> or null if the file is not from a dependency (i.e. a project file).
      *
      * @var array<string, ?ComposerPackage>
      */
@@ -35,12 +33,10 @@ class Prefixer
 
     public function __construct(
         PrefixerConfigInterface $config,
-        string $workingDir,
         FilesystemOperator $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->config = $config;
-        $this->workingDir = $workingDir;
         $this->filesystem = $filesystem;
         $this->logger = $logger ?? new NullLogger();
     }
@@ -59,8 +55,17 @@ class Prefixer
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
         foreach ($files as $file) {
+            if ($this->filesystem->directoryExists($file->getAbsoluteTargetPath())) {
+                $this->logger->debug("is_dir() / nothing to do : {$file->getAbsoluteTargetPath()}");
+                continue;
+            }
+
             if (! $this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
                 $this->logger->warning("Expected file does not exist: {$file->getAbsoluteTargetPath()}");
+                continue;
+            }
+
+            if(!$file->isPhpFile()) {
                 continue;
             }
 
@@ -92,11 +97,7 @@ class Prefixer
     public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, array $absoluteFilePathsArray): void
     {
 
-        foreach ($absoluteFilePathsArray as $workingDirRelativeFilepath) {
-            $fileAbsolutePath = 0 === strpos($workingDirRelativeFilepath, $this->workingDir)
-                    ? $workingDirRelativeFilepath
-                    : $this->workingDir . $workingDirRelativeFilepath;
-
+        foreach ($absoluteFilePathsArray as $fileAbsolutePath) {
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
                 $this->logger->debug("is_dir() / nothing to do : {$fileAbsolutePath}");
                 continue;
@@ -113,7 +114,7 @@ class Prefixer
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
-                $this->changedFiles[ $workingDirRelativeFilepath ] = null;
+                $this->changedFiles[ $fileAbsolutePath ] = null;
                 $this->filesystem->write($fileAbsolutePath, $updatedContents);
                 $this->logger->info('Updated contents of file: ' . $fileAbsolutePath);
             } else {

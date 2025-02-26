@@ -23,9 +23,11 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Console\Input\InputOption;
 use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
@@ -142,7 +144,8 @@ class DependenciesCommand extends Command
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
-            )
+            ),
+            getcwd() . '/'
         );
     }
 
@@ -195,11 +198,16 @@ class DependenciesCommand extends Command
             $this->updateConfigFromCli($input);
 
             if ($this->config->isDryRun()) {
+                $normalizer = new WhitespacePathNormalizer();
+                $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+
                 $this->filesystem =
                     new FileSystem(
                         new ReadOnlyFileSystem(
-                            $this->filesystem
-                        )
+                            $this->filesystem,
+                            $normalizer
+                        ),
+                        $this->workingDir
                     );
 
                 /** @var FilesystemRegistry $registry */
@@ -288,7 +296,6 @@ class DependenciesCommand extends Command
         $this->logger->notice('Building dependency list...');
 
         $this->dependenciesEnumerator = new DependenciesEnumerator(
-            $this->workingDir,
             $this->config,
             $this->filesystem,
             $this->logger
@@ -303,7 +310,6 @@ class DependenciesCommand extends Command
         $this->logger->notice('Enumerating files...');
 
         $fileEnumerator = new FileEnumerator(
-            $this->workingDir,
             $this->config,
             $this->filesystem,
             $this->logger
@@ -315,7 +321,7 @@ class DependenciesCommand extends Command
     // 3. Copy autoloaded files for each
     protected function copyFiles(): void
     {
-        (new FileCopyScanner($this->workingDir, $this->config, $this->filesystem, $this->logger))->scanFiles($this->discoveredFiles);
+        (new FileCopyScanner($this->config, $this->filesystem, $this->logger))->scanFiles($this->discoveredFiles);
 
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
             // Nothing to do.
@@ -326,7 +332,6 @@ class DependenciesCommand extends Command
 
         $copier = new Copier(
             $this->discoveredFiles,
-            $this->workingDir,
             $this->config,
             $this->filesystem,
             $this->logger
@@ -352,7 +357,6 @@ class DependenciesCommand extends Command
 
         $changeEnumerator = new ChangeEnumerator(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );
@@ -367,7 +371,6 @@ class DependenciesCommand extends Command
 
         $this->replacer = new Prefixer(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );
@@ -382,20 +385,20 @@ class DependenciesCommand extends Command
             return;
         }
 
+        return;
+
         $projectReplace = new Prefixer(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );
 
         $fileEnumerator = new FileEnumerator(
-            $this->workingDir,
             $this->config,
             $this->filesystem
         );
 
-        $files = $fileEnumerator->compileFileListForPaths([$this->config->getVendorDirectory()]);
+        $files = $fileEnumerator->compileFileListForPaths([$this->workingDir . $this->config->getVendorDirectory()]);
 
         $composerPhpFilePaths = array_map(
             fn($file) => $file->getSourcePath(),
@@ -408,23 +411,26 @@ class DependenciesCommand extends Command
     protected function performReplacementsInProjectFiles(): void
     {
 
-        $callSitePaths =
+        $relativeCallSitePaths =
             $this->config->getUpdateCallSites()
             ?? $this->projectComposerPackage->getFlatAutoloadKey();
 
-        if (empty($callSitePaths)) {
+        if (empty($relativeCallSitePaths)) {
             return;
         }
 
+        $callSitePaths = array_map(
+            fn($path) => $this->workingDir . $path,
+            $relativeCallSitePaths
+        );
+
         $projectReplace = new Prefixer(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );
 
         $fileEnumerator = new FileEnumerator(
-            $this->workingDir,
             $this->config,
             $this->filesystem
         );
@@ -452,7 +458,6 @@ class DependenciesCommand extends Command
 
         $licenser = new Licenser(
             $this->config,
-            $this->workingDir,
             $dependencies,
             $author,
             $this->filesystem,
@@ -498,7 +503,6 @@ class DependenciesCommand extends Command
 
         $classmap = new Autoload(
             $this->config,
-            $this->workingDir,
             $filesAutoloaders,
             $this->filesystem,
             $this->logger
@@ -521,14 +525,12 @@ class DependenciesCommand extends Command
 
         $aliases = new Aliases(
             $this->config,
-            $this->workingDir,
             $this->filesystem
         );
         $aliases->writeAliasesFileForSymbols($this->discoveredSymbols);
 
         $vendorComposerAutoload = new VendorComposerAutoload(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );
@@ -543,21 +545,17 @@ class DependenciesCommand extends Command
      */
     protected function cleanUp(): void
     {
-        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            // TODO: update installed.json, run composer dump-autoload.
-            return;
-        }
 
         $this->logger->notice('Cleaning up...');
 
         $cleanup = new Cleanup(
             $this->config,
-            $this->workingDir,
             $this->filesystem,
             $this->logger
         );
 
         // This will check the config to check should it delete or not.
-        $cleanup->cleanup($this->discoveredFiles->getFiles(), $this->flatDependencyTree, $this->discoveredSymbols);
+        $cleanup->cleanup($this->discoveredFiles->getFiles());
+        $cleanup->cleanupVendorInstalledJson($this->flatDependencyTree, $this->discoveredSymbols);
     }
 }

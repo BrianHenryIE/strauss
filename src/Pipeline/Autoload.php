@@ -11,10 +11,8 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
-use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -24,8 +22,6 @@ class Autoload
     use LoggerAwareTrait;
 
     protected FileSystem $filesystem;
-
-    protected string $workingDir;
 
     protected AutoloadConfigInterace $config;
 
@@ -43,40 +39,18 @@ class Autoload
      * Autoload constructor.
      *
      * @param StraussConfig $config
-     * @param string $workingDir
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
     public function __construct(
         AutoloadConfigInterace $config,
-        string $workingDir,
         array $discoveredFilesAutoloaders,
         Filesystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->config = $config;
-        $this->workingDir = $workingDir;
         $this->discoveredFilesAutoloaders = $discoveredFilesAutoloaders;
-
         $this->filesystem = $filesystem;
         $this->setLogger($logger ?? new NullLogger());
-
-
-        $targetDirectory = ltrim(sprintf(
-            '%s/%s/',
-            trim($this->workingDir, '/\\'),
-            trim($this->config->getTargetDirectory(), '/\\')
-        ), '/\\');
-
-        $pathNormalizer = new WhitespacePathNormalizer();
-        $targetDirectory = $pathNormalizer->normalizePath($targetDirectory) . '/';
-
-        $targetDir = $this->config->isDryRun()
-            ? 'mem://' . ltrim($targetDirectory, '/')
-            : $targetDirectory;
-
-        $this->absoluteTargetDirectory = $targetDir;
-
-        $this->logger->debug('Using target directory: ' . $this->absoluteTargetDirectory);
     }
 
     public function generate(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
@@ -95,7 +69,6 @@ class Autoload
         $this->logger->info('Generating autoload files for ' . $this->config->getTargetDirectory());
 
         $installedJson = new InstalledJson(
-            $this->workingDir,
             $this->config,
             $this->filesystem,
             $this->logger
@@ -103,10 +76,9 @@ class Autoload
         $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
 
         (new DumpAutoload(
-            $this->workingDir,
             $this->config,
             $this->filesystem,
             $this->logger
-        ))->generatedPrefixedAutoloader($this->workingDir, $this->config->getTargetDirectory());
+        ))->generatedPrefixedAutoloader();
     }
 }

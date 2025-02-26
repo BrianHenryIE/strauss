@@ -76,7 +76,6 @@ EOD;
 
         $sut = new VendorComposerAutoload(
             $config,
-            '/',
             $fileSystem,
             new NullLogger()
         );

@@ -19,17 +19,6 @@ class DependenciesEnumerator
     use LoggerAwareTrait;
 
     /**
-     * The only path variable with a leading slash.
-     * All directories in project end with a slash.
-     *
-     * @var string
-     */
-    protected string $workingDir;
-
-    /** @var string */
-    protected string $vendorDir;
-
-    /**
      * @var string[]
      */
     protected array $requiredPackageNames;
@@ -57,25 +46,23 @@ class DependenciesEnumerator
      * @var array{}|array<string, array{files?:array<string>,classmap?:array<string>,"psr-4":array<string|array<string>>}> $overrideAutoload
      */
     protected array $overrideAutoload = array();
+    protected StraussConfig $config;
 
     /**
      * Constructor.
      *
-     * @param string $workingDir
      * @param StraussConfig $config
      */
     public function __construct(
-        string $workingDir,
         StraussConfig $config,
-        FilesystemReader $filesystem,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
-        $this->workingDir = $workingDir;
-        $this->vendorDir = $config->getVendorDirectory();
         $this->overrideAutoload = $config->getOverrideAutoload();
         $this->requiredPackageNames = $config->getPackages();
 
         $this->filesystem = $filesystem;
+        $this->config = $config;
 
         $this->setLogger($logger ?? new NullLogger());
     }
@@ -98,12 +85,6 @@ class DependenciesEnumerator
     {
         $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
 
-        $absoluteVendorDir = sprintf(
-            '%s%s',
-            $this->workingDir,
-            $this->vendorDir,
-        );
-
         foreach ($requiredPackageNames as $requiredPackageName) {
             // Avoid infinite recursion.
             if (isset($this->flatDependencyTree[$requiredPackageName])) {
@@ -112,9 +93,10 @@ class DependenciesEnumerator
 
             $packageComposerFile = sprintf(
                 '%s%s/composer.json',
-                $absoluteVendorDir,
+                $this->config->getVendorDirectory(),
                 $requiredPackageName
             );
+            $packageComposerFile = str_replace('mem://', '/', $packageComposerFile);
 
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
@@ -126,7 +108,7 @@ class DependenciesEnumerator
                 $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock');
 
                 // TODO: These (.json, .lock) should be read once and reused.
-                $composerJsonString = $this->filesystem->read($this->workingDir . 'composer.json');
+                $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . 'composer.json');
                 $composerJson       = json_decode($composerJsonString, true);
 
                 if (isset($composerJson['provide']) && in_array($requiredPackageName, array_keys($composerJson['provide']))) {
@@ -134,7 +116,7 @@ class DependenciesEnumerator
                     continue;
                 }
 
-                $composerLockString           = $this->filesystem->read($this->workingDir . 'composer.lock');
+                $composerLockString           = $this->filesystem->read($this->config->getProjectDirectory() . 'composer.lock');
                 $composerLock           = json_decode($composerLockString, true);
 
                 $requiredPackageComposerJson = null;

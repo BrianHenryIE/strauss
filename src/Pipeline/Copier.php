@@ -27,16 +27,6 @@ class Copier
 {
     use LoggerAwareTrait;
 
-    /**
-     * The only path variable with a leading slash.
-     * All directories in project end with a slash.
-     *
-     * @var string
-     */
-    protected string $workingDir;
-
-    protected string $absoluteTargetDir;
-
     protected DiscoveredFiles $files;
 
     protected FileSystem $filesystem;
@@ -49,27 +39,20 @@ class Copier
      * Copier constructor.
      *
      * @param DiscoveredFiles $files
-     * @param string $workingDir
      * @param StraussConfig $config
      */
     public function __construct(
         DiscoveredFiles $files,
-        string $workingDir,
         StraussConfig $config,
         FileSystem $filesystem,
         LoggerInterface $logger
     ) {
         $this->files = $files;
-
         $this->config = $config;
         $this->logger = $logger;
-
-        $this->absoluteTargetDir = $workingDir . $config->getTargetDirectory();
-
         $this->filesystem = $filesystem;
-        $this->workingDir = $workingDir;
     }
-
+    
     /**
      * If the target dir does not exist, create it.
      * If it already exists, delete any files we're about to copy.
@@ -79,22 +62,22 @@ class Copier
      */
     public function prepareTarget(): void
     {
-        if (! $this->filesystem->directoryExists($this->absoluteTargetDir)) {
-            $this->logger->info('Creating directory at ' . $this->absoluteTargetDir);
-            $this->filesystem->createDirectory($this->absoluteTargetDir);
-        } else {
-            foreach ($this->files->getFiles() as $file) {
-                if (!$file->isDoCopy()) {
-                    $this->logger->debug('Skipping ' . $file->getSourcePath());
-                    continue;
-                }
+        if (! $this->filesystem->directoryExists($this->config->getTargetDirectory())) {
+            $this->logger->info('Creating directory at ' . $this->config->getTargetDirectory());
+            $this->filesystem->createDirectory($this->config->getTargetDirectory());
+        }
 
-                $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
+        foreach ($this->files->getFiles() as $file) {
+            if (!$file->isDoCopy()) {
+                $this->logger->debug('Skipping ' . $file->getSourcePath());
+                continue;
+            }
 
-                if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
-                    $this->logger->info('Deleting existing destination file at ' . $targetAbsoluteFilepath);
-                    $this->filesystem->delete($targetAbsoluteFilepath);
-                }
+            $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
+
+            if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
+                $this->logger->info('Deleting existing destination file at ' . $targetAbsoluteFilepath);
+                $this->filesystem->delete($targetAbsoluteFilepath);
             }
         }
     }
