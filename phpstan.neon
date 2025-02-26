@@ -9,3 +9,5 @@ parameters:
         -
             message: '#Property.*excludePackages is unused#'
             path: src/Composer/Extra/StraussConfig.php
+        - '#Cannot call method .* on Psr\\Log\\LoggerInterface\|null#'
+        - '#.*expects Psr\\Log\\LoggerInterface, Psr\\Log\\LoggerInterface\|null given#'
