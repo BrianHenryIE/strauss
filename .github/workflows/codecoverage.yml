@@ -54,7 +54,7 @@ jobs:
           rm -rf *
 
       - name: Generate code coverage
-        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover tests/_reports/clover.xml --coverage-html tests/_reports/html tests/unit
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover tests/_reports/clover.xml --coverage-html tests/_reports/html ./tests/unit/
 
       - name: Add code coverage output to gh-pages
         working-directory: tests/_reports/html
