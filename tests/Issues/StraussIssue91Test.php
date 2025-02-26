@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  */
 class StraussIssue91Test extends IntegrationTestCase
 {
-    public function test_namespace_keyword_on_opening_line()
+    public function test_issue_91()
     {
         $composerJsonString = <<<'EOD'
 {
@@ -37,8 +37,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
 
-        self::assertEquals(0, $result);
+        $this->assertEquals(0, $exitCode, $output);
     }
 }

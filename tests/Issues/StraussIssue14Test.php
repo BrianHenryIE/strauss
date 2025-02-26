@@ -42,7 +42,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir .'vendor-prefixed/guzzlehttp/psr7/src/AppendStream.php');
 
@@ -78,8 +79,9 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
-        self::assertFileExists($this->testsWorkingDir .'vendor-prefixed/autoload-files.php');
+        self::assertFileExists($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
     }
 }

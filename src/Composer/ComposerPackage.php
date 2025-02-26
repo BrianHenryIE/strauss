@@ -66,19 +66,13 @@ class ComposerPackage
     protected string $license;
 
     /**
-     * @param string $absolutePath The absolute path to the vendor folder with the composer.json "name",
-     *          i.e. the domain/package definition, which is the vendor subdir from where the package's
-     *          composer.json should be read.
+     * @param string $absolutePath The absolute path to composer.json
      * @param ?array{files?:array<string>, classmap?:array<string>, psr?:array<string,string|array<string>>} $overrideAutoload Optional configuration to replace the package's own autoload definition with
      *                                    another which Strauss can use.
      * @return ComposerPackage
      */
     public static function fromFile(string $absolutePath, array $overrideAutoload = null): ComposerPackage
     {
-        if (is_dir($absolutePath)) {
-            $absolutePath = rtrim($absolutePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'composer.json';
-        }
-
         $composer = Factory::create(new NullIO(), $absolutePath, true);
 
         return new ComposerPackage($composer, $overrideAutoload);
@@ -115,13 +109,13 @@ class ComposerPackage
 
         $absolutePath = realpath(dirname($composerJsonFileAbsolute));
         if (false !== $absolutePath) {
-            $this->packageAbsolutePath = $absolutePath . DIRECTORY_SEPARATOR;
+            $this->packageAbsolutePath = $absolutePath . '/';
         }
 
         $vendorDirectory = $this->composer->getConfig()->get('vendor-dir');
-        if (file_exists($vendorDirectory . DIRECTORY_SEPARATOR . $this->packageName)) {
+        if (file_exists($vendorDirectory . '/' . $this->packageName)) {
             $this->relativePath = $this->packageName;
-            $this->packageAbsolutePath = realpath($vendorDirectory . DIRECTORY_SEPARATOR . $this->packageName) . DIRECTORY_SEPARATOR;
+            $this->packageAbsolutePath = realpath($vendorDirectory . '/' . $this->packageName) . '/';
         // If the package is symlinked, the path will be outside the working directory.
         } elseif (0 !== strpos($absolutePath, getcwd()) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorDirectory, $output_array)) {
             $this->relativePath = $output_array[1];
@@ -163,7 +157,7 @@ class ComposerPackage
      */
     public function getRelativePath(): ?string
     {
-        return $this->relativePath . DIRECTORY_SEPARATOR;
+        return $this->relativePath . '/';
     }
 
     public function getPackageAbsolutePath(): ?string

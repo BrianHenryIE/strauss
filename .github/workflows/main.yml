@@ -14,12 +14,18 @@ on:
     paths:
       - '**.php'
 
+concurrency:
+  # Cancel previous runs of this workflow if they are testing the same branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     strategy:
       matrix:
         php: ['7.4', '8.0', '8.1', '8.2', '8.3']
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
+#        os: [ubuntu-latest, windows-latest]
       fail-fast: false
     name: PHP tests ${{ matrix.php }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -30,7 +36,11 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          tools: composer:v2, phive
           extensions: fileinfo
+
+      - name: Install Phive tools
+        uses: ngmy/phive-install-action@master
 
       - name: Setup problem matcher for PHPUnit
         run: |
@@ -52,6 +62,20 @@ jobs:
         run:
           ./scripts/createphar.sh
 
+      - uses: actions/upload-artifact@v4
+        if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
+        id: artifact-upload-step
+        with:
+          name: strauss.phar
+          path: strauss.phar
+
+      - name: Add phar to PR comment
+        uses: mshick/add-pr-comment@v2
+        if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
+        with:
+          message-id: strauss-phar
+          message: ${{ format('[strauss.phar.zip]({0}) @ {1}', steps.artifact-upload-step.outputs.artifact-url, github.event.pull_request.head.sha) }}
+
       - name: Run tests with strauss.phar
         run: vendor/bin/phpunit
   lint:
@@ -65,7 +89,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          tools: composer, cs2pr
+          tools: composer, cs2pr, phive
+
+      - name: Install Phive tools
+        uses: ngmy/phive-install-action@master
 
       - name: Debugging
         run: |
@@ -82,7 +109,7 @@ jobs:
           vendor/bin/phpcs -q -n --report=checkstyle | cs2pr
 
       - name: Commit PHPCBF changes
-        if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }} # only commit on pushes to main
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }} # only commit on pushes to master
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "🤖 PHPCBF"

@@ -18,23 +18,21 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use Symfony\Component\Finder\Finder;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use League\Flysystem\FilesystemException;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class Licenser
 {
-    protected string $workingDir;
-
-    protected string $vendorDir;
+    use LoggerAwareTrait;
 
     /** @var ComposerPackage[]  */
     protected array $dependencies;
 
     // The author of the current project who is running Strauss to make the changes to the required libraries.
     protected string $author;
-
-    protected string $targetDirectory;
 
     protected bool $includeModifiedDate;
 
@@ -51,51 +49,81 @@ class Licenser
      */
     protected array $discoveredLicenseFiles = array();
 
-    /** @var Filesystem */
-    protected $filesystem;
+    protected FileSystem $filesystem;
+
+    protected StraussConfig $config;
 
     /**
      * Licenser constructor.
      *
-     * @param string $workingDir
      * @param ComposerPackage[] $dependencies Whose folders are searched for existing license.txt files.
      * @param string $author To add to each modified file's header
      */
-    public function __construct(StraussConfig $config, string $workingDir, array $dependencies, string $author)
-    {
-        $this->workingDir = $workingDir;
+    public function __construct(
+        StraussConfig $config,
+        array $dependencies,
+        string $author,
+        FileSystem $filesystem,
+        ?LoggerInterface $logger = null
+    ) {
         $this->dependencies = $dependencies;
         $this->author = $author;
 
-        $this->targetDirectory = $config->getTargetDirectory();
-        $this->vendorDir = $config->getVendorDirectory();
         $this->includeModifiedDate = $config->isIncludeModifiedDate();
         $this->includeAuthor = $config->isIncludeAuthor();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter('/'));
+        $this->filesystem = $filesystem;
+
+        $this->config = $config;
+
+        $this->setLogger($logger ?? new NullLogger());
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function copyLicenses(): void
     {
         $this->findLicenseFiles();
 
         foreach ($this->getDiscoveredLicenseFiles() as $licenseFile) {
-            $targetLicenseFile = $this->targetDirectory . $licenseFile;
+            $targetLicenseFile = str_replace(
+                $this->config->getVendorDirectory(),
+                $this->config->getTargetDirectory(),
+                $licenseFile
+            );
 
             $targetLicenseFileDir = dirname($targetLicenseFile);
 
             // Don't try copy it if it's already there.
             if ($this->filesystem->fileExists($targetLicenseFile)) {
+                $this->logger->debug(sprintf(
+                    "Skipping %s because it already exists at %s",
+                    basename($licenseFile),
+                    $targetLicenseFile
+                ));
                 continue;
             }
 
             // Don't add licenses to non-existent directories – there were no files copied there!
-            if (! is_dir($targetLicenseFileDir)) {
+            if (! $this->filesystem->directoryExists($targetLicenseFileDir)) {
+                $this->logger->debug(sprintf(
+                    "Skipping %s because the directory %s does not exist",
+                    basename($licenseFile),
+                    $targetLicenseFileDir
+                ));
                 continue;
             }
 
+            $this->logger->info(
+                sprintf(
+                    "Copying license file from %s to %s",
+                    basename($licenseFile),
+                    $targetLicenseFile
+                )
+            );
             $this->filesystem->copy(
-                $this->vendorDir . $licenseFile,
+                $licenseFile,
                 $targetLicenseFile
             );
         }
@@ -104,26 +132,28 @@ class Licenser
     /**
      * @see https://www.phpliveregex.com/p/A5y
      */
-    public function findLicenseFiles(?Finder $finder = null): void
+    public function findLicenseFiles(): void
     {
         // Include all license files in the dependency path.
-        $finder = $finder ?? new Finder();
 
         /** @var ComposerPackage $dependency */
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
 
-            // If packages happen to have their vendor dir, i.e. locally required packages, don't included the licenses
-            // from their vendor dir (they should be included otherwise anyway).
-            // $dependency->getVendorDir()
-            $finder->files()->in($packagePath)->followLinks()->exclude(array( 'vendor' ))->name('/^.*licen.e.*/i');
+            $files = $this->filesystem->listContents($packagePath, true);
+            foreach ($files as $file) {
+                $filePath = '/' . $file->path();
 
-            /** @var \SplFileInfo $foundFile */
-            foreach ($finder as $foundFile) {
-                $filePath = $foundFile->getPathname();
+                // If packages happen to have their vendor dir, i.e. locally required packages, don't included the licenses
+                // from their vendor dir (they should be included otherwise anyway).
+                // I.e. in symlinked packages, the vendor dir might still exist.
+                if (0 === strpos($packagePath . '/vendor', $filePath)) {
+                    continue;
+                }
 
-                // Replace multiple \ and/or / with OS native DIRECTORY_SEPARATOR.
-                $filePath = preg_replace('#[\\\/]+#', DIRECTORY_SEPARATOR, $filePath);
+                if (!preg_match('/^.*licen.e.*/i', $filePath)) {
+                    continue;
+                }
 
                 $this->discoveredLicenseFiles[$filePath] = $dependency->getPackageName();
             }
@@ -141,6 +171,7 @@ class Licenser
      * @param array<string, ComposerPackage> $modifiedFiles
      *
      * @throws \Exception
+     * @throws FilesystemException
      */
     public function addInformationToUpdatedFiles(array $modifiedFiles): void
     {
@@ -148,7 +179,7 @@ class Licenser
         $date = gmdate("d-F-Y", time());
 
         foreach ($modifiedFiles as $relativeFilePath => $package) {
-            $filepath = $this->workingDir . $this->targetDirectory . $relativeFilePath;
+            $filepath = $this->config->getTargetDirectory() . $relativeFilePath;
 
             if (!$this->filesystem->fileExists($filepath)) {
                 continue;
@@ -164,6 +195,7 @@ class Licenser
             );
 
             if ($updatedContents !== $contents) {
+                $this->logger->info("Adding change declaration to {$filepath}");
                 $this->filesystem->write($filepath, $updatedContents);
             }
         }

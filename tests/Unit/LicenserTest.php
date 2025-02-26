@@ -3,19 +3,22 @@
  * @author BrianHenryIE
  */
 
-namespace BrianHenryIE\Strauss\Tests\Unit;
+namespace BrianHenryIE\Strauss;
 
 use ArrayIterator;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\TestCase;
-use PHPUnit\Framework\Constraint\Callback;
-use Symfony\Component\Finder\Finder;
+use League\Flysystem\DirectoryListing;
+use League\Flysystem\FileAttributes;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Mockery;
 
 /**
  * Class LicenserTest
- * @package BrianHenryIE\Strauss\Tests\Unit
+ * @package BrianHenryIE\Strauss
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Licenser
  */
 class LicenserTest extends TestCase
@@ -26,7 +29,6 @@ class LicenserTest extends TestCase
     public function testFindLicenceFilesPathsAreRelative()
     {
         $config = $this->createStub(StraussConfig::class);
-        $workingDir = __DIR__ . DIRECTORY_SEPARATOR;
 
         $dependencies = array();
 
@@ -35,32 +37,29 @@ class LicenserTest extends TestCase
         $dependency->method('getPackageAbsolutePath')->willReturn(__DIR__.'/vendor/developer-name/project-name/');
         $dependencies[] = $dependency;
 
-        $sut = new Licenser($config, $workingDir, $dependencies, 'BrianHenryIE');
+        $filesystemMock = Mockery::mock(FileSystem::class);
 
-        $finder = $this->createStub(Finder::class);
-
-        $file = $this->createStub(\SplFileInfo::class);
-        $file->method('getPathname')
-            ->willReturn(__DIR__.'/vendor/developer-name/project-name/license.md');
+        $file = Mockery::mock(FileAttributes::class);
+        $file->expects('path')
+             ->andReturn(__DIR__.'/vendor/developer-name/project-name/license.md');
 
         $finderArrayIterator = new ArrayIterator(array(
             $file
         ));
 
-        $finder->method('getIterator')->willReturn($finderArrayIterator);
+        $directoryListingMock = Mockery::mock(DirectoryListing::class);
+        $directoryListingMock->expects('getIterator')->andReturn($finderArrayIterator);
 
-        // Make the rest fluent.
-        $callableConstraintNotGetIterator = function ($methodName) {
-            return 'getIterator' !== $methodName;
-        };
-        $finder->method(new Callback($callableConstraintNotGetIterator))->willReturn($finder);
+        $filesystemMock->expects('listContents')->andReturn($directoryListingMock);
 
-        $sut->findLicenseFiles($finder);
+        $sut = new Licenser($config, $dependencies, 'BrianHenryIE', $filesystemMock);
+
+        $sut->findLicenseFiles();
 
         $result = $sut->getDiscoveredLicenseFiles();
 
         // Currently contains an array entry: /Users/brianhenry/Sites/mozart/mozart/tests/Unit/developer-name/project-name/license.md
-        self::assertStringContainsString('developer-name' . DIRECTORY_SEPARATOR . 'project-name' . DIRECTORY_SEPARATOR . 'license.md', $result[0]);
+        self::assertStringContainsString('developer-name/project-name/license.md', $result[0]);
     }
 
     /**
@@ -82,7 +81,7 @@ class LicenserTest extends TestCase
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -133,7 +132,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(false);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -173,7 +172,7 @@ EOD;
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(false);
 
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -213,7 +212,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php // phpcs:ignore WordPress.Files.FileName
@@ -271,7 +270,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -340,7 +339,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -394,7 +393,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -462,7 +461,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -537,7 +536,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, __DIR__, array(), $author);
+        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
 
         $contents = <<<'EOD'
 <?php

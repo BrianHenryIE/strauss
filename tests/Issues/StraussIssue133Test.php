@@ -24,13 +24,7 @@ class StraussIssue133Test extends IntegrationTestCase
     {
         $minimum_php_version = '8.2';
 
-        exec('php -v', $output, $return_var);
-        preg_match('/PHP\s([\d\\\.]*)/', $output[0], $php_version_capture);
-        $system_php_version = $php_version_capture[1];
-
-        if (!version_compare(phpversion(), $minimum_php_version, '>=') || !version_compare($system_php_version, $minimum_php_version, '>=')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.2 compatible. Running tests under PHP " . phpversion() . ', ' . $system_php_version);
-        }
+        $this->markTestSkippedOnPhpVersion($minimum_php_version, ">=");
 
         $composerJsonString = <<<'EOD'
 {
@@ -63,8 +57,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
 
-        $this->assertEquals(0, $result);
+        $this->assertEquals(0, $exitCode, $output);
     }
 }

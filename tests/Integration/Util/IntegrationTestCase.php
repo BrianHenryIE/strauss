@@ -8,12 +8,13 @@
 namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
-use League\Flysystem\Filesystem;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
@@ -34,11 +35,10 @@ class IntegrationTestCase extends TestCase
 
         $this->projectDir = getcwd();
 
-        $this->testsWorkingDir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
-            . 'strausstestdir' . DIRECTORY_SEPARATOR;
+        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
 
         if ('Darwin' === PHP_OS) {
-            $this->testsWorkingDir = DIRECTORY_SEPARATOR . 'private' . $this->testsWorkingDir;
+            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
         }
 
         if (file_exists($this->testsWorkingDir)) {
@@ -53,19 +53,37 @@ class IntegrationTestCase extends TestCase
         }
     }
 
-    protected function runStrauss(): int
+    protected function runStrauss(?string &$allOutput = null, string $params = ''): int
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
-            exec('php ' . $this->projectDir . '/strauss.phar', $output, $return_var);
+            // TODO add xdebug to the command
+            exec('php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+            $allOutput = implode(PHP_EOL, $output);
+            echo $allOutput;
             return $return_var;
         }
 
-        $inputInterfaceMock = $this->createMock(InputInterface::class);
-        $outputInterfaceMock = $this->createMock(OutputInterface::class);
+        $paramsSplit = explode(' ', trim($params));
 
-        $strauss = new DependenciesCommand();
+        switch ($paramsSplit[0]) {
+            case 'include-autoloader':
+                $strauss = new IncludeAutoloaderCommand();
+                unset($paramsSplit[0]);
+                break;
+            default:
+                $strauss = new DependenciesCommand();
+        }
 
-        return $strauss->run($inputInterfaceMock, $outputInterfaceMock);
+        $argv = array_merge(['strauss'], array_filter($paramsSplit));
+        $inputInterface = new ArgvInput($argv);
+
+        $bufferedOutput = new BufferedOutput(OutputInterface::VERBOSITY_NORMAL);
+
+        $result = $strauss->run($inputInterface, $bufferedOutput);
+
+        $allOutput = $bufferedOutput->fetch();
+
+        return $result;
     }
 
     /**
@@ -80,6 +98,13 @@ class IntegrationTestCase extends TestCase
         $dir = $this->testsWorkingDir;
 
         $this->deleteDir($dir);
+
+        /** @var FilesystemRegistry $registry */
+        try {
+            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+            $registry->unregister('mem');
+        } catch (\Exception $e) {
+        }
     }
 
     protected function deleteDir($dir)
@@ -87,8 +112,12 @@ class IntegrationTestCase extends TestCase
         if (!file_exists($dir)) {
             return;
         }
-
-        $filesystem = new Filesystem(new LocalFilesystemAdapter('/'));
+        $filesystem = new Filesystem(
+            new \League\Flysystem\Filesystem(
+                new LocalFilesystemAdapter('/')
+            ),
+            $this->testsWorkingDir
+        );
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
         $isSymlink = function ($file) use ($symfonyFilesystem) {
@@ -128,6 +157,27 @@ class IntegrationTestCase extends TestCase
             }
         }
 
+        if (!is_dir($dir)) {
+            return;
+        }
+
         $filesystem->deleteDirectory($dir);
+    }
+
+    /**
+     * Checks both the PHP version the tests are running under and the system PHP version.
+     */
+    public function markTestSkippedOnPhpVersion(string $php_version, string $operator)
+    {
+        exec('php -v', $output, $return_var);
+        preg_match('/PHP\s([\d\\\.]*)/', $output[0], $php_version_capture);
+        $system_php_version = $php_version_capture[1];
+
+        $testPhpVersionConstraintMatch = version_compare(phpversion(), $php_version, $operator);
+        $systemPhpVersionConstraintMatch = version_compare($system_php_version, $php_version, $operator);
+
+        if (! ($testPhpVersionConstraintMatch && $systemPhpVersionConstraintMatch)) {
+            $this->markTestSkipped("Package specified for test requires PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version);
+        }
     }
 }

@@ -62,9 +62,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
-//
-//        self::assertEquals(0, $result);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         self::assertFileExists($this->testsWorkingDir .'vendor-prefixed/aws/aws-sdk-php/src/AWS/Common/Aws.php');
     }

@@ -56,11 +56,11 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
         // Run TWICE!
-        $result = $this->runStrauss();
-
-        self::assertNotEquals(1, $result);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $project_file_php_string = file_get_contents($this->testsWorkingDir . 'src/library.php');
         self::assertStringNotContainsString('use Psr\Log\LoggerInterface', $project_file_php_string);

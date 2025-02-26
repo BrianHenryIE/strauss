@@ -27,7 +27,7 @@ class MozartIssue108Test extends IntegrationTestCase
     /**
      * WooCommerce Action Scheduler ... has no autoload key. But also needs some Mozart patches to work correctly.
      */
-    public function test_it_does_not_make_classname_replacement_inside_namespaced_file()
+    public function test_woocommerce_actionscheduler()
     {
 
         $composerJsonString = <<<'EOD'
@@ -62,7 +62,8 @@ EOD;
         // The file we're going to move and check.
         assert(file_exists($this->testsWorkingDir . 'vendor/deliciousbrains/wp-background-processing/classes/wp-async-request.php'));
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_contents = file_get_contents($this->testsWorkingDir .'vendor-prefixed/deliciousbrains/wp-background-processing/classes/wp-async-request.php');
         self::assertStringContainsString('abstract class Strauss_WP_Async_Request', $php_contents);

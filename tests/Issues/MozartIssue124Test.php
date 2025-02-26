@@ -28,9 +28,7 @@ class MozartIssue124Test extends IntegrationTestCase
      */
     public function test_it_does_not_make_classname_replacement_inside_namespaced_file()
     {
-        if (version_compare(phpversion(), '8.1', '>=')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.1 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersion('8.0.0', "<=");
 
         $composerJsonString = <<<'EOD'
 {
@@ -53,7 +51,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $mpdf_php = file_get_contents($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Mpdf.php');
 
@@ -77,9 +76,7 @@ EOD;
      */
     public function test_it_does_not_prefix_function_argument_types_whose_classname_matches_the_namespace()
     {
-        if (version_compare(phpversion(), '8.1', '>=')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.1 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersion('8.0.0', "<=");
 
         $composerJsonString = <<<'EOD'
 {
@@ -102,7 +99,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $mpdf_php = file_get_contents($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Conversion/DecToOther.php');
 
@@ -123,9 +121,7 @@ EOD;
      */
     public function testItDoesPrefixNamespacedExtends()
     {
-        if (version_compare(phpversion(), '8.1', '>=')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.1 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersion('8.0.0', "<=");
 
         $composerJsonString = <<<'EOD'
 {
@@ -148,7 +144,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $mpdf_php = file_get_contents($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Barcode/BarcodeException.php');
 

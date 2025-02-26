@@ -4,6 +4,9 @@
     <include>
       <directory suffix=".php">src/</directory>
     </include>
+    <exclude>
+      <file>src/Pipeline/FileSymbol/builtinsymbols.php</file>
+    </exclude>
   </coverage>
   <testsuites>
     <testsuite name="all">

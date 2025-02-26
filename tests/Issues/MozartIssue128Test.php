@@ -13,12 +13,11 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  */
 class MozartIssue128Test extends IntegrationTestCase
 {
-
     /**
      * Because the neither package was a sub-package of the other, the replacing was not occurring
      * throughout.
      */
-    public function test_it_does_not_make_classname_replacement_inside_namespaced_file()
+    public function test_fpdf()
     {
 
         if (version_compare(phpversion(), '7.0', '>')) {
@@ -49,9 +48,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
-
-        assert(0 === $result);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $mpdf_php = file_get_contents($this->testsWorkingDir .'strauss/setasign/fpdi/src/FpdfTpl.php');
 

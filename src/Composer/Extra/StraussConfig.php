@@ -5,21 +5,37 @@
 
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
+use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
+use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use Composer\Composer;
+use Composer\Factory;
 use Exception;
 use JsonMapper\JsonMapperFactory;
 use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
 class StraussConfig implements
-    ReplaceConfigInterface,
+    AliasesConfigInterace,
+    AutoloadConfigInterace,
+    ChangeEnumeratorConfigInterface,
+    CleanupConfigInterface,
     FileSymbolScannerConfigInterface,
+    FileEnumeratorConfig,
     FileCopyScannerConfigInterface,
-    ChangeEnumeratorConfigInterface
+    PrefixerConfigInterface,
+    ReplaceConfigInterface
 {
+    /**
+     * The directory containing `composer.json`. Probably `cwd()`.
+     */
+    protected string $projectDirectory;
+
     /**
      * The output directory.
      */
@@ -62,7 +78,7 @@ class StraussConfig implements
      *
      * @var ?string[]
      */
-    protected ?array $updateCallSites = null;
+    protected ?array $updateCallSites = array();
 
     /**
      * Packages to copy and (maybe) prefix.
@@ -141,6 +157,11 @@ class StraussConfig implements
      * @var bool
      */
     protected $includeAuthor = true;
+
+    /**
+     * Should the changes be printed to console rather than files modified?
+     */
+    protected bool $dryRun = false;
 
     /**
      * Read any existing Mozart config.
@@ -260,7 +281,7 @@ class StraussConfig implements
                         $paths = (array) $entry;
                         foreach ($paths as $path) {
                             // Matches the target directory.
-                            if (trim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR === $this->getTargetDirectory()) {
+                            if (trim($path, '\\/') . '/' === $this->getTargetDirectory()) {
                                 $this->classmapOutput = false;
                                 break 3;
                             }
@@ -294,7 +315,7 @@ class StraussConfig implements
      */
     public function getTargetDirectory(): string
     {
-        return trim($this->targetDirectory, DIRECTORY_SEPARATOR . '\\/') . DIRECTORY_SEPARATOR;
+        return $this->getProjectDirectory() . trim($this->targetDirectory, '\\/') . '/';
     }
 
     /**
@@ -302,15 +323,7 @@ class StraussConfig implements
      */
     public function setTargetDirectory(string $targetDirectory): void
     {
-        $this->targetDirectory = trim(
-            preg_replace(
-                '/[\/\\\\]+/',
-                DIRECTORY_SEPARATOR,
-                $targetDirectory
-            ),
-            DIRECTORY_SEPARATOR
-        )
-            . DIRECTORY_SEPARATOR ;
+        $this->targetDirectory = $targetDirectory;
     }
 
     /**
@@ -318,7 +331,7 @@ class StraussConfig implements
      */
     public function getVendorDirectory(): string
     {
-        return trim($this->vendorDirectory, DIRECTORY_SEPARATOR . '\\/') . DIRECTORY_SEPARATOR;
+        return $this->getProjectDirectory() . trim($this->vendorDirectory, '\\/') . '/';
     }
 
     /**
@@ -387,9 +400,16 @@ class StraussConfig implements
     /**
      * @param string[]|null $updateCallSites
      */
-    public function setUpdateCallSites(?array $updateCallSites): void
+    public function setUpdateCallSites($updateCallSites): void
     {
-        $this->updateCallSites = $updateCallSites;
+        if (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === true) {
+            // Setting `null` instructs Strauss to update call sites in the project's autoload key.
+            $this->updateCallSites = null;
+        } elseif (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === false) {
+            $this->updateCallSites = array();
+        } else {
+            $this->updateCallSites = $updateCallSites;
+        }
     }
 
     /**
@@ -619,6 +639,22 @@ class StraussConfig implements
     }
 
     /**
+     * Should expected changes be printed to console rather than files modified?
+     */
+    public function isDryRun(): bool
+    {
+        return $this->dryRun;
+    }
+
+    /**
+     * Disable making changes to files; output changes to console instead.
+     */
+    public function setDryRun(bool $dryRun): void
+    {
+        $this->dryRun = $dryRun;
+    }
+
+    /**
      * @param InputInterface $input To access the command line options.
      */
     public function updateFromCli(InputInterface $input): void
@@ -640,12 +676,45 @@ class StraussConfig implements
             }
         }
 
-        if ($input->hasOption('deleteVendorPackages') && $input->getOption('deleteVendorPackages') !== null) {
-            $isDeleteVendorPackagesCommandLine = $input->getOption('deleteVendorPackages') === 'true';
+        if ($input->hasOption('deleteVendorPackages')  && $input->getOption('deleteVendorPackages') !== false) {
+            $isDeleteVendorPackagesCommandLine = $input->getOption('deleteVendorPackages') === 'true'
+                || $input->getOption('deleteVendorPackages') === null;
             $this->setDeleteVendorPackages($isDeleteVendorPackagesCommandLine);
-        } elseif ($input->hasOption('delete_vendor_packages') && $input->getOption('delete_vendor_packages') !== null) {
-            $isDeleteVendorPackagesCommandLine = $input->getOption('delete_vendor_packages') === 'true';
+        } elseif ($input->hasOption('delete_vendor_packages') && $input->getOption('delete_vendor_packages') !== false) {
+            $isDeleteVendorPackagesCommandLine = $input->getOption('delete_vendor_packages') === 'true'
+                || $input->getOption('delete_vendor_packages') === null;
             $this->setDeleteVendorPackages($isDeleteVendorPackagesCommandLine);
         }
+
+        if ($input->hasOption('dry-run') && $input->getOption('dry-run') !== false) {
+            // If we're here, the parameter was passed in the CLI command.
+            $this->dryRun = empty($input->getOption('dry-run'))
+                ? true
+                : filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
+    }
+
+    /**
+     * Should we create the `autoload_aliases.php` file in `vendor/composer`?
+     *
+     * TODO:
+     * [x] YES when we are deleting vendor packages or files
+     * [ ] NO when we are running composer install `--no-dev`
+     * [ ] SOMETIMES: see https://github.com/BrianHenryIE/strauss/issues/144
+     * [ ] Add `aliases` to `extra` in `composer.json`
+     * [ ] Add `--aliases=true` CLI option
+     */
+    public function isCreateAliases(): bool
+    {
+        return $this->deleteVendorPackages || $this->deleteVendorFiles || $this->targetDirectory === 'vendor';
+    }
+
+    public function getProjectDirectory(): string
+    {
+        $projectDirectory = $this->projectDirectory ?? getcwd() . '/';
+
+        return $this->isDryRun()
+            ? 'mem:/' . $projectDirectory
+            : $projectDirectory;
     }
 }

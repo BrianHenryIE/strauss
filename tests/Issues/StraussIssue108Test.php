@@ -17,7 +17,7 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  */
 class StraussIssue108Test extends IntegrationTestCase
 {
-    public function test_correct_directory_permission()
+    public function test_a()
     {
         $composerJsonString = <<<'EOD'
 {
@@ -40,7 +40,8 @@ class StraussIssue108Test extends IntegrationTestCase
 		    "."
 		  ]
 		}
-	  }
+	  },
+	  "update_call_sites": true
     }
   }
 }
@@ -68,7 +69,8 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_string = file_get_contents($replacementfilePath);
 

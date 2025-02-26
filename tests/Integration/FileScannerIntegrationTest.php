@@ -10,6 +10,9 @@ use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use Psr\Log\NullLogger;
 
 /**
  * Class CopierTest
@@ -27,7 +30,7 @@ class FileScannerIntegrationTest extends IntegrationTestCase
 
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/strauss",
+  "name": "brianhenryie/filescannerintegrationtest",
   "require": {
     "google/apiclient": "*"
   },
@@ -47,28 +50,35 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
-            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
-            return ComposerPackage::fromFile($dir);
+            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
+            return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
-        $workingDir = $this->testsWorkingDir;
-        $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
-        $vendorDir = 'vendor' . DIRECTORY_SEPARATOR;
+        $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
+        $vendorDir = $this->testsWorkingDir . 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);
-        $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
+        $config->method('getTargetDirectory')->willReturn($targetDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $fileEnumerator = new FileEnumerator(
+            $config,
+            new Filesystem(
+                new \League\Flysystem\Filesystem(
+                    new LocalFilesystemAdapter('/')
+                ),
+                $this->testsWorkingDir
+            )
+        );
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
+        (new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir)))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config);
+        $copier = new Copier($files, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir), new NullLogger());
 
         $copier->prepareTarget();
 
@@ -80,7 +90,7 @@ EOD;
         $config->method('getExcludeNamespacesFromPrefixing')->willReturn(array());
         $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
 
-        $fileScanner = new FileSymbolScanner($config);
+        $fileScanner = new FileSymbolScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
 
         $discoveredSymbols = $fileScanner->findInFiles($files);
 

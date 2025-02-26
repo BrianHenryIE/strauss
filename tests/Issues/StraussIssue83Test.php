@@ -16,7 +16,8 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 class StraussIssue83Test extends IntegrationTestCase
 {
-    public function test_namespace_keyword_on_opening_line()
+    // Excludes everything except aws from copy.
+    public function test_issue_83()
     {
         $composerJsonString = <<<'EOD'
 {
@@ -49,9 +50,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
-
-        self::assertEqualsRN(0, $result);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/ClientResolver.php');
 

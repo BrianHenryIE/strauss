@@ -59,8 +59,8 @@ EOD;
         exec('composer install');
 
         assert(file_exists($this->testsWorkingDir .'vendor/nesbot/carbon/src/Carbon/Carbon.php'));
-
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/nesbot/carbon/src/Carbon/Carbon.php');
 

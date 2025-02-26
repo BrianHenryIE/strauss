@@ -30,18 +30,17 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
         chdir($main_package_dir);
         exec('composer install');
 
-        $inputInterfaceMock = $this->createMock(InputInterface::class);
-        $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
         $relative_symlinked_package_dir = $main_package_dir . 'vendor/strauss-test/symlinked-package';
 
-        $relative_symlinked_package_dir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relative_symlinked_package_dir);
+        $relative_symlinked_package_dir = str_replace(['/', '\\'], '/', $relative_symlinked_package_dir);
 
         assert(is_dir($relative_symlinked_package_dir));
 
-        $strauss = new DependenciesCommand();
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
-        $strauss->run($inputInterfaceMock, $outputInterfaceMock);
+        $this->assertFileExists($main_package_dir . 'vendor_prefixed/strauss-test/symlinked-package/src/File.php');
 
         self::assertDirectoryExists($symlinked_package_dir);
         self::assertDirectoryDoesNotExist($relative_symlinked_package_dir);

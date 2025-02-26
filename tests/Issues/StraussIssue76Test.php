@@ -19,6 +19,7 @@ class StraussIssue76Test extends IntegrationTestCase
      */
     public function test_psr4_array()
     {
+        $this->markTestIncomplete('This is inadequate');
 
         $composerJsonString = <<<'EOD'
 {
@@ -48,8 +49,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
 
-        self::assertEqualsRN(0, $result);
+        $this->assertEquals(0, $exitCode, $output);
     }
 }

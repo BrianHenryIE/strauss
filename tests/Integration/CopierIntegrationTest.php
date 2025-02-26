@@ -5,10 +5,13 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use Psr\Log\NullLogger;
 use stdClass;
 
 /**
@@ -44,34 +47,42 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
-            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
-            return ComposerPackage::fromFile($dir);
+            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
+            return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
-        $workingDir = $this->testsWorkingDir;
-        $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
-        $vendorDir = 'vendor' . DIRECTORY_SEPARATOR;
+        $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
+        $vendorDir = $this->testsWorkingDir . 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);
-        $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
+        $config->method('getTargetDirectory')->willReturn($targetDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $fileEnumerator = new FileEnumerator(
+            $config,
+            new Filesystem(
+                new \League\Flysystem\Filesystem(
+                    new LocalFilesystemAdapter('/')
+                ),
+                $this->testsWorkingDir
+            )
+        );
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
+        $fileCopyScanner = new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
+        $fileCopyScanner->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config);
+        $copier = new Copier($files, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir), new NullLogger());
 
         $file = 'ContainerAwareTrait.php';
         $relativePath = 'league/container/src/';
-        $targetPath = $this->testsWorkingDir . $relativeTargetDir . $relativePath;
+        $targetPath = $targetDir . $relativePath;
         $targetFile = $targetPath . $file;
 
-        mkdir(rtrim($targetPath, DIRECTORY_SEPARATOR), 0777, true);
+        mkdir(rtrim($targetPath, '\\/'), 0777, true);
 
         file_put_contents($targetFile, 'dummy file');
 
@@ -87,7 +98,7 @@ EOD;
 
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/strauss",
+  "name": "brianhenryie/copierintegrationtest",
   "require": {
     "google/apiclient": "*"
   },
@@ -107,31 +118,38 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $dependencies = array_map(function ($element) {
-            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
-            return ComposerPackage::fromFile($dir);
+            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
+            return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
-        $workingDir = $this->testsWorkingDir;
-        $relativeTargetDir = 'vendor-prefixed' . DIRECTORY_SEPARATOR;
-        $vendorDir = 'vendor' . DIRECTORY_SEPARATOR;
+        $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
+        $vendorDir = $this->testsWorkingDir . 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);
-        $config->method('getTargetDirectory')->willReturn($relativeTargetDir);
+        $config->method('getTargetDirectory')->willReturn($targetDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $fileEnumerator = new FileEnumerator(
+            $config,
+            new Filesystem(
+                new \League\Flysystem\Filesystem(
+                    new LocalFilesystemAdapter('/')
+                ),
+                $this->testsWorkingDir
+            )
+        );
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($workingDir, $config))->scanFiles($files);
+        (new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir)))->scanFiles($files);
 
-        $copier = new Copier($files, $workingDir, $config);
+        $copier = new Copier($files, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir), new NullLogger());
 
         $file = 'Client.php';
         $relativePath = 'google/apiclient/src/';
-        $targetPath = $this->testsWorkingDir . $relativeTargetDir . $relativePath;
+        $targetPath = $targetDir . $relativePath;
         $targetFile = $targetPath . $file;
 
         $copier->prepareTarget();
@@ -269,10 +287,9 @@ EOD;
 
         $packages = array();
         foreach ($this->config->getPackages() as $packageString) {
-            $testDummyComposerDir = $this->testsWorkingDir  . 'vendor'
-                . DIRECTORY_SEPARATOR . $packageString;
+            $testDummyComposerDir = $this->testsWorkingDir  . 'vendor/' . $packageString;
             @mkdir($testDummyComposerDir, 0777, true);
-            $testDummyComposerPath = $testDummyComposerDir . DIRECTORY_SEPARATOR . 'composer.json';
+            $testDummyComposerPath = $testDummyComposerDir . '/composer.json';
             $testDummyComposerContents = json_encode(new stdClass());
 
             file_put_contents($testDummyComposerPath, $testDummyComposerContents);

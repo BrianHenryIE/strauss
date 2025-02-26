@@ -18,4 +18,6 @@ interface ReplaceConfigInterface
     public function isIncludeModifiedDate(): bool;
 
     public function isIncludeAuthor(): bool;
+
+    public function getUpdateCallSites(): ?array;
 }

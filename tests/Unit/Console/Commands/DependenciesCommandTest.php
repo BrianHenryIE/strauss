@@ -1,15 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace BrianHenryIE\Strauss\Tests\Unit\Console\Commands;
+namespace BrianHenryIE\Strauss\Console\Commands;
 
-use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\TestCase;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
-class ComposeTest extends TestCase
+/**
+ * @coversDefaultClass \BrianHenryIE\Strauss\Console\Commands\DependenciesCommand
+ */
+class DependenciesCommandTest extends TestCase
 {
 
     /**

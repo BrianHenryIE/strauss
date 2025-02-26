@@ -8,6 +8,8 @@ namespace BrianHenryIE\Strauss\Tests\Issues;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -49,9 +51,9 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
 
-        self::assertNotEquals(1, $result);
+        $this->assertEquals(0, $exitCode, $output);
     }
 
 
@@ -72,7 +74,7 @@ EOD;
 
         $exception = null;
 
-        $prefixer = new Prefixer($config, $this->testsWorkingDir);
+        $prefixer = new Prefixer($config, $this->getFileSystem());
 
         try {
             $prefixer->replaceClassname($contents, $originalClassname, $classnamePrefix);

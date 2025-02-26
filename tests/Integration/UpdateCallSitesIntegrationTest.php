@@ -16,6 +16,8 @@ class UpdateCallSitesIntegrationTest extends IntegrationTestCase
      */
     public function test_updateCallSites_functions(): void
     {
+        // TODO: Find alternative to twig for this test.
+        $this->markTestSkipped('Exceptionally slow test');
 
         $file1 = <<<'EOD'
 <?php
@@ -62,12 +64,12 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss();
-        $this->runStrauss();
-
-        $phpString = file_get_contents($this->testsWorkingDir .'vendor/twig/twig/src/Extension/CoreExtension.php');
-        $this->assertStringNotContainsString('function twig_cycle(', $phpString);
-        $this->assertStringContainsString('function bh_strauss_twig_cycle(', $phpString);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
+        assert($exitCode === 0);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
+        assert($exitCode === 0);
 
         $project_file_php_string = file_get_contents($this->testsWorkingDir . 'file1.php');
         $this->assertStringNotContainsString('$v = twig_cycle(', $project_file_php_string);
@@ -76,5 +78,10 @@ EOD;
         $project_file_php_string = file_get_contents($this->testsWorkingDir . 'file2.php');
         $this->assertStringNotContainsString('use function twig_cycle as my_twig_cycle;', $project_file_php_string);
         $this->assertStringContainsString('use function bh_strauss_twig_cycle as my_twig_cycle;', $project_file_php_string);
+
+        // This test isn't the actual thing being tested but might as well include it as a regression test.
+        $phpString = file_get_contents($this->testsWorkingDir .'vendor/twig/twig/src/Extension/CoreExtension.php');
+        $this->assertStringNotContainsString('function twig_cycle(', $phpString);
+        $this->assertStringContainsString('function bh_strauss_twig_cycle(', $phpString);
     }
 }

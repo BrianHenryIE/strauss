@@ -7,6 +7,8 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * Class FileEnumeratorIntegrationTest
@@ -21,7 +23,7 @@ class FileEnumeratorIntegrationTest extends IntegrationTestCase
 
         $composerJsonString = <<<'EOD'
 {
-  "name": "brianhenryie/strauss",
+  "name": "brianhenryie/fileenumeratorintegrationtest",
   "require": {
     "google/apiclient": "*"
   },
@@ -41,21 +43,29 @@ EOD;
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir);
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         // Only one because we haven't run "flat dependency list".
         $dependencies = array_map(function ($element) {
-            $dir = $this->testsWorkingDir . 'vendor'. DIRECTORY_SEPARATOR . $element;
-            return ComposerPackage::fromFile($dir);
+            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
+            return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
-        $vendorDir = 'vendor' . DIRECTORY_SEPARATOR;
+        $vendorDir = 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getVendorDirectory')->willReturn($vendorDir);
 
-        $fileEnumerator = new FileEnumerator($workingDir, $config);
+        $fileEnumerator = new FileEnumerator(
+            $config,
+            new Filesystem(
+                new \League\Flysystem\Filesystem(
+                    new LocalFilesystemAdapter('/')
+                ),
+                $this->testsWorkingDir
+            )
+        );
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 

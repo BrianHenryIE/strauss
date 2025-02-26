@@ -18,7 +18,7 @@ class StraussIssue80Test extends IntegrationTestCase
 
     /**
      */
-    public function test_namespace_keyword_on_opening_line()
+    public function test_issue_80()
     {
 
         $composerJsonString = <<<'EOD'
@@ -42,9 +42,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
-
-        self::assertEqualsRN(0, $result);
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/league/oauth2-linkedin/src/Provider/LinkedInResourceOwner.php');
         self::assertStringNotContainsString('class Issue_80_LinkedInResourceOwner extends GenericResourceOwner', $php_string);
@@ -113,8 +112,6 @@ EOD;
         $strauss = new Compose();
 
         $result = $strauss->run($inputInterfaceMock, $outputInterfaceMock);
-
-        self::assertEqualsRN(0, $result);
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/google/apiclient/src/aliases.php');
         self::assertStringNotContainsString("'Company\\Project\\\Google\\\\Client' => 'Prefix_Google_Client',", $php_string);

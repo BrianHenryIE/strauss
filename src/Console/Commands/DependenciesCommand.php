@@ -6,7 +6,11 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
+use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Copier;
@@ -17,7 +21,13 @@ use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use Composer\Console\Input\InputOption;
+use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
+use League\Flysystem\Config;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
@@ -42,7 +52,7 @@ class DependenciesCommand extends Command
 
     protected DependenciesEnumerator $dependenciesEnumerator;
 
-    /** @var ComposerPackage[] */
+    /** @var array<string,ComposerPackage> */
     protected array $flatDependencyTree = [];
 
     /**
@@ -54,6 +64,8 @@ class DependenciesCommand extends Command
      */
     protected DiscoveredFiles $discoveredFiles;
     protected DiscoveredSymbols $discoveredSymbols;
+
+    protected Filesystem $filesystem;
 
     /**
      * @return void
@@ -74,9 +86,97 @@ class DependenciesCommand extends Command
         $this->addOption(
             'deleteVendorPackages',
             null,
-            InputArgument::OPTIONAL,
-            'Should original packages be deleted after copying? true|false'
+            4,
+            'Should original packages be deleted after copying? true|false',
+            false
         );
+        // Is there a nicer way to add aliases?
+        $this->addOption(
+            'delete_vendor_packages',
+            null,
+            4,
+            '',
+            false
+        );
+
+        $this->addOption(
+            'dry-run',
+            null,
+            4,
+            'Do not actually make any changes',
+            false
+        );
+
+        $this->addOption(
+            'info',
+            null,
+            4,
+            'output level',
+            false
+        );
+
+        $this->addOption(
+            'debug',
+            null,
+            4,
+            'output level',
+            false
+        );
+
+        $this->addOption(
+            'silent',
+            's',
+            4,
+            'output level',
+            false
+        );
+
+        $localFilesystemAdapter = new LocalFilesystemAdapter(
+            '/',
+            null,
+            LOCK_EX,
+            LocalFilesystemAdapter::SKIP_LINKS
+        );
+
+        $this->filesystem = new Filesystem(
+            new \League\Flysystem\Filesystem(
+                $localFilesystemAdapter,
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ]
+            ),
+            getcwd() . '/'
+        );
+    }
+
+    /**
+     * @param InputInterface $input
+     * @return array<string, int>
+     */
+    protected function getLogLevel(InputInterface $input): array
+    {
+
+        $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
+
+        if ($input->hasOption('info') && $input->getOption('info') !== false) {
+            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        if ($input->hasOption('debug') && $input->getOption('debug') !== false) {
+            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
+            $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        if (isset($this->config) && $this->config->isDryRun()) {
+            $logLevel[LogLevel::INFO] = OutputInterface::VERBOSITY_NORMAL;
+            $logLevel[LogLevel::DEBUG] = OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        if ($input->hasOption('silent') && $input->getOption('silent') !== false) {
+            return [];
+        }
+
+        return $logLevel;
     }
 
     /**
@@ -89,21 +189,43 @@ class DependenciesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->setLogger(
-            new ConsoleLogger(
-                $output,
-                [ LogLevel::INFO => OutputInterface::VERBOSITY_NORMAL ]
-            )
-        );
+        $this->setLogger(new ConsoleLogger($output, $this->getLogLevel($input)));
 
-        $workingDir       = getcwd() . DIRECTORY_SEPARATOR;
+        $workingDir       = getcwd() . '/';
         $this->workingDir = $workingDir;
 
         try {
+            $this->logger->notice('Starting... ' /** version */); // + PHP version
+
             $this->loadProjectComposerPackage();
             $this->loadConfigFromComposerJson();
             $this->updateConfigFromCli($input);
 
+            if ($this->config->isDryRun()) {
+                $normalizer = new WhitespacePathNormalizer();
+                $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+
+                $this->filesystem =
+                    new FileSystem(
+                        new ReadOnlyFileSystem(
+                            $this->filesystem,
+                            $normalizer
+                        ),
+                        $this->workingDir
+                    );
+
+                /** @var FilesystemRegistry $registry */
+                $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+
+                // Register a file stream mem:// to handle file operations by third party libraries.
+                // This exception handling probably doesn't matter in real life but does in unit tests.
+                try {
+                    $registry->get('mem');
+                } catch (\Exception $e) {
+                    $registry->register('mem', $this->filesystem);
+                }
+                $this->setLogger(new ConsoleLogger($output, $this->getLogLevel($input)));
+            }
             $this->buildDependencyList();
 
             $this->enumerateFiles();
@@ -114,15 +236,18 @@ class DependenciesCommand extends Command
 
             $this->performReplacements();
 
-            $this->performReplacementsInComposerFiles();
-
             $this->performReplacementsInProjectFiles();
 
             $this->addLicenses();
 
-            $this->generateAutoloader();
+
+            // After file have been deleted, we may need aliases.
+            $this->generateAliasesFile();
 
             $this->cleanUp();
+
+            // This runs after cleanup because cleanup edits installed.json
+            $this->generateAutoloader();
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
@@ -132,7 +257,6 @@ class DependenciesCommand extends Command
         return Command::SUCCESS;
     }
 
-
     /**
      * 1. Load the composer.json.
      *
@@ -140,9 +264,9 @@ class DependenciesCommand extends Command
      */
     protected function loadProjectComposerPackage(): void
     {
-        $this->logger->info('Loading package...');
+        $this->logger->notice('Loading package...');
 
-        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir);
+        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . 'composer.json');
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.
@@ -150,14 +274,14 @@ class DependenciesCommand extends Command
 
     protected function loadConfigFromComposerJson(): void
     {
-        $this->logger->info('Loading composer.json config...');
+        $this->logger->notice('Loading composer.json config...');
 
         $this->config = $this->projectComposerPackage->getStraussConfig();
     }
 
     protected function updateConfigFromCli(InputInterface $input): void
     {
-        $this->logger->info('Loading cli config...');
+        $this->logger->notice('Loading cli config...');
 
         $this->config->updateFromCli($input);
     }
@@ -171,11 +295,12 @@ class DependenciesCommand extends Command
      */
     protected function buildDependencyList(): void
     {
-        $this->logger->info('Building dependency list...');
+        $this->logger->notice('Building dependency list...');
 
         $this->dependenciesEnumerator = new DependenciesEnumerator(
-            $this->workingDir,
-            $this->config
+            $this->config,
+            $this->filesystem,
+            $this->logger
         );
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 
@@ -184,11 +309,12 @@ class DependenciesCommand extends Command
 
     protected function enumerateFiles(): void
     {
-        $this->logger->info('Enumerating files...');
+        $this->logger->notice('Enumerating files...');
 
         $fileEnumerator = new FileEnumerator(
-            $this->workingDir,
-            $this->config
+            $this->config,
+            $this->filesystem,
+            $this->logger
         );
 
         $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);
@@ -197,19 +323,20 @@ class DependenciesCommand extends Command
     // 3. Copy autoloaded files for each
     protected function copyFiles(): void
     {
-        (new FileCopyScanner($this->workingDir, $this->config))->scanFiles($this->discoveredFiles);
+        (new FileCopyScanner($this->config, $this->filesystem, $this->logger))->scanFiles($this->discoveredFiles);
 
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
             // Nothing to do.
             return;
         }
 
-        $this->logger->info('Copying files...');
+        $this->logger->notice('Copying files...');
 
         $copier = new Copier(
             $this->discoveredFiles,
-            $this->workingDir,
-            $this->config
+            $this->config,
+            $this->filesystem,
+            $this->logger
         );
 
 
@@ -220,15 +347,20 @@ class DependenciesCommand extends Command
     // 4. Determine namespace and classname changes
     protected function determineChanges(): void
     {
-        $this->logger->info('Determining changes...');
+        $this->logger->notice('Determining changes...');
 
-        $fileScanner = new FileSymbolScanner($this->config);
+        $fileScanner = new FileSymbolScanner(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
 
         $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
 
         $changeEnumerator = new ChangeEnumerator(
             $this->config,
-            $this->workingDir
+            $this->filesystem,
+            $this->logger
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
@@ -237,81 +369,72 @@ class DependenciesCommand extends Command
     // Replace references to updated namespaces and classnames throughout the dependencies.
     protected function performReplacements(): void
     {
-        $this->logger->info('Performing replacements...');
+        $this->logger->notice('Performing replacements...');
 
-        $this->replacer = new Prefixer($this->config, $this->workingDir);
+        $this->replacer = new Prefixer(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
 
         $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
-    }
-
-    protected function performReplacementsInComposerFiles(): void
-    {
-        if ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
-            // Nothing to do.
-            return;
-        }
-
-        $projectReplace = new Prefixer($this->config, $this->workingDir);
-
-        $fileEnumerator = new FileEnumerator(
-            $this->workingDir,
-            $this->config
-        );
-
-        $files = $fileEnumerator->compileFileListForPaths([$this->config->getVendorDirectory() . 'composer']);
-
-        $composerPhpFileRelativePaths = array_map(
-            fn($file) => $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory()),
-            $files->getFiles()
-        );
-
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $composerPhpFileRelativePaths);
     }
 
     protected function performReplacementsInProjectFiles(): void
     {
 
-        $callSitePaths =
+        $relativeCallSitePaths =
             $this->config->getUpdateCallSites()
             ?? $this->projectComposerPackage->getFlatAutoloadKey();
 
-        if (empty($callSitePaths)) {
+        if (empty($relativeCallSitePaths)) {
             return;
         }
 
-        $projectReplace = new Prefixer($this->config, $this->workingDir);
+        $callSitePaths = array_map(
+            fn($path) => $this->workingDir . $path,
+            $relativeCallSitePaths
+        );
+
+        $projectReplace = new Prefixer(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
 
         $fileEnumerator = new FileEnumerator(
-            $this->workingDir,
-            $this->config
+            $this->config,
+            $this->filesystem
         );
 
         $phpFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
 
-        $phpFilesRelativePaths = array_map(
-            fn($file) => $file->getSourcePath($this->workingDir),
+        $phpFilesAbsolutePaths = array_map(
+            fn($file) => $file->getSourcePath(),
             $phpFiles->getFiles()
         );
 
         // TODO: Warn when a file that was specified is not found
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesRelativePaths);
-    }
-
-    protected function writeClassAliasMap(): void
-    {
+        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
     protected function addLicenses(): void
     {
-        $this->logger->info('Adding licenses...');
+        $this->logger->notice('Adding licenses...');
 
         $author = $this->projectComposerPackage->getAuthor();
 
         $dependencies = $this->flatDependencyTree;
 
-        $licenser = new Licenser($this->config, $this->workingDir, $dependencies, $author);
+        $licenser = new Licenser(
+            $this->config,
+            $dependencies,
+            $author,
+            $this->filesystem,
+            $this->logger
+        );
 
         $licenser->copyLicenses();
 
@@ -325,7 +448,7 @@ class DependenciesCommand extends Command
     protected function generateAutoloader(): void
     {
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            $this->logger->info('Skipping autoloader generation as target directory is vendor directory.');
+            $this->logger->notice('Skipping autoloader generation as target directory is vendor directory.');
             return;
         }
         if (isset($this->projectComposerPackage->getAutoload()['classmap'])
@@ -335,11 +458,11 @@ class DependenciesCommand extends Command
                 true
             )
         ) {
-            $this->logger->info('Skipping autoloader generation as target directory is in Composer classmap. Run `composer dump-autoload`.');
+            $this->logger->notice('Skipping autoloader generation as target directory is in Composer classmap. Run `composer dump-autoload`.');
             return;
         }
 
-        $this->logger->info('Generating autoloader...');
+        $this->logger->notice('Generating autoloader...');
 
         $allFilesAutoloaders = $this->dependenciesEnumerator->getAllFilesAutoloaders();
         $filesAutoloaders = array();
@@ -350,17 +473,41 @@ class DependenciesCommand extends Command
             $filesAutoloaders[$packageName] = $packageFilesAutoloader;
         }
 
-        $classmap = new Autoload($this->config, $this->workingDir, $filesAutoloaders);
+        $classmap = new Autoload(
+            $this->config,
+            $filesAutoloaders,
+            $this->filesystem,
+            $this->logger
+        );
 
-        $classmap->generate();
+        $classmap->generate($this->flatDependencyTree, $this->discoveredSymbols);
     }
 
     /**
-     * When namespaces are prefixed which are used by by require and require-dev dependencies,
+     * When namespaces are prefixed which are used by both require and require-dev dependencies,
      * the require-dev dependencies need class aliases specified to point to the new class names/namespaces.
      */
-    protected function generateClassAliasList(): void
+    protected function generateAliasesFile(): void
     {
+        if (!$this->config->isCreateAliases()) {
+            return;
+        }
+
+        $this->logger->info('Generating aliases file...');
+
+        $aliases = new Aliases(
+            $this->config,
+            $this->filesystem
+        );
+        $aliases->writeAliasesFileForSymbols($this->discoveredSymbols);
+
+        $vendorComposerAutoload = new VendorComposerAutoload(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+        $vendorComposerAutoload->addAliasesFileToComposer();
+        $vendorComposerAutoload->addVendorPrefixedAutoloadToVendorAutoload();
     }
 
     /**
@@ -370,18 +517,17 @@ class DependenciesCommand extends Command
      */
     protected function cleanUp(): void
     {
-        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            // Nothing to do.
-            return;
-        }
 
-        $this->logger->info('Cleaning up...');
+        $this->logger->notice('Cleaning up...');
 
-        $cleanup = new Cleanup($this->config, $this->workingDir);
-
-        // TODO: For files autoloaders, delete the contents of the file, not the file itself.
+        $cleanup = new Cleanup(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
 
         // This will check the config to check should it delete or not.
         $cleanup->cleanup($this->discoveredFiles->getFiles());
+        $cleanup->cleanupVendorInstalledJson($this->flatDependencyTree, $this->discoveredSymbols);
     }
 }

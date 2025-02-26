@@ -20,22 +20,31 @@ use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use League\Flysystem\FilesystemReader;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class FileCopyScanner
 {
+    use LoggerAwareTrait;
 
     protected FileCopyScannerConfigInterface $config;
 
-    protected string $workingDir;
+    protected FileSystem $fileSystem;
 
     public function __construct(
-        string $workingDir,
-        FileCopyScannerConfigInterface $config
+        FileCopyScannerConfigInterface $config,
+        FileSystem $filesystem,
+        ?LoggerInterface $logger = null
     ) {
-        $this->workingDir = $workingDir;
         $this->config = $config;
+        $this->fileSystem = $filesystem;
+
+        $this->setLogger($logger ?? new NullLogger());
     }
 
     public function scanFiles(DiscoveredFiles $files): void
@@ -46,57 +55,51 @@ class FileCopyScanner
 
             if ($file instanceof FileWithDependency) {
                 if (in_array($file->getDependency()->getPackageName(), $this->config->getExcludePackagesFromCopy(), true)) {
+                    $this->logger->debug("File {$file->getSourcePath()} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.");
                     $copy = false;
                 }
             }
 
             if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+                $this->logger->debug("The target directory is the same as the vendor directory."); // TODO: surely this should be outside the loop/class.
                 $copy = false;
             }
 
-            $fileSymbols = $file->getDiscoveredSymbols();
-            $excludedNamespaces = $this->config->getExcludeNamespacesFromCopy();
             /** @var DiscoveredSymbol $symbol */
-            foreach ($fileSymbols as $symbol) {
-                foreach ($excludedNamespaces as $namespace) {
-                    if ($symbol->getSourceFile() === $file
-                    && $symbol instanceof NamespaceSymbol
+            foreach ($file->getDiscoveredSymbols() as $symbol) {
+                foreach ($this->config->getExcludeNamespacesFromCopy() as $namespace) {
+                    if (in_array($file->getSourcePath(), array_keys($symbol->getSourceFiles()), true)
+                        && $symbol instanceof NamespaceSymbol
                         && str_starts_with($symbol->getOriginalSymbol(), $namespace)
                     ) {
+                        $this->logger->debug("File {$file->getSourcePath()} will not be copied because namespace {$namespace} is excluded from copy.");
                         $copy = false;
                     }
                 }
             }
 
-            $filePath = $file->getSourcePath($this->workingDir . $this->config->getVendorDirectory());
+            $filePath = $file->getSourcePath();
             foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
                 if (1 == preg_match($pattern, $filePath)) {
+                    $this->logger->debug("File {$file->getSourcePath()} will not be copied because it matches pattern {$pattern}.");
                     $copy = false;
                 }
+            }
+
+            if ($copy) {
+                $this->logger->debug("Marking file {$file->getSourcePath()} to be copied.");
             }
 
             $file->setDoCopy($copy);
 
             $target = $copy && $file instanceof FileWithDependency
-                ? $this->workingDir . $this->config->getTargetDirectory() . $file->getVendorRelativePath()
+                ? $this->config->getTargetDirectory() . $file->getVendorRelativePath()
                 : $file->getSourcePath();
 
-            $file->setAbsoluteTargetPath(
-                $target
-            );
+            $file->setAbsoluteTargetPath($target);
 
-            $file->setDoDelete($this->config->isDeleteVendorFiles() && ! $this->isSymlinkedFile($file));
+            $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->fileSystem->isSymlinkedFile($file);
+            $file->setDoDelete($shouldDelete);
         };
-    }
-
-    /**
-     * Check does the filepath point to a file outside the working directory.
-     * If `realpath()` fails to resolve the path, assume it's a symlink.
-     */
-    protected function isSymlinkedFile(FileBase $file): bool
-    {
-        $realpath = realpath($file->getSourcePath());
-
-        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
     }
 }

@@ -6,55 +6,29 @@
  * @author https://github.com/stephenharris
  */
 
+namespace BrianHenryIE\Strauss;
 
-namespace BrianHenryIE\Strauss\Tests\Unit;
-
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
+use BrianHenryIE\Strauss\Tests\Issues\MozartIssue93Test;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
-use Composer\Composer;
-use Composer\Config;
-use Symfony\Component\Console\Input\InputInterface;
+use League\Flysystem\Config;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * Class ReplacerTest
  * @package BrianHenryIE\Strauss
- * @covers \BrianHenryIE\Strauss\Pipeline\Prefixer
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Prefixer
  */
 class PrefixerTest extends TestCase
 {
-
-    protected StraussConfig $config;
-
-    protected function aaasetUp(): void
-    {
-        parent::setUp();
-
-        $composerJson = <<<'EOD'
-{
-"name": "brianhenryie/strauss-replacer-test",
-"extra": {
-
-}
-}
-EOD;
-
-        $composerConfig = new Config(false);
-        $composerConfig->merge(json_decode($composerJson, true));
-        $composer = new Composer();
-        $composer->setConfig($composerConfig);
-
-        $input = $this->createMock(InputInterface::class);
-
-        $this->config = new StraussConfig($composer, $input);
-    }
-
     public function testNamespaceReplacer()
     {
 
@@ -131,9 +105,9 @@ class Service
   }
 }
 EOD;
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $originalNamespace = 'Google\\Http';
         $replacement = 'BrianHenryIE\\Strauss\\Google\\Http';
@@ -170,9 +144,9 @@ protected $buffer;             // buffer holding in-memory PDF
 }
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
-
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $original = "FPDF";
         $classnamePrefix = "BrianHenryIE_Strauss_";
@@ -201,9 +175,9 @@ EOD;
         $originalClassname = 'Hello_World';
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -220,9 +194,9 @@ EOD;
         $originalClassname = 'Hello_World';
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -239,9 +213,9 @@ EOD;
         $originalClassname = 'Hello_World';
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -258,9 +232,9 @@ EOD;
         $originalClassname = 'Hello_World';
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -277,9 +251,9 @@ EOD;
         $originalClassname = 'Hello_World';
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -297,9 +271,9 @@ EOD;
         $originalNamespace = 'Strauss';
         $replacement = 'Prefix\Strauss';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
 
@@ -314,7 +288,7 @@ EOD;
         $this->markTestIncomplete('TODO Delete/move');
 
         $contents = 'class Hello_World {';
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $replacer->setClassmapPrefix('Mozart_');
         $replacer->replace($contents);
         self::assertArrayHasKey('Hello_World', $replacer->getReplacedClasses());
@@ -331,9 +305,9 @@ EOD;
         $originalClassname = 'Hello_World';
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -352,9 +326,9 @@ EOD;
         $originalClassname = 'Hello_World';
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -363,7 +337,7 @@ EOD;
 
 
     /**
-     * @see ClassmapReplacerIntegrationTest::test_it_does_not_make_classname_replacement_inside_namespaced_file()
+     * @see MozartIssue93Test
      * @see https://github.com/coenjacobs/mozart/issues/93
      *
      * @author BrianHenryIE
@@ -382,10 +356,10 @@ EOD;
         $originalClassname = 'Hello_World';
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method("getClassmapPrefix")->willReturn($classnamePrefix);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
@@ -397,7 +371,7 @@ EOD;
     }
 
     /**
-     * @see ClassmapReplacerIntegrationTest::test_it_does_not_make_classname_replacement_inside_namespaced_file()
+     * @see MozartIssue93Test
      * @see https://github.com/coenjacobs/mozart/issues/93
      *
      * @author BrianHenryIE
@@ -409,9 +383,9 @@ EOD;
         $originalClassname = 'Hello_World';
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -443,9 +417,9 @@ EOD;
 
         $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, 'B_Class', $classnamePrefix);
 
@@ -460,9 +434,9 @@ EOD;
         $namespace = "Test\\Test";
         $replacement = "My\\Mozart\\Prefix\\Test\\Test";
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
 
@@ -477,9 +451,9 @@ EOD;
     {
         $contents = "namespace Test\\Something;\n\nuse Test\\Test;";
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, "Test\\Something", "My\\Mozart\\Prefix\\Test\\Something");
         $result = $replacer->replaceNamespace($result, "Test\\Test", "My\\Mozart\\Prefix\\Test\\Test");
 
@@ -496,9 +470,9 @@ EOD;
         $namespace = 'Test\\Another';
         $replacement = 'My\\Mozart\\Prefix\\'.$namespace;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
 
         self::assertEqualsRN('namespace Test\\Test\\Another;', $result);
@@ -513,9 +487,9 @@ EOD;
         $namespace = "Test\\Another";
         $prefix = "My\\Mozart\\Prefix";
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $namespace, $prefix);
 
         self::assertEqualsRN('namespace My\\Mozart\\Prefix\\Test\\Another;', $result);
@@ -538,9 +512,9 @@ EOD;
         $prefix = "Dargon\\Dependencies\\";
         $replacement = $prefix . $namespace;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
 
         self::assertNotEquals('namespace Dargon\\Dependencies\\Dargon\\Dependencies\\Dragon\\Form;', $result);
@@ -558,9 +532,9 @@ EOD;
         $contents = 'use Chicken\\Egg;';
         $expected = 'use My\\Mozart\\Prefix\\Chicken\\Egg;';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, 'Chicken', 'My\\Mozart\\Prefix\\Chicken');
         $result = $replacer->replaceNamespace($result, 'Egg', 'My\\Mozart\\Prefix\\Egg');
@@ -580,9 +554,9 @@ EOD;
 
         $contents = "use Symfony\Polyfill\Mbstring as p;";
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
 
         $expected = "use MBViews\\Dependencies\\Symfony\\Polyfill\\Mbstring as p;";
@@ -599,9 +573,9 @@ EOD;
         $prefix = "Mozart";
         $contents = 'public function getServices( Mpdf $mpdf, LoggerInterface $logger, $config, )';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $namespace, $prefix);
 
         $expected = 'public function getServices( Mpdf $mpdf, LoggerInterface $logger, $config, )';
@@ -615,9 +589,9 @@ EOD;
         $replacement = "Prefix\\Strauss\\Test";
         $contents = '$mentionedClass = "\\Strauss\\Test\\Classname";';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
 
         $expected = '$mentionedClass = "\\Prefix\\Strauss\\Test\\Classname";';
@@ -631,9 +605,9 @@ EOD;
         $replacement = 'Prefix\\Strauss\\Test';
         $contents = '$mentionedClass = "\\\\Strauss\\\\Test\\\\Classname";';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
 
         $expected = '$mentionedClass = "\\\\Prefix\\\\Strauss\\\\Test\\\\Classname";';
@@ -648,9 +622,9 @@ EOD;
         $replacement = "Prefix\\net\\authorize\\api\\contract\\v1";
         $contents = "public function __construct(\\net\\authorize\\api\\contract\\v1\\AnetApiRequestType \$request, \$responseType)";
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
 
         $expected = "public function __construct(\\Prefix\\net\\authorize\\api\\contract\\v1\\AnetApiRequestType \$request, \$responseType)";
@@ -666,9 +640,9 @@ EOD;
         $replacement = "Prefix\\net\\authorize\\api\constants";
         $contents = "public function executeWithApiResponse(\$endPoint = \\net\\authorize\\api\\constants\\ANetEnvironment::CUSTOM)";
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
 
         $expected = "public function executeWithApiResponse(\$endPoint = \\Prefix\\net\\authorize\\api\\constants\\ANetEnvironment::CUSTOM)";
@@ -684,9 +658,9 @@ EOD;
         $replacement = "Prefix\\net\\authorize\\api\\constants";
         $contents = "\$this->apiRequest->setClientId(\"sdk-php-\" . \\net\\authorize\\api\\constants\\ANetEnvironment::VERSION);";
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
 
         $expected = "\$this->apiRequest->setClientId(\"sdk-php-\" . \\Prefix\\net\\authorize\\api\\constants\\ANetEnvironment::VERSION);";
@@ -704,9 +678,9 @@ EOD;
         $contents = '$default_font_size = $mmsize * (Mpdf::SCALE);';
         $expected = $contents;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Mpdf', 'BrianHenryIE\Strauss\Mpdf');
 
         self::assertEqualsRN($expected, $result);
@@ -718,9 +692,9 @@ EOD;
         $contents = 'class BarcodeException extends \Mpdf\MpdfException';
         $expected = 'class BarcodeException extends \BrianHenryIE\Strauss\Mpdf\MpdfException';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Mpdf', 'BrianHenryIE\Strauss\Mpdf');
 
         self::assertEqualsRN($expected, $result);
@@ -737,9 +711,9 @@ EOD;
         $contents = '$ioc->register( new \Carbon_Fields\Provider\Container_Condition_Provider() );';
         $expected = '$ioc->register( new \BrianHenryIE\Strauss\Carbon_Fields\Provider\Container_Condition_Provider() );';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Carbon_Fields\Provider', 'BrianHenryIE\Strauss\Carbon_Fields\Provider');
 
         self::assertEqualsRN($expected, $result);
@@ -758,9 +732,9 @@ EOD;
         $contents = '@method static \Carbon_Fields\Container\Comment_Meta_Container';
         $expected = '@method static \BrianHenryIE\Strauss\Carbon_Fields\Container\Comment_Meta_Container';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Carbon_Fields\Container', 'BrianHenryIE\Strauss\Carbon_Fields\Container');
 
         self::assertEqualsRN($expected, $result);
@@ -777,9 +751,9 @@ EOD;
         $contents = 'return \Carbon_Fields\Carbon_Fields::resolve';
         $expected = 'return \BrianHenryIE\Strauss\Carbon_Fields\Carbon_Fields::resolve';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Carbon_Fields', 'BrianHenryIE\Strauss\Carbon_Fields');
 
         self::assertEqualsRN($expected, $result);
@@ -796,9 +770,9 @@ EOD;
         $contents = '		\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable()';
         $expected = '		\\BrianHenryIE\\Strauss\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable()';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace(
             $contents,
             'Carbon_Fields',
@@ -819,9 +793,9 @@ EOD;
         $replacement = "Prefix\\TrustedLogin";
         $contents = "esc_html__( 'Learn about TrustedLogin', 'trustedlogin' )";
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
 
         $expected = "esc_html__( 'Learn about TrustedLogin', 'trustedlogin' )";
@@ -842,9 +816,9 @@ EOD;
         $classnamePrefix = 'Strauss_Issue19_';
         $contents = "public static function objclone(\$object) {";
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
         // NOT public static function objclone($Strauss_Issue19_object) {
@@ -874,12 +848,13 @@ class FPDF
 {
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method('getConstantsPrefix')->willReturn('BHMP_');
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $constants = array('FPDF_VERSION','ANOTHER_CONSTANT');
@@ -910,9 +885,9 @@ public function __construct() {
     new \StraussTest\ST\StraussTestPackage2();
 }
 EOD;
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\ST');
 
         self::assertEqualsRN($expected, $result);
@@ -925,9 +900,9 @@ EOD;
         $contents = 'use chillerlan\\QRCode\\{QRCode, QRCodeException};';
         $expected = 'use BrianHenryIE\\Strauss\\chillerlan\\QRCode\\{QRCode, QRCodeException};';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceNamespace($contents, 'chillerlan\\QRCode', 'BrianHenryIE\\Strauss\\chillerlan\\QRCode');
 
         self::assertEqualsRN($expected, $result);
@@ -940,8 +915,8 @@ EOD;
     public function testStaticSimpleCall()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         // Simple call.
 
@@ -966,8 +941,8 @@ EOD;
     public function testStaticVariableAssignment()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         // Variable assignment.
         $contents = '$test1 = \ST\StraussTestPackage2::hello();';
@@ -991,8 +966,8 @@ EOD;
     public function testStaticIfConditionSingle()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         // If condition: Single.
         $contents = <<<'EOD'
@@ -1032,8 +1007,8 @@ EOD;
     public function testStaticIfConditionMultipleAND()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
 // If condition: Multiple (AND).
         $contents = <<<'EOD'
@@ -1072,8 +1047,8 @@ EOD;
     public function testStaticIfConditionMultipleOR()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
 // If condition: Multiple (OR).
         $contents = <<<'EOD'
@@ -1112,8 +1087,8 @@ EOD;
     public function testStaticArrayNonAssociativeSingle()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
 // Array: Non-associative: Single.
         $contents = <<<'EOD'
@@ -1141,8 +1116,8 @@ EOD;
     public function testStaticArrayNonAssociativeMultipleAND()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
 // Array: Non-associative: Multiple (AND).
         $contents = <<<'EOD'
@@ -1170,8 +1145,8 @@ EOD;
     public function testStaticArrayNonAssociationMultipleOR()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
 // Array: Non-associative: Multiple (OR).
         $contents = <<<'EOD'
@@ -1199,8 +1174,8 @@ EOD;
     public function testStaticArrayAssociativeSingle()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
 // Array: Associative: Single.
         $contents = <<<'EOD'
@@ -1228,8 +1203,8 @@ EOD;
     public function testStaticArrayAssociativeMultipleAND()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
 // Array: Associative: Multiple (AND).
         $contents = <<<'EOD'
@@ -1256,8 +1231,8 @@ EOD;
     public function testStaticArrayAssociativeMultipleOR()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
 // Array: Associative: Multiple (OR).
         $contents = <<<'EOD'
@@ -1284,8 +1259,8 @@ EOD;
     public function testDoublePrefixBug()
     {
 
-        $config = $this->createMock(StraussConfig::class);
-        $replacer = new Prefixer($config, __DIR__);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $contents = <<<'EOD'
 namespace ST;
@@ -1355,9 +1330,9 @@ EOD;
         $originalClassname = 'Normalizer';
         $classnamePrefix = 'Normalizer_Test_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -1389,9 +1364,9 @@ EOD;
         $originalClassname = 'Normalizer';
         $classnamePrefix = 'Normalizer_Test_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -1423,9 +1398,9 @@ EOD;
         $originalClassname = 'Normalizer';
         $classnamePrefix = 'Normalizer_Test_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -1461,9 +1436,9 @@ EOD;
         $originalClassname = 'Normalizer';
         $classnamePrefix = 'Normalizer_Test_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -1488,18 +1463,19 @@ EOD;
 
         $classnamePrefix = 'Normalizer_Test_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method("getClassmapPrefix")->willReturn($classnamePrefix);
 
         $file = \Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $classSymbol = new ClassSymbol('Normalizer', $file);
         $classSymbol->setReplacement('Normalizer_Test_Normalizer');
         $discoveredSymbols->add($classSymbol);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
@@ -1540,9 +1516,9 @@ class StraussTestPackage {
 }
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
 
@@ -1595,9 +1571,9 @@ final class BodySummarizer implements BodySummarizerInterface
 }
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, 'GuzzleHttp', 'StraussTest\\GuzzleHttp');
 
@@ -1659,9 +1635,9 @@ class Configuration implements ConfigurationInterface
     }
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, 'Aws', 'StraussTest\\Aws');
 
@@ -1693,9 +1669,9 @@ use function StraussTest\Chophper\some_func;
 some_func();
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, 'Chophper', 'StraussTest\\Chophper');
 
@@ -1724,13 +1700,14 @@ namespace StraussTest\WPGraphQL\Registry\Utils;
 use StraussTest_WPGraphQL as WPGraphQL;
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method("getClassmapPrefix")->willReturn('StraussTest_');
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $file = \Mockery::mock(File::class);
         $file->expects('addDiscoveredSymbol')->once();
+        $file->expects('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -1768,9 +1745,9 @@ EOD;
 use Company\Project\League\OAuth2\Client\Tool\ArrayAccessorTrait;
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, 'League\\OAuth2', 'Company\\Project\\League\\OAuth2');
 
@@ -1814,9 +1791,9 @@ EOD;
         $originalClassname = 'Google_Client';
         $classnamePrefix = 'Company_Project_';
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
@@ -1861,9 +1838,9 @@ class ClientResolver
 }
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, 'Aws\\EndpointDiscovery', 'Company\\Project\\Aws\\EndpointDiscovery');
         $result = $replacer->replaceNamespace($result, 'Aws', 'Company\\Project\\Aws');
@@ -1931,9 +1908,9 @@ class ConfigurationResolver
 }
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceNamespace($contents, 'Aws', 'Company\\Project\\Aws');
 
@@ -1960,16 +1937,16 @@ class MyClass {
 }
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
         $result = $replacer->replaceClassname($contents, 'GlobalClass', 'Prefixed_');
 
         $this->assertEqualsRN($expected, $result);
     }
 
     /**
-     * @covers \BrianHenryIE\Strauss\Pipeline\Prefixer::replaceFunctions
+     * @covers ::replaceFunctions
      */
     public function testReplaceFunctions(): void
     {
@@ -2030,7 +2007,7 @@ register_tick_function('myprefix_append_config' , $myArray);
 unregister_tick_function( 'myprefix_append_config');
 EOD;
 
-        $config = $this->createMock(StraussConfig::class);
+        $config = $this->createMock(PrefixerConfigInterface::class);
 
         $symbol = new FunctionSymbol('append_config', $this->createMock(File::class));
         $symbol->setReplacement('myprefix_append_config');
@@ -2038,7 +2015,7 @@ EOD;
         $symbols = new DiscoveredSymbols();
         $symbols->add($symbol);
 
-        $replacer = new Prefixer($config, __DIR__);
+        $replacer = new Prefixer($config, $this->getFileSystem());
 
         $result = $replacer->replaceInString($symbols, $contents);
 

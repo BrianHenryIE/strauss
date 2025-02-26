@@ -8,29 +8,20 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
-use BrianHenryIE\Strauss\Helpers\Path;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use RegexIterator;
-use Symfony\Component\Finder\Finder;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use League\Flysystem\FilesystemException;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class FileEnumerator
 {
-    /**
-     * The only path variable with a leading slash.
-     * All directories in project end with a slash.
-     *
-     * @var string
-     */
-    protected string $workingDir;
+    use LoggerAwareTrait;
 
-    /** @var string */
     protected string $vendorDir;
 
     /** @var string[]  */
@@ -42,7 +33,6 @@ class FileEnumerator
     /** @var string[]  */
     protected array $excludeFilePatterns = array();
 
-    /** @var Filesystem */
     protected Filesystem $filesystem;
 
     protected DiscoveredFiles $discoveredFiles;
@@ -56,25 +46,29 @@ class FileEnumerator
      */
     protected array $filesAutoloaders = [];
 
+    protected FileEnumeratorConfig $config;
+
     /**
      * Copier constructor.
-     *
-     * @param string $workingDir
      */
     public function __construct(
-        string $workingDir,
-        StraussConfig $config
+        FileEnumeratorConfig $config,
+        FileSystem $filesystem,
+        ?LoggerInterface $logger = null
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
-        $this->workingDir = $workingDir;
         $this->vendorDir = $config->getVendorDirectory();
+
+        $this->config = $config;
 
         $this->excludeNamespaces = $config->getExcludeNamespacesFromCopy();
         $this->excludePackageNames = $config->getExcludePackagesFromCopy();
         $this->excludeFilePatterns = $config->getExcludeFilePatternsFromCopy();
 
-        $this->filesystem = new Filesystem(new LocalFilesystemAdapter($this->workingDir));
+        $this->filesystem = $filesystem;
+
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -88,8 +82,10 @@ class FileEnumerator
     {
         foreach ($dependencies as $dependency) {
             if (in_array($dependency->getPackageName(), $this->excludePackageNames)) {
+                $this->logger->info("Excluding package " . $dependency->getPackageName());
                 continue;
             }
+            $this->logger->info("Scanning for files for package " . $dependency->getPackageName());
 
             /**
              * Where $dependency->autoload is ~
@@ -112,42 +108,42 @@ class FileEnumerator
 
                 foreach ($value as $namespace => $namespace_relative_paths) {
                     if (!empty($namespace) && in_array($namespace, $this->excludeNamespaces)) {
+                        $this->logger->info("Excluding namespace " . $namespace);
                         continue;
                     }
 
-                    if (! is_array($namespace_relative_paths)) {
-                        $namespace_relative_paths = array( $namespace_relative_paths );
-                    }
+                    $namespace_relative_paths = (array) $namespace_relative_paths;
+//                    if (! is_array($namespace_relative_paths)) {
+//                        $namespace_relative_paths = array( $namespace_relative_paths );
+//                    }
 
                     foreach ($namespace_relative_paths as $namespaceRelativePath) {
-                        $sourceAbsolutePath = $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
+                        $sourceAbsoluteDirPath = in_array($namespaceRelativePath, ['.','./'])
+                            ? $dependency->getPackageAbsolutePath()
+                            : $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
 
-                        if (is_file($sourceAbsolutePath)) {
-                            $this->addFileWithDependency($dependency, $namespaceRelativePath, $type);
-                        } elseif (is_dir($sourceAbsolutePath)) {
-                            // trailingslashit(). (to remove duplicates).
-                            $sourcePath = Path::normalize($sourceAbsolutePath);
+                        if ($this->filesystem->directoryExists($sourceAbsoluteDirPath)) {
+                            $fileList = $this->filesystem->listContents($sourceAbsoluteDirPath, true);
+                            $actualFileList = $fileList->toArray();
 
-//                          $this->findFilesInDirectory()
-                            $finder = new Finder();
-                            $finder->files()->in($sourcePath)->followLinks();
-
-                            foreach ($finder as $foundFile) {
-                                $sourceAbsoluteFilepath = $foundFile->getPathname();
-
+                            foreach ($actualFileList as $foundFile) {
+                                $sourceAbsoluteFilepath = '/'. $foundFile->path();
                                 // No need to record the directory itself.
-                                if (is_dir($sourceAbsoluteFilepath)) {
+                                if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)
+                                    ||
+                                    $this->filesystem->directoryExists($sourceAbsoluteFilepath)
+                                ) {
                                     continue;
                                 }
 
-                                $namespaceRelativePath = Path::normalize($namespaceRelativePath);
-
                                 $this->addFileWithDependency(
                                     $dependency,
-                                    $namespaceRelativePath . str_replace($sourcePath, '', $sourceAbsoluteFilepath),
+                                    $sourceAbsoluteFilepath,
                                     $type
                                 );
                             }
+                        } else {
+                            $this->addFileWithDependency($dependency, $sourceAbsoluteDirPath, $type);
                         }
                     }
                 }
@@ -159,23 +155,31 @@ class FileEnumerator
 
     /**
      * @param ComposerPackage $dependency
-     * @param string $packageRelativePath
+     * @param string $sourceAbsoluteFilepath
      * @param string $autoloaderType
      *
-     * @throws \League\Flysystem\FilesystemException
+     * @throws FilesystemException
      * @uses \BrianHenryIE\Strauss\Files\DiscoveredFiles::add()
      *
      */
-    protected function addFileWithDependency(ComposerPackage $dependency, string $packageRelativePath, string $autoloaderType): void
-    {
-        $sourceAbsoluteFilepath = $dependency->getPackageAbsolutePath() . $packageRelativePath;
-        $vendorRelativePath = $dependency->getRelativePath() . $packageRelativePath;
-        $projectRelativePath    = $this->vendorDir . $vendorRelativePath;
-        $isOutsideProjectDir    = 0 !== strpos($sourceAbsoluteFilepath, $this->workingDir);
+    protected function addFileWithDependency(
+        ComposerPackage $dependency,
+        string $sourceAbsoluteFilepath,
+        string $autoloaderType
+    ): void {
+        $vendorRelativePath = substr($sourceAbsoluteFilepath, strpos($sourceAbsoluteFilepath, $dependency->getRelativePath()));
+
+        if ($vendorRelativePath === $sourceAbsoluteFilepath) {
+            $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
+        }
+
+        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getVendorDirectory());
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
             ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
+
+        $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
 
         $f->addAutoloader($autoloaderType);
         $f->setDoDelete($isOutsideProjectDir);
@@ -186,14 +190,9 @@ class FileEnumerator
             }
         }
 
-        if ('<?php // This file was deleted by {@see https://github.com/BrianHenryIE/strauss}.'
-            ===
-            $this->filesystem->read($projectRelativePath)
-        ) {
-            $f->setDoCopy(false);
-        }
-
         $this->discoveredFiles->add($f);
+
+        $this->logger->info("Found file " . $f->getAbsoluteTargetPath());
     }
 
     /**
@@ -201,7 +200,7 @@ class FileEnumerator
      */
     public function compileFileListForPaths(array $paths): DiscoveredFiles
     {
-        $absoluteFilePaths = $this->findAllFilesAbsolutePaths($this->workingDir, $paths);
+        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths($paths);
 
         foreach ($absoluteFilePaths as $sourceAbsolutePath) {
             $f = $this->discoveredFiles->getFile($sourceAbsolutePath)
@@ -211,57 +210,5 @@ class FileEnumerator
         }
 
         return $this->discoveredFiles;
-    }
-
-    /**
-     * @param string $workingDir
-     * @param string[] $relativeFileAndDirPaths
-     * @param string $regexPattern
-     *
-     * @return string[]
-     */
-    public function findAllFilesAbsolutePaths(string $workingDir, array $relativeFileAndDirPaths, string $regexPattern = '/.+\.php$/'): array
-    {
-        $files = [];
-
-        foreach ($relativeFileAndDirPaths as $path) {
-            if (is_dir($path)) {
-                $path = rtrim($path, '/').'/';
-                $files = array_merge(
-                    $files,
-                    $this->findFilesInDirectory($this->workingDir, str_replace($this->workingDir, '', $path))
-                );
-            } elseif (is_file($path)) {
-                $files[] = $path;
-            } elseif (is_dir($this->workingDir . '/'. $path)) {
-                $files = array_merge(
-                    $files,
-                    $this->findFilesInDirectory($this->workingDir, $path)
-                );
-            } elseif (is_file($this->workingDir . '/'. $path)) {
-                $files[] = $this->workingDir . '/'. $path;
-            }
-        }
-
-        return $files;
-    }
-
-    /**
-     * @param string $workingDir Absolute path to the working directory, results will be relative to this.
-     * @param string $relativeDirectory
-     * @param string $regexPattern Default to PHP files.
-     *
-     * @return string[]
-     */
-    protected function findFilesInDirectory(string $workingDir, string $relativeDirectory = '.', string $regexPattern = '/.+\.php$/'): array
-    {
-        $dir = new RecursiveDirectoryIterator($workingDir . $relativeDirectory);
-        $ite = new RecursiveIteratorIterator($dir);
-        $files = new RegexIterator($ite, $regexPattern, RegexIterator::GET_MATCH);
-        $fileList = array();
-        foreach ($files as $file) {
-            $fileList = array_merge($fileList, str_replace($workingDir, '', $file));
-        }
-        return $fileList;
     }
 }

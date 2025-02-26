@@ -48,9 +48,6 @@ class MozartIssue66Test extends IntegrationTestCase
     }
   },
   "autoload": {
-    "classmap": [
-      "lib/Mozart/classmaps/"
-    ],
     "psr-4": {
         "MarkJaquith\\MozartFileAutoloaderBug\\Mozart\\": "lib/Mozart/",
         "MarkJaquith\\MozartFileAutoloaderBug\\": "app/"
@@ -66,7 +63,8 @@ EOD;
 
         exec('composer install');
 
-        $result = $this->runStrauss();
+        $exitCode = $this->runStrauss($output, '--debug');
+        assert(0 === $exitCode, $output);
 
         self::assertFileExists($this->testsWorkingDir . 'strauss/php-di/php-di/src/functions.php');
     }

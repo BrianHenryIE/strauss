@@ -1,6 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Tests\Unit\Composer;
+namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
@@ -23,8 +23,7 @@ class ProjectComposerPackageTest extends TestCase
 
         $composer = new ProjectComposerPackage($testFile);
 
-        $input = $this->createMock(InputInterface::class);
-        $config = $composer->getStraussConfig($input);
+        $config = $composer->getStraussConfig();
 
         self::assertInstanceOf(StraussConfig::class, $config);
     }
