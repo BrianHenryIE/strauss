@@ -167,7 +167,10 @@ class FileEnumerator
         string $sourceAbsoluteFilepath,
         string $autoloaderType
     ): void {
-        $vendorRelativePath = substr($sourceAbsoluteFilepath, strpos($sourceAbsoluteFilepath, $dependency->getRelativePath()));
+        $vendorRelativePath = substr(
+            $sourceAbsoluteFilepath,
+            strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
+        );
 
         if ($vendorRelativePath === $sourceAbsoluteFilepath) {
             $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
