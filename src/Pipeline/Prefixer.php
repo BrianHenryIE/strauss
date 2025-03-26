@@ -9,8 +9,13 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\NamespaceSort;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Exception;
 use League\Flysystem\FilesystemException;
+use PhpParser\Node;
+use PhpParser\NodeTraverser;
+use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -134,6 +139,8 @@ class Prefixer
         $classes = $discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix());
         $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
         $functions = $discoveredSymbols->getDiscoveredFunctions();
+
+        $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
 
         foreach ($classes as $originalClassname) {
             $classmapPrefix = $this->config->getClassmapPrefix();
@@ -467,5 +474,145 @@ class Prefixer
     public function getModifiedFiles(): array
     {
         return $this->changedFiles;
+    }
+
+    /**
+     * In the case of `use Namespaced\Traitname;` by `nette/latte`, the trait uses the full namespace but it is not
+     * preceeded by a backslash. When everything is moved up a namespace level, this is a problem. I think being
+     * explicit about the namespace being a full namespace rather than a relative one should fix this.
+     *
+     * We will scan the file for `use Namespaced\Traitname` and replace it with `use \Namespaced\Traitname;`.
+     *
+     * @see https://github.com/nette/latte/blob/0ac0843a459790d471821f6a82f5d13db831a0d3/src/Latte/Loaders/FileLoader.php#L20
+     *
+     * @param string $phpFileContent
+     * @param NamespaceSymbol[] $discoveredNamespaceSymbols
+     */
+    protected function prepareRelativeNamespaces(string $phpFileContent, array $discoveredNamespaceSymbols): string
+    {
+        // Determine the namespace we're in
+
+        // Find any `use Trait` statements which may be relative
+
+        // Convert those to FQDN statements
+
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+
+        $ast = $parser->parse($phpFileContent);
+
+        $traverser = new NodeTraverser();
+        $visitor = new class($discoveredNamespaceSymbols) extends \PhpParser\NodeVisitorAbstract {
+
+            public int $countChanges = 0;
+            protected array $discoveredNamespaces;
+
+            protected Node $lastNode;
+
+            /**
+             * The list of `use Namespace\Subns;` statements in the file.
+             *
+             * @var string[]
+             */
+            protected array $using = [];
+
+            public function __construct(array $discoveredNamespaceSymbols)
+            {
+
+                $this->discoveredNamespaces = array_map(
+                    fn(NamespaceSymbol $symbol) => $symbol->getOriginalSymbol(),
+                    $discoveredNamespaceSymbols
+                );
+            }
+
+            public function leaveNode(Node $node)
+            {
+
+                if ($node instanceof \PhpParser\Node\Stmt\Namespace_) {
+                    $this->using[] = $node->name->name;
+                    $this->lastNode = $node;
+                    return $node;
+                }
+                // Probably the namespace declaration
+                if (empty($this->lastNode) && $node instanceof \PhpParser\Node\Name) {
+                    $this->using[] = $node->name;
+                    $this->lastNode = $node;
+                    return $node;
+                }
+                if ($node instanceof \PhpParser\Node\Name) {
+                    return $node;
+                }
+                if ($node instanceof \PhpParser\Node\Stmt\Use_) {
+                    foreach ($node->uses as $use) {
+                        $use->name->name = ltrim($use->name->name, '\\');
+                        $this->using[] = $use->name->name;
+                    }
+                    $this->lastNode = $node;
+                    return $node;
+                }
+                if ($node instanceof \PhpParser\Node\UseItem) {
+                    return $node;
+                }
+
+                $nameNodes = [];
+
+                if ($node instanceof \PhpParser\Node\Stmt\TraitUse) {
+                    $nameNodes = array_merge($nameNodes, $node->traits);
+                }
+
+                if (property_exists($node, 'name')
+                    && $node->name instanceof \PhpParser\Node\Name
+                    && !($node->name instanceof \PhpParser\Node\Name\FullyQualified)
+                ) {
+                    $nameNodes[] = $node->name;
+                }
+
+                if ($node instanceof \PhpParser\Node\Expr\StaticCall) {
+                    if (!method_exists($node->class, 'isFullyQualified') || !$node->class->isFullyQualified()) {
+                        $nameNodes[] = $node->class;
+                    }
+                }
+
+                if ($node instanceof \PhpParser\Node\Stmt\Class_) {
+                    $nameNodes = array_merge($nameNodes, $node->implements);
+                }
+
+                foreach ($nameNodes as $nameNode) {
+                    if (!property_exists($nameNode, 'name')) {
+                        continue;
+                    }
+                    // If the name contains a `\` but does not begin with one, it may be a relative namespace;
+                    if (false !== strpos($nameNode->name, '\\') && 0 !== strpos($nameNode->name, '\\')) {
+                        $parts = explode('\\', $nameNode->name);
+                        array_pop($parts);
+                        $namespace = implode('\\', $parts);
+                        if (in_array($namespace, $this->discoveredNamespaces)) {
+                            $nameNode->name = '\\' . $nameNode->name;
+                            $this->countChanges ++;
+                        } else {
+                            foreach ($this->using as $namespaceBase) {
+                                if (in_array($namespaceBase . '\\' . $namespace, $this->discoveredNamespaces)) {
+                                    $nameNode->name = '\\' . $namespaceBase . '\\' . $nameNode->name;
+                                    $this->countChanges ++;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                $this->lastNode = $node;
+                return $node;
+            }
+        };
+        $traverser->addVisitor($visitor);
+
+        $modifiedStmts = $traverser->traverse($ast);
+
+        $updatedContent = (new Standard())->prettyPrintFile($modifiedStmts);
+
+        $updatedContent = str_replace('namespace \\', 'namespace ', $updatedContent);
+
+        return $visitor->countChanges == 0
+            ? $phpFileContent
+            : $updatedContent;
     }
 }

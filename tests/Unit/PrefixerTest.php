@@ -2021,4 +2021,178 @@ EOD;
 
         $this->assertEqualsRN($expected, $result);
     }
+
+    /**
+     * @covers ::prepareRelativeNamespaces
+     */
+    public function testPrepareRelativeNamespaces(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Loaders;
+
+use Latte;
+
+/**
+ * Template loader.
+ */
+class FileLoader implements Latte\Loader
+{
+	use Latte\Strict;
+
+	/**
+	 * Returns template source code.
+	 */
+	public function getContent($fileName): string
+	{
+		$file = $this->baseDir . $fileName;
+		if ($this->baseDir && !Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
+			throw new Latte\RuntimeException("Template '$file' is not within the allowed path '{$this->baseDir}'.");
+
+		} elseif (!is_file($file)) {
+			throw new Latte\RuntimeException("Missing template file '$file'.");
+
+		} elseif ($this->isExpired($fileName, time())) {
+			if (@touch($file) === false) {
+				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
+			}
+		}
+
+		return file_get_contents($file);
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Latte\Loaders;
+
+use Latte;
+
+/**
+ * Template loader.
+ */
+class FileLoader implements \Latte\Loader
+{
+	use \Latte\Strict;
+
+	/**
+	 * Returns template source code.
+	 */
+	public function getContent($fileName): string
+	{
+		$file = $this->baseDir . $fileName;
+		if ($this->baseDir && !\Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
+			throw new \Latte\RuntimeException("Template '{$file}' is not within the allowed path '{$this->baseDir}'.");
+
+		} elseif (!is_file($file)) {
+			throw new \Latte\RuntimeException("Missing template file '{$file}'.");
+
+		} elseif ($this->isExpired($fileName, time())) {
+			if (@touch($file) === false) {
+				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
+			}
+		}
+
+		return file_get_contents($file);
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function test_dont_double_slash(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace GuzzleHttp;
+
+use Psr\Http\Message\MessageInterface;
+
+final class BodySummarizer implements BodySummarizerInterface
+{
+    /**
+     * @var int|null
+     */
+    private $truncateAt;
+
+    public function __construct(int $truncateAt = null)
+    {
+        $this->truncateAt = $truncateAt;
+    }
+
+    /**
+     * Returns a summarized message body.
+     */
+    public function summarize(MessageInterface $message): ?string
+    {
+        return $this->truncateAt === null
+            ? \GuzzleHttp\Psr7\Message::bodySummary($message)
+            : \GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\GuzzleHttp;
+
+use Psr\Http\Message\MessageInterface;
+
+final class BodySummarizer implements BodySummarizerInterface
+{
+    /**
+     * @var int|null
+     */
+    private $truncateAt;
+
+    public function __construct(int $truncateAt = null)
+    {
+        $this->truncateAt = $truncateAt;
+    }
+
+    /**
+     * Returns a summarized message body.
+     */
+    public function summarize(MessageInterface $message): ?string
+    {
+        return $this->truncateAt === null
+            ? \Strauss\Test\GuzzleHttp\Psr7\Message::bodySummary($message)
+            : \Strauss\Test\GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
+    }
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('GuzzleHttp', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\GuzzleHttp');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
 }
