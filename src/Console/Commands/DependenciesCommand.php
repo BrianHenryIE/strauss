@@ -123,14 +123,6 @@ class DependenciesCommand extends Command
             false
         );
 
-        $this->addOption(
-            'silent',
-            's',
-            4,
-            'output level',
-            false
-        );
-
         $localFilesystemAdapter = new LocalFilesystemAdapter(
             '/',
             null,
