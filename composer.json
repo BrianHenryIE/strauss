@@ -16,6 +16,7 @@
     "prefer-stable": true,
     "license": "MIT",
     "require": {
+        "composer-runtime-api": "^2.0",
         "composer/class-map-generator": "^1.6.0",
         "composer/composer": "*",
         "elazar/flystream": "^0.5.0",

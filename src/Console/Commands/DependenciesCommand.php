@@ -22,6 +22,7 @@ use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Console\Input\InputOption;
+use Composer\InstalledVersions;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
@@ -123,13 +124,15 @@ class DependenciesCommand extends Command
             false
         );
 
-        $this->addOption(
-            'silent',
-            's',
-            4,
-            'output level',
-            false
-        );
+        if (version_compare(InstalledVersions::getVersion('symfony/console'), '7.2', '<')) {
+            $this->addOption(
+                'silent',
+                's',
+                4,
+                'output level',
+                false
+            );
+        }
 
         $localFilesystemAdapter = new LocalFilesystemAdapter(
             '/',
