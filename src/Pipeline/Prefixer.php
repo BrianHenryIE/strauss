@@ -196,8 +196,8 @@ class Prefixer
             |static\s+
             |\"                            # inside a string that does not contain spaces - needs work
             |'                             #   right now its just inside a string that doesnt start with a space
-            |implements\s+
-            |extends\s+                    # when the class being extended is namespaced inline
+            |implements\s+[a-zA-Z0-9_\x7f-\xff]{1,}
+            |extends\s+[a-zA-Z0-9_\x7f-\xff]{1,}                    # when the class being extended is namespaced inline
             |return\s+
             |instanceof\s+                 # when checking the class type of an object in a conditional
             |\(\s*                         # inside a function declaration as the first parameters type
