@@ -15,6 +15,9 @@ class StraussIssue154Test extends IntegrationTestCase
 {
     public function test_relative_namespaces()
     {
+        if (!version_compare(phpversion(), '8.4', '<')) {
+            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
+        }
 
         $composerJsonString = <<<'EOD'
 {
