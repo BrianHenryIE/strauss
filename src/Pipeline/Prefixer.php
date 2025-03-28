@@ -490,12 +490,6 @@ class Prefixer
      */
     protected function prepareRelativeNamespaces(string $phpFileContent, array $discoveredNamespaceSymbols): string
     {
-        // Determine the namespace we're in
-
-        // Find any `use Trait` statements which may be relative
-
-        // Convert those to FQDN statements
-
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
         $ast = $parser->parse($phpFileContent);
