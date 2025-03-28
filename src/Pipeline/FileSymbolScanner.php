@@ -144,7 +144,7 @@ class FileSymbolScanner
         preg_replace_callback(
             '
 			~											# Start the pattern
-				[\r\n]+\s*namespace\s+([a-zA-Z0-9_\x7f-\xff\\\\]+)[;{\s\n]{1}[\s\S]*?(?=namespace|$) 
+				[\r\n]*\s*namespace\s+([a-zA-Z0-9_\x7f-\xff\\\\]+)[;{\s\n]{1}[\s\S]*?(?=namespace|$) 
 														# Look for a preceding namespace declaration, 
 														# followed by a semicolon, open curly bracket, space or new line
 														# up until a 
