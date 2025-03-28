@@ -229,6 +229,7 @@ class Prefixer
             (?!:)                          # Not followed by : which would only be valid after a classname
             (
             \s*;                           # followed by a semicolon 
+            |\s*{                          # or an opening brace for multiple namespaces per file
             |\\\\{1,2}[a-zA-Z0-9_\x7f-\xff]{1,}         # or a classname no slashes 
             |\s+as                         # or the keyword as 
             |\"                            # or quotes
