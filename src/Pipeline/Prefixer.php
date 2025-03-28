@@ -559,6 +559,12 @@ class Prefixer
                     $nameNodes = array_merge($nameNodes, $node->traits);
                 }
 
+                if ($node instanceof \PhpParser\Node\Param
+                    && $node->type instanceof \PhpParser\Node\Name
+                    && !($node->type instanceof \PhpParser\Node\Name\FullyQualified)) {
+                    $nameNodes[] = $node->type;
+                }
+
                 if (property_exists($node, 'name')
                     && $node->name instanceof \PhpParser\Node\Name
                     && !($node->name instanceof \PhpParser\Node\Name\FullyQualified)

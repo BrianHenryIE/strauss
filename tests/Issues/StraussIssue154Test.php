@@ -93,4 +93,46 @@ EOD;
         $this->assertStringNotContainsString('use StraussLatte\Latte\Strict;', $phpString);
         $this->assertStringContainsString('use \StraussLatte\Latte\Strict;', $phpString);
     }
+
+    /**
+     * @see https://github.com/BrianHenryIE/strauss/pull/157#issuecomment-2757377363
+     */
+    public function test_parameter()
+    {
+        if (!version_compare(phpversion(), '8.4', '<')) {
+            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
+        }
+
+        $composerJsonString = <<<'EOD'
+{
+    "require": {
+        "latte/latte": "2.11.7"
+    },
+    "extra": {
+        "strauss": {
+            "classmap_prefix": "StraussLatte_",
+            "namespace_prefix": "StraussLatte\\"
+        }
+    }
+}
+EOD;
+
+        chdir($this->testsWorkingDir);
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        exec('composer install');
+
+        /**
+         * @see DependenciesCommand::execute()
+         */
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
+
+        $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Latte/Macros/BlockMacros.php');
+
+        $this->assertStringNotContainsString('public static function install(Latte\Compiler $compiler)', $phpString);
+        $this->assertStringNotContainsString('public static function install(StraussLatte\Latte\Compiler $compiler)', $phpString);
+        $this->assertStringContainsString('public static function install(\StraussLatte\Latte\Compiler $compiler)', $phpString);
+    }
 }
