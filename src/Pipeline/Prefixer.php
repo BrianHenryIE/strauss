@@ -565,6 +565,12 @@ class Prefixer
                     $nameNodes[] = $node->type;
                 }
 
+                if ($node instanceof \PhpParser\Node\Expr\ClassConstFetch
+                    && $node->class instanceof \PhpParser\Node\Name
+                    && !($node->class instanceof \PhpParser\Node\Name\FullyQualified)) {
+                    $nameNodes[] = $node->class;
+                }
+
                 if (property_exists($node, 'name')
                     && $node->name instanceof \PhpParser\Node\Name
                     && !($node->name instanceof \PhpParser\Node\Name\FullyQualified)

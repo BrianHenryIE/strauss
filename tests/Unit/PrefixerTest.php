@@ -2248,4 +2248,63 @@ EOD;
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
 
+	public function test_relative_namespace_constant(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Macros;
+
+use Latte;
+
+class BlockMacros extends MacroSet
+{
+	public function macroBlock(MacroNode $node, PhpWriter $writer): string
+	{
+		if (Helpers::startsWith((string) $node->context[1], Latte\Compiler::CONTEXT_HTML_ATTRIBUTE)) {
+			$node->context[1] = '';
+			$node->modifiers .= '|escape';
+		} elseif ($node->modifiers) {
+			$node->modifiers .= '|escape';
+		}
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Macros;
+
+use Strauss\Test\Latte;
+
+class BlockMacros extends MacroSet
+{
+	public function macroBlock(MacroNode $node, PhpWriter $writer): string
+	{
+		if (Helpers::startsWith((string) $node->context[1], \Strauss\Test\Latte\Compiler::CONTEXT_HTML_ATTRIBUTE)) {
+			$node->context[1] = '';
+			$node->modifiers .= '|escape';
+		} elseif ($node->modifiers) {
+			$node->modifiers .= '|escape';
+		}
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
 }
