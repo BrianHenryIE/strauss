@@ -2307,4 +2307,56 @@ EOD;
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
+    public function test_relative_return_type(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Macros;
+
+use Latte;
+use Latte\CompileException;
+use Latte\MacroNode;
+
+class MacroSet implements Latte\Macro
+{
+	public function getCompiler(): Latte\Compiler
+	{
+		return $this->compiler;
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Macros;
+
+use Strauss\Test\Latte;
+use Strauss\Test\Latte\CompileException;
+use Strauss\Test\Latte\MacroNode;
+
+class MacroSet implements \Strauss\Test\Latte\Macro
+{
+	public function getCompiler(): \Strauss\Test\Latte\Compiler
+	{
+		return $this->compiler;
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
 }
