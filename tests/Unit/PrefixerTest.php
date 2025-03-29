@@ -2477,4 +2477,62 @@ EOD;
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
+
+    public function test_relative_constructor_property(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Tools;
+
+use Latte;
+use Nette;
+
+final class Linter
+{
+	use Latte\Strict;
+
+	public function __construct(?Latte\Engine $engine = null, bool $debug = false)
+	{
+		$this->engine = $engine;
+		$this->debug = $debug;
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Tools;
+
+use Strauss\Test\Latte;
+use Nette;
+
+final class Linter
+{
+	use \Strauss\Test\Latte\Strict;
+
+	public function __construct(?\Strauss\Test\Latte\Engine $engine = null, bool $debug = false)
+	{
+		$this->engine = $engine;
+		$this->debug = $debug;
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
 }

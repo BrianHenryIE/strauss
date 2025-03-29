@@ -578,6 +578,12 @@ class Prefixer
                     $nameNodes[] = $node->type;
                 }
 
+                if ($node instanceof \PhpParser\Node\NullableType
+                    && $node->type instanceof \PhpParser\Node\Name
+                    && !($node->type instanceof \PhpParser\Node\Name\FullyQualified)) {
+                    $nameNodes[] = $node->type;
+                }
+
                 if ($node instanceof \PhpParser\Node\Stmt\ClassMethod
                     && $node->returnType instanceof \PhpParser\Node\Name
                     && !($node->returnType instanceof \PhpParser\Node\Name\FullyQualified)) {
