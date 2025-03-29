@@ -554,7 +554,7 @@ class Prefixer
                 if ($docComment) {
                     foreach ($this->discoveredNamespaces as $namespace) {
                         $updatedDocCommentText = preg_replace(
-                            '/(.*\*\s*@\w+\s+)(Latte)/',
+                            '/(.*\*\s*@\w+\s+)('.$namespace.')/',
                             '$1\\\\$2',
                             $docComment->getText(),
                             1,
