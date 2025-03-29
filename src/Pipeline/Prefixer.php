@@ -615,6 +615,18 @@ class Prefixer
                     }
                 }
 
+                if ($node instanceof \PhpParser\Node\Stmt\TryCatch) {
+                    foreach ($node->catches as $catch) {
+                        foreach ($catch->types as $catchType) {
+                            if ($catchType instanceof \PhpParser\Node\Name
+                                  && !($catchType instanceof \PhpParser\Node\Name\FullyQualified)
+                            ) {
+                                $nameNodes[] = $catchType;
+                            }
+                        }
+                    }
+                }
+
                 if ($node instanceof \PhpParser\Node\Stmt\Class_) {
                     $nameNodes = array_merge($nameNodes, $node->implements);
                 }

@@ -2535,4 +2535,86 @@ EOD;
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
+
+    public function test_relative_exception_type(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Tools;
+
+use Latte;
+use Nette;
+
+final class Linter
+{
+	use Latte\Strict;
+
+	public function lintLatte(string $file): bool
+	{
+		try {
+			$code = $this->engine->compile($s);
+
+		} catch (Latte\CompileException $e) {
+			if ($this->debug) {
+				echo $e;
+			}
+			$pos = $e->sourceLine ? ':' . $e->sourceLine : '';
+			fwrite(STDERR, "[ERROR]      {$file}{$pos}    {$e->getMessage()}\n");
+			return false;
+
+		} finally {
+			restore_error_handler();
+		}
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Tools;
+
+use Strauss\Test\Latte;
+use Nette;
+
+final class Linter
+{
+	use \Strauss\Test\Latte\Strict;
+
+	public function lintLatte(string $file): bool
+	{
+		try {
+			$code = $this->engine->compile($s);
+
+		} catch (\Strauss\Test\Latte\CompileException $e) {
+			if ($this->debug) {
+				echo $e;
+			}
+			$pos = $e->sourceLine ? ':' . $e->sourceLine : '';
+			fwrite(STDERR, "[ERROR]      {$file}{$pos}    {$e->getMessage()}\n");
+			return false;
+
+		} finally {
+			restore_error_handler();
+		}
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
 }
