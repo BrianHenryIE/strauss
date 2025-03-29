@@ -2410,4 +2410,71 @@ EOD;
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
+
+    public function test_relative_static_property(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Runtime;
+
+use Latte;
+use Latte\Engine;
+use Latte\RuntimeException;
+use Nette;
+use function is_array, is_string, count, strlen;
+
+class Filters
+{
+	public static function checkTagSwitch(string $orig, $new): void
+	{
+		$new = strtolower($new);
+		if (
+			$new === 'style' || $new === 'script'
+			|| isset(Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(Latte\Helpers::$emptyElements[$new])
+		) {
+			throw new Latte\RuntimeException("Forbidden tag <$orig> change to <$new>.");
+		}
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Runtime;
+
+use Strauss\Test\Latte;
+use Strauss\Test\Latte\Engine;
+use Strauss\Test\Latte\RuntimeException;
+use Nette;
+use function is_array, is_string, count, strlen;
+
+class Filters
+{
+	public static function checkTagSwitch(string $orig, $new): void
+	{
+		$new = strtolower($new);
+		if ($new === 'style' || $new === 'script' || isset(\Strauss\Test\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\Strauss\Test\Latte\Helpers::$emptyElements[$new])) {
+			throw new \Strauss\Test\Latte\RuntimeException("Forbidden tag <{$orig}> change to <{$new}>.");
+		}
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
 }
