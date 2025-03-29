@@ -550,6 +550,24 @@ class Prefixer
 
                 $nameNodes = [];
 
+                $docComment = $node->getDocComment();
+                if ($docComment) {
+                    foreach ($this->discoveredNamespaces as $namespace) {
+                        $updatedDocCommentText = preg_replace(
+                            '/(.*\*\s*@\w+\s+)(Latte)/',
+                            '$1\\\\$2',
+                            $docComment->getText(),
+                            1,
+                            $count
+                        );
+                        if ($count > 0) {
+                            $this->countChanges ++;
+                            $node->setDocComment(new \PhpParser\Comment\Doc($updatedDocCommentText));
+                            break;
+                        }
+                    }
+                }
+
                 if ($node instanceof \PhpParser\Node\Stmt\TraitUse) {
                     $nameNodes = array_merge($nameNodes, $node->traits);
                 }
