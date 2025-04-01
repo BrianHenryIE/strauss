@@ -2021,4 +2021,600 @@ EOD;
 
         $this->assertEqualsRN($expected, $result);
     }
+
+    /**
+     * @covers ::prepareRelativeNamespaces
+     */
+    public function testPrepareRelativeNamespaces(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Loaders;
+
+use Latte;
+
+/**
+ * Template loader.
+ */
+class FileLoader implements Latte\Loader
+{
+	use Latte\Strict;
+
+	/**
+	 * Returns template source code.
+	 */
+	public function getContent($fileName): string
+	{
+		$file = $this->baseDir . $fileName;
+		if ($this->baseDir && !Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
+			throw new Latte\RuntimeException("Template '$file' is not within the allowed path '{$this->baseDir}'.");
+
+		} elseif (!is_file($file)) {
+			throw new Latte\RuntimeException("Missing template file '$file'.");
+
+		} elseif ($this->isExpired($fileName, time())) {
+			if (@touch($file) === false) {
+				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
+			}
+		}
+
+		return file_get_contents($file);
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Latte\Loaders;
+
+use Latte;
+
+/**
+ * Template loader.
+ */
+class FileLoader implements \Latte\Loader
+{
+	use \Latte\Strict;
+
+	/**
+	 * Returns template source code.
+	 */
+	public function getContent($fileName): string
+	{
+		$file = $this->baseDir . $fileName;
+		if ($this->baseDir && !\Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
+			throw new \Latte\RuntimeException("Template '{$file}' is not within the allowed path '{$this->baseDir}'.");
+
+		} elseif (!is_file($file)) {
+			throw new \Latte\RuntimeException("Missing template file '{$file}'.");
+
+		} elseif ($this->isExpired($fileName, time())) {
+			if (@touch($file) === false) {
+				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
+			}
+		}
+
+		return file_get_contents($file);
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function test_dont_double_slash(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace GuzzleHttp;
+
+use Psr\Http\Message\MessageInterface;
+
+final class BodySummarizer implements BodySummarizerInterface
+{
+    /**
+     * @var int|null
+     */
+    private $truncateAt;
+
+    public function __construct(int $truncateAt = null)
+    {
+        $this->truncateAt = $truncateAt;
+    }
+
+    /**
+     * Returns a summarized message body.
+     */
+    public function summarize(MessageInterface $message): ?string
+    {
+        return $this->truncateAt === null
+            ? \GuzzleHttp\Psr7\Message::bodySummary($message)
+            : \GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\GuzzleHttp;
+
+use Psr\Http\Message\MessageInterface;
+
+final class BodySummarizer implements BodySummarizerInterface
+{
+    /**
+     * @var int|null
+     */
+    private $truncateAt;
+
+    public function __construct(int $truncateAt = null)
+    {
+        $this->truncateAt = $truncateAt;
+    }
+
+    /**
+     * Returns a summarized message body.
+     */
+    public function summarize(MessageInterface $message): ?string
+    {
+        return $this->truncateAt === null
+            ? \Strauss\Test\GuzzleHttp\Psr7\Message::bodySummary($message)
+            : \Strauss\Test\GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
+    }
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('GuzzleHttp', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\GuzzleHttp');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function test_relative_namespace_in_function_parameter(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Macros;
+
+use Latte;
+
+class BlockMacros extends MacroSet
+{
+
+	public static function install(Latte\Compiler $compiler): void
+	{
+		
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Macros;
+
+use Strauss\Test\Latte;
+
+class BlockMacros extends MacroSet
+{
+
+	public static function install(\Strauss\Test\Latte\Compiler $compiler): void
+	{
+		
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function test_relative_namespace_constant(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Macros;
+
+use Latte;
+
+class BlockMacros extends MacroSet
+{
+	public function macroBlock(MacroNode $node, PhpWriter $writer): string
+	{
+		if (Helpers::startsWith((string) $node->context[1], Latte\Compiler::CONTEXT_HTML_ATTRIBUTE)) {
+			$node->context[1] = '';
+			$node->modifiers .= '|escape';
+		} elseif ($node->modifiers) {
+			$node->modifiers .= '|escape';
+		}
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Macros;
+
+use Strauss\Test\Latte;
+
+class BlockMacros extends MacroSet
+{
+	public function macroBlock(MacroNode $node, PhpWriter $writer): string
+	{
+		if (Helpers::startsWith((string) $node->context[1], \Strauss\Test\Latte\Compiler::CONTEXT_HTML_ATTRIBUTE)) {
+			$node->context[1] = '';
+			$node->modifiers .= '|escape';
+		} elseif ($node->modifiers) {
+			$node->modifiers .= '|escape';
+		}
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function test_relative_phpdoc(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Macros;
+
+use Latte;
+use Latte\CompileException;
+use Latte\MacroNode;
+
+class MacroSet implements Latte\Macro
+{
+	/** @var Latte\Compiler */
+	private $compiler;
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Macros;
+
+use Strauss\Test\Latte;
+use Strauss\Test\Latte\CompileException;
+use Strauss\Test\Latte\MacroNode;
+
+class MacroSet implements \Strauss\Test\Latte\Macro
+{
+	/** @var \Strauss\Test\Latte\Compiler */
+	private $compiler;
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function test_relative_return_type(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Macros;
+
+use Latte;
+use Latte\CompileException;
+use Latte\MacroNode;
+
+class MacroSet implements Latte\Macro
+{
+	public function getCompiler(): Latte\Compiler
+	{
+		return $this->compiler;
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Macros;
+
+use Strauss\Test\Latte;
+use Strauss\Test\Latte\CompileException;
+use Strauss\Test\Latte\MacroNode;
+
+class MacroSet implements \Strauss\Test\Latte\Macro
+{
+	public function getCompiler(): \Strauss\Test\Latte\Compiler
+	{
+		return $this->compiler;
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function test_relative_static_property(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Runtime;
+
+use Latte;
+use Latte\Engine;
+use Latte\RuntimeException;
+use Nette;
+use function is_array, is_string, count, strlen;
+
+class Filters
+{
+	public static function checkTagSwitch(string $orig, $new): void
+	{
+		$new = strtolower($new);
+		if (
+			$new === 'style' || $new === 'script'
+			|| isset(Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(Latte\Helpers::$emptyElements[$new])
+		) {
+			throw new Latte\RuntimeException("Forbidden tag <$orig> change to <$new>.");
+		}
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Runtime;
+
+use Strauss\Test\Latte;
+use Strauss\Test\Latte\Engine;
+use Strauss\Test\Latte\RuntimeException;
+use Nette;
+use function is_array, is_string, count, strlen;
+
+class Filters
+{
+	public static function checkTagSwitch(string $orig, $new): void
+	{
+		$new = strtolower($new);
+		if ($new === 'style' || $new === 'script' || isset(\Strauss\Test\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\Strauss\Test\Latte\Helpers::$emptyElements[$new])) {
+			throw new \Strauss\Test\Latte\RuntimeException("Forbidden tag <{$orig}> change to <{$new}>.");
+		}
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function test_relative_constructor_property(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Tools;
+
+use Latte;
+use Nette;
+
+final class Linter
+{
+	use Latte\Strict;
+
+	public function __construct(?Latte\Engine $engine = null, bool $debug = false)
+	{
+		$this->engine = $engine;
+		$this->debug = $debug;
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Tools;
+
+use Strauss\Test\Latte;
+use Nette;
+
+final class Linter
+{
+	use \Strauss\Test\Latte\Strict;
+
+	public function __construct(?\Strauss\Test\Latte\Engine $engine = null, bool $debug = false)
+	{
+		$this->engine = $engine;
+		$this->debug = $debug;
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function test_relative_exception_type(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Latte\Tools;
+
+use Latte;
+use Nette;
+
+final class Linter
+{
+	use Latte\Strict;
+
+	public function lintLatte(string $file): bool
+	{
+		try {
+			$code = $this->engine->compile($s);
+
+		} catch (Latte\CompileException $e) {
+			if ($this->debug) {
+				echo $e;
+			}
+			$pos = $e->sourceLine ? ':' . $e->sourceLine : '';
+			fwrite(STDERR, "[ERROR]      {$file}{$pos}    {$e->getMessage()}\n");
+			return false;
+
+		} finally {
+			restore_error_handler();
+		}
+	}
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Tools;
+
+use Strauss\Test\Latte;
+use Nette;
+
+final class Linter
+{
+	use \Strauss\Test\Latte\Strict;
+
+	public function lintLatte(string $file): bool
+	{
+		try {
+			$code = $this->engine->compile($s);
+
+		} catch (\Strauss\Test\Latte\CompileException $e) {
+			if ($this->debug) {
+				echo $e;
+			}
+			$pos = $e->sourceLine ? ':' . $e->sourceLine : '';
+			fwrite(STDERR, "[ERROR]      {$file}{$pos}    {$e->getMessage()}\n");
+			return false;
+
+		} finally {
+			restore_error_handler();
+		}
+	}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
 }

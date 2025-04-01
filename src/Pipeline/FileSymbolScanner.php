@@ -144,15 +144,15 @@ class FileSymbolScanner
         preg_replace_callback(
             '
 			~											# Start the pattern
-				[\r\n]+\s*namespace\s+([a-zA-Z0-9_\x7f-\xff\\\\]+)[;{\s\n]{1}[\s\S]*?(?=namespace|$) 
+				/\*[\s\S]*?\*/ |						# Skip multiline comments
+				\s*//.*	       |						# Skip single line comments
+				[\r\n]*\s*namespace\s+([a-zA-Z0-9_\x7f-\xff\\\\]+)[;{\s\n]{1}[\s\S]*?(?=namespace|$) 
 														# Look for a preceding namespace declaration, 
 														# followed by a semicolon, open curly bracket, space or new line
 														# up until a 
 														# potential second namespace declaration or end of file.
 														# if found, match that much before continuing the search on
 				|										# the remainder of the string.
-				\/\*[\s\S]*?\*\/ |                      # Skip multiline comments
-				^\s*\/\/.*$	|   						# Skip single line comments
 				\s*										# Whitespace is allowed before 
 				(?:abstract\sclass|class|interface)\s+	# Look behind for class, abstract class, interface
 				([a-zA-Z0-9_\x7f-\xff]+)				# Match the word until the first non-classname-valid character
