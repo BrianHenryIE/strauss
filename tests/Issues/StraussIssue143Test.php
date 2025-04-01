@@ -102,4 +102,45 @@ EOD;
 
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
     }
+
+    /**
+     * symfony/console 7.2 adds a silent option to all commands. Since Strauss is also adding `silent`, we need to
+     * only do that for older versions of Symfony Console, and test behavior works correctly for 7.2+.
+     */
+    public function test_silent_option_symfony_72(): void
+    {
+        $this->markTestSkippedOnPhpVersion('8.2', '>=');
+
+        $composerJsonString = <<<'EOD'
+{
+    "name": "strauss/issue143",
+    "require": {
+        "symfony/console": "7.2.5"
+    },
+    "extra": {
+      "strauss": {
+        "namespace_prefix": "Strauss\\Issue143\\"
+      }
+    }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
+
+        exec($this->testsWorkingDir . '/ vendor/bin/strauss dependencies  2>&1', $output);
+
+        $outputMerged = implode(PHP_EOL, $output);
+
+
+        $this->assertStringNotContainsString(
+            'An option named "silent" already exists',
+            $outputMerged
+        );
+    }
 }
