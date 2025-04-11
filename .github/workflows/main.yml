@@ -8,6 +8,7 @@ on:
     paths:
       - '**.php'
       - 'composer.json'
+      - '.github/workflows/main.yml'
   pull_request:
     branches:
       - master
@@ -15,6 +16,7 @@ on:
     paths:
       - '**.php'
       - 'composer.json'
+      - '.github/workflows/main.yml'
 
 concurrency:
   # Cancel previous runs of this workflow if they are testing the same branch

@@ -20,6 +20,7 @@ on:
     paths:
       - '**.php'
       - 'composer.json'
+      - '.github/workflows/codecoverage.yml'
 
 jobs:
   tests:
