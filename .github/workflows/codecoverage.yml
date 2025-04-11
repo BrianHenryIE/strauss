@@ -19,6 +19,7 @@ on:
       - master
     paths:
       - '**.php'
+      - 'composer.json'
 
 jobs:
   tests:

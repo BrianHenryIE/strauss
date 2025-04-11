@@ -7,12 +7,14 @@ on:
       - main
     paths:
       - '**.php'
+      - 'composer.json'
   pull_request:
     branches:
       - master
       - main
     paths:
       - '**.php'
+      - 'composer.json'
 
 concurrency:
   # Cancel previous runs of this workflow if they are testing the same branch
