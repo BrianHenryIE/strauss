@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Unit\Pipeline;
 
-use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
+use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\TestCase;

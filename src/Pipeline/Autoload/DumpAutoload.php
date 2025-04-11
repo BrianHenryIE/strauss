@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
-use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
+use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Autoload\AutoloadGenerator;
 use Composer\Config;

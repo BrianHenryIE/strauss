@@ -3,7 +3,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
+use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use Elazar\Flystream\FilesystemRegistry;

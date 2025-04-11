@@ -6,7 +6,7 @@
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
+use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use PhpParser\Error;
 use PhpParser\Node;

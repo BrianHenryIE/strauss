@@ -13,7 +13,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\Strauss\Config\AliasesConfigInterace;
+use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\NamespaceSort;
