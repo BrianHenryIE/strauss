@@ -25,7 +25,7 @@ class AliasesTest extends TestCase
     public function test_spl_autoloader(): void
     {
 
-        $config = \Mockery::mock(AliasesConfigInterace::class);
+        $config = \Mockery::mock(AliasesConfigInterface::class);
         $config->expects('isDryRun')->andReturnTrue();
         $config->expects('getVendorDirectory')->andReturn('vendor/');
         $config->expects('getTargetDirectory')->andReturn('vendor-prefixed/');
@@ -82,7 +82,7 @@ EOD;
     public function test_functions(): void
     {
 
-        $config = \Mockery::mock(AliasesConfigInterace::class);
+        $config = \Mockery::mock(AliasesConfigInterface::class);
         $config->expects('isDryRun')->andReturnTrue();
         $config->expects('getVendorDirectory')->andReturn('vendor/');
         $config->expects('getTargetDirectory')->andReturn('vendor-prefixed/');
@@ -126,7 +126,7 @@ EOD;
     public function test_namespaced_interfaces(): void
     {
 
-        $config = \Mockery::mock(AliasesConfigInterace::class);
+        $config = \Mockery::mock(AliasesConfigInterface::class);
         $config->expects('isDryRun')->andReturnTrue();
         $config->expects('getVendorDirectory')->andReturn('vendor/');
         $config->expects('getTargetDirectory')->andReturn('vendor-prefixed/');

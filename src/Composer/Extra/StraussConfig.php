@@ -21,8 +21,8 @@ use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
 class StraussConfig implements
-    AliasesConfigInterace,
-    AutoloadConfigInterace,
+    AliasesConfigInterface,
+    AutoloadConfigInterface,
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     FileSymbolScannerConfigInterface,

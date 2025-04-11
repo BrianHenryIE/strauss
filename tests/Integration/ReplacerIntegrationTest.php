@@ -131,7 +131,7 @@ EOD;
         self::assertStringContainsString('namespace BrianHenryIE\MyProject\WP_Logger;', $updatedFile);
     }
 
-    public function testExaggeratedRepacementPatterns(): void
+    public function testExaggeratedReplacementPatterns(): void
     {
 
         $composerJsonString = <<<'EOD'

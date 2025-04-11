@@ -222,7 +222,7 @@ class Prefixer
             |<                             # In a generic type declaration
             |\(string\)\s*                 # casting a namespaced class to a string
             )
-            @?                             # Maybe preceeded by the @ symbol for error suppression
+            @?                             # Maybe preceded by the @ symbol for error suppression
             (?<searchNamespace>
             {$searchNamespace}             # followed by the namespace to replace
             )
@@ -479,7 +479,7 @@ class Prefixer
 
     /**
      * In the case of `use Namespaced\Traitname;` by `nette/latte`, the trait uses the full namespace but it is not
-     * preceeded by a backslash. When everything is moved up a namespace level, this is a problem. I think being
+     * preceded by a backslash. When everything is moved up a namespace level, this is a problem. I think being
      * explicit about the namespace being a full namespace rather than a relative one should fix this.
      *
      * We will scan the file for `use Namespaced\Traitname` and replace it with `use \Namespaced\Traitname;`.

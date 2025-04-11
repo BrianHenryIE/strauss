@@ -23,7 +23,7 @@ class Autoload
 
     protected FileSystem $filesystem;
 
-    protected AutoloadConfigInterace $config;
+    protected AutoloadConfigInterface $config;
 
     /**
      * The files autoloaders of packages that have been copied by Strauss.
@@ -42,7 +42,7 @@ class Autoload
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
     public function __construct(
-        AutoloadConfigInterace $config,
+        AutoloadConfigInterface $config,
         array $discoveredFilesAutoloaders,
         Filesystem $filesystem,
         ?LoggerInterface $logger = null

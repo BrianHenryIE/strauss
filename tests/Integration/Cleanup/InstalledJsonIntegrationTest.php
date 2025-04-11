@@ -126,7 +126,7 @@ EOD;
     /**
      * @see https://github.com/CarbonPHP/carbon/blob/4be0c005164249208ce1b5ca633cd57bdd42ff33/composer.json#L34-L38
      */
-    public function testPackageWithEmptyPsr4Namesapce(): void
+    public function testPackageWithEmptyPsr4Namespace(): void
     {
         $this->markTestIncomplete('Not really sure if there is a true problem here.');
 

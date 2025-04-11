@@ -33,12 +33,12 @@ class Aliases
 {
     use LoggerAwareTrait;
 
-    protected AliasesConfigInterace $config;
+    protected AliasesConfigInterface $config;
 
     protected FileSystem $fileSystem;
 
     public function __construct(
-        AliasesConfigInterace $config,
+        AliasesConfigInterface $config,
         FileSystem $fileSystem,
         ?LoggerInterface $logger = null
     ) {

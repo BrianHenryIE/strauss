@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Config;
 
-interface AliasesConfigInterace
+interface AliasesConfigInterface
 {
 
     /**

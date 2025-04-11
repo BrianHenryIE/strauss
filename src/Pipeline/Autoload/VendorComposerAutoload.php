@@ -23,10 +23,10 @@ class VendorComposerAutoload
 
     protected FileSystem $fileSystem;
 
-    protected AutoloadConfigInterace $config;
+    protected AutoloadConfigInterface $config;
 
     public function __construct(
-        AutoloadConfigInterace $config,
+        AutoloadConfigInterface $config,
         Filesystem             $filesystem,
         LoggerInterface        $logger
     ) {

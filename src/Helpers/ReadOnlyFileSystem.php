@@ -234,8 +234,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
             throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
         }
         if ($this->inMemoryFiles->fileExists($path)) {
-            $attribtes = $this->inMemoryFiles->visibility($path);
-            return $attribtes->visibility();
+            $attributes = $this->inMemoryFiles->visibility($path);
+            return $attributes->visibility();
         }
         if ($this->filesystem->fileExists($path)) {
             return $this->filesystem->visibility($path);

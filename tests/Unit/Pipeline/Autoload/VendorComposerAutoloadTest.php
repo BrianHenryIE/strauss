@@ -67,7 +67,7 @@ require_once __DIR__ . '/composer/autoload_real.php';
 return ComposerAutoloaderInitb94e268379fc65b46685517f75b1e1ba::getLoader();
 EOD;
 
-        $config = Mockery::mock(AutoloadConfigInterace::class);
+        $config = Mockery::mock(AutoloadConfigInterface::class);
         $config->shouldReceive('isDryRun')->andReturnFalse();
         $config->shouldReceive('getVendorDirectory')->andReturn('vendor/');
         $config->shouldReceive('getTargetDirectory')->andReturn('vendor-prefixed/');

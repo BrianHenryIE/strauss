@@ -18,12 +18,12 @@ class DumpAutoload
 {
     use LoggerAwareTrait;
 
-    protected AutoloadConfigInterace $config;
+    protected AutoloadConfigInterface $config;
 
     protected FileSystem $filesystem;
 
     public function __construct(
-        AutoloadConfigInterace $config,
+        AutoloadConfigInterface $config,
         Filesystem $filesystem,
         ?LoggerInterface $logger = null
     ) {

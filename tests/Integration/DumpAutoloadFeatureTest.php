@@ -15,7 +15,7 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
     /**
      * TODO: Ideally, a test where some no-dev packages are shared with dev packages and all autoloader types covered.
      */
-    public function testDumpAutolaod(): void
+    public function testDumpAutoload(): void
     {
         $composerJsonString = <<<'EOD'
 {

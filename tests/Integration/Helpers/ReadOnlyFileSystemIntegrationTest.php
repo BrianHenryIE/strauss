@@ -131,7 +131,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         // Then both should be in the directory listing
         $this->assertCount(2, $sut->listContents($this->testsWorkingDir)->toArray());
 
-        // And the file should not actuall exist
+        // And the file should not actually exist
         $this->assertFileDoesNotExist($file2Path);
     }
 
