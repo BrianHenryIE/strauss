@@ -190,8 +190,6 @@ The following configuration is default:
 - `delete_vendor_files`: `false` a boolean flag to indicate if files copied from the packages' vendor directories should be deleted after being processed. It defaults to false, so any destructive change is opt-in. This is maybe deprecated! Is there any use to this that is more appropriate than `delete_vendor_packages`?
 - `include_modified_date` is a `bool` to decide if Strauss should include a date in the (phpdoc) header written to modified files. Defaults to `true`.
 - `include_author` is a `bool` to decide if Strauss should include the author name in the (phpdoc) header written to modified files. Defaults to `true`.
-
-
 - `update_call_sites`: `false`. This can be `true`, `false` or an `array` of directories/filepaths. When set to `true` it defaults to the directories and files in the project's `autoload` key. The PHP files and directories' PHP files will be updated where they call the prefixed classes.
 
 The remainder is empty:
@@ -213,7 +211,7 @@ The remainder is empty:
 Strauss uses Composer's own tools to generate a set of autoload files in the `target_directory` and creates an `autoload.php` alongside it, so in many projects autoloading is just a matter of:
 
 ```php
-require_once __DIR__ . '/strauss/autoload.php';
+require_once __DIR__ . '/vendor-prefixed/autoload.php';
 ```
 
 If you plan to continue using Composer's autoloader you probably want to turn on `delete_vendor_packages` or set `target_directory` to `vendor`.

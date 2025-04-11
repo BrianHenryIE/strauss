@@ -5,12 +5,15 @@
 * Add: `--info`, `--debug` and `--silent` verbosity levels
 * Add: `--dry-run` which runs with `--debug` output but does not write files
 * Add: `autoload_aliases.php` file for dev dependencies to load modified classes using their original fqdn
+* Fix: relative namespaces
 * Fix: allow vendor and target directories to be in parent directory of `composer.json`
+* Fix: incorrectly updating call sites
 * Dev: major refactor to use `thephpleague/Flysystem` and `elazar/flystream` for file operations
 * Dev: print diff code coverage report on PRs
 * Dev: skip / speed-up some tests
 * Dev: improvements to tests' names and coverage reporting specificity 
 * Docs: improve installation instructions in `README.md` 
+* CI: Set up problem matcher for PHPUnit
 
 ## 0.21.1 January 2025
 
