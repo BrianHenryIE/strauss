@@ -164,10 +164,17 @@ class InstalledJson
             }
 
             $autoload_key = $package['autoload'];
+            if (!isset($autoload_key['classmap'])) {
+                $autoload_key['classmap'] = [];
+            }
             foreach ($autoload_key as $type => $autoload) {
                 switch ($type) {
-                    case 'psr-4':
                     case 'psr-0':
+                        $autoload_key['classmap'] = array_merge(
+                            $autoload_key['classmap'],
+                            array_values((array) $autoload_key['psr-0'])
+                        );
+                    case 'psr-4':
                         /**
                          * e.g.
                          * * {"psr-4":{"Psr\\Log\\":"Psr\/Log\/"}}
