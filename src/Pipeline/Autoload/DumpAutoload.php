@@ -3,7 +3,13 @@
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterace;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
+use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
+use BrianHenryIE\Strauss\Pipeline\Prefixer;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Autoload\AutoloadGenerator;
 use Composer\Config;
 use Composer\Factory;
@@ -81,10 +87,13 @@ class DumpAutoload
         $generator->setRunScripts(false);
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
-        $optimize = false; // $input->getOption('optimize') || $config->get('optimize-autoloader');
+        $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
+        $optimize = false;
         $generator->setDevMode(false);
 
         $localRepo = new InstalledFilesystemRepository(new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json'));
+
+        $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
 
         // This will output the autoload_static.php etc. files to `vendor-prefixed/composer`.
         $generator->dump(
@@ -96,7 +105,7 @@ class DumpAutoload
             $optimize,
             $this->getSuffix(),
             $composer->getLocker(),
-            false, // $input->getOption('strict-ambiguous')
+            $strictAmbiguous
         );
 
         /**
@@ -106,6 +115,49 @@ class DumpAutoload
          * then they might expect it to be unmodified.
          */
         Config::$defaultConfig['vendor-dir'] = $defaultVendorDirBefore;
+
+        $this->prefixNewAutoloader();
+    }
+
+    protected function prefixNewAutoloader(): void
+    {
+        $this->logger->debug('Prefixing the new Composer autoloader.');
+
+        $projectReplace = new Prefixer(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+
+        $fileEnumerator = new FileEnumerator(
+            $this->config,
+            $this->filesystem
+        );
+
+        $phpFiles = $fileEnumerator->compileFileListForPaths([
+            $this->config->getTargetDirectory() . 'composer',
+        ]);
+
+        $phpFilesAbsolutePaths = array_map(
+            fn($file) => $file->getSourcePath(),
+            $phpFiles->getFiles()
+        );
+
+        $sourceFile = new File(__DIR__);
+        $composerNamespaceSymbol = new NamespaceSymbol(
+            'Composer\\Autoload',
+            $sourceFile
+        );
+        $composerNamespaceSymbol->setReplacement(
+            $this->config->getNamespacePrefix() . '\\Composer\\Autoload'
+        );
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add(
+            $composerNamespaceSymbol
+        );
+
+        $projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
     /**
