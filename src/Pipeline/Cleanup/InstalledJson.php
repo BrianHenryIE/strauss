@@ -278,9 +278,9 @@ class InstalledJson
     {
         $this->copyInstalledJson();
 
-        $vendorDir = $this->config->getTargetDirectory();
+        $targetDir = $this->config->getTargetDirectory();
 
-        $installedJsonFile = $this->getJsonFile($vendorDir);
+        $installedJsonFile = $this->getJsonFile($targetDir);
 
         /**
          * @var InstalledJsonArray $installedJsonArray
@@ -291,7 +291,7 @@ class InstalledJson
 
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
 
-        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $vendorDir);
+        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $targetDir);
 
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
@@ -305,11 +305,11 @@ class InstalledJson
 
         $this->logger->debug('Installed.json after: ' . json_encode($installedJsonArray));
 
-        $this->logger->info('Writing installed.json to ' . $vendorDir);
+        $this->logger->info('Writing installed.json to ' . $targetDir);
 
         $installedJsonFile->write($installedJsonArray);
 
-        $this->logger->info('Installed.json written to ' . $vendorDir);
+        $this->logger->info('Installed.json written to ' . $targetDir);
     }
 
 
