@@ -144,8 +144,9 @@ class Prefixer
 
         foreach ($classes as $originalClassname) {
             $classmapPrefix = $this->config->getClassmapPrefix();
-
-            $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
+            if ($classmapPrefix) {
+                $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
+            }
         }
 
         // TODO: Move this out of the loop.
