@@ -167,11 +167,13 @@ class InstalledJson
             foreach ($autoload_key as $type => $autoload) {
                 switch ($type) {
                     case 'psr-4':
+                    case 'psr-0':
                         /**
                          * e.g.
                          * * {"psr-4":{"Psr\\Log\\":"Psr\/Log\/"}}
                          * * {"psr-4":{"":"src\/"}}
                          * * {"psr-4":{"Symfony\\Polyfill\\Mbstring\\":""}}
+                         * * {"psr-0":{"PayPal":"lib\/"}}
                          */
                         foreach ($autoload_key[$type] as $originalNamespace => $packageRelativeDirectory) {
                             // Replace $originalNamespace with updated namespace
@@ -188,7 +190,7 @@ class InstalledJson
 
                             $trimmedOriginalNamespace = trim($originalNamespace, '\\');
 
-                            $this->logger->info('Checking PSR-4 namespace: ' . $trimmedOriginalNamespace);
+                            $this->logger->info('Checking '.$type.' namespace: ' . $trimmedOriginalNamespace);
 
                             if (isset($discoveredNamespaces[$trimmedOriginalNamespace])) {
                                 $namespaceSymbol = $discoveredNamespaces[$trimmedOriginalNamespace];
@@ -238,7 +240,6 @@ class InstalledJson
                          * E.g.
                          *
                          * * {"classmap":["src\/"]}
-                         * * {"psr-0":{"PayPal":"lib\/"}}
                          * * {"files":["src\/functions.php"]}
                          *
                          * Also:

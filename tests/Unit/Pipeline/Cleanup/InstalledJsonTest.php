@@ -157,4 +157,95 @@ EOD;
         $this->assertStringContainsString('"BrianHenryIE\\\\Tests\\\\Psr\\\\Container\\\\": "src/"', $fileSystem->read('vendor-prefixed/composer/installed.json'));
         $this->assertStringNotContainsString('"Psr\\\\Container\\\\": "src/"', $fileSystem->read('vendor-prefixed/composer/installed.json'));
     }
+
+    public function test_updates_psr0_entry(): void
+    {
+        $installedJson = <<<'EOD'
+{
+    "packages": [
+        {
+            "name": "psr/log",
+            "version": "1.0.0",
+            "version_normalized": "1.0.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/fe0936ee26643249e916849d48e3a51d5f5e278b",
+                "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b",
+                "shasum": ""
+            },
+            "time": "2012-12-21T11:40:51+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-0": {
+                    "Psr\\Log\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "support": {
+                "issues": "https://github.com/php-fig/log/issues",
+                "source": "https://github.com/php-fig/log/tree/1.0.0"
+            },
+            "install-path": "../psr/log"
+        }
+    ],
+    "dev": false,
+    "dev-package-names": []
+}
+EOD;
+
+        $fileSystem = $this->getFileSystem();
+
+        $fileSystem->createDirectory('vendor/composer');
+        $fileSystem->write('vendor/composer/installed.json', $installedJson);
+        $fileSystem->write('vendor-prefixed/psr/log/src/AbstractLogger.php', '<?php namespace Psr\Log;');
+
+        $config = \Mockery::mock(CleanupConfigInterface::class);
+        $config->expects()->getVendorDirectory()->once()->andReturn('mem://vendor/');
+        $config->expects()->getTargetDirectory()->once()->andReturn('mem://vendor-prefixed/');
+
+        $sut = new InstalledJson(
+            $config,
+            $fileSystem,
+            new NullLogger()
+        );
+
+        /** @var array<string,ComposerPackage> $flatDependencyTree*/
+        $flatDependencyTree = ['psr/log'=>\Mockery::mock(ComposerPackage::class)];
+
+        $file = \Mockery::mock(FileWithDependency::class);
+        $file->expects('getSourcePath')->andReturn('vendor/psr/log/src/AbstractLogger.php');
+        $file->expects('addDiscoveredSymbol');
+
+        $namespaceSymbol = new NamespaceSymbol('Psr\\Log', $file);
+        $namespaceSymbol->setReplacement('BrianHenryIE\\Tests\\Psr\\Log',);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $sut->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+
+        $this->assertStringContainsString('"BrianHenryIE\\\\Tests\\\\Psr\\\\Log\\\\": ""', $fileSystem->read('vendor-prefixed/composer/installed.json'));
+        $this->assertStringNotContainsString('"Psr\\\\Log\\\\": ""', $fileSystem->read('vendor-prefixed/composer/installed.json'));
+    }
 }
