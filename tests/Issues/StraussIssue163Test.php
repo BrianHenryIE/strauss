@@ -17,7 +17,7 @@ class StraussIssue163Test extends IntegrationTestCase
      */
     public function test_multiple_autoloaders_breaks_autoloading()
     {
-        $composerJsonString = <<<'EOD'
+        $composerJsonString1 = <<<'EOD'
 {
   "name": "strauss/issue163",
   "require": {
@@ -26,37 +26,59 @@ class StraussIssue163Test extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "Company\\Project\\"
+      "namespace_prefix": "Company\\Project1\\"
     }
   }
 }
 EOD;
 
-        $phpString = <<<'EOD'
-<?php
-
-require __DIR__ . '/vendor/autoload.php';
-require __DIR__ . '/vendor-prefixed/autoload.php';
-
-Company\Project\WP_Forge\Helpers\dataGet( ['akey' => 'success'], 'akey' );
+        $composerJsonString2 = <<<'EOD'
+{
+  "name": "strauss/issue163",
+  "require": {
+    "php": ">=7.4",
+    "wp-forge/helpers": "2.0"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Company\\Project2\\"
+    }
+  }
+}
 EOD;
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
-        chdir($this->testsWorkingDir);
+        mkdir($this->testsWorkingDir . 'project1');
+        file_put_contents($this->testsWorkingDir . 'project1/composer.json', $composerJsonString1);
+        chdir($this->testsWorkingDir . 'project1');
         exec('composer install --no-dev;');
-
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
 
-        exec('composer dump-autoload --classmap-authoritative');
+        mkdir($this->testsWorkingDir . 'project2');
+        file_put_contents($this->testsWorkingDir . 'project2/composer.json', $composerJsonString2);
+        chdir($this->testsWorkingDir . 'project2');
+        exec('composer install --no-dev;');
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
-        file_put_contents($this->testsWorkingDir . '/test.php', $phpString);
+        $project1files = include $this->testsWorkingDir . 'project1/vendor-prefixed/composer/autoload_files.php';
+        $project2files = include $this->testsWorkingDir . 'project2/vendor-prefixed/composer/autoload_files.php';
 
-        chdir($this->testsWorkingDir);
-        exec('php test.php', $output);
+        $project1index = null;
+        foreach ($project1files as $index => $project1file) {
+            if (false !== strpos($project1file, '/wp-forge/helpers/includes/functions.php')) {
+                $project1index = $index;
+                break;
+            }
+        }
+        $project2index = null;
+        foreach ($project2files as $index => $project2file) {
+            if (false !== strpos($project2file, '/wp-forge/helpers/includes/functions.php')) {
+                $project2index = $index;
+                break;
+            }
+        }
 
-        $output = implode(PHP_EOL, $output);
-
-        $this->assertEmpty($output, $output);
+        $this->assertNotEquals($project1index, $project2index);
     }
 }
