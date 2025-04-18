@@ -21,6 +21,7 @@ use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use League\Flysystem\Config;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mockery;
 
 /**
  * Class ReplacerTest
@@ -361,7 +362,7 @@ EOD;
 
         $replacer = new Prefixer($config, $this->getFileSystem());
 
-        $file = \Mockery::mock(File::class);
+        $file = Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
         $namespaceSymbol = new NamespaceSymbol($originalClassname, $file);
 
@@ -852,7 +853,7 @@ EOD;
         $config->method('getConstantsPrefix')->willReturn('BHMP_');
         $replacer = new Prefixer($config, $this->getFileSystem());
 
-        $file = \Mockery::mock(File::class);
+        $file = Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
         $file->shouldReceive('getSourcePath');
 
@@ -1466,7 +1467,7 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method("getClassmapPrefix")->willReturn($classnamePrefix);
 
-        $file = \Mockery::mock(File::class);
+        $file = Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
         $file->shouldReceive('getSourcePath');
 
@@ -1705,9 +1706,9 @@ EOD;
 
         $replacer = new Prefixer($config, $this->getFileSystem());
 
-        $file = \Mockery::mock(File::class);
-        $file->expects('addDiscoveredSymbol')->once();
-        $file->expects('getSourcePath');
+        $file = Mockery::mock(File::class);
+        $file->expects('addDiscoveredSymbol')->twice();
+        $file->expects('getSourcePath')->twice();
 
         $discoveredSymbols = new DiscoveredSymbols();
 
