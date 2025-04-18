@@ -6,7 +6,6 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
-use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -15,10 +14,7 @@ use Composer\Config;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Json\JsonFile;
-use Composer\Package\Link;
-use Composer\Package\PackageInterface;
 use Composer\Repository\InstalledFilesystemRepository;
-use Composer\Semver\Constraint\ConstraintInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -81,7 +77,11 @@ class DumpAutoload
             'config' => $projectComposerJsonArray['config'] ?? []
         ]);
 
-        $generator = $composer->getAutoloadGenerator();
+        $generator = new ComposerAutoloadGenerator(
+            $this->config->getNamespacePrefix(),
+            $composer->getEventDispatcher()
+        );
+
         $generator->setDryRun($this->config->isDryRun());
         $generator->setClassMapAuthoritative(true);
         $generator->setRunScripts(false);
@@ -116,8 +116,6 @@ class DumpAutoload
         Config::$defaultConfig['vendor-dir'] = $defaultVendorDirBefore;
 
         $this->prefixNewAutoloader();
-
-        $this->rewriteFilesIdentifiers();
     }
 
     protected function prefixNewAutoloader(): void
@@ -159,55 +157,6 @@ class DumpAutoload
         );
 
         $projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
-    }
-
-    /**
-     * @see AutoloadGenerator::getFileIdentifier()
-     * @see PackageInterface::getName()
-     */
-    protected function rewriteFilesIdentifiers(): void
-    {
-        $autoloadStatic = $this->filesystem->read($this->config->getTargetDirectory() . 'composer/autoload_static.php');
-
-        $autoloadStaticLines = explode(PHP_EOL, $autoloadStatic);
-        $isFilesArray = false;
-        foreach ($autoloadStaticLines as $index => $autoloadStaticLine) {
-            if ($autoloadStaticLine === '    public static $files = array (') {
-                $isFilesArray = true;
-                continue;
-            }
-            if (!$isFilesArray) {
-                continue;
-            }
-            if ($autoloadStaticLine === '    public static $prefixLengthsPsr4 = array (') {
-                break;
-            }
-
-            if (1 === preg_match('/^(\s+\')([\w\d]+)(\' => __DIR__ \. \'.*\',)$/', $autoloadStaticLine, $matches)) {
-                $autoloadStaticLines[$index] = $matches[1] . md5($matches[2] . $this->config->getNamespacePrefix()). $matches[3];
-            }
-        }
-        unset($index);
-        $autoloadStatic = implode(PHP_EOL, $autoloadStaticLines);
-
-        $this->filesystem->write($this->config->getTargetDirectory() . 'composer/autoload_static.php', $autoloadStatic);
-
-        if (!$this->filesystem->fileExists($this->config->getTargetDirectory() . 'composer/autoload_files.php')) {
-            return;
-        }
-
-        $autoloadFiles = $this->filesystem->read($this->config->getTargetDirectory() . 'composer/autoload_files.php');
-
-        $autoloadFilesLines = explode(PHP_EOL, $autoloadFiles);
-        foreach ($autoloadFilesLines as $index => $autoloadFilesLine) {
-            if (1 === preg_match('/^(\s+\')([\w\d]+)(\' => \$vendorDir \. \'.*\',)$/', $autoloadFilesLine, $matches)) {
-                $autoloadFilesLines[$index] = $matches[1] . md5($matches[2] . $this->config->getNamespacePrefix()). $matches[3];
-            }
-        }
-        unset($index);
-        $autoloadFiles = implode(PHP_EOL, $autoloadFilesLines);
-
-        $this->filesystem->write($this->config->getTargetDirectory() . 'composer/autoload_files.php', $autoloadFiles);
     }
 
     /**
