@@ -1,6 +1,16 @@
 # Change Log
 
-## 0.22.0 February 2025
+## 0.22.2 April 2025
+
+* Fix: `psr-0` autoloaders were no longer autoloaded because the directory structure did not match
+* Fix: `files` autoloaders failed when not unique (the whole point of this tool)
+* Fix: spelling
+
+## 0.22.1 April 2025
+
+* Fix: jsonmapper latest version caused problems with PhpDoc
+
+## 0.22.0 April 2025
 
 * Add: `--info`, `--debug` and `--silent` verbosity levels
 * Add: `--dry-run` which runs with `--debug` output but does not write files
