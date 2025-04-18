@@ -8,6 +8,7 @@ use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use League\Flysystem\WhitespacePathNormalizer;
+use Mockery;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
@@ -80,5 +81,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             $registry->unregister('mem');
         } catch (\Exception $e) {
         }
+
+        Mockery::close();
     }
 }
