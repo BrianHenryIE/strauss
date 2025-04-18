@@ -34,7 +34,7 @@ jobs:
     name: PHP tests ${{ matrix.php }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
@@ -82,12 +82,23 @@ jobs:
 
       - name: Run tests with strauss.phar
         run: vendor/bin/phpunit
+
+  spelling:
+    runs-on: ubuntu-latest
+    name: Spelling
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Search for misspellings
+        uses: crate-ci/typos@master
+
   lint:
     runs-on: ubuntu-latest
     name: Lint project files
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2

@@ -1,0 +1,16 @@
+[files]
+extend-exclude = [
+    ".git/",
+    "tests/Issues/data/",
+]
+ignore-hidden = false
+
+[default]
+extend-ignore-re = [
+    "ComposerAutoloaderInit[0-9a-f]+",
+]
+
+[default.extend-identifiers]
+# Typos
+"Github" = "GitHub"
+"Wordpress" = "WordPress"
