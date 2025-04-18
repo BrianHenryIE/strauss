@@ -70,6 +70,10 @@ class IntegrationTestCase extends TestCase
                 $strauss = new IncludeAutoloaderCommand();
                 unset($paramsSplit[0]);
                 break;
+            case 'replace':
+                $strauss = new \BrianHenryIE\Strauss\Console\Commands\ReplaceCommand();
+                unset($paramsSplit[0]);
+                break;
             default:
                 $strauss = new DependenciesCommand();
         }
