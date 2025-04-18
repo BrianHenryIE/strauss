@@ -274,4 +274,9 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             $this->normalizer->normalizePath($dir)
         );
     }
+
+    public function normalize(string $path)
+    {
+        return $this->normalizer->normalizePath($path);
+    }
 }
