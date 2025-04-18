@@ -170,10 +170,15 @@ class InstalledJson
             foreach ($autoload_key as $type => $autoload) {
                 switch ($type) {
                     case 'psr-0':
-                        $autoload_key['classmap'] = array_merge(
-                            $autoload_key['classmap'],
-                            array_values((array) $autoload_key['psr-0'])
-                        );
+                        foreach (array_values((array) $autoload_key['psr-0']) as $relativePath) {
+                            $packageRelativePath = $package['install-path'];
+                            if (1 === preg_match('#.*'.preg_quote($this->filesystem->normalize($this->config->getTargetDirectory()), '#').'/(.*)#', $packageRelativePath, $matches)) {
+                                $packageRelativePath = $matches[1];
+                            }
+                            if ($this->filesystem->directoryExists($this->config->getTargetDirectory() . $packageRelativePath . $relativePath)) {
+                                $autoload_key['classmap'][] = $relativePath;
+                            }
+                        }
                     case 'psr-4':
                         /**
                          * e.g.
