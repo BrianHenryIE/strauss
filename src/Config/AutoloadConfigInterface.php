@@ -26,4 +26,6 @@ interface AutoloadConfigInterface
     public function isClassmapOutput(): bool;
 
     public function isDryRun(): bool;
+
+    public function getNamespacePrefix(): ?string;
 }

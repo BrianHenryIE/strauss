@@ -164,14 +164,30 @@ class InstalledJson
             }
 
             $autoload_key = $package['autoload'];
+            if (!isset($autoload_key['classmap'])) {
+                $autoload_key['classmap'] = [];
+            }
             foreach ($autoload_key as $type => $autoload) {
                 switch ($type) {
+                    case 'psr-0':
+                        foreach (array_values((array) $autoload_key['psr-0']) as $relativePath) {
+                            $packageRelativePath = $package['install-path'];
+                            if (1 === preg_match('#.*'.preg_quote($this->filesystem->normalize($this->config->getTargetDirectory()), '#').'/(.*)#', $packageRelativePath, $matches)) {
+                                $packageRelativePath = $matches[1];
+                            }
+                            if ($this->filesystem->directoryExists($this->config->getTargetDirectory() . $packageRelativePath . $relativePath)) {
+                                $autoload_key['classmap'][] = $relativePath;
+                            }
+                        }
+                        // Intentionally fall through
+                        // Although the PSR-0 implemention here is a bit of a hack.
                     case 'psr-4':
                         /**
                          * e.g.
                          * * {"psr-4":{"Psr\\Log\\":"Psr\/Log\/"}}
                          * * {"psr-4":{"":"src\/"}}
                          * * {"psr-4":{"Symfony\\Polyfill\\Mbstring\\":""}}
+                         * * {"psr-0":{"PayPal":"lib\/"}}
                          */
                         foreach ($autoload_key[$type] as $originalNamespace => $packageRelativeDirectory) {
                             // Replace $originalNamespace with updated namespace
@@ -188,7 +204,7 @@ class InstalledJson
 
                             $trimmedOriginalNamespace = trim($originalNamespace, '\\');
 
-                            $this->logger->info('Checking PSR-4 namespace: ' . $trimmedOriginalNamespace);
+                            $this->logger->info('Checking '.$type.' namespace: ' . $trimmedOriginalNamespace);
 
                             if (isset($discoveredNamespaces[$trimmedOriginalNamespace])) {
                                 $namespaceSymbol = $discoveredNamespaces[$trimmedOriginalNamespace];
@@ -238,7 +254,6 @@ class InstalledJson
                          * E.g.
                          *
                          * * {"classmap":["src\/"]}
-                         * * {"psr-0":{"PayPal":"lib\/"}}
                          * * {"files":["src\/functions.php"]}
                          *
                          * Also:
@@ -270,9 +285,9 @@ class InstalledJson
     {
         $this->copyInstalledJson();
 
-        $vendorDir = $this->config->getTargetDirectory();
+        $targetDir = $this->config->getTargetDirectory();
 
-        $installedJsonFile = $this->getJsonFile($vendorDir);
+        $installedJsonFile = $this->getJsonFile($targetDir);
 
         /**
          * @var InstalledJsonArray $installedJsonArray
@@ -283,7 +298,7 @@ class InstalledJson
 
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
 
-        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $vendorDir);
+        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $targetDir);
 
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
@@ -297,11 +312,11 @@ class InstalledJson
 
         $this->logger->debug('Installed.json after: ' . json_encode($installedJsonArray));
 
-        $this->logger->info('Writing installed.json to ' . $vendorDir);
+        $this->logger->info('Writing installed.json to ' . $targetDir);
 
         $installedJsonFile->write($installedJsonArray);
 
-        $this->logger->info('Installed.json written to ' . $vendorDir);
+        $this->logger->info('Installed.json written to ' . $targetDir);
     }
 
 
