@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use Mockery;
 use Psr\Log\NullLogger;
 
 /**
@@ -25,10 +26,10 @@ class AliasesTest extends TestCase
     public function test_spl_autoloader(): void
     {
 
-        $config = \Mockery::mock(AliasesConfigInterface::class);
-        $config->expects('isDryRun')->andReturnTrue();
-        $config->expects('getVendorDirectory')->andReturn('vendor/');
-        $config->expects('getTargetDirectory')->andReturn('vendor-prefixed/');
+        $config = Mockery::mock(AliasesConfigInterface::class);
+        $config->expects('isDryRun')->twice()->andReturnTrue();
+        $config->expects('getVendorDirectory')->twice()->andReturn('vendor/');
+        $config->expects('getTargetDirectory')->once()->andReturn('vendor-prefixed/');
 
         $fileSystem = $this->getFileSystem();
 
@@ -39,7 +40,7 @@ class AliasesTest extends TestCase
         );
 
         $symbols = new DiscoveredSymbols();
-        $file = \Mockery::mock(FileWithDependency::class);
+        $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->once()->andReturn('vendor/foo/bar/baz.php');
         $file->expects('addDiscoveredSymbol')->once();
 
@@ -82,10 +83,10 @@ EOD;
     public function test_functions(): void
     {
 
-        $config = \Mockery::mock(AliasesConfigInterface::class);
-        $config->expects('isDryRun')->andReturnTrue();
-        $config->expects('getVendorDirectory')->andReturn('vendor/');
-        $config->expects('getTargetDirectory')->andReturn('vendor-prefixed/');
+        $config = Mockery::mock(AliasesConfigInterface::class);
+        $config->expects('isDryRun')->twice()->andReturnTrue();
+        $config->expects('getVendorDirectory')->twice()->andReturn('vendor/');
+        $config->expects('getTargetDirectory')->once()->andReturn('vendor-prefixed/');
 
         $fileSystem = $this->getFileSystem();
 
@@ -96,7 +97,7 @@ EOD;
         );
 
         $symbols = new DiscoveredSymbols();
-        $file = \Mockery::mock(FileWithDependency::class);
+        $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->once()->andReturn('vendor/foo/bar/baz.php');
         $file->expects('addDiscoveredSymbol')->once();
 
@@ -126,10 +127,10 @@ EOD;
     public function test_namespaced_interfaces(): void
     {
 
-        $config = \Mockery::mock(AliasesConfigInterface::class);
-        $config->expects('isDryRun')->andReturnTrue();
-        $config->expects('getVendorDirectory')->andReturn('vendor/');
-        $config->expects('getTargetDirectory')->andReturn('vendor-prefixed/');
+        $config = Mockery::mock(AliasesConfigInterface::class);
+        $config->expects('isDryRun')->twice()->andReturnTrue();
+        $config->expects('getVendorDirectory')->twice()->andReturn('vendor/');
+        $config->expects('getTargetDirectory')->once()->andReturn('vendor-prefixed/');
 
         $fileSystem = $this->getFileSystem();
 
@@ -140,7 +141,7 @@ EOD;
         );
 
         $symbols = new DiscoveredSymbols();
-        $file = \Mockery::mock(FileWithDependency::class);
+        $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->once()->andReturn('vendor/foo/bar/baz.php');
         $file->expects('addDiscoveredSymbol')->once();
 
