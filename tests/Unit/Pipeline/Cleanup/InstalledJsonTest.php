@@ -86,7 +86,7 @@ EOD;
 
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects()->getVendorDirectory()->times(3)->andReturn('mem://vendor/');
-        $config->expects()->getTargetDirectory()->times(4)->andReturn('mem://vendor-prefixed/');
+        $config->expects()->getTargetDirectory()->times(1)->andReturn('mem://vendor-prefixed/');
 
         $sut = new InstalledJson(
             $config,
