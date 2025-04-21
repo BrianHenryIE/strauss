@@ -20,13 +20,10 @@ class FileSystemTest extends TestCase
     public function testFileAttributes(): void
     {
         $sut = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
-                [
+            new LocalFilesystemAdapter('/'),
+            [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
-            ),
-            __DIR__
         );
 
         $result = $sut->getAttributes(__FILE__);
@@ -37,13 +34,10 @@ class FileSystemTest extends TestCase
     public function testIsDirTrue()
     {
         $sut = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
-            ),
-            __DIR__
+            new LocalFilesystemAdapter('/'),
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
         $result = $sut->directoryExists(__DIR__);
@@ -54,13 +48,10 @@ class FileSystemTest extends TestCase
     public function testIsDirFalse()
     {
         $sut = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
-            ),
-            __DIR__
+            new LocalFilesystemAdapter('/'),
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
         $result = $sut->directoryExists(__FILE__);

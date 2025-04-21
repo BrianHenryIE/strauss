@@ -48,14 +48,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
 
         $filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                $inMemoryFilesystem,
-                [
+            $inMemoryFilesystem,
+            [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ],
-                $normalizer
-            ),
-            __DIR__
+            $normalizer
         );
 
         /** @var FilesystemRegistry $registry */

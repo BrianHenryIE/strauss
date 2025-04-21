@@ -8,10 +8,11 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
-use League\Flysystem\FilesystemOperator;
+use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToReadFile;
@@ -19,52 +20,52 @@ use League\Flysystem\UnableToRetrieveMetadata;
 use League\Flysystem\WhitespacePathNormalizer;
 use Traversable;
 
-class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInterface
+class ReadOnlyFileSystem implements FilesystemAdapter
 {
-//  use FlysystemBackCompatTrait;
-    protected FilesystemOperator $filesystem;
-    protected InMemoryFilesystemAdapter $inMemoryFiles;
-    protected InMemoryFilesystemAdapter $deletedFiles;
+    use FlysystemBackCompatTrait;
+
+    protected FilesystemAdapter $parentFilesystemAdapter;
+    protected ModifiedFilesInMemoryFilesystemAdapter $inMemoryFiles;
+    protected DeletedFilesInMemoryFilesystemAdapter $deletedFiles;
 
     protected PathNormalizer $pathNormalizer;
 
-    public function __construct(FilesystemOperator $filesystem, ?PathNormalizer $pathNormalizer = null)
+    public function __construct(FilesystemAdapter $filesystem, ?PathNormalizer $pathNormalizer = null)
     {
-        $this->filesystem = $filesystem;
+        $this->parentFilesystemAdapter = $filesystem;
 
-        $this->inMemoryFiles = new InMemoryFilesystemAdapter();
-        $this->deletedFiles = new InMemoryFilesystemAdapter();
+        $this->inMemoryFiles = new ModifiedFilesInMemoryFilesystemAdapter();
+        $this->deletedFiles = new DeletedFilesInMemoryFilesystemAdapter();
 
         $this->pathNormalizer = $pathNormalizer ?? new WhitespacePathNormalizer();
     }
 
-    public function fileExists(string $location): bool
+    public function fileExists(string $path): bool
     {
-        if ($this->deletedFiles->fileExists($location)) {
+        if ($this->deletedFiles->fileExists($path)) {
             return false;
         }
-        return $this->inMemoryFiles->fileExists($location)
-                || $this->filesystem->fileExists($location);
+        return $this->inMemoryFiles->fileExists($path)
+                || $this->parentFilesystemAdapter->fileExists($path);
     }
 
-    public function write(string $location, string $contents, array $config = []): void
+    public function write(string $path, string $contents, Config $config): void
     {
-        $config = new \League\Flysystem\Config($config);
-        $this->inMemoryFiles->write($location, $contents, $config);
+        $this->inMemoryFiles->write($path, $contents, $config);
 
-        if ($this->deletedFiles->fileExists($location)) {
-            $this->deletedFiles->delete($location);
+        if ($this->deletedFiles->fileExists($path)) {
+            $this->deletedFiles->delete($path);
         }
     }
 
-    public function writeStream(string $location, $contents, $config = []): void
+    public function writeStream(string $path, $contents, $config = []): void
     {
         $config = new \League\Flysystem\Config($config);
         $this->rewindStream($contents);
-        $this->inMemoryFiles->writeStream($location, $contents, $config);
+        $this->inMemoryFiles->writeStream($path, $contents, $config);
 
-        if ($this->deletedFiles->fileExists($location)) {
-            $this->deletedFiles->delete($location);
+        if ($this->deletedFiles->fileExists($path)) {
+            $this->deletedFiles->delete($path);
         }
     }
     /**
@@ -77,82 +78,94 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         }
     }
 
-    public function read(string $location): string
+    public function read(string $path): string
     {
-        if ($this->deletedFiles->fileExists($location)) {
-            throw UnableToReadFile::fromLocation($location);
+        if ($this->deletedFiles->fileExists($path)) {
+            throw UnableToReadFile::fromLocation($path);
         }
-        if ($this->inMemoryFiles->fileExists($location)) {
-            return $this->inMemoryFiles->read($location);
+        if ($this->inMemoryFiles->fileExists($path)) {
+            return $this->inMemoryFiles->read($path);
         }
-        return $this->filesystem->read($location);
+        return $this->parentFilesystemAdapter->read($path);
     }
 
-    public function readStream(string $location)
+    public function readStream(string $path)
     {
-        if ($this->deletedFiles->fileExists($location)) {
-            throw UnableToReadFile::fromLocation($location);
+        if ($this->deletedFiles->fileExists($path)) {
+            throw UnableToReadFile::fromLocation($path);
         }
-        if ($this->inMemoryFiles->fileExists($location)) {
-            return $this->inMemoryFiles->readStream($location);
+        if ($this->inMemoryFiles->fileExists($path)) {
+            return $this->inMemoryFiles->readStream($path);
         }
-        return $this->filesystem->readStream($location);
+        return $this->parentFilesystemAdapter->readStream($path);
     }
 
-    public function delete(string $location): void
+    public function delete(string $path): void
     {
-        if ($this->fileExists($location)) {
-            $file = $this->read($location);
-            $this->deletedFiles->write($location, $file, new Config([]));
+        if ($this->fileExists($path)) {
+            $file = $this->read($path);
+            $this->deletedFiles->write($path, $file, new Config([]));
         }
-        if ($this->inMemoryFiles->fileExists($location)) {
-            $this->inMemoryFiles->delete($location);
+        if ($this->inMemoryFiles->fileExists($path)) {
+            $this->inMemoryFiles->delete($path);
         }
     }
 
-    public function deleteDirectory(string $location): void
+    public function deleteDirectory(string $path): void
     {
-        $location = $this->pathNormalizer->normalizePath($location);
+        $path = $this->pathNormalizer->normalizePath($path);
 
-        $this->deletedFiles->createDirectory($location, new Config([]));
-        $this->inMemoryFiles->deleteDirectory($location);
+        $this->deletedFiles->createDirectory($path, new Config([]));
+        $this->inMemoryFiles->deleteDirectory($path);
     }
 
 
-    public function createDirectory(string $location, array $config = []): void
+    public function createDirectory(string $path, Config $config): void
     {
-        $this->inMemoryFiles->createDirectory($location, new Config($config));
+        $this->inMemoryFiles->createDirectory($path, $config);
 
-        $this->deletedFiles->deleteDirectory($location);
+        $this->deletedFiles->deleteDirectory($path);
     }
 
-    public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
+    public function listContents(string $path, bool $deep): iterable
     {
-        /** @var FileAttributes[] $actual */
-        $actual = $this->filesystem->listContents($location, $deep)->toArray();
 
-        $inMemoryFilesGenerator = $this->inMemoryFiles->listContents($location, $deep);
-        $inMemoryFilesArray = $inMemoryFilesGenerator instanceof Traversable
-            ? iterator_to_array($inMemoryFilesGenerator, false)
-            : (array) $inMemoryFilesGenerator;
-
-        $inMemoryFilePaths = array_map(fn($file) => $file->path(), $inMemoryFilesArray);
-
-        $deletedFilesGenerator = $this->deletedFiles->listContents($location, $deep);
+        $deletedFilesGenerator = $this->deletedFiles->listContents($path, $deep);
         $deletedFilesArray = $deletedFilesGenerator instanceof Traversable
             ? iterator_to_array($deletedFilesGenerator, false)
             : (array) $deletedFilesGenerator;
         $deletedFilePaths = array_map(fn($file) => $file->path(), $deletedFilesArray);
 
-        $actual = array_filter($actual, fn($file) => !in_array($file->path(), $inMemoryFilePaths));
-        $actual = array_filter($actual, fn($file) => !in_array($file->path(), $deletedFilePaths));
 
-        $good = array_merge($actual, $inMemoryFilesArray);
+        $inMemoryFilesGenerator = $this->inMemoryFiles->listContents($path, $deep);
+        $inMemoryFilesArray = $inMemoryFilesGenerator instanceof Traversable
+            ? iterator_to_array($inMemoryFilesGenerator, false)
+            : (array) $inMemoryFilesGenerator;
+
+        // Remove deleted files from the modified files filesystem array
+        $inMemoryFilesArray = array_filter($inMemoryFilesArray, fn($file) => !in_array($file->path(), $deletedFilePaths));
+
+        $inMemoryFilePaths = (array) array_map(fn($file) => $file->path(), $inMemoryFilesArray);
+
+
+        /** @var FileAttributes[] $parentFilesystemArray */
+        $parentFilesystemGenerator = $this->parentFilesystemAdapter->listContents($path, $deep);
+        $parentFilesystemArray = $parentFilesystemGenerator instanceof Traversable
+            ? iterator_to_array($parentFilesystemGenerator, false)
+            : (array) $parentFilesystemGenerator;
+//      $parentFilesystemPaths = (array) array_map(fn($file) => $file->path(), $parentFilesystemArray);
+
+        // Remove modified files from the parent filesystem array
+        $parentFilesystemArray = array_filter($parentFilesystemArray, fn($file) => !in_array($file->path(), $inMemoryFilePaths));
+        // Remove deleted files from the parent filesystem array
+        $parentFilesystemArray = array_filter($parentFilesystemArray, fn($file) => !in_array($file->path(), $deletedFilePaths));
+
+        $good = array_merge($parentFilesystemArray, $inMemoryFilesArray);
 
         return new DirectoryListing($good);
     }
 
-    public function move(string $source, string $destination, array $config = []): void
+    public function move(string $source, string $destination, Config $config): void
     {
         throw new \BadMethodCallException('Not yet implemented');
     }
@@ -189,30 +202,36 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         throw UnableToReadFile::fromLocation($path);
     }
 
-    public function lastModified(string $path): int
+    public function lastModified(string $path): FileAttributes
     {
-        $attributes = $this->getAttributes($path);
-        return $attributes->lastModified() ?? 0;
+        $storageAttributes = $this->getAttributes($path);
+        return new FileAttributes(
+            $path,
+            null,
+            $storageAttributes->visibility(),
+            // TODO: This shouldn't be null – it should be set during other operations.
+            $storageAttributes->lastModified() ?? 0
+        );
     }
 
-    public function fileSize(string $path): int
+    public function fileSize(string $path): FileAttributes
     {
         $filesize = 0;
 
         if ($this->inMemoryFiles->fileExists($path)) {
             $filesize = $this->inMemoryFiles->fileSize($path);
-        } elseif ($this->filesystem->fileExists($path)) {
-            $filesize = $this->filesystem->fileSize($path);
+        } elseif ($this->parentFilesystemAdapter->fileExists($path)) {
+            $filesize = $this->parentFilesystemAdapter->fileSize($path);
         }
 
         if ($filesize instanceof FileAttributes) {
-            return $filesize->fileSize();
+            return $filesize;
         }
 
-        return $filesize;
+        return new FileAttributes($path, $filesize);
     }
 
-    public function mimeType(string $path): string
+    public function mimeType(string $path): FileAttributes
     {
         throw new \BadMethodCallException('Not yet implemented');
     }
@@ -222,7 +241,7 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         throw new \BadMethodCallException('Not yet implemented');
     }
 
-    public function visibility(string $path): string
+    public function visibility(string $path): FileAttributes
     {
         $path = $this->pathNormalizer->normalizePath($path);
 
@@ -230,50 +249,48 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
             throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
         }
 
-        if ($this->deletedFiles->fileExists($path)) {
+        if ($this->deletedFiles->has($path)) {
             throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
         }
-        if ($this->inMemoryFiles->fileExists($path)) {
-            $attributes = $this->inMemoryFiles->visibility($path);
-            return $attributes->visibility();
+        if ($this->inMemoryFiles->has($path)) {
+            return $this->inMemoryFiles->visibility($path);
         }
-        if ($this->filesystem->fileExists($path)) {
-            return $this->filesystem->visibility($path);
+        if ($this->parentFilesystemAdapter->fileExists($path)) {
+            return $this->parentFilesystemAdapter->visibility($path);
         }
-        return \League\Flysystem\Visibility::PUBLIC;
+        throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
     }
 
-    public function directoryExists(string $location): bool
+    public function directoryExists(string $path): bool
     {
-        $location = $this->pathNormalizer->normalizePath($location);
+        $path = $this->pathNormalizer->normalizePath($path);
 
-        if ($this->directoryExistsIn($location, $this->deletedFiles)) {
+        if ($this->directoryExistsIn($path, $this->deletedFiles)) {
             return false;
         }
 
-        return  $this->directoryExistsIn($location, $this->inMemoryFiles)
-            || $this->directoryExistsIn($location, $this->filesystem);
+        return  $this->directoryExistsIn($path, $this->inMemoryFiles)
+            || $this->directoryExistsIn($path, $this->parentFilesystemAdapter);
     }
 
-    protected function directoryExistsIn(string $location, $filesystem): bool
+    protected function directoryExistsIn(string $path, FilesystemAdapter $filesystem): bool
     {
         if (method_exists($filesystem, 'directoryExists')) {
-            return $filesystem->directoryExists($location);
+            return $filesystem->directoryExists($path);
         }
 
-        $parentDirectoryContents = $filesystem->listContents(dirname($location), false);
+        $parentDirectoryPath = dirname($path);
+        $parentDirectoryContents = $filesystem->listContents($parentDirectoryPath, false);
+
+        $parent = [];
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
-            if ($entry->path() == $location) {
+            $parent[] = $entry;
+            if ($entry->path() == $path) {
                 return $entry->isDir();
             }
         }
 
         return false;
-    }
-
-    public function has(string $location): bool
-    {
-        throw new \BadMethodCallException('Not yet implemented');
     }
 }

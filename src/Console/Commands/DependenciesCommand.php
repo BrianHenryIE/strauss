@@ -142,13 +142,11 @@ class DependenciesCommand extends Command
         );
 
         $this->filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                $localFilesystemAdapter,
-                [
+            $localFilesystemAdapter,
+            [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
-            ),
-            getcwd() . '/'
+                ],
+            //            getcwd() . '/'
         );
     }
 
@@ -211,10 +209,10 @@ class DependenciesCommand extends Command
                 $this->filesystem =
                     new FileSystem(
                         new ReadOnlyFileSystem(
-                            $this->filesystem,
-                            $normalizer
+                            $this->filesystem->getAdapter(),
                         ),
-                        $this->workingDir
+                        [],
+                        $normalizer
                     );
 
                 /** @var FilesystemRegistry $registry */
