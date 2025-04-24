@@ -48,7 +48,9 @@ EOD;
         // Only one because we haven't run "flat dependency list".
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $a = ComposerPackage::fromFile($composerFile);
+            $a->setProjectDirectory($this->testsWorkingDir . 'vendor/');
+            return $a;
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;

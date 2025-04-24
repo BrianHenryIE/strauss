@@ -51,7 +51,9 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectDirectory($this->testsWorkingDir.'vendor/');
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
@@ -119,7 +121,9 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectDirectory($this->testsWorkingDir.'vendor/');
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
