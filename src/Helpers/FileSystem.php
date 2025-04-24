@@ -161,4 +161,10 @@ class FileSystem extends \League\Flysystem\Filesystem
         return $file->getSourcePath() !== $realpath;
     }
 
+
+    public function dirIsEmpty(string $dir): bool
+    {
+        // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
+        return empty($this->listContents($dir)->toArray());
+    }
 }

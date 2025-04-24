@@ -155,13 +155,6 @@ class Cleanup
 //        }
     }
 
-    // TODO: Move to FileSystem class.
-    protected function dirIsEmpty(string $dir): bool
-    {
-        // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
-        return empty($this->filesystem->listContents($dir)->toArray());
-    }
-
     /**
      * @param array<File> $files
      */
