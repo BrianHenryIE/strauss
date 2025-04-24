@@ -103,7 +103,7 @@ class FileEnumerator
 
                 if ('files' === $type) {
                     // TODO: This is not in use.
-                    $this->filesAutoloaders[$dependency->getRelativePath()] = $value;
+                    $this->filesAutoloaders[$dependency->getVendorRelativePath()] = $value;
                 }
 
                 foreach ($value as $namespace => $namespace_relative_paths) {
@@ -167,14 +167,20 @@ class FileEnumerator
         string $sourceAbsoluteFilepath,
         string $autoloaderType
     ): void {
-        $vendorRelativePath = substr(
-            $sourceAbsoluteFilepath,
-            strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
+
+        $vendorRelativePath = $this->filesystem->getRelativePath(
+            $this->config->getVendorDirectory(),
+            $sourceAbsoluteFilepath
         );
 
-        if ($vendorRelativePath === $sourceAbsoluteFilepath) {
-            $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
-        }
+//        $vendorRelativePath = substr(
+//            $sourceAbsoluteFilepath,
+//            strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
+//        );
+
+//        if ($vendorRelativePath === $sourceAbsoluteFilepath) {
+//            $vendorRelativePath = $dependency->getVendorRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
+//        }
 
         $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getVendorDirectory());
 

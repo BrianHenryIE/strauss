@@ -153,11 +153,13 @@ class ComposerPackage
     }
 
     /**
-     * Is this relative to vendor?
+     * This is relative to vendor.
      */
-    public function getRelativePath(): ?string
+    public function getVendorRelativePath(): ?string
     {
-        return $this->relativePath . '/';
+        return is_null($this->vendorRelativePath)
+               ? null
+             : $this->vendorRelativePath . '/';
     }
 
     public function getPackageAbsolutePath(): ?string
