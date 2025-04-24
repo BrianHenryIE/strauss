@@ -106,18 +106,18 @@ class FileEnumerator
                     $this->filesAutoloaders[$dependency->getVendorRelativePath()] = $value;
                 }
 
-                foreach ($value as $namespace => $namespace_relative_paths) {
+                foreach ($value as $namespace => $namespaceRelativePaths) {
                     if (!empty($namespace) && in_array($namespace, $this->excludeNamespaces)) {
                         $this->logger->info("Excluding namespace " . $namespace);
                         continue;
                     }
 
-                    $namespace_relative_paths = (array) $namespace_relative_paths;
+                    $namespaceRelativePaths = (array) $namespaceRelativePaths;
 //                    if (! is_array($namespace_relative_paths)) {
 //                        $namespace_relative_paths = array( $namespace_relative_paths );
 //                    }
 
-                    foreach ($namespace_relative_paths as $namespaceRelativePath) {
+                    foreach ($namespaceRelativePaths as $namespaceRelativePath) {
                         $sourceAbsoluteDirPath = in_array($namespaceRelativePath, ['.','./'])
                             ? $dependency->getPackageAbsolutePath()
                             : $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
