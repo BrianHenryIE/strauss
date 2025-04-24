@@ -153,10 +153,10 @@ class FileSystem extends \League\Flysystem\Filesystem
     {
         $realpath = realpath('/'.$file->getSourcePath());
 
-		// If realpath fails, it's probably an in-memory file.
-		if(!$realpath) {
-			return false;
-		}
+        // If realpath fails, it's probably an in-memory file.
+        if (!$realpath) {
+            return false;
+        }
 
         return $file->getSourcePath() !== $realpath;
     }
