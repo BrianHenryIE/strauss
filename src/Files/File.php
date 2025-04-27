@@ -95,6 +95,9 @@ class File implements FileBase
         return $this->doDelete;
     }
 
+    /**
+     * @see Cleanup::doIsDeleteVendorFiles()
+     */
     public function setDidDelete(bool $didDelete): void
     {
         $this->didDelete = $didDelete;

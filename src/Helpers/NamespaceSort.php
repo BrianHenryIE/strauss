@@ -1,4 +1,7 @@
 <?php
+/**
+ * Sort namespaces by the depth, followed by the length of the last part.
+ */
 
 namespace BrianHenryIE\Strauss\Helpers;
 

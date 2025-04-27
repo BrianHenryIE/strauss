@@ -122,6 +122,7 @@ class FileEnumerator
                             ? $dependency->getPackageAbsolutePath()
                             : $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
 
+                        // If it is a directory, we need to list + add all files in it.
                         if ($this->filesystem->directoryExists($sourceAbsoluteDirPath)) {
                             $fileList = $this->filesystem->listContents($sourceAbsoluteDirPath, true);
                             $actualFileList = $fileList->toArray();
