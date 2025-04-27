@@ -16,8 +16,12 @@ trait FlysystemBackCompatTrait
     // directoryExists
     public function directoryExists(string $location): bool
     {
-        if (method_exists(get_parent_class($this), 'directoryExists')) {
-            return parent::directoryExists($location);
+        /**
+         * Use `self::class` here to check the parent of the current class, not necessarily the parent of the class
+         * which was called.
+         */
+        if (method_exists(get_parent_class(self::class), 'directoryExists')) {
+             return parent::directoryExists($location);
         }
 
         $normalizer = new WhitespacePathNormalizer();
@@ -39,8 +43,8 @@ trait FlysystemBackCompatTrait
     // has
     public function has(string $location): bool
     {
-        if (method_exists(get_parent_class($this), 'has')) {
-            return $this->has($location);
+        if (method_exists(get_parent_class(self::class), 'has')) {
+            return parent::has($location);
         }
         return $this->fileExists($location) || $this->directoryExists($location);
     }
