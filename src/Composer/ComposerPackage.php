@@ -91,7 +91,7 @@ class ComposerPackage
      * @param array{name?:string, license?:string, requires?:array<string,string>, autoload?:AutoloadKey} $jsonArray composer.json decoded to array
      * @param ?AutoloadKey $overrideAutoload New autoload rules to replace the existing ones.
      */
-    public static function fromComposerJsonArray($jsonArray, array $overrideAutoload = null): ComposerPackage
+    public static function fromComposerJsonArray(array $jsonArray, array $overrideAutoload = null): ComposerPackage
     {
         $factory = new Factory();
         $io = new NullIO();
