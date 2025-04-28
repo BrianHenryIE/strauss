@@ -15,6 +15,7 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
+use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\WhitespacePathNormalizer;
 
@@ -24,19 +25,40 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     protected PathNormalizer $normalizer;
 
-    public function __construct(FilesystemAdapter $adapter, array $config = [], PathNormalizer $pathNormalizer = null)
-    {
+    protected PathPrefixer $pathPrefixer;
+    /**
+     * @var ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter|FilesystemAdapter
+     */
+    protected $flysystemAdapter;
 
+    /**
+     * @param ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter $adapter
+     * @param array $config
+     * @param PathNormalizer|null $pathNormalizer
+     */
+    public function __construct(
+        FilesystemAdapter $adapter,
+        array $config = [],
+        PathNormalizer $pathNormalizer = null,
+        PathPrefixer $pathPrefixer = null
+    ) {
         parent::__construct($adapter, $config, $pathNormalizer);
 
         // Parent is private.
         $this->normalizer = $pathNormalizer ?? new WhitespacePathNormalizer();
-        $this->adapter = $adapter;
+        $this->flysystemAdapter = $adapter;
+
+        $this->pathPrefixer = $pathPrefixer ?? new PathPrefixer($this->getFileSystemRoot());
+    }
+
+    protected function getFileSystemRoot(): string
+    {
+        return PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
     }
 
     public function getAdapter(): FilesystemAdapter
     {
-        return $this->adapter;
+        return $this->flysystemAdapter;
     }
 
     /**
@@ -174,5 +196,10 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     public function getNormalizer(): PathNormalizer
     {
         return $this->normalizer;
+    }
+
+    public function pathPrefix(string $packageComposerFile): string
+    {
+        return $this->pathPrefixer->prefixPath($packageComposerFile);
     }
 }
