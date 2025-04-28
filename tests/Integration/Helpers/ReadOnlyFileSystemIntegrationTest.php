@@ -34,6 +34,12 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $config = Mockery::mock(Config::class);
         $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC)->atLeast()->once();
+        /**
+         * `InMemoryFilesystemAdapter` v4 sets the timestamp from Config where available.
+         *
+         * https://github.com/thephpleague/flysystem-memory/blob/874b022ed7bd095765d1ebf187b750bb809176a9/InMemoryFilesystemAdapter.php#L58
+         */
+        $config->expects('get')->with('timestamp')->zeroOrMoreTimes()->andReturnNull();
 
         $sut->write($target, $contents, $config);
 
@@ -54,6 +60,12 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $config = Mockery::mock(Config::class);
         $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC)->atLeast()->once();
+        /**
+         * `InMemoryFilesystemAdapter` v4 sets the timestamp from Config where available.
+         *
+         * https://github.com/thephpleague/flysystem-memory/blob/874b022ed7bd095765d1ebf187b750bb809176a9/InMemoryFilesystemAdapter.php#L58
+         */
+        $config->expects('get')->with('timestamp')->zeroOrMoreTimes()->andReturnNull();
 
         $sut->write($source, 'source', $config);
 
@@ -135,6 +147,12 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $config = Mockery::mock(Config::class);
         $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC)->atLeast()->once();
+        /**
+         * `InMemoryFilesystemAdapter` v4 sets the timestamp from Config where available.
+         *
+         * https://github.com/thephpleague/flysystem-memory/blob/874b022ed7bd095765d1ebf187b750bb809176a9/InMemoryFilesystemAdapter.php#L58
+         */
+        $config->expects('get')->with('timestamp')->zeroOrMoreTimes()->andReturnNull();
 
         $file2Path = $this->testsWorkingDir . 'file2.php';
         // And a new file
