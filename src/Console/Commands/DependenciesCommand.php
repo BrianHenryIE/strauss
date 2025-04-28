@@ -135,16 +135,20 @@ class DependenciesCommand extends Command
             );
         }
 
+        $localFilesystemLocation = PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
+
         $localFilesystemAdapter = new LocalFilesystemAdapter(
-            '/',
+            $localFilesystemLocation,
             null,
             LOCK_EX,
             LocalFilesystemAdapter::SKIP_LINKS
         );
 
+        $pathPrefixer = new PathPrefixer($localFilesystemLocation);
+
         $symlinkProtectFilesystemAdapter = new \BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter(
             $localFilesystemAdapter,
-            new PathPrefixer('/'),
+            $pathPrefixer,
             null,
             $this->logger
         );
@@ -154,6 +158,8 @@ class DependenciesCommand extends Command
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
             ],
+            null,
+            $pathPrefixer
         );
     }
 
