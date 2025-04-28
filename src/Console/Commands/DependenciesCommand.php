@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -139,7 +140,7 @@ class DependenciesCommand extends Command
 
         $pathPrefixer = new PathPrefixer($localFilesystemLocation);
 
-        $symlinkProtectFilesystemAdapter = new \BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter(
+        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
             null,
             $pathPrefixer,
             $this->logger
@@ -311,6 +312,30 @@ class DependenciesCommand extends Command
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 
         // TODO: Print the dependency tree that Strauss has determined.
+
+        $symlinkedDependencies = array_filter($this->flatDependencyTree, fn ($dependency) => $dependency->getPackageAbsolutePath() !== $dependency->getRealPath());
+
+        if (!empty($symlinkedDependencies) &&
+            ($this->config->isDeleteVendorFiles() || ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()))
+        ) {
+            $list = implode(
+                ', ',
+                array_map(
+                    fn($dependency) => $dependency->getPackageName(),
+                    $symlinkedDependencies
+                )
+            );
+            $this->logger->error(
+                sprintf(
+                    'Symlinked package%s detected: %s',
+                    count($symlinkedDependencies) ? 's' : '',
+                    $list
+                )
+            );
+            // https://stackoverflow.com/a/65009324/336146
+            $this->logger->notice('Use `COMPOSER_MIRROR_PATH_REPOS=1 composer install` to copy symlinked packages to vendor directory.');
+            throw new Exception();
+        }
     }
 
     protected function enumerateFiles(): void
