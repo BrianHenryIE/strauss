@@ -180,7 +180,7 @@ class FileEnumerator
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
             ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
 
-        $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
+        $f->setAbsoluteTargetPath($this->config->getTargetDirectory() . $vendorRelativePath);
 
         $f->addAutoloader($autoloaderType);
         $f->setDoDelete(!$isOutsideProjectDir);
