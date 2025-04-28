@@ -8,10 +8,6 @@
  *
  * Read operations act normally, write operations log warnings and errors.
  *
- * TODO: Aside: Is it possible to "implement" an interface in PHP that just uses `__call` and the
- * class acts a proxy to another class, and only implements the couple of methods it
- * cares about?
- *
  * Outcome of trying to delete a file inside a symlink:
  * * logs an error (FlySystem FileSystemAdapter probably throws an exception)
  * * prevents future access to the file (as though it really were deleted)
@@ -25,10 +21,12 @@
  * * we must be careful to not delete the target of the symlink
  *
  * Outcome of read operation on symlinked files:
- * * Nothing. Extend this class and add info logs if required.
+ * * Debug log every time a symlinked file is read
  *
  * Outcome of write/modify operation on non-symlinked files:
- * * debug log
+ * * nothing
+ *
+ * Info log the first time each symlink is seen
  *
  * Your implementation of LoggerInterface can decide what to do with the log messages, e.g.
  * throw an exception on error, or just log them with an instruction on how to remedy the issue.
