@@ -34,7 +34,7 @@ class LicenserTest extends TestCase
         $dependencies = array();
 
         $dependency = $this->createStub(ComposerPackage::class);
-        $dependency->method('getVendorRelativePath')->willReturn('developer-name/project-name/');
+        $dependency->method('getVendorSubdir')->willReturn('developer-name/project-name/');
         $projectPath = __DIR__.'/vendor/developer-name/project-name/';
         $dependency->method('getPackageAbsolutePath')->willReturn($projectPath);
         $dependencies[] = $dependency;

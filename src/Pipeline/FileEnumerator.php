@@ -103,7 +103,7 @@ class FileEnumerator
 
                 if ('files' === $type) {
                     // TODO: This is not in use.
-                    $this->filesAutoloaders[$dependency->getVendorRelativePath()] = $value;
+                    $this->filesAutoloaders[$dependency->getVendorSubdir()] = $value;
                 }
 
                 foreach ($value as $namespace => $namespaceRelativePaths) {
