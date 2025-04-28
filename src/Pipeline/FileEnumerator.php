@@ -128,7 +128,7 @@ class FileEnumerator
                             $actualFileList = $fileList->toArray();
 
                             foreach ($actualFileList as $foundFile) {
-                                $sourceAbsoluteFilepath = '/'. $foundFile->path();
+                                $sourceAbsoluteFilepath = $foundFile->path();
                                 // No need to record the directory itself.
                                 if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)
                                     ||
