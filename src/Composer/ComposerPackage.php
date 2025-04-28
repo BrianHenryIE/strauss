@@ -203,7 +203,7 @@ class ComposerPackage
         return $this->license;
     }
 
-    public function setProjectDirectory(string $parentProjectVendorDirectory)
+    public function setProjectVendorDirectory(string $parentProjectVendorDirectory)
     {
         $this->packageAbsolutePath = $parentProjectVendorDirectory . $this->vendorRelativePath;
     }

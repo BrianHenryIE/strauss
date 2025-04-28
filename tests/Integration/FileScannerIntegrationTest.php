@@ -55,7 +55,7 @@ EOD;
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
             $package = ComposerPackage::fromFile($composerFile);
-            $package->setProjectDirectory($this->testsWorkingDir.'vendor/');
+            $package->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
             return $package;
         }, $projectComposerPackage->getRequiresNames());
 
