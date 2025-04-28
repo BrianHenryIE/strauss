@@ -149,7 +149,11 @@ class DependenciesEnumerator
                 $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
             }
 
-            $requiredComposerPackage->setProjectVendorDirectory($this->config->getVendorDirectory());
+            $requiredComposerPackage->setProjectVendorDirectory(
+                $this->filesystem->normalize(
+                    $this->config->getVendorDirectory()
+                )
+            );
 
             $this->logger->info('Analysing package ' . $requiredComposerPackage->getPackageName());
             $this->flatDependencyTree[$requiredComposerPackage->getPackageName()] = $requiredComposerPackage;

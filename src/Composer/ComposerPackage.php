@@ -212,11 +212,16 @@ class ComposerPackage
 
     public function setProjectVendorDirectory(string $parentProjectVendorDirectory)
     {
-        $this->packageAbsolutePath = $parentProjectVendorDirectory . $this->vendorSubdir;
+        $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorSubdir;
     }
 
     public function setRealpath(string $realpath)
     {
         $this->packageRealPath = $realpath;
+    }
+
+    public function getRealPath(): ?string
+    {
+        return $this->packageRealPath ?? $this->getPackageAbsolutePath();
     }
 }

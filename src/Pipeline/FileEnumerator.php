@@ -174,16 +174,7 @@ class FileEnumerator
             $sourceAbsoluteFilepath
         );
 
-//        $vendorRelativePath = substr(
-//            $sourceAbsoluteFilepath,
-//            strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
-//        );
-
-//        if ($vendorRelativePath === $sourceAbsoluteFilepath) {
-//            $vendorRelativePath = $dependency->getVendorRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
-//        }
-
-        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getVendorDirectory());
+        $isOutsideProjectDir = $dependency->getRealPath() === $dependency->getPackageAbsolutePath();
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
@@ -192,7 +183,7 @@ class FileEnumerator
         $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
 
         $f->addAutoloader($autoloaderType);
-        $f->setDoDelete($isOutsideProjectDir);
+        $f->setDoDelete(!$isOutsideProjectDir);
 
         foreach ($this->excludeFilePatterns as $excludePattern) {
             if (1 === preg_match($excludePattern, $vendorRelativePath)) {
