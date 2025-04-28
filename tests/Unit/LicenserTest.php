@@ -14,6 +14,7 @@ use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
 
 /**
@@ -34,7 +35,8 @@ class LicenserTest extends TestCase
 
         $dependency = $this->createStub(ComposerPackage::class);
         $dependency->method('getVendorRelativePath')->willReturn('developer-name/project-name/');
-        $dependency->method('getPackageAbsolutePath')->willReturn(__DIR__.'/vendor/developer-name/project-name/');
+        $projectPath = __DIR__.'/vendor/developer-name/project-name/';
+        $dependency->method('getPackageAbsolutePath')->willReturn($projectPath);
         $dependencies[] = $dependency;
 
         $filesystemMock = Mockery::mock(FileSystem::class);
@@ -50,6 +52,8 @@ class LicenserTest extends TestCase
         $directoryListingMock = Mockery::mock(DirectoryListing::class);
         $directoryListingMock->expects('getIterator')->andReturn($finderArrayIterator);
 
+        $normalizer = new WhitespacePathNormalizer();
+        $filesystemMock->expects('normalize')->andReturn($normalizer->normalizePath($projectPath));
         $filesystemMock->expects('listContents')->andReturn($directoryListingMock);
 
         $sut = new Licenser($config, $dependencies, 'BrianHenryIE', $filesystemMock);
