@@ -25,7 +25,7 @@
  * * we must be careful to not delete the target of the symlink
  *
  * Outcome of read operation on symlinked files:
- * * Nothing. Extend this class and add info logs if required. (TODO)
+ * * Nothing. Extend this class and add info logs if required.
  *
  * Outcome of write/modify operation on non-symlinked files:
  * * debug log
@@ -45,6 +45,7 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use League\Flysystem\Config;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\PathNormalizer;
@@ -63,18 +64,32 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
     protected PathNormalizer $normalizer;
 
     /**
+     * Converts flysystem relative paths to filesystem absolute paths.
+     */
+    protected PathPrefixer $pathPrefixer;
+
+    /**
      * Record of discovered symlink paths
      * * allows faster lookup in future
      * * provides list of symlinked paths for "did we encounter a symlink" checks
      *
-     * @var array<string, string> Array of flysystem relative paths : full filesystem paths.
+     * @var array<string, string> Array of flysystem relative paths : target path.
      */
     protected array $symlinkPaths = [];
 
     /**
-     * Converts flysystem relative paths to filesystem absolute paths.
+     * Record of non-symlinked paths to avoid running is_link repeatedly.
+     *
+     * I.e. no need to `/check/every/level/of/this/when` we partial path has been checked before.
      */
-    protected PathPrefixer $pathPrefixer;
+    protected array $nonSymlinkPaths = [];
+
+    /**
+     * Record of all files already checked.
+     *
+     * @var array<string, string|null> Array of flysystem relative paths : flysystem relative path to symlink, or null.
+     */
+    protected array $checkedCache = [];
 
     /**
      * TODO: If a symlinked file is "deleted", keep a record of it and prevent any future access to it.
@@ -111,39 +126,56 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
      */
     protected function getSymlink(string $path): ?string
     {
+        if (isset($this->checkedCache[$path])) {
+            return $this->checkedCache[$path];
+        }
+
         foreach ($this->symlinkPaths as $flysystemPath => $symlinkPath) {
             if (str_starts_with($path, $flysystemPath)) {
-                return $symlinkPath;
+                $target = $this->normalizer->normalizePath($symlinkPath . str_replace($flysystemPath, '', $path));
+                $this->checkedCache[$path] = $target;
+                return $target;
             }
         }
 
         $absolutePath = $this->pathPrefixer->prefixPath($path);
 
-        $parts = explode('/', $path);
+        $prefixParts = explode('/', $path);
+        $checkedPaths = [];
         do {
-            $partsPath = implode('/', $parts);
+            $partsPath = implode('/', $prefixParts);
             $absoluteParentDir = $this->pathPrefixer->prefixPath($partsPath);
-            if (is_link($absoluteParentDir)) {
-                $this->symlinkPaths[$partsPath] = $absoluteParentDir;
-                return $absoluteParentDir;
+            if (isset($this->nonSymlinkPaths[$partsPath])) {
+                return null;
             }
-            array_pop($parts);
-        } while (count($parts) > 0);
+            if (is_link($absoluteParentDir)) {
+                $this->recordSymlink($path, $absoluteParentDir);
+                $this->nonSymlinkPaths = array_merge($this->nonSymlinkPaths, $checkedPaths);
+                return $absoluteParentDir;
+            } else {
+                $checkedPaths[$partsPath] = $absoluteParentDir;
+            }
+            array_pop($prefixParts);
+        } while (count($prefixParts) > 0);
 
         $realpath = realpath($absolutePath);
 
         /**
          * If realpath() returns false, the file may be in an in-memory filesystem.
+         * Or maybe the file really does not exist.
          *
          * @see https://github.com/php/php-src/issues/12118
          */
-        if ($realpath === false) {
+        if ($realpath === false
+            || $absolutePath === $realpath) {
+            $this->nonSymlinkPaths = array_merge($this->nonSymlinkPaths, $checkedPaths);
+
+            $this->checkedCache[$path] = null;
+
             return null;
         }
 
-        if ($absolutePath === $realpath) {
-            return null;
-        }
+        $this->recordSymlink($path, $absolutePath);
 
         return $absolutePath;
     }
@@ -156,6 +188,30 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
         $path = $this->normalizer->normalizePath($path);
 
         return (bool) $this->getSymlink($path);
+    }
+
+    protected function recordSymlink(string $path, string $symlinkSource): void
+    {
+        $symlinkTarget = realpath($symlinkSource);
+        $symlinkSource = $this->normalizer->normalizePath($symlinkSource);
+        $symlinkTarget = $this->normalizer->normalizePath($symlinkTarget);
+
+        $fileTarget = $this->normalizer->normalizePath($symlinkTarget . str_replace($symlinkSource, '', $path));
+        $this->checkedCache[$path] = $fileTarget;
+
+        if (isset($this->symlinkPaths[$symlinkSource])) {
+            return;
+        }
+
+        $this->symlinkPaths[$symlinkSource] = $symlinkTarget;
+
+        $this->logger->info(
+            "New symlink found at {$symlinkSource} target {$symlinkTarget}.",
+            [
+                'source' => $symlinkSource,
+                'target' => $symlinkTarget,
+            ]
+        );
     }
 
     public function getSymlinks(): array
@@ -201,6 +257,14 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
     protected function isWindowsOS(): bool
     {
         return false !== strpos('WIN', constant('PHP_OS'));
+    }
+
+    /**
+     * @see FlysystemBackCompatTrait::directoryExists()
+     */
+    public function getNormalizer(): PathNormalizer
+    {
+        return $this->normalizer;
     }
 
     /**
@@ -446,11 +510,131 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
         );
     }
 
-    /**
-     * @see FlysystemBackCompatTrait::directoryExists()
-     */
-    public function getNormalizer(): PathNormalizer
+    public function fileExists(string $path): bool
     {
-        return $this->normalizer;
+        $path = $this->normalizer->normalizePath($path);
+        $symlink = $this->getSymlink($path);
+        if ($symlink) {
+            $this->logger->debug("FileExists symlinked file at {$path} to target {$symlink}", [
+                'source' => $path,
+                'target' => $symlink,
+                'method' => __METHOD__,
+                'args' => func_get_args()
+            ]);
+        }
+
+        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+    }
+
+    public function read(string $path): string
+    {
+        $path = $this->normalizer->normalizePath($path);
+        $symlink = $this->getSymlink($path);
+        if ($symlink) {
+            $this->logger->debug("Reading symlinked file at {$path} to target {$symlink}", [
+                'source' => $path,
+                'target' => $symlink,
+                'method' => __METHOD__,
+                'args' => func_get_args()
+            ]);
+        }
+
+        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+    }
+
+    public function readStream(string $path)
+    {
+        $path = $this->normalizer->normalizePath($path);
+        $symlink = $this->getSymlink($path);
+        if ($symlink) {
+            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+                'source' => $path,
+                'target' => $symlink,
+                'method' => __METHOD__,
+                'args' => func_get_args()
+            ]);
+        }
+
+        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+    }
+
+    public function visibility(string $path): FileAttributes
+    {
+        $path = $this->normalizer->normalizePath($path);
+        $symlink = $this->getSymlink($path);
+        if ($symlink) {
+            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+                'source' => $path,
+                'target' => $symlink,
+                'method' => __METHOD__,
+                'args' => func_get_args()
+            ]);
+        }
+
+        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+    }
+
+    public function mimeType(string $path): FileAttributes
+    {
+        $path = $this->normalizer->normalizePath($path);
+        $symlink = $this->getSymlink($path);
+        if ($symlink) {
+            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+                'source' => $path,
+                'target' => $symlink,
+                'method' => __METHOD__,
+                'args' => func_get_args()
+            ]);
+        }
+
+        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+    }
+
+    public function lastModified(string $path): FileAttributes
+    {
+        $path = $this->normalizer->normalizePath($path);
+        $symlink = $this->getSymlink($path);
+        if ($symlink) {
+            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+                'source' => $path,
+                'target' => $symlink,
+                'method' => __METHOD__,
+                'args' => func_get_args()
+            ]);
+        }
+
+        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+    }
+
+    public function fileSize(string $path): FileAttributes
+    {
+        $path = $this->normalizer->normalizePath($path);
+        $symlink = $this->getSymlink($path);
+        if ($symlink) {
+            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+                'source' => $path,
+                'target' => $symlink,
+                'method' => __METHOD__,
+                'args' => func_get_args()
+            ]);
+        }
+
+        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+    }
+
+    public function listContents(string $path, bool $deep): iterable
+    {
+        $path = $this->normalizer->normalizePath($path);
+        $symlink = $this->getSymlink($path);
+        if ($symlink) {
+            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+                'source' => $path,
+                'target' => $symlink,
+                'method' => __METHOD__,
+                'args' => func_get_args()
+            ]);
+        }
+
+        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
     }
 }

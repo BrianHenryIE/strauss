@@ -32,13 +32,13 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
         // aka /fakedir/file.txt
         symlink($this->testsWorkingDir . '/realdir', $this->testsWorkingDir . '/fakedir');
 
-        $rootFilesystem = new LocalFilesystemAdapter($this->testsWorkingDir);
+        $rootFilesystem = new LocalFilesystemAdapter('/');
 
         $this->logger = new ColorLogger();
 
         $sut = new SymlinkProtectFilesystemAdapter(
             $rootFilesystem,
-            new PathPrefixer($this->testsWorkingDir),
+            new PathPrefixer('/'),
             null,
             $this->logger
         );
@@ -63,7 +63,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_delete_symlinked_directory(): void
     {
-        $this->filesystem->deleteDirectory('fakedir');
+        $this->filesystem->deleteDirectory($this->testsWorkingDir . 'fakedir');
 
         $this->assertTrue($this->logger->hasNoticeRecords());
 
@@ -77,7 +77,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_delete_directory_in_symlinked_directory(): void
     {
-        $this->filesystem->deleteDirectory('fakedir/subdir');
+        $this->filesystem->deleteDirectory($this->testsWorkingDir . 'fakedir/subdir');
 
         $this->assertTrue($this->logger->hasErrorRecords());
 
@@ -92,7 +92,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_delete_file_in_symlinked_directory(): void
     {
-        $this->filesystem->delete('fakedir/file.txt');
+        $this->filesystem->delete($this->testsWorkingDir . 'fakedir/file.txt');
 
         $this->assertTrue($this->logger->hasErrorRecords());
 
@@ -108,7 +108,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_write_file_in_symlinked_directory(): void
     {
-        $this->filesystem->write('fakedir/file2.txt', 'test');
+        $this->filesystem->write($this->testsWorkingDir . 'fakedir/file2.txt', 'test');
 
         $this->assertTrue($this->logger->hasWarningRecords());
 
