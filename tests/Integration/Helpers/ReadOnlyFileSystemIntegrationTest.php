@@ -204,6 +204,12 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $config = Mockery::mock(Config::class);
         $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC);
+        /**
+         * `InMemoryFilesystemAdapter` v4 sets the timestamp from Config where available.
+         *
+         * https://github.com/thephpleague/flysystem-memory/blob/874b022ed7bd095765d1ebf187b750bb809176a9/InMemoryFilesystemAdapter.php#L58
+         */
+        $config->expects('get')->with('timestamp')->zeroOrMoreTimes()->andReturnNull();
 
         $sut->createDirectory($newDir, $config);
 
