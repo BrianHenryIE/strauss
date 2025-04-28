@@ -335,8 +335,8 @@ EOD;
                     // Does it matter since all references to use the constant should have been updated to the new name anyway.
                     // TODO: global `const`.
                     $aliasesPhpString = <<<EOD
-        if(!defined('$originalSymbol') && defined('$replacementSymbol')) { 
-            define('$originalSymbol', $replacementSymbol); 
+        if(!defined('$originalSymbol') && defined('$replacementSymbol')) {
+            define('$originalSymbol', $replacementSymbol);
         }
         EOD;
                     break;
