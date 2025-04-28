@@ -85,6 +85,13 @@ class DependenciesEnumerator
     {
         $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
 
+        $installedJsonPath = sprintf("%scomposer/installed.json", $this->config->getVendorDirectory());
+        $installedJson = json_decode($this->filesystem->read($installedJsonPath), true);
+        $installedJsonPackages = [];
+        foreach ($installedJson['packages'] as $package) {
+            $installedJsonPackages[$package['name']] = $package;
+        }
+
         foreach ($requiredPackageNames as $requiredPackageName) {
             // Avoid infinite recursion.
             if (isset($this->flatDependencyTree[$requiredPackageName])) {
@@ -149,6 +156,16 @@ class DependenciesEnumerator
                 $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
             }
 
+            $installedPackage = $installedJsonPackages[$requiredPackageName];
+            if (isset($installedPackage['dist'], $installedPackage['dist']['type']) && $installedPackage['dist']['type'] === 'path') {
+                $path = $installedPackage['dist']['url'];
+
+                $packageRealPath = $this->filesystem->normalize($this->config->getProjectDirectory() . $path);
+                $requiredComposerPackage->setRealpath(
+                    $packageRealPath
+                );
+            }
+            unset($installedPackage);
             $requiredComposerPackage->setProjectVendorDirectory(
                 $this->filesystem->normalize(
                     $this->config->getVendorDirectory()
