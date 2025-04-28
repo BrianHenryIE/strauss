@@ -18,7 +18,7 @@ trait FlysystemBackCompatTrait
          * Use `self::class` here to check the parent of the current class, not necessarily the parent of the class
          * which was called.
          */
-        if (method_exists(get_parent_class(self::class), 'directoryExists')) {
+        if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'directoryExists')) {
              return parent::directoryExists($location);
         }
 
@@ -40,7 +40,7 @@ trait FlysystemBackCompatTrait
     // has
     public function has(string $location): bool
     {
-        if (method_exists(get_parent_class(self::class), 'has')) {
+        if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'has')) {
             return parent::has($location);
         }
         return $this->fileExists($location) || $this->directoryExists($location);
