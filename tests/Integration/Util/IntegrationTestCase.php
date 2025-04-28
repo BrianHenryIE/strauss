@@ -12,7 +12,10 @@ use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\PathNormalizer;
+use League\Flysystem\WhitespacePathNormalizer;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -29,9 +32,13 @@ class IntegrationTestCase extends TestCase
 
     protected $testsWorkingDir;
 
+    protected PathNormalizer $pathNormalizer;
+
     public function setUp(): void
     {
         parent::setUp();
+
+        $this->pathNormalizer = new StripProtocolPathNormalizer(['mem'], new WhitespacePathNormalizer());
 
         $this->projectDir = getcwd();
 

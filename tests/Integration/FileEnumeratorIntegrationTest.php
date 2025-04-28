@@ -57,7 +57,7 @@ EOD;
         $vendorDir = 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getVendorDirectory')->willReturn($vendorDir);
+        $config->method('getVendorDirectory')->willReturn($workingDir . $vendorDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,
@@ -68,6 +68,6 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $this->assertNotNull($files->getFile($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php'));
+        $this->assertNotNull($files->getFile($this->pathNormalizer->normalizePath($workingDir . 'vendor/google/apiclient/src/aliases.php')));
     }
 }

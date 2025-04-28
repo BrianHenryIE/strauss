@@ -112,7 +112,7 @@ class InstalledJson
             if (!$this->filesystem->directoryExists($packageDir)) {
                 $this->logger->debug('Original package directory does not exist at : ' . $packageDir);
 
-                $newInstallPath = $this->config->getTargetDirectory() . str_replace('../', '', $package['install-path']);
+                $newInstallPath = $this->filesystem->normalize($this->config->getTargetDirectory() . '/composer/' .$package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
                     $this->logger->warning('Target package directory unexpectedly DOES NOT exist: ' . $newInstallPath);

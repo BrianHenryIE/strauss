@@ -81,7 +81,7 @@ class Aliases
 
         $vendorClassmap = ClassMapGenerator::createMap($paths);
 
-        $vendorClassmap = array_map(fn($path) => str_replace('mem://', '', $path), $vendorClassmap);
+        $vendorClassmap = array_map(fn($path) => $this->fileSystem->normalize($path), $vendorClassmap);
 
         return $vendorClassmap;
     }
@@ -109,7 +109,7 @@ class Aliases
         // To make it easier when viewing in xdebug.
         uksort($classMap, new NamespaceSort());
 
-        $classMap = array_map(fn($path) => str_replace('mem://', '', $path), $classMap);
+        $classMap = array_map(fn($path) => $this->fileSystem->normalize($path), $classMap);
 
         return $classMap;
     }
@@ -205,7 +205,7 @@ class Aliases
 
                     $namespacesInOriginalClassmap = array_filter(
                         $sourceDirClassmap,
-                        fn($filepath) => in_array($filepath, array_keys($symbolSourceFiles))
+                        fn($filepath) => array_key_exists($this->fileSystem->normalize($filepath), $symbolSourceFiles)
                     );
 
                     foreach ($namespacesInOriginalClassmap as $originalFqdnClassName => $absoluteFilePath) {

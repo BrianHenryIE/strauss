@@ -53,8 +53,8 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         $files = $fs->findAllFilesAbsolutePaths([ $dir ]);
 
-        $this->assertContains($file1, $files);
-        $this->assertContains($file2, $files);
-        $this->assertContains($file3, $files);
+        $this->assertContains($this->pathNormalizer->normalizePath($file1), $files);
+        $this->assertContains($this->pathNormalizer->normalizePath($file2), $files);
+        $this->assertContains($this->pathNormalizer->normalizePath($file3), $files);
     }
 }
