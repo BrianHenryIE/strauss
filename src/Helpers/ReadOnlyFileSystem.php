@@ -40,6 +40,11 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         $this->pathNormalizer = $pathNormalizer ?? new WhitespacePathNormalizer();
     }
 
+    public function getAdapter(): FilesystemAdapter
+    {
+        return $this->parentFilesystemAdapter;
+    }
+
     public function fileExists(string $path): bool
     {
         if ($this->deletedFiles->fileExists($path)) {
