@@ -112,17 +112,20 @@ class ComposerPackage
 
         $this->packageName = $composer->getPackage()->getName();
 
+        $packageVendorDir = $this->composer->getConfig()->get('vendor-dir');
+        preg_match('/(.*vendor)/U', $packageVendorDir, $projectVendorDirRegex);
+        $projectVendorDir = $projectVendorDirRegex[1];
+
         $composerJsonFileAbsolute = $composer->getConfig()->getConfigSource()->getName();
 
         $absolutePath = dirname($composerJsonFileAbsolute);
 
-        // TODO: This is wrong, it is always giving /path/to/project/vendor/package/package/vendor
-        $vendorDirectory = $this->composer->getConfig()->get('vendor-dir');
+        $this->packageAbsolutePath = $absolutePath . '/';
 
-        if (file_exists($vendorDirectory . '/' . $this->packageName)) {
+        if (file_exists($projectVendorDir . '/' . $this->packageName)) {
             $this->vendorSubdir = $this->packageName;
         // If the package is symlinked, the path will be outside the working directory.
-        } elseif (0 !== strpos($absolutePath, getcwd()) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorDirectory, $output_array)) {
+        } elseif (0 !== strpos($absolutePath, getcwd()) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $projectVendorDir, $output_array)) {
             $this->vendorSubdir = $output_array[1];
         } elseif (1 === preg_match('/.*[\/\\\\]([^\/\\\\]+[\/\\\\][^\/\\\\]+)[\/\\\\]composer.json/', $composerJsonFileAbsolute, $output_array)) {
         // Not every package gets installed to a folder matching its name (crewlabs/unsplash).
@@ -169,9 +172,7 @@ class ComposerPackage
 
     public function getPackageAbsolutePath(): ?string
     {
-        return is_null($this->packageAbsolutePath)
-               ? null
-            : $this->packageAbsolutePath . '/';
+        return $this->packageAbsolutePath;
     }
 
     /**
@@ -212,7 +213,7 @@ class ComposerPackage
 
     public function setProjectVendorDirectory(string $parentProjectVendorDirectory)
     {
-        $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorSubdir;
+        $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorSubdir . '/';
     }
 
     public function setRealpath(string $realpath)

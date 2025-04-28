@@ -174,7 +174,8 @@ class FileEnumerator
             $sourceAbsoluteFilepath
         );
 
-        $isOutsideProjectDir = $dependency->getRealPath() === $dependency->getPackageAbsolutePath();
+        $isOutsideProjectDir = $this->filesystem->normalize($dependency->getRealPath())
+                               !== $this->filesystem->normalize($dependency->getPackageAbsolutePath());
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
