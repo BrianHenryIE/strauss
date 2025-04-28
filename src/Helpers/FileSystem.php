@@ -84,9 +84,9 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
             /** @var FileAttributes[] $files */
             $fileAttributesArray = $directoryListing->toArray();
 
-            $f = array_map(fn($file) => '/'.$file->path(), $fileAttributesArray);
+            $paths = array_map(fn($file) => $file->path(), $fileAttributesArray);
 
-            $files = array_merge($files, $f);
+            $files = array_merge($files, $paths);
         }
 
         return $files;
