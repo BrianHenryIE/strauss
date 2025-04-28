@@ -37,8 +37,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
         $this->logger = new ColorLogger();
 
         $sut = new SymlinkProtectFilesystemAdapter(
-            $rootFilesystem,
-            new PathPrefixer('/'),
+            null,
             null,
             $this->logger
         );

@@ -48,16 +48,18 @@ use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\PathPrefixer;
+use League\Flysystem\UnixVisibility\VisibilityConverter;
 use League\Flysystem\WhitespacePathNormalizer;
+use League\MimeTypeDetection\MimeTypeDetector;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBackCompatTraitInterface
+class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements FlysystemBackCompatTraitInterface
 {
-    use ProxyFlysystemAdapterTrait;
     use FlysystemBackCompatTrait;
     use LoggerAwareTrait;
 
@@ -99,16 +101,21 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
     protected array $deletedPaths = [];
 
     public function __construct(
-        FilesystemAdapter $parentFilesystem,
-        PathPrefixer $pathPrefixer,
         PathNormalizer $pathNormalizer = null,
-        LoggerInterface $logger = null
+        PathPrefixer $pathPrefixer = null,
+        LoggerInterface $logger = null,
+        VisibilityConverter $visibility = null,
+        int $writeFlags = LOCK_EX,
+        int $linkHandling = LocalFilesystemAdapter::SKIP_LINKS,
+        MimeTypeDetector $mimeTypeDetector = null
     ) {
+        $location = $this->isWindowsOS() ? substr(getcwd(), 0, 3) : '/';
+
+        parent::__construct($location, $visibility, $writeFlags, $linkHandling, $mimeTypeDetector);
+
         $this->setLogger($logger ?? new NullLogger());
 
-        $this->setProxyFilesystemAdapter($parentFilesystem);
-
-        $this->pathPrefixer = $pathPrefixer;
+        $this->pathPrefixer = $pathPrefixer ?? new PathPrefixer($location, DIRECTORY_SEPARATOR);
         $this->normalizer = $pathNormalizer ?? new WhitespacePathNormalizer();
     }
 
@@ -241,9 +248,9 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
             unlink($fullPath);
         }
 
-        return !method_exists($this->proxyFilesystemAdapter, 'directoryExists')
-            ? !$this->proxyFilesystemAdapter->fileExists($path)
-            : !$this->proxyFilesystemAdapter->fileExists($path) && !$this->proxyFilesystemAdapter->directoryExists($path);
+        return !method_exists($this, 'directoryExists')
+            ? !$this->fileExists($path)
+            : !$this->fileExists($path) && !$this->directoryExists($path);
     }
 
 
@@ -281,7 +288,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
                 'method' => __METHOD__,
                 'args' => func_get_args()
             ]);
-            call_user_func_array([$this->proxyFilesystemAdapter,__FUNCTION__], func_get_args());
+            parent::write($path, $contents, $config);
             return;
         }
 
@@ -309,7 +316,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
                 'method' => __METHOD__,
                 'args' => func_get_args()
             ]);
-            call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+            parent::writeStream($path, $contents, $config);
             return;
         }
 
@@ -334,7 +341,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
                 'method' => __METHOD__,
                 'args' => func_get_args()
             ]);
-            call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+            parent::setVisibility($path, $visibility);
             return;
         }
 
@@ -359,7 +366,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
                 'method' => __METHOD__,
                 'args' => func_get_args()
             ]);
-            call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+            parent::delete($path);
             return;
         }
 
@@ -401,7 +408,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
                 'method' => __METHOD__,
                 'args' => func_get_args()
             ]);
-            call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+            parent::deleteDirectory($path);
             return;
         }
 
@@ -443,7 +450,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
                 'method' => __METHOD__,
                 'args' => func_get_args()
             ]);
-            call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+            parent::createDirectory($path, $config);
             return;
         }
 
@@ -470,7 +477,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
                 'method' => __METHOD__,
                 'args' => func_get_args()
             ]);
-            call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+            parent::move($source, $destination, $config);
             return;
         }
 
@@ -496,7 +503,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
                 'method' => __METHOD__,
                 'args' => func_get_args()
             ]);
-            call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+            parent::copy($source, $destination, $config);
             return;
         }
 
@@ -523,7 +530,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
             ]);
         }
 
-        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+        return parent::fileExists($path);
     }
 
     public function read(string $path): string
@@ -539,7 +546,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
             ]);
         }
 
-        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+        return parent::read($path);
     }
 
     public function readStream(string $path)
@@ -555,7 +562,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
             ]);
         }
 
-        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+        return parent::readStream($path);
     }
 
     public function visibility(string $path): FileAttributes
@@ -571,7 +578,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
             ]);
         }
 
-        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+        return parent::visibility($path);
     }
 
     public function mimeType(string $path): FileAttributes
@@ -587,7 +594,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
             ]);
         }
 
-        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+        return parent::mimeType($path);
     }
 
     public function lastModified(string $path): FileAttributes
@@ -603,7 +610,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
             ]);
         }
 
-        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+        return parent::lastModified($path);
     }
 
     public function fileSize(string $path): FileAttributes
@@ -619,7 +626,7 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
             ]);
         }
 
-        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+        return parent::fileSize($path);
     }
 
     public function listContents(string $path, bool $deep): iterable
@@ -635,6 +642,6 @@ class SymlinkProtectFilesystemAdapter implements FilesystemAdapter, FlysystemBac
             ]);
         }
 
-        return call_user_func_array([$this->proxyFilesystemAdapter, __FUNCTION__], func_get_args());
+        return parent::listContents($path, $deep);
     }
 }
