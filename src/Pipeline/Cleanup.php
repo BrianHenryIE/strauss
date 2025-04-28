@@ -137,7 +137,7 @@ class Cleanup
 
             foreach ($allFilePaths as $filePath) {
                 if ($this->filesystem->directoryExists($filePath)
-                    && $this->dirIsEmpty($filePath)
+                    && $this->filesystem->dirIsEmpty($filePath)
                 ) {
                     $this->logger->debug('Deleting empty directory ' . $filePath);
                     $this->filesystem->deleteDirectory($filePath);
@@ -172,35 +172,11 @@ class Cleanup
         /** @var ComposerPackage $package */
         foreach ($packages as $package) {
             // Normal package.
-            if ($this->filesystem->isSubDirOf($this->config->getVendorDirectory(), $package->getPackageAbsolutePath())) {
-                $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
+            $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
-                $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
-            } else {
-                // TODO: log _where_ the symlink is pointing to.
-                $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
+            $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
 
-                // If it's a symlink, remove the symlink in the directory
-                $symlinkPath =
-                    rtrim(
-                        $this->config->getVendorDirectory() . $package->getRelativePath(),
-                        '/'
-                    );
-
-                if (false !== strpos('WIN', PHP_OS)) {
-                    /**
-                     * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
-                     * "On windows, take care that `is_link()` returns false for Junctions."
-                     *
-                     * @see https://www.php.net/manual/en/function.is-link.php#113263
-                     * @see https://stackoverflow.com/a/18262809/336146
-                     */
-                    rmdir($symlinkPath);
-                } else {
-                    unlink($symlinkPath);
-                }
-            }
-            if ($this->dirIsEmpty(dirname($package->getPackageAbsolutePath()))) {
+            if ($this->filesystem->dirIsEmpty(dirname($package->getPackageAbsolutePath()))) {
                 $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));
                 $this->filesystem->deleteDirectory(dirname($package->getPackageAbsolutePath()));
             }
@@ -208,7 +184,7 @@ class Cleanup
     }
 
     /**
-     * @param array $files
+     * @param array<string, File> $files
      *
      * @throws FilesystemException
      */
@@ -216,13 +192,13 @@ class Cleanup
     {
         $this->logger->info('Deleting original vendor files.');
 
-        foreach ($files as $file) {
+        foreach ($files as $path => $file) {
             if (! $file->isDoDelete()) {
                 $this->logger->debug('Skipping/preserving ' . $file->getSourcePath());
                 continue;
             }
 
-            $sourceRelativePath = $file->getSourcePath();
+            $sourceRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $path);
 
             $this->logger->info('Deleting ' . $sourceRelativePath);
 

@@ -28,6 +28,7 @@ use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
@@ -141,12 +142,18 @@ class DependenciesCommand extends Command
             LocalFilesystemAdapter::SKIP_LINKS
         );
 
-        $this->filesystem = new Filesystem(
+        $symlinkProtectFilesystemAdapter = new \BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter(
             $localFilesystemAdapter,
+            new PathPrefixer('/'),
+            null,
+            $this->logger
+        );
+
+        $this->filesystem = new Filesystem(
+            $symlinkProtectFilesystemAdapter,
             [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ],
-            //            getcwd() . '/'
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
         );
     }
 

@@ -3,8 +3,6 @@
  * This class extends Flysystem's Filesystem class to add some additional functionality, particularly around
  * symlinks which are not supported by Flysystem.
  *
- * TODO: Delete and modify operations on files in symlinked directories should fail with a warning.
- *
  * @see https://github.com/thephpleague/flysystem/issues/599
  */
 
@@ -149,7 +147,6 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         return $relativePath;
     }
 
-
     /**
      * Does the subdir path start with the dir path?
      */
@@ -166,21 +163,22 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         return $this->normalizer->normalizePath($path);
     }
 
-
     /**
-     * Check does the filepath point to a file outside the working directory.
-     * If `realpath()` fails to resolve the path, assume it's a symlink.
+     * Check is a file under a symlinked path.
      */
     public function isSymlinkedFile(FileBase $file): bool
     {
-        $realpath = realpath('/'.$file->getSourcePath());
+        $adapter = $this->flysystemAdapter;
 
-        // If realpath fails, it's probably an in-memory file.
-        if (!$realpath) {
-            return false;
+        if ($adapter instanceof ReadOnlyFileSystem) {
+            $adapter = $adapter->getAdapter();
         }
 
-        return $file->getSourcePath() !== $realpath;
+        if ($adapter instanceof SymlinkProtectFilesystemAdapter) {
+            return $adapter->isSymlinked($file->getSourcePath());
+        }
+
+        throw new \Exception('Cannot determine symbolic link for files');
     }
 
 
