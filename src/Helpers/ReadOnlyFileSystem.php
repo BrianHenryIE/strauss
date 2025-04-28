@@ -20,7 +20,7 @@ use League\Flysystem\UnableToRetrieveMetadata;
 use League\Flysystem\WhitespacePathNormalizer;
 use Traversable;
 
-class ReadOnlyFileSystem implements FilesystemAdapter
+class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitInterface
 {
     use FlysystemBackCompatTrait;
 
@@ -292,5 +292,13 @@ class ReadOnlyFileSystem implements FilesystemAdapter
         }
 
         return false;
+    }
+
+    /**
+     * @see FlysystemBackCompatTrait::directoryExists()
+     */
+    public function getNormalizer(): PathNormalizer
+    {
+        return $this->pathNormalizer;
     }
 }

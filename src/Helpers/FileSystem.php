@@ -18,7 +18,7 @@ use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\WhitespacePathNormalizer;
 
-class FileSystem extends \League\Flysystem\Filesystem
+class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCompatTraitInterface
 {
     use FlysystemBackCompatTrait;
 
@@ -166,5 +166,13 @@ class FileSystem extends \League\Flysystem\Filesystem
     {
         // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
         return empty($this->listContents($dir)->toArray());
+    }
+
+    /**
+     * @see FlysystemBackCompatTrait::directoryExists()
+     */
+    public function getNormalizer(): PathNormalizer
+    {
+        return $this->normalizer;
     }
 }

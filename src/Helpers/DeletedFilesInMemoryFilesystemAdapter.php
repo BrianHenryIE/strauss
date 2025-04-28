@@ -7,5 +7,4 @@ namespace BrianHenryIE\Strauss\Helpers;
 
 class DeletedFilesInMemoryFilesystemAdapter extends InMemoryFilesystemAdapter
 {
-    use FlysystemBackCompatTrait;
 }
