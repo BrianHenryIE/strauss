@@ -108,4 +108,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         Mockery::close();
     }
+
+    protected function assertEqualsPaths(string $expected, string $actual, string $message = ''): void
+    {
+        self::assertEquals(
+            $this->pathNormalizer->normalizePath($expected),
+            $this->pathNormalizer->normalizePath($actual),
+            $message
+        );
+    }
 }
