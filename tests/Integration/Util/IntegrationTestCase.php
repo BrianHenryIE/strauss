@@ -12,10 +12,8 @@ use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
-use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\PathNormalizer;
-use League\Flysystem\WhitespacePathNormalizer;
+use Mockery;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -30,34 +28,18 @@ class IntegrationTestCase extends TestCase
 {
     protected string $projectDir;
 
-    protected $testsWorkingDir;
-
-    protected PathNormalizer $pathNormalizer;
-
     public function setUp(): void
     {
         parent::setUp();
 
-        $this->pathNormalizer = new StripProtocolPathNormalizer(['mem'], new WhitespacePathNormalizer());
-
         $this->projectDir = getcwd();
-
-        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
-
-        if ('Darwin' === PHP_OS) {
-            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
-        }
-
-        if (file_exists($this->testsWorkingDir)) {
-            $this->deleteDir($this->testsWorkingDir);
-        }
-
-        @mkdir($this->testsWorkingDir);
 
         if (file_exists($this->projectDir . '/strauss.phar')) {
             echo "strauss.phar found\n";
             ob_flush();
         }
+
+        $this->createWorkingDir();
     }
 
     protected function runStrauss(?string &$allOutput = null, string $params = ''): int

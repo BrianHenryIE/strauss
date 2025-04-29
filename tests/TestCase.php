@@ -12,6 +12,23 @@ use Mockery;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
+    protected string $testsWorkingDir;
+
+    protected function createWorkingDir(): void
+    {
+
+        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
+        if ('Darwin' === PHP_OS) {
+            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
+        }
+
+        if (file_exists($this->testsWorkingDir)) {
+            $this->deleteDir($this->testsWorkingDir);
+        }
+
+        @mkdir($this->testsWorkingDir);
+    }
+
     public static function assertEqualsRN($expected, $actual, string $message = ''): void
     {
         if (is_string($expected) && is_string($actual)) {
