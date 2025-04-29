@@ -104,6 +104,7 @@ class IncludeAutoloaderCommand extends Command
     protected function createConfig(InputInterface $input): StraussConfig
     {
         $config = new StraussConfig();
+        $config->setProjectDirectory(getcwd());
         return $config;
     }
 }
