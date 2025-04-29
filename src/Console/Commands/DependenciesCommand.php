@@ -29,7 +29,7 @@ use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\PathPrefixer;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
@@ -212,13 +212,16 @@ class DependenciesCommand extends Command
                 $normalizer = new WhitespacePathNormalizer();
                 $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
 
+                $pathPrefixer = new PathPrefixer('mem://','/');
+
                 $this->filesystem =
                     new FileSystem(
                         new ReadOnlyFileSystem(
                             $this->filesystem->getAdapter(),
                         ),
                         [],
-                        $normalizer
+                        $normalizer,
+                        $pathPrefixer
                     );
 
                 /** @var FilesystemRegistry $registry */

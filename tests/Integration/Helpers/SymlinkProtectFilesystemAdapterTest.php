@@ -8,7 +8,7 @@ namespace BrianHenryIE\Strauss\Helpers;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\PathPrefixer;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use Psr\Log\Test\TestLogger;
 use League\Flysystem\Filesystem as FlysystemFilesystem;
 

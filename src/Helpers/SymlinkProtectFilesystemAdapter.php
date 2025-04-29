@@ -48,7 +48,7 @@ use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
-use League\Flysystem\PathPrefixer;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\UnixVisibility\VisibilityConverter;
 use League\Flysystem\WhitespacePathNormalizer;
 use League\MimeTypeDetection\MimeTypeDetector;

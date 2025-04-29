@@ -13,7 +13,7 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
-use League\Flysystem\PathPrefixer;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\WhitespacePathNormalizer;
 
