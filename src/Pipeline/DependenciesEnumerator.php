@@ -109,7 +109,7 @@ class DependenciesEnumerator
 
             if ($this->filesystem->fileExists($packageComposerFile)) {
                 $requiredComposerPackage = ComposerPackage::fromFile(
-                    $this->filesystem->pathPrefix($packageComposerFile),
+                    $this->filesystem->prefixPath($packageComposerFile),
                     $overrideAutoload
                 );
             } else {

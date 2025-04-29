@@ -196,7 +196,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         return $this->normalizer;
     }
 
-    public function pathPrefix(string $packageComposerFile): string
+    public function prefixPath(string $packageComposerFile): string
     {
         return $this->pathPrefixer->prefixPath($packageComposerFile);
     }
