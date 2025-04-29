@@ -8,6 +8,7 @@ use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
 
@@ -74,12 +75,15 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $normalizer = new WhitespacePathNormalizer();
         $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
 
+        $pathPrefixer = new PathPrefixer('mem://','/');
+
         $filesystem = new Filesystem(
             $inMemoryFilesystem,
             [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ],
-            $normalizer
+            $normalizer,
+            $pathPrefixer
         );
 
         /** @var FilesystemRegistry $registry */
