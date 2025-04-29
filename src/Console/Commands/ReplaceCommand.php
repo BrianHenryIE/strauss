@@ -138,6 +138,7 @@ class ReplaceCommand extends Command
     protected function createConfig(InputInterface $input): ReplaceConfigInterface
     {
         $config = new StraussConfig();
+        $config->setProjectDirectory(getcwd());
 
         $from = $input->getOption('from');
         $to = $input->getOption('to');
