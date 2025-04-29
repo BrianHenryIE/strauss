@@ -250,20 +250,19 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
     {
         $path = $this->pathNormalizer->normalizePath($path);
 
-        if (!$this->fileExists($path) && !$this->directoryExists($path)) {
+        if (!$this->has($path)) {
             throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
         }
 
         if ($this->deletedFiles->has($path)) {
             throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
         }
+
         if ($this->inMemoryFiles->has($path)) {
             return $this->inMemoryFiles->visibility($path);
         }
-        if ($this->parentFilesystemAdapter->fileExists($path)) {
-            return $this->parentFilesystemAdapter->visibility($path);
-        }
-        throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
+
+        return $this->parentFilesystemAdapter->visibility($path);
     }
 
     public function directoryExists(string $path): bool
