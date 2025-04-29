@@ -74,11 +74,14 @@ class InstalledJson
      */
     protected function getJsonFile(string $vendorDir): JsonFile
     {
-        $installedJsonFile = new JsonFile(
+        $installedJsonFilePath = $this->filesystem->prefixPath(
             sprintf(
                 '%scomposer/installed.json',
                 $vendorDir
             )
+        );
+        $installedJsonFile = new JsonFile(
+            $installedJsonFilePath
         );
         if (!$installedJsonFile->exists()) {
             $this->logger->error('Expected vendor/composer/installed.json does not exist.');
