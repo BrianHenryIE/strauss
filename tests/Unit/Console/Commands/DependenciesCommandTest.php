@@ -13,6 +13,12 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
 class DependenciesCommandTest extends TestCase
 {
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->createWorkingDir();
+    }
+
     /**
      * When composer.json is absent, instead of failing with:
      * "failed to open stream: No such file or directory"
@@ -58,9 +64,8 @@ class DependenciesCommandTest extends TestCase
 
         $badComposerJson = '{ "name": "coenjacobs/mozart", }';
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
-        chdir(dirname($tmpfname));
+        file_put_contents($this->testsWorkingDir . 'composer.json', $badComposerJson);
+        chdir($this->testsWorkingDir);
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(ConsoleOutputInterface::class);
@@ -98,9 +103,8 @@ class DependenciesCommandTest extends TestCase
 
         $badComposerJson = '{ }';
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
-        chdir(dirname($tmpfname));
+        file_put_contents($this->testsWorkingDir . 'composer.json', $badComposerJson);
+        chdir($this->testsWorkingDir);
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(ConsoleOutputInterface::class);
@@ -137,9 +141,8 @@ class DependenciesCommandTest extends TestCase
 
         $badComposerJson = '{ "name": "coenjacobs/mozart", "extra": [] }';
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
-        chdir(dirname($tmpfname));
+        file_put_contents($this->testsWorkingDir . '/composer.json', $badComposerJson);
+        chdir($this->testsWorkingDir);
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(ConsoleOutputInterface::class);
@@ -176,9 +179,8 @@ class DependenciesCommandTest extends TestCase
 
         $badComposerJson = '{ "name": "coenjacobs/mozart", "extra": { "moozart": {} } }';
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
-        chdir(dirname($tmpfname));
+        file_put_contents($this->testsWorkingDir . 'composer.json', $badComposerJson);
+        chdir($this->testsWorkingDir);
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(ConsoleOutputInterface::class);
@@ -217,9 +219,8 @@ class DependenciesCommandTest extends TestCase
 
         $badComposerJson = '{ "name": "coenjacobs/mozart", "extra": { "mozart": []  }';
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
-        chdir(dirname($tmpfname));
+        file_put_contents($this->testsWorkingDir . 'composer.json', $badComposerJson);
+        chdir($this->testsWorkingDir);
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(ConsoleOutputInterface::class);
