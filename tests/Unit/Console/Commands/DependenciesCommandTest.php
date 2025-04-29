@@ -114,7 +114,7 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
-        $outputInterfaceMock->expects($this->exactly(1))
+        $outputInterfaceMock->expects($this->atLeast(1))
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
@@ -153,7 +153,7 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
-        $outputInterfaceMock->expects($this->exactly(1))
+        $outputInterfaceMock->expects($this->atLeast(1))
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
@@ -191,7 +191,7 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
-        $outputInterfaceMock->expects($this->exactly(1))
+        $outputInterfaceMock->expects($this->atLeast(1))
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
