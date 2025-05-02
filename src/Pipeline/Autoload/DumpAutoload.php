@@ -26,6 +26,8 @@ class DumpAutoload
     protected AutoloadConfigInterface $config;
 
     protected FileSystem $filesystem;
+    private Prefixer $projectReplace;
+    private FileEnumerator $fileEnumerator;
 
     public function __construct(
         AutoloadConfigInterface $config,
@@ -35,6 +37,17 @@ class DumpAutoload
         $this->config = $config;
         $this->filesystem = $filesystem;
         $this->setLogger($logger ?? new NullLogger());
+
+        $this->projectReplace = new Prefixer(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+
+        $this->fileEnumerator = new FileEnumerator(
+            $this->config,
+            $this->filesystem
+        );
     }
 
     /**
@@ -133,18 +146,7 @@ class DumpAutoload
     {
         $this->logger->debug('Prefixing the new Composer autoloader.');
 
-        $projectReplace = new Prefixer(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-
-        $fileEnumerator = new FileEnumerator(
-            $this->config,
-            $this->filesystem
-        );
-
-        $phpFiles = $fileEnumerator->compileFileListForPaths([
+        $phpFiles = $this->fileEnumerator->compileFileListForPaths([
             $this->config->getTargetDirectory() . 'composer',
         ]);
 
@@ -167,7 +169,7 @@ class DumpAutoload
             $composerNamespaceSymbol
         );
 
-        $projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
+        $this->projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
     /**
