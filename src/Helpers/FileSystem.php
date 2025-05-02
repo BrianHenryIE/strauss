@@ -9,6 +9,11 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\Strauss\Files\FileBase;
+use BrianHenryIE\Strauss\Pipeline\Autoload;
+use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
+use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
+use Composer\Factory;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
@@ -49,6 +54,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->pathPrefixer = $pathPrefixer ?? new PathPrefixer($this->getFileSystemRoot());
     }
 
+    // TODO: or `mem://`
     protected function getFileSystemRoot(): string
     {
         return PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
@@ -181,7 +187,6 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         throw new \Exception('Cannot determine symbolic link for files');
     }
 
-
     public function dirIsEmpty(string $dir): bool
     {
         // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
@@ -197,6 +202,61 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     public function prefixPath(string $packageComposerFile): string
+    {
+        if ($this->flysystemAdapter instanceof InMemoryFilesystemAdapter) {
+            return $this->pathPrefixer->prefixPath($packageComposerFile);
+        }
+
+        if (!($this->flysystemAdapter instanceof ReadOnlyFileSystem)
+                || $this->shouldUseFilesystemPrefix()) {
+            $prefixer = new PathPrefixer(
+                $this->getFileSystemRoot(),
+                DIRECTORY_SEPARATOR,
+            );
+
+            return $prefixer->prefixPath($packageComposerFile);
+        }
+
+        return $this->pathPrefixer->prefixPath($packageComposerFile);
+    }
+
+    /**
+     * Temporary solution.
+     *
+     * when a filepath is being passed to a class that cannot use stream wrappers, always just pass the filesystem path
+     */
+    private function shouldUseFilesystemPrefix(): bool
+    {
+        $callingMethod = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 3)[2];
+
+        $enableFor = [
+            DependenciesEnumerator::class => ['recursiveGetAllDependencies'],
+            DumpAutoload::class => null,
+            Autoload::class => null,
+        ];
+
+        if( isset($enableFor[$callingMethod['class']])) {
+                $a ='';
+        }
+        if(
+            isset($enableFor[$callingMethod['class']])
+            &&
+           (
+                is_null($enableFor[$callingMethod['class']])
+                ||
+                in_array($callingMethod['function'], $enableFor[$callingMethod['class']])
+           )
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @see Factory::createComposer() uses {@see realpath()} which doesn't work with stream wrappers.
+     */
+    public function prefixPathRealpath(string $packageComposerFile): string
     {
         return $this->pathPrefixer->prefixPath($packageComposerFile);
     }
