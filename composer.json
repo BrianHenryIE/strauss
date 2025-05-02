@@ -49,7 +49,9 @@
         "php": "^7.4|^8.0",
         "ext-json": "*",
         "brianhenryie/color-logger": "^1.2",
+        "brianhenryie/composer-prefer-local": "^0.1.4",
         "clue/phar-composer": "^1.2",
+        "cweagans/composer-patches": "^1.7",
         "jaschilz/php-coverage-badger": "^2.0",
         "mheap/phpunit-github-actions-printer": "^1.4",
         "mockery/mockery": "^1.6",
@@ -57,6 +59,16 @@
         "phpunit/phpcov": "*",
         "phpunit/phpunit": "^9|^10",
         "squizlabs/php_codesniffer": "^3.5"
+    },
+    "extra": {
+        "patches": {
+            "composer/composer": {
+                "Improve stream wrapper support": "https://github.com/composer/composer/pull/12396.patch"
+            },
+            "elazar/flystream": {
+                "Catch exceptions; return false ": "https://github.com/elazar/flystream/pull/17.patch"
+            }
+        }
     },
     "scripts": {
         "post-install-cmd": [
@@ -114,6 +126,10 @@
         "coenjacobs/mozart": "*"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "cweagans/composer-patches": true,
+            "brianhenryie/composer-prefer-local": false
+        }
     }
 }
