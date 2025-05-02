@@ -35,7 +35,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          tools: composer:v2, phive
+          tools: composer:v2
           coverage: xdebug
 
       - name: Checkout GitHub Pages branch for code coverage report
@@ -43,9 +43,6 @@ jobs:
         with:
           ref: gh-pages
           path: tests/_reports/html
-
-      - name: Install Phive tools
-        uses: ngmy/phive-install-action@master
 
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress

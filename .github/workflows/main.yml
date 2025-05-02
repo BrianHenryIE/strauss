@@ -40,11 +40,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:v2, phive
+          tools: composer:v2
           extensions: fileinfo
-
-      - name: Install Phive tools
-        uses: ngmy/phive-install-action@master
 
       - name: Setup problem matcher for PHPUnit
         run: |
@@ -93,10 +90,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          tools: composer, cs2pr, phive
-
-      - name: Install Phive tools
-        uses: ngmy/phive-install-action@master
+          tools: composer, cs2pr
 
       - name: Debugging
         run: |

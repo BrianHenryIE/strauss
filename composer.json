@@ -71,19 +71,9 @@
         }
     },
     "scripts": {
-        "post-install-cmd": [
-            "@install-phive-dependencies"
-        ],
-        "post-update-cmd": [
-            "@install-phive-dependencies"
-        ],
         "cs": [
             "phpcs",
             "phpstan --memory-limit=4G"
-        ],
-        "install-phive-dependencies": [
-            "if [ -z \"$(command -v phive)\" ]; then echo \"Phive is not installed. Run 'brew install gpg phive' or see https://phar.io/.\"; exit 1; fi;",
-            "phive install"
         ],
         "cs-fix": [
             "phpcbf || true",
@@ -91,21 +81,6 @@
         ],
         "test": [
             "phpunit"
-        ],
-        "test-changes": [
-            "if [ -z \"$(command -v ./tools/php-diff-test)\" ]; then echo \"Please install 'php-diff-test' with 'phive install'.\"; exit 1; fi;",
-            "if [ \"$XDEBUG_MODE\" != \"coverage\" ]; then echo 'Run with XDEBUG_MODE=coverage composer test-changes'; exit 1; fi;",
-            "phpunit --filter=\"$(./tools/php-diff-test filter --input-files tests/_reports/php.cov --granularity=line)\" --coverage-text;"
-        ],
-        "test-changes-report": [
-            "if [ -z \"$(command -v ./tools/php-diff-test)\" ]; then echo \"Please install 'php-diff-test' with 'phive install'.\"; exit 1; fi;",
-            "if [ -z \"$(command -v ./tools/phpcov)\" ]; then echo \"Please install 'phpcov' with 'phive install'.\"; exit 1; fi;",
-            "if [ \"$XDEBUG_MODE\" != \"coverage\" ]; then echo 'Run with XDEBUG_MODE=coverage composer test-changes-report'; exit 1; fi;",
-            "if [ -d \"tests/_reports/diff\" ]; then rm -rf tests/_reports/diff; fi;",
-            "phpunit --filter=\"$(./tools/php-diff-test filter --input-files tests/_reports/php.cov --granularity file)\" --coverage-text --coverage-php tests/_reports/diff/php.cov -d memory_limit=-1;",
-            "./tools/php-diff-test coverage --input-files tests/_reports/diff/php.cov --output-file tests/_reports/diff/php.cov;",
-            "./tools/phpcov merge tests/_reports/diff --html tests/_reports/diff/html;",
-            "open tests/_reports/diff/html/index.html"
         ],
         "test-coverage": [
             "Composer\\Config::disableProcessTimeout",
