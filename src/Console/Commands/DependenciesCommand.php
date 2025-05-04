@@ -410,11 +410,16 @@ class DependenciesCommand extends Command
             $this->filesystem
         );
 
-        $phpFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
+        $projectFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
+
+        $phpFiles = array_filter(
+            $projectFiles->getFiles(),
+            fn($file) => $file->isPhpFile()
+        );
 
         $phpFilesAbsolutePaths = array_map(
             fn($file) => $file->getSourcePath(),
-            $phpFiles->getFiles()
+            $phpFiles
         );
 
         // TODO: Warn when a file that was specified is not found
