@@ -48,7 +48,10 @@ jobs:
         uses: ngmy/phive-install-action@master
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-progress
+        run: composer update --prefer-dist --verbose
+
+      - name: Print composer.lock
+        run: cat composer.lock
 
       - name: Clear previous code coverage
         working-directory: tests/_reports/html
