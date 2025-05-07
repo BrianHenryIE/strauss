@@ -629,7 +629,12 @@ class Prefixer
                 }
 
                 if ($node instanceof \PhpParser\Node\Stmt\Class_) {
-                    $nameNodes = array_merge($nameNodes, $node->implements);
+                    foreach ($node->implements as $implement) {
+                        if ($implement instanceof \PhpParser\Node\Name
+                            && !($implement instanceof \PhpParser\Node\Name\FullyQualified)) {
+                            $nameNodes[] = $implement;
+                        }
+                    }
                 }
                 if ($node instanceof \PhpParser\Node\Expr\Instanceof_
                     && $node->class instanceof \PhpParser\Node\Name
