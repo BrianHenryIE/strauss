@@ -102,6 +102,9 @@ EOD;
 
         exec('composer install');
 
+        $exitCode = $this->runStrauss($output, '--debug');
+        assert(0 === $exitCode, $output);
+
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         assert(0 === $exitCode, $output);
 

@@ -213,7 +213,7 @@ class VendorComposerAutoload
             return $code;
         }
 
-        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->config->getVendorDirectory(), $this->config->getTargetDirectory()) . '/autoload.php';
+        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->config->getVendorDirectory(), $this->config->getTargetDirectory()) . 'autoload.php';
 
         if (false !== strpos($code, $targetDirAutoload)) {
             $this->logger->info('vendor/autoload.php already includes ' . $targetDirAutoload);
