@@ -142,7 +142,7 @@ class Licenser
             $packagePath = $dependency->getPackageAbsolutePath();
 
             $files = $this->filesystem->listContents($packagePath, true)
-                ->filter(fn (StorageAttributes $attributes) => $attributes->isFile());;
+                ->filter(fn (StorageAttributes $attributes) => $attributes->isFile());
             foreach ($files as $file) {
                 $filePath = '/' . $file->path();
 
