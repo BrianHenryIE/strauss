@@ -30,7 +30,10 @@
     "autoload": {
         "psr-4": {
             "BrianHenryIE\\Strauss\\": "src/"
-        }
+        },
+        "files": [
+            "bootstrap.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
