@@ -133,13 +133,18 @@ class DumpAutoload
             $this->filesystem
         );
 
-        $phpFiles = $fileEnumerator->compileFileListForPaths([
+        $projectFiles = $fileEnumerator->compileFileListForPaths([
             $this->config->getTargetDirectory() . 'composer',
         ]);
 
+        $phpFiles = array_filter(
+            $projectFiles->getFiles(),
+            fn($file) => $file->isPhpFile()
+        );
+
         $phpFilesAbsolutePaths = array_map(
             fn($file) => $file->getSourcePath(),
-            $phpFiles->getFiles()
+            $phpFiles
         );
 
         $sourceFile = new File(__DIR__);
