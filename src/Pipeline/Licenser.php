@@ -20,6 +20,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\FilesystemException;
+use League\Flysystem\StorageAttributes;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -140,7 +141,8 @@ class Licenser
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
 
-            $files = $this->filesystem->listContents($packagePath, true);
+            $files = $this->filesystem->listContents($packagePath, true)
+                ->filter(fn (StorageAttributes $attributes) => $attributes->isFile());;
             foreach ($files as $file) {
                 $filePath = '/' . $file->path();
 
