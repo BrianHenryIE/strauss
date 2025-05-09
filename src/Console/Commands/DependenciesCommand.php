@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -28,6 +29,7 @@ use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
@@ -134,21 +136,23 @@ class DependenciesCommand extends Command
             );
         }
 
-        $localFilesystemAdapter = new LocalFilesystemAdapter(
-            '/',
+        $localFilesystemLocation = PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
+
+        $pathPrefixer = new PathPrefixer($localFilesystemLocation);
+
+        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
             null,
-            LOCK_EX,
-            LocalFilesystemAdapter::SKIP_LINKS
+            $pathPrefixer,
+            $this->logger
         );
 
         $this->filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                $localFilesystemAdapter,
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
-            ),
-            getcwd() . '/'
+            $symlinkProtectFilesystemAdapter,
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            $pathPrefixer
         );
     }
 
@@ -208,13 +212,16 @@ class DependenciesCommand extends Command
                 $normalizer = new WhitespacePathNormalizer();
                 $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
 
+                $pathPrefixer = new PathPrefixer('mem://','/');
+
                 $this->filesystem =
                     new FileSystem(
                         new ReadOnlyFileSystem(
-                            $this->filesystem,
-                            $normalizer
+                            $this->filesystem->getAdapter(),
                         ),
-                        $this->workingDir
+                        [],
+                        $normalizer,
+                        $pathPrefixer
                     );
 
                 /** @var FilesystemRegistry $registry */
@@ -308,6 +315,30 @@ class DependenciesCommand extends Command
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 
         // TODO: Print the dependency tree that Strauss has determined.
+
+        $symlinkedDependencies = array_filter($this->flatDependencyTree, fn ($dependency) => $dependency->getPackageAbsolutePath() !== $dependency->getRealPath());
+
+        if (!empty($symlinkedDependencies) &&
+            ($this->config->isDeleteVendorFiles() || ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()))
+        ) {
+            $list = implode(
+                ', ',
+                array_map(
+                    fn($dependency) => $dependency->getPackageName(),
+                    $symlinkedDependencies
+                )
+            );
+            $this->logger->error(
+                sprintf(
+                    'Symlinked package%s detected: %s',
+                    count($symlinkedDependencies) ? 's' : '',
+                    $list
+                )
+            );
+            // https://stackoverflow.com/a/65009324/336146
+            $this->logger->notice('Use `COMPOSER_MIRROR_PATH_REPOS=1 composer install` to copy symlinked packages to vendor directory.');
+            throw new Exception();
+        }
     }
 
     protected function enumerateFiles(): void

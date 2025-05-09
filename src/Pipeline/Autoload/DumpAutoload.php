@@ -26,6 +26,8 @@ class DumpAutoload
     protected AutoloadConfigInterface $config;
 
     protected FileSystem $filesystem;
+    private Prefixer $projectReplace;
+    private FileEnumerator $fileEnumerator;
 
     public function __construct(
         AutoloadConfigInterface $config,
@@ -35,6 +37,17 @@ class DumpAutoload
         $this->config = $config;
         $this->filesystem = $filesystem;
         $this->setLogger($logger ?? new NullLogger());
+
+        $this->projectReplace = new Prefixer(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+
+        $this->fileEnumerator = new FileEnumerator(
+            $this->config,
+            $this->filesystem
+        );
     }
 
     /**
@@ -58,11 +71,11 @@ class DumpAutoload
 
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
-        $composer = Factory::create(new NullIO(), $this->config->getProjectDirectory() . 'composer.json');
+        $composer = Factory::create(new NullIO(), $this->filesystem->prefixPath($this->config->getProjectDirectory() . 'composer.json'));
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
 
-        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . 'composer.json');
+        $projectComposerJson = new JsonFile($this->filesystem->prefixPath($this->config->getProjectDirectory() . 'composer.json'));
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             unset($projectComposerJsonArray['config']['vendor-dir']);
@@ -71,7 +84,12 @@ class DumpAutoload
         /**
          * Cannot use `$composer->getConfig()`, need to create a new one so the vendor-dir is correct.
          */
-        $config = new \Composer\Config(false, $this->config->getProjectDirectory());
+        $config = new \Composer\Config(
+            false,
+            $this->filesystem->prefixPath(
+                $this->config->getProjectDirectory()
+            )
+        );
 
         $config->merge([
             'config' => $projectComposerJsonArray['config'] ?? []
@@ -90,7 +108,13 @@ class DumpAutoload
         $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
         $generator->setDevMode(false);
 
-        $localRepo = new InstalledFilesystemRepository(new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json'));
+        $localRepo = new InstalledFilesystemRepository(
+            new JsonFile(
+                $this->filesystem->prefixPath(
+                    $this->config->getTargetDirectory() . 'composer/installed.json'
+                )
+            )
+        );
 
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
 
@@ -161,7 +185,7 @@ class DumpAutoload
             $composerNamespaceSymbol
         );
 
-        $projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
+        $this->projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
     /**

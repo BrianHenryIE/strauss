@@ -103,31 +103,32 @@ class FileEnumerator
 
                 if ('files' === $type) {
                     // TODO: This is not in use.
-                    $this->filesAutoloaders[$dependency->getRelativePath()] = $value;
+                    $this->filesAutoloaders[$dependency->getVendorSubdir()] = $value;
                 }
 
-                foreach ($value as $namespace => $namespace_relative_paths) {
+                foreach ($value as $namespace => $namespaceRelativePaths) {
                     if (!empty($namespace) && in_array($namespace, $this->excludeNamespaces)) {
                         $this->logger->info("Excluding namespace " . $namespace);
                         continue;
                     }
 
-                    $namespace_relative_paths = (array) $namespace_relative_paths;
+                    $namespaceRelativePaths = (array) $namespaceRelativePaths;
 //                    if (! is_array($namespace_relative_paths)) {
 //                        $namespace_relative_paths = array( $namespace_relative_paths );
 //                    }
 
-                    foreach ($namespace_relative_paths as $namespaceRelativePath) {
+                    foreach ($namespaceRelativePaths as $namespaceRelativePath) {
                         $sourceAbsoluteDirPath = in_array($namespaceRelativePath, ['.','./'])
                             ? $dependency->getPackageAbsolutePath()
                             : $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
 
+                        // If it is a directory, we need to list + add all files in it.
                         if ($this->filesystem->directoryExists($sourceAbsoluteDirPath)) {
                             $fileList = $this->filesystem->listContents($sourceAbsoluteDirPath, true);
                             $actualFileList = $fileList->toArray();
 
                             foreach ($actualFileList as $foundFile) {
-                                $sourceAbsoluteFilepath = '/'. $foundFile->path();
+                                $sourceAbsoluteFilepath = $foundFile->path();
                                 // No need to record the directory itself.
                                 if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)
                                     ||
@@ -168,25 +169,23 @@ class FileEnumerator
         string $sourceAbsoluteFilepath,
         string $autoloaderType
     ): void {
-        $vendorRelativePath = substr(
-            $sourceAbsoluteFilepath,
-            strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
+
+        $vendorRelativePath = $this->filesystem->getRelativePath(
+            $this->config->getVendorDirectory(),
+            $sourceAbsoluteFilepath
         );
 
-        if ($vendorRelativePath === $sourceAbsoluteFilepath) {
-            $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
-        }
-
-        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getVendorDirectory());
+        $isOutsideProjectDir = $this->filesystem->normalize($dependency->getRealPath())
+                               !== $this->filesystem->normalize($dependency->getPackageAbsolutePath());
 
         /** @var FileWithDependency $f */
         $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
             ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
 
-        $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
+        $f->setAbsoluteTargetPath($this->config->getTargetDirectory() . $vendorRelativePath);
 
         $f->addAutoloader($autoloaderType);
-        $f->setDoDelete($isOutsideProjectDir);
+        $f->setDoDelete(!$isOutsideProjectDir);
 
         foreach ($this->excludeFilePatterns as $excludePattern) {
             if (1 === preg_match($excludePattern, $vendorRelativePath)) {

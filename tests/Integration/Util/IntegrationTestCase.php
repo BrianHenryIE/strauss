@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mockery;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -27,37 +28,25 @@ class IntegrationTestCase extends TestCase
 {
     protected string $projectDir;
 
-    protected $testsWorkingDir;
-
     public function setUp(): void
     {
         parent::setUp();
 
         $this->projectDir = getcwd();
 
-        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
-
-        if ('Darwin' === PHP_OS) {
-            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
-        }
-
-        if (file_exists($this->testsWorkingDir)) {
-            $this->deleteDir($this->testsWorkingDir);
-        }
-
-        @mkdir($this->testsWorkingDir);
-
         if (file_exists($this->projectDir . '/strauss.phar')) {
             echo "strauss.phar found\n";
             ob_flush();
         }
+
+        $this->createWorkingDir();
     }
 
     protected function runStrauss(?string &$allOutput = null, string $params = ''): int
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             // TODO add xdebug to the command
-            exec('php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+            exec('php ' . $this->projectDir . '/strauss.phar ' . $params .' 2>&1', $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
             return $return_var;
@@ -117,10 +106,7 @@ class IntegrationTestCase extends TestCase
             return;
         }
         $filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
+            new LocalFilesystemAdapter('/')
         );
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();

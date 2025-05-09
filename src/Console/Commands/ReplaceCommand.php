@@ -88,8 +88,7 @@ class ReplaceCommand extends Command
 
         // TODO: permissions?
         $this->filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')),
-            getcwd() . '/'
+            new LocalFilesystemAdapter('/')
         );
     }
 
@@ -139,6 +138,7 @@ class ReplaceCommand extends Command
     protected function createConfig(InputInterface $input): ReplaceConfigInterface
     {
         $config = new StraussConfig();
+        $config->setProjectDirectory(getcwd());
 
         $from = $input->getOption('from');
         $to = $input->getOption('to');

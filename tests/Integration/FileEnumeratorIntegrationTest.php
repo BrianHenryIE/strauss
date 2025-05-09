@@ -48,27 +48,26 @@ EOD;
         // Only one because we haven't run "flat dependency list".
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $a = ComposerPackage::fromFile($composerFile);
+            $a->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
+            return $a;
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
         $vendorDir = 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getVendorDirectory')->willReturn($vendorDir);
+        $config->method('getVendorDirectory')->willReturn($workingDir . $vendorDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,
             new Filesystem(
-                new \League\Flysystem\Filesystem(
-                    new LocalFilesystemAdapter('/')
-                ),
-                $this->testsWorkingDir
+                new LocalFilesystemAdapter('/')
             )
         );
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $this->assertNotNull($files->getFile($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php'));
+        $this->assertNotNull($files->getFile($this->pathNormalizer->normalizePath($workingDir . 'vendor/google/apiclient/src/aliases.php')));
     }
 }
