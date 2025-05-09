@@ -55,12 +55,6 @@ class Autoload
 
     public function generate(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
-        // Use native Composer's `autoload.php` etc. when the target directory is the vendor directory.
-        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            $this->logger->debug('Not generating autoload.php because the target directory is the vendor directory.');
-            return;
-        }
-
         if (!$this->config->isClassmapOutput()) {
             $this->logger->debug('Not generating autoload.php because classmap output is disabled.');
             return;
@@ -68,12 +62,14 @@ class Autoload
 
         $this->logger->info('Generating autoload files for ' . $this->config->getTargetDirectory());
 
-        $installedJson = new InstalledJson(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-        $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+        if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()) {
+            $installedJson = new InstalledJson(
+                $this->config,
+                $this->filesystem,
+                $this->logger
+            );
+            $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+        }
 
         (new DumpAutoload(
             $this->config,
