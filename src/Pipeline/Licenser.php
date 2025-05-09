@@ -153,7 +153,7 @@ class Licenser
                     continue;
                 }
 
-                if (!preg_match('/^.*licen.e.*/i', $filePath)) {
+                if (!preg_match('/^.*licen.e[^\\/]*$/i', $filePath)) {
                     continue;
                 }
 
