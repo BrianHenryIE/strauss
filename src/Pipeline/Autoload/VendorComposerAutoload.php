@@ -37,22 +37,34 @@ class VendorComposerAutoload
 
     public function addVendorPrefixedAutoloadToVendorAutoload(): void
     {
-        $autoloadPhpFilepath = $this->config->getVendorDirectory() . 'autoload.php';
-
-        if (!$this->fileSystem->fileExists($autoloadPhpFilepath)) {
-            $this->logger->info("No autoload.php found:" . $autoloadPhpFilepath);
+        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+            $this->logger->info("Target dir is source dir, no autoload.php to add.");
             return;
         }
 
-        $this->logger->info('Modifying original autoload.php to add `' . $this->config->getTargetDirectory() . '/autoload.php`');
+        $composerAutoloadPhpFilepath = $this->config->getVendorDirectory() . 'autoload.php';
 
-        $composerAutoloadPhpFileString = $this->fileSystem->read($autoloadPhpFilepath);
+        if (!$this->fileSystem->fileExists($composerAutoloadPhpFilepath)) {
+            $this->logger->info("No autoload.php found:" . $composerAutoloadPhpFilepath);
+            return;
+        }
+
+        $newAutoloadPhpFilepath = $this->config->getTargetDirectory() . 'autoload.php';
+
+        if (!$this->fileSystem->fileExists($newAutoloadPhpFilepath)) {
+            $this->logger->info("No new autoload.php found: " . $newAutoloadPhpFilepath);
+            return;
+        }
+
+        $this->logger->info('Modifying original autoload.php to add `' . $newAutoloadPhpFilepath);
+
+        $composerAutoloadPhpFileString = $this->fileSystem->read($composerAutoloadPhpFilepath);
 
         $newComposerAutoloadPhpFileString = $this->addVendorPrefixedAutoloadToComposerAutoload($composerAutoloadPhpFileString);
 
         if ($newComposerAutoloadPhpFileString !== $composerAutoloadPhpFileString) {
             $this->logger->info('Writing new autoload.php');
-            $this->fileSystem->write($autoloadPhpFilepath, $newComposerAutoloadPhpFileString);
+            $this->fileSystem->write($composerAutoloadPhpFilepath, $newComposerAutoloadPhpFileString);
         } else {
             $this->logger->debug('No changes to autoload.php');
         }
@@ -69,10 +81,10 @@ class VendorComposerAutoload
             return;
         }
 
-        $autoloadPhpFilepath = $this->config->getVendorDirectory() . 'autoload.php';
+        $composerAutoloadPhpFilepath = $this->config->getVendorDirectory() . 'autoload.php';
 
-        if (!$this->fileSystem->fileExists($autoloadPhpFilepath)) {
-            $this->logger->info("No autoload.php found:" . $autoloadPhpFilepath);
+        if (!$this->fileSystem->fileExists($composerAutoloadPhpFilepath)) {
+            $this->logger->info("No autoload.php found: " . $composerAutoloadPhpFilepath);
             return;
         }
 
@@ -83,13 +95,13 @@ class VendorComposerAutoload
 
         $this->logger->info('Modifying original autoload.php to add autoload_aliases.php in ' . $this->config->getVendorDirectory());
 
-        $composerAutoloadPhpFileString = $this->fileSystem->read($autoloadPhpFilepath);
+        $composerAutoloadPhpFileString = $this->fileSystem->read($composerAutoloadPhpFilepath);
 
         $newComposerAutoloadPhpFileString = $this->addAliasesFileToComposerAutoload($composerAutoloadPhpFileString);
 
         if ($newComposerAutoloadPhpFileString !== $composerAutoloadPhpFileString) {
             $this->logger->info('Writing new autoload.php');
-            $this->fileSystem->write($autoloadPhpFilepath, $newComposerAutoloadPhpFileString);
+            $this->fileSystem->write($composerAutoloadPhpFilepath, $newComposerAutoloadPhpFileString);
         } else {
             $this->logger->debug('No changes to autoload.php');
         }
@@ -201,7 +213,7 @@ class VendorComposerAutoload
             return $code;
         }
 
-        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->config->getVendorDirectory(), $this->config->getTargetDirectory()) . '/autoload.php';
+        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->config->getVendorDirectory(), $this->config->getTargetDirectory()) . 'autoload.php';
 
         if (false !== strpos($code, $targetDirAutoload)) {
             $this->logger->info('vendor/autoload.php already includes ' . $targetDirAutoload);

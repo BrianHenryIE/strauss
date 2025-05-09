@@ -150,6 +150,7 @@ class FileEnumerator
             }
         }
 
+        $this->discoveredFiles->sort();
         return $this->discoveredFiles;
     }
 
@@ -212,6 +213,7 @@ class FileEnumerator
             $this->discoveredFiles->add($f);
         }
 
+        $this->discoveredFiles->sort();
         return $this->discoveredFiles;
     }
 }

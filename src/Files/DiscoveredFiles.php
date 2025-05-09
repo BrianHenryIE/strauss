@@ -31,4 +31,9 @@ class DiscoveredFiles
     {
         return $this->files[$sourceAbsolutePath] ?? null;
     }
+
+    public function sort(): void
+    {
+        ksort($this->files);
+    }
 }

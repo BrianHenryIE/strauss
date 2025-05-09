@@ -410,11 +410,16 @@ class DependenciesCommand extends Command
             $this->filesystem
         );
 
-        $phpFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
+        $projectFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
+
+        $phpFiles = array_filter(
+            $projectFiles->getFiles(),
+            fn($file) => $file->isPhpFile()
+        );
 
         $phpFilesAbsolutePaths = array_map(
             fn($file) => $file->getSourcePath(),
-            $phpFiles->getFiles()
+            $phpFiles
         );
 
         // TODO: Warn when a file that was specified is not found
@@ -450,10 +455,6 @@ class DependenciesCommand extends Command
      */
     protected function generateAutoloader(): void
     {
-        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            $this->logger->notice('Skipping autoloader generation as target directory is vendor directory.');
-            return;
-        }
         if (isset($this->projectComposerPackage->getAutoload()['classmap'])
             && in_array(
                 $this->config->getTargetDirectory(),
