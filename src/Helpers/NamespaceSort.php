@@ -1,6 +1,6 @@
 <?php
 /**
- * Sort namespaces by the depth, followed by the length of the last part.
+ * Given two namespaces, sort them by the number of levels, then the length of the final part
  */
 
 namespace BrianHenryIE\Strauss\Helpers;
@@ -18,46 +18,32 @@ class NamespaceSort
         $this->order = $order;
     }
 
-    public function __invoke(string $a, string $b)
+    public function __invoke(string $a, string $b): int
     {
+        $a = trim($a, '\\');
+        $b = trim($b, '\\');
+
         return $this->order === self::LONGEST
             ? $this->sort($a, $b)
             : $this->sort($b, $a);
     }
 
-    protected function sort($a, $b)
+    protected function sort(string $a, string $b): int
     {
 
         $aParts = explode('\\', $a);
         $bParts = explode('\\', $b);
 
-        $aPathParts = array_slice($aParts, 0, -1);
-        $bPathParts = array_slice($bParts, 0, -1);
+        $aPartCount = count($aParts);
+        $bPartCount = count($bParts);
 
-        // 0 is a valid string length for the global namespace
-
-        $aPath = implode('/', $aPathParts);
-        $bPath = implode('/', $bPathParts);
-        $aPathLength = strlen($aPath);
-        $bPathLength = strlen($bPath);
-
-        // This isn't done right yet, when the path length is equal, the comparison should be done inccludingthe partent directory/path.
-
-        if ($aPathLength === $bPathLength) {
-            // What happens with count() < 1/0?
-            $aa = implode('/', array_slice($aParts, -2));
-            $bb = implode('/', array_slice($bParts, -2));
-
-            return strlen($bb) - strlen($aa);
+        if ($aPartCount !== $bPartCount) {
+            return $bPartCount - $aPartCount;
         }
 
-        if ($aPathLength !== $bPathLength) {
-            return $bPathLength - $aPathLength;
-        }
+        $bLastPart = array_pop($aParts);
+        $aLastPart = array_pop($bParts);
 
-        $bPop = array_pop($bPathParts);
-        $aPop = array_pop($aPathParts);
-
-        return strlen($bPop) - strlen($aPop);
+        return strlen($aLastPart) - strlen($bLastPart);
     }
 }

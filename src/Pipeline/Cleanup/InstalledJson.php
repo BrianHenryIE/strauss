@@ -183,7 +183,7 @@ class InstalledJson
                             }
                         }
                         // Intentionally fall through
-                        // Although the PSR-0 implemention here is a bit of a hack.
+                        // Although the PSR-0 implementation here is a bit of a hack.
                     case 'psr-4':
                         /**
                          * e.g.

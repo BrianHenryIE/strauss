@@ -18,6 +18,7 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
@@ -40,6 +41,7 @@ class IncludeAutoloaderCommand extends Command
     protected StraussConfig $config;
 
     protected Filesystem $filesystem;
+    protected ProjectComposerPackage $projectComposerPackage;
 
     /**
      * @return void
@@ -75,14 +77,15 @@ class IncludeAutoloaderCommand extends Command
         $this->workingDir = $workingDir;
 
         try {
-            $config = $this->createConfig($input);
+            $this->loadProjectComposerPackage();
+            $this->loadConfigFromComposerJson();
 
             // Pipeline
 
             // TODO: check for `--no-dev` somewhere.
 
             $vendorComposerAutoload = new VendorComposerAutoload(
-                $config,
+                $this->config,
                 $this->filesystem,
                 $logger
             );
@@ -99,12 +102,23 @@ class IncludeAutoloaderCommand extends Command
     }
 
     /**
-     * TODO: This should be in a shared parent class/trait.
+     * 1. Load the composer.json.
+     *
+     * @throws Exception
      */
-    protected function createConfig(InputInterface $input): StraussConfig
+    protected function loadProjectComposerPackage(): void
     {
+        $this->logger->notice('Loading package...');
+
+        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . 'composer.json');
+    }
+
+    protected function loadConfigFromComposerJson(): void
+    {
+        $this->logger->notice('Loading composer.json config...');
+
+        $this->config = $this->projectComposerPackage->getStraussConfig();
         $config = new StraussConfig();
         $config->setProjectDirectory(getcwd());
-        return $config;
     }
 }

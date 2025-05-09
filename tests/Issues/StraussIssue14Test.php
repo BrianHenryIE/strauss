@@ -62,9 +62,6 @@ EOD;
   "require":{
     "guzzlehttp/psr7": "*"
   },
-  "require-dev":{
-    "brianhenryie/strauss": "*"
-  },
   "extra": {
     "strauss": {
       "namespace_prefix": "BrianHenryIE\\Strauss\\"
