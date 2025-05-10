@@ -133,7 +133,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
 
-        exec($this->testsWorkingDir . '/ vendor/bin/strauss dependencies  2>&1', $output);
+        exec($this->testsWorkingDir . '/vendor/bin/strauss dependencies  2>&1', $output);
 
         $outputMerged = implode(PHP_EOL, $output);
 
