@@ -212,12 +212,12 @@ class Prefixer
             |,\s*                          # inside a function declaration as a subsequent parameter type
             |\.\s*                         # as part of a concatenated string
             |=\s*                          # as the value being assigned to a variable
-            |\*\s+@\w+\s*                  # In a comments param etc  
+            |\*\s+@\w+\s*                  # In a comments param etc
             |&\s*                             # a static call as a second parameter of an if statement
             |\|\s*
             |!\s*                             # negating the result of a static call
             |=>\s*                            # as the value in an associative array
-            |\[\s*                         # In a square array 
+            |\[\s*                         # In a square array
             |\?\s*                         # In a ternary operator
             |:\s*                          # In a ternary operator
             |<                             # In a generic type declaration
@@ -229,16 +229,16 @@ class Prefixer
             )
             (?!:)                          # Not followed by : which would only be valid after a classname
             (
-            \s*;                           # followed by a semicolon 
+            \s*;                           # followed by a semicolon
             |\s*{                          # or an opening brace for multiple namespaces per file
-            |\\\\{1,2}[a-zA-Z0-9_\x7f-\xff]{1,}         # or a classname no slashes 
-            |\s+as                         # or the keyword as 
+            |\\\\{1,2}[a-zA-Z0-9_\x7f-\xff]{1,}         # or a classname no slashes
+            |\s+as                         # or the keyword as
             |\"                            # or quotes
-            |'                             # or single quote         
+            |'                             # or single quote
             |:                             # or a colon to access a static
             |\\\\{
             |>                             # In a generic type declaration (end)
-            )                            
+            )
             /Ux";                          // U: Non-greedy matching, x: ignore whitespace in pattern.
 
         $replacingFunction = function ($matches) use ($originalNamespace, $replacement) {
@@ -297,15 +297,15 @@ class Prefixer
         // This could be more specific if we could enumerate all preceding and proceeding words ("new", "("...).
         $pattern = '
 			/											# Start the pattern
-				(^\s*namespace|\r\n\s*namespace)\s+[a-zA-Z0-9_\x7f-\xff\\\\]+\s*{(.*?)(namespace|\z) 
-														# Look for a preceding namespace declaration, up until a 
+				(^\s*namespace|\r\n\s*namespace)\s+[a-zA-Z0-9_\x7f-\xff\\\\]+\s*{(.*?)(namespace|\z)
+														# Look for a preceding namespace declaration, up until a
 														# potential second namespace declaration.
 				|										# if found, match that much before continuing the search on
 								    		        	# the remainder of the string.
                 (^\s*namespace|\r\n\s*namespace)\s+[a-zA-Z0-9_\x7f-\xff\\\\]+\s*;(.*) # Skip lines just declaring the namespace.
-                |		        	
+                |
 				([^a-zA-Z0-9_\x7f-\xff\$\\\])('. $searchClassname . ')([^a-zA-Z0-9_\x7f-\xff\\\]) # outside a namespace the class will not be prefixed with a slash
-				
+
 			/xsm'; //                                    # x: ignore whitespace in regex.  s dot matches newline, m: ^ and $ match start and end of line
 
         $replacingFunction = function ($matches) use ($originalClassname, $classnamePrefix) {

@@ -163,6 +163,12 @@ class StraussConfig implements
      */
     protected bool $dryRun = false;
 
+    // Hopefully temporary.
+    private function normalizer(string $path): string
+    {
+        return rtrim(substr($path, (PHP_OS_FAMILY === 'Windows' ? 3 : 1)), '\\/') . '/';
+    }
+
     /**
      * Read any existing Mozart config.
      * Overwrite it with any Strauss config.
@@ -174,6 +180,13 @@ class StraussConfig implements
      */
     public function __construct(?Composer $composer = null)
     {
+        if (isset($composer)) {
+            $composerDir = $composer->getConfig()->getConfigSource()->getName();
+            // Composer factory accepts a file or directory.
+            $composerDir = str_ends_with($composerDir, 'composer.json')
+                ? dirname($composerDir) : $composerDir;
+            $this->projectDirectory = $this->normalizer($composerDir);
+        }
 
         $configExtraSettings = null;
 
@@ -275,18 +288,9 @@ class StraussConfig implements
             $this->classmapOutput = true;
             // Check each autoloader.
             if (isset($composer)) {
-                foreach ($composer->getPackage()->getAutoload() as $autoload) {
-                    // To see if one of its paths.
-                    foreach ($autoload as $entry) {
-                        $paths = (array) $entry;
-                        foreach ($paths as $path) {
-                            // Matches the target directory.
-                            if (trim($path, '\\/') . '/' === $this->getTargetDirectory()) {
-                                $this->classmapOutput = false;
-                                break 3;
-                            }
-                        }
-                    }
+                $autoloadKey = $composer->getPackage()->getAutoload();
+                if (isset($autoloadKey['classmap']) && in_array($this->targetDirectory, $autoloadKey['classmap'], true)) {
+                    $this->classmapOutput = false;
                 }
             }
         }
@@ -709,12 +713,15 @@ class StraussConfig implements
         return $this->deleteVendorPackages || $this->deleteVendorFiles || $this->targetDirectory === 'vendor';
     }
 
-    public function getProjectDirectory(): string
-    {
-        $projectDirectory = $this->projectDirectory ?? getcwd() . '/';
+    public function getProjectDirectory(): string {
+        return $this->projectDirectory;
+    }
 
-        return $this->isDryRun()
-            ? 'mem:/' . $projectDirectory
-            : $projectDirectory;
+    /**
+     * @param string $projectDirectory Normalized path.
+     */
+    public function setProjectDirectory(string $projectDirectory): void
+    {
+        $this->projectDirectory = $this->normalizer($projectDirectory . '/');
     }
 }

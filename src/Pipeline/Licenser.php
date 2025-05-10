@@ -140,9 +140,11 @@ class Licenser
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
 
+            $packagePath = $this->filesystem->normalize($packagePath);
+
             $files = $this->filesystem->listContents($packagePath, true);
             foreach ($files as $file) {
-                $filePath = '/' . $file->path();
+                $filePath = $file->path();
 
                 // If packages happen to have their vendor dir, i.e. locally required packages, don't included the licenses
                 // from their vendor dir (they should be included otherwise anyway).
