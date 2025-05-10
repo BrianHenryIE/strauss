@@ -278,23 +278,42 @@ class VendorComposerAutoload
                         return $node;
                     }
 
+                    // __DIR__ . '../vendor-prefixed/autoload.php'
+                    $path = new \PhpParser\Node\Expr\BinaryOp\Concat(
+                        new \PhpParser\Node\Scalar\MagicConst\Dir(),
+                        new Node\Scalar\String_($this->targetDirectoryAutoload)
+                    );
+
+                    // require_once
                     $requireOnceStraussAutoload = new Node\Stmt\Expression(
                         new Node\Expr\Include_(
-                            new \PhpParser\Node\Expr\BinaryOp\Concat(
-                                new \PhpParser\Node\Scalar\MagicConst\Dir(),
-                                new Node\Scalar\String_($this->targetDirectoryAutoload)
-                            ),
+                            $path,
                             Node\Expr\Include_::TYPE_REQUIRE_ONCE
                         )
                     );
 
+                    // if(file_exists()){}
+                    $ifFileExistsRequireOnceStraussAutoload = new \PhpParser\Node\Stmt\If_(
+                        new \PhpParser\Node\Expr\FuncCall(
+                            new \PhpParser\Node\Name('file_exists'),
+                            [
+                                new \PhpParser\Node\Arg($path)
+                            ],
+                        ),
+                        [
+                            'stmts' => [
+                                $requireOnceStraussAutoload
+                            ],
+                        ]
+                    );
+
                     // Add a blank line. Probably not the correct way to do this.
-                    $requireOnceStraussAutoload->setAttribute('comments', [new \PhpParser\Comment('')]);
+                    $ifFileExistsRequireOnceStraussAutoload->setAttribute('comments', [new \PhpParser\Comment('')]);
 
                     $this->added = true;
 
                     return [
-                        $requireOnceStraussAutoload,
+                        $ifFileExistsRequireOnceStraussAutoload,
                         $node
                     ];
                 }
