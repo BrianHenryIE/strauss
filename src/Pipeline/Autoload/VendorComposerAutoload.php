@@ -207,6 +207,7 @@ class VendorComposerAutoload
 
                     // Add a blank line. Probably not the correct way to do this.
                     $node->setAttribute('comments', [new \PhpParser\Comment('')]);
+                    $ifFileExistsRequireOnceAutoloadAliases->setAttribute('comments', [new \PhpParser\Comment('')]);
 
                     return [
                         $ifFileExistsRequireOnceAutoloadAliases,
@@ -271,7 +272,6 @@ class VendorComposerAutoload
 
                     $targets = [
                         "require_once __DIR__ . '/composer/autoload_real.php'",
-                        "require_once __DIR__ . '/composer/autoload_aliases.php'"
                     ];
 
                     if (!in_array($nodeText, $targets)) {
@@ -308,6 +308,7 @@ class VendorComposerAutoload
                     );
 
                     // Add a blank line. Probably not the correct way to do this.
+                    $node->setAttribute('comments', [new \PhpParser\Comment('')]);
                     $ifFileExistsRequireOnceStraussAutoload->setAttribute('comments', [new \PhpParser\Comment('')]);
 
                     $this->added = true;
