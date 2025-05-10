@@ -28,13 +28,15 @@ if (file_exists($autoloadAliasesFilepath)) {
         return null;
     };
 
-    // Check it's not trying to load the vendor/autoload.php file that is currently being loaded.
-    $autoloadTargetDir = $targetDirectoryFromComposerExtra() ?? realpath(__DIR__ . "/../../../vendor-prefixed");
-    $autoloadTargetDirFilepath = '/autoload.php';
-    if ($autoloadTargetDirFilepath !== realpath(__DIR__ . '/../../autoload.php') && file_exists($autoloadTargetDirFilepath)) {
-        require_once $autoloadTargetDirFilepath;
+    $autoloadTargetFilepath = sprintf(
+        "%s/%s/autoload.php",
+        getcwd(),
+        $targetDirectoryFromComposerExtra() ?? "vendor-prefixed"
+    );
+    if ($autoloadTargetFilepath !== realpath(__DIR__ . '/../../autoload.php') && file_exists($autoloadTargetFilepath)) {
+        require_once $autoloadTargetFilepath;
     }
-    unset($autoloadTargetDirFilepath);
+    unset($autoloadTargetFilepath);
 
     require_once $autoloadAliasesFilepath;
 }
