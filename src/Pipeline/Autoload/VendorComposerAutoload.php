@@ -52,8 +52,7 @@ class VendorComposerAutoload
         $newAutoloadPhpFilepath = $this->config->getTargetDirectory() . 'autoload.php';
 
         if (!$this->fileSystem->fileExists($newAutoloadPhpFilepath)) {
-            $this->logger->info("No new autoload.php found: " . $newAutoloadPhpFilepath);
-            return;
+            $this->logger->warning("No new autoload.php found: " . $newAutoloadPhpFilepath);
         }
 
         $this->logger->info('Modifying original autoload.php to add `' . $newAutoloadPhpFilepath);
