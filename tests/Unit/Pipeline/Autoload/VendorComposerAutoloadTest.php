@@ -13,7 +13,11 @@ use Psr\Log\NullLogger;
 class VendorComposerAutoloadTest extends TestCase
 {
     /**
+     * @covers ::__construct
      * @covers ::addAliasesFileToComposer
+     * @covers ::isComposerInstalled
+     * @covers ::isComposerNoDev
+     * @covers ::addAliasesFileToComposerAutoload
      */
     public function test_add_aliases_file_to_true_composer(): void
     {
@@ -61,7 +65,9 @@ if (PHP_VERSION_ID < 50600) {
     trigger_error($err, E_USER_ERROR);
 }
 
-require_once __DIR__ . '/composer/autoload_aliases.php';
+if (file_exists(__DIR__ . '/composer/autoload_aliases.php')) {
+    require_once __DIR__ . '/composer/autoload_aliases.php';
+}
 
 require_once __DIR__ . '/composer/autoload_real.php';
 return ComposerAutoloaderInitb94e268379fc65b46685517f75b1e1ba::getLoader();
