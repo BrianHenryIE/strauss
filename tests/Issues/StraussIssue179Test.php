@@ -14,7 +14,7 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  */
 class StraussIssue179Test extends IntegrationTestCase
 {
-    public function test_issue_173()
+    public function test_issue_179()
     {
         $this->markTestSkippedOnPhpVersion('8.1.0', ">=");
 
@@ -57,6 +57,10 @@ EOD;
         chdir($this->testsWorkingDir);
 
         file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        exec('composer install');
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
 
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         assert(0 === $exitCode, $output);
