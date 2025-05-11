@@ -676,6 +676,7 @@ class Prefixer
         $updatedContent = (new Standard())->prettyPrintFile($modifiedStmts);
 
         $updatedContent = str_replace('namespace \\', 'namespace ', $updatedContent);
+        $updatedContent = str_replace('use \\\\', 'use \\', $updatedContent);
 
         return $visitor->countChanges == 0
             ? $phpFileContent
