@@ -46,7 +46,6 @@ EOD;
 
         $this->assertStringNotContainsString('use \\\\Company\\\\Project\\\\Stripe\\ApiOperations\\Update;', $php_string);
 
-        $this->assertStringContainsString('use Update;', $php_string);
-        $this->assertStringContainsString('use Company\\Project\\Stripe\\ApiOperations\\Update;', $php_string);
+        $this->assertStringContainsString('use \\Company\\Project\\Stripe\\ApiOperations\\Update;', $php_string);
     }
 }
