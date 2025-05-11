@@ -260,7 +260,7 @@ class Aliases
                             $aliasesPhpString .= "      \$includeFile = '<?php namespace $namespace; interface $localName extends \\$newFqdnClassName {};';" . PHP_EOL;
                             $aliasesPhpString .= "      include \"data://text/plain;base64,\" . base64_encode(\$includeFile);" . PHP_EOL;
                         } elseif ($isTrait) {
-                            $aliasesPhpString .= "      \$includeFile = '<?php namespace $namespace; trait $localName { use \\$newFqdnClassName };';" . PHP_EOL;
+                            $aliasesPhpString .= "      \$includeFile = '<?php namespace $namespace; trait $localName { use \\$newFqdnClassName; };';" . PHP_EOL;
                             $aliasesPhpString .= "      include \"data://text/plain;base64,\" . base64_encode(\$includeFile);" . PHP_EOL;
                         }
 
