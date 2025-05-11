@@ -258,16 +258,10 @@ class Aliases
                             $aliasesPhpString .= "      class_alias(\\$newFqdnClassName::class, \\$originalFqdnClassName::class);" . PHP_EOL;
                         } elseif ($isInterface) {
                             $aliasesPhpString .= "      \$includeFile = '<?php namespace $namespace; interface $localName extends \\$newFqdnClassName {};';" . PHP_EOL;
-                            $aliasesPhpString .= "      \$includeFilePath = __DIR__ . '/file.php';" . PHP_EOL;
-                            $aliasesPhpString .= "      file_put_contents(\$includeFilePath, \$includeFile);" . PHP_EOL;
-                            $aliasesPhpString .= "      include \$includeFilePath;" . PHP_EOL;
-                            $aliasesPhpString .= "      unlink(\$includeFilePath);" . PHP_EOL;
+                            $aliasesPhpString .= "      include \"data://text/plain;base64,\" . base64_encode(\$includeFile);" . PHP_EOL;
                         } elseif ($isTrait) {
                             $aliasesPhpString .= "      \$includeFile = '<?php namespace $namespace; trait $localName { use \\$newFqdnClassName; };';" . PHP_EOL;
-                            $aliasesPhpString .= "      \$includeFilePath = __DIR__ . '/file.php';" . PHP_EOL;
-                            $aliasesPhpString .= "      file_put_contents(\$includeFilePath, \$includeFile);" . PHP_EOL;
-                            $aliasesPhpString .= "      include \$includeFilePath;" . PHP_EOL;
-                            $aliasesPhpString .= "      unlink(\$includeFilePath);" . PHP_EOL;
+                            $aliasesPhpString .= "      include \"data://text/plain;base64,\" . base64_encode(\$includeFile);" . PHP_EOL;
                         }
 
                         $aliasesPhpString .= "      break;" . PHP_EOL;
