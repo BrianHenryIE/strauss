@@ -60,7 +60,7 @@ class StraussIssue47Test extends IntegrationTestCase
         "league/flysystem": "*",
         "symfony/var-dumper": "*",
         "doctrine/dbal": "*",
-        "psr/log": "*",
+        "psr/log": "^1.0",
         "spatie/guzzle-rate-limiter-middleware": "*"
     }
 }
@@ -146,7 +146,7 @@ EOD;
         "league/flysystem": "*",
         "symfony/var-dumper": "*",
         "doctrine/dbal": "*",
-        "psr/log": "*",
+        "psr/log": "^1.0",
         "spatie/guzzle-rate-limiter-middleware": "*"
     }
 }
@@ -212,7 +212,7 @@ EOD;
         "league/flysystem": "*",
         "symfony/var-dumper": "*",
         "doctrine/dbal": "*",
-        "psr/log": "*",
+        "psr/log": "^1.0",
         "spatie/guzzle-rate-limiter-middleware": "*"
     }
 }

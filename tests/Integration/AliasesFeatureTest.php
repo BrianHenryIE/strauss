@@ -27,7 +27,7 @@ class AliasesFeatureTest extends IntegrationTestCase
 {
   "name": "brianhenryie/aliasfeaturetest",
   "require": {
-    "psr/log": "*"
+    "psr/log": "^1.0"
   },
   "require-dev": {
     "brianhenryie/color-logger": "*",
