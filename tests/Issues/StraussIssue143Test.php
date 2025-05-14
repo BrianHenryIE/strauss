@@ -57,8 +57,14 @@ EOD;
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
 
-        $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
-        $this->assertStringContainsString('/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
+        $installedJsonString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
+        $this->assertStringContainsString('"name": "psr/log",', $installedJsonString);
+
+//        $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
+//        $this->assertStringContainsString('/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
+
+        $psr4String = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_psr4.php');
+        $this->assertStringContainsString('/../vendor/psr/log/Psr/Log', $psr4String);
     }
 
     /**
