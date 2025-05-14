@@ -34,7 +34,7 @@ class StraussIssue183Test extends IntegrationTestCase
 {
   "name": "strauss/issue183",
   "require": {
-    "psr/log": "1.0.0"
+    "psr/log": "1.1.0"
   },
   "require-dev": {
     "brianhenryie/strauss": "dev-master"
@@ -82,7 +82,7 @@ EOD;
 {
   "name": "strauss/issue183",
   "require": {
-    "psr/log": "1.0.0"
+    "psr/log": "1.1.0"
   },
   "require-dev": {
     "brianhenryie/strauss": "dev-master"

@@ -23,7 +23,7 @@ class StraussIssue143Test extends IntegrationTestCase
 {
     "name": "strauss/issue143",
     "require": {
-        "psr/log": "1.0.0"
+        "psr/log": "1.1.0"
     },
     "config": {
         "vendor-dir": "../vendor/"
@@ -71,7 +71,7 @@ EOD;
 {
     "name": "strauss/issue143",
     "require": {
-        "psr/log": "1.0.0"
+        "psr/log": "1.1.0"
     },
     "config": {
         "vendor-dir": "../vendor/"

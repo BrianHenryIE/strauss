@@ -28,7 +28,7 @@ class StraussIssue159Test extends IntegrationTestCase
 	},
   "require": {
     "php": ">=7.4",
-    "psr/log": "1.0.0"
+    "psr/log": "1.1.0"
   },
   "extra": {
     "strauss": {
