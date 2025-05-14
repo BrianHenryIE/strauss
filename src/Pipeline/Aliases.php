@@ -269,7 +269,7 @@ class Aliases
                         $aliasesPhpString .= "    case '$escapedOriginalFqdnClassName':" . PHP_EOL;
 
                         // Where there is a `class_alias()` of an original class, we'll probably miss it here. E.g. `PHPUnit_Framework_TestCase`.
-                        if ($isClass && class_exists($escapedOriginalFqdnClassName)) {
+                        if ($isClass && class_exists($originalFqdnClassName)) {
                             $reflectionClass = new ReflectionClass($originalFqdnClassName);
                             // If the class is final, we can't extend it. TODO: Remove `final` when running with dev dependencies, don't remove it with `--no-dev`
                             // $isFinal = $rf->isFinal();

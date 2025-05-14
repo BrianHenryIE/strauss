@@ -77,6 +77,12 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
 
+        $exitCode = $this->runStrauss($output, 'include-autoloader');
+        assert(0 === $exitCode, $output);
+
+        $phpString = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_aliases.php');
+        $this->assertStringContainsString('namespace Psr\\Log; class NullLogger', $phpString);
+
         exec('composer dump-autoload');
 
         exec('php ' . $this->testsWorkingDir . '/file1.php', $output, $return_var);
