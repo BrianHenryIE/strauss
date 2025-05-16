@@ -89,7 +89,7 @@ class DiscoveredSymbols
     {
         return array_filter(
             $this->types[T_CLASS],
-            fn($classSymbol) => !$classSymbol->getNamespaceSymbol()
+            fn($classSymbol) => !$classSymbol->getNamespace()
         );
     }
 
