@@ -3,6 +3,7 @@
   <coverage>
     <include>
       <directory suffix=".php">src/</directory>
+      <file>bootstrap.php</file>
     </include>
     <exclude>
       <file>src/Pipeline/FileSymbol/builtinsymbols.php</file>

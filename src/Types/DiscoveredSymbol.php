@@ -13,6 +13,8 @@ abstract class DiscoveredSymbol
     /** @var array<File> $sourceFiles */
     protected array $sourceFiles = [];
 
+    protected ?string $namespace;
+
     protected string $symbol;
 
     protected string $replacement;
@@ -21,12 +23,16 @@ abstract class DiscoveredSymbol
      * @param string $symbol The classname / namespace etc.
      * @param File $sourceFile The file it was discovered in.
      */
-    public function __construct(string $symbol, File $sourceFile)
+    public function __construct(string $symbol, File $sourceFile, ?string $namespace = null)
     {
         $this->symbol = $symbol;
 
         $this->addSourceFile($sourceFile);
         $sourceFile->addDiscoveredSymbol($this);
+
+        if ($namespace !=='global') {
+            $this->namespace = $namespace;
+        }
     }
 
     public function getOriginalSymbol(): string
@@ -60,5 +66,10 @@ abstract class DiscoveredSymbol
     public function setReplacement(string $replacement): void
     {
         $this->replacement = $replacement;
+    }
+
+    public function getNamespace(): ?string
+    {
+        return $this->namespace;
     }
 }

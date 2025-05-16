@@ -249,6 +249,8 @@ class DependenciesCommand extends Command
 
             // This runs after cleanup because cleanup edits installed.json
             $this->generateAutoloader();
+
+            $this->logger->notice('Done');
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
@@ -495,7 +497,7 @@ class DependenciesCommand extends Command
             return;
         }
 
-        $this->logger->info('Generating aliases file...');
+        $this->logger->notice('Generating aliases file...');
 
         $aliases = new Aliases(
             $this->config,

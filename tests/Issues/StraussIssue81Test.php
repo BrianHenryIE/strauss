@@ -34,7 +34,7 @@ class StraussIssue81Test extends IntegrationTestCase
     "brianhenryie/bh-wc-logger": "0.1.1"
   },
   "require-dev": {
-    "psr/log": "1.1.4",
+    "psr/log": "1.1.0",
     "phpunit/phpunit": "*"
   },
   "extra": {
@@ -77,6 +77,12 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
 
+        $exitCode = $this->runStrauss($output, 'include-autoloader');
+        assert(0 === $exitCode, $output);
+
+        $phpString = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_aliases.php');
+        $this->assertStringContainsString('namespace Psr\\Log; class NullLogger', $phpString);
+
         exec('composer dump-autoload');
 
         exec('php ' . $this->testsWorkingDir . '/file1.php', $output, $return_var);
@@ -97,7 +103,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0"
+    "psr/log": "1.1.0"
   },
   "extra": {
     "strauss": {
@@ -128,7 +134,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0"
+    "psr/log": "1.1.0"
   },
   "extra": {
     "strauss": {
@@ -159,7 +165,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0"
+    "psr/log": "1.1.0"
   },
   "extra": {
     "strauss": {
@@ -190,7 +196,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0"
+    "psr/log": "1.1.0"
   },
   "extra": {
     "strauss": {
@@ -220,7 +226,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0"
+    "psr/log": "1.1.0"
   },
   "extra": {
     "strauss": {
@@ -251,7 +257,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0"
+    "psr/log": "1.1.0"
   },
   "extra": {
     "strauss": {

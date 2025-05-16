@@ -36,7 +36,8 @@ class StraussIssue179Test extends IntegrationTestCase
         "php": ">=8.1",
         "duck7000/imdb-graphql-php": "dev-jcv",
         "twbs/bootstrap": "@stable",
-        "monolog/monolog": "@stable"
+        "monolog/monolog": "@stable",
+        "psr/log": "1.1.0"
     },
 	"extra": {
 	    "strauss": {

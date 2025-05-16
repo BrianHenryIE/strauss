@@ -34,7 +34,7 @@ class StraussIssue183Test extends IntegrationTestCase
 {
   "name": "strauss/issue183",
   "require": {
-    "psr/log": "*"
+    "psr/log": "1.1.0"
   },
   "require-dev": {
     "brianhenryie/strauss": "dev-master"
@@ -82,7 +82,7 @@ EOD;
 {
   "name": "strauss/issue183",
   "require": {
-    "psr/log": "*"
+    "psr/log": "1.1.0"
   },
   "require-dev": {
     "brianhenryie/strauss": "dev-master"
@@ -128,7 +128,8 @@ EOD;
 
         // php -d allow_url_include=on -d error_reporting="E_ALL & ~E_DEPRECATED" vendor/bin/strauss
 
-        exec('php -d allow_url_include=on -d error_reporting="E_ALL & ~E_DEPRECATED" -r "include __DIR__ . \'/vendor/autoload.php\'; new class() { use \Psr\Log\LoggerAwareTrait; };" 2>&1', $output, $result_code);
+//        exec('php -d allow_url_include=on -d error_reporting="E_ALL & ~E_DEPRECATED" -r "include __DIR__ . \'/vendor/autoload.php\'; new class() { use \Psr\Log\LoggerAwareTrait; };" 2>&1', $output, $result_code);
+        exec('php -r "include __DIR__ . \'/vendor/autoload.php\'; new class() { use \Psr\Log\LoggerAwareTrait; };" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);
 
         $this->assertEmpty($outputString, $outputString);
