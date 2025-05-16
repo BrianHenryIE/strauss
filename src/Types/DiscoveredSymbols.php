@@ -55,7 +55,7 @@ class DiscoveredSymbols
     {
         return array_merge(
             array_values($this->getNamespaces()),
-            array_values($this->getClasses()),
+            array_values($this->getGlobalClasses()),
             array_values($this->getConstants()),
             array_values($this->getDiscoveredFunctions()),
         );
@@ -85,9 +85,12 @@ class DiscoveredSymbols
     /**
      * @return array<string, ClassSymbol>
      */
-    public function getClasses(): array
+    public function getGlobalClasses(): array
     {
-        return $this->types[T_CLASS];
+        return array_filter(
+            $this->types[T_CLASS],
+            fn($classSymbol) => !$classSymbol->getNamespaceSymbol()
+        );
     }
 
     /**
@@ -113,13 +116,11 @@ class DiscoveredSymbols
     }
 
     /**
-     * TODO: should be called getGlobalClasses?
-     *
      * @return string[]
      */
     public function getDiscoveredClasses(?string $classmapPrefix = ''): array
     {
-        $discoveredClasses = $this->getClasses();
+        $discoveredClasses = $this->getGlobalClasses();
 
         $discoveredClasses = array_filter(
             array_keys($discoveredClasses),
