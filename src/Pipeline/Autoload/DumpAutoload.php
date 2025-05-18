@@ -30,20 +30,47 @@ class DumpAutoload
     public function __construct(
         AutoloadConfigInterface $config,
         Filesystem $filesystem,
-        ?LoggerInterface $logger = null
+        ?LoggerInterface $logger = null,
+        ?Prefixer $projectReplace = null,
+        ?FileEnumerator $fileEnumerator = null
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
         $this->setLogger($logger ?? new NullLogger());
+
+        $this->projectReplace = $projectReplace ?? new Prefixer(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+
+        $this->fileEnumerator = $fileEnumerator ?? new FileEnumerator(
+            $this->config,
+            $this->filesystem
+        );
+    }
+
+    /**
+     * Create `autoload.php` and the `vendor-prefixed/composer` directory.
+     */
+    public function generatedPrefixedAutoloader(): void
+    {
+        $this->generatedMainAutoloader();
+
+        $this->createInstalledVersionsFiles();
+
+        $this->prefixNewAutoloader();
     }
 
     /**
      * Uses `vendor/composer/installed.json` to output autoload files to `vendor-prefixed/composer`.
      */
-    public function generatedPrefixedAutoloader(): void
+    protected function generatedMainAutoloader(): void
     {
         /**
          * Unfortunately, `::dump()` creates the target directories if they don't exist, even though it otherwise respects `::setDryRun()`.
+         *
+         * {@see https://github.com/composer/composer/pull/12396} might fix this.
          */
         if ($this->config->isDryRun()) {
             return;
@@ -55,7 +82,6 @@ class DumpAutoload
         );
 
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
-
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
         $composer = Factory::create(new NullIO(), $this->config->getProjectDirectory() . 'composer.json');
@@ -114,26 +140,51 @@ class DumpAutoload
          * then they might expect it to be unmodified.
          */
         Config::$defaultConfig['vendor-dir'] = $defaultVendorDirBefore;
+    }
 
-        $this->prefixNewAutoloader();
+    /**
+     * Create `InstalledVersions.php` and `installed.php`.
+     *
+     * This file is copied in all Composer installations.
+     * It is added always in `ComposerAutoloadGenerator::dump()`, called above.
+     * If the file does not exist, its entry in the classmap will not be prefixed and will cause autoloading issues for the real class.
+     *
+     * The accompanying `installed.php` is unique per install. Copy it and filter its packages to the packages that was copied.
+     */
+    protected function createInstalledVersionsFiles(): void
+    {
+        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+            return;
+        }
+
+        $this->filesystem->copy($this->config->getVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getTargetDirectory() . 'composer/InstalledVersions.php');
+
+        // This is just `<?php return array(...);`
+        $installedPhpString = $this->filesystem->read($this->config->getVendorDirectory() . '/composer/installed.php');
+        $installed = eval(str_replace('<?php', '', $installedPhpString));
+
+        $targetPackages = $this->config->getPackagesToCopy();
+        $targetPackagesNames = array_keys($targetPackages);
+
+        $installed['versions'] = array_filter($installed['versions'], function ($packageName) use ($targetPackagesNames) {
+            return in_array($packageName, $targetPackagesNames);
+        }, ARRAY_FILTER_USE_KEY);
+
+        $installedArrayString = var_export($installed, true);
+
+        $newInstalledPhpString = "<?php return $installedArrayString;";
+
+        // Update `__DIR__` which was evaluated during the `include`/`eval`.
+        $newInstalledPhpString = preg_replace('/(\'install_path\' => )(.*)(\/\.\..*)/', "$1__DIR__ . '$3", $newInstalledPhpString);
+
+        $this->filesystem->write($this->config->getTargetDirectory() . '/composer/installed.php', $newInstalledPhpString);
     }
 
     protected function prefixNewAutoloader(): void
     {
         $this->logger->debug('Prefixing the new Composer autoloader.');
 
-        $projectReplace = new Prefixer(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-
-        $fileEnumerator = new FileEnumerator(
-            $this->config,
-            $this->filesystem
-        );
-
-        $projectFiles = $fileEnumerator->compileFileListForPaths([
+        $projectFiles = $this->fileEnumerator->compileFileListForPaths([
             $this->config->getTargetDirectory() . 'composer',
         ]);
 
@@ -155,13 +206,20 @@ class DumpAutoload
         $composerNamespaceSymbol->setReplacement(
             $this->config->getNamespacePrefix() . '\\Composer\\Autoload'
         );
+        $composerNamespaceSymbol = new NamespaceSymbol(
+            'Composer',
+            $sourceFile
+        );
+        $composerNamespaceSymbol->setReplacement(
+            $this->config->getNamespacePrefix() . '\\Composer'
+        );
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add(
             $composerNamespaceSymbol
         );
 
-        $projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
+        $this->projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
     }
 
     /**

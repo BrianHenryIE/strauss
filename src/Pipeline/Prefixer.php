@@ -73,6 +73,10 @@ class Prefixer
                 continue;
             }
 
+            if (!$file->isDoPrefix()) {
+                continue;
+            }
+
             /**
              * Throws an exception, but unlikely to happen.
              */
@@ -135,17 +139,46 @@ class Prefixer
      */
     public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents): string
     {
+        $classmapPrefix = $this->config->getClassmapPrefix();
+
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
-        $classes = $discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix());
         $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
         $functions = $discoveredSymbols->getDiscoveredFunctions();
 
         $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
 
-        foreach ($classes as $originalClassname) {
-            $classmapPrefix = $this->config->getClassmapPrefix();
+        $classesTraitsInterfaces = array_merge(
+            $discoveredSymbols->getDiscoveredTraits(),
+            $discoveredSymbols->getDiscoveredInterfaces(),
+            $discoveredSymbols->getAllClasses()
+        );
+
+        foreach ($classesTraitsInterfaces as $theclass) {
+            if (str_starts_with($theclass->getOriginalSymbol(), $classmapPrefix)) {
+                // Already prefixed / second scan.
+                continue;
+            }
+
+            if ($theclass->getNamespace() !== '\\') {
+                $newNamespace = $namespacesChanges[$theclass->getNamespace()];
+                if ($newNamespace) {
+                    $theclass->setReplacement(
+                        str_replace(
+                            $newNamespace->getOriginalSymbol(),
+                            $newNamespace->getReplacement(),
+                            $theclass->getOriginalSymbol()
+                        )
+                    );
+                    unset($newNamespace);
+                }
+                continue;
+            }
+            $theclass->setReplacement($classmapPrefix . $theclass->getOriginalSymbol());
+        }
+
+        foreach ($discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix()) as $classsname) {
             if ($classmapPrefix) {
-                $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
+                $contents = $this->replaceClassname($contents, $classsname, $classmapPrefix);
             }
         }
 

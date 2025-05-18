@@ -8,4 +8,6 @@ interface FileSymbolScannerConfigInterface
      * @return string[]
      */
     public function getExcludeNamespacesFromPrefixing(): array;
+
+    public function getPackagesToPrefix(): array;
 }

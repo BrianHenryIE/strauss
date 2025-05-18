@@ -7,6 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 
+use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
@@ -41,6 +42,12 @@ class IntegrationTestCase extends TestCase
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
         }
 
+        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
+        // we set breakpoints, we can easily browse the files.
+        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
+            $this->testsWorkingDir = getcwd() . '/teststempdir/';
+        }
+
         if (file_exists($this->testsWorkingDir)) {
             $this->deleteDir($this->testsWorkingDir);
         }
@@ -48,7 +55,7 @@ class IntegrationTestCase extends TestCase
         @mkdir($this->testsWorkingDir);
 
         if (file_exists($this->projectDir . '/strauss.phar')) {
-            echo "strauss.phar found\n";
+            echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
             ob_flush();
         }
     }
@@ -77,6 +84,7 @@ class IntegrationTestCase extends TestCase
             default:
                 $strauss = new DependenciesCommand();
         }
+        $strauss->setLogger(new ColorLogger());
 
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
         $inputInterface = new ArgvInput($argv);

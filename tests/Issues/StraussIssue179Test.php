@@ -36,7 +36,8 @@ class StraussIssue179Test extends IntegrationTestCase
         "php": ">=8.1",
         "duck7000/imdb-graphql-php": "dev-jcv",
         "twbs/bootstrap": "@stable",
-        "monolog/monolog": "@stable"
+        "monolog/monolog": "@stable",
+        "psr/log": "1.1.0"
     },
 	"extra": {
 	    "strauss": {
@@ -65,8 +66,8 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         assert(0 === $exitCode, $output);
 
-        exec('composer install');
-        $exitCode = $this->runStrauss($output);
+        exec("php -r \"include __DIR__ . '/vendor/autoload.php'; new class() { use \Psr\Log\LoggerAwareTrait; };\"", $output, $exitCode);
+        $output = implode(PHP_EOL, $output);
 
         $this->assertEquals(0, $exitCode, $output);
     }

@@ -1,13 +1,12 @@
 <?php
 
-namespace BrianHenryIE\Strauss;
+namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\TestCase;
 use League\Flysystem\FilesystemReader;
 use Mockery;
@@ -107,6 +106,8 @@ EOD;
         $contents = <<<'EOD'
 <?php
 namespace MyNamespace {
+    class MyClass {
+    }
 }
 namespace {
     class MyClass {
@@ -285,11 +286,11 @@ EOD;
     public function test_it_does_not_treat_comments_as_classes()
     {
         $contents = "
-    	// A class as good as any.
-    	class Whatever {
-    	
-    	}
-    	";
+        // A class as good as any.
+        class Whatever {
+        	
+        }
+        ";
 
 
         $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
@@ -497,11 +498,13 @@ EOD;
     {
 
         $contents = <<<'EOD'
-	class WP_Dependency_Installer {
-		/**
-		 *
-		 */
-EOD;
+					<?php
+					class WP_Dependency_Installer {
+						/**
+						 *
+						 */
+					 }
+					EOD;
 
         $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -536,6 +539,7 @@ EOD;
     {
 
         $contents = "
+        <?php
 		namespace My_Project {
 			class A_Class { }
 		}
@@ -635,6 +639,7 @@ EOD;
     public function testNamespaceReplacementPatterns()
     {
         $contents = "
+        <?php
 		namespace BrianHenryIE\PdfHelpers {
 			class A_Class { }
 		}
@@ -728,6 +733,7 @@ EOD;
     {
 
         $contents = <<<'EOD'
+<?php
 /*******************************************************************************
  * FPDF                                                                         *
  *                                                                              *
@@ -742,7 +748,7 @@ define('FPDF_VERSION', '1.83');
 define('ANOTHER_CONSTANT', '1.83');
 
 class FPDF
-{
+{}
 EOD;
 
         $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
