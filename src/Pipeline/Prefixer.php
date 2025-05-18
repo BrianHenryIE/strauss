@@ -137,15 +137,37 @@ class Prefixer
     {
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
         $classes = $discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix());
+        $classes = $discoveredSymbols->getAllClasses();
         $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
         $functions = $discoveredSymbols->getDiscoveredFunctions();
 
         $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
 
-        foreach ($classes as $originalClassname) {
-            $classmapPrefix = $this->config->getClassmapPrefix();
+        $classmapPrefix = $this->config->getClassmapPrefix();
+        foreach ($classes as $theclass) {
+            if (str_starts_with($theclass->getOriginalSymbol(), $classmapPrefix)) {
+                // Already prefixed / second scan.
+                continue;
+            }
+
+            if ($theclass->getNamespace() !== '\\') {
+                $newNamespace = $namespacesChanges[$theclass->getNamespace()];
+                if ($newNamespace) {
+                    $theclass->setReplacement(
+                        str_replace(
+                            $newNamespace->getOriginalSymbol(),
+                            $newNamespace->getReplacement(),
+                            $theclass->getOriginalSymbol()
+                        )
+                    );
+                    unset($newNamespace);
+                }
+                continue;
+            }
+            $theclass->setReplacement($classmapPrefix . $theclass->getOriginalSymbol());
+
             if ($classmapPrefix) {
-                $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
+                $contents = $this->replaceClassname($contents, $theclass->getOriginalSymbol(), $classmapPrefix);
             }
         }
 
