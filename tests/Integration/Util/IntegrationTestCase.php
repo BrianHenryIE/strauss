@@ -7,6 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 
+use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
@@ -77,6 +78,7 @@ class IntegrationTestCase extends TestCase
             default:
                 $strauss = new DependenciesCommand();
         }
+        $strauss->setLogger(new ColorLogger());
 
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
         $inputInterface = new ArgvInput($argv);

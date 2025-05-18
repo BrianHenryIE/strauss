@@ -177,7 +177,9 @@ class DependenciesCommand extends Command
             $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
         }
 
-        return new ConsoleLogger($output, $logLevel);
+        return isset($this->logger) && $this->logger instanceof \Psr\Log\Test\TestLogger
+            ? $this->logger
+            : new ConsoleLogger($output, $logLevel);
     }
 
     /**
