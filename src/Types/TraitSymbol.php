@@ -30,7 +30,7 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
             'type' => 'trait',
             'traitname' => $this->getOriginalLocalName(),
             'namespace' => $this->namespace,
-            'use' => $this->getReplacement(),
+            'use' => [$this->getReplacement()],
         );
     }
 }
