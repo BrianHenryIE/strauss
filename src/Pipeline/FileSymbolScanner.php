@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\SimplePhpParser;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
@@ -42,6 +43,8 @@ class FileSymbolScanner
 
     protected FilesystemReader $filesystem;
 
+    protected FileSymbolScannerConfigInterface $config;
+
     /** @var string[] */
     protected array $builtIns = [];
 
@@ -60,6 +63,8 @@ class FileSymbolScanner
     ) {
         $this->discoveredSymbols = new DiscoveredSymbols();
         $this->excludeNamespacesFromPrefixing = $config->getExcludeNamespacesFromPrefixing();
+
+        $this->config = $config;
 
         $this->filesystem = $filesystem;
         $this->logger = $logger ?? new NullLogger();
@@ -99,7 +104,13 @@ class FileSymbolScanner
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
         foreach ($files->getFiles() as $file) {
+            if ($file instanceof FileWithDependency && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
+                $file->setDoPrefix(false);
+                continue;
+            }
+
             if (!$file->isPhpFile()) {
+                $file->setDoPrefix(false);
                 $this->logger->debug('Skipping non-PHP file: ' . $file->getSourcePath());
                 continue;
             }
