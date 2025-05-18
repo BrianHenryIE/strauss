@@ -42,6 +42,12 @@ class IntegrationTestCase extends TestCase
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
         }
 
+        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
+        // we set breakpoints, we can easily browse the files.
+        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
+            $this->testsWorkingDir = getcwd() . '/teststempdir/';
+        }
+
         if (file_exists($this->testsWorkingDir)) {
             $this->deleteDir($this->testsWorkingDir);
         }
