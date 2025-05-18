@@ -21,6 +21,8 @@ class DiscoveredSymbols
             T_CONST => [],
             T_NAMESPACE => [],
             T_FUNCTION => [],
+            T_TRAIT => [],
+            T_INTERFACE => [],
         ];
     }
 
@@ -175,11 +177,13 @@ class DiscoveredSymbols
         return array_merge(...$this->types);
     }
 
-	public function getDiscoveredTraits(): array {
-		return (array) $this->types[T_TRAIT];
-	}
+    public function getDiscoveredTraits(): array
+    {
+        return (array) $this->types[T_TRAIT];
+    }
 
-	public function getDiscoveredInterfaces(): array {
-		return (array) $this->types[T_INTERFACE];
-	}
+    public function getDiscoveredInterfaces(): array
+    {
+        return (array) $this->types[T_INTERFACE];
+    }
 }
