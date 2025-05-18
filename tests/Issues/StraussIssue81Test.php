@@ -34,7 +34,7 @@ class StraussIssue81Test extends IntegrationTestCase
     "brianhenryie/bh-wc-logger": "0.1.1"
   },
   "require-dev": {
-    "psr/log": "1.0.0",
+    "psr/log": "1.1.4",
     "phpunit/phpunit": "*"
   },
   "extra": {
@@ -103,7 +103,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0.0"
+    "psr/log": "1.0"
   },
   "extra": {
     "strauss": {
@@ -134,7 +134,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0.0"
+    "psr/log": "1.0"
   },
   "extra": {
     "strauss": {
@@ -165,7 +165,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0.0"
+    "psr/log": "1.0"
   },
   "extra": {
     "strauss": {
@@ -196,7 +196,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0.0"
+    "psr/log": "1.0"
   },
   "extra": {
     "strauss": {
@@ -226,7 +226,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0.0"
+    "psr/log": "1.0"
   },
   "extra": {
     "strauss": {
@@ -257,7 +257,7 @@ EOD;
 {
   "name": "issue/80",
   "require": {
-    "psr/log": "1.0.0"
+    "psr/log": "1.0"
   },
   "extra": {
     "strauss": {
