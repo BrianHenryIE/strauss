@@ -309,7 +309,20 @@ class DependenciesCommand extends Command
         );
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 
-        $this->config->setPackagesToCopy($this->flatDependencyTree);
+        $this->config->setPackagesToCopy(
+            array_filter($this->flatDependencyTree, function ($dependency) {
+                return !in_array($dependency, $this->config->getExcludePackagesFromCopy());
+            },
+            ARRAY_FILTER_USE_KEY)
+        );
+
+        $this->config->setPackagesToPrefix(
+            array_filter($this->flatDependencyTree, function ($dependency) {
+                return !in_array($dependency, $this->config->getExcludePackagesFromPrefixing());
+            },
+            ARRAY_FILTER_USE_KEY)
+        );
+
         // TODO: Print the dependency tree that Strauss has determined.
     }
 
