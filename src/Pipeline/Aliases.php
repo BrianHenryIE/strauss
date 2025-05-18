@@ -123,6 +123,7 @@ class Aliases
 					// TODO: What if this was a real function in this class that could be used for testing, which would be read and written by php-parser?
 				    private function classTemplate(array \$class): string
 				    {
+				        \$abstract = \$class['isabstract'] ? 'abstract ' : '';
 				        \$classname = \$class['classname'];
 				        if(isset(\$class['namespace'])) {
 				            \$namespace = "namespace {\$class['namespace']};";
@@ -138,7 +139,7 @@ class Aliases
 				        return <<<EOD
 								<?php
 								\$namespace
-								class \$classname extends \$extends \$implements {}
+								\$abstract class \$classname extends \$extends \$implements {}
 								EOD;
 				    }
 				    
@@ -182,15 +183,11 @@ class Aliases
 
     public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
     {
+        $modifiedSymbols = $this->getModifiedSymbols($symbols);
+
         $outputFilepath = $this->getAliasFilepath();
 
-        $fileString = $this->buildStringOfAliases($symbols, basename($outputFilepath));
-
-        if (empty($fileString)) {
-            // TODO: Check if no actual aliases were added (i.e. is it just an empty template).
-            // Log?
-            return;
-        }
+        $fileString = $this->buildStringOfAliases($modifiedSymbols, basename($outputFilepath));
 
         $this->fileSystem->write($outputFilepath, $fileString);
     }
@@ -206,16 +203,12 @@ class Aliases
         );
     }
 
-    /**
-     * @param DiscoveredSymbol[] $symbols
-     * @return DiscoveredSymbol[]
-     */
-    protected function getModifiedSymbols(array $symbols): array
+    protected function getModifiedSymbols(DiscoveredSymbols $symbols): DiscoveredSymbols
     {
-        $modifiedSymbols = [];
-        foreach ($symbols as $symbol) {
+        $modifiedSymbols = new DiscoveredSymbols();
+        foreach ($symbols->getAll() as $symbol) {
             if ($symbol->getOriginalSymbol() !== $symbol->getReplacement()) {
-                $modifiedSymbols[] = $symbol;
+                $modifiedSymbols->add($symbol);
             }
         }
         return $modifiedSymbols;
@@ -250,10 +243,10 @@ class Aliases
 
         // TODO: When target !== vendor, there should be a test here to ensure the target autoloader is included, with instructions to add it.
 
-        $modifiedSymbols = $this->getModifiedSymbols($symbols->getSymbols());
+        $modifiedSymbols = $this->getModifiedSymbols($symbols);
 
-        $functionSymbols = array_filter($modifiedSymbols, fn(DiscoveredSymbol $symbol) => $symbol instanceof FunctionSymbol);
-        $otherSymbols = array_filter($modifiedSymbols, fn(DiscoveredSymbol $symbol) => !($symbol instanceof FunctionSymbol));
+        $functionSymbols = $modifiedSymbols->getDiscoveredFunctions();
+        $otherSymbols = $modifiedSymbols->getClassmapSymbols();
 
         $autoloadAliasesFunctionsString = count($functionSymbols)>0
             ? $this->appendFunctionAliases($functionSymbols, $autoloadAliasesFileString)

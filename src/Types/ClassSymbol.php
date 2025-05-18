@@ -40,11 +40,15 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return $this->isAbstract;
     }
 
+    /**
+     * @return array{type:string,classname:string,isabstract:bool,namespace:string,extends:string,implements:array<string>}
+     */
     public function getAutoloadAliasArray(): array
     {
         return array (
             'type' => 'class',
             'classname' => $this->getOriginalLocalName(),
+            'isabstract' => $this->isAbstract,
             'namespace' => $this->namespace,
             'extends' => $this->getReplacement(),
             'implements' => $this->interfaces,

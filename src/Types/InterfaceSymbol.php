@@ -24,13 +24,16 @@ class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return $this->extends;
     }
 
+    /**
+     * @return array{type:string,interfacename:string,namespace:string,extends:array<string>}
+     */
     public function getAutoloadAliasArray(): array
     {
         return array (
             'type' => 'interface',
             'interfacename' => $this->getOriginalLocalName(),
             'namespace' => $this->namespace,
-            'extends' => $this->extends,
+            'extends' => [$this->getReplacement()] + $this->extends,
         );
     }
 }

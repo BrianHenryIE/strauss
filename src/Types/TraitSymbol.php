@@ -24,6 +24,9 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return $this->uses;
     }
 
+    /**
+     * @return array{type:string,traitname:string,namespace:string,use:array<string>}
+     */
     public function getAutoloadAliasArray(): array
     {
         return array (

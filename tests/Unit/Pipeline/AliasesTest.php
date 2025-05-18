@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\TestCase;
+use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
@@ -37,13 +38,11 @@ class AliasesTest extends TestCase
      * Until now, the output was a list of `class_alias()` etc. calls, but where the class they extended was not yet
      * loaded caused problems. I.e. don't add a class alias unless there's an autoloader for anything it might extend.
      */
-    public function test_spl_autoloader(): void
+    public function test_class_in_aliases_array(): void
     {
 
         $config = Mockery::mock(AliasesConfigInterface::class);
-        $config->expects('isDryRun')->twice()->andReturnTrue();
-        $config->expects('getVendorDirectory')->twice()->andReturn('vendor/');
-        $config->expects('getTargetDirectory')->once()->andReturn('vendor-prefixed/');
+        $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
         $config->expects('getNamespacePrefix')->times(2)->andReturn('Baz\\');
 
         $fileSystem = $this->getFileSystem();
@@ -56,16 +55,15 @@ class AliasesTest extends TestCase
 
         $symbols = new DiscoveredSymbols();
         $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->times(2)->andReturn('vendor/foo/bar/baz.php');
+        $file->expects('getSourcePath')->times(1)->andReturn('vendor/foo/bar/baz.php');
         $file->expects('addDiscoveredSymbol')->once();
-        $file->expects('getAbsoluteTargetPath')->once()->andReturn('vendor-prefixed/foo/bar/baz.php');
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; class Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; class Baz {}');
 
-        $namespaceSymbol = new NamespaceSymbol('Foo\\Bar', $file);
-        $namespaceSymbol->setReplacement('Baz\\Foo\\Bar');
-        $symbols->add($namespaceSymbol);
+        $classSymbol = new ClassSymbol('Foo\\Bar\\Baz', $file, false, 'Foo\\Bar');
+        $classSymbol->setReplacement('Baz\\Foo\\Bar\\Baz');
+        $symbols->add($classSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
 
@@ -76,13 +74,10 @@ class AliasesTest extends TestCase
 	array (
 		'type' => 'class',
 		'classname' => 'Baz',
-		'isAbstract' => 'false',
+		'isabstract' => false,
 		'namespace' => 'Foo\\Bar',
 		'extends' => 'Baz\\Foo\\Bar\\Baz',
 		'implements' => 
-			array (
-			),
-		'traits' => 
 			array (
 			),
 ),
@@ -98,9 +93,7 @@ EOD;
     {
 
         $config = Mockery::mock(AliasesConfigInterface::class);
-        $config->expects('isDryRun')->twice()->andReturnTrue();
-        $config->expects('getVendorDirectory')->twice()->andReturn('vendor/');
-        $config->expects('getTargetDirectory')->once()->andReturn('vendor-prefixed/');
+        $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
         $config->expects('getNamespacePrefix')->times(2)->andReturn('Baz\\');
 
         $fileSystem = $this->getFileSystem();
@@ -157,8 +150,8 @@ EOD;
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; interface Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; interface Baz {}');
 
-		$interfaceSymbol = new InterfaceSymbol('Foo\\Bar\\Baz', $file, 'Foo\\Bar');
-		$interfaceSymbol->setReplacement('Baz\\Foo\\Bar\\Baz');
+        $interfaceSymbol = new InterfaceSymbol('Foo\\Bar\\Baz', $file, 'Foo\\Bar');
+        $interfaceSymbol->setReplacement('Baz\\Foo\\Bar\\Baz');
         $symbols->add($interfaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
