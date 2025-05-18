@@ -81,7 +81,7 @@ EOD;
         assert(0 === $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_aliases.php');
-        $this->assertStringContainsString('namespace Psr\\Log; class NullLogger', $phpString);
+        $this->assertStringContainsString("'extends' => 'Strauss\\\\Alias\\\\Psr\\\\Log\\\\NullLogger'", $phpString);
 
         exec('composer dump-autoload');
 
