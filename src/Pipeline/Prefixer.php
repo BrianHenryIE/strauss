@@ -135,16 +135,21 @@ class Prefixer
      */
     public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents): string
     {
+        $classmapPrefix = $this->config->getClassmapPrefix();
+
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
-        $classes = $discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix());
-        $classes = $discoveredSymbols->getAllClasses();
         $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
         $functions = $discoveredSymbols->getDiscoveredFunctions();
 
         $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
 
-        $classmapPrefix = $this->config->getClassmapPrefix();
-        foreach ($classes as $theclass) {
+        $classesTraitsInterfaces = array_merge(
+            $discoveredSymbols->getDiscoveredTraits(),
+            $discoveredSymbols->getDiscoveredInterfaces(),
+            $discoveredSymbols->getAllClasses()
+        );
+
+        foreach ($classesTraitsInterfaces as $theclass) {
             if (str_starts_with($theclass->getOriginalSymbol(), $classmapPrefix)) {
                 // Already prefixed / second scan.
                 continue;
@@ -165,9 +170,11 @@ class Prefixer
                 continue;
             }
             $theclass->setReplacement($classmapPrefix . $theclass->getOriginalSymbol());
+        }
 
+        foreach ($discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix()) as $classsname) {
             if ($classmapPrefix) {
-                $contents = $this->replaceClassname($contents, $theclass->getOriginalSymbol(), $classmapPrefix);
+                $contents = $this->replaceClassname($contents, $classsname, $classmapPrefix);
             }
         }
 
