@@ -162,8 +162,8 @@ class Aliases
 				        \$namespace = isset(\$trait['namespace']) 
 				            ? "namespace {\$trait['namespace']};" : '';
 				        \$uses = isset(\$trait['namespace'])
-				            ? '\\\\' . implode(';' . PHP_EOL . '    use \\\\', \$trait['extends'])
-				            : implode(';' . PHP_EOL . '    use ', \$trait['extends']);
+				            ? '\\\\' . implode(';' . PHP_EOL . '    use \\\\', \$trait['use'])
+				            : implode(';' . PHP_EOL . '    use ', \$trait['use']);
 				        return <<<EOD
 								<?php
 								\$namespace
