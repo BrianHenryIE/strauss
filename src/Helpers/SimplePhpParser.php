@@ -245,6 +245,12 @@ class SimplePhpParser
         $traverser->addVisitor($visitor);
         $traverser->traverse($parsedCode);
 
+        foreach ($parserContainer->getClasses() as $classKey => $class) {
+            if ($class->name === $class->parentClass) {
+                $class->parentClass = null;
+            }
+        }
+
         return $parserContainer;
     }
 
