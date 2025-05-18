@@ -307,6 +307,7 @@ class DependenciesCommand extends Command
         );
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 
+        $this->config->setPackagesToCopy($this->flatDependencyTree);
         // TODO: Print the dependency tree that Strauss has determined.
     }
 
