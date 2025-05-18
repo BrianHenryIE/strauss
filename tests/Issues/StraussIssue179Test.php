@@ -66,8 +66,8 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         assert(0 === $exitCode, $output);
 
-        exec('composer install');
-        $exitCode = $this->runStrauss($output);
+        exec("php -r \"include __DIR__ . '/vendor/autoload.php'; new class() { use \Psr\Log\LoggerAwareTrait; };\"", $output, $exitCode);
+        $output = implode(PHP_EOL, $output);
 
         $this->assertEquals(0, $exitCode, $output);
     }
