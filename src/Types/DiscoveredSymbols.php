@@ -186,4 +186,18 @@ class DiscoveredSymbols
     {
         return (array) $this->types[T_INTERFACE];
     }
+
+    /**
+     * Get all discovered symbols that are classes, interfaces, or traits, i.e. only those that are autoloadable.
+     *
+     * @return array<DiscoveredSymbol>
+     */
+    public function getClassmapSymbols(): array
+    {
+        return array_merge(
+            $this->getDiscoveredClasses(),
+            $this->getDiscoveredInterfaces(),
+            $this->getDiscoveredTraits(),
+        );
+    }
 }
