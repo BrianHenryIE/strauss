@@ -29,5 +29,5 @@ interface AutoloadConfigInterface
 
     public function getNamespacePrefix(): ?string;
 
-    public function getPackages(): array;
+    public function getPackagesToCopy(): array;
 }
