@@ -10,19 +10,26 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Helpers\SimplePhpParser;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use BrianHenryIE\Strauss\Types\TraitSymbol;
 use League\Flysystem\FilesystemReader;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use voku\SimplePhpParser\Model\PHPClass;
+use voku\SimplePhpParser\Model\PHPConst;
+use voku\SimplePhpParser\Model\PHPFunction;
 
 class FileSymbolScanner
 {
@@ -107,125 +114,109 @@ class FileSymbolScanner
         return $this->discoveredSymbols;
     }
 
-    /**
-     * TODO: Don't use preg_replace_callback!
-     *
-     * @uses self::addDiscoveredNamespaceChange()
-     * @uses self::addDiscoveredClassChange()
-     */
     protected function find(string $contents, File $file): void
     {
-        // If the entire file is under one namespace, all we want is the namespace.
-        // If there were more than one namespace, it would appear as `namespace MyNamespace { ...`,
-        // a file with only a single namespace will appear as `namespace MyNamespace;`.
-        $singleNamespacePattern = '/
-            (<?php|\r\n|\n)                                              # A new line or the beginning of the file.
-            \s*                                                          # Allow whitespace before
-            namespace\s+(?<namespace>[0-9A-Za-z_\x7f-\xff\\\\]+)[\s\n]*; # Match a single namespace in the file.
-        /x'; //  # x: ignore whitespace in regex.
-        if (1 === preg_match($singleNamespacePattern, $contents, $matches)) {
-            $this->addDiscoveredNamespaceChange($matches['namespace'], $file);
+        $namespaces = $this->splitByNamespace($contents);
 
-            return;
-        }
+        foreach ($namespaces as $namespaceName => $contents) {
+            $this->addDiscoveredNamespaceChange($namespaceName, $file);
 
-        if (0 < preg_match_all('/\s*define\s*\(\s*["\']([^"\']*)["\']\s*,\s*["\'][^"\']*["\']\s*\)\s*;/', $contents, $constants)) {
-            foreach ($constants[1] as $constant) {
-                $constantObj = new ConstantSymbol($constant, $file);
-                $this->add($constantObj);
+            // Because we split the file by namespace, we need to add it back to avoid the case where `class A extends \A`.
+            $contents = trim($contents);
+            $contents = false === strpos($contents, '<?php') ? "<?php\n" . $contents : $contents;
+            if ($namespaceName !== '\\') {
+                $contents = str_replace('<?php', '<?php' . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL, $contents);
             }
-        }
 
-        // TODO traits
+            $phpCode = SimplePhpParser::getFromString($contents);
 
-        // TODO: Is the ";" in this still correct since it's being taken care of in the regex just above?
-        // Looks like with the preceding regex, it will never match.
-
-        preg_replace_callback(
-            '
-			~											# Start the pattern
-				/\*[\s\S]*?\*/ |						# Skip multiline comments
-				\s*//.*	       |						# Skip single line comments
-				[\r\n]*\s*namespace\s+([a-zA-Z0-9_\x7f-\xff\\\\]+)[;{\s\n]{1}[\s\S]*?(?=namespace|$) 
-														# Look for a preceding namespace declaration, 
-														# followed by a semicolon, open curly bracket, space or new line
-														# up until a 
-														# potential second namespace declaration or end of file.
-														# if found, match that much before continuing the search on
-				|										# the remainder of the string.
-				\s*										# Whitespace is allowed before 
-				(?:abstract\sclass|class|interface)\s+	# Look behind for class, abstract class, interface
-				([a-zA-Z0-9_\x7f-\xff]+)				# Match the word until the first non-classname-valid character
-				\s?										# Allow a space after
-				(?:{|extends|implements|\n|$)			# Class declaration can be followed by {, extends, implements 
-														# or a new line
-			~x', //                                     # x: ignore whitespace in regex.
-            function ($matches) use ($file) {
-
-                // If we're inside a namespace other than the global namespace:
-                if (1 === preg_match('/^\s*namespace\s+[a-zA-Z0-9_\x7f-\xff\\\\]+[;{\s\n]{1}.*/', $matches[0])) {
-                    $this->addDiscoveredNamespaceChange($matches[1], $file);
-
-                    return $matches[0];
+            /** @var PHPClass[] $phpClasses */
+            $phpClasses = $phpCode->getClasses();
+            foreach ($phpClasses as $fqdnClassname => $class) {
+                // Skip classes defined in other files.
+                // I tried to use the $class->file property but it was autoloading from Strauss so incorrectly setting
+                // the path, different to the file being scanned.
+                if (false !== strpos($contents, "use {$fqdnClassname};")) {
+                    continue;
                 }
 
-                if (count($matches) < 3) {
-                    return $matches[0];
+                $isAbstract = (bool) $class->is_abstract;
+                $extends     = $class->parentClass;
+                $interfaces  = $class->interfaces;
+                $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $namespaceName, $extends, $interfaces);
+            }
+
+            /** @var PHPFunction[] $phpFunctions */
+            $phpFunctions = $phpCode->getFunctions();
+            foreach ($phpFunctions as $functionName => $function) {
+                if (in_array($functionName, $this->getBuiltIns())) {
+                    continue;
                 }
-
-                // TODO: Why is this [2] and not [1] (which seems to be always empty).
-                $this->addDiscoveredClassChange($matches[2], $file);
-
-                return $matches[0];
-            },
-            $contents
-        );
-
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $ast = $parser->parse($contents);
-
-        $traverser = new NodeTraverser();
-        $visitor = new class extends \PhpParser\NodeVisitorAbstract {
-            protected array $functions = [];
-            public function enterNode(Node $node)
-            {
-                if ($node instanceof Node\Stmt\Function_) {
-                    $this->functions[] = $node->name->name;
-                }
-                return $node;
+                $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceName);
+                $this->add($functionSymbol);
             }
 
-            /**
-             * @return string[] Function names.
-             */
-            public function getFunctions(): array
-            {
-                return $this->functions;
+            /** @var PHPConst $phpConstants */
+            $phpConstants = $phpCode->getConstants();
+            foreach ($phpConstants as $constantName => $constant) {
+                $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName);
+                $this->add($constantSymbol);
             }
-        };
-        $traverser->addVisitor($visitor);
 
-        /** @var Node $node */
-        foreach ((array) $ast as $node) {
-            $traverser->traverse([ $node ]);
-        }
-        foreach ($visitor->getFunctions() as $functionName) {
-            if (in_array($functionName, $this->getBuiltIns())) {
-                continue;
+            $phpInterfaces = $phpCode->getInterfaces();
+            foreach ($phpInterfaces as $interfaceName => $interface) {
+                $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceName);
+                $this->add($interfaceSymbol);
             }
-            $functionSymbol = new FunctionSymbol($functionName, $file);
-            $this->add($functionSymbol);
+
+            $phpTraits =  $phpCode->getTraits();
+            foreach ($phpTraits as $traitName => $trait) {
+                $traitSymbol = new TraitSymbol($traitName, $file, $namespaceName);
+                $this->add($traitSymbol);
+            }
         }
     }
 
-    protected function addDiscoveredClassChange(string $classname, File $file): void
+    protected function splitByNamespace(string $contents):array
     {
+        $result = [];
+
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+
+        $ast = $parser->parse(trim($contents));
+
+        foreach ($ast as $rootNode) {
+            if ($rootNode instanceof Node\Stmt\Namespace_) {
+                if (is_null($rootNode->name)) {
+                    $result['\\'] = (new Standard())->prettyPrintFile($rootNode->stmts);
+                } else {
+                    $result[$rootNode->name->name] = (new Standard())->prettyPrintFile($rootNode->stmts);
+                }
+            }
+        }
+
+        // TODO: is this necessary?
+        if (empty($result)) {
+            $result['\\'] = $contents;
+        }
+
+        return $result;
+    }
+
+    protected function addDiscoveredClassChange(
+        string $fqdnClassname,
+        bool $isAbstract,
+        File $file,
+        $namespaceName,
+        $extends,
+        array $interfaces
+    ): void {
         // TODO: This should be included but marked not to prefix.
-        if (in_array($classname, $this->getBuiltIns())) {
+        if (in_array($fqdnClassname, $this->getBuiltIns())) {
             return;
         }
 
-        $classSymbol = new ClassSymbol($classname, $file);
+        $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespaceName, $extends, $interfaces);
         $this->add($classSymbol);
     }
 

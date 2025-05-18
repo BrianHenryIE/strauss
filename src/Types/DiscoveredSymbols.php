@@ -42,9 +42,16 @@ class DiscoveredSymbols
             case FunctionSymbol::class:
                 $type = T_FUNCTION;
                 break;
+            case InterfaceSymbol::class:
+                $type = T_INTERFACE;
+                break;
+            case TraitSymbol::class:
+                $type = T_TRAIT;
+                break;
             default:
                 throw new \InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
         }
+        // TODO: This should merge the symbols instead of overwriting them.
         $this->types[$type][$symbol->getOriginalSymbol()] = $symbol;
     }
 
@@ -89,8 +96,16 @@ class DiscoveredSymbols
     {
         return array_filter(
             $this->types[T_CLASS],
-            fn($classSymbol) => !$classSymbol->getNamespace()
+            fn($classSymbol) => '\\' === $classSymbol->getNamespace()
         );
+    }
+
+    /**
+     * @return array<string, ClassSymbol>
+     */
+    public function getAllClasses(): array
+    {
+        return $this->types[T_CLASS];
     }
 
     /**
@@ -111,6 +126,8 @@ class DiscoveredSymbols
         uksort($discoveredNamespaceReplacements, function ($a, $b) {
             return strlen($a) <=> strlen($b);
         });
+
+        unset($discoveredNamespaceReplacements['\\']);
 
         return $discoveredNamespaceReplacements;
     }
@@ -151,5 +168,10 @@ class DiscoveredSymbols
     public function getDiscoveredFunctions()
     {
         return $this->types[T_FUNCTION];
+    }
+
+    public function getAll(): array
+    {
+        return array_merge(...$this->types);
     }
 }
