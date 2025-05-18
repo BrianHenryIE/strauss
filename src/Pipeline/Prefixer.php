@@ -73,6 +73,10 @@ class Prefixer
                 continue;
             }
 
+            if (!$file->isDoPrefix()) {
+                continue;
+            }
+
             /**
              * Throws an exception, but unlikely to happen.
              */
