@@ -99,6 +99,12 @@ class StraussConfig implements
     protected array $packagesToCopy = [];
 
     /**
+     *
+     * @var array<string,ComposerPackage>
+     */
+    protected array $packagesToPrefix = [];
+
+    /**
      * Back-compatibility with Mozart.
      *
      * @var string[]
@@ -587,6 +593,16 @@ class StraussConfig implements
     public function setPackagesToCopy(array $packagesToCopy): void
     {
         $this->packagesToCopy = $packagesToCopy;
+    }
+
+    public function getPackagesToPrefix(): array
+    {
+        return $this->packagesToPrefix;
+    }
+
+    public function setPackagesToPrefix(array $packagesToPrefix): void
+    {
+        $this->packagesToPrefix = $packagesToPrefix;
     }
     /**
      * @return bool
