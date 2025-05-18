@@ -21,7 +21,7 @@ class StraussIssue104Test extends IntegrationTestCase
 {
   "name": "strauss/issue104",
   "require": {
-    "psr/log": "1.1.0"
+    "psr/log": "1.0.0"
   },
   "extra": {
     "strauss": {

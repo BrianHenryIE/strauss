@@ -28,7 +28,7 @@ class StraussIssue34Test extends IntegrationTestCase
     ]
   },
   "require": {
-    "psr/log": "1.1.0",
+    "psr/log": "1.0.0",
     "phpunit/phpunit": "*"
   },
   "extra": {
