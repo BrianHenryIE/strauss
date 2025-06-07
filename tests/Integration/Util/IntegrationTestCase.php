@@ -44,7 +44,7 @@ class IntegrationTestCase extends TestCase
 
         // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
         // we set breakpoints, we can easily browse the files.
-        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
+        if ($this->isPhpStormRunning()) {
             $this->testsWorkingDir = getcwd() . '/teststempdir/';
         }
 
@@ -58,6 +58,18 @@ class IntegrationTestCase extends TestCase
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
             ob_flush();
         }
+    }
+
+    protected function isPhpStormRunning(): bool
+    {
+        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
+            return true;
+        }
+
+        if (isset($_SERVER['IDE_PHPUNIT_CUSTOM_LOADER'])) {
+            return true;
+        }
+        return false;
     }
 
     protected function runStrauss(?string &$allOutput = null, string $params = ''): int
