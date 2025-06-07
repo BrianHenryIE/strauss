@@ -84,15 +84,15 @@ class DumpAutoload
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
-        $composer = Factory::create(new NullIO(), $this->config->getProjectDirectory() . 'composer.json');
-        $installationManager = $composer->getInstallationManager();
-        $package = $composer->getPackage();
-
         $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . 'composer.json');
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
-            unset($projectComposerJsonArray['config']['vendor-dir']);
+            $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
         }
+
+        $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
+        $installationManager = $composer->getInstallationManager();
+        $package = $composer->getPackage();
 
         /**
          * Cannot use `$composer->getConfig()`, need to create a new one so the vendor-dir is correct.
