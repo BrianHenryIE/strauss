@@ -60,11 +60,23 @@ EOD;
         $installedJsonString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString('"name": "psr/log",', $installedJsonString);
 
-//        $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
-//        $this->assertStringContainsString('/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
+        $exitCode = $this->runStrauss($output, 'include-autoloader');
+        assert(0 === $exitCode, $output);
 
-        $psr4String = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_psr4.php');
-        $this->assertStringContainsString('/../vendor/psr/log/Psr/Log', $psr4String);
+        $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
+        $this->assertStringContainsString('/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
+        $this->assertStringNotContainsString('\'Psr\\\\Log\\\\NullLogger', $classmapString);
+        $this->assertStringContainsString('\'Strauss\\\\Issue143\\\\Psr\\\\Log\\\\NullLogger', $classmapString);
+
+        exec('php -r "include __DIR__ . \'/../vendor/autoload.php\'; new \Psr\Log\NullLogger();" 2>&1', $output, $result_code);
+        $outputString = implode(PHP_EOL, $output);
+
+        $this->assertEquals(0, $result_code, $outputString);
+
+        exec('php -r "include __DIR__ . \'/../vendor/autoload.php\'; new \Strauss\Issue143\Psr\Log\NullLogger();" 2>&1', $output, $result_code);
+        $outputString = implode(PHP_EOL, $output);
+
+        $this->assertEquals(0, $result_code, $outputString);
     }
 
     /**
