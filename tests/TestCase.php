@@ -48,6 +48,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
+    /**
+     * Get an in-memory filesystem.
+     */
     protected function getFileSystem(): FileSystem
     {
 
