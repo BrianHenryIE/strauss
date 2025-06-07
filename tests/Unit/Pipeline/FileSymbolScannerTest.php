@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\TestCase;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use League\Flysystem\FilesystemReader;
 use Mockery;
 
@@ -592,6 +593,10 @@ EOD;
         $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getSourcePath')->andReturn('/a/path');
 
+        $file->shouldReceive('addDiscoveredSymbol')
+             ->withArgs(fn($v) => $v instanceof NamespaceSymbol && $v->getOriginalSymbol() === '\\')
+             ->once();
+
         $files = Mockery::mock(DiscoveredFiles::class)->makePartial();
         $files->shouldReceive('getFiles')->andReturn([$file]);
 
@@ -621,6 +626,10 @@ EOD;
         $file = Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
         $file->shouldReceive('getSourcePath')->andReturn('/a/path');
+
+        $file->shouldReceive('addDiscoveredSymbol')
+             ->withArgs(fn($v) => $v instanceof NamespaceSymbol && $v->getOriginalSymbol() === '\\')
+             ->once();
 
         $files = Mockery::mock(DiscoveredFiles::class)->makePartial();
         $files->shouldReceive('getFiles')->andReturn([$file]);
