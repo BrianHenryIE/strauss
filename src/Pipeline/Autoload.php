@@ -57,6 +57,8 @@ class Autoload
     {
         if (!$this->config->isClassmapOutput()) {
             $this->logger->debug('Not generating autoload.php because classmap output is disabled.');
+            // TODO: warn about `files` autoloaders.
+            // TODO: list the files autoloaders that will be missed.
             return;
         }
 
