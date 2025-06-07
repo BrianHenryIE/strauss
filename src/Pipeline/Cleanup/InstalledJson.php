@@ -4,7 +4,8 @@
  *
  * * create new vendor-prefixed/composer/installed.json file with copied packages
  * * when delete is enabled, update package paths in the original vendor/composer/installed.json
- * * when delete is enabled, remove dead entries in the original vendor/composer/installed.jso
+ * * when delete is enabled, remove dead entries in the original vendor/composer/installed.json
+ * * update psr-0 autoload keys to have matching classmap entries
  *
  * @see vendor/composer/installed.json
  *
@@ -175,7 +176,7 @@ class InstalledJson
                             if (1 === preg_match('#.*'.preg_quote($this->filesystem->normalize($this->config->getTargetDirectory()), '#').'/(.*)#', $packageRelativePath, $matches)) {
                                 $packageRelativePath = $matches[1];
                             }
-                            if ($this->filesystem->directoryExists($this->config->getTargetDirectory() . $packageRelativePath . $relativePath)) {
+                            if ($this->filesystem->directoryExists($this->config->getTargetDirectory() . 'composer/' . $packageRelativePath . $relativePath)) {
                                 $autoload_key['classmap'][] = $relativePath;
                             }
                         }
