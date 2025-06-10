@@ -127,7 +127,7 @@ EOD;
      */
     public function test_silent_option_symfony_72(): void
     {
-        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2');
+        $this->markTestSkippedOnPhpVersionBelow('8.2');
 
         $composerJsonString = <<<'EOD'
 {
