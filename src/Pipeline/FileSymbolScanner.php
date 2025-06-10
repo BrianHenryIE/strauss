@@ -80,7 +80,9 @@ class FileSymbolScanner
         $this->loggedSymbols[] = $symbol->getOriginalSymbol();
 
         $pad = function (string $text, int $length = 20): string {
-            static $padLength = max($padLength ?? 0, $length);
+            /** @var int $padLength */
+            static $padLength;
+            $padLength = max(isset($padLength) ? $padLength : 0, $length);
             $padLength = max($padLength, strlen($text) + 2);
             return str_pad($text, $padLength, ' ', STR_PAD_RIGHT);
         };
