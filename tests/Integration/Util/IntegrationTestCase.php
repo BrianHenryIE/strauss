@@ -196,10 +196,26 @@ class IntegrationTestCase extends TestCase
         $filesystem->deleteDirectory($dir);
     }
 
+    public function markTestSkippedOnPhpVersionBelow(string $php_version, string $message = '')
+    {
+        $this->markTestSkippedOnPhpVersion($php_version, '<', $message);
+    }
+    public function markTestSkippedOnPhpVersionEqualOrBelow(string $php_version, string $message = '')
+    {
+        $this->markTestSkippedOnPhpVersion($php_version, '<=', $message);
+    }
+    public function markTestSkippedOnPhpVersionAbove(string $php_version, string $message = '')
+    {
+        $this->markTestSkippedOnPhpVersion($php_version, '>', $message);
+    }
+    public function markTestSkippedOnPhpVersionEqualOrAbove(string $php_version, string $message = '')
+    {
+        $this->markTestSkippedOnPhpVersion($php_version, '>=', $message);
+    }
     /**
      * Checks both the PHP version the tests are running under and the system PHP version.
      */
-    public function markTestSkippedOnPhpVersion(string $php_version, string $operator)
+    public function markTestSkippedOnPhpVersion(string $php_version, string $operator, string $message = '')
     {
         exec('php -v', $output, $return_var);
         preg_match('/PHP\s([\d\\\.]*)/', $output[0], $php_version_capture);
@@ -208,8 +224,10 @@ class IntegrationTestCase extends TestCase
         $testPhpVersionConstraintMatch = version_compare(phpversion(), $php_version, $operator);
         $systemPhpVersionConstraintMatch = version_compare($system_php_version, $php_version, $operator);
 
-        if (! ($testPhpVersionConstraintMatch && $systemPhpVersionConstraintMatch)) {
-            $this->markTestSkipped("Package specified for test requires PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version);
+        if ($testPhpVersionConstraintMatch || $systemPhpVersionConstraintMatch) {
+            empty($message)
+                ? $this->markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
+                : $this->markTestSkipped($message);
         }
     }
 }

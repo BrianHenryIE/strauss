@@ -53,7 +53,8 @@ class MozartIssue89Test extends IntegrationTestCase
      */
     public function it_moves_each_file_once_per_namespace()
     {
-        $this->markTestSkippedOnPhpVersion('7.1', '<');
+        $this->markTestSkippedOnPhpVersionBelow('7.1');
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.0');
 
         $composerJsonString = <<<'EOD'
 {

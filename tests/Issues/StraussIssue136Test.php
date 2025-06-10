@@ -20,7 +20,7 @@ class StraussIssue136Test extends IntegrationTestCase
      */
     public function test_does_not_update_source_files_unless_requested()
     {
-        $this->markTestSkippedOnPhpVersion('8.0.0', ">=");
+        $this->markTestSkippedOnPhpVersionBelow('8.0.0');
 
         $composerJsonString = <<<'EOD'
 {
