@@ -14,6 +14,9 @@ use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Psr\Log\LoggerInterface;
+use Psr\Log\Test\LoggerInterfaceTest;
+use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -30,6 +33,8 @@ class IntegrationTestCase extends TestCase
 
     protected $testsWorkingDir;
 
+    protected ?TestLogger $logger = null;
+
     public function setUp(): void
     {
         parent::setUp();
@@ -37,6 +42,8 @@ class IntegrationTestCase extends TestCase
         $this->projectDir = getcwd();
 
         $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
+
+        $this->logger = new ColorLogger();
 
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
@@ -96,7 +103,8 @@ class IntegrationTestCase extends TestCase
             default:
                 $strauss = new DependenciesCommand();
         }
-        $strauss->setLogger(new ColorLogger());
+
+        $this->logger && $strauss->setLogger($this->logger);
 
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
         $inputInterface = new ArgvInput($argv);

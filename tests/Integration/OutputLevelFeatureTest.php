@@ -16,6 +16,8 @@ class OutputLevelFeatureTest extends IntegrationTestCase
     {
         parent::setUp();
 
+        $this->logger = null;
+        
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
