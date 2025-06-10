@@ -87,7 +87,7 @@ class FileSymbolScanner
                 $this->logger->log($level, "Found {$newText}constant:   {$noNewText}" . $symbol->getOriginalSymbol());
                 break;
             case ClassSymbol::class:
-                $this->logger->log($level, "Found {$newText}class.     {$noNewText}" . $symbol->getOriginalSymbol());
+                $this->logger->log($level, "Found {$newText}class:      {$noNewText}" . $symbol->getOriginalSymbol());
                 break;
             case FunctionSymbol::class:
                 $this->logger->log($level, "Found {$newText}function    {$noNewText}" . $symbol->getOriginalSymbol());
