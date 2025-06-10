@@ -101,16 +101,21 @@ class Copier
             $sourceAbsoluteFilepath = $file->getSourcePath();
             $targetAbsolutePath = $file->getAbsoluteTargetPath();
 
+            $relativeTargetPath = $this->filesystem->getRelativePath(
+                $this->config->getProjectDirectory(),
+                $file->getAbsoluteTargetPath()
+            );
+
             if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
                 $this->logger->info(sprintf(
                     'Creating directory at %s',
-                    $file->getAbsoluteTargetPath()
+                    $relativeTargetPath
                 ));
                 $this->filesystem->createDirectory($targetAbsolutePath);
             } else {
                 $this->logger->info(sprintf(
                     'Copying file to %s',
-                    $file->getAbsoluteTargetPath()
+                    $relativeTargetPath
                 ));
                 $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
             }
