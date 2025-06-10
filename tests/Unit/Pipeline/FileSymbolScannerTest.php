@@ -7,6 +7,7 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use League\Flysystem\FilesystemReader;
@@ -39,8 +40,9 @@ class MyClass {
 }
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $config->method('getNamespacePrefix')->willReturn('Prefix');
@@ -78,8 +80,9 @@ namespace {
 }
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
 
@@ -116,8 +119,9 @@ namespace {
 }
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -158,12 +162,12 @@ namespace MyNamespace {
 }
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
-
 
         $file = Mockery::mock(File::class);
         $file->shouldReceive('isPhpFile')->andReturnTrue();
@@ -219,8 +223,9 @@ class HTMLPurifier_Printer_ConfigForm extends HTMLPurifier_Printer
 // vim: et sw=4 sts=4
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -259,8 +264,9 @@ class MyOtherClass {
 }
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -294,8 +300,9 @@ EOD;
         ";
 
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -330,8 +337,9 @@ EOD;
     	";
 
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -370,8 +378,9 @@ EOD;
     	";
 
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -403,8 +412,9 @@ EOD;
     	";
 
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -439,8 +449,9 @@ EOD;
     	}
     	";
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -471,8 +482,9 @@ EOD;
 	    myvar = 123; class Pear { };
 	    ";
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(Filesystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -507,8 +519,9 @@ EOD;
                     }
                     EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -578,8 +591,9 @@ EOD;
     public function testExcludePackagesFromPrefix()
     {
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(Filesystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn('');
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $config->method('getExcludePackagesFromPrefixing')->willReturn(
@@ -611,8 +625,9 @@ EOD;
      */
     public function testExcludeFilePatternsFromPrefix()
     {
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(Filesystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn('');
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $config->method('getExcludeFilePatternsFromPrefixing')->willReturn(
@@ -654,8 +669,9 @@ EOD;
 		}
 		";
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $config->method('getNamespacePrefix')->willReturn('BrianHenryIE\Prefix');
@@ -714,8 +730,9 @@ class TCPDF_STATIC
 }
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(Filesystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -760,8 +777,9 @@ class FPDF
 {}
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(Filesystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -809,8 +827,9 @@ final class WPGraphQL {
 }
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -856,8 +875,9 @@ function lowerFunction() {
 EOD;
 
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -903,8 +923,9 @@ if (! function_exists('collect')) {
 EOD;
 
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -947,8 +968,9 @@ function lowerFunction() {
 EOD;
 
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
@@ -1000,8 +1022,9 @@ namespace {
 EOD;
 
 
-        $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
         $sut = new FileSymbolScanner($config, $filesystemReaderMock);
