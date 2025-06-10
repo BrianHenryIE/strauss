@@ -128,7 +128,7 @@ class Aliases
                         if(isset(\$class['namespace'])) {
                             \$namespace = "namespace {\$class['namespace']};";
                             \$extends = '\\\\' . \$class['extends'];
-                	        \$implements = !empty(\$class['implements']) ? ''
+                	        \$implements = empty(\$class['implements']) ? ''
                 	            : ' implements \\\\' . implode(', \\\\', \$class['implements']);
                         } else {
                             \$namespace = '';
@@ -145,7 +145,7 @@ class Aliases
                     
                     private function interfaceTemplate(array \$interface): string
                     {
-                        \$interfacename = \$interface['classname'];
+                        \$interfacename = \$interface['interfacename'];
                         \$namespace = isset(\$interface['namespace']) 
                             ? "namespace {\$interface['namespace']};" : '';
                         \$extends = isset(\$interface['namespace'])
