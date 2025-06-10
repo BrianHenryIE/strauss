@@ -11,6 +11,7 @@ use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -19,7 +20,6 @@ use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
-use League\Flysystem\FilesystemReader;
 use PhpParser\Node;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
@@ -40,7 +40,7 @@ class FileSymbolScanner
 
     protected DiscoveredSymbols $discoveredSymbols;
 
-    protected FilesystemReader $filesystem;
+    protected FileSystem $filesystem;
 
     protected FileSymbolScannerConfigInterface $config;
 
@@ -57,7 +57,7 @@ class FileSymbolScanner
      */
     public function __construct(
         FileSymbolScannerConfigInterface $config,
-        FilesystemReader $filesystem,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->discoveredSymbols = new DiscoveredSymbols();
@@ -108,13 +108,18 @@ class FileSymbolScanner
                 continue;
             }
 
+            $relativeFilePath = $this->filesystem->getRelativePath(
+                $this->config->getProjectDirectory(),
+                $file->getSourcePath()
+            );
+
             if (!$file->isPhpFile()) {
                 $file->setDoPrefix(false);
-                $this->logger->debug('Skipping non-PHP file: ' . $file->getSourcePath());
+                $this->logger->debug("Skipping non-PHP file: {$relativeFilePath}");
                 continue;
             }
 
-            $this->logger->info('Scanning file:        ' . $file->getSourcePath());
+            $this->logger->info("Scanning file:        {$relativeFilePath}");
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
                 $file
