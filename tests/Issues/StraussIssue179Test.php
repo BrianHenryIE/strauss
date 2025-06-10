@@ -16,7 +16,7 @@ class StraussIssue179Test extends IntegrationTestCase
 {
     public function test_issue_179()
     {
-        $this->markTestSkippedOnPhpVersionEqualOrBelow('8.1.0');
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.1.0');
 
         $composerJsonString = <<<'EOD'
 {
