@@ -11,7 +11,6 @@ use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
-use BrianHenryIE\Strauss\Helpers\SimplePhpParser;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -22,7 +21,6 @@ use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use League\Flysystem\FilesystemReader;
 use PhpParser\Node;
-use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
@@ -31,6 +29,7 @@ use Psr\Log\NullLogger;
 use voku\SimplePhpParser\Model\PHPClass;
 use voku\SimplePhpParser\Model\PHPConst;
 use voku\SimplePhpParser\Model\PHPFunction;
+use voku\SimplePhpParser\Parsers\PhpCodeParser;
 
 class FileSymbolScanner
 {
@@ -139,7 +138,8 @@ class FileSymbolScanner
                 $contents = str_replace('<?php', '<?php' . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL, $contents);
             }
 
-            $phpCode = SimplePhpParser::getFromString($contents);
+            PhpCodeParser::$classExistsAutoload = false;
+            $phpCode = PhpCodeParser::getFromString($contents);
 
             /** @var PHPClass[] $phpClasses */
             $phpClasses = $phpCode->getClasses();
