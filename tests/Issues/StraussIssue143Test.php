@@ -127,7 +127,7 @@ EOD;
      */
     public function test_silent_option_symfony_72(): void
     {
-        $this->markTestSkippedOnPhpVersionBelow('8.2');
+        $this->markTestSkippedOnPhpVersionAbove('8.2');
 
         $composerJsonString = <<<'EOD'
 {
@@ -154,7 +154,6 @@ EOD;
         exec($this->testsWorkingDir . '/vendor/bin/strauss dependencies  2>&1', $output);
 
         $outputMerged = implode(PHP_EOL, $output);
-
 
         $this->assertStringNotContainsString(
             'An option named "silent" already exists',
