@@ -16,7 +16,7 @@ class StraussIssue179Test extends IntegrationTestCase
 {
     public function test_issue_179()
     {
-        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.1.0');
+        $this->markTestSkippedOnPhpVersionEqualOrBelow('8.1.0');
 
         $composerJsonString = <<<'EOD'
 {
@@ -36,8 +36,7 @@ class StraussIssue179Test extends IntegrationTestCase
         "php": ">=8.1",
         "duck7000/imdb-graphql-php": "dev-jcv",
         "twbs/bootstrap": "@stable",
-        "monolog/monolog": "@stable",
-        "psr/log": "1.1.0"
+        "monolog/monolog": "@stable"
     },
 	"extra": {
 	    "strauss": {
