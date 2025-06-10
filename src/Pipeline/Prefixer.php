@@ -84,13 +84,15 @@ class Prefixer
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
+
             if ($updatedContents !== $contents) {
                 // TODO: diff here and debug log.
                 $file->setDidUpdate();
                 $this->filesystem->write($file->getAbsoluteTargetPath(), $updatedContents);
-                $this->logger->info('Updated contents of file: ' . $file->getAbsoluteTargetPath());
+                $this->logger->info("Updated contents of file: {$relativeFilePath}");
             } else {
-                $this->logger->debug('No changes to file: ' . $file->getAbsoluteTargetPath());
+                $this->logger->debug("No changes to file: {$relativeFilePath}");
             }
         }
     }
