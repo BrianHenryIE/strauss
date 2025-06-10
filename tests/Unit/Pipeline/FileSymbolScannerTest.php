@@ -499,13 +499,13 @@ EOD;
     {
 
         $contents = <<<'EOD'
-					<?php
-					class WP_Dependency_Installer {
-						/**
-						 *
-						 */
-					 }
-					EOD;
+                    <?php
+                    class WP_Dependency_Installer {
+                    	/**
+                    	 *
+                    	 */
+                    }
+                    EOD;
 
         $filesystemReaderMock = Mockery::mock(FilesystemReader::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
