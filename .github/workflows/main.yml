@@ -78,7 +78,7 @@ jobs:
         if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
         with:
           message-id: strauss-phar
-          message: ${{ format('[strauss.phar.zip]({0}) @ {1} {2} `composer require brianhenryie/strauss:"dev-master#{1}" --dev', steps.artifact-upload-step.outputs.artifact-url, github.event.pull_request.head.sha, '\n') }}
+          message: ${{ format('[strauss.phar.zip]({0}) @ {1} {2} `composer require brianhenryie/strauss:"dev-master#{1}" --dev`', steps.artifact-upload-step.outputs.artifact-url, github.event.pull_request.head.sha, '\n') }}
 
       - name: Run tests with strauss.phar
         run: vendor/bin/phpunit
