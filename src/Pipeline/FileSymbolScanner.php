@@ -79,6 +79,12 @@ class FileSymbolScanner
 
         $this->loggedSymbols[] = $symbol->getOriginalSymbol();
 
+        $pad = function (string $text, int $length = 20): string {
+            static $padLength = max($padLength ?? 0, $length);
+            $padLength = max($padLength, strlen($text) + 2);
+            return str_pad($text, $padLength, ' ', STR_PAD_RIGHT);
+        };
+
         switch (get_class($symbol)) {
             case NamespaceSymbol::class:
                 $this->logger->log($level, "Found {$newText}namespace:  {$noNewText}" . $symbol->getOriginalSymbol());
@@ -93,7 +99,21 @@ class FileSymbolScanner
                 $this->logger->log($level, "Found {$newText}function    {$noNewText}" . $symbol->getOriginalSymbol());
                 break;
             default:
-                $this->logger->log($level, "Found {$newText} " . get_class($symbol) . $noNewText . ' ' . $symbol->getOriginalSymbol());
+                $this->logger->log(
+                    $level,
+                    sprintf(
+                        "%s %s",
+                        // The part up until the original symbol. I.e. the first "column" of the message.
+                        $pad(sprintf(
+                            "Found %s %s %s",
+                            $newText,
+                            // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
+                            strtolower(str_replace('Symbol', '', basename(get_class($symbol)))),
+                            $noNewText,
+                        )),
+                        $symbol->getOriginalSymbol()
+                    )
+                );
         }
     }
 
