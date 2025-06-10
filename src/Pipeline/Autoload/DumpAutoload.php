@@ -26,6 +26,10 @@ class DumpAutoload
     protected AutoloadConfigInterface $config;
 
     protected FileSystem $filesystem;
+    
+    protected Prefixer $projectReplace;
+
+    protected FileEnumerator $fileEnumerator;
 
     public function __construct(
         AutoloadConfigInterface $config,
