@@ -186,7 +186,12 @@ class FileEnumerator
 
         $this->discoveredFiles->add($f);
 
-        $this->logger->info("Found file " . $f->getAbsoluteTargetPath());
+        $relativeFilePath =
+            $this->filesystem->getRelativePath(
+                dirname($this->config->getVendorDirectory()),
+                $f->getAbsoluteTargetPath()
+            );
+        $this->logger->info("Found file " . $relativeFilePath);
     }
 
     /**
