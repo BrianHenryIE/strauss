@@ -108,13 +108,15 @@ class Prefixer
     {
 
         foreach ($absoluteFilePathsArray as $fileAbsolutePath) {
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $fileAbsolutePath);
+
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
-                $this->logger->debug("is_dir() / nothing to do : {$fileAbsolutePath}");
+                $this->logger->debug("is_dir() / nothing to do : {$relativeFilePath}");
                 continue;
             }
 
             if (! $this->filesystem->fileExists($fileAbsolutePath)) {
-                $this->logger->warning("Expected file does not exist: {$fileAbsolutePath}");
+                $this->logger->warning("Expected file does not exist: {$relativeFilePath}");
                 continue;
             }
 
@@ -126,9 +128,9 @@ class Prefixer
             if ($updatedContents !== $contents) {
                 $this->changedFiles[ $fileAbsolutePath ] = null;
                 $this->filesystem->write($fileAbsolutePath, $updatedContents);
-                $this->logger->info('Updated contents of file: ' . $fileAbsolutePath);
+                $this->logger->info('Updated contents of file: ' . $relativeFilePath);
             } else {
-                $this->logger->debug('No changes to file: ' . $fileAbsolutePath);
+                $this->logger->debug('No changes to file: ' . $relativeFilePath);
             }
         }
     }
