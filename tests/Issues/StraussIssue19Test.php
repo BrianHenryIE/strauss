@@ -21,7 +21,7 @@ class StraussIssue19Test extends IntegrationTestCase
      */
     public function testObjectIsNotPrefixed()
     {
-        $this->markTestSkippedOnPhpVersion('8.0', '>=');
+        $this->markTestSkippedOnPhpVersionBelow('8.0');
 
         $this->markTestSkipped('I think when the Alias file is being built, this fails because a tcpdf file includes/requires a file that does not exist.');
 

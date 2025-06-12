@@ -16,7 +16,7 @@ class StraussIssue179Test extends IntegrationTestCase
 {
     public function test_issue_179()
     {
-        $this->markTestSkippedOnPhpVersion('8.1.0', ">=");
+        $this->markTestSkippedOnPhpVersionEqualOrBelow('8.1.0');
 
         $composerJsonString = <<<'EOD'
 {
@@ -65,8 +65,8 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         assert(0 === $exitCode, $output);
 
-        exec('composer install');
-        $exitCode = $this->runStrauss($output);
+        exec("php -r \"include __DIR__ . '/vendor/autoload.php'; new class() { use \Psr\Log\LoggerAwareTrait; };\"", $output, $exitCode);
+        $output = implode(PHP_EOL, $output);
 
         $this->assertEquals(0, $exitCode, $output);
     }

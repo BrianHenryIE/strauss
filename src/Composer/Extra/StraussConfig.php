@@ -5,6 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
@@ -13,6 +14,8 @@ use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
 use Composer\Factory;
 use Exception;
@@ -88,6 +91,18 @@ class StraussConfig implements
      * @var string[]
      */
     protected array $packages = [];
+
+    /**
+     *
+     * @var array<string,ComposerPackage>
+     */
+    protected array $packagesToCopy = [];
+
+    /**
+     *
+     * @var array<string,ComposerPackage>
+     */
+    protected array $packagesToPrefix = [];
 
     /**
      * Back-compatibility with Mozart.
@@ -563,6 +578,32 @@ class StraussConfig implements
         $this->packages = $packages;
     }
 
+    /**
+     * @used-by DumpAutoload::createInstalledVersionsFiles()
+     * @return array<string,ComposerPackage>
+     */
+    public function getPackagesToCopy(): array
+    {
+        return $this->packagesToCopy;
+    }
+
+    /**
+     * @used-by DependenciesCommand::buildDependencyList()
+     */
+    public function setPackagesToCopy(array $packagesToCopy): void
+    {
+        $this->packagesToCopy = $packagesToCopy;
+    }
+
+    public function getPackagesToPrefix(): array
+    {
+        return $this->packagesToPrefix;
+    }
+
+    public function setPackagesToPrefix(array $packagesToPrefix): void
+    {
+        $this->packagesToPrefix = $packagesToPrefix;
+    }
     /**
      * @return bool
      */

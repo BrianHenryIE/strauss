@@ -89,6 +89,7 @@ EOD;
         $config->method('getNamespacePrefix')->willReturn("Prefix");
         $config->method('getExcludeNamespacesFromPrefixing')->willReturn(array());
         $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
+        $config->method('getPackagesToPrefix')->willReturn(array('google/apiclient'=>''));
 
         $fileScanner = new FileSymbolScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
 

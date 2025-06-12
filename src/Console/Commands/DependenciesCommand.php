@@ -177,7 +177,9 @@ class DependenciesCommand extends Command
             $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
         }
 
-        return new ConsoleLogger($output, $logLevel);
+        return isset($this->logger) && $this->logger instanceof \Psr\Log\Test\TestLogger
+            ? $this->logger
+            : new ConsoleLogger($output, $logLevel);
     }
 
     /**
@@ -249,6 +251,8 @@ class DependenciesCommand extends Command
 
             // This runs after cleanup because cleanup edits installed.json
             $this->generateAutoloader();
+
+            $this->logger->notice('Done');
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
@@ -304,6 +308,20 @@ class DependenciesCommand extends Command
             $this->logger
         );
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
+
+        $this->config->setPackagesToCopy(
+            array_filter($this->flatDependencyTree, function ($dependency) {
+                return !in_array($dependency, $this->config->getExcludePackagesFromCopy());
+            },
+            ARRAY_FILTER_USE_KEY)
+        );
+
+        $this->config->setPackagesToPrefix(
+            array_filter($this->flatDependencyTree, function ($dependency) {
+                return !in_array($dependency, $this->config->getExcludePackagesFromPrefixing());
+            },
+            ARRAY_FILTER_USE_KEY)
+        );
 
         // TODO: Print the dependency tree that Strauss has determined.
     }
@@ -495,7 +513,7 @@ class DependenciesCommand extends Command
             return;
         }
 
-        $this->logger->info('Generating aliases file...');
+        $this->logger->notice('Generating aliases file...');
 
         $aliases = new Aliases(
             $this->config,

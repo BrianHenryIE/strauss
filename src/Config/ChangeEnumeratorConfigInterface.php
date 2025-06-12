@@ -22,4 +22,6 @@ interface ChangeEnumeratorConfigInterface
     public function getNamespacePrefix(): ?string;
 
     public function getClassmapPrefix(): ?string;
+
+    public function getPackagesToPrefix(): array;
 }

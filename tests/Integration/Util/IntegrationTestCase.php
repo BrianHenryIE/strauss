@@ -7,12 +7,14 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 
+use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -29,6 +31,8 @@ class IntegrationTestCase extends TestCase
 
     protected $testsWorkingDir;
 
+    protected ?TestLogger $logger = null;
+
     public function setUp(): void
     {
         parent::setUp();
@@ -37,8 +41,21 @@ class IntegrationTestCase extends TestCase
 
         $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
 
+        $this->logger = new class extends ColorLogger {
+            public function debug($message, array $context = array())
+            {
+                // Mute debug.
+            }
+        };
+
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
+        }
+
+        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
+        // we set breakpoints, we can easily browse the files.
+        if ($this->isPhpStormRunning()) {
+            $this->testsWorkingDir = getcwd() . '/teststempdir/';
         }
 
         if (file_exists($this->testsWorkingDir)) {
@@ -48,9 +65,21 @@ class IntegrationTestCase extends TestCase
         @mkdir($this->testsWorkingDir);
 
         if (file_exists($this->projectDir . '/strauss.phar')) {
-            echo "strauss.phar found\n";
+            echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
             ob_flush();
         }
+    }
+
+    protected function isPhpStormRunning(): bool
+    {
+        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
+            return true;
+        }
+
+        if (isset($_SERVER['IDE_PHPUNIT_CUSTOM_LOADER'])) {
+            return true;
+        }
+        return false;
     }
 
     protected function runStrauss(?string &$allOutput = null, string $params = ''): int
@@ -77,6 +106,8 @@ class IntegrationTestCase extends TestCase
             default:
                 $strauss = new DependenciesCommand();
         }
+
+        $this->logger && $strauss->setLogger($this->logger);
 
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
         $inputInterface = new ArgvInput($argv);
@@ -168,10 +199,26 @@ class IntegrationTestCase extends TestCase
         $filesystem->deleteDirectory($dir);
     }
 
+    public function markTestSkippedOnPhpVersionBelow(string $php_version, string $message = '')
+    {
+        $this->markTestSkippedOnPhpVersion($php_version, '<', $message);
+    }
+    public function markTestSkippedOnPhpVersionEqualOrBelow(string $php_version, string $message = '')
+    {
+        $this->markTestSkippedOnPhpVersion($php_version, '<=', $message);
+    }
+    public function markTestSkippedOnPhpVersionAbove(string $php_version, string $message = '')
+    {
+        $this->markTestSkippedOnPhpVersion($php_version, '>', $message);
+    }
+    public function markTestSkippedOnPhpVersionEqualOrAbove(string $php_version, string $message = '')
+    {
+        $this->markTestSkippedOnPhpVersion($php_version, '>=', $message);
+    }
     /**
      * Checks both the PHP version the tests are running under and the system PHP version.
      */
-    public function markTestSkippedOnPhpVersion(string $php_version, string $operator)
+    public function markTestSkippedOnPhpVersion(string $php_version, string $operator, string $message = '')
     {
         exec('php -v', $output, $return_var);
         preg_match('/PHP\s([\d\\\.]*)/', $output[0], $php_version_capture);
@@ -180,8 +227,10 @@ class IntegrationTestCase extends TestCase
         $testPhpVersionConstraintMatch = version_compare(phpversion(), $php_version, $operator);
         $systemPhpVersionConstraintMatch = version_compare($system_php_version, $php_version, $operator);
 
-        if (! ($testPhpVersionConstraintMatch && $systemPhpVersionConstraintMatch)) {
-            $this->markTestSkipped("Package specified for test requires PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version);
+        if ($testPhpVersionConstraintMatch || $systemPhpVersionConstraintMatch) {
+            empty($message)
+                ? $this->markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
+                : $this->markTestSkipped($message);
         }
     }
 }

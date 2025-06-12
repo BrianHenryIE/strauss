@@ -24,7 +24,7 @@ class StraussIssue133Test extends IntegrationTestCase
     {
         $minimum_php_version = '8.2';
 
-        $this->markTestSkippedOnPhpVersion($minimum_php_version, ">=");
+        $this->markTestSkippedOnPhpVersionBelow($minimum_php_version);
 
         $composerJsonString = <<<'EOD'
 {

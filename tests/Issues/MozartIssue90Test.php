@@ -26,7 +26,7 @@ class MozartIssue90Test extends IntegrationTestCase
 
         // `PHP Fatal error:  Declaration of BrianHenryIE\Strauss\setasign\Fpdi\FpdfTplTrait::setPageFormat($size, $orientation) must be compatible with BrianHenryIE_Strauss_TCPDF::setPageFormat($format, $orientation = 'P') in /tmp/strausstestdir67b0184f95896/vendor-prefixed/setasign/fpdi/src/FpdfTpl.php on line 48`
         // I think this only fails on newer PHP versions where inheritance signatures are checked more strictly.
-        $this->markTestSkippedOnPhpVersion('8.0', '>=');
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.0');
 
         $composerJsonString = <<<'EOD'
 {

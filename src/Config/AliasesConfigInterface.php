@@ -21,4 +21,6 @@ interface AliasesConfigInterface
     public function isDryRun(): bool;
 
     public function isCreateAliases(): bool;
+
+    public function getNamespacePrefix(): ?string;
 }
