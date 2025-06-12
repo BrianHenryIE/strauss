@@ -69,54 +69,39 @@ class FileSymbolScanner
         $this->logger = $logger ?? new NullLogger();
     }
 
+
+    private static function pad(string $text, int $length = 25): string
+    {
+        /** @var int $padLength */
+        static $padLength;
+        $padLength = max(isset($padLength) ? $padLength : 0, $length);
+        $padLength = max($padLength, strlen($text) + 1);
+        return str_pad($text, $padLength, ' ', STR_PAD_RIGHT);
+    }
+
     protected function add(DiscoveredSymbol $symbol): void
     {
         $this->discoveredSymbols->add($symbol);
 
         $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
         $newText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '' : 'new ';
-        $noNewText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '   ' : '';
 
         $this->loggedSymbols[] = $symbol->getOriginalSymbol();
 
-        $pad = function (string $text, int $length = 20): string {
-            /** @var int $padLength */
-            static $padLength;
-            $padLength = max(isset($padLength) ? $padLength : 0, $length);
-            $padLength = max($padLength, strlen($text) + 2);
-            return str_pad($text, $padLength, ' ', STR_PAD_RIGHT);
-        };
-
-        switch (get_class($symbol)) {
-            case NamespaceSymbol::class:
-                $this->logger->log($level, "Found {$newText}namespace:  {$noNewText}" . $symbol->getOriginalSymbol());
-                break;
-            case ConstantSymbol::class:
-                $this->logger->log($level, "Found {$newText}constant:   {$noNewText}" . $symbol->getOriginalSymbol());
-                break;
-            case ClassSymbol::class:
-                $this->logger->log($level, "Found {$newText}class:      {$noNewText}" . $symbol->getOriginalSymbol());
-                break;
-            case FunctionSymbol::class:
-                $this->logger->log($level, "Found {$newText}function    {$noNewText}" . $symbol->getOriginalSymbol());
-                break;
-            default:
-                $this->logger->log(
-                    $level,
-                    sprintf(
-                        "%s %s",
-                        // The part up until the original symbol. I.e. the first "column" of the message.
-                        $pad(sprintf(
-                            "Found %s %s %s",
-                            $newText,
-                            // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
-                            strtolower(str_replace('Symbol', '', basename(get_class($symbol)))),
-                            $noNewText,
-                        )),
-                        $symbol->getOriginalSymbol()
-                    )
-                );
-        }
+        $this->logger->log(
+            $level,
+            sprintf(
+                "%s %s",
+                // The part up until the original symbol. I.e. the first "column" of the message.
+                self::pad(sprintf(
+                    "Found %s%s: ",
+                    $newText,
+                    // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
+                    strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
+                )),
+                $symbol->getOriginalSymbol()
+            )
+        );
     }
 
     /**
@@ -137,11 +122,11 @@ class FileSymbolScanner
 
             if (!$file->isPhpFile()) {
                 $file->setDoPrefix(false);
-                $this->logger->debug("Skipping non-PHP file: {$relativeFilePath}");
+                $this->logger->debug(self::pad("Skipping non-PHP file:"). $relativeFilePath);
                 continue;
             }
 
-            $this->logger->info("Scanning file:        {$relativeFilePath}");
+            $this->logger->info(self::pad("Scanning file:") . $relativeFilePath);
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
                 $file
