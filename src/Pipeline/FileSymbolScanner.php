@@ -147,7 +147,7 @@ class FileSymbolScanner
             $contents = trim($contents);
             $contents = false === strpos($contents, '<?php') ? "<?php\n" . $contents : $contents;
             if ($namespaceName !== '\\') {
-                $contents = str_replace('<?php', '<?php' . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL, $contents);
+                $contents = preg_replace('#<\?php#', '<?php' . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL, $contents, 1);
             }
 
             PhpCodeParser::$classExistsAutoload = false;
