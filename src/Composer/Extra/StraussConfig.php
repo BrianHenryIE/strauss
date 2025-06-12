@@ -580,7 +580,7 @@ class StraussConfig implements
 
     /**
      * @used-by DumpAutoload::createInstalledVersionsFiles()
-     * @var array<string,ComposerPackage>
+     * @return array<string,ComposerPackage>
      */
     public function getPackagesToCopy(): array
     {
