@@ -34,24 +34,17 @@ class DumpAutoload
     public function __construct(
         AutoloadConfigInterface $config,
         Filesystem $filesystem,
-        ?LoggerInterface $logger = null,
-        ?Prefixer $projectReplace = null,
-        ?FileEnumerator $fileEnumerator = null
+        LoggerInterface $logger,
+        Prefixer $projectReplace,
+        FileEnumerator $fileEnumerator
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
         $this->setLogger($logger ?? new NullLogger());
 
-        $this->projectReplace = $projectReplace ?? new Prefixer(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
+        $this->projectReplace = $projectReplace;
 
-        $this->fileEnumerator = $fileEnumerator ?? new FileEnumerator(
-            $this->config,
-            $this->filesystem
-        );
+        $this->fileEnumerator = $fileEnumerator;
     }
 
     /**

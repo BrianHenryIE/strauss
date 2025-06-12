@@ -76,7 +76,16 @@ class Autoload
         (new DumpAutoload(
             $this->config,
             $this->filesystem,
-            $this->logger
+            $this->logger,
+            new Prefixer(
+                $this->config,
+                $this->filesystem,
+                $this->logger
+            ),
+            new FileEnumerator(
+                $this->config,
+                $this->filesystem
+            )
         ))->generatedPrefixedAutoloader();
     }
 }
