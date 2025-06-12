@@ -43,7 +43,7 @@ class AliasesTest extends TestCase
 
         $config = Mockery::mock(AliasesConfigInterface::class);
         $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
-        $config->expects('getNamespacePrefix')->times(2)->andReturn('Baz\\');
+        $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
 
         $fileSystem = $this->getFileSystem();
 
@@ -94,7 +94,7 @@ EOD;
 
         $config = Mockery::mock(AliasesConfigInterface::class);
         $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
-        $config->expects('getNamespacePrefix')->times(2)->andReturn('Baz\\');
+        $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
 
         $fileSystem = $this->getFileSystem();
 
