@@ -203,11 +203,11 @@ class DumpAutoload
         );
 
         $sourceFile = new File(__DIR__);
-        $composerNamespaceSymbol = new NamespaceSymbol(
+        $composerAutoloadNamespaceSymbol = new NamespaceSymbol(
             'Composer\\Autoload',
             $sourceFile
         );
-        $composerNamespaceSymbol->setReplacement(
+        $composerAutoloadNamespaceSymbol->setReplacement(
             $this->config->getNamespacePrefix() . '\\Composer\\Autoload'
         );
         $composerNamespaceSymbol = new NamespaceSymbol(
@@ -221,6 +221,9 @@ class DumpAutoload
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add(
             $composerNamespaceSymbol
+        );
+        $discoveredSymbols->add(
+            $composerAutoloadNamespaceSymbol
         );
 
         $this->projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
