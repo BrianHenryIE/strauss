@@ -26,10 +26,10 @@ use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use voku\SimplePhpParser\Model\PHPClass;
-use voku\SimplePhpParser\Model\PHPConst;
-use voku\SimplePhpParser\Model\PHPFunction;
-use voku\SimplePhpParser\Parsers\PhpCodeParser;
+use BrianHenryIE\SimplePhpParser\Model\PHPClass;
+use BrianHenryIE\SimplePhpParser\Model\PHPConst;
+use BrianHenryIE\SimplePhpParser\Model\PHPFunction;
+use BrianHenryIE\SimplePhpParser\Parsers\PhpCodeParser;
 
 class FileSymbolScanner
 {
