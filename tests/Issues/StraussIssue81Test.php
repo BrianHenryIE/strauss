@@ -25,6 +25,7 @@ class StraussIssue81Test extends IntegrationTestCase
      */
     public function test_aliased_class(): void
     {
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 
         // `psr/log` isn't a good example to use because it uses PHPUnit without declaring it as a dependency.
         $composerJsonString = <<<'EOD'

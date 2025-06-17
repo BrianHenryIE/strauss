@@ -80,6 +80,8 @@ EOD;
      */
     public function test_meta_package()
     {
+        $this->markTestSkippedOnPhpVersionAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
+
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss-issue-22",

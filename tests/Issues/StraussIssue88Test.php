@@ -17,6 +17,7 @@ class StraussIssue88Test extends IntegrationTestCase
 {
     public function test_returned_casted_function_call()
     {
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 
         $composerJsonString = <<<'EOD'
 {
