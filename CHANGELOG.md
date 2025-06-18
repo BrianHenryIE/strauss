@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.22.4 June 2025
+## 0.22.3 June 2025
 
 * Filter 'implements' nodes on FullyQualified + add issue test
 * Exclude directories from license copy step
