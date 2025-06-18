@@ -48,7 +48,7 @@ EOD;
 
         $this->assertStringNotContainsString(
             "Couldn't find constant \\League\\MimeTypeDetection\\FinfoMimeTypeDetector::INCONCLUSIVE_MIME_TYPES",
-            $this->getActualOutput()
+            $this->getActualOutputForAssertion()
         );
     }
 }
