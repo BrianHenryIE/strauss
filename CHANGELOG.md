@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.22.4 June 2025
+
+* Require `simple-php-code-parser` `^0.15.1`
+
 ## 0.22.3 June 2025
 
 * Filter 'implements' nodes on FullyQualified + add issue test
@@ -9,7 +13,7 @@
 * Fix spelling
 * Filter `performReplacementsInProjectFiles()` to only PHP files
 * Add `file_exists()` check in edited `vendor/autoload.php`
-* Fix Double slashes when replacing namespace in use keywoards inside clasess
+* Fix Double slashes when replacing namespace in use keywords inside classes
 * Fix Fatal error: Uncaught Error: Failed opening required 'vendor_prefixed'
 * Fix Command "include-autoloader" is not defined
 * Fix/close Mockery
