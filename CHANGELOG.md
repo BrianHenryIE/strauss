@@ -1,5 +1,21 @@
 # Change Log
 
+## 0.22.4 June 2025
+
+* Filter 'implements' nodes on FullyQualified + add issue test
+* Exclude directories from license copy step
+* Add spelling to main workflow
+* Use `"elazar/flystream": "^0.5.0|^1"`
+* Fix spelling
+* Filter `performReplacementsInProjectFiles()` to only PHP files
+* Add `file_exists()` check in edited `vendor/autoload.php`
+* Fix Double slashes when replacing namespace in use keywoards inside clasess
+* Fix Fatal error: Uncaught Error: Failed opening required 'vendor_prefixed'
+* Fix Command "include-autoloader" is not defined
+* Fix/close Mockery
+* Add `extends Composer\Autoload\AutoloadGenerator`
+* Don't use dir as file
+
 ## 0.22.2 April 2025
 
 * Fix: `psr-0` autoloaders were no longer autoloaded because the directory structure did not match
