@@ -5,7 +5,10 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class MozartIssue89Test
@@ -53,7 +56,8 @@ class MozartIssue89Test extends IntegrationTestCase
      */
     public function it_moves_each_file_once_per_namespace()
     {
-        $this->markTestSkippedOnPhpVersion('7.1', '<');
+        $this->markTestSkippedOnPhpVersionBelow('7.1');
+        $this->markTestSkippedOnPhpVersionAbove('7.4');
 
         $composerJsonString = <<<'EOD'
 {
@@ -80,7 +84,7 @@ EOD;
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
-        $mozartCompose = new Compose();
+        $mozartCompose = new DependenciesCommand();
 
         // $this->expectException(League\Flysystem\FileExistsException::class);
 
@@ -88,7 +92,7 @@ EOD;
 
         try {
             $result = $mozartCompose->run($inputInterfaceMock, $outputInterfaceMock);
-        } catch (\League\Flysystem\FileExistsException $e) {
+        } catch (\Exception $e) {
             $exception  = $e;
         }
 

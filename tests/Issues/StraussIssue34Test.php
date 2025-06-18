@@ -30,6 +30,9 @@ class StraussIssue34Test extends IntegrationTestCase
   "require": {
     "psr/log": "1"
   },
+  "require-dev": {
+    "phpunit/phpunit": "*"
+  },
   "extra": {
     "strauss": {
       "namespace_prefix": "BrianHenryIE\\Strauss\\",

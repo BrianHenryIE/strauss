@@ -13,25 +13,29 @@ abstract class DiscoveredSymbol
     /** @var array<File> $sourceFiles */
     protected array $sourceFiles = [];
 
-    protected string $symbol;
+    protected ?string $namespace;
+
+    protected string $fqdnOriginalSymbol;
 
     protected string $replacement;
 
     /**
-     * @param string $symbol The classname / namespace etc.
+     * @param string $fqdnSymbol The classname / namespace etc.
      * @param File $sourceFile The file it was discovered in.
      */
-    public function __construct(string $symbol, File $sourceFile)
+    public function __construct(string $fqdnSymbol, File $sourceFile, string $namespace = '\\')
     {
-        $this->symbol = $symbol;
+        $this->fqdnOriginalSymbol = $fqdnSymbol;
 
         $this->addSourceFile($sourceFile);
         $sourceFile->addDiscoveredSymbol($this);
+
+        $this->namespace = $namespace;
     }
 
     public function getOriginalSymbol(): string
     {
-        return $this->symbol;
+        return $this->fqdnOriginalSymbol;
     }
 
     /**
@@ -54,11 +58,21 @@ abstract class DiscoveredSymbol
 
     public function getReplacement(): string
     {
-        return $this->replacement ?? $this->symbol;
+        return $this->replacement ?? $this->fqdnOriginalSymbol;
     }
 
     public function setReplacement(string $replacement): void
     {
         $this->replacement = $replacement;
+    }
+
+    public function getNamespace(): ?string
+    {
+        return $this->namespace;
+    }
+
+    public function getOriginalLocalName(): string
+    {
+        return array_reverse(explode('\\', $this->fqdnOriginalSymbol))[0];
     }
 }

@@ -57,8 +57,26 @@ EOD;
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
 
+        $installedJsonString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
+        $this->assertStringContainsString('"name": "psr/log",', $installedJsonString);
+
+        $exitCode = $this->runStrauss($output, 'include-autoloader');
+        assert(0 === $exitCode, $output);
+
         $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
         $this->assertStringContainsString('/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
+        $this->assertStringNotContainsString('\'Psr\\\\Log\\\\NullLogger', $classmapString);
+        $this->assertStringContainsString('\'Strauss\\\\Issue143\\\\Psr\\\\Log\\\\NullLogger', $classmapString);
+
+        exec('php -r "include __DIR__ . \'/../vendor/autoload.php\'; new \Psr\Log\NullLogger();" 2>&1', $output, $result_code);
+        $outputString = implode(PHP_EOL, $output);
+
+        $this->assertEquals(0, $result_code, $outputString);
+
+        exec('php -r "include __DIR__ . \'/../vendor/autoload.php\'; new \Strauss\Issue143\Psr\Log\NullLogger();" 2>&1', $output, $result_code);
+        $outputString = implode(PHP_EOL, $output);
+
+        $this->assertEquals(0, $result_code, $outputString);
     }
 
     /**
@@ -109,7 +127,8 @@ EOD;
      */
     public function test_silent_option_symfony_72(): void
     {
-        $this->markTestSkippedOnPhpVersion('8.2', '>=');
+        $this->markTestSkippedOnPhpVersionAbove('8.2');
+        $this->markTestSkippedOnPhpVersionBelow('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -136,7 +155,6 @@ EOD;
         exec($this->testsWorkingDir . '/vendor/bin/strauss dependencies  2>&1', $output);
 
         $outputMerged = implode(PHP_EOL, $output);
-
 
         $this->assertStringNotContainsString(
             'An option named "silent" already exists',

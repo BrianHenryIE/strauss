@@ -73,6 +73,10 @@ class Prefixer
                 continue;
             }
 
+            if (!$file->isDoPrefix()) {
+                continue;
+            }
+
             /**
              * Throws an exception, but unlikely to happen.
              */
@@ -80,13 +84,15 @@ class Prefixer
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
+
             if ($updatedContents !== $contents) {
                 // TODO: diff here and debug log.
                 $file->setDidUpdate();
                 $this->filesystem->write($file->getAbsoluteTargetPath(), $updatedContents);
-                $this->logger->info('Updated contents of file: ' . $file->getAbsoluteTargetPath());
+                $this->logger->info("Updated contents of file: {$relativeFilePath}");
             } else {
-                $this->logger->debug('No changes to file: ' . $file->getAbsoluteTargetPath());
+                $this->logger->debug("No changes to file: {$relativeFilePath}");
             }
         }
     }
@@ -102,13 +108,15 @@ class Prefixer
     {
 
         foreach ($absoluteFilePathsArray as $fileAbsolutePath) {
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $fileAbsolutePath);
+
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
-                $this->logger->debug("is_dir() / nothing to do : {$fileAbsolutePath}");
+                $this->logger->debug("is_dir() / nothing to do : {$relativeFilePath}");
                 continue;
             }
 
             if (! $this->filesystem->fileExists($fileAbsolutePath)) {
-                $this->logger->warning("Expected file does not exist: {$fileAbsolutePath}");
+                $this->logger->warning("Expected file does not exist: {$relativeFilePath}");
                 continue;
             }
 
@@ -120,9 +128,9 @@ class Prefixer
             if ($updatedContents !== $contents) {
                 $this->changedFiles[ $fileAbsolutePath ] = null;
                 $this->filesystem->write($fileAbsolutePath, $updatedContents);
-                $this->logger->info('Updated contents of file: ' . $fileAbsolutePath);
+                $this->logger->info('Updated contents of file: ' . $relativeFilePath);
             } else {
-                $this->logger->debug('No changes to file: ' . $fileAbsolutePath);
+                $this->logger->debug('No changes to file: ' . $relativeFilePath);
             }
         }
     }
@@ -135,17 +143,46 @@ class Prefixer
      */
     public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents): string
     {
+        $classmapPrefix = $this->config->getClassmapPrefix();
+
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
-        $classes = $discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix());
         $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
         $functions = $discoveredSymbols->getDiscoveredFunctions();
 
         $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
 
-        foreach ($classes as $originalClassname) {
-            $classmapPrefix = $this->config->getClassmapPrefix();
+        $classesTraitsInterfaces = array_merge(
+            $discoveredSymbols->getDiscoveredTraits(),
+            $discoveredSymbols->getDiscoveredInterfaces(),
+            $discoveredSymbols->getAllClasses()
+        );
+
+        foreach ($classesTraitsInterfaces as $theclass) {
+            if (str_starts_with($theclass->getOriginalSymbol(), $classmapPrefix)) {
+                // Already prefixed / second scan.
+                continue;
+            }
+
+            if ($theclass->getNamespace() !== '\\') {
+                $newNamespace = $namespacesChanges[$theclass->getNamespace()];
+                if ($newNamespace) {
+                    $theclass->setReplacement(
+                        str_replace(
+                            $newNamespace->getOriginalSymbol(),
+                            $newNamespace->getReplacement(),
+                            $theclass->getOriginalSymbol()
+                        )
+                    );
+                    unset($newNamespace);
+                }
+                continue;
+            }
+            $theclass->setReplacement($classmapPrefix . $theclass->getOriginalSymbol());
+        }
+
+        foreach ($discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix()) as $classsname) {
             if ($classmapPrefix) {
-                $contents = $this->replaceClassname($contents, $originalClassname, $classmapPrefix);
+                $contents = $this->replaceClassname($contents, $classsname, $classmapPrefix);
             }
         }
 

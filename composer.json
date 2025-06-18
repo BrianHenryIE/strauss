@@ -16,6 +16,7 @@
     "prefer-stable": true,
     "license": "MIT",
     "require": {
+        "brianhenryie/simple-php-code-parser": "^0.15",
         "composer-runtime-api": "^2.0",
         "composer/class-map-generator": "^1.6.0",
         "composer/composer": "*",
@@ -23,7 +24,7 @@
         "json-mapper/json-mapper": ">=2.0.0 <=2.22.3",
         "league/flysystem": "^2.1|^3.0",
         "league/flysystem-memory": "*",
-        "nikic/php-parser": "*",
+        "nikic/php-parser": "^5.4.0",
         "symfony/console": "^4|^5|^6|^7",
         "symfony/finder": "^4|^5|^6|^7"
     },
@@ -48,6 +49,7 @@
     "require-dev": {
         "php": "^7.4|^8.0",
         "ext-json": "*",
+        "brianhenryie/color-logger": "^1.2",
         "clue/phar-composer": "^1.2",
         "jaschilz/php-coverage-badger": "^2.0",
         "mheap/phpunit-github-actions-printer": "^1.4",

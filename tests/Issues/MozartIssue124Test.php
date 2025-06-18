@@ -28,7 +28,7 @@ class MozartIssue124Test extends IntegrationTestCase
      */
     public function test_it_does_not_make_classname_replacement_inside_namespaced_file()
     {
-        $this->markTestSkippedOnPhpVersion('8.0.0', "<=");
+        $this->markTestSkippedOnPhpVersionAbove('8.0.0');
 
         $composerJsonString = <<<'EOD'
 {
@@ -76,7 +76,7 @@ EOD;
      */
     public function test_it_does_not_prefix_function_argument_types_whose_classname_matches_the_namespace()
     {
-        $this->markTestSkippedOnPhpVersion('8.0.0', "<=");
+        $this->markTestSkippedOnPhpVersionAbove('8.0.0');
 
         $composerJsonString = <<<'EOD'
 {
@@ -121,7 +121,7 @@ EOD;
      */
     public function testItDoesPrefixNamespacedExtends()
     {
-        $this->markTestSkippedOnPhpVersion('8.0.0', "<=");
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.1.0');
 
         $composerJsonString = <<<'EOD'
 {
