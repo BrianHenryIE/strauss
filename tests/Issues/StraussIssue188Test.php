@@ -41,8 +41,8 @@ EOD;
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/guzzlehttp/guzzle/src/Client.php');
 
-        $this->assertStringNotContainsString("class Client implements ClientInterface, \\Psr\Http\Client\ClientInterface", $php_string);
-        $this->assertStringContainsString("class Client implements ClientInterface, \Company\PluginFramework\Psr\Http\Client\ClientInterface", $php_string);
+        $this->assertStringNotContainsString("class Client implements ClientInterface, \\\\Psr\\Http\\Client\\ClientInterface", $php_string);
+        $this->assertStringContainsString("class Client implements ClientInterface, \\Company\\PluginFramework\\Psr\\Http\\Client\\ClientInterface", $php_string);
     }
 
 
@@ -84,8 +84,8 @@ EOD;
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/mpdf/mpdf/src/Exception/FontException.php');
 
-        $this->assertStringNotContainsString("class FontException extends \\Mpdf\MpdfException", $php_string);
-        $this->assertStringNotContainsString("class FontException extends \\Company\PluginFramework\Mpdf\MpdfException", $php_string);
-        $this->assertStringContainsString("class FontException extends \Company\PluginFramework\Mpdf\MpdfException", $php_string);
+        $this->assertStringNotContainsString("class FontException extends \\\\Mpdf\\MpdfException", $php_string);
+        $this->assertStringNotContainsString("class FontException extends \\Company\\PluginFramework\\Mpdf\\MpdfException", $php_string);
+        $this->assertStringContainsString("class FontException extends \\Company\\PluginFramework\\Mpdf\\MpdfException", $php_string);
     }
 }
