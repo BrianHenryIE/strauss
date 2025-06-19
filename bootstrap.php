@@ -14,7 +14,7 @@
 
 $autoloadAliasesFilepath = realpath(__DIR__ . '/../../composer/autoload_aliases.php');
 if (file_exists($autoloadAliasesFilepath)) {
-    $targetDirectory = function () {
+    $targetDirectoryFromComposerExtra = function () {
         $composerJsonFilepath = realpath(__DIR__ . '/../../../composer.json');
         if (file_exists($composerJsonFilepath)) {
             $composerJson = json_decode(file_get_contents($composerJsonFilepath), true);
@@ -28,12 +28,15 @@ if (file_exists($autoloadAliasesFilepath)) {
         return null;
     };
 
-    // Check it's not trying to load the vendor/autoload.php file that is currently being loaded.
-    $autoloadTargetDirFilepath = $targetDirectory() ?? realpath(__DIR__ . "/../../../vendor-prefixed/autoload.php");
-    if ($autoloadTargetDirFilepath !== realpath(__DIR__ . '/../../autoload.php') && file_exists($autoloadTargetDirFilepath)) {
-        require_once $autoloadTargetDirFilepath;
+    $autoloadTargetFilepath = sprintf(
+        "%s/%s/autoload.php",
+        getcwd(),
+        $targetDirectoryFromComposerExtra() ?? "vendor-prefixed"
+    );
+    if ($autoloadTargetFilepath !== realpath(__DIR__ . '/../../autoload.php') && file_exists($autoloadTargetFilepath)) {
+        require_once $autoloadTargetFilepath;
     }
-    unset($autoloadTargetDirFilepath);
+    unset($autoloadTargetFilepath);
 
     require_once $autoloadAliasesFilepath;
 }

@@ -19,3 +19,5 @@ xdebug.sh
 7.4linux.sh
 scripts/builtins.php
 /tools
+
+/teststempdir

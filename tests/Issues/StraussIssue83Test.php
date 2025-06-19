@@ -19,6 +19,8 @@ class StraussIssue83Test extends IntegrationTestCase
     // Excludes everything except aws from copy.
     public function test_issue_83()
     {
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
+
         $composerJsonString = <<<'EOD'
 {
   "name": "issue/83",

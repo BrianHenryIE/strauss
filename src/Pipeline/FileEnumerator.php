@@ -81,10 +81,6 @@ class FileEnumerator
     public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
     {
         foreach ($dependencies as $dependency) {
-            if (in_array($dependency->getPackageName(), $this->excludePackageNames)) {
-                $this->logger->info("Excluding package " . $dependency->getPackageName());
-                continue;
-            }
             $this->logger->info("Scanning for files for package " . $dependency->getPackageName());
 
             /**
@@ -187,15 +183,14 @@ class FileEnumerator
         $f->addAutoloader($autoloaderType);
         $f->setDoDelete(!$isOutsideProjectDir);
 
-        foreach ($this->excludeFilePatterns as $excludePattern) {
-            if (1 === preg_match($excludePattern, $vendorRelativePath)) {
-                $f->setDoCopy(false);
-            }
-        }
-
         $this->discoveredFiles->add($f);
 
-        $this->logger->info("Found file " . $f->getAbsoluteTargetPath());
+        $relativeFilePath =
+            $this->filesystem->getRelativePath(
+                dirname($this->config->getVendorDirectory()),
+                $f->getAbsoluteTargetPath()
+            );
+        $this->logger->info("Found file " . $relativeFilePath);
     }
 
     /**

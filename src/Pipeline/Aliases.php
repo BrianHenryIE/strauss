@@ -17,6 +17,7 @@ use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\NamespaceSort;
+use BrianHenryIE\Strauss\Types\AutoloadAliasInterface;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -28,6 +29,7 @@ use League\Flysystem\StorageAttributes;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use ReflectionClass;
 
 class Aliases
 {
@@ -47,71 +49,147 @@ class Aliases
         $this->setLogger($logger ?? new NullLogger());
     }
 
+    protected function getTemplate(array $aliasesArray, ?string $autoloadAliasesFunctionsString): string
+    {
+        $namespace = $this->config->getNamespacePrefix();
+        $autoloadAliases = var_export($aliasesArray, true);
+
+        $globalFunctionsString = !$autoloadAliasesFunctionsString ? ''
+                : <<<GLOBAL
+                // Global functions
+                namespace {
+                	$autoloadAliasesFunctionsString
+                }
+                GLOBAL;
+
+        return <<<TEMPLATE
+                <?php
+
+                $globalFunctionsString
+
+                // Everything else – irrelevant that this part is namespaced
+                namespace $namespace {
+
+                class AliasAutoloader
+                {
+                	private string \$includeFilePath;
+
+                    private array \$autoloadAliases = $autoloadAliases;
+
+                    public function __construct() {
+                		\$this->includeFilePath = __DIR__ . '/autoload_alias.php';
+                    }
+
+                    public function autoload(\$class)
+                    {
+                        if (!isset(\$this->autoloadAliases[\$class])) {
+                            return;
+                        }
+                        switch (\$this->autoloadAliases[\$class]['type']) {
+                            case 'class':
+                                \$this->load(
+                                    \$this->classTemplate(
+                                        \$this->autoloadAliases[\$class]
+                                    )
+                                );
+                                break;
+                            case 'interface':
+                                \$this->load(
+                                    \$this->interfaceTemplate(
+                                        \$this->autoloadAliases[\$class]
+                                    )
+                                );
+                                break;
+                            case 'trait':
+                                \$this->load(
+                                    \$this->traitTemplate(
+                                        \$this->autoloadAliases[\$class]
+                                    )
+                                );
+                                break;
+                            default:
+                                // Never.
+                                break;
+                        }
+                    }
+
+                    private function load(string \$includeFile)
+                    {
+                        file_put_contents(\$this->includeFilePath, \$includeFile);
+                        include \$this->includeFilePath;
+                        file_exists(\$this->includeFilePath) && unlink(\$this->includeFilePath);
+                    }
+
+                	// TODO: What if this was a real function in this class that could be used for testing, which would be read and written by php-parser?
+                    private function classTemplate(array \$class): string
+                    {
+                        \$abstract = \$class['isabstract'] ? 'abstract ' : '';
+                        \$classname = \$class['classname'];
+                        if(isset(\$class['namespace'])) {
+                            \$namespace = "namespace {\$class['namespace']};";
+                            \$extends = '\\\\' . \$class['extends'];
+                	        \$implements = empty(\$class['implements']) ? ''
+                	            : ' implements \\\\' . implode(', \\\\', \$class['implements']);
+                        } else {
+                            \$namespace = '';
+                            \$extends = \$class['extends'];
+                	        \$implements = !empty(\$class['implements']) ? ''
+                	            : ' implements ' . implode(', ', \$class['implements']);
+                        }
+                        return <<<EOD
+                				<?php
+                				\$namespace
+                				\$abstract class \$classname extends \$extends \$implements {}
+                				EOD;
+                    }
+
+                    private function interfaceTemplate(array \$interface): string
+                    {
+                        \$interfacename = \$interface['interfacename'];
+                        \$namespace = isset(\$interface['namespace'])
+                            ? "namespace {\$interface['namespace']};" : '';
+                        \$extends = isset(\$interface['namespace'])
+                            ? '\\\\' . implode('\\\\ ,', \$interface['extends'])
+                            : implode(', ', \$interface['extends']);
+                        return <<<EOD
+                				<?php
+                				\$namespace
+                				interface \$interfacename extends \$extends {}
+                				EOD;
+                    }
+                    private function traitTemplate(array \$trait): string
+                    {
+                        \$traitname = \$trait['traitname'];
+                        \$namespace = isset(\$trait['namespace'])
+                            ? "namespace {\$trait['namespace']};" : '';
+                        \$uses = isset(\$trait['namespace'])
+                            ? '\\\\' . implode(';' . PHP_EOL . '    use \\\\', \$trait['use'])
+                            : implode(';' . PHP_EOL . '    use ', \$trait['use']);
+                        return <<<EOD
+                				<?php
+                				\$namespace
+                				trait \$traitname {
+                				    use \$uses;
+                				}
+                				EOD;
+                	    }
+                	}
+
+                	spl_autoload_register( [ new AliasAutoloader(), 'autoload' ] );
+
+                }
+                TEMPLATE;
+    }
+
     public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
     {
+        $modifiedSymbols = $this->getModifiedSymbols($symbols);
+
         $outputFilepath = $this->getAliasFilepath();
 
-        $fileString = $this->buildStringOfAliases($symbols, basename($outputFilepath));
-
-        if (empty($fileString)) {
-            // TODO: Check if no actual aliases were added (i.e. is it just an empty template).
-            // Log?
-            return;
-        }
+        $fileString = $this->buildStringOfAliases($modifiedSymbols, basename($outputFilepath));
 
         $this->fileSystem->write($outputFilepath, $fileString);
-    }
-
-    /**
-     * @return array<string,string> FQDN => relative path
-     */
-    protected function getVendorClassmap(): array
-    {
-        $paths = array_map(
-            function ($file) {
-                return $this->config->isDryRun()
-                    ? new \SplFileInfo('mem://'.$file->path())
-                    : new \SplFileInfo('/'.$file->path());
-            },
-            array_filter(
-                $this->fileSystem->listContents($this->config->getVendorDirectory(), true)->toArray(),
-                fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
-            )
-        );
-
-        $vendorClassmap = ClassMapGenerator::createMap($paths);
-
-        $vendorClassmap = array_map(fn($path) => $this->fileSystem->normalize($path), $vendorClassmap);
-
-        return $vendorClassmap;
-    }
-
-    /**
-     * @return array<string,string> FQDN => absolute path
-     */
-    protected function getTargetClassmap(): array
-    {
-        $paths =
-            array_map(
-                function ($file) {
-                    return $this->config->isDryRun()
-                        ? new \SplFileInfo('mem://'.$file->path())
-                        : new \SplFileInfo('/'.$file->path());
-                },
-                array_filter(
-                    $this->fileSystem->listContents($this->config->getTargetDirectory(), \League\Flysystem\FilesystemReader::LIST_DEEP)->toArray(),
-                    fn(StorageAttributes $file) => $file->isFile() && in_array(substr($file->path(), -3), ['php', 'inc', '.hh'])
-                )
-            );
-
-        $classMap = ClassMapGenerator::createMap($paths);
-
-        // To make it easier when viewing in xdebug.
-        uksort($classMap, new NamespaceSort());
-
-        $classMap = array_map(fn($path) => $this->fileSystem->normalize($path), $classMap);
-
-        return $classMap;
     }
 
     /**
@@ -125,47 +203,51 @@ class Aliases
         );
     }
 
-    /**
-     * @param DiscoveredSymbol[] $symbols
-     * @return DiscoveredSymbol[]
-     */
-    protected function getModifiedSymbols(array $symbols): array
+    protected function getModifiedSymbols(DiscoveredSymbols $symbols): DiscoveredSymbols
     {
-        $modifiedSymbols = [];
-        foreach ($symbols as $symbol) {
+        $modifiedSymbols = new DiscoveredSymbols();
+        foreach ($symbols->getAll() as $symbol) {
             if ($symbol->getOriginalSymbol() !== $symbol->getReplacement()) {
-                $modifiedSymbols[] = $symbol;
+                $modifiedSymbols->add($symbol);
             }
         }
         return $modifiedSymbols;
     }
 
-    protected function buildStringOfAliases(DiscoveredSymbols $symbols, string $outputFilename): string
+    protected function registerAutoloader(array $classmap): void
     {
 
-        $sourceDirClassmap = $this->getVendorClassmap();
+        // Need to autoload the classes for reflection to work (this is maybe just an issue during tests).
+        spl_autoload_register(function (string $class) use ($classmap) {
+            if (isset($classmap[$class])) {
+                $this->logger->debug("Autoloading $class from {$classmap[$class]}");
+                try {
+                    include_once $classmap[$class];
+                } catch (\Throwable $e) {
+                    if (false !== strpos($e->getMessage(), 'PHPUnit')) {
+                        $this->logger->warning("Error autoloading $class from {$classmap[$class]}: " . $e->getMessage());
+                    } else {
+                        $this->logger->error("Error autoloading $class from {$classmap[$class]}: " . $e->getMessage());
+                    }
+                }
+            }
+        });
+    }
 
-        $autoloadAliasesFileString = '<?php' . PHP_EOL . PHP_EOL . '// ' . $outputFilename . ' @generated by Strauss' . PHP_EOL . PHP_EOL;
-
+    protected function buildStringOfAliases(DiscoveredSymbols $symbols, string $outputFilename): string
+    {
         // TODO: When target !== vendor, there should be a test here to ensure the target autoloader is included, with instructions to add it.
 
-        $modifiedSymbols = $this->getModifiedSymbols($symbols->getSymbols());
+        $modifiedSymbols = $this->getModifiedSymbols($symbols);
 
-        $functionSymbols = array_filter($modifiedSymbols, fn(DiscoveredSymbol $symbol) => $symbol instanceof FunctionSymbol);
-        $otherSymbols = array_filter($modifiedSymbols, fn(DiscoveredSymbol $symbol) => !($symbol instanceof FunctionSymbol));
+        $functionSymbols = $modifiedSymbols->getDiscoveredFunctions();
 
-        $targetDirClassmap = $this->getTargetClassmap();
+        $autoloadAliasesFunctionsString = count($functionSymbols)>0
+            ? $this->getFunctionAliasesString($functionSymbols)
+            : null;
+        $aliasesArray = $this->getAliasesArray($symbols);
 
-        if (count($otherSymbols)>0) {
-            $autoloadAliasesFileString .= 'function autoloadAliases( $classname ): void {' . PHP_EOL;
-            $autoloadAliasesFileString = $this->appendAliasString($otherSymbols, $sourceDirClassmap, $targetDirClassmap, $autoloadAliasesFileString);
-            $autoloadAliasesFileString .= '}' . PHP_EOL . PHP_EOL;
-            $autoloadAliasesFileString .= "spl_autoload_register( 'autoloadAliases' );" . PHP_EOL . PHP_EOL;
-        }
-
-        if (count($functionSymbols)>0) {
-            $autoloadAliasesFileString = $this->appendFunctionAliases($functionSymbols, $autoloadAliasesFileString);
-        }
+        $autoloadAliasesFileString = $this->getTemplate($aliasesArray, $autoloadAliasesFunctionsString);
 
         return $autoloadAliasesFileString;
     }
@@ -174,135 +256,33 @@ class Aliases
      * @param array<NamespaceSymbol|ClassSymbol> $modifiedSymbols
      * @param array $sourceDirClassmap
      * @param array $targetDirClasssmap
-     * @param string $autoloadAliasesFileString
-     * @return string
+     * @return array{}
      * @throws \League\Flysystem\FilesystemException
      */
-    protected function appendAliasString(array $modifiedSymbols, array $sourceDirClassmap, array $targetDirClasssmap, string $autoloadAliasesFileString): string
+    protected function getAliasesArray(DiscoveredSymbols $symbols): array
     {
-        $aliasesPhpString = '  switch( $classname ) {' . PHP_EOL;
+        $result = [];
 
-        foreach ($modifiedSymbols as $symbol) {
-            $originalSymbol = $symbol->getOriginalSymbol();
-            $replacementSymbol = $symbol->getReplacement();
-
-//            if (!$symbol->getSourceFile()->isDoDelete()) {
-//                $this->logger->debug("Skipping {$originalSymbol} because it is not marked for deletion.");
-//                continue;
-//            }
-
-            if ($originalSymbol === $replacementSymbol) {
-                $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
+        foreach ($symbols->getAll() as $originalSymbolFqdn => $symbol) {
+            if ($symbol->getOriginalSymbol() === $symbol->getReplacement()) {
                 continue;
             }
-
-            switch (get_class($symbol)) {
-                case NamespaceSymbol::class:
-                    // TODO: namespaced constants?
-                    $namespace = $symbol->getOriginalSymbol();
-
-                    $symbolSourceFiles = $symbol->getSourceFiles();
-
-                    $namespacesInOriginalClassmap = array_filter(
-                        $sourceDirClassmap,
-                        fn($filepath) => array_key_exists($this->fileSystem->normalize($filepath), $symbolSourceFiles)
-                    );
-
-                    foreach ($namespacesInOriginalClassmap as $originalFqdnClassName => $absoluteFilePath) {
-                        if ($symbol->getOriginalSymbol() === $symbol->getReplacement()) {
-                            continue;
-                        }
-
-                        $localName = array_reverse(explode('\\', $originalFqdnClassName))[0];
-
-                        if (0 !== strpos($originalFqdnClassName, $symbol->getReplacement())) {
-                            $newFqdnClassName = $symbol->getReplacement() . '\\' . $localName;
-                        } else {
-                            $newFqdnClassName = $originalFqdnClassName;
-                        }
-
-                        if (!isset($targetDirClasssmap[$newFqdnClassName]) && !isset($sourceDirClassmap[$originalFqdnClassName])) {
-                            $a = $symbol->getSourceFiles();
-                            /** @var File $b */
-                            $b = array_pop($a); // There's gotta be at least one.
-
-                            throw new \Exception("errorrrr " . ' ' . basename($b->getAbsoluteTargetPath()) . ' ' . $originalFqdnClassName . ' ' . $newFqdnClassName . PHP_EOL . PHP_EOL);
-                        }
-
-                        $symbolFilepath = $targetDirClasssmap[$newFqdnClassName] ?? $sourceDirClassmap[$originalFqdnClassName];
-                        $symbolFileString = $this->fileSystem->read($symbolFilepath);
-
-                        // This should be improved with a check for non-class-valid characters after the name.
-                        // Eventually it should be in the File object itself.
-                        $isClass = 1 === preg_match('/class ' . $localName . '/i', $symbolFileString);
-                        $isInterface = 1 === preg_match('/interface ' . $localName . '/i', $symbolFileString);
-                        $isTrait = 1 === preg_match('/trait ' . $localName . '/i', $symbolFileString);
-
-                        if (!$isClass && !$isInterface && !$isTrait) {
-                            $isEnum = 1 === preg_match('/enum ' . $localName . '/', $symbolFileString);
-
-                            if ($isEnum) {
-                                $this->logger->warning("Skipping $newFqdnClassName – enum aliasing not yet implemented.");
-                                // TODO: enums
-                                continue;
-                            }
-
-                            $this->logger->error("Skipping $newFqdnClassName because it doesn't exist.");
-                            throw new \Exception("Skipping $newFqdnClassName because it doesn't exist.");
-                        }
-
-                        $escapedOriginalFqdnClassName = str_replace('\\', '\\\\', $originalFqdnClassName);
-                        $aliasesPhpString .= "    case '$escapedOriginalFqdnClassName':" . PHP_EOL;
-
-                        if ($isClass) {
-                            $aliasesPhpString .= "      class_alias(\\$newFqdnClassName::class, \\$originalFqdnClassName::class);" . PHP_EOL;
-                        } elseif ($isInterface) {
-                            $aliasesPhpString .= "      \$includeFile = '<?php namespace $namespace; interface $localName extends \\$newFqdnClassName {};';" . PHP_EOL;
-                            $aliasesPhpString .= "      include \"data://text/plain;base64,\" . base64_encode(\$includeFile);" . PHP_EOL;
-                        } elseif ($isTrait) {
-                            $aliasesPhpString .= "      \$includeFile = '<?php namespace $namespace; trait $localName { use \\$newFqdnClassName };';" . PHP_EOL;
-                            $aliasesPhpString .= "      include \"data://text/plain;base64,\" . base64_encode(\$includeFile);" . PHP_EOL;
-                        }
-
-                        $aliasesPhpString .= "      break;" . PHP_EOL;
-                    }
-                    break;
-                case ClassSymbol::class:
-                    // TODO: Do we handle global traits or interfaces? at all?
-                    $alias = $symbol->getOriginalSymbol(); // We want the original to continue to work, so it is the alias.
-                    $concreteClass = $symbol->getReplacement();
-                    $aliasesPhpString .= <<<EOD
-    case '$alias':
-      class_alias($concreteClass::class, $alias::class);
-      break;
-EOD;
-                    break;
-
-                default:
-                    /**
-                     * Functions and constants addressed below.
-                     *
-                     * @see self::appendFunctionAliases())
-                     */
-                    break;
+            if (!($symbol instanceof AutoloadAliasInterface)) {
+                continue;
             }
+            $result[$originalSymbolFqdn] = $symbol->getAutoloadAliasArray();
         }
 
-        $autoloadAliasesFileString .= $aliasesPhpString;
-
-        $autoloadAliasesFileString .= '    default:' . PHP_EOL;
-        $autoloadAliasesFileString .= '      // Not in this autoloader.' . PHP_EOL;
-        $autoloadAliasesFileString .= '      break;' . PHP_EOL;
-        $autoloadAliasesFileString .= '  }' . PHP_EOL;
-
-        return $autoloadAliasesFileString;
+        return $result;
     }
 
-    protected function appendFunctionAliases(array $modifiedSymbols, string $autoloadAliasesFileString): string
+    protected function getFunctionAliasesString(array $modifiedSymbols): string
     {
-        $aliasesPhpString = '';
+        $autoloadAliasesFileString = '';
 
         foreach ($modifiedSymbols as $symbol) {
+            $aliasesPhpString = '';
+
             $originalSymbol = $symbol->getOriginalSymbol();
             $replacementSymbol = $symbol->getReplacement();
 

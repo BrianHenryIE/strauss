@@ -22,7 +22,6 @@ use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use Composer\Console\Input\InputOption;
 use Composer\InstalledVersions;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
@@ -32,7 +31,9 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -157,11 +158,17 @@ class DependenciesCommand extends Command
     }
 
     /**
-     * @param InputInterface $input
-     * @return array<string, int>
+     * @param InputInterface $input The command line input to check for `--debug`, `--silent` etc.
+     * @param OutputInterface $output The Symfony object that actually prints the messages.
      */
-    protected function getLogLevel(InputInterface $input): array
+    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
+        $isDryRun = isset($this->config) && $this->config->isDryRun();
+
+        // Who would want to dry-run without output?
+        if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
+            return new NullLogger();
+        }
 
         $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
 
@@ -169,21 +176,14 @@ class DependenciesCommand extends Command
             $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
         }
 
-        if ($input->hasOption('debug') && $input->getOption('debug') !== false) {
+        if ($isDryRun || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {
             $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
             $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
         }
 
-        if (isset($this->config) && $this->config->isDryRun()) {
-            $logLevel[LogLevel::INFO] = OutputInterface::VERBOSITY_NORMAL;
-            $logLevel[LogLevel::DEBUG] = OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        if ($input->hasOption('silent') && $input->getOption('silent') !== false) {
-            return [];
-        }
-
-        return $logLevel;
+        return isset($this->logger) && $this->logger instanceof \Psr\Log\Test\TestLogger
+            ? $this->logger
+            : new ConsoleLogger($output, $logLevel);
     }
 
     /**
@@ -196,7 +196,7 @@ class DependenciesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->setLogger(new ConsoleLogger($output, $this->getLogLevel($input)));
+        $this->setLogger($this->getLogger($input, $output));
 
         $workingDir       = getcwd() . '/';
         $this->workingDir = $workingDir;
@@ -234,7 +234,7 @@ class DependenciesCommand extends Command
                 } catch (\Exception $e) {
                     $registry->register('mem', $this->filesystem);
                 }
-                $this->setLogger(new ConsoleLogger($output, $this->getLogLevel($input)));
+                $this->setLogger($this->getLogger($input, $output));
             }
             $this->buildDependencyList();
 
@@ -258,6 +258,8 @@ class DependenciesCommand extends Command
 
             // This runs after cleanup because cleanup edits installed.json
             $this->generateAutoloader();
+
+            $this->logger->notice('Done');
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
@@ -313,6 +315,20 @@ class DependenciesCommand extends Command
             $this->logger
         );
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
+
+        $this->config->setPackagesToCopy(
+            array_filter($this->flatDependencyTree, function ($dependency) {
+                return !in_array($dependency, $this->config->getExcludePackagesFromCopy());
+            },
+            ARRAY_FILTER_USE_KEY)
+        );
+
+        $this->config->setPackagesToPrefix(
+            array_filter($this->flatDependencyTree, function ($dependency) {
+                return !in_array($dependency, $this->config->getExcludePackagesFromPrefixing());
+            },
+            ARRAY_FILTER_USE_KEY)
+        );
 
         // TODO: Print the dependency tree that Strauss has determined.
 
@@ -528,7 +544,7 @@ class DependenciesCommand extends Command
             return;
         }
 
-        $this->logger->info('Generating aliases file...');
+        $this->logger->notice('Generating aliases file...');
 
         $aliases = new Aliases(
             $this->config,

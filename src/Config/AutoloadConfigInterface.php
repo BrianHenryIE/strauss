@@ -28,4 +28,6 @@ interface AutoloadConfigInterface
     public function isDryRun(): bool;
 
     public function getNamespacePrefix(): ?string;
+
+    public function getPackagesToCopy(): array;
 }

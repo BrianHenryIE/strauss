@@ -8,12 +8,13 @@ namespace BrianHenryIE\Strauss;
 use ArrayIterator;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\TestCase;
+use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
 
@@ -42,11 +43,22 @@ class LicenserTest extends TestCase
         $filesystemMock = Mockery::mock(FileSystem::class);
 
         $file = Mockery::mock(FileAttributes::class);
-        $file->expects('path')
-             ->andReturn(__DIR__.'/vendor/developer-name/project-name/license.md');
+        $file->expects('path')->andReturn(__DIR__.'/vendor/developer-name/project-name/license.md');
+        $file->expects('isFile')->andReturn(true);
+
+        $fileWithLicenseInPath = Mockery::mock(FileAttributes::class);
+        $fileWithLicenseInPath->expects('path')->andReturn(__DIR__.'/vendor/developer-name/license-path/other-file.md');
+        $fileWithLicenseInPath->expects('isFile')->andReturn(true);
+
+        $directory = Mockery::mock(DirectoryAttributes::class);
+        $directory->expects('isFile')->andReturn(false);
+        // directories should be skipped before accessing path
+        $directory->shouldNotReceive('path');
 
         $finderArrayIterator = new ArrayIterator(array(
-            $file
+            $file,
+            $fileWithLicenseInPath,
+            $directory,
         ));
 
         $directoryListingMock = Mockery::mock(DirectoryListing::class);
@@ -62,6 +74,7 @@ class LicenserTest extends TestCase
 
         $result = $sut->getDiscoveredLicenseFiles();
 
+        self::assertCount(1, $result);
         // Currently contains an array entry: /Users/brianhenry/Sites/mozart/mozart/tests/Unit/developer-name/project-name/license.md
         self::assertStringContainsString('developer-name/project-name/license.md', $result[0]);
     }

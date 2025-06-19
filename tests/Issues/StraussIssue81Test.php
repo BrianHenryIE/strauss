@@ -25,6 +25,7 @@ class StraussIssue81Test extends IntegrationTestCase
      */
     public function test_aliased_class(): void
     {
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 
         // `psr/log` isn't a good example to use because it uses PHPUnit without declaring it as a dependency.
         $composerJsonString = <<<'EOD'
@@ -76,6 +77,12 @@ EOD;
 
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
+
+        $exitCode = $this->runStrauss($output, 'include-autoloader');
+        assert(0 === $exitCode, $output);
+
+        $phpString = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_aliases.php');
+        $this->assertStringContainsString("'extends' => 'Strauss\\\\Alias\\\\Psr\\\\Log\\\\NullLogger'", $phpString);
 
         exec('composer dump-autoload');
 

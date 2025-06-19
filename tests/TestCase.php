@@ -58,6 +58,15 @@ class TestCase extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public static function assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $actual, string $message = ''): void
+    {
+        self::assertStringContainsString(
+            self::stripWhitespaceAndBlankLines($expected),
+            self::stripWhitespaceAndBlankLines($actual),
+            $message
+        );
+    }
+
     protected static function stripWhitespaceAndBlankLines(string $string): string
     {
         $string = str_replace("\r\n", "\n", $string);
@@ -66,6 +75,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
+    /**
+     * Get an in-memory filesystem.
+     */
     protected function getFileSystem(): FileSystem
     {
 

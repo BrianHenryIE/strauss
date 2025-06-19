@@ -21,6 +21,8 @@ class DiscoveredSymbols
             T_CONST => [],
             T_NAMESPACE => [],
             T_FUNCTION => [],
+            T_TRAIT => [],
+            T_INTERFACE => [],
         ];
     }
 
@@ -42,9 +44,16 @@ class DiscoveredSymbols
             case FunctionSymbol::class:
                 $type = T_FUNCTION;
                 break;
+            case InterfaceSymbol::class:
+                $type = T_INTERFACE;
+                break;
+            case TraitSymbol::class:
+                $type = T_TRAIT;
+                break;
             default:
                 throw new \InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
         }
+        // TODO: This should merge the symbols instead of overwriting them.
         $this->types[$type][$symbol->getOriginalSymbol()] = $symbol;
     }
 
@@ -55,7 +64,7 @@ class DiscoveredSymbols
     {
         return array_merge(
             array_values($this->getNamespaces()),
-            array_values($this->getClasses()),
+            array_values($this->getGlobalClasses()),
             array_values($this->getConstants()),
             array_values($this->getDiscoveredFunctions()),
         );
@@ -85,7 +94,18 @@ class DiscoveredSymbols
     /**
      * @return array<string, ClassSymbol>
      */
-    public function getClasses(): array
+    public function getGlobalClasses(): array
+    {
+        return array_filter(
+            $this->types[T_CLASS],
+            fn($classSymbol) => '\\' === $classSymbol->getNamespace()
+        );
+    }
+
+    /**
+     * @return array<string, ClassSymbol>
+     */
+    public function getAllClasses(): array
     {
         return $this->types[T_CLASS];
     }
@@ -109,17 +129,17 @@ class DiscoveredSymbols
             return strlen($a) <=> strlen($b);
         });
 
+        unset($discoveredNamespaceReplacements['\\']);
+
         return $discoveredNamespaceReplacements;
     }
 
     /**
-     * TODO: should be called getGlobalClasses?
-     *
      * @return string[]
      */
     public function getDiscoveredClasses(?string $classmapPrefix = ''): array
     {
-        $discoveredClasses = $this->getClasses();
+        $discoveredClasses = $this->getGlobalClasses();
 
         $discoveredClasses = array_filter(
             array_keys($discoveredClasses),
@@ -150,5 +170,34 @@ class DiscoveredSymbols
     public function getDiscoveredFunctions()
     {
         return $this->types[T_FUNCTION];
+    }
+
+    public function getAll(): array
+    {
+        return array_merge(...$this->types);
+    }
+
+    public function getDiscoveredTraits(): array
+    {
+        return (array) $this->types[T_TRAIT];
+    }
+
+    public function getDiscoveredInterfaces(): array
+    {
+        return (array) $this->types[T_INTERFACE];
+    }
+
+    /**
+     * Get all discovered symbols that are classes, interfaces, or traits, i.e. only those that are autoloadable.
+     *
+     * @return array<DiscoveredSymbol>
+     */
+    public function getClassmapSymbols(): array
+    {
+        return array_merge(
+            $this->getDiscoveredClasses(),
+            $this->getDiscoveredInterfaces(),
+            $this->getDiscoveredTraits(),
+        );
     }
 }

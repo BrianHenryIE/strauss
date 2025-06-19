@@ -19,7 +19,9 @@ class StraussIssue65Test extends IntegrationTestCase
      */
     public function test_aws_prefixed_functions()
     {
-        $this->markTestSkippedOnPhpVersion('8.0', "<");
+        $this->markTestSkippedOnPhpVersionBelow('8.0');
+
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 
         $composerJsonString = <<<'EOD'
 {

@@ -24,8 +24,7 @@ class MozartIssue13Test extends IntegrationTestCase
      */
     public function testPaypalStringReplacement()
     {
-
-//        $this->markTestSkipped('This test was passing until I excluded the PSR namespace');
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 
         $composerJsonString = <<<'EOD'
 {

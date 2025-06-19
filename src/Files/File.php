@@ -1,4 +1,7 @@
 <?php
+/**
+ * A file without a dependency means the project src files and the vendor/composer autoload files.
+ */
 
 namespace BrianHenryIE\Strauss\Files;
 

@@ -37,6 +37,7 @@ class ChangeEnumerator
 
     public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void
     {
+
         foreach ($discoveredSymbols->getSymbols() as $symbol) {
             // TODO: this is a bit of a mess. Should be reconsidered. Previously there was 1-1 relationship between symbols and files.
             $symbolSourceFiles = $symbol->getSourceFiles();
@@ -47,6 +48,7 @@ class ChangeEnumerator
                     $this->config->getExcludePackagesFromPrefixing(),
                     true
                 )) {
+                    $symbolSourceFile->setDoPrefix(false);
                     continue;
                 }
 
