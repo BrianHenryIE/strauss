@@ -112,12 +112,17 @@ class Copier
                     $relativeTargetPath
                 ));
                 $this->filesystem->createDirectory($targetAbsolutePath);
-            } else {
+            } elseif ($this->filesystem->fileExists($sourceAbsoluteFilepath)) {
                 $this->logger->info(sprintf(
                     'Copying file to %s',
                     $relativeTargetPath
                 ));
                 $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
+            } else {
+                $this->logger->warning(sprintf(
+                    'Expected file not found: %s',
+                    $relativeTargetPath
+                ));
             }
         }
     }
