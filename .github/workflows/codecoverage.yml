@@ -42,6 +42,8 @@ jobs:
           php-version: '7.4'
           tools: composer:v2
           coverage: xdebug
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout GitHub Pages branch for code coverage report
         uses: actions/checkout@v4
