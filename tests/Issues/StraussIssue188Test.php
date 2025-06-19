@@ -85,7 +85,7 @@ EOD;
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/mpdf/mpdf/src/Exception/FontException.php');
 
         $this->assertStringNotContainsString("class FontException extends \\\\Mpdf\\MpdfException", $php_string);
-        $this->assertStringNotContainsString("class FontException extends \\Company\\PluginFramework\\Mpdf\\MpdfException", $php_string);
+        $this->assertStringNotContainsString("class FontException extends \\\\Company\\PluginFramework\\Mpdf\\MpdfException", $php_string);
         $this->assertStringContainsString("class FontException extends \\Company\\PluginFramework\\Mpdf\\MpdfException", $php_string);
     }
 }
