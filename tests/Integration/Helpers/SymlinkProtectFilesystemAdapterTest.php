@@ -17,8 +17,6 @@ use League\Flysystem\Filesystem as FlysystemFilesystem;
  */
 class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
 {
-    protected TestLogger $logger;
-
     protected FlysystemFilesystem $filesystem;
 
     public function setUp(): void
@@ -33,8 +31,6 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
         symlink($this->testsWorkingDir . '/realdir', $this->testsWorkingDir . '/fakedir');
 
         $rootFilesystem = new LocalFilesystemAdapter('/');
-
-        $this->logger = new ColorLogger();
 
         $sut = new SymlinkProtectFilesystemAdapter(
             null,
