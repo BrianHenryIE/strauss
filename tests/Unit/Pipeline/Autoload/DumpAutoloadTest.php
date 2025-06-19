@@ -61,7 +61,10 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
 
         $logger = new ColorLogger();
 
-        $sut = new DumpAutoload($config, $filesystem, $logger);
+        $prefixer = Mockery::mock(Prefixer::class);
+        $fileEnumerator = Mockery::mock(FileEnumerator::class);
+
+        $sut = new DumpAutoload($config, $filesystem, $logger, $prefixer, $fileEnumerator);
 
         $sut->generatedPrefixedAutoloader();
 
