@@ -140,7 +140,7 @@ class Licenser
         /** @var ComposerPackage $dependency */
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
-//            $packagePath = $this->filesystem->normalize($packagePath);
+            $packagePath = $this->filesystem->normalize($packagePath);
 
             $files = $this->filesystem->listContents($packagePath, true)
                 ->filter(fn (StorageAttributes $attributes) => $attributes->isFile());
