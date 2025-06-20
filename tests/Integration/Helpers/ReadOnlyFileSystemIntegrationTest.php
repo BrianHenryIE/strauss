@@ -231,7 +231,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $sut->createDirectory($newDir, $config);
 
-        $this->assertDirectoryDoesNotExist($newDir);
-        $this->assertTrue($sut->directoryExists($newDir));
+        $this->assertDirectoryDoesNotExist($newDir, $newDir);
+        $this->assertTrue($sut->directoryExists($newDir), $newDir);
     }
 }
