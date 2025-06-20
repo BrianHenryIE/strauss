@@ -42,6 +42,8 @@ jobs:
           php-version: ${{ matrix.php }}
           tools: composer:v2
           extensions: fileinfo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup problem matcher for PHPUnit
         run: |
@@ -54,7 +56,7 @@ jobs:
           composer --version
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --verbose
 
       - name: Run tests
         run: vendor/bin/phpunit --stop-on-failure --order-by=random
