@@ -51,7 +51,9 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
@@ -64,18 +66,15 @@ EOD;
         $fileEnumerator = new FileEnumerator(
             $config,
             new Filesystem(
-                new \League\Flysystem\Filesystem(
-                    new LocalFilesystemAdapter('/')
-                ),
-                $this->testsWorkingDir
+                new LocalFilesystemAdapter('/')
             )
         );
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $fileCopyScanner = new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
+        $fileCopyScanner = new FileCopyScanner($config, new Filesystem(new LocalFilesystemAdapter('/')));
         $fileCopyScanner->scanFiles($files);
 
-        $copier = new Copier($files, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir), new NullLogger());
+        $copier = new Copier($files, $config, new Filesystem(new LocalFilesystemAdapter('/')), new NullLogger());
 
         $file = 'ContainerAwareTrait.php';
         $relativePath = 'league/container/src/';
@@ -122,7 +121,9 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
@@ -135,17 +136,19 @@ EOD;
         $fileEnumerator = new FileEnumerator(
             $config,
             new Filesystem(
-                new \League\Flysystem\Filesystem(
-                    new LocalFilesystemAdapter('/')
-                ),
-                $this->testsWorkingDir
+                new LocalFilesystemAdapter('/')
             )
         );
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir)))->scanFiles($files);
+        (new FileCopyScanner($config, new Filesystem(new LocalFilesystemAdapter('/'))))->scanFiles($files);
 
-        $copier = new Copier($files, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir), new NullLogger());
+        $copier = new Copier(
+            $files,
+            $config,
+            new Filesystem(new LocalFilesystemAdapter('/')),
+            new NullLogger()
+        );
 
         $file = 'Client.php';
         $relativePath = 'google/apiclient/src/';

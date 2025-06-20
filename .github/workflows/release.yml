@@ -24,10 +24,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 7.4
-          tools: composer:v2, phive
-
-      - name: Install Phive tools
-        uses: ngmy/phive-install-action@master
+          tools: composer:v2
 
       - name: Install dependencies
         run: composer install --no-dev --prefer-dist --no-progress

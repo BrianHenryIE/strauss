@@ -14,6 +14,7 @@ use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mockery;
 use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -28,8 +29,6 @@ use Symfony\Component\Finder\Finder;
 class IntegrationTestCase extends TestCase
 {
     protected string $projectDir;
-
-    protected $testsWorkingDir;
 
     protected ?TestLogger $logger = null;
 
@@ -68,6 +67,8 @@ class IntegrationTestCase extends TestCase
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
             ob_flush();
         }
+
+        $this->createWorkingDir();
     }
 
     protected function isPhpStormRunning(): bool
@@ -86,7 +87,7 @@ class IntegrationTestCase extends TestCase
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             // TODO add xdebug to the command
-            exec('php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+            exec('php ' . $this->projectDir . '/strauss.phar ' . $params .' 2>&1', $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
             return $return_var;
@@ -148,10 +149,7 @@ class IntegrationTestCase extends TestCase
             return;
         }
         $filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
+            new LocalFilesystemAdapter('/')
         );
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();

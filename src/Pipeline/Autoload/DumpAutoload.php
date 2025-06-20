@@ -26,7 +26,7 @@ class DumpAutoload
     protected AutoloadConfigInterface $config;
 
     protected FileSystem $filesystem;
-    
+
     protected Prefixer $projectReplace;
 
     protected FileEnumerator $fileEnumerator;
@@ -81,7 +81,7 @@ class DumpAutoload
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
-        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . 'composer.json');
+        $projectComposerJson = new JsonFile($this->filesystem->prefixPath($this->config->getProjectDirectory() . 'composer.json'));
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
@@ -94,7 +94,12 @@ class DumpAutoload
         /**
          * Cannot use `$composer->getConfig()`, need to create a new one so the vendor-dir is correct.
          */
-        $config = new \Composer\Config(false, $this->config->getProjectDirectory());
+        $config = new \Composer\Config(
+            false,
+            $this->filesystem->prefixPath(
+                $this->config->getProjectDirectory()
+            )
+        );
 
         $config->merge([
             'config' => $projectComposerJsonArray['config'] ?? []
@@ -113,7 +118,13 @@ class DumpAutoload
         $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
         $generator->setDevMode(false);
 
-        $localRepo = new InstalledFilesystemRepository(new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json'));
+        $localRepo = new InstalledFilesystemRepository(
+            new JsonFile(
+                $this->filesystem->prefixPath(
+                    $this->config->getTargetDirectory() . 'composer/installed.json'
+                )
+            )
+        );
 
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
 
