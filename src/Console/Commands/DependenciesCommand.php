@@ -139,7 +139,7 @@ class DependenciesCommand extends Command
 
         $localFilesystemLocation = PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
 
-        $pathPrefixer = new PathPrefixer($localFilesystemLocation);
+        $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
 
         $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
             null,
