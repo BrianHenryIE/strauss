@@ -22,6 +22,7 @@ use League\Flysystem\Config;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Mockery;
+use PHPUnit\Framework\MockObject\Exception;
 
 /**
  * Class ReplacerTest
@@ -2617,5 +2618,70 @@ EOD;
         $result = $replacer->replaceInString($symbols, $contents);
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    public function testForAbsenceOfFunctionPrefixInClass(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+if (! function_exists('my_function')) {
+    function my_function()
+    {
+        return 'global';
+    }
+}
+
+class MyClass
+{
+    public function my_function()
+    {
+        foreach (my_function() as $value) {
+        }
+        return 'method';
+    }
+}
+
+$value = my_function();
+$value2 = (new MyClass())->my_function();
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+if (! function_exists('myprefix_my_function')) {
+    function myprefix_my_function()
+    {
+        return 'global';
+    }
+}
+
+class MyClass
+{
+    public function my_function()
+    {
+        foreach (myprefix_my_function() as $value) {
+        }
+        return 'method';
+    }
+}
+
+$value = myprefix_my_function();
+$value2 = (new MyClass())->my_function();
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $symbol = new FunctionSymbol('my_function', $this->createMock(File::class));
+        $symbol->setReplacement('myprefix_my_function');
+
+        $symbols = new DiscoveredSymbols();
+        $symbols->add($symbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
     }
 }
