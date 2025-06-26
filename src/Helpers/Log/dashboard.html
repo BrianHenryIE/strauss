@@ -2,7 +2,7 @@
 <html lang="en">
  <head>
   <meta charset="UTF-8">
-  <title>Dashboard for /home/runner/work/strauss/strauss/src/Pipeline/Cleanup</title>
+  <title>Dashboard for /home/runner/work/strauss/strauss/src/Helpers/Log</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="../../../_css/bootstrap.min.css?v=9.2.32" rel="stylesheet" type="text/css">
   <link href="../../../_css/nv.d3.min.css?v=9.2.32" rel="stylesheet" type="text/css">
@@ -18,8 +18,8 @@
        <ol class="breadcrumb">
          <li class="breadcrumb-item"><a href="../../../index.html">/home/runner/work/strauss/strauss</a></li>
          <li class="breadcrumb-item"><a href="../../index.html">src</a></li>
-         <li class="breadcrumb-item"><a href="../index.html">Pipeline</a></li>
-         <li class="breadcrumb-item"><a href="index.html">Cleanup</a></li>
+         <li class="breadcrumb-item"><a href="../index.html">Helpers</a></li>
+         <li class="breadcrumb-item"><a href="index.html">Log</a></li>
          <li class="breadcrumb-item active">(Dashboard)</li>
 
        </ol>
@@ -60,7 +60,6 @@
         </tr>
        </thead>
        <tbody>
-       <tr><td><a href="InstalledJson.php.html#40">BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson</a></td><td class="text-right">82%</td></tr>
 
        </tbody>
       </table>
@@ -77,7 +76,6 @@
         </tr>
        </thead>
        <tbody>
-       <tr><td><a href="InstalledJson.php.html#40">BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson</a></td><td class="text-right">35</td></tr>
 
        </tbody>
       </table>
@@ -115,10 +113,6 @@
         </tr>
        </thead>
        <tbody>
-       <tr><td><a href="InstalledJson.php.html#142"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::removeMissingPackages">removeMissingPackages</abbr></a></td><td class="text-right">71%</td></tr>
-       <tr><td><a href="InstalledJson.php.html#100"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::updatePackagePaths">updatePackagePaths</abbr></a></td><td class="text-right">73%</td></tr>
-       <tr><td><a href="InstalledJson.php.html#156"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::updateNamespaces">updateNamespaces</abbr></a></td><td class="text-right">75%</td></tr>
-       <tr><td><a href="InstalledJson.php.html#76"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::getJsonFile">getJsonFile</abbr></a></td><td class="text-right">83%</td></tr>
 
        </tbody>
       </table>
@@ -135,10 +129,6 @@
         </tr>
        </thead>
        <tbody>
-       <tr><td><a href="InstalledJson.php.html#156"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::updateNamespaces">updateNamespaces</abbr></a></td><td class="text-right">18</td></tr>
-       <tr><td><a href="InstalledJson.php.html#100"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::updatePackagePaths">updatePackagePaths</abbr></a></td><td class="text-right">5</td></tr>
-       <tr><td><a href="InstalledJson.php.html#142"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::removeMissingPackages">removeMissingPackages</abbr></a></td><td class="text-right">3</td></tr>
-       <tr><td><a href="InstalledJson.php.html#76"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::getJsonFile">getJsonFile</abbr></a></td><td class="text-right">2</td></tr>
 
        </tbody>
       </table>
@@ -167,7 +157,7 @@ $(document).ready(function() {
       .yAxis.tickFormat(d3.format('d'));
 
     d3.select('#classCoverageDistribution svg')
-      .datum(getCoverageDistributionData([0,0,0,0,0,0,0,0,0,1,0,0], "Class Coverage"))
+      .datum(getCoverageDistributionData([0,0,0,0,0,0,0,0,0,0,0,2], "Class Coverage"))
       .transition().duration(500).call(chart);
 
     nv.utils.windowResize(chart.update);
@@ -185,7 +175,7 @@ $(document).ready(function() {
       .yAxis.tickFormat(d3.format('d'));
 
     d3.select('#methodCoverageDistribution svg')
-      .datum(getCoverageDistributionData([0,0,0,0,0,0,0,0,3,1,1,3], "Method Coverage"))
+      .datum(getCoverageDistributionData([0,0,0,0,0,0,0,0,0,0,0,4], "Method Coverage"))
       .transition().duration(500).call(chart);
 
     nv.utils.windowResize(chart.update);
@@ -235,7 +225,7 @@ $(document).ready(function() {
     chart.yAxis.axisLabel('Cyclomatic Complexity');
 
     d3.select('#classComplexity svg')
-      .datum(getComplexityData([[82.72727272727273,31,"<a href=\"InstalledJson.php.html#40\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson<\/a>"]], 'Class Complexity'))
+      .datum(getComplexityData([[100,4,"<a href=\"LogPlaceholderSubstituter.php.html#11\">BrianHenryIE\\Strauss\\Helpers\\Log\\LogPlaceholderSubstituter<\/a>"],[100,5,"<a href=\"RelativeFilepathLogger.php.html#14\">BrianHenryIE\\Strauss\\Helpers\\Log\\RelativeFilepathLogger<\/a>"]], 'Class Complexity'))
       .transition()
       .duration(500)
       .call(chart);
@@ -259,7 +249,7 @@ $(document).ready(function() {
     chart.yAxis.axisLabel('Method Complexity');
 
     d3.select('#methodComplexity svg')
-      .datum(getComplexityData([[100,1,"<a href=\"InstalledJson.php.html#48\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::__construct<\/a>"],[100,1,"<a href=\"InstalledJson.php.html#59\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::copyInstalledJson<\/a>"],[83.33333333333334,2,"<a href=\"InstalledJson.php.html#76\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::getJsonFile<\/a>"],[73.68421052631578,5,"<a href=\"InstalledJson.php.html#100\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::updatePackagePaths<\/a>"],[71.42857142857143,3,"<a href=\"InstalledJson.php.html#142\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::removeMissingPackages<\/a>"],[75.67567567567568,15,"<a href=\"InstalledJson.php.html#156\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::updateNamespaces<\/a>"],[94.11764705882352,3,"<a href=\"InstalledJson.php.html#285\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::createAndCleanTargetDirInstalledJson<\/a>"],[100,1,"<a href=\"InstalledJson.php.html#331\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::cleanupVendorInstalledJson<\/a>"]], 'Method Complexity'))
+      .datum(getComplexityData([[100,1,"<a href=\"LogPlaceholderSubstituter.php.html#16\">BrianHenryIE\\Strauss\\Helpers\\Log\\LogPlaceholderSubstituter::__construct<\/a>"],[100,3,"<a href=\"LogPlaceholderSubstituter.php.html#22\">BrianHenryIE\\Strauss\\Helpers\\Log\\LogPlaceholderSubstituter::log<\/a>"],[100,1,"<a href=\"RelativeFilepathLogger.php.html#21\">BrianHenryIE\\Strauss\\Helpers\\Log\\RelativeFilepathLogger::__construct<\/a>"],[100,4,"<a href=\"RelativeFilepathLogger.php.html#39\">BrianHenryIE\\Strauss\\Helpers\\Log\\RelativeFilepathLogger::log<\/a>"]], 'Method Complexity'))
       .transition()
       .duration(500)
       .call(chart);
