@@ -78,7 +78,7 @@ EOD;
         $config->shouldReceive('getVendorDirectory')->andReturn('vendor/');
         $config->shouldReceive('getTargetDirectory')->andReturn('vendor-prefixed/');
 
-        $fileSystem = $this->getFileSystem();
+        $fileSystem = $this->getInMemoryFileSystem();
 
         $sut = new VendorComposerAutoload(
             $config,

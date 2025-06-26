@@ -24,7 +24,7 @@ class ChangeEnumeratorTest extends TestCase
         $config = Mockery::mock(\BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface::class);
         $config->expects('getClassmapPrefix')->andReturn('Prefix_');
 
-        $sut = new ChangeEnumerator($config, $this->getFileSystem());
+        $sut = new ChangeEnumerator($config, $this->getInMemoryFileSystem());
 
         $discoveredSymbols = new DiscoveredSymbols();
         $symbol = new FunctionSymbol('myFunction', new File('/path/to/file.php'));
