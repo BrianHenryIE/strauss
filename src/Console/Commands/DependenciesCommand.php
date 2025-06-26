@@ -7,6 +7,8 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Log\LogPlaceholderSubstituter;
+use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogger;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
@@ -229,6 +231,14 @@ class DependenciesCommand extends Command
                 }
                 $this->setLogger($this->getLogger($input, $output));
             }
+
+            $this->setLogger(new RelativeFilepathLogger(
+                $this->filesystem,
+                new LogPlaceholderSubstituter(
+                    $this->logger
+                )
+            ));
+
             $this->buildDependencyList();
 
             $this->enumerateFiles();
