@@ -2678,7 +2678,7 @@ EOD;
         $symbols = new DiscoveredSymbols();
         $symbols->add($symbol);
 
-        $replacer = new Prefixer($config, $this->getFileSystem());
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
         $result = $replacer->replaceInString($symbols, $contents);
 
