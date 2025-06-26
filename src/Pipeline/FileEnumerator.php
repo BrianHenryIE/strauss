@@ -22,16 +22,7 @@ class FileEnumerator
 {
     use LoggerAwareTrait;
 
-    protected string $vendorDir;
-
-    /** @var string[]  */
-    protected array $excludePackageNames = array();
-
-    /** @var string[]  */
-    protected array $excludeNamespaces = array();
-
-    /** @var string[]  */
-    protected array $excludeFilePatterns = array();
+    protected FileEnumeratorConfig $config;
 
     protected Filesystem $filesystem;
 
@@ -46,8 +37,6 @@ class FileEnumerator
      */
     protected array $filesAutoloaders = [];
 
-    protected FileEnumeratorConfig $config;
-
     /**
      * Copier constructor.
      */
@@ -58,13 +47,8 @@ class FileEnumerator
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
-        $this->vendorDir = $config->getVendorDirectory();
 
         $this->config = $config;
-
-        $this->excludeNamespaces = $config->getExcludeNamespacesFromCopy();
-        $this->excludePackageNames = $config->getExcludePackagesFromCopy();
-        $this->excludeFilePatterns = $config->getExcludeFilePatternsFromCopy();
 
         $this->filesystem = $filesystem;
 
@@ -103,7 +87,7 @@ class FileEnumerator
                 }
 
                 foreach ($value as $namespace => $namespace_relative_paths) {
-                    if (!empty($namespace) && in_array($namespace, $this->excludeNamespaces)) {
+                    if (!empty($namespace) && in_array($namespace, $this->config->getExcludeNamespacesFromCopy())) {
                         $this->logger->info("Excluding namespace " . $namespace);
                         continue;
                     }
