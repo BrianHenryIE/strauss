@@ -34,8 +34,10 @@ class Copier
     /**
      * Copier constructor.
      *
-     * @param DiscoveredFiles $files
+     * @param DiscoveredFiles $files Contains a collections of Files with source and target paths.
      * @param CopierConfigInterface $config
+     * @param FileSystem $filesystem A filesystem instance.
+     * @param LoggerInterface $logger A logger implementation.
      */
     public function __construct(
         DiscoveredFiles $files,
@@ -89,35 +91,30 @@ class Copier
          */
         foreach ($this->files->getFiles() as $file) {
             if (!$file->isDoCopy()) {
-                $this->logger->debug('Skipping ' . $file->getSourcePath());
+                $this->logger->debug('Skipping {sourcePath}', ['sourcePath' => $file->getSourcePath()]);
                 continue;
             }
 
             $sourceAbsoluteFilepath = $file->getSourcePath();
             $targetAbsolutePath = $file->getAbsoluteTargetPath();
 
-            $relativeTargetPath = $this->filesystem->getRelativePath(
-                $this->config->getProjectDirectory(),
-                $file->getAbsoluteTargetPath()
-            );
-
             if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
-                $this->logger->info(sprintf(
-                    'Creating directory at %s',
-                    $relativeTargetPath
-                ));
+                $this->logger->info(
+                    'Creating directory at {targetPath}',
+                    ['targetPath' => $targetAbsolutePath]
+                );
                 $this->filesystem->createDirectory($targetAbsolutePath);
             } elseif ($this->filesystem->fileExists($sourceAbsoluteFilepath)) {
-                $this->logger->info(sprintf(
-                    'Copying file to %s',
-                    $relativeTargetPath
-                ));
+                $this->logger->info(
+                    'Copying file to {targetPath}',
+                    ['targetPath' => $targetAbsolutePath]
+                );
                 $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
             } else {
-                $this->logger->warning(sprintf(
-                    'Expected file not found: %s',
-                    $relativeTargetPath
-                ));
+                $this->logger->warning(
+                    'Expected file not found: {sourcePath}',
+                    ['sourcePath' => $sourceAbsoluteFilepath]
+                );
             }
         }
     }
