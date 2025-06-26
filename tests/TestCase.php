@@ -77,7 +77,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
                 ],
                 $normalizer
             ),
-            __DIR__
+            'mem://'
         );
 
         /** @var FilesystemRegistry $registry */
