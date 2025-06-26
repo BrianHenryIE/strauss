@@ -20,7 +20,6 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class Copier
 {
@@ -31,8 +30,6 @@ class Copier
     protected FileSystem $filesystem;
 
     protected CopierConfigInterface $config;
-
-    protected OutputInterface $output;
 
     /**
      * Copier constructor.
@@ -56,7 +53,6 @@ class Copier
      * If the target dir does not exist, create it.
      * If it already exists, delete any files we're about to copy.
      *
-     * @return void
      * @throws FilesystemException
      */
     public function prepareTarget(): void
