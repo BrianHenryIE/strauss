@@ -1,6 +1,6 @@
 <?php
 /**
- * @see https://github.com/BrianHenryIE/strauss/pull/198
+ * @see https://github.com/BrianHenryIE/strauss/pull/200
  */
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
@@ -11,7 +11,7 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  * @package BrianHenryIE\Strauss\Tests\Issues
  * @coversNothing
  */
-class StraussIssue198Test extends IntegrationTestCase
+class StraussIssue200Test extends IntegrationTestCase
 {
     public function test_does_not_remove_vendor_autoload_dev_entries()
     {
