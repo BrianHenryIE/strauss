@@ -48,10 +48,20 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
+    protected FileSystem $inMemoryFilesystem;
+
     /**
      * Get an in-memory filesystem.
      */
     protected function getInMemoryFileSystem(): FileSystem
+    {
+        if (!isset($inMemoryFilesystem)) {
+            $this->inMemoryFilesystem = $this->getNewInMemoryFileSystem();
+        }
+        return $this->inMemoryFilesystem;
+    }
+
+    protected function getNewInMemoryFileSystem(): FileSystem
     {
 
         $inMemoryFilesystem = new \BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter();
