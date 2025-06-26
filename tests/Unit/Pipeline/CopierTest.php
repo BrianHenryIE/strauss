@@ -9,38 +9,12 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\Log\LogPlaceholderSubstituter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogger;
 use BrianHenryIE\Strauss\TestCase;
-use Psr\Log\LoggerInterface;
-use Psr\Log\Test\TestLogger;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Copier
  */
 class CopierTest extends TestCase
 {
-    protected LoggerInterface $logger;
-    protected TestLogger $testLogger;
-
-    protected function getLogger(): LoggerInterface
-    {
-        if (!isset($this->logger)) {
-            $this->logger = new RelativeFilepathLogger(
-                $this->getInMemoryFileSystem(),
-                new LogPlaceholderSubstituter(
-                    $this->getTestLogger()
-                )
-            );
-        }
-        return $this->logger;
-    }
-    protected function getTestLogger(): TestLogger
-    {
-        if (!isset($this->testLogger)) {
-            $this->testLogger = new ColorLogger();
-        }
-
-        return $this->testLogger;
-    }
-
     /**
      * @covers ::__construct
      * @covers ::copy
