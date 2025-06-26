@@ -40,7 +40,7 @@ class MozartIssue129Test extends TestCase
         $original = 'Example\Sdk\Endpoints';
         $replacement = 'Strauss\Example\Sdk\Endpoints';
 
-        $replacer = new Prefixer($config, $this->getFileSystem());
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
         $result = $replacer->replaceNamespace($phpString, $original, $replacement);
 

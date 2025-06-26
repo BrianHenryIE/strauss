@@ -51,7 +51,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Get an in-memory filesystem.
      */
-    protected function getFileSystem(): FileSystem
+    protected function getInMemoryFileSystem(): FileSystem
     {
 
         $inMemoryFilesystem = new \BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter();
