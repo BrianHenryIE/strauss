@@ -42,7 +42,7 @@ class AutoloadTest extends TestCase
 
         $absoluteWorkingDir = '/';
         $discoveredFilesAutoloaders = array();
-        $filesystem = $this->getFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
         $logger = new TestLogger();
 
         $filesystem->write(
@@ -83,7 +83,7 @@ class AutoloadTest extends TestCase
 
         $absoluteWorkingDir = '/path/to/myproject/build/';
         $discoveredFilesAutoloaders = array();
-        $filesystem = $this->getFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
         $logger = new TestLogger();
 
         $filesystem->write(
@@ -127,7 +127,7 @@ class AutoloadTest extends TestCase
                     0 => 'src/constants.php',
                 ),
         );
-        $filesystem = $this->getFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
         $logger = new TestLogger();
 
         $filesystem->write(

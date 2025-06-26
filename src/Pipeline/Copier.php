@@ -13,15 +13,13 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\CopierConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\FilesystemException;
-use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class Copier
 {
@@ -31,19 +29,19 @@ class Copier
 
     protected FileSystem $filesystem;
 
-    protected StraussConfig $config;
-
-    protected OutputInterface $output;
+    protected CopierConfigInterface $config;
 
     /**
      * Copier constructor.
      *
-     * @param DiscoveredFiles $files
-     * @param StraussConfig $config
+     * @param DiscoveredFiles $files Contains a collections of Files with source and target paths.
+     * @param CopierConfigInterface $config
+     * @param FileSystem $filesystem A filesystem instance.
+     * @param LoggerInterface $logger A logger implementation.
      */
     public function __construct(
         DiscoveredFiles $files,
-        StraussConfig $config,
+        CopierConfigInterface $config,
         FileSystem $filesystem,
         LoggerInterface $logger
     ) {
@@ -57,7 +55,6 @@ class Copier
      * If the target dir does not exist, create it.
      * If it already exists, delete any files we're about to copy.
      *
-     * @return void
      * @throws FilesystemException
      */
     public function prepareTarget(): void
@@ -94,30 +91,31 @@ class Copier
          */
         foreach ($this->files->getFiles() as $file) {
             if (!$file->isDoCopy()) {
-                $this->logger->debug('Skipping ' . $file->getSourcePath());
+                $this->logger->debug('Skipping {sourcePath}', ['sourcePath' => $file->getSourcePath()]);
                 continue;
             }
 
             $sourceAbsoluteFilepath = $file->getSourcePath();
             $targetAbsolutePath = $file->getAbsoluteTargetPath();
 
-            $relativeTargetPath = $this->filesystem->getRelativePath(
-                $this->config->getProjectDirectory(),
-                $file->getAbsoluteTargetPath()
-            );
-
             if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
-                $this->logger->info(sprintf(
-                    'Creating directory at %s',
-                    $relativeTargetPath
-                ));
+                $this->logger->info(
+                    'Creating directory at {targetPath}',
+                    ['targetPath' => $targetAbsolutePath]
+                );
                 $this->filesystem->createDirectory($targetAbsolutePath);
-            } else {
-                $this->logger->info(sprintf(
-                    'Copying file to %s',
-                    $relativeTargetPath
-                ));
+            } elseif ($this->filesystem->fileExists($sourceAbsoluteFilepath)) {
+                $this->logger->info(
+                    'Copying file to {targetPath}',
+                    ['targetPath' => $targetAbsolutePath]
+                );
                 $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
+            } else {
+                $file->setDoPrefix(false);
+                $this->logger->warning(
+                    'Expected file not found: {sourcePath}',
+                    ['sourcePath' => $sourceAbsoluteFilepath]
+                );
             }
         }
     }

@@ -84,7 +84,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             PrefixerConfigInterface::class,
             FileEnumeratorConfig::class
         );
-        $filesystem = $this->getFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 //      $logger = new ColorLogger();
         $logger = new NullLogger();
 

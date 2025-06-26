@@ -31,8 +31,6 @@ class IntegrationTestCase extends TestCase
 
     protected $testsWorkingDir;
 
-    protected ?TestLogger $logger = null;
-
     public function setUp(): void
     {
         parent::setUp();
