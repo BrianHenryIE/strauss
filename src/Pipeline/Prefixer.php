@@ -14,6 +14,8 @@ use Exception;
 use League\Flysystem\FilesystemException;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
@@ -45,7 +47,8 @@ class Prefixer
         PrefixerConfigInterface $config,
         FileSystem              $filesystem,
         ?LoggerInterface        $logger = null
-    ) {
+    )
+    {
         $this->config = $config;
         $this->filesystem = $filesystem;
         $this->logger = $logger ?? new NullLogger();
@@ -213,6 +216,54 @@ class Prefixer
 
         foreach ($functions as $functionSymbol) {
             $contents = $this->replaceFunctions($contents, $functionSymbol);
+        }
+
+        $contents = $this->replaceConstFetchNamespaces($discoveredSymbols, $contents);
+
+        return $contents;
+    }
+
+    protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, string $contents): string
+    {
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $ast = $parser->parse($contents);
+
+        $namespaceSymbols = $symbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
+        if (empty($namespaceSymbols)) {
+            return $contents;
+        }
+
+        $nodeFinder = new NodeFinder();
+        $positions = [];
+
+        /** @var ConstFetch[] $constFetches */
+        $constFetches = $nodeFinder->find($ast, function (Node $node) {
+            return $node instanceof ConstFetch
+                && $node->name instanceof Name\FullyQualified;
+        });
+
+        foreach ($constFetches as $fetch) {
+            $full = $fetch->name->toString();
+            $parts = explode('\\', $full);
+            $namespace = $parts[0] ?? null;
+
+            if ($namespace && isset($namespaceSymbols[$namespace])) {
+                $replacementNamespace = $namespaceSymbols[$namespace]->getReplacement();
+                $parts[0] = $replacementNamespace;
+                $newName = '\\' . implode('\\', $parts);
+
+                $positions[] = [
+                    'start' => $fetch->name->getStartFilePos(),
+                    'end' => $fetch->name->getEndFilePos() + 1,
+                    'replacement' => $newName,
+                ];
+            }
+        }
+
+        usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
+
+        foreach ($positions as $pos) {
+            $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
         }
 
         return $contents;
@@ -408,7 +459,8 @@ class Prefixer
         string $contents,
         string $originalClassname,
         string $classnamePrefix
-    ): string {
+    ): string
+    {
         $replacement = $classnamePrefix . $originalClassname;
 
         // use Prefixed_Class as Class;
@@ -524,7 +576,7 @@ class Prefixer
             ) {
                 $positions[] = [
                     'start' => $call->args[0]->value->getStartFilePos() + 1, // do not change quotes
-                    'end'   => $call->args[0]->value->getEndFilePos(),
+                    'end' => $call->args[0]->value->getEndFilePos(),
                 ];
             }
         }
@@ -665,7 +717,7 @@ class Prefixer
                     $nameNodes[] = $node->returnType;
                 }
 
-                if ($node instanceof \PhpParser\Node\Expr\ClassConstFetch
+                if ($node instanceof ClassConstFetch
                     && $node->class instanceof Name
                     && !($node->class instanceof \PhpParser\Node\Name\FullyQualified)) {
                     $nameNodes[] = $node->class;
