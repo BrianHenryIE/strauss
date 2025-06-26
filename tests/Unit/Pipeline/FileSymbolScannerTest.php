@@ -479,7 +479,7 @@ EOD;
     {
 
         $contents = "
-	    myvar = 123; class Pear { };
+	    \$myvar = 123; class Pear { };
 	    ";
 
         $filesystemReaderMock = Mockery::mock(Filesystem::class);

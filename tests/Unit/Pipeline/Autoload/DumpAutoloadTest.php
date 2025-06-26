@@ -89,8 +89,8 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $logger = new NullLogger();
 
         $config->expects('isDryRun')->times(1)->andReturn(true);
-        $config->expects('getVendorDirectory')->times(3)->andReturn('mem://project/vendor');
-        $config->expects('getTargetDirectory')->times(4)->andReturn('mem://project/vendor-prefixed');
+        $config->expects('getVendorDirectory')->times(4)->andReturn('mem://project/vendor');
+        $config->expects('getTargetDirectory')->times(5)->andReturn('mem://project/vendor-prefixed');
 
         $installedVersions = <<<EOD
 <?php // a core Composer file that is not unique per install.
