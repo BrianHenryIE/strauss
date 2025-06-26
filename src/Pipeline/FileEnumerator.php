@@ -61,6 +61,8 @@ class FileEnumerator
      * Includes all files in the directories and subdirectories mentioned in the autoloaders.
      *
      * @param ComposerPackage[] $dependencies
+     *
+     * @throws FilesystemException
      */
     public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
     {
@@ -140,7 +142,7 @@ class FileEnumerator
      * @param string $autoloaderType
      *
      * @throws FilesystemException
-     * @uses \BrianHenryIE\Strauss\Files\DiscoveredFiles::add()
+     * @uses DiscoveredFiles::add
      *
      */
     protected function addFileWithDependency(
