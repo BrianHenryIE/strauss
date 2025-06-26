@@ -9,7 +9,6 @@ use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogger;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
-use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
 use Psr\Log\LoggerInterface;
@@ -17,6 +16,18 @@ use Psr\Log\Test\TestLogger;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * The logger used by the objects.
+     */
+    protected ?LoggerInterface $logger;
+
+    /**
+     * The output logger.
+     */
+    protected TestLogger $testLogger;
+
+    protected FileSystem $inMemoryFilesystem;
+
     public static function assertEqualsRN($expected, $actual, string $message = ''): void
     {
         if (is_string($expected) && is_string($actual)) {
@@ -53,7 +64,6 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
-    protected FileSystem $inMemoryFilesystem;
 
     /**
      * Get an in-memory filesystem.
@@ -111,9 +121,6 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         Mockery::close();
     }
-
-    protected LoggerInterface $logger;
-    protected TestLogger $testLogger;
 
     protected function getLogger(): LoggerInterface
     {
