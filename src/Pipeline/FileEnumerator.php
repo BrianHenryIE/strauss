@@ -47,7 +47,6 @@ class FileEnumerator
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
-
         $this->config = $config;
 
         $this->filesystem = $filesystem;
@@ -67,7 +66,7 @@ class FileEnumerator
     public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
     {
         foreach ($dependencies as $dependency) {
-            $this->logger->info("Scanning for files for package " . $dependency->getPackageName());
+            $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
 
             /**
              * Where $dependency->autoload is ~
@@ -79,6 +78,8 @@ class FileEnumerator
             $autoloaders = array_filter($dependency->getAutoload(), function ($type) {
                 return 'exclude-from-classmap' !== $type;
             }, ARRAY_FILTER_USE_KEY);
+
+            $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
 
             foreach ($autoloaders as $type => $value) {
                 // Might have to switch/case here.
@@ -101,8 +102,8 @@ class FileEnumerator
 
                     foreach ($namespace_relative_paths as $namespaceRelativePath) {
                         $sourceAbsoluteDirPath = in_array($namespaceRelativePath, ['.','./'])
-                            ? $dependency->getPackageAbsolutePath()
-                            : $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
+                            ? $dependencyPackageAbsolutePath
+                            : $dependencyPackageAbsolutePath . $namespaceRelativePath;
 
                         if ($this->filesystem->directoryExists($sourceAbsoluteDirPath)) {
                             $fileList = $this->filesystem->listContents($sourceAbsoluteDirPath, true);
@@ -150,6 +151,14 @@ class FileEnumerator
         string $sourceAbsoluteFilepath,
         string $autoloaderType
     ): void {
+
+        // Do not add a file if its source does not exist!
+        if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)
+            && !$this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+            $this->logger->warning("File does not exist: {sourcePath}", ['sourcePath' => $sourceAbsoluteFilepath]);
+            return;
+        }
+
         $vendorRelativePath = substr(
             $sourceAbsoluteFilepath,
             strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
