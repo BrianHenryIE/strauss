@@ -13,12 +13,11 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\CopierConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\FilesystemException;
-use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -31,7 +30,7 @@ class Copier
 
     protected FileSystem $filesystem;
 
-    protected StraussConfig $config;
+    protected CopierConfigInterface $config;
 
     protected OutputInterface $output;
 
@@ -39,11 +38,11 @@ class Copier
      * Copier constructor.
      *
      * @param DiscoveredFiles $files
-     * @param StraussConfig $config
+     * @param CopierConfigInterface $config
      */
     public function __construct(
         DiscoveredFiles $files,
-        StraussConfig $config,
+        CopierConfigInterface $config,
         FileSystem $filesystem,
         LoggerInterface $logger
     ) {
