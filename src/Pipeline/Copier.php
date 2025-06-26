@@ -111,6 +111,7 @@ class Copier
                 );
                 $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
             } else {
+                $file->setDoPrefix(false);
                 $this->logger->warning(
                     'Expected file not found: {sourcePath}',
                     ['sourcePath' => $sourceAbsoluteFilepath]

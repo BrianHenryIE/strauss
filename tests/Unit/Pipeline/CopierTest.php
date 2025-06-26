@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\Log\LogPlaceholderSubstituter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogger;
 use BrianHenryIE\Strauss\TestCase;
+use Mockery;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Copier
@@ -98,8 +99,11 @@ class CopierTest extends TestCase
 
         $filepath = $sourceDir . '/file.php';
 
-        $file = new File($filepath);
-        $file->setAbsoluteTargetPath($targetDir . '/file.php');
+        $file = Mockery::mock(File::class);
+        $file->expects()->isDoCopy()->andReturnTrue();
+        $file->expects()->getSourcePath()->andReturn($filepath)->atleast()->Once();
+        $file->expects()->getAbsoluteTargetPath()->andReturn($targetDir . '/file.php');
+        $file->expects()->setDoPrefix(false);
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
