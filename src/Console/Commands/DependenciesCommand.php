@@ -8,8 +8,7 @@ use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\Log\LogPlaceholderSubstituter;
-use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogger;
+use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
@@ -32,6 +31,9 @@ use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\WhitespacePathNormalizer;
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
+use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -234,12 +236,11 @@ class DependenciesCommand extends Command
                 $this->setLogger($this->getLogger($input, $output));
             }
 
-            $this->setLogger(new RelativeFilepathLogger(
-                $this->filesystem,
-                new LogPlaceholderSubstituter(
-                    $this->logger
-                )
-            ));
+            $logger = new Logger('logger');
+            $logger->pushProcessor(new PsrLogMessageProcessor());
+            $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
+            $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
+            $this->setLogger($logger);
 
             $this->buildDependencyList();
 
