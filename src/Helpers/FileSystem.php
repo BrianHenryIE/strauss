@@ -252,6 +252,17 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         return $relativePath;
     }
 
+    public function getProjectRelativePath(string $absolutePath): string
+    {
+
+        // What will happen with strings that are not paths?!
+
+        return $this->getRelativePath(
+            $this->workingDir,
+            $absolutePath
+        );
+    }
+
 
     /**
      * Check does the filepath point to a file outside the working directory.

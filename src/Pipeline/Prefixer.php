@@ -68,13 +68,12 @@ class Prefixer
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
         foreach ($files as $file) {
-            if ($this->filesystem->directoryExists($file->getAbsoluteTargetPath())) {
-                $this->logger->debug("is_dir() / nothing to do : {$file->getAbsoluteTargetPath()}");
+            if (!$file->isDoPrefix()) {
                 continue;
             }
 
-            if (!$this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
-                $this->logger->warning("Expected file does not exist: {$file->getAbsoluteTargetPath()}");
+            if ($this->filesystem->directoryExists($file->getAbsoluteTargetPath())) {
+                $this->logger->debug("is_dir() / nothing to do : {$file->getAbsoluteTargetPath()}");
                 continue;
             }
 
@@ -82,7 +81,8 @@ class Prefixer
                 continue;
             }
 
-            if (!$file->isDoPrefix()) {
+            if (!$this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
+                $this->logger->warning("Expected file does not exist: {$file->getAbsoluteTargetPath()}");
                 continue;
             }
 
