@@ -2,12 +2,9 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Config\CopierConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Helpers\Log\LogPlaceholderSubstituter;
-use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogger;
 use BrianHenryIE\Strauss\TestCase;
 use Mockery;
 
@@ -38,21 +35,13 @@ class CopierTest extends TestCase
 
         $config = \Mockery::mock(CopierConfigInterface::class);
 
-        $colorLogger = new ColorLogger();
-        $logger = new RelativeFilepathLogger(
-            $filesystem,
-            new LogPlaceholderSubstituter(
-                $colorLogger
-            )
-        );
-
-        $sut = new Copier($discoveredFiles, $config, $filesystem, $logger);
+        $sut = new Copier($discoveredFiles, $config, $filesystem, $this->getLogger());
         $sut->copy();
 
         $this->assertTrue($filesystem->fileExists($targetDir . '/file.php'));
         $this->assertEquals('test', $filesystem->read($targetDir . '/file.php'));
 
-        $this->assertTrue($colorLogger->hasInfo('Copying file to target/file.php'));
+        $this->assertTrue($this->getTestLogger()->hasInfo('Copying file to target/file.php'));
     }
 
     /**

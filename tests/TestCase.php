@@ -4,13 +4,15 @@ namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\Log\LogPlaceholderSubstituter;
-use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogger;
+use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
+use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
 
@@ -125,15 +127,19 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected function getLogger(): LoggerInterface
     {
         if (!isset($this->logger)) {
-            $this->logger = new RelativeFilepathLogger(
-                $this->getInMemoryFileSystem(),
-                new LogPlaceholderSubstituter(
-                    $this->getTestLogger()
-                )
-            );
+            $this->logger = $this->getNewLogger();
         }
         return $this->logger;
     }
+    protected function getNewLogger(): LoggerInterface
+    {
+        $logger = new Logger('logger');
+        $logger->pushProcessor(new PsrLogMessageProcessor());
+        $logger->pushProcessor(new RelativeFilepathLogProcessor($this->getInMemoryFileSystem()));
+        $logger->pushHandler(new PsrHandler($this->getTestLogger()));
+        return $logger;
+    }
+
     protected function getTestLogger(): TestLogger
     {
         if (!isset($this->testLogger)) {
