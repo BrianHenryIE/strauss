@@ -2728,7 +2728,7 @@ EOD;
         $symbol->setReplacement('Prefix\\Strauss\\Carbon_Fields');
         $symbols->add($symbol);
 
-        $replacer = new Prefixer($config, $this->getFileSystem());
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceInString($symbols, $contents);
 
         $this->assertEqualsRN($expected, $result);
