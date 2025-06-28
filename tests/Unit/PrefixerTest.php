@@ -147,8 +147,9 @@ protected $buffer;             // buffer holding in-memory PDF
 EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
-        
+
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
 
         $original = "FPDF";
         $classnamePrefix = "BrianHenryIE_Strauss_";
@@ -349,7 +350,7 @@ EOD;
     public function it_does_not_replace_inside_namespace_multiline(): void
     {
         self::markTestSkipped('No longer describes how the code behaves.');
-        
+
         $contents = "
         namespace Mozart;
         class Hello_World
@@ -393,7 +394,6 @@ EOD;
 
         self::assertEqualsRN($contents, $result);
     }
-
 
 
     /**
@@ -470,7 +470,7 @@ EOD;
         $contents = 'namespace Test\\Test\\Another;';
 
         $namespace = 'Test\\Another';
-        $replacement = 'My\\Mozart\\Prefix\\'.$namespace;
+        $replacement = 'My\\Mozart\\Prefix\\' . $namespace;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -722,7 +722,6 @@ EOD;
     }
 
 
-
     /**
      * Prefix namespaced classnames after `static` keyword.
      *
@@ -859,7 +858,7 @@ EOD;
         $file->shouldReceive('getSourcePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
-        $constants = array('FPDF_VERSION','ANOTHER_CONSTANT');
+        $constants = array('FPDF_VERSION', 'ANOTHER_CONSTANT');
         foreach ($constants as $constant) {
             $discoveredSymbols->add(new ConstantSymbol($constant, $file));
         }
@@ -1410,7 +1409,6 @@ EOD;
     }
 
 
-
     /**
      *
      *
@@ -1918,6 +1916,7 @@ EOD;
 
         self::assertEqualsRN($expected, $result);
     }
+
     public function testPrefixesAliasedGlobalClass(): void
     {
         $contents = <<<'EOD'
@@ -2680,6 +2679,56 @@ EOD;
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    public function testInclude(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace Carbon_Fields\Container;
+
+use Carbon_Fields\Helper\Helper;
+
+class User_Meta_Container extends Container {
+
+    public function t() {
+        include \Carbon_Fields\DIR . '/f.php';
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Prefix\Strauss\Carbon_Fields\Container;
+
+use Prefix\Strauss\Carbon_Fields\Helper\Helper;
+
+class User_Meta_Container extends Container {
+
+    public function t() {
+        include \Prefix\Strauss\Carbon_Fields\DIR . '/f.php';
+    }
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = $this->createMock(File::class);
+        $file->expects($this->any())->method('addDiscoveredSymbol');
+        $file->expects($this->any())->method('getSourcePath');
+
+        $symbols = new DiscoveredSymbols();
+
+        $symbol = new NamespaceSymbol('Carbon_Fields', $file);
+        $symbol->setReplacement('Prefix\\Strauss\\Carbon_Fields');
+        $symbols->add($symbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceInString($symbols, $contents);
 
         $this->assertEqualsRN($expected, $result);
