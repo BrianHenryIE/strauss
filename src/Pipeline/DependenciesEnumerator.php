@@ -128,7 +128,7 @@ class DependenciesEnumerator
                 }
 
                 if (is_null($requiredPackageComposerJson)) {
-                    // e.g. composer-plugin-api.
+                    // e.g. composer-plugin-api, composer-runtime-api
                     $this->logger->info('Skipping ' . $requiredPackageName . ' as it is not in composer.lock');
                     continue;
                 }
