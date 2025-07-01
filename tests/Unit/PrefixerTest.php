@@ -2619,6 +2619,68 @@ EOD;
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
 
+    public function test_namespace_in_string_with_variable(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+if (!self::$raw) {
+  $name_canon = preg_replace("/[^a-z0-9]/", "", strtolower($tag));
+
+  $class = "FontLib\\Table\\Type\\$name_canon";
+
+  if (!isset($this->directory[$tag]) || !@class_exists($class)) {
+    return;
+  }
+}
+else {
+  $class = "FontLib\\Table\\Table";
+}
+
+$decorator  = "Dompdf\\FrameDecorator\\$decorator";
+$reflower   = "Dompdf\\FrameReflower\\$reflower";
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+if (!self::$raw) {
+  $name_canon = preg_replace("/[^a-z0-9]/", "", strtolower($tag));
+
+  $class = "Strauss\\Test\\FontLib\\Table\\Type\\$name_canon";
+
+  if (!isset($this->directory[$tag]) || !@class_exists($class)) {
+    return;
+  }
+}
+else {
+  $class = "Strauss\\Test\\FontLib\\Table\\Table";
+}
+
+$decorator  = "Strauss\\Test\\Dompdf\\FrameDecorator\\$decorator";
+$reflower   = "Strauss\\Test\\Dompdf\\FrameReflower\\$reflower";
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $symbols = new DiscoveredSymbols();
+
+        $namespaceSymbol = new NamespaceSymbol('FontLib\\Table', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\FontLib\\Table');
+        $symbols->add($namespaceSymbol);
+
+        $namespaceSymbol = new NamespaceSymbol('Dompdf', $this->createMock(File::class));
+        $namespaceSymbol->setReplacement('Strauss\\Test\\Dompdf');
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
     public function testForAbsenceOfFunctionPrefixInClass(): void
     {
         $contents = <<<'EOD'
