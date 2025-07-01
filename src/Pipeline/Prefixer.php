@@ -47,8 +47,7 @@ class Prefixer
         PrefixerConfigInterface $config,
         FileSystem              $filesystem,
         ?LoggerInterface        $logger = null
-    )
-    {
+    ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
         $this->logger = $logger ?? new NullLogger();
@@ -459,8 +458,7 @@ class Prefixer
         string $contents,
         string $originalClassname,
         string $classnamePrefix
-    ): string
-    {
+    ): string {
         $replacement = $classnamePrefix . $originalClassname;
 
         // use Prefixed_Class as Class;
