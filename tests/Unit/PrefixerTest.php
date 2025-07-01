@@ -2674,7 +2674,7 @@ EOD;
         $namespaceSymbol->setReplacement('Strauss\\Test\\Dompdf');
         $symbols->add($namespaceSymbol);
 
-        $replacer = new Prefixer($config, $this->getFileSystem());
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
         $result = $replacer->replaceInString($symbols, $contents);
 
