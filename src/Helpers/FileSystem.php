@@ -153,6 +153,29 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         return $relativePath;
     }
 
+    public function getProjectRelativePath(string $absolutePath): string
+    {
+
+        // What will happen with strings that are not paths?!
+
+        return $this->getRelativePath(
+            $this->workingDir,
+            $absolutePath
+        );
+    }
+
+
+    /**
+     * Check does the filepath point to a file outside the working directory.
+     * If `realpath()` fails to resolve the path, assume it's a symlink.
+     */
+    public function isSymlinkedFile(FileBase $file): bool
+    {
+        $realpath = realpath($file->getSourcePath());
+
+        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
+    }
+
     /**
      * Does the subdir path start with the dir path?
      */

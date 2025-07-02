@@ -45,7 +45,7 @@ class AliasesTest extends TestCase
         $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
         $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
 
-        $fileSystem = $this->getFileSystem();
+        $fileSystem = $this->getInMemoryFileSystem();
 
         $sut = new Aliases(
             $config,
@@ -96,7 +96,7 @@ EOD;
         $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
         $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
 
-        $fileSystem = $this->getFileSystem();
+        $fileSystem = $this->getInMemoryFileSystem();
 
         $sut = new Aliases(
             $config,
@@ -134,7 +134,7 @@ EOD;
         $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
         $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
 
-        $fileSystem = $this->getFileSystem();
+        $fileSystem = $this->getInMemoryFileSystem();
 
         $sut = new Aliases(
             $config,

@@ -6,7 +6,9 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Pipeline\Aliases;
@@ -22,6 +24,7 @@ use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\InstalledVersions;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
@@ -30,6 +33,9 @@ use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
+use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -236,6 +242,13 @@ class DependenciesCommand extends Command
                 }
                 $this->setLogger($this->getLogger($input, $output));
             }
+
+            $logger = new Logger('logger');
+            $logger->pushProcessor(new PsrLogMessageProcessor());
+            $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
+            $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
+            $this->setLogger($logger);
+
             $this->buildDependencyList();
 
             $this->enumerateFiles();
@@ -243,6 +256,8 @@ class DependenciesCommand extends Command
             $this->copyFiles();
 
             $this->determineChanges();
+
+            $this->enumeratePsr4Namespaces();
 
             $this->performReplacements();
 
@@ -354,6 +369,33 @@ class DependenciesCommand extends Command
             // https://stackoverflow.com/a/65009324/336146
             $this->logger->notice('Use `COMPOSER_MIRROR_PATH_REPOS=1 composer install` to copy symlinked packages to vendor directory.');
             throw new Exception();
+        }
+    }
+
+    /**
+     * TODO: currently this must run after ::determineChanges() so the discoveredSymbols object exists,
+     * but logically it should run first.
+     */
+    protected function enumeratePsr4Namespaces(): void
+    {
+        foreach ($this->config->getPackagesToPrefix() as $package) {
+            $autoloadKey = $package->getAutoload();
+            if (! isset($autoloadKey['psr-4'])) {
+                continue;
+            }
+
+            $psr4autoloadKey = $autoloadKey['psr-4'];
+            $namespaces = array_keys($psr4autoloadKey);
+
+            $file = new File($package->getPackageAbsolutePath() . 'composer.json');
+
+            foreach ($namespaces as $namespace) {
+                // TODO: log.
+                $symbol = new NamespaceSymbol(trim($namespace, '\\'), $file);
+                // TODO: respect all config options.
+                $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
+                $this->discoveredSymbols->add($symbol);
+            }
         }
     }
 

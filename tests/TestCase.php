@@ -2,7 +2,9 @@
 
 namespace BrianHenryIE\Strauss;
 
+use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
@@ -10,9 +12,26 @@ use League\Flysystem\PathNormalizer;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
+use Monolog\Processor\PsrLogMessageProcessor;
+use Psr\Log\LoggerInterface;
+use Psr\Log\Test\TestLogger;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * The logger used by the objects.
+     */
+    protected ?LoggerInterface $logger;
+
+    /**
+     * The output logger.
+     */
+    protected TestLogger $testLogger;
+
+    protected FileSystem $inMemoryFilesystem;
+
     protected string $testsWorkingDir;
 
     protected PathNormalizer $pathNormalizer;
@@ -75,10 +94,19 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
+
     /**
      * Get an in-memory filesystem.
      */
-    protected function getFileSystem(): FileSystem
+    protected function getInMemoryFileSystem(): FileSystem
+    {
+        if (!isset($inMemoryFilesystem)) {
+            $this->inMemoryFilesystem = $this->getNewInMemoryFileSystem();
+        }
+        return $this->inMemoryFilesystem;
+    }
+
+    protected function getNewInMemoryFileSystem(): FileSystem
     {
 
         $inMemoryFilesystem = new \BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter();
@@ -89,12 +117,15 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $pathPrefixer = new PathPrefixer('mem://', '/');
 
         $filesystem = new Filesystem(
-            $inMemoryFilesystem,
-            [
+            new \League\Flysystem\Filesystem(
+                $inMemoryFilesystem,
+                [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ],
-            $normalizer,
-            $pathPrefixer
+                $normalizer
+            ),
+            $pathPrefixer,
+            'mem://'
         );
 
         /** @var FilesystemRegistry $registry */
@@ -131,5 +162,30 @@ class TestCase extends \PHPUnit\Framework\TestCase
             $this->pathNormalizer->normalizePath($actual),
             $message
         );
+    }
+
+    protected function getLogger(): LoggerInterface
+    {
+        if (!isset($this->logger)) {
+            $this->logger = $this->getNewLogger();
+        }
+        return $this->logger;
+    }
+    protected function getNewLogger(): LoggerInterface
+    {
+        $logger = new Logger('logger');
+        $logger->pushProcessor(new PsrLogMessageProcessor());
+        $logger->pushProcessor(new RelativeFilepathLogProcessor($this->getInMemoryFileSystem()));
+        $logger->pushHandler(new PsrHandler($this->getTestLogger()));
+        return $logger;
+    }
+
+    protected function getTestLogger(): TestLogger
+    {
+        if (!isset($this->testLogger)) {
+            $this->testLogger = new ColorLogger();
+        }
+
+        return $this->testLogger;
     }
 }

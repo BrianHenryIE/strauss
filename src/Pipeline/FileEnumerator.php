@@ -22,16 +22,7 @@ class FileEnumerator
 {
     use LoggerAwareTrait;
 
-    protected string $vendorDir;
-
-    /** @var string[]  */
-    protected array $excludePackageNames = array();
-
-    /** @var string[]  */
-    protected array $excludeNamespaces = array();
-
-    /** @var string[]  */
-    protected array $excludeFilePatterns = array();
+    protected FileEnumeratorConfig $config;
 
     protected Filesystem $filesystem;
 
@@ -46,8 +37,6 @@ class FileEnumerator
      */
     protected array $filesAutoloaders = [];
 
-    protected FileEnumeratorConfig $config;
-
     /**
      * Copier constructor.
      */
@@ -58,13 +47,7 @@ class FileEnumerator
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
-        $this->vendorDir = $config->getVendorDirectory();
-
         $this->config = $config;
-
-        $this->excludeNamespaces = $config->getExcludeNamespacesFromCopy();
-        $this->excludePackageNames = $config->getExcludePackagesFromCopy();
-        $this->excludeFilePatterns = $config->getExcludeFilePatternsFromCopy();
 
         $this->filesystem = $filesystem;
 
@@ -77,11 +60,13 @@ class FileEnumerator
      * Includes all files in the directories and subdirectories mentioned in the autoloaders.
      *
      * @param ComposerPackage[] $dependencies
+     *
+     * @throws FilesystemException
      */
     public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
     {
         foreach ($dependencies as $dependency) {
-            $this->logger->info("Scanning for files for package " . $dependency->getPackageName());
+            $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
 
             /**
              * Where $dependency->autoload is ~
@@ -94,6 +79,8 @@ class FileEnumerator
                 return 'exclude-from-classmap' !== $type;
             }, ARRAY_FILTER_USE_KEY);
 
+            $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
+
             foreach ($autoloaders as $type => $value) {
                 // Might have to switch/case here.
 
@@ -103,7 +90,7 @@ class FileEnumerator
                 }
 
                 foreach ($value as $namespace => $namespaceRelativePaths) {
-                    if (!empty($namespace) && in_array($namespace, $this->excludeNamespaces)) {
+                    if (!empty($namespace) && in_array($namespace, $this->config->getExcludeNamespacesFromCopy())) {
                         $this->logger->info("Excluding namespace " . $namespace);
                         continue;
                     }
@@ -115,8 +102,8 @@ class FileEnumerator
 
                     foreach ($namespaceRelativePaths as $namespaceRelativePath) {
                         $sourceAbsoluteDirPath = in_array($namespaceRelativePath, ['.','./'])
-                            ? $dependency->getPackageAbsolutePath()
-                            : $dependency->getPackageAbsolutePath() . $namespaceRelativePath;
+                            ? $dependencyPackageAbsolutePath
+                            : $dependencyPackageAbsolutePath . $namespaceRelativePath;
 
                         // If it is a directory, we need to list + add all files in it.
                         if ($this->filesystem->directoryExists($sourceAbsoluteDirPath)) {
@@ -157,7 +144,7 @@ class FileEnumerator
      * @param string $autoloaderType
      *
      * @throws FilesystemException
-     * @uses \BrianHenryIE\Strauss\Files\DiscoveredFiles::add()
+     * @uses DiscoveredFiles::add
      *
      */
     protected function addFileWithDependency(
@@ -166,10 +153,22 @@ class FileEnumerator
         string $autoloaderType
     ): void {
 
-        $vendorRelativePath = $this->filesystem->getRelativePath(
-            $this->config->getVendorDirectory(),
-            $sourceAbsoluteFilepath
+        // Do not add a file if its source does not exist!
+        if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)
+            && !$this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+            $this->logger->warning("File does not exist: {sourcePath}", ['sourcePath' => $sourceAbsoluteFilepath]);
+            return;
+        }
+
+        $vendorRelativePath = substr(
+            $sourceAbsoluteFilepath,
+            strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
         );
+
+//        $vendorRelativePath = $this->filesystem->getRelativePath(
+//            $this->config->getVendorDirectory(),
+//            $sourceAbsoluteFilepath
+//        );
 
         $isOutsideProjectDir = $this->filesystem->normalize($dependency->getRealPath())
                                !== $this->filesystem->normalize($dependency->getPackageAbsolutePath());

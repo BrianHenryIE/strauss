@@ -74,7 +74,7 @@ EOD;
 
         $exception = null;
 
-        $prefixer = new Prefixer($config, $this->getFileSystem());
+        $prefixer = new Prefixer($config, $this->getInMemoryFileSystem());
 
         try {
             $prefixer->replaceClassname($contents, $originalClassname, $classnamePrefix);

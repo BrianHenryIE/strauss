@@ -116,7 +116,14 @@ class DumpAutoload
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
         $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
-        $generator->setDevMode(false);
+
+        /**
+         * If the target directory is different to the vendor directory, then we do not want to include dev
+         * dependencies, but if it is vendor, then unless composer install was run with --no-dev, we do want them.
+         */
+        if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()) {
+            $generator->setDevMode(false);
+        }
 
         $localRepo = new InstalledFilesystemRepository(
             new JsonFile(
@@ -190,6 +197,10 @@ class DumpAutoload
 
     protected function prefixNewAutoloader(): void
     {
+        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+            return;
+        }
+
         $this->logger->debug('Prefixing the new Composer autoloader.');
 
         $projectFiles = $this->fileEnumerator->compileFileListForPaths([

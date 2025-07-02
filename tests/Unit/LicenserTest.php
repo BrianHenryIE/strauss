@@ -100,7 +100,7 @@ class LicenserTest extends TestCase
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -151,7 +151,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(false);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -191,7 +191,7 @@ EOD;
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(false);
 
-        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -231,7 +231,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php // phpcs:ignore WordPress.Files.FileName
@@ -289,7 +289,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -358,7 +358,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -412,7 +412,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -480,7 +480,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -555,7 +555,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getFileSystem());
+        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php

@@ -1,5 +1,17 @@
 # Change Log
 
+## 0.22.6 June 2025
+
+* Fix: Use monolog (to avoid implementing `LoggerInterface`)
+* Fix: prefixing of constants
+
+## 0.22.5 June 2025
+
+* Fix: Reliable prefixing of global functions
+* Fix: FQDN namespaces not correctly prefxied
+* Fix: Namespaces with no classes not in the direct namespace not working with psr-4
+* Fix vendor autoloader dev entries when target is vendor
+
 ## 0.22.4 June 2025
 
 * Require `simple-php-code-parser` `^0.15.1`

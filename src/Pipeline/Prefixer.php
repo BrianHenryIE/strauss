@@ -13,6 +13,14 @@ use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Exception;
 use League\Flysystem\FilesystemException;
 use PhpParser\Node;
+use PhpParser\Node\Arg;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Name;
+use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt\Function_;
+use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
@@ -37,8 +45,8 @@ class Prefixer
 
     public function __construct(
         PrefixerConfigInterface $config,
-        FileSystem $filesystem,
-        ?LoggerInterface $logger = null
+        FileSystem              $filesystem,
+        ?LoggerInterface        $logger = null
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
@@ -59,13 +67,12 @@ class Prefixer
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
         foreach ($files as $file) {
-            if ($this->filesystem->directoryExists($file->getAbsoluteTargetPath())) {
-                $this->logger->debug("is_dir() / nothing to do : {$file->getAbsoluteTargetPath()}");
+            if (!$file->isDoPrefix()) {
                 continue;
             }
 
-            if (! $this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
-                $this->logger->warning("Expected file does not exist: {$file->getAbsoluteTargetPath()}");
+            if ($this->filesystem->directoryExists($file->getAbsoluteTargetPath())) {
+                $this->logger->debug("is_dir() / nothing to do : {$file->getAbsoluteTargetPath()}");
                 continue;
             }
 
@@ -73,7 +80,8 @@ class Prefixer
                 continue;
             }
 
-            if (!$file->isDoPrefix()) {
+            if (!$this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
+                $this->logger->warning("Expected file does not exist: {$file->getAbsoluteTargetPath()}");
                 continue;
             }
 
@@ -115,7 +123,7 @@ class Prefixer
                 continue;
             }
 
-            if (! $this->filesystem->fileExists($fileAbsolutePath)) {
+            if (!$this->filesystem->fileExists($fileAbsolutePath)) {
                 $this->logger->warning("Expected file does not exist: {$relativeFilePath}");
                 continue;
             }
@@ -126,7 +134,7 @@ class Prefixer
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
-                $this->changedFiles[ $fileAbsolutePath ] = null;
+                $this->changedFiles[$fileAbsolutePath] = null;
                 $this->filesystem->write($fileAbsolutePath, $updatedContents);
                 $this->logger->info('Updated contents of file: ' . $relativeFilePath);
             } else {
@@ -209,6 +217,54 @@ class Prefixer
             $contents = $this->replaceFunctions($contents, $functionSymbol);
         }
 
+        $contents = $this->replaceConstFetchNamespaces($discoveredSymbols, $contents);
+
+        return $contents;
+    }
+
+    protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, string $contents): string
+    {
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $ast = $parser->parse($contents);
+
+        $namespaceSymbols = $symbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
+        if (empty($namespaceSymbols)) {
+            return $contents;
+        }
+
+        $nodeFinder = new NodeFinder();
+        $positions = [];
+
+        /** @var ConstFetch[] $constFetches */
+        $constFetches = $nodeFinder->find($ast, function (Node $node) {
+            return $node instanceof ConstFetch
+                && $node->name instanceof Name\FullyQualified;
+        });
+
+        foreach ($constFetches as $fetch) {
+            $full = $fetch->name->toString();
+            $parts = explode('\\', $full);
+            $namespace = $parts[0] ?? null;
+
+            if ($namespace && isset($namespaceSymbols[$namespace])) {
+                $replacementNamespace = $namespaceSymbols[$namespace]->getReplacement();
+                $parts[0] = $replacementNamespace;
+                $newName = '\\' . implode('\\', $parts);
+
+                $positions[] = [
+                    'start' => $fetch->name->getStartFilePos(),
+                    'end' => $fetch->name->getEndFilePos() + 1,
+                    'replacement' => $newName,
+                ];
+            }
+        }
+
+        usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
+
+        foreach ($positions as $pos) {
+            $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
+        }
+
         return $contents;
     }
 
@@ -225,7 +281,7 @@ class Prefixer
     public function replaceNamespace(string $contents, string $originalNamespace, string $replacement): string
     {
 
-        $searchNamespace = '\\'.rtrim($originalNamespace, '\\') . '\\';
+        $searchNamespace = '\\' . rtrim($originalNamespace, '\\') . '\\';
         $searchNamespace = str_replace('\\\\', '\\', $searchNamespace);
         $searchNamespace = str_replace('\\', '\\\\{0,2}', $searchNamespace);
 
@@ -304,7 +360,7 @@ class Prefixer
         // For prefixed functions which do not begin with a backslash, add one.
         // I'm not certain this is a good idea.
         // @see https://github.com/BrianHenryIE/strauss/issues/65
-        $functionReplacingPattern = '/\\\\?('.preg_quote(ltrim($replacement, '\\'), '/').'\\\\(?:[a-zA-Z0-9_\x7f-\xff]+\\\\)*[a-zA-Z0-9_\x7f-\xff]+\\()/';
+        $functionReplacingPattern = '/\\\\?(' . preg_quote(ltrim($replacement, '\\'), '/') . '\\\\(?:[a-zA-Z0-9_\x7f-\xff]+\\\\)*[a-zA-Z0-9_\x7f-\xff]+\\()/';
 
         return preg_replace(
             $functionReplacingPattern,
@@ -341,7 +397,7 @@ class Prefixer
 								    		        	# the remainder of the string.
                 (^\s*namespace|\r\n\s*namespace)\s+[a-zA-Z0-9_\x7f-\xff\\\\]+\s*;(.*) # Skip lines just declaring the namespace.
                 |
-				([^a-zA-Z0-9_\x7f-\xff\$\\\])('. $searchClassname . ')([^a-zA-Z0-9_\x7f-\xff\\\]) # outside a namespace the class will not be prefixed with a slash
+				([^a-zA-Z0-9_\x7f-\xff\$\\\])(' . $searchClassname . ')([^a-zA-Z0-9_\x7f-\xff\\\]) # outside a namespace the class will not be prefixed with a slash
 
 			/xsm'; //                                    # x: ignore whitespace in regex.  s dot matches newline, m: ^ and $ match start and end of line
 
@@ -408,14 +464,14 @@ class Prefixer
         // use Prefixed_Class as Class;
         $usePattern = '/
 			(\s*use\s+)
-			('.$originalClassname.')   # Followed by the classname
+			(' . $originalClassname . ')   # Followed by the classname
 			\s*;
 			/x'; //                    # x: ignore whitespace in regex.
 
         $contents = preg_replace_callback(
             $usePattern,
             function ($matches) use ($replacement) {
-                return $matches[1] . $replacement . ' as '. $matches[2] . ';';
+                return $matches[1] . $replacement . ' as ' . $matches[2] . ';';
             },
             $contents
         );
@@ -423,7 +479,7 @@ class Prefixer
         $bodyPattern =
             '/([^a-zA-Z0-9_\x7f-\xff]  # Not a class character
 			\\\)                       # Followed by a backslash to indicate global namespace
-			('.$originalClassname.')   # Followed by the classname
+			(' . $originalClassname . ')   # Followed by the classname
 			([^\\\;]{1})               # Not a backslash or semicolon which might indicate a namespace
 			/x'; //                    # x: ignore whitespace in regex.
 
@@ -467,6 +523,36 @@ class Prefixer
             return $contents;
         }
 
+        $nodeFinder = new NodeFinder();
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $ast = $parser->parse($contents);
+
+        $positions = [];
+
+        // Function declarations (global only)
+        $functionDefs = $nodeFinder->findInstanceOf($ast, Function_::class);
+        foreach ($functionDefs as $func) {
+            if ($func->name->name === $originalFunctionString) {
+                $positions[] = [
+                    'start' => $func->name->getStartFilePos(),
+                    'end' => $func->name->getEndFilePos() + 1,
+                ];
+            }
+        }
+
+        // Calls (global only)
+        $calls = $nodeFinder->findInstanceOf($ast, FuncCall::class);
+        foreach ($calls as $call) {
+            if ($call->name instanceof Name &&
+                $call->name->toString() === $originalFunctionString
+            ) {
+                $positions[] = [
+                    'start' => $call->name->getStartFilePos(),
+                    'end' => $call->name->getEndFilePos() + 1,
+                ];
+            }
+        }
+
         $functionsUsingCallable = [
             'function_exists',
             'call_user_func',
@@ -477,32 +563,33 @@ class Prefixer
             'register_tick_function',
             'unregister_tick_function',
         ];
-// TODO: Immediately surrounded by quotes is sometimes valid, e.g. passing a callable, but not always.
-// Log cases like this and present a list to users. Maybe CLI confirmation to replace?
 
-        $pattern = '/
-			(\s*use\s+function\s+)('.preg_quote($originalFunctionString, '/').')(\s+as|\s+;) # use function as
-			|
-			|('.implode('|', $functionsUsingCallable).')(\s*\(\s*[\'"])('.preg_quote($originalFunctionString, '/').')([\'"]) # function related calls without closing bracket
-			|
-			(\s*function\s+)('.preg_quote($originalFunctionString, '/').')(\s*\() # function declaration
-			|
-			([;\s]+)('.preg_quote($originalFunctionString, '/').')(\s*\() # function call
-			/x'; // x: ignore whitespace in regex.
+        foreach ($calls as $call) {
+            if ($call->name instanceof Name &&
+                in_array($call->name->toString(), $functionsUsingCallable)
+                && isset($call->args[0])
+                && $call->args[0] instanceof Arg
+                && $call->args[0]->value instanceof String_
+                && $call->args[0]->value->value === $originalFunctionString
+            ) {
+                $positions[] = [
+                    'start' => $call->args[0]->value->getStartFilePos() + 1, // do not change quotes
+                    'end' => $call->args[0]->value->getEndFilePos(),
+                ];
+            }
+        }
 
-        return preg_replace_callback(
-            $pattern,
-            function ($matches) use ($originalFunctionString, $replacementFunctionString) {
-                foreach ($matches as $index => $match) {
-                    if ($match == $originalFunctionString) {
-                        $matches[$index] = $replacementFunctionString;
-                    }
-                }
-                unset($matches[0]);
-                return implode('', $matches);
-            },
-            $contents
-        );
+        if (empty($positions)) {
+            return $contents;
+        }
+
+        // We sort by start, from the end - so as not to break the positions after the substitution
+        usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
+
+        foreach ($positions as $pos) {
+            $contents = substr_replace($contents, $replacementFunctionString, $pos['start'], $pos['end'] - $pos['start']);
+        }
+        return $contents;
     }
 
     /**
@@ -566,12 +653,12 @@ class Prefixer
                     return $node;
                 }
                 // Probably the namespace declaration
-                if (empty($this->lastNode) && $node instanceof \PhpParser\Node\Name) {
+                if (empty($this->lastNode) && $node instanceof Name) {
                     $this->using[] = $node->name;
                     $this->lastNode = $node;
                     return $node;
                 }
-                if ($node instanceof \PhpParser\Node\Name) {
+                if ($node instanceof Name) {
                     return $node;
                 }
                 if ($node instanceof \PhpParser\Node\Stmt\Use_) {
@@ -592,14 +679,14 @@ class Prefixer
                 if ($docComment) {
                     foreach ($this->discoveredNamespaces as $namespace) {
                         $updatedDocCommentText = preg_replace(
-                            '/(.*\*\s*@\w+\s+)('.preg_quote($namespace, '/').')/',
+                            '/(.*\*\s*@\w+\s+)(' . preg_quote($namespace, '/') . ')/',
                             '$1\\\\$2',
                             $docComment->getText(),
                             1,
                             $count
                         );
                         if ($count > 0) {
-                            $this->countChanges ++;
+                            $this->countChanges++;
                             $node->setDocComment(new \PhpParser\Comment\Doc($updatedDocCommentText));
                             break;
                         }
@@ -611,37 +698,37 @@ class Prefixer
                 }
 
                 if ($node instanceof \PhpParser\Node\Param
-                    && $node->type instanceof \PhpParser\Node\Name
+                    && $node->type instanceof Name
                     && !($node->type instanceof \PhpParser\Node\Name\FullyQualified)) {
                     $nameNodes[] = $node->type;
                 }
 
                 if ($node instanceof \PhpParser\Node\NullableType
-                    && $node->type instanceof \PhpParser\Node\Name
+                    && $node->type instanceof Name
                     && !($node->type instanceof \PhpParser\Node\Name\FullyQualified)) {
                     $nameNodes[] = $node->type;
                 }
 
                 if ($node instanceof \PhpParser\Node\Stmt\ClassMethod
-                    && $node->returnType instanceof \PhpParser\Node\Name
+                    && $node->returnType instanceof Name
                     && !($node->returnType instanceof \PhpParser\Node\Name\FullyQualified)) {
                     $nameNodes[] = $node->returnType;
                 }
 
-                if ($node instanceof \PhpParser\Node\Expr\ClassConstFetch
-                    && $node->class instanceof \PhpParser\Node\Name
+                if ($node instanceof ClassConstFetch
+                    && $node->class instanceof Name
                     && !($node->class instanceof \PhpParser\Node\Name\FullyQualified)) {
                     $nameNodes[] = $node->class;
                 }
 
                 if ($node instanceof \PhpParser\Node\Expr\StaticPropertyFetch
-                    && $node->class instanceof \PhpParser\Node\Name
+                    && $node->class instanceof Name
                     && !($node->class instanceof \PhpParser\Node\Name\FullyQualified)) {
                     $nameNodes[] = $node->class;
                 }
 
                 if (property_exists($node, 'name')
-                    && $node->name instanceof \PhpParser\Node\Name
+                    && $node->name instanceof Name
                     && !($node->name instanceof \PhpParser\Node\Name\FullyQualified)
                 ) {
                     $nameNodes[] = $node->name;
@@ -656,8 +743,8 @@ class Prefixer
                 if ($node instanceof \PhpParser\Node\Stmt\TryCatch) {
                     foreach ($node->catches as $catch) {
                         foreach ($catch->types as $catchType) {
-                            if ($catchType instanceof \PhpParser\Node\Name
-                                  && !($catchType instanceof \PhpParser\Node\Name\FullyQualified)
+                            if ($catchType instanceof Name
+                                && !($catchType instanceof \PhpParser\Node\Name\FullyQualified)
                             ) {
                                 $nameNodes[] = $catchType;
                             }
@@ -667,14 +754,14 @@ class Prefixer
 
                 if ($node instanceof \PhpParser\Node\Stmt\Class_) {
                     foreach ($node->implements as $implement) {
-                        if ($implement instanceof \PhpParser\Node\Name
+                        if ($implement instanceof Name
                             && !($implement instanceof \PhpParser\Node\Name\FullyQualified)) {
                             $nameNodes[] = $implement;
                         }
                     }
                 }
                 if ($node instanceof \PhpParser\Node\Expr\Instanceof_
-                    && $node->class instanceof \PhpParser\Node\Name
+                    && $node->class instanceof Name
                     && !($node->class instanceof \PhpParser\Node\Name\FullyQualified)) {
                     $nameNodes[] = $node->class;
                 }
@@ -690,12 +777,12 @@ class Prefixer
                         $namespace = implode('\\', $parts);
                         if (in_array($namespace, $this->discoveredNamespaces)) {
                             $nameNode->name = '\\' . $nameNode->name;
-                            $this->countChanges ++;
+                            $this->countChanges++;
                         } else {
                             foreach ($this->using as $namespaceBase) {
                                 if (in_array($namespaceBase . '\\' . $namespace, $this->discoveredNamespaces)) {
                                     $nameNode->name = '\\' . $namespaceBase . '\\' . $nameNode->name;
-                                    $this->countChanges ++;
+                                    $this->countChanges++;
                                     break;
                                 }
                             }
