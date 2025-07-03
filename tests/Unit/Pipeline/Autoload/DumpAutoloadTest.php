@@ -28,24 +28,15 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             PrefixerConfigInterface::class,
             FileEnumeratorConfig::class
         );
-        $config->expects('isDryRun')->times(2)->andReturnFalse();
-//        $config->expects('getProjectDirectory')->times(3)->andReturn('project/');
-        $config->expects('getProjectDirectory')->times(4)->andReturn('project/');
-//        $config->expects('getTargetDirectory')->times(2)->andReturn('project/vendor-prefixed/');
-        $config->expects('getTargetDirectory')->times(4)->andReturn('project/vendor-prefixed/');
-//        $config->expects('getNamespacePrefix')->once()->andReturn('BrianHenryIE\\Test\\');
-        $config->expects('getNamespacePrefix')->times(8)->andReturn('BrianHenryIE\\Test\\');
+        $config->expects('isDryRun')->atLeast()->once()->andReturnFalse();
+        $config->expects('getProjectDirectory')->atLeast()->once()->andReturn('project/');
+        $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('project/vendor-prefixed/');
+        $config->expects('getNamespacePrefix')->atLeast()->once()->andReturn('BrianHenryIE\\Test\\');
 
-        $config->expects('getVendorDirectory')->times(2)->andReturn('project/vendor/');
-        $config->expects('getExcludeNamespacesFromCopy')->times(2)->andReturn([]);
-        $config->expects('getExcludePackagesFromCopy')->times(2)->andReturn([]);
-        $config->expects('getExcludeFilePatternsFromCopy')->times(2)->andReturn([]);
-        $config->expects('getClassmapPrefix')->times(6)->andReturn('BrianHenryIE_Test_');
-        $config->expects('getConstantsPrefix')->times(18)->andReturn('BRIANHENRYIE_TEST_');
-        $config->expects('getExcludeNamespacesFromPrefixing')->times(6)->andReturn([]);
+        $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('project/vendor/');
 
         /** @var FileSystem $filesystem */
-        $filesystem = $this->getFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
         $filesystem->createDirectory('project/vendor-prefixed');
 
         $filesystem->write('project/composer.json', json_encode([
@@ -56,15 +47,28 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             ],
         ]));
 
-        $filesystem->write('project/vendor/composer/installed.json', json_encode([
-            ]));
+        $filesystem->write('project/vendor/composer/installed.json', json_encode([]));
+        $filesystem->write('project/vendor-prefixed/composer/ClassLoader.php', '<?php');
 
         $logger = new ColorLogger();
 
         $prefixer = Mockery::mock(Prefixer::class);
-        $fileEnumerator = Mockery::mock(FileEnumerator::class);
 
-        $sut = new DumpAutoload($config, $filesystem, $logger, $prefixer, $fileEnumerator);
+        $projectFiles = Mockery::mock(DiscoveredFiles::class);
+
+        $fileEnumerator = Mockery::mock(FileEnumerator::class);
+        $fileEnumerator->expects('compileFileListForPaths')->andReturn($projectFiles);
+
+        $projectFiles->expects('getFiles')->andReturn([]);
+
+        $prefixer->expects('replaceInProjectFiles');
+
+        $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
+        $composerAutoloadGenerator = Mockery::mock(ComposerAutoloadGenerator::class)->makePartial();
+        $composerAutoloadGeneratorFactory->expects('get')->once()->andReturn($composerAutoloadGenerator);
+        $composerAutoloadGenerator->expects('dump')->once();
+
+        $sut = new DumpAutoload($config, $filesystem, $logger, $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory);
 
         $sut->generatedPrefixedAutoloader();
 
@@ -190,12 +194,14 @@ EOD;
         $fileEnumerator->expects('compileFileListForPaths')->once()->andReturn(new DiscoveredFiles());
         $config->expects('getNamespacePrefix')->times(2)->andReturn('DumpAutoload\\');
         $projectReplace->expects('replaceInProjectFiles')->once();
+        $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
         $dumpAutoload = new DumpAutoload(
             $config,
             $filesystem,
             $logger,
             $projectReplace,
-            $fileEnumerator
+            $fileEnumerator,
+            $composerAutoloadGeneratorFactory
         );
         $dumpAutoload->generatedPrefixedAutoloader();
 

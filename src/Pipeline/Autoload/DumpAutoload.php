@@ -30,13 +30,15 @@ class DumpAutoload
     protected Prefixer $projectReplace;
 
     protected FileEnumerator $fileEnumerator;
+    protected ComposerAutoloadGeneratorFactory $composerAutoloadGeneratorFactory;
 
     public function __construct(
         AutoloadConfigInterface $config,
         Filesystem $filesystem,
         LoggerInterface $logger,
         Prefixer $projectReplace,
-        FileEnumerator $fileEnumerator
+        FileEnumerator $fileEnumerator,
+        ComposerAutoloadGeneratorFactory $composerAutoloadGeneratorFactory
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
@@ -45,6 +47,8 @@ class DumpAutoload
         $this->projectReplace = $projectReplace;
 
         $this->fileEnumerator = $fileEnumerator;
+
+        $this->composerAutoloadGeneratorFactory = $composerAutoloadGeneratorFactory;
     }
 
     /**
@@ -105,7 +109,7 @@ class DumpAutoload
             'config' => $projectComposerJsonArray['config'] ?? []
         ]);
 
-        $generator = new ComposerAutoloadGenerator(
+        $generator = $this->composerAutoloadGeneratorFactory->get(
             $this->config->getNamespacePrefix(),
             $composer->getEventDispatcher()
         );
@@ -172,7 +176,19 @@ class DumpAutoload
             return;
         }
 
-        $this->filesystem->copy($this->config->getVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getTargetDirectory() . 'composer/InstalledVersions.php');
+        $sourcePath = $this->config->getVendorDirectory() . '/composer/InstalledVersions.php';
+
+        if (!file_exists($sourcePath)) {
+            $this->logger->debug('InstalledVersions.php does not exist at {sourcePath}, skipping copy.', [
+                'sourcePath' => $sourcePath
+            ]);
+            return;
+        }
+
+        $this->filesystem->copy(
+            $sourcePath,
+            $this->config->getTargetDirectory() . 'composer/InstalledVersions.php'
+        );
 
         // This is just `<?php return array(...);`
         $installedPhpString = $this->filesystem->read($this->config->getVendorDirectory() . '/composer/installed.php');
