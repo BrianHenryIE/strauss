@@ -13,12 +13,16 @@ use League\Flysystem\Config;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToReadFile;
 use League\Flysystem\UnableToRetrieveMetadata;
 use League\Flysystem\WhitespacePathNormalizer;
 use Traversable;
+
+// TODO: When a directory is deleted, all the files in that directory should be marked deleted?
+// OR each parent diectory of a file should be checked it exists before the file is read?
 
 class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitInterface
 {
@@ -63,9 +67,11 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         }
     }
 
-    public function writeStream(string $path, $contents, $config = []): void
+    /**
+     * @see FilesystemAdapter::writeStream()
+     */
+    public function writeStream(string $path, $contents, Config $config): void
     {
-        $config = new \League\Flysystem\Config($config);
         $this->rewindStream($contents);
         $this->inMemoryFiles->writeStream($path, $contents, $config);
 
@@ -175,7 +181,10 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         throw new \BadMethodCallException('Not yet implemented');
     }
 
-    public function copy(string $source, string $destination, $config = null): void
+    /**
+     * @see FilesystemAdapter::copy()
+     */
+    public function copy(string $source, string $destination, Config $config): void
     {
         $sourceFile = $this->read($source);
 
