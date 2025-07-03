@@ -33,6 +33,10 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      * @var ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter|FilesystemAdapter
      */
     protected $flysystemAdapter;
+    /**
+     * @var false|string
+     */
+    protected string $workingDir;
 
     /**
      * @param ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter $adapter
@@ -43,7 +47,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         FilesystemAdapter $adapter,
         array $config = [],
         PathNormalizer $pathNormalizer = null,
-        PathPrefixer $pathPrefixer = null
+        PathPrefixer $pathPrefixer = null,
+        ?string $workingDir = null
     ) {
         parent::__construct($adapter, $config, $pathNormalizer);
 
@@ -52,6 +57,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->flysystemAdapter = $adapter;
 
         $this->pathPrefixer = $pathPrefixer ?? new PathPrefixer($this->getFileSystemRoot());
+
+        $this->workingDir = $workingDir ?? getcwd();
     }
 
     // TODO: or `mem://`
@@ -166,17 +173,6 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
 
     /**
-     * Check does the filepath point to a file outside the working directory.
-     * If `realpath()` fails to resolve the path, assume it's a symlink.
-     */
-    public function isSymlinkedFile(FileBase $file): bool
-    {
-        $realpath = realpath($file->getSourcePath());
-
-        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
-    }
-
-    /**
      * Does the subdir path start with the dir path?
      */
     public function isSubDirOf(string $dir, string $subdir): bool
@@ -194,6 +190,9 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     /**
      * Check is a file under a symlinked path.
+     *
+     * Check does the filepath point to a file outside the working directory.
+     * If `realpath()` fails to resolve the path, assume it's a symlink.
      */
     public function isSymlinkedFile(FileBase $file): bool
     {
@@ -206,6 +205,10 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         if ($adapter instanceof SymlinkProtectFilesystemAdapter) {
             return $adapter->isSymlinked($file->getSourcePath());
         }
+
+//        $realpath = realpath($file->getSourcePath());
+//
+//        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
 
         throw new \Exception('Cannot determine symbolic link for files');
     }
@@ -258,11 +261,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
             Autoload::class => null,
         ];
 
-        if( isset($enableFor[$callingMethod['class']])) {
-                $a ='';
-        }
-        if(
-            isset($enableFor[$callingMethod['class']])
+        if (isset($enableFor[$callingMethod['class']])
             &&
            (
                 is_null($enableFor[$callingMethod['class']])

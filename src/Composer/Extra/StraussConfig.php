@@ -756,7 +756,8 @@ class StraussConfig implements
         return $this->deleteVendorPackages || $this->deleteVendorFiles || $this->targetDirectory === 'vendor';
     }
 
-    public function getProjectDirectory(): string {
+    public function getProjectDirectory(): string
+    {
         return $this->projectDirectory;
     }
 

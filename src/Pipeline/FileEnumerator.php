@@ -160,15 +160,10 @@ class FileEnumerator
             return;
         }
 
-        $vendorRelativePath = substr(
-            $sourceAbsoluteFilepath,
-            strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
+        $vendorRelativePath = $this->filesystem->getRelativePath(
+            $this->config->getVendorDirectory(),
+            $sourceAbsoluteFilepath
         );
-
-//        $vendorRelativePath = $this->filesystem->getRelativePath(
-//            $this->config->getVendorDirectory(),
-//            $sourceAbsoluteFilepath
-//        );
 
         $isOutsideProjectDir = $this->filesystem->normalize($dependency->getRealPath())
                                !== $this->filesystem->normalize($dependency->getPackageAbsolutePath());

@@ -14,8 +14,6 @@ use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Mockery;
-use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -29,10 +27,6 @@ use Symfony\Component\Finder\Finder;
 class IntegrationTestCase extends TestCase
 {
     protected string $projectDir;
-
-    protected ?TestLogger $logger = null;
-
-    protected $testsWorkingDir;
 
     public function setUp(): void
     {
@@ -198,7 +192,6 @@ class IntegrationTestCase extends TestCase
 
         $filesystem->deleteDirectory($dir);
     }
-
     public function markTestSkippedOnPhpVersionBelow(string $php_version, string $message = '')
     {
         $this->markTestSkippedOnPhpVersion($php_version, '<', $message);
@@ -215,6 +208,7 @@ class IntegrationTestCase extends TestCase
     {
         $this->markTestSkippedOnPhpVersion($php_version, '>=', $message);
     }
+
     /**
      * Checks both the PHP version the tests are running under and the system PHP version.
      */

@@ -218,7 +218,7 @@ class DependenciesCommand extends Command
                 $normalizer = new WhitespacePathNormalizer();
                 $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
 
-                $pathPrefixer = new PathPrefixer('mem://','/');
+                $pathPrefixer = new PathPrefixer('mem://', '/');
 
                 $this->filesystem =
                     new FileSystem(
