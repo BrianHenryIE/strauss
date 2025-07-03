@@ -130,13 +130,6 @@ class IntegrationTestCase extends TestCase
         $dir = $this->testsWorkingDir;
 
         $this->deleteDir($dir);
-
-        /** @var FilesystemRegistry $registry */
-        try {
-            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-            $registry->unregister('mem');
-        } catch (\Exception $e) {
-        }
     }
 
     protected function deleteDir($dir)

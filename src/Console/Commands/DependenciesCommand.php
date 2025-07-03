@@ -230,16 +230,14 @@ class DependenciesCommand extends Command
                         $pathPrefixer
                     );
 
-                /** @var FilesystemRegistry $registry */
+                /**
+                 * Register a file stream mem:// to handle file operations by third party libraries.
+                 *
+                 * @var FilesystemRegistry $registry
+                 */
                 $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+                $registry->register('mem', $this->filesystem);
 
-                // Register a file stream mem:// to handle file operations by third party libraries.
-                // This exception handling probably doesn't matter in real life but does in unit tests.
-                try {
-                    $registry->get('mem');
-                } catch (\Exception $e) {
-                    $registry->register('mem', $this->filesystem);
-                }
                 $this->setLogger($this->getLogger($input, $output));
             }
 

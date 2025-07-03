@@ -6,7 +6,6 @@ use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use Elazar\Flystream\FilesystemRegistry;
-use Elazar\Flystream\StreamWrapper;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\PathNormalizer;
@@ -18,7 +17,6 @@ use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
-use Throwable;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
@@ -48,9 +46,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
          * @see \Composer\Util\Filesystem::$streamWrappersRegex
          * @see \Composer\Util\Filesystem::isStreamWrapperPath()
          */
-        try {
+        if (!in_array('mem', stream_get_wrappers())) {
             stream_wrapper_register('mem', \stdClass::class);
-        } catch (Throwable $e) {
+            \Composer\Util\Filesystem::isStreamWrapperPath('mem://');
+            stream_wrapper_unregister('mem');
         }
 
         $this->pathNormalizer = new StripProtocolPathNormalizer(['mem'], new WhitespacePathNormalizer());
@@ -107,7 +106,6 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
-
     /**
      * Get an in-memory filesystem.
      */
@@ -139,18 +137,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
             'mem://'
         );
 
-        /** @var FilesystemRegistry $registry */
+        /**
+         * Register a file stream mem:// to handle file operations by third party libraries.
+         *
+         * @var FilesystemRegistry $registry
+         */
         $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-        // Register a file stream mem:// to handle file operations by third party libraries.
-        // This exception handling probably doesn't matter in real life but does in unit tests.
-        if (in_array('mem', stream_get_wrappers())) {
-            stream_wrapper_unregister('mem');
-        }
-        try {
-            $registry->get('mem');
-        } catch (\Exception $e) {
-            $registry->register('mem', $filesystem);
-        }
+        $registry->register('mem', $filesystem);
 
         return $filesystem;
     }
@@ -160,10 +153,12 @@ class TestCase extends \PHPUnit\Framework\TestCase
         parent::tearDown();
 
         /** @var FilesystemRegistry $registry */
-        try {
+        if (in_array('mem', stream_get_wrappers())) {
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+            /**
+             * Also runs `stream_wrapper_unregister('mem')`
+             */
             $registry->unregister('mem');
-        } catch (\Exception $e) {
         }
 
         Mockery::close();
