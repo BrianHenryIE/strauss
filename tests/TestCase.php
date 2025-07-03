@@ -111,7 +111,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getInMemoryFileSystem(): FileSystem
     {
-        if (!isset($inMemoryFilesystem)) {
+        if (!isset($this->inMemoryFilesystem)) {
             $this->inMemoryFilesystem = $this->getNewInMemoryFileSystem();
         }
         return $this->inMemoryFilesystem;
@@ -152,8 +152,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::tearDown();
 
-        /** @var FilesystemRegistry $registry */
         if (in_array('mem', stream_get_wrappers())) {
+            /** @var FilesystemRegistry $registry */
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
             /**
              * Also runs `stream_wrapper_unregister('mem')`
