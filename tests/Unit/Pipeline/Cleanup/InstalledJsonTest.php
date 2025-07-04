@@ -85,8 +85,8 @@ EOD;
         $fileSystem->write('vendor-prefixed/psr/container/src/ContainerInterface.php', '<?php namespace Psr\Container;');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
-        $config->expects()->getVendorDirectory()->times(3)->andReturn('mem://vendor/');
-        $config->expects()->getTargetDirectory()->times(1)->andReturn('mem://vendor-prefixed/');
+        $config->expects()->getVendorDirectory()->times(3)->andReturn('vendor/');
+        $config->expects()->getTargetDirectory()->times(1)->andReturn('vendor-prefixed/');
 
         $sut = new InstalledJson(
             $config,
@@ -131,8 +131,8 @@ EOD;
         $fileSystem->write('vendor-prefixed/psr/container/src/ContainerInterface.php', '<?php namespace Psr\Container;');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
-        $config->expects()->getVendorDirectory()->times(3)->andReturn('mem://vendor/');
-        $config->expects()->getTargetDirectory()->times(4)->andReturn('mem://vendor-prefixed/');
+        $config->expects()->getVendorDirectory()->times(3)->andReturn('vendor/');
+        $config->expects()->getTargetDirectory()->times(4)->andReturn('vendor-prefixed/');
 
         $sut = new InstalledJson(
             $config,
@@ -222,8 +222,8 @@ EOD;
         $fileSystem->write('vendor-prefixed/psr/log/src/AbstractLogger.php', '<?php namespace Psr\Log;');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
-        $config->expects()->getVendorDirectory()->times(3)->andReturn('mem://vendor/');
-        $config->expects()->getTargetDirectory()->times(6)->andReturn('mem://vendor-prefixed/');
+        $config->expects()->getVendorDirectory()->times(3)->andReturn('vendor/');
+        $config->expects()->getTargetDirectory()->times(6)->andReturn('vendor-prefixed/');
 
         $sut = new InstalledJson(
             $config,

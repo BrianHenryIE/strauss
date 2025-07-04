@@ -14,7 +14,6 @@ use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -28,8 +27,6 @@ use Symfony\Component\Finder\Finder;
 class IntegrationTestCase extends TestCase
 {
     protected string $projectDir;
-
-    protected $testsWorkingDir;
 
     public function setUp(): void
     {
@@ -66,6 +63,8 @@ class IntegrationTestCase extends TestCase
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
             ob_flush();
         }
+
+        $this->createWorkingDir();
     }
 
     protected function isPhpStormRunning(): bool
@@ -84,7 +83,7 @@ class IntegrationTestCase extends TestCase
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             // TODO add xdebug to the command
-            exec('php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+            exec('php ' . $this->projectDir . '/strauss.phar ' . $params .' 2>&1', $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
             return $return_var;
@@ -131,13 +130,6 @@ class IntegrationTestCase extends TestCase
         $dir = $this->testsWorkingDir;
 
         $this->deleteDir($dir);
-
-        /** @var FilesystemRegistry $registry */
-        try {
-            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-            $registry->unregister('mem');
-        } catch (\Exception $e) {
-        }
     }
 
     protected function deleteDir($dir)
@@ -146,10 +138,7 @@ class IntegrationTestCase extends TestCase
             return;
         }
         $filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
+            new LocalFilesystemAdapter('/')
         );
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
@@ -196,7 +185,6 @@ class IntegrationTestCase extends TestCase
 
         $filesystem->deleteDirectory($dir);
     }
-
     public function markTestSkippedOnPhpVersionBelow(string $php_version, string $message = '')
     {
         $this->markTestSkippedOnPhpVersion($php_version, '<', $message);
@@ -213,6 +201,7 @@ class IntegrationTestCase extends TestCase
     {
         $this->markTestSkippedOnPhpVersion($php_version, '>=', $message);
     }
+
     /**
      * Checks both the PHP version the tests are running under and the system PHP version.
      */

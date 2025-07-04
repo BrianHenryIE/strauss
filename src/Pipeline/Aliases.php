@@ -64,22 +64,22 @@ class Aliases
 
         return <<<TEMPLATE
                 <?php
-                
+
                 $globalFunctionsString
-                
+
                 // Everything else – irrelevant that this part is namespaced
                 namespace $namespace {
-                	
+
                 class AliasAutoloader
                 {
                 	private string \$includeFilePath;
-                
+
                     private array \$autoloadAliases = $autoloadAliases;
-                
+
                     public function __construct() {
                 		\$this->includeFilePath = __DIR__ . '/autoload_alias.php';
                     }
-                    
+
                     public function autoload(\$class)
                     {
                         if (!isset(\$this->autoloadAliases[\$class])) {
@@ -112,14 +112,14 @@ class Aliases
                                 break;
                         }
                     }
-                
+
                     private function load(string \$includeFile)
                     {
                         file_put_contents(\$this->includeFilePath, \$includeFile);
                         include \$this->includeFilePath;
                         file_exists(\$this->includeFilePath) && unlink(\$this->includeFilePath);
                     }
-                	
+
                 	// TODO: What if this was a real function in this class that could be used for testing, which would be read and written by php-parser?
                     private function classTemplate(array \$class): string
                     {
@@ -142,11 +142,11 @@ class Aliases
                 				\$abstract class \$classname extends \$extends \$implements {}
                 				EOD;
                     }
-                    
+
                     private function interfaceTemplate(array \$interface): string
                     {
                         \$interfacename = \$interface['interfacename'];
-                        \$namespace = isset(\$interface['namespace']) 
+                        \$namespace = isset(\$interface['namespace'])
                             ? "namespace {\$interface['namespace']};" : '';
                         \$extends = isset(\$interface['namespace'])
                             ? '\\\\' . implode('\\\\ ,', \$interface['extends'])
@@ -156,11 +156,11 @@ class Aliases
                 				\$namespace
                 				interface \$interfacename extends \$extends {}
                 				EOD;
-                    } 
+                    }
                     private function traitTemplate(array \$trait): string
                     {
                         \$traitname = \$trait['traitname'];
-                        \$namespace = isset(\$trait['namespace']) 
+                        \$namespace = isset(\$trait['namespace'])
                             ? "namespace {\$trait['namespace']};" : '';
                         \$uses = isset(\$trait['namespace'])
                             ? '\\\\' . implode(';' . PHP_EOL . '    use \\\\', \$trait['use'])
@@ -168,13 +168,13 @@ class Aliases
                         return <<<EOD
                 				<?php
                 				\$namespace
-                				trait \$traitname { 
-                				    use \$uses; 
+                				trait \$traitname {
+                				    use \$uses;
                 				}
                 				EOD;
                 	    }
                 	}
-                	
+
                 	spl_autoload_register( [ new AliasAutoloader(), 'autoload' ] );
 
                 }
@@ -315,8 +315,8 @@ class Aliases
                     // Does it matter since all references to use the constant should have been updated to the new name anyway.
                     // TODO: global `const`.
                     $aliasesPhpString = <<<EOD
-        if(!defined('$originalSymbol') && defined('$replacementSymbol')) { 
-            define('$originalSymbol', $replacementSymbol); 
+        if(!defined('$originalSymbol') && defined('$replacementSymbol')) {
+            define('$originalSymbol', $replacementSymbol);
         }
         EOD;
                     break;
