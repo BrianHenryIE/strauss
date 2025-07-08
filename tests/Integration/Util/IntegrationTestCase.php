@@ -107,12 +107,9 @@ class IntegrationTestCase extends TestCase
 
         $this->logger && $strauss->setLogger($this->logger);
 
-        $envArray = array_map(
-            fn(string $pair) => explode('=', $pair),
-            explode(' ', $env)
-        );
-        foreach ($envArray as $var) {
-            $_ENV[$var[0]] = $var[1];
+        foreach (array_filter(explode(' ', $env)) as $pair) {
+            $kv = explode('=', $pair);
+            $_ENV[trim($kv[0])] = trim($kv[1]);
         }
 
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
