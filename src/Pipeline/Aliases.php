@@ -365,12 +365,12 @@ class Aliases
                 }
 
                 $aliasesPhpString .= <<<EOD
-				    if(!function_exists('$namespacedOriginalSymbol')){
-				        function $originalSymbol(...\$args) {
-				            return \\$replacementSymbol(func_get_args());
-				        }
-				    }
-				EOD . PHP_EOL;
+                    if(!function_exists('$namespacedOriginalSymbol')){
+                        function $originalSymbol(...\$args) {
+                            return \\$replacementSymbol(func_get_args());
+                        }
+                    }
+                EOD . PHP_EOL;
             }
             $aliasesPhpString .= "}" . PHP_EOL; // Close namespace.
 
