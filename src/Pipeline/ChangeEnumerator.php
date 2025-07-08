@@ -114,7 +114,12 @@ class ChangeEnumerator
             }
 
             if ($symbol instanceof FunctionSymbol) {
-                // TODO: Add its own config option.
+                // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
+                if ($symbol->getNamespace() !== '\\') {
+                    continue;
+                }
+                // TODO: Add a config option for setting the function prefix for global functions.
+                // Currently it is the classmap prefix, all lowercase.
                 $functionPrefix = strtolower($this->config->getClassmapPrefix());
                 if (str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
                     continue;
