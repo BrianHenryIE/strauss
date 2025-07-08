@@ -31,9 +31,13 @@ class IntegrationTestCase extends TestCase
 
     protected $testsWorkingDir;
 
+    protected array $envBeforeTest = [];
+
     public function setUp(): void
     {
         parent::setUp();
+
+        $this->envBeforeTest = $_ENV;
 
         $this->projectDir = getcwd();
 
@@ -132,6 +136,8 @@ class IntegrationTestCase extends TestCase
     public function tearDown(): void
     {
         parent::tearDown();
+
+        $_ENV = $this->envBeforeTest;
 
         $dir = $this->testsWorkingDir;
 
