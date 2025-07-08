@@ -10,13 +10,11 @@ use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
-use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
 use Psr\Log\NullLogger;
 
 /**
- * @coversNothing
- * @see Aliases
+ * @coversDefaultClass Aliases
  */
 class AliasesTest extends TestCase
 {
@@ -171,6 +169,61 @@ EOD;
 ),
 EOD;
 
+        $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    /**
+     * @covers ::getFunctionAliasesString()
+     */
+    public function test_namespaced_functions(): void
+    {
+
+        $config = Mockery::mock(AliasesConfigInterface::class);
+        $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
+        $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
+
+        $fileSystem = $this->getInMemoryFileSystem();
+
+        $sut = new Aliases(
+            $config,
+            $fileSystem,
+            new NullLogger()
+        );
+
+        $symbols = new DiscoveredSymbols();
+        $file = Mockery::mock(FileWithDependency::class);
+        $file->expects('getSourcePath')->atLeast()->once()->andReturn('vendor/foo/bar/baz.php');
+        $file->expects('addDiscoveredSymbol')->twice();
+
+        $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Bar; function baz {}');
+        $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Foo\\Bar; function baz {}');
+
+        $functionSymbol = new FunctionSymbol('baz', $file, 'Bar');
+        $functionSymbol->setReplacement('Foo\\Bar\\baz');
+        $symbols->add($functionSymbol);
+
+        $functionSymbol = new FunctionSymbol('foobar', $file, 'Bar');
+        $functionSymbol->setReplacement('Foo\\Bar\\foobar');
+        $symbols->add($functionSymbol);
+
+        $sut->writeAliasesFileForSymbols($symbols);
+
+        $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
+
+        $expected = <<<'EOD'
+namespace Bar {
+	if(!function_exists('Bar\\baz')){
+		function baz(...$args) {
+			return \Foo\Bar\baz(func_get_args()); 
+		}
+	}
+	if(!function_exists('Bar\\foobar')){
+		function foobar(...$args) {
+			return \Foo\Bar\foobar(func_get_args());
+		}
+	}
+}
+EOD;
         $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
 }

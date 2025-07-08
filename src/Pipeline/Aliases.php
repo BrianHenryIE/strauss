@@ -56,10 +56,8 @@ class Aliases
 
         $globalFunctionsString = !$autoloadAliasesFunctionsString ? ''
                 : <<<GLOBAL
-                // Global functions
-                namespace {
-                	$autoloadAliasesFunctionsString
-                }
+                // Functions and constants
+                $autoloadAliasesFunctionsString
                 GLOBAL;
 
         return <<<TEMPLATE
@@ -280,57 +278,111 @@ class Aliases
     {
         $autoloadAliasesFileString = '';
 
+        $symbolsByNamespace = ['\\' => []];
         foreach ($modifiedSymbols as $symbol) {
-            $aliasesPhpString = '';
-
-            $originalSymbol = $symbol->getOriginalSymbol();
-            $replacementSymbol = $symbol->getReplacement();
-
-//            if (!$symbol->getSourceFile()->isDoDelete()) {
-//                $this->logger->debug("Skipping {$originalSymbol} because it is not marked for deletion.");
-//                continue;
-//            }
-
-            if ($originalSymbol === $replacementSymbol) {
-                $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
-                continue;
+            if ($symbol instanceof FunctionSymbol) {
+                if (!isset($symbolsByNamespace[$symbol->getNamespace()])) {
+                    $symbolsByNamespace[$symbol->getNamespace()] = [];
+                }
+                $symbolsByNamespace[$symbol->getNamespace()][] = $symbol;
             }
+            /**
+             * "define() will define constants exactly as specified.  So, if you want to define a constant in a
+             * namespace, you will need to specify the namespace in your call to define(), even if you're calling
+             * define() from within a namespace."
+             * @see https://www.php.net/manual/en/function.define.php
+             */
+            if ($symbol instanceof ConstantSymbol) {
+                $symbolsByNamespace['\\'][] = $symbol;
+            }
+        }
 
-            switch (get_class($symbol)) {
-                case FunctionSymbol::class:
-                    // TODO: Do we need to check for `void`? Or will it just be ignored?
-                    // Is it possible to inherit PHPDoc from the original function?
-                    $aliasesPhpString = <<<EOD
+        if (!empty($symbolsByNamespace['\\'])) {
+            $globalAliasesPhpString = 'namespace {' . PHP_EOL;
+
+            /** @var FunctionSymbol & ConstantSymbol $symbol */
+            foreach ($symbolsByNamespace['\\'] as $symbol) {
+                $aliasesPhpString = '';
+
+                $originalSymbol    = $symbol->getOriginalSymbol();
+                $replacementSymbol = $symbol->getReplacement();
+
+                if ($originalSymbol === $replacementSymbol) {
+                    $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
+                    continue;
+                }
+
+                switch (get_class($symbol)) {
+                    case FunctionSymbol::class:
+                        // TODO: Do we need to check for `void`? Or will it just be ignored?
+                        // Is it possible to inherit PHPDoc from the original function?
+                        $aliasesPhpString = <<<EOD
         if(!function_exists('$originalSymbol')){
             function $originalSymbol(...\$args) { return $replacementSymbol(func_get_args()); }
         }
         EOD;
-                    break;
-                case ConstantSymbol::class:
-                    /**
-                     * https://stackoverflow.com/questions/19740621/namespace-constants-and-use-as
-                     */
-                    // Ideally this would somehow be loaded after everything else.
-                    // Maybe some Patchwork style redefining of `define()` to add the alias?
-                    // Does it matter since all references to use the constant should have been updated to the new name anyway.
-                    // TODO: global `const`.
-                    $aliasesPhpString = <<<EOD
+                        break;
+                    case ConstantSymbol::class:
+                        /**
+                         * https://stackoverflow.com/questions/19740621/namespace-constants-and-use-as
+                         */
+                        // Ideally this would somehow be loaded after everything else.
+                        // Maybe some Patchwork style redefining of `define()` to add the alias?
+                        // Does it matter since all references to use the constant should have been updated to the new name anyway.
+                        // TODO: global `const`.
+                        $aliasesPhpString = <<<EOD
         if(!defined('$originalSymbol') && defined('$replacementSymbol')) { 
             define('$originalSymbol', $replacementSymbol); 
         }
         EOD;
-                    break;
-                default:
-                    /**
-                     * Should be addressed above.
-                     *
-                     * @see self::appendAliasString())
-                     */
-                    break;
+                        break;
+                    default:
+                        /**
+                         * Should be addressed above.
+                         *
+                         * @see self::appendAliasString())
+                         */
+                        break;
+                }
+
+                $globalAliasesPhpString .= $aliasesPhpString;
             }
+
+            $globalAliasesPhpString .= PHP_EOL . '}' . PHP_EOL; // Close global namespace.
+
+            $autoloadAliasesFileString = $autoloadAliasesFileString . PHP_EOL . $globalAliasesPhpString;
+        }
+
+        unset($symbolsByNamespace['\\']);
+        foreach ($symbolsByNamespace as $namespace => $symbols) {
+            $aliasesPhpString = "namespace $namespace {" . PHP_EOL;
+
+            foreach ($symbols as $symbol) {
+                $originalSymbol    = $symbol->getOriginalSymbol();
+                $replacementSymbol = $symbol->getReplacement();
+
+                $namespacedOriginalSymbol = $symbol->getNamespace() . '\\' . $originalSymbol;
+                $namespacedOriginalSymbol = str_replace('\\', '\\\\', $namespacedOriginalSymbol);
+
+                if ($originalSymbol === $replacementSymbol) {
+                    $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
+                    continue;
+                }
+
+                $aliasesPhpString .= <<<EOD
+				    if(!function_exists('$namespacedOriginalSymbol')){
+				        function $originalSymbol(...\$args) {
+				            return \\$replacementSymbol(func_get_args());
+				        }
+				    }
+				EOD . PHP_EOL;
+            }
+            $aliasesPhpString .= "}" . PHP_EOL; // Close namespace.
 
             $autoloadAliasesFileString .= $aliasesPhpString;
         }
+
+
 
         return $autoloadAliasesFileString;
     }
