@@ -8,6 +8,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Composer\Factory;
 use Exception;
 use League\Flysystem\FilesystemReader;
 use Psr\Log\LoggerAwareTrait;
@@ -116,7 +117,8 @@ class DependenciesEnumerator
                     continue;
                 }
 
-                $composerLockString           = $this->filesystem->read($this->config->getProjectDirectory() . 'composer.lock');
+                $composerLockPath = $this->config->getProjectDirectory() . Factory::getLockFile(Factory::getComposerFile());
+                $composerLockString     = $this->filesystem->read($composerLockPath);
                 $composerLock           = json_decode($composerLockString, true);
 
                 $requiredPackageComposerJson = null;
