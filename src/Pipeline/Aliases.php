@@ -364,11 +364,6 @@ class Aliases
                 $namespacedOriginalSymbol = $symbol->getNamespace() . '\\' . $originalSymbol;
                 $namespacedOriginalSymbol = str_replace('\\', '\\\\', $namespacedOriginalSymbol);
 
-                if ($originalSymbol === $replacementSymbol) {
-                    $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
-                    continue;
-                }
-
                 $aliasesPhpString .= <<<EOD
 				    if(!function_exists('$namespacedOriginalSymbol')){
 				        function $originalSymbol(...\$args) {
