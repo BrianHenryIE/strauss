@@ -287,13 +287,14 @@ class DependenciesCommand extends Command
     {
         $this->logger->notice('Loading package...');
 
-        $composerFilePath = $this->workingDir . Factory::getComposerFile();
-        $defaultComposerFilePath = $this->workingDir . 'composer.json';
+
+        $composerFilePath = $this->filesystem->normalize($this->workingDir . Factory::getComposerFile());
+        $defaultComposerFilePath = $this->filesystem->normalize($this->workingDir . 'composer.json');
         if ($composerFilePath !== $defaultComposerFilePath) {
             $this->logger->info('Using: ' . $composerFilePath);
         }
 
-        $this->projectComposerPackage = new ProjectComposerPackage($composerFilePath);
+        $this->projectComposerPackage = new ProjectComposerPackage('/'.$composerFilePath);
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.
