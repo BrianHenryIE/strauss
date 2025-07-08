@@ -307,11 +307,6 @@ class Aliases
                 $originalSymbol    = $symbol->getOriginalSymbol();
                 $replacementSymbol = $symbol->getReplacement();
 
-                if ($originalSymbol === $replacementSymbol) {
-                    $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
-                    continue;
-                }
-
                 switch (get_class($symbol)) {
                     case FunctionSymbol::class:
                         // TODO: Do we need to check for `void`? Or will it just be ignored?
@@ -363,6 +358,11 @@ class Aliases
 
                 $namespacedOriginalSymbol = $symbol->getNamespace() . '\\' . $originalSymbol;
                 $namespacedOriginalSymbol = str_replace('\\', '\\\\', $namespacedOriginalSymbol);
+
+                if ($originalSymbol === $replacementSymbol) {
+                    $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
+                    continue;
+                }
 
                 $aliasesPhpString .= <<<EOD
 				    if(!function_exists('$namespacedOriginalSymbol')){
