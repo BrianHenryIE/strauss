@@ -112,14 +112,19 @@ class DumpAutoload
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
         $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
 
-        $localRepo = new InstalledFilesystemRepository(new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json'));
+        $installedJsonFile = new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json');
+        $installedJson = $installedJsonFile->read();
+        $localRepo = new InstalledFilesystemRepository($installedJsonFile);
 
         /**
          * If the target directory is different to the vendor directory, then we do not want to include dev
          * dependencies, but if it is vendor, then unless composer install was run with --no-dev, we do want them.
          */
-        $isDevMode = $this->config->getVendorDirectory() !== $this->config->getTargetDirectory()
-            ? false : $localRepo->getDevMode();
+        if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()) {
+            $isDevMode = false;
+        } else {
+            $isDevMode = $installedJson['dev'];
+        }
         $generator->setDevMode($isDevMode);
 
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
