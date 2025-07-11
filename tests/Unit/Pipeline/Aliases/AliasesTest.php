@@ -13,7 +13,7 @@ use Mockery;
 use Psr\Log\NullLogger;
 
 /**
- * @coversDefaultClass Aliases
+ * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Aliases\Aliases
  */
 class AliasesTest extends TestCase
 {
