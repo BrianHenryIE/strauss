@@ -63,7 +63,7 @@ class Aliases
 
         $template = str_replace(
             'namespace BrianHenryIE\Strauss {',
-            'namespace ' . $namespace . ' {',
+            'namespace ' . str_replace('\\', '', $namespace) . ' {',
             $template
         );
 
@@ -78,11 +78,11 @@ class Aliases
 
     public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
     {
-        $modifiedSymbols = $this->getModifiedSymbols($symbols);
+//        $modifiedSymbols = $this->getModifiedSymbols($symbols);
 
         $outputFilepath = $this->getAliasFilepath();
 
-        $fileString = $this->buildStringOfAliases($modifiedSymbols, basename($outputFilepath));
+        $fileString = $this->buildStringOfAliases($symbols, basename($outputFilepath));
 
         $this->fileSystem->write($outputFilepath, $fileString);
     }
@@ -217,7 +217,7 @@ class Aliases
                         // Is it possible to inherit PHPDoc from the original function?
                         $aliasesPhpString = <<<EOD
         if(!function_exists('$originalSymbol')){
-            function $originalSymbol(...\$args) { return $replacementSymbol(func_get_args()); }
+            function $originalSymbol(...\$args) { return $replacementSymbol(...func_get_args()); }
         }
         EOD;
                         break;
@@ -274,18 +274,21 @@ class Aliases
                 $namespacedOriginalSymbol = $symbol->getNamespace() . '\\' . $unNamespacedOriginalSymbol;
                 $namespacedOriginalSymbol = str_replace('\\', '\\\\', $namespacedOriginalSymbol);
 
-                $replacementSymbol = str_replace(
-                    $namespaceSymbol->getOriginalSymbol(),
-                    $namespaceSymbol->getReplacement(),
-                    $replacementSymbol
-                );
+//                $replacementSymbol = str_replace(
+//                    $namespaceSymbol->getOriginalSymbol(),
+//                    $namespaceSymbol->getReplacement(),
+//                    $replacementSymbol
+//                );
 
-                $replacementSymbol = str_replace('\\', '\\\\', '\\'.$replacementSymbol);
+//                $replacementSymbol = str_replace('\\', '\\\\', '\\'.$replacementSymbol);
+
+
+                $replacementSymbol = '\\' . $replacementSymbol;
 
                 $aliasesPhpString .= <<<EOD
                     if(!function_exists('$namespacedOriginalSymbol')){
                         function $originalSymbol(...\$args) {
-                            return $replacementSymbol(func_get_args());
+                            return $replacementSymbol(...func_get_args());
                         }
                     }
                 EOD . PHP_EOL;
