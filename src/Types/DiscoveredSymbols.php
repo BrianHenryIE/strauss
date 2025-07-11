@@ -24,6 +24,8 @@ class DiscoveredSymbols
             T_TRAIT => [],
             T_INTERFACE => [],
         ];
+
+        $this->types[T_NAMESPACE]['\\'] = new NamespaceSymbol('\\', new \BrianHenryIE\Strauss\Files\File(''));
     }
 
     /**

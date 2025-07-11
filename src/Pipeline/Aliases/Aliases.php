@@ -107,7 +107,10 @@ class Aliases
             }
             if ($symbol instanceof FunctionSymbol) {
                 $functionNamespace = $symbols->getNamespaceSymbolByString($symbol->getNamespace());
-                if ($functionNamespace->isChangedNamespace()) {
+                $isFunctionHasChangedNamespace = $functionNamespace->isChangedNamespace();
+
+                if ($isFunctionHasChangedNamespace || $symbol->getOriginalSymbol() !== $symbol->getReplacement()
+                ) {
                     $modifiedSymbols->add($symbol);
                 }
             }

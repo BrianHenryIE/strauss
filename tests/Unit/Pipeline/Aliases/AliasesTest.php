@@ -3,12 +3,15 @@
 namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use JsonMapper\Tests\Implementation\Models\NamespaceAliasObject;
 use Mockery;
 use Psr\Log\NullLogger;
 
@@ -102,6 +105,7 @@ EOD;
         );
 
         $symbols = new DiscoveredSymbols();
+
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->once()->andReturn('vendor/foo/bar/baz.php');
         $file->expects('addDiscoveredSymbol')->once();
@@ -113,13 +117,16 @@ EOD;
         $functionSymbol->setReplacement('bar_foo');
         $symbols->add($functionSymbol);
 
+        $namespaceSymbol = new NamespaceSymbol('Foo\\Bar', $file, '\\');
+        $symbols->add($namespaceSymbol);
+
         $sut->writeAliasesFileForSymbols($symbols);
 
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
 if(!function_exists('foo')){
-    function foo(...$args) { return bar_foo(func_get_args()); }
+    function foo(...$args) { return bar_foo(...func_get_args()); }
 }
 EOD;
         $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
@@ -213,12 +220,12 @@ EOD;
 namespace Bar {
 	if(!function_exists('Bar\\baz')){
 		function baz(...$args) {
-			return \Foo\Bar\baz(func_get_args()); 
+			return \Foo\Bar\baz(...func_get_args()); 
 		}
 	}
 	if(!function_exists('Bar\\foobar')){
 		function foobar(...$args) {
-			return \Foo\Bar\foobar(func_get_args());
+			return \Foo\Bar\foobar(...func_get_args());
 		}
 	}
 }
