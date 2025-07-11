@@ -200,4 +200,9 @@ class DiscoveredSymbols
             $this->getDiscoveredTraits(),
         );
     }
+
+    public function getNamespaceSymbolByString(string $namespace): ?NamespaceSymbol
+    {
+        return $this->types[T_NAMESPACE][$namespace] ?? null;
+    }
 }

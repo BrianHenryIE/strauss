@@ -105,6 +105,12 @@ class Aliases
             if ($symbol->getOriginalSymbol() !== $symbol->getReplacement()) {
                 $modifiedSymbols->add($symbol);
             }
+            if ($symbol instanceof FunctionSymbol) {
+                $functionNamespace = $symbols->getNamespaceSymbolByString($symbol->getNamespace());
+                if ($functionNamespace->isChangedNamespace()) {
+                    $modifiedSymbols->add($symbol);
+                }
+            }
         }
         return $modifiedSymbols;
     }
@@ -129,18 +135,13 @@ class Aliases
         });
     }
 
-    protected function buildStringOfAliases(DiscoveredSymbols $symbols, string $outputFilename): string
+    protected function buildStringOfAliases(DiscoveredSymbols $modifiedSymbols, string $outputFilename): string
     {
         // TODO: When target !== vendor, there should be a test here to ensure the target autoloader is included, with instructions to add it.
 
-        $modifiedSymbols = $this->getModifiedSymbols($symbols);
+        $autoloadAliasesFunctionsString = $this->getFunctionAliasesString($modifiedSymbols);
 
-        $functionSymbols = $modifiedSymbols->getDiscoveredFunctions();
-
-        $autoloadAliasesFunctionsString = count($functionSymbols)>0
-            ? $this->getFunctionAliasesString($functionSymbols)
-            : null;
-        $aliasesArray = $this->getAliasesArray($symbols);
+        $aliasesArray = $this->getAliasesArray($modifiedSymbols);
 
         $autoloadAliasesFileString = $this->getTemplate($aliasesArray, $autoloadAliasesFunctionsString);
 
@@ -172,8 +173,10 @@ class Aliases
         return $result;
     }
 
-    protected function getFunctionAliasesString(array $modifiedSymbols): string
+    protected function getFunctionAliasesString(DiscoveredSymbols $discoveredSymbols): string
     {
+        $modifiedSymbols = $discoveredSymbols->getSymbols();
+
         $autoloadAliasesFileString = '';
 
         $symbolsByNamespace = ['\\' => []];
@@ -247,25 +250,39 @@ class Aliases
         }
 
         unset($symbolsByNamespace['\\']);
-        foreach ($symbolsByNamespace as $namespace => $symbols) {
-            $aliasesPhpString = "namespace $namespace {" . PHP_EOL;
+        foreach ($symbolsByNamespace as $namespaceSymbol => $symbols) {
+            $aliasesPhpString = "namespace $namespaceSymbol {" . PHP_EOL;
 
             foreach ($symbols as $symbol) {
-                $originalSymbol    = $symbol->getOriginalSymbol();
+                $originalSymbol    = $symbol->getOriginalLocalName();
                 $replacementSymbol = $symbol->getReplacement();
 
-                $namespacedOriginalSymbol = $symbol->getNamespace() . '\\' . $originalSymbol;
-                $namespacedOriginalSymbol = str_replace('\\', '\\\\', $namespacedOriginalSymbol);
+                $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespace());
 
-                if ($originalSymbol === $replacementSymbol) {
+                if (!($symbol instanceof FunctionSymbol
+                   &&
+                   $namespaceSymbol->isChangedNamespace())
+                ) {
                     $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
                     continue;
                 }
 
+                $unNamespacedOriginalSymbol = trim(str_replace($symbol->getNamespace(), '', $originalSymbol), '\\');
+                $namespacedOriginalSymbol = $symbol->getNamespace() . '\\' . $unNamespacedOriginalSymbol;
+                $namespacedOriginalSymbol = str_replace('\\', '\\\\', $namespacedOriginalSymbol);
+
+                $replacementSymbol = str_replace(
+                    $namespaceSymbol->getOriginalSymbol(),
+                    $namespaceSymbol->getReplacement(),
+                    $replacementSymbol
+                );
+
+                $replacementSymbol = str_replace('\\', '\\\\', '\\'.$replacementSymbol);
+
                 $aliasesPhpString .= <<<EOD
                     if(!function_exists('$namespacedOriginalSymbol')){
                         function $originalSymbol(...\$args) {
-                            return \\$replacementSymbol(func_get_args());
+                            return $replacementSymbol(func_get_args());
                         }
                     }
                 EOD . PHP_EOL;
@@ -274,8 +291,6 @@ class Aliases
 
             $autoloadAliasesFileString .= $aliasesPhpString;
         }
-
-
 
         return $autoloadAliasesFileString;
     }

@@ -7,5 +7,8 @@ namespace BrianHenryIE\Strauss\Types;
 
 class NamespaceSymbol extends DiscoveredSymbol
 {
-
+    public function isChangedNamespace(): bool
+    {
+        return $this->getReplacement() !== $this->getOriginalSymbol();
+    }
 }
