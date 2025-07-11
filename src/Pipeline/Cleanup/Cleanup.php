@@ -3,14 +3,13 @@
  * Deletes source files and empty directories.
  */
 
-namespace BrianHenryIE\Strauss\Pipeline;
+namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
