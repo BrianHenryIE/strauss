@@ -63,7 +63,7 @@ class Aliases
 
         $template = str_replace(
             'namespace BrianHenryIE\Strauss {',
-            'namespace ' . str_replace('\\', '', $namespace) . ' {',
+            'namespace ' . trim($namespace, '\\') . ' {',
             $template
         );
 
