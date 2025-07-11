@@ -1,10 +1,9 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Tests\Unit\Pipeline;
+namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
-use BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;

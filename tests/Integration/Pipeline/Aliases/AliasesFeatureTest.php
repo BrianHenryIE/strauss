@@ -1,6 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Tests\Integration;
+namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 

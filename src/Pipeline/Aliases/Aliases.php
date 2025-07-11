@@ -11,25 +11,18 @@
  * @package brianhenryie/strauss
  */
 
-namespace BrianHenryIE\Strauss\Pipeline;
+namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
-use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\NamespaceSort;
 use BrianHenryIE\Strauss\Types\AutoloadAliasInterface;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
-use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
-use BrianHenryIE\Strauss\Types\NamespaceSymbol;
-use Composer\ClassMapGenerator\ClassMapGenerator;
-use League\Flysystem\StorageAttributes;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use ReflectionClass;
 
 class Aliases
 {
@@ -251,9 +244,10 @@ class Aliases
     }
 
     /**
-     * @param array<NamespaceSymbol|ClassSymbol> $modifiedSymbols
+     * @param ClassSymbol $modifiedSymbols
      * @param array $sourceDirClassmap
      * @param array $targetDirClasssmap
+     *
      * @return array{}
      * @throws \League\Flysystem\FilesystemException
      */
