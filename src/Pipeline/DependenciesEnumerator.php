@@ -8,6 +8,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Composer\Factory;
 use Exception;
 use League\Flysystem\FilesystemReader;
 use Psr\Log\LoggerAwareTrait;
@@ -108,7 +109,7 @@ class DependenciesEnumerator
                 $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock');
 
                 // TODO: These (.json, .lock) should be read once and reused.
-                $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . 'composer.json');
+                $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . Factory::getComposerFile());
                 $composerJson       = json_decode($composerJsonString, true);
 
                 if (isset($composerJson['provide']) && in_array($requiredPackageName, array_keys($composerJson['provide']))) {
