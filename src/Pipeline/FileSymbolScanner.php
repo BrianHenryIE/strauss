@@ -91,7 +91,7 @@ class FileSymbolScanner
         $this->logger->log(
             $level,
             sprintf(
-                "%s %s",
+                "%s%s",
                 // The part up until the original symbol. I.e. the first "column" of the message.
                 self::pad(sprintf(
                     "Found %s%s:",
