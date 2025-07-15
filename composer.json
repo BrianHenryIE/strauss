@@ -16,7 +16,7 @@
     "prefer-stable": true,
     "license": "MIT",
     "require": {
-        "brianhenryie/simple-php-code-parser": "^0.15.2",
+        "brianhenryie/simple-php-code-parser": "^0.15.3",
         "composer-runtime-api": "^2.0",
         "composer/class-map-generator": "^1.6.0",
         "composer/composer": "^2.6.0",
