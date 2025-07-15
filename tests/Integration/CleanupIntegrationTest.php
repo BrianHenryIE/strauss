@@ -55,8 +55,10 @@ EOD;
         $autoloadStaticPhp = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_static.php');
         $this->assertStringNotContainsString("__DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php'", $autoloadStaticPhp);
 
-        $autoloadFilesPhp = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_files.php');
-        $this->assertStringNotContainsString("\$vendorDir . '/symfony/polyfill-php80/bootstrap.php'", $autoloadFilesPhp);
+        $this->assertFileDoesNotExist($this->testsWorkingDir .'vendor/composer/autoload_files.php');
+
+        $autoloadFilesPhp = file_get_contents($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
+        $this->assertStringContainsString("\$vendorDir . '/symfony/polyfill-php80/bootstrap.php'", $autoloadFilesPhp);
 
         $newAutoloadFilesPhp = file_get_contents($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("/symfony/polyfill-php80/bootstrap.php'", $newAutoloadFilesPhp);
