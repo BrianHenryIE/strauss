@@ -21,6 +21,9 @@ class StraussIssue206Test extends IntegrationTestCase
   "require": {
     "wp-forge/helpers": "2.0.0"
   },
+  "require-dev": {
+    "wp-forge/wp-loop": "1.0.0"
+  },
   "extra": {
     "strauss": {
       "target_directory": "vendor-prefixed",
@@ -47,8 +50,11 @@ EOD;
 
         $installedJsonString = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
         $this->assertStringNotContainsString("\"WP_Forge\\Helpers", $installedJsonString);
+
         $vendorPrefixedInstalledJsonString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString("Company\\\\Project\\\\WP_Forge\\\\Helpers\\\\", $vendorPrefixedInstalledJsonString);
+
+        $this->assertStringContainsString('"install-path" : "../../vendor-prefixed/wp-forge/helpers/"', $vendorPrefixedInstalledJsonString);
 
         $vendorAutoloadFilesString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
         $this->assertStringNotContainsString("/wp-forge/helpers/includes/functions.php", $vendorAutoloadFilesString);
