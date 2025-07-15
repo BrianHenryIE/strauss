@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.23.0 July 2025
+
+* Fix: use `COMPOSER=custom.json` environmental variable
+* Fix: namespaced function aliasing
+* Require `simple-php-code-parser` `^0.15.3`
+
 ## 0.22.6 June 2025
 
 * Fix: Use monolog (to avoid implementing `LoggerInterface`)

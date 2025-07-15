@@ -359,9 +359,12 @@ class StraussConfig implements
         $this->vendorDirectory = $vendorDirectory;
     }
 
+    /**
+     * With no trailing slash and no leading slash.
+     */
     public function getNamespacePrefix(): ?string
     {
-        return !isset($this->namespacePrefix) ? null :trim($this->namespacePrefix, '\\');
+        return !isset($this->namespacePrefix) ? null : trim($this->namespacePrefix, '\\');
     }
 
     /**

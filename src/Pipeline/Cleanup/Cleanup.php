@@ -3,15 +3,21 @@
  * Deletes source files and empty directories.
  */
 
-namespace BrianHenryIE\Strauss\Pipeline;
+namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
+use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use Composer\Autoload\AutoloadGenerator;
+use Composer\Config as ComposerConfig;
+use Composer\Factory;
+use Composer\IO\NullIO;
+use Composer\Json\JsonFile;
+use Composer\Repository\InstalledFilesystemRepository;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -49,7 +55,7 @@ class Cleanup
      *
      * @throws FilesystemException
      */
-    public function cleanup(array $files): void
+    public function deleteFiles(array $files): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
             $this->logger->info('No cleanup required.');
@@ -79,16 +85,65 @@ class Cleanup
         if ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
         && !$this->config->isDeleteVendorFiles() && !$this->config->isDeleteVendorPackages()
         ) {
-            $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+            $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
         } elseif ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
             &&
             ($this->config->isDeleteVendorFiles() ||$this->config->isDeleteVendorPackages())
         ) {
-            $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+            $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
         } elseif ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
         }
+    }
+
+    /**
+     * After packages or files have been deleted, the autoloader still contains references to them, in particular
+     * `files` are `require`d on boot (whereas classes are on demand) so that must be fixed.
+     *
+     * Assumes {@see Cleanup::cleanupVendorInstalledJson()} has been called first.
+     *
+     * TODO refactor so this object is passed around rather than reloaded.
+     *
+     * Shares a lot of code with {@see DumpAutoload::generatedPrefixedAutoloader()} but I've done lots of work
+     * on that in another branch so I don't want to cause merge conflicts.
+     */
+    public function rebuildVendorAutoloader(): void
+    {
+        if ($this->config->isDryRun()) {
+            return;
+        }
+
+        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . 'composer.json');
+        $projectComposerJsonArray = $projectComposerJson->read();
+        $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
+        $installationManager = $composer->getInstallationManager();
+        $package = $composer->getPackage();
+        $config = $composer->getConfig();
+        $generator = new AutoloadGenerator($composer->getEventDispatcher());
+
+        $generator->setClassMapAuthoritative(true);
+        $generator->setRunScripts(false);
+//        $generator->setApcu($apcu, $apcuPrefix);
+//        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
+        $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
+        $installedJson = new JsonFile($this->config->getVendorDirectory() . 'composer/installed.json');
+        $localRepo = new InstalledFilesystemRepository($installedJson);
+        $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
+        $installedJsonArray = $installedJson->read();
+        $generator->setDevMode($installedJsonArray['dev'] ?? false);
+        // This will output the autoload_static.php etc. files to `vendor/composer`.
+        $generator->dump(
+            $config,
+            $localRepo,
+            $package,
+            $installationManager,
+            'composer',
+            $optimize,
+            null,
+            $composer->getLocker(),
+            $strictAmbiguous
+        );
     }
 
     /**
