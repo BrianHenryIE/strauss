@@ -18,7 +18,6 @@ use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
-use Composer\Factory;
 use Exception;
 use JsonMapper\JsonMapperFactory;
 use JsonMapper\Middleware\Rename\Rename;
@@ -65,6 +64,13 @@ class StraussConfig implements
      * @var string
      */
     protected ?string $classmapPrefix = null;
+
+    /**
+     * Null to disable. Otherwise, suggested it is all lowercase with a trailing underscore.
+     *
+     * @var string|bool|null
+     */
+    protected $functionsPrefix;
 
     /**
      * @var ?string
@@ -218,6 +224,9 @@ class StraussConfig implements
             $rename->addMapping(StraussConfig::class, 'delete_vendor_packages', 'deleteVendorPackages');
 
             $rename->addMapping(StraussConfig::class, 'exclude_prefix_packages', 'excludePackagesFromPrefixing');
+
+
+            $rename->addMapping(StraussConfig::class, 'function_prefix', 'functionsPrefix');
 
             $mapper->unshift($rename);
             $mapper->push(new \JsonMapper\Middleware\CaseConversion(
@@ -389,6 +398,29 @@ class StraussConfig implements
     public function setClassmapPrefix(string $classmapPrefix): void
     {
         $this->classmapPrefix = $classmapPrefix;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFunctionsPrefix(): ?string
+    {
+        if (!isset($this->functionsPrefix)) {
+            return strtolower($this->getClassmapPrefix());
+        }
+        if (empty($this->functionsPrefix)) {
+            return null;
+        }
+
+        return $this->functionsPrefix;
+    }
+
+    /**
+     * @param string|bool|null $functionsPrefix
+     */
+    public function setFunctionsPrefix($functionsPrefix): void
+    {
+        $this->functionsPrefix = $functionsPrefix;
     }
 
     /**
