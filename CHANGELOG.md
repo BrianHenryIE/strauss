@@ -1,10 +1,15 @@
 # Change Log
 
+## 0.24.0 July 2025
+
+* Add: `functions_prefix` string|false config option
+* Fix: Don't use the root composer.json's autoload key when generating the vendor-prefixed autoloader
+
 ## 0.23.0 July 2025
 
-* Fix: use `COMPOSER=custom.json` environmental variable
+* Add: use `COMPOSER=custom.json` environmental variable
 * Fix: namespaced function aliasing
-* Require `simple-php-code-parser` `^0.15.3`
+* Dependency: `simple-php-code-parser` `^0.15.3`
 
 ## 0.22.6 June 2025
 
