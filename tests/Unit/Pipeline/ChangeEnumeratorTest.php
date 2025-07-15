@@ -22,9 +22,10 @@ class ChangeEnumeratorTest extends TestCase
     public function testFunctionReplacement(): void
     {
         $config = Mockery::mock(\BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface::class);
-        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
+        $config->expects('getClassmapPrefix')->never();
         $config->expects('getNamespaceReplacementPatterns')->andReturn([]);
         $config->expects('getNamespacePrefix')->andReturn('Prefix')->atLeast()->once();
+        $config->expects('getFunctionsPrefix')->andReturn('functions_prefix_')->atLeast()->once();
 
         $sut = new ChangeEnumerator($config, $this->getInMemoryFileSystem());
 
@@ -35,7 +36,7 @@ class ChangeEnumeratorTest extends TestCase
         $sut->determineReplacements($discoveredSymbols);
 
         $this->assertEquals(
-            'prefix_myFunction',
+            'functions_prefix_myFunction',
             $symbol->getReplacement()
         );
     }
