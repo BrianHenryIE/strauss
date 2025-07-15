@@ -10,7 +10,7 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 /**
  * @coversNothing
  */
-class VendorComposerAutoloadFixtureTest extends IntegrationTestCase
+class VendorComposerAutoloadFeatureTest extends IntegrationTestCase
 {
 
     public function testHappyPath(): void
