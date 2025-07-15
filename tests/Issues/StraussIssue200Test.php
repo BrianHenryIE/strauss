@@ -47,6 +47,7 @@ EOD;
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
         $this->assertStringContainsString("Company\\\\Project\\\\Psr\\\\Log\\\\", $php_string);
+        $this->assertStringNotContainsString("'Psr\\\\Log\\\\", $php_string);
         $this->assertStringContainsString("Psr\\\\SimpleCache\\\\", $php_string);
     }
 }
