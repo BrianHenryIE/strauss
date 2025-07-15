@@ -41,5 +41,16 @@ EOD;
 
         $installedJsonString = file_get_contents($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
         $this->assertStringContainsString('dataGet', $installedJsonString);
+
+        $vendorPrefixedAutoloadFilesString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
+        $this->assertStringContainsString("/wp-forge/helpers/includes/functions.php", $vendorPrefixedAutoloadFilesString);
+
+        $installedJsonString = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $this->assertStringNotContainsString("\"WP_Forge\\Helpers", $installedJsonString);
+        $vendorPrefixedInstalledJsonString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $this->assertStringContainsString("Company\\\\Project\\\\WP_Forge\\\\Helpers\\\\", $vendorPrefixedInstalledJsonString);
+
+        $vendorAutoloadFilesString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
+        $this->assertStringNotContainsString("/wp-forge/helpers/includes/functions.php", $vendorAutoloadFilesString);
     }
 }
