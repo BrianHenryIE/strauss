@@ -70,7 +70,7 @@ class Autoload
                 $this->filesystem,
                 $this->logger
             );
-            $installedJson->createAndCleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+            $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
         }
 
         (new DumpAutoload(

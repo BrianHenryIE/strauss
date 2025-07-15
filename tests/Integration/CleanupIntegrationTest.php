@@ -1,10 +1,7 @@
 <?php
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
-use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class CleanupIntegrationTest
@@ -14,10 +11,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CleanupIntegrationTest extends IntegrationTestCase
 {
 
-    public function testFilesAutoloader()
+    /**
+     * When `delete_vendor_packages` is true, the autoloader should be cleaned of files that are not needed.
+     */
+    public function testFilesAutoloaderCleaned()
     {
-        self::markTestSkipped('When this test was written, the files in a files autoloader were being deleted, but now they are replaced with an empty file.');
-
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
@@ -28,7 +26,7 @@ class CleanupIntegrationTest extends IntegrationTestCase
     "strauss": {
       "namespace_prefix": "BrianHenryIE\\Strauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_files": true
+      "delete_vendor_packages": true
     }
   }
 }
@@ -41,20 +39,26 @@ EOD;
 
         assert(file_exists($this->testsWorkingDir . '/vendor/symfony/polyfill-php80/bootstrap.php'));
 
-        $inputInterfaceMock = $this->createMock(InputInterface::class);
-        $outputInterfaceMock = $this->createMock(OutputInterface::class);
+        $exitCode = $this->runStrauss();
+        assert($exitCode === 0);
 
-        $strauss = new DependenciesCommand();
+        $installedJsonFile = file_get_contents($this->testsWorkingDir .'vendor/composer/installed.json');
+        $installedJson = json_decode($installedJsonFile, true);
+        $entry = array_reduce($installedJson['packages'], function ($carry, $item) {
+            if ($item['name'] === 'symfony/polyfill-php80') {
+                return $item;
+            }
+            return $carry;
+        }, null);
+        $this->assertEmpty($entry['autoload'], json_encode($entry['autoload'], JSON_PRETTY_PRINT));
 
-        $result = $strauss->run($inputInterfaceMock, $outputInterfaceMock);
+        $autoloadStaticPhp = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_static.php');
+        $this->assertStringNotContainsString("__DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php'", $autoloadStaticPhp);
 
-        $autoload_static_php = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_static.php');
-//       This was changed so an empty file is put in its place.
-//        self::assertStringNotContainsString("__DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php'", $autoload_static_php);
+        $autoloadFilesPhp = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_files.php');
+        $this->assertStringNotContainsString("\$vendorDir . '/symfony/polyfill-php80/bootstrap.php'", $autoloadFilesPhp);
 
-        $autoload_files_php = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_files.php');
-//        self::assertStringNotContainsString("\$vendorDir . '/symfony/polyfill-php80/bootstrap.php'", $autoload_files_php);
-
-//        self::assertStringContainsString("\$baseDir . '/vendor-prefixed/symfony/polyfill-php80/bootstrap.php'", $autoload_files_php);
+        $newAutoloadFilesPhp = file_get_contents($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
+        $this->assertStringContainsString("/symfony/polyfill-php80/bootstrap.php'", $newAutoloadFilesPhp);
     }
 }
