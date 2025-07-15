@@ -87,6 +87,11 @@ class DumpAutoload
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
         }
 
+        // Do not include the autoload section from the project composer.json in the vendor-prefixed autoloader.
+        if (isset($projectComposerJsonArray['autoload'])) {
+            $projectComposerJsonArray['autoload'] = [];
+        }
+
         $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
