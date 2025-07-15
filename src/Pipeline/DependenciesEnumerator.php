@@ -117,7 +117,8 @@ class DependenciesEnumerator
                     continue;
                 }
 
-                $composerLockString           = $this->filesystem->read($this->config->getProjectDirectory() . 'composer.lock');
+                $composerLockPath = $this->config->getProjectDirectory() . Factory::getLockFile(Factory::getComposerFile());
+                $composerLockString     = $this->filesystem->read($composerLockPath);
                 $composerLock           = json_decode($composerLockString, true);
 
                 $requiredPackageComposerJson = null;

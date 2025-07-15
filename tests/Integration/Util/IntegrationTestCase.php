@@ -31,9 +31,13 @@ class IntegrationTestCase extends TestCase
 
     protected $testsWorkingDir;
 
+    protected array $envBeforeTest = [];
+
     public function setUp(): void
     {
         parent::setUp();
+
+        $this->envBeforeTest = $_ENV;
 
         $this->projectDir = getcwd();
 
@@ -80,11 +84,11 @@ class IntegrationTestCase extends TestCase
         return false;
     }
 
-    protected function runStrauss(?string &$allOutput = null, string $params = ''): int
+    protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             // TODO add xdebug to the command
-            exec('php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+            exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
             return $return_var;
@@ -107,6 +111,11 @@ class IntegrationTestCase extends TestCase
 
         $this->logger && $strauss->setLogger($this->logger);
 
+        foreach (array_filter(explode(' ', $env)) as $pair) {
+            $kv = explode('=', $pair);
+            $_ENV[trim($kv[0])] = trim($kv[1]);
+        }
+
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
         $inputInterface = new ArgvInput($argv);
 
@@ -127,6 +136,8 @@ class IntegrationTestCase extends TestCase
     public function tearDown(): void
     {
         parent::tearDown();
+
+        $_ENV = $this->envBeforeTest;
 
         $dir = $this->testsWorkingDir;
 

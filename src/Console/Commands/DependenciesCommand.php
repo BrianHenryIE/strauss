@@ -25,6 +25,7 @@ use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use Composer\Factory;
 use Composer\InstalledVersions;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
@@ -285,7 +286,14 @@ class DependenciesCommand extends Command
     {
         $this->logger->notice('Loading package...');
 
-        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . 'composer.json');
+
+        $composerFilePath = $this->filesystem->normalize($this->workingDir . Factory::getComposerFile());
+        $defaultComposerFilePath = $this->filesystem->normalize($this->workingDir . 'composer.json');
+        if ($composerFilePath !== $defaultComposerFilePath) {
+            $this->logger->info('Using: ' . $composerFilePath);
+        }
+
+        $this->projectComposerPackage = new ProjectComposerPackage('/'.$composerFilePath);
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.
