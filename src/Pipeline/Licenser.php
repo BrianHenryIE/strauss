@@ -253,6 +253,7 @@ class Licenser
                 $token = array_shift($tokenizeString);
 
                 if (is_array($token) && stristr($token[1], 'strauss')) {
+                    // Already done?
                     return $phpString;
                 }
             } elseif (!is_array($token)) {

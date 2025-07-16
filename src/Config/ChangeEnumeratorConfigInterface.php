@@ -24,4 +24,9 @@ interface ChangeEnumeratorConfigInterface
     public function getClassmapPrefix(): ?string;
 
     public function getPackagesToPrefix(): array;
+
+    /**
+     * The prefix to use for global functions. Null if none should be used.
+     */
+    public function getFunctionsPrefix(): ?string;
 }

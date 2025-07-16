@@ -56,7 +56,7 @@ class InstalledJson
         $this->setLogger($logger);
     }
 
-    protected function copyInstalledJson(): void
+    public function copyInstalledJson(): void
     {
         $this->logger->info('Copying vendor/composer/installed.json to vendor-prefixed/composer/installed.json');
 
@@ -138,23 +138,23 @@ class InstalledJson
 
 
     /**
-     * Remove packages from `installed.json` whose target directory does not exist
+     * Remove the autoload key for packages from `installed.json` whose target directory does not exist after deleting.
      *
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      */
-    protected function removeMissingPackages(array $installedJsonArray, string $vendorDir): array
+    protected function removeMovedPackagesAutoloadKey(array $installedJsonArray, string $vendorDir): array
     {
         foreach ($installedJsonArray['packages'] as $key => $package) {
             $path = $vendorDir . 'composer/' . $package['install-path'];
+            // TODO: Use a getter on the package.
             $pathExists = $this->filesystem->directoryExists($path);
             if (!$pathExists) {
-                $this->logger->info('Removing package from installed.json: ' . $package['name']);
-                unset($installedJsonArray['packages'][$key]);
+                $this->logger->info('Removing package autoload key from installed.json: ' . $package['name']);
+                $installedJsonArray['packages'][$key]['autoload'] = [];
             }
         }
         return $installedJsonArray;
     }
-
 
     protected function updateNamespaces(array $installedJsonArray, DiscoveredSymbols $discoveredSymbols): array
     {
@@ -285,10 +285,8 @@ class InstalledJson
      * @param array<string,ComposerPackage> $flatDependencyTree
      * @param DiscoveredSymbols $discoveredSymbols
      */
-    public function createAndCleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    public function cleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
-        $this->copyInstalledJson();
-
         $targetDir = $this->config->getTargetDirectory();
 
         $installedJsonFile = $this->getJsonFile($targetDir);
@@ -302,7 +300,7 @@ class InstalledJson
 
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
 
-        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $targetDir);
+        $installedJsonArray = $this->removeMovedPackagesAutoloadKey($installedJsonArray, $targetDir);
 
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
@@ -344,11 +342,12 @@ class InstalledJson
          */
         $installedJsonArray = $vendorInstalledJsonFile->read();
 
+        $installedJsonArray = $this->removeMovedPackagesAutoloadKey($installedJsonArray, $vendorDir);
+
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
 
+        // Only relevant when source = target.
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
-
-        $installedJsonArray = $this->removeMissingPackages($installedJsonArray, $vendorDir);
 
         $vendorInstalledJsonFile->write($installedJsonArray);
     }

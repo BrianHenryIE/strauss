@@ -114,9 +114,12 @@ class ChangeEnumerator
             }
 
             if ($symbol instanceof FunctionSymbol) {
-                // TODO: Add its own config option.
-                $functionPrefix = strtolower($this->config->getClassmapPrefix());
-                if (str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
+                // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
+                if ($symbol->getNamespace() !== '\\') {
+                    continue;
+                }
+                $functionPrefix = $this->config->getFunctionsPrefix();
+                if (empty($functionPrefix) || str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
                     continue;
                 }
 

@@ -8,7 +8,7 @@ A fork of [Mozart](https://github.com/coenjacobs/mozart/) for [Composer](https:/
 
 Have you ever activated a WordPress plugin that has a conflict with another because the plugins use two different versions of the same PHP library? **Strauss is the solution to that problem** - it ensures that _your_ plugin's PHP dependencies are isolated and loaded from your plugin rather than loading from whichever plugin's autoloader registers & runs first.
 
-> ⚠️ **Sponsorship**: I don't want your money. [Please write a unit test to help the project](https://brianhenryie.github.io/strauss/).
+> ⚠️ **Sponsorship**: It would be neat if you were to offer me a license to your plugin, or at least [post about where this is used](https://github.com/BrianHenryIE/strauss/discussions).
 
 ## Table of Contents
 

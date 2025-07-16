@@ -2619,6 +2619,9 @@ EOD;
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
 
+    /**
+     * @see https://github.com/dompdf/php-font-lib/pull/148
+     */
     public function test_namespace_in_string_with_variable(): void
     {
 

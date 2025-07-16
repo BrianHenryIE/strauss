@@ -85,10 +85,15 @@ class DumpAutoload
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
-        $projectComposerJson = new JsonFile($this->filesystem->prefixPath($this->config->getProjectDirectory() . 'composer.json'));
+        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
+        }
+
+        // Do not include the autoload section from the project composer.json in the vendor-prefixed autoloader.
+        if (isset($projectComposerJsonArray['autoload'])) {
+            $projectComposerJsonArray['autoload'] = [];
         }
 
         $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
@@ -121,21 +126,20 @@ class DumpAutoload
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
         $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
 
+        $installedJsonFile = new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json');
+        $installedJson = $installedJsonFile->read();
+        $localRepo = new InstalledFilesystemRepository($installedJsonFile);
+
         /**
          * If the target directory is different to the vendor directory, then we do not want to include dev
          * dependencies, but if it is vendor, then unless composer install was run with --no-dev, we do want them.
          */
         if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()) {
-            $generator->setDevMode(false);
+            $isDevMode = false;
+        } else {
+            $isDevMode = $installedJson['dev'];
         }
-
-        $localRepo = new InstalledFilesystemRepository(
-            new JsonFile(
-                $this->filesystem->prefixPath(
-                    $this->config->getTargetDirectory() . 'composer/installed.json'
-                )
-            )
-        );
+        $generator->setDevMode($isDevMode);
 
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
 

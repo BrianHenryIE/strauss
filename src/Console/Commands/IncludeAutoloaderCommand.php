@@ -22,6 +22,7 @@ use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
+use Composer\Factory;
 use Exception;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerAwareTrait;
@@ -110,7 +111,7 @@ class IncludeAutoloaderCommand extends Command
     {
         $this->logger->notice('Loading package...');
 
-        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . 'composer.json');
+        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . Factory::getComposerFile());
     }
 
     protected function loadConfigFromComposerJson(): void

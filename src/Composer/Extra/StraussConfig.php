@@ -18,7 +18,6 @@ use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
-use Composer\Factory;
 use Exception;
 use JsonMapper\JsonMapperFactory;
 use JsonMapper\Middleware\Rename\Rename;
@@ -65,6 +64,13 @@ class StraussConfig implements
      * @var string
      */
     protected ?string $classmapPrefix = null;
+
+    /**
+     * Null to disable. Otherwise, suggested it is all lowercase with a trailing underscore.
+     *
+     * @var string|bool|null
+     */
+    protected $functionsPrefix;
 
     /**
      * @var ?string
@@ -232,6 +238,9 @@ class StraussConfig implements
 
             $rename->addMapping(StraussConfig::class, 'exclude_prefix_packages', 'excludePackagesFromPrefixing');
 
+
+            $rename->addMapping(StraussConfig::class, 'function_prefix', 'functionsPrefix');
+
             $mapper->unshift($rename);
             $mapper->push(new \JsonMapper\Middleware\CaseConversion(
                 \JsonMapper\Enums\TextNotation::UNDERSCORE(),
@@ -363,9 +372,12 @@ class StraussConfig implements
         $this->vendorDirectory = $vendorDirectory;
     }
 
+    /**
+     * With no trailing slash and no leading slash.
+     */
     public function getNamespacePrefix(): ?string
     {
-        return !isset($this->namespacePrefix) ? null :trim($this->namespacePrefix, '\\');
+        return !isset($this->namespacePrefix) ? null : trim($this->namespacePrefix, '\\');
     }
 
     /**
@@ -390,6 +402,29 @@ class StraussConfig implements
     public function setClassmapPrefix(string $classmapPrefix): void
     {
         $this->classmapPrefix = $classmapPrefix;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFunctionsPrefix(): ?string
+    {
+        if (!isset($this->functionsPrefix)) {
+            return strtolower($this->getClassmapPrefix());
+        }
+        if (empty($this->functionsPrefix)) {
+            return null;
+        }
+
+        return $this->functionsPrefix;
+    }
+
+    /**
+     * @param string|bool|null $functionsPrefix
+     */
+    public function setFunctionsPrefix($functionsPrefix): void
+    {
+        $this->functionsPrefix = $functionsPrefix;
     }
 
     /**
@@ -611,7 +646,7 @@ class StraussConfig implements
         $this->packagesToPrefix = $packagesToPrefix;
     }
     /**
-     * @return bool
+     * TODO: Can we name this `isClassmapOutputEnabled`?
      */
     public function isClassmapOutput(): bool
     {

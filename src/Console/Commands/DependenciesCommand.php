@@ -11,11 +11,12 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
-use BrianHenryIE\Strauss\Pipeline\Aliases;
+use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
-use BrianHenryIE\Strauss\Pipeline\Cleanup;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
@@ -25,6 +26,7 @@ use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use Composer\Factory;
 use Composer\InstalledVersions;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
@@ -263,14 +265,12 @@ class DependenciesCommand extends Command
 
             $this->addLicenses();
 
-
-            // After file have been deleted, we may need aliases.
-            $this->generateAliasesFile();
-
             $this->cleanUp();
 
-            // This runs after cleanup because cleanup edits installed.json
             $this->generateAutoloader();
+
+            // After files have been deleted, we may need aliases.
+            $this->generateAliasesFile();
 
             $this->logger->notice('Done');
         } catch (Exception $e) {
@@ -291,7 +291,14 @@ class DependenciesCommand extends Command
     {
         $this->logger->notice('Loading package...');
 
-        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . 'composer.json');
+
+        $composerFilePath = $this->filesystem->normalize($this->workingDir . Factory::getComposerFile());
+        $defaultComposerFilePath = $this->filesystem->normalize($this->workingDir . 'composer.json');
+        if ($composerFilePath !== $defaultComposerFilePath) {
+            $this->logger->info('Using: ' . $composerFilePath);
+        }
+
+        $this->projectComposerPackage = new ProjectComposerPackage('/'.$composerFilePath);
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.
@@ -432,6 +439,13 @@ class DependenciesCommand extends Command
 
         $copier->prepareTarget();
         $copier->copy();
+
+        $installedJson = new InstalledJson(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+        $installedJson->copyInstalledJson();
     }
 
     // 4. Determine namespace and classname changes
@@ -618,7 +632,13 @@ class DependenciesCommand extends Command
         );
 
         // This will check the config to check should it delete or not.
-        $cleanup->cleanup($this->discoveredFiles->getFiles());
+        $cleanup->deleteFiles($this->discoveredFiles->getFiles());
+
         $cleanup->cleanupVendorInstalledJson($this->flatDependencyTree, $this->discoveredSymbols);
+        if ($this->config->isDeleteVendorFiles() || $this->config->isDeleteVendorPackages()) {
+            // Rebuild the autoloader after cleanup.
+            // This is needed because cleanup may have deleted files that were in the autoloader.
+            $cleanup->rebuildVendorAutoloader();
+        }
     }
 }

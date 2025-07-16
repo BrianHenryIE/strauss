@@ -22,7 +22,7 @@
         }
     },
     "require": {
-        "brianhenryie/simple-php-code-parser": "^0.15.2",
+        "brianhenryie/simple-php-code-parser": "^0.15.3",
         "composer-runtime-api": "^2.0",
         "brianhenryie/composer-prefer-local": "^0.1.4",
         "brianhenryie/simple-php-code-parser": "^0.15.1",
