@@ -610,7 +610,7 @@ class StraussConfig implements
         $this->packagesToPrefix = $packagesToPrefix;
     }
     /**
-     * @return bool
+     * TODO: Can we name this `isClassmapOutputEnabled`?
      */
     public function isClassmapOutput(): bool
     {
