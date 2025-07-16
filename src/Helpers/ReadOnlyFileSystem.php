@@ -191,7 +191,7 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         $this->inMemoryFiles->write(
             $destination,
             $sourceFile,
-            $config instanceof Config ? $config : new Config($config ?? [])
+            $config
         );
 
         $a = $this->inMemoryFiles->read($destination);
