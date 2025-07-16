@@ -38,8 +38,6 @@ class IntegrationTestCase extends TestCase
 
         $this->projectDir = getcwd();
 
-        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
-
         $this->logger = new class extends ColorLogger {
             public function debug($message, array $context = array())
             {
@@ -47,40 +45,14 @@ class IntegrationTestCase extends TestCase
             }
         };
 
-        if ('Darwin' === PHP_OS) {
-            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
-        }
-
-        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
-        // we set breakpoints, we can easily browse the files.
-        if ($this->isPhpStormRunning()) {
-            $this->testsWorkingDir = getcwd() . '/teststempdir/';
-        }
-
-        if (file_exists($this->testsWorkingDir)) {
-            $this->deleteDir($this->testsWorkingDir);
-        }
-
-        @mkdir($this->testsWorkingDir);
+        $this->createWorkingDir();
 
         if (file_exists($this->projectDir . '/strauss.phar')) {
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
             ob_flush();
         }
 
-        $this->createWorkingDir();
-    }
 
-    protected function isPhpStormRunning(): bool
-    {
-        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
-            return true;
-        }
-
-        if (isset($_SERVER['IDE_PHPUNIT_CUSTOM_LOADER'])) {
-            return true;
-        }
-        return false;
     }
 
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
@@ -143,59 +115,6 @@ class IntegrationTestCase extends TestCase
         $this->deleteDir($dir);
     }
 
-    protected function deleteDir($dir)
-    {
-        if (!file_exists($dir)) {
-            return;
-        }
-        $filesystem = new Filesystem(
-            new LocalFilesystemAdapter('/')
-        );
-
-        $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
-        $isSymlink = function ($file) use ($symfonyFilesystem) {
-            return ! is_null($symfonyFilesystem->readlink($file));
-        };
-
-        /**
-         * Delete symlinks first.
-         *
-         * @see https://github.com/thephpleague/flysystem/issues/1560
-         */
-        $finder = new Finder();
-        $finder->in($dir);
-        if ($finder->hasResults()) {
-
-            /** @var \SplFileInfo[] $files */
-            $files = iterator_to_array($finder->getIterator());
-            /** @var \SplFileInfo[] $links */
-            $links = array_filter(
-                $files,
-                function ($file) use ($isSymlink) {
-                    return $isSymlink($file->getPath());
-                }
-            );
-
-            // Sort by longest filename first.
-            uasort($links, function ($a, $b) {
-                return strlen($b->getPath()) <=> strlen($a->getPath());
-            });
-
-            foreach ($links as $link) {
-                $linkPath = "{$link->getPath()}/{$link->getFilename()}";
-                unlink($linkPath);
-                if (is_readable($linkPath)) {
-                    rmdir($linkPath);
-                }
-            }
-        }
-
-        if (!is_dir($dir)) {
-            return;
-        }
-
-        $filesystem->deleteDirectory($dir);
-    }
     public function markTestSkippedOnPhpVersionBelow(string $php_version, string $message = '')
     {
         $this->markTestSkippedOnPhpVersion($php_version, '<', $message);

@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
@@ -17,6 +18,7 @@ use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
+use Symfony\Component\Finder\Finder;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
@@ -57,10 +59,16 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function createWorkingDir(): void
     {
-
         $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
+
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
+        }
+
+        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
+        // we set breakpoints, we can easily browse the files.
+        if ($this->isPhpStormRunning()) {
+            $this->testsWorkingDir = getcwd() . '/teststempdir/';
         }
 
         if (file_exists($this->testsWorkingDir)) {
@@ -68,6 +76,72 @@ class TestCase extends \PHPUnit\Framework\TestCase
         }
 
         @mkdir($this->testsWorkingDir);
+    }
+
+    protected function deleteDir($dir)
+    {
+        if (!file_exists($dir)) {
+            return;
+        }
+        $filesystem = new Filesystem(
+            new LocalFilesystemAdapter('/')
+        );
+
+        $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
+        $isSymlink = function ($file) use ($symfonyFilesystem) {
+            return ! is_null($symfonyFilesystem->readlink($file));
+        };
+
+        /**
+         * Delete symlinks first.
+         *
+         * @see https://github.com/thephpleague/flysystem/issues/1560
+         */
+        $finder = new Finder();
+        $finder->in($dir);
+        if ($finder->hasResults()) {
+
+            /** @var \SplFileInfo[] $files */
+            $files = iterator_to_array($finder->getIterator());
+            /** @var \SplFileInfo[] $links */
+            $links = array_filter(
+                $files,
+                function ($file) use ($isSymlink) {
+                    return $isSymlink($file->getPath());
+                }
+            );
+
+            // Sort by longest filename first.
+            uasort($links, function ($a, $b) {
+                return strlen($b->getPath()) <=> strlen($a->getPath());
+            });
+
+            foreach ($links as $link) {
+                $linkPath = "{$link->getPath()}/{$link->getFilename()}";
+                unlink($linkPath);
+                if (is_readable($linkPath)) {
+                    rmdir($linkPath);
+                }
+            }
+        }
+
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $filesystem->deleteDirectory($dir);
+    }
+
+    protected function isPhpStormRunning(): bool
+    {
+        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
+            return true;
+        }
+
+        if (isset($_SERVER['IDE_PHPUNIT_CUSTOM_LOADER'])) {
+            return true;
+        }
+        return false;
     }
 
     public static function assertEqualsRN($expected, $actual, string $message = ''): void
