@@ -175,7 +175,10 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $destination = $this->testsWorkingDir . 'destination.php';
 
-        $sut->copy($source, $destination);
+        $config = Mockery::mock(Config::class);
+        $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC)->atLeast()->once();
+
+        $sut->copy($source, $destination, $config);
 
         $this->assertEquals($contents, $sut->read($destination));
 
