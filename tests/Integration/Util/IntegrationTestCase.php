@@ -11,13 +11,11 @@ use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use Elazar\Flystream\FilesystemRegistry;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Finder\Finder;
 
 /**
  * Class IntegrationTestCase
@@ -51,8 +49,6 @@ class IntegrationTestCase extends TestCase
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
             ob_flush();
         }
-
-
     }
 
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
@@ -77,10 +73,21 @@ class IntegrationTestCase extends TestCase
                 unset($paramsSplit[0]);
                 break;
             default:
-                $strauss = new DependenciesCommand();
+                $strauss = new class($this) extends DependenciesCommand {
+                    protected IntegrationTestCase $integrationTestCase;
+                    public function __construct(
+                        IntegrationTestCase $integrationTestCase,
+                        ?string $name = null
+                    ) {
+                        $this->integrationTestCase = $integrationTestCase;
+                        parent::__construct($name);
+                    }
+                    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+                    {
+                        return $this->integrationTestCase->logger;
+                    }
+                };
         }
-
-        $this->logger && $strauss->setLogger($this->logger);
 
         foreach (array_filter(explode(' ', $env)) as $pair) {
             $kv = explode('=', $pair);

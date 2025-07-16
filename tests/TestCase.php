@@ -25,7 +25,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * The logger used by the objects.
      */
-    protected ?LoggerInterface $logger;
+    public ?LoggerInterface $logger;
 
     /**
      * The output logger.
