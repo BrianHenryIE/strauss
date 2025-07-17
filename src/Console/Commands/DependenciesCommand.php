@@ -298,7 +298,9 @@ class DependenciesCommand extends Command
             $this->logger->info('Using: ' . $composerFilePath);
         }
 
-        $this->projectComposerPackage = new ProjectComposerPackage('/'.$composerFilePath);
+        $composerFilePath = $this->filesystem->normalize($composerFilePath);
+        $composerFilePath = $this->filesystem->prefixPath($composerFilePath);
+        $this->projectComposerPackage = new ProjectComposerPackage($composerFilePath);
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.

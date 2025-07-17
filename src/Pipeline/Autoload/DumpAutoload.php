@@ -85,7 +85,10 @@ class DumpAutoload
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
-        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
+        $projectComposerJsonFilePath = $this->config->getProjectDirectory() . Factory::getComposerFile();
+        $projectComposerJsonFilePath = $this->filesystem->normalize($projectComposerJsonFilePath);
+        $projectComposerJsonFilePath = $this->filesystem->prefixPath($projectComposerJsonFilePath);
+        $projectComposerJson = new JsonFile($projectComposerJsonFilePath);
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
@@ -126,7 +129,10 @@ class DumpAutoload
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
         $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
 
-        $installedJsonFile = new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json');
+        $installedJsonFilePath = $this->config->getTargetDirectory() . 'composer/installed.json';
+        $installedJsonFilePath = $this->filesystem->normalize($installedJsonFilePath);
+        $installedJsonFilePath = $this->filesystem->prefixPath($installedJsonFilePath);
+        $installedJsonFile = new JsonFile($installedJsonFilePath);
         $installedJson = $installedJsonFile->read();
         $localRepo = new InstalledFilesystemRepository($installedJsonFile);
 

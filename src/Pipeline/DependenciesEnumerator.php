@@ -87,7 +87,10 @@ class DependenciesEnumerator
         $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
 
         $installedJsonPath = sprintf("%scomposer/installed.json", $this->config->getVendorDirectory());
-        $installedJson = json_decode($this->filesystem->read($installedJsonPath), true);
+        $installedJsonPath = $this->filesystem->normalize($installedJsonPath);
+        $installedJsonPath = $this->filesystem->prefixPath($installedJsonPath);
+        $installedJsonTxt = $this->filesystem->read($installedJsonPath);
+        $installedJson = json_decode($installedJsonTxt, true);
         $installedJsonPackages = [];
         foreach ($installedJson['packages'] as $package) {
             $installedJsonPackages[$package['name']] = $package;

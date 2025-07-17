@@ -114,7 +114,10 @@ class Cleanup
             return;
         }
 
-        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . 'composer.json');
+        $projectComposerFilePath = $this->config->getProjectDirectory() . '/' . Factory::getComposerFile();
+        $projectComposerFilePath = $this->filesystem->normalize($projectComposerFilePath);
+        $projectComposerFilePath = $this->filesystem->prefixPath($projectComposerFilePath);
+        $projectComposerJson = new JsonFile($projectComposerFilePath);
         $projectComposerJsonArray = $projectComposerJson->read();
         $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
         $installationManager = $composer->getInstallationManager();
@@ -127,11 +130,16 @@ class Cleanup
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
         $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
-        $installedJson = new JsonFile($this->config->getVendorDirectory() . 'composer/installed.json');
+
+        $installedJsonFilePath = $this->config->getVendorDirectory() . 'composer/installed.json';
+        $installedJsonFilePath = $this->filesystem->normalize($installedJsonFilePath);
+        $installedJsonFilePath = $this->filesystem->prefixPath($installedJsonFilePath);
+        $installedJson = new JsonFile($installedJsonFilePath);
         $localRepo = new InstalledFilesystemRepository($installedJson);
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
         $installedJsonArray = $installedJson->read();
         $generator->setDevMode($installedJsonArray['dev'] ?? false);
+
         // This will output the autoload_static.php etc. files to `vendor/composer`.
         $generator->dump(
             $config,
