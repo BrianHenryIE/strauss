@@ -206,7 +206,7 @@ class StraussConfig implements
         if (isset($composer)) {
             $composerDir = $composer->getConfig()->getConfigSource()->getName();
             // Composer factory accepts a file or directory.
-            $composerDir = str_ends_with($composerDir, 'composer.json')
+            $composerDir = str_ends_with($composerDir, '.json') // TODO: replace with a file exists/dir exists check.
                 ? dirname($composerDir) : $composerDir;
             $this->projectDirectory = $this->normalizer($composerDir);
         }
