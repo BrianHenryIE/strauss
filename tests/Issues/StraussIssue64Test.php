@@ -5,10 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Console\Commands\Compose;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 final class StraussIssue64Test extends IntegrationTestCase
 {
@@ -36,8 +33,8 @@ final class StraussIssue64Test extends IntegrationTestCase
 
         $this->assertNotEquals(0, $exitCode);
 
-        $this->assertStringContainsString('[error] Symlinked packages detected', $output);
-        $this->assertStringContainsString('COMPOSER_MIRROR_PATH_REPOS=1', $output);
+        $this->assertTrue($this->getTestLogger()->hasErrorThatContains('Symlinked packages detected'), 'Should contain Symlinked packages detected');
+        $this->assertTrue($this->getTestLogger()->hasNoticeThatContains('COMPOSER_MIRROR_PATH_REPOS=1'), 'Should comtain COMPOSER_MIRROR_PATH_REPOS=1');
     }
 
     private function packageComposerFile(): string
