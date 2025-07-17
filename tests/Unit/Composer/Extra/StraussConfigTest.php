@@ -936,4 +936,77 @@ EOD;
         self::assertIsArray($sut->getUpdateCallSites());
         self::assertCount(2, $sut->getUpdateCallSites());
     }
+
+    public function test_functions_prefix(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "functions_prefix": "brianhenryie_strauss_"
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        file_put_contents($tmpfname, $composerExtraStraussJson);
+
+        $composer = Factory::create(new NullIO(), $tmpfname);
+
+        $sut = new StraussConfig($composer);
+
+        $result = $sut->getFunctionsPrefix();
+
+        $this->assertEquals('brianhenryie_strauss_', $result);
+    }
+
+    public function test_functions_prefix_disabled(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "functions_prefix": false
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        file_put_contents($tmpfname, $composerExtraStraussJson);
+
+        $composer = Factory::create(new NullIO(), $tmpfname);
+
+        $sut = new StraussConfig($composer);
+
+        $result = $sut->getFunctionsPrefix();
+
+        $this->assertNull($result);
+    }
+
+
+    public function test_functions_not_set(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "classmap_prefix": "brianhenryie_strauss_function_prefix_not_set_"
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        file_put_contents($tmpfname, $composerExtraStraussJson);
+
+        $composer = Factory::create(new NullIO(), $tmpfname);
+
+        $sut = new StraussConfig($composer);
+
+        $result = $sut->getFunctionsPrefix();
+
+        $this->assertEquals('brianhenryie_strauss_function_prefix_not_set_', $result);
+    }
 }

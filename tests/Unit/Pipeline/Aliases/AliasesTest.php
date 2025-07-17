@@ -125,8 +125,10 @@ EOD;
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-if(!function_exists('foo')){
-    function foo(...$args) { return bar_foo(...func_get_args()); }
+if(!function_exists('\\foo')){
+    function foo(...$args) { 
+      return \bar_foo(...func_get_args()); 
+    }
 }
 EOD;
         $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
@@ -205,11 +207,9 @@ EOD;
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Foo\\Bar; function baz {}');
 
         $functionSymbol = new FunctionSymbol('baz', $file, 'Bar');
-        $functionSymbol->setReplacement('Foo\\Bar\\baz');
         $symbols->add($functionSymbol);
 
         $functionSymbol = new FunctionSymbol('foobar', $file, 'Bar');
-        $functionSymbol->setReplacement('Foo\\Bar\\foobar');
         $symbols->add($functionSymbol);
 
         $namespaceSymbol = new NamespaceSymbol('Bar', $file, '\\');
@@ -222,12 +222,12 @@ EOD;
 
         $expected = <<<'EOD'
 namespace Bar {
-	if(!function_exists('Bar\\baz')){
+	if(!function_exists('\\Bar\\baz')){
 		function baz(...$args) {
 			return \Foo\Bar\baz(...func_get_args()); 
 		}
 	}
-	if(!function_exists('Bar\\foobar')){
+	if(!function_exists('\\Bar\\foobar')){
 		function foobar(...$args) {
 			return \Foo\Bar\foobar(...func_get_args());
 		}

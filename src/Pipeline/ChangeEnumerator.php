@@ -118,10 +118,8 @@ class ChangeEnumerator
                 if ($symbol->getNamespace() !== '\\') {
                     continue;
                 }
-                // TODO: Add a config option for setting the function prefix for global functions.
-                // Currently it is the classmap prefix, all lowercase.
-                $functionPrefix = strtolower($this->config->getClassmapPrefix());
-                if (str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
+                $functionPrefix = $this->config->getFunctionsPrefix();
+                if (empty($functionPrefix) || str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
                     continue;
                 }
 

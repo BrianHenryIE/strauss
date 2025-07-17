@@ -70,4 +70,101 @@ EOD;
 
         $this->assertEmpty($output, $output);
     }
+
+    public function test_namespaced_files_alias(): void
+    {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/aliases-feature-test",
+  "require": {
+    "wp-forge/helpers": "2.0"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "delete_vendor_files": true
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
+
+        $autoloadAliasesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
+
+        $this->assertStringNotContainsString('return \\WP_Forge\\Helpers\\dataGet(...func_get_args());', $autoloadAliasesPhpString);
+        $this->assertStringContainsString('return \\BrianHenryIE\\Strauss\\WP_Forge\\Helpers\\dataGet(...func_get_args());', $autoloadAliasesPhpString);
+    }
+
+    public function test_non_namespaced_files_alias(): void
+    {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/aliases-feature-test",
+  "require": {
+    "symfony/deprecation-contracts": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "function_prefix": "brianhenryie_strauss_",
+      "delete_vendor_files": true
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
+
+        $autoloadAliasesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
+
+        $this->assertStringContainsString('function trigger_deprecation(...$args)', $autoloadAliasesPhpString);
+        $this->assertStringContainsString('return \\brianhenryie_strauss_trigger_deprecation(...func_get_args());', $autoloadAliasesPhpString);
+    }
+
+    public function test_disabled_function_renaming(): void
+    {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/aliases-feature-test",
+  "require": {
+    "symfony/deprecation-contracts": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "function_prefix": false,
+      "delete_vendor_files": true
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        assert(0 === $exitCode, $output);
+
+        $autoloadAliasesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
+
+        $this->assertStringNotContainsString('function trigger_deprecation(...$args)', $autoloadAliasesPhpString);
+    }
 }

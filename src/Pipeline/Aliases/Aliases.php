@@ -208,18 +208,18 @@ class Aliases
             foreach ($symbolsByNamespace['\\'] as $symbol) {
                 $aliasesPhpString = '';
 
-                $originalSymbol    = $symbol->getOriginalSymbol();
-                $replacementSymbol = $symbol->getReplacement();
+                $originalLocalSymbol = $symbol->getOriginalSymbol();
+                $replacementSymbol   = $symbol->getReplacement();
+
+                if ($originalLocalSymbol === $replacementSymbol) {
+                    continue;
+                }
 
                 switch (get_class($symbol)) {
                     case FunctionSymbol::class:
                         // TODO: Do we need to check for `void`? Or will it just be ignored?
                         // Is it possible to inherit PHPDoc from the original function?
-                        $aliasesPhpString = <<<EOD
-        if(!function_exists('$originalSymbol')){
-            function $originalSymbol(...\$args) { return $replacementSymbol(...func_get_args()); }
-        }
-        EOD;
+                        $aliasesPhpString = $this->aliasedFunctionTemplate($originalLocalSymbol, $replacementSymbol);
                         break;
                     case ConstantSymbol::class:
                         /**
@@ -230,8 +230,8 @@ class Aliases
                         // Does it matter since all references to use the constant should have been updated to the new name anyway.
                         // TODO: global `const`.
                         $aliasesPhpString = <<<EOD
-        if(!defined('$originalSymbol') && defined('$replacementSymbol')) { 
-            define('$originalSymbol', $replacementSymbol); 
+        if(!defined('$originalLocalSymbol') && defined('$replacementSymbol')) { 
+            define('$originalLocalSymbol', $replacementSymbol); 
         }
         EOD;
                         break;
@@ -257,8 +257,7 @@ class Aliases
             $aliasesPhpString = "namespace $namespaceSymbol {" . PHP_EOL;
 
             foreach ($symbols as $symbol) {
-                $originalSymbol    = $symbol->getOriginalLocalName();
-                $replacementSymbol = $symbol->getReplacement();
+                $originalLocalSymbol = $symbol->getOriginalLocalName();
 
                 $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespace());
 
@@ -266,32 +265,23 @@ class Aliases
                    &&
                    $namespaceSymbol->isChangedNamespace())
                 ) {
-                    $this->logger->debug("Skipping {$originalSymbol} because it is not being changed.");
+                    $this->logger->debug("Skipping {$originalLocalSymbol} because it is not being changed.");
                     continue;
                 }
 
-                $unNamespacedOriginalSymbol = trim(str_replace($symbol->getNamespace(), '', $originalSymbol), '\\');
+                $unNamespacedOriginalSymbol = trim(str_replace($symbol->getNamespace(), '', $originalLocalSymbol), '\\');
                 $namespacedOriginalSymbol = $symbol->getNamespace() . '\\' . $unNamespacedOriginalSymbol;
-                $namespacedOriginalSymbol = str_replace('\\', '\\\\', $namespacedOriginalSymbol);
 
-//                $replacementSymbol = str_replace(
-//                    $namespaceSymbol->getOriginalSymbol(),
-//                    $namespaceSymbol->getReplacement(),
-//                    $replacementSymbol
-//                );
+                $replacementSymbol = str_replace(
+                    $namespaceSymbol->getOriginalSymbol(),
+                    $namespaceSymbol->getReplacement(),
+                    $namespacedOriginalSymbol
+                );
 
-//                $replacementSymbol = str_replace('\\', '\\\\', '\\'.$replacementSymbol);
-
-
-                $replacementSymbol = '\\' . $replacementSymbol;
-
-                $aliasesPhpString .= <<<EOD
-                    if(!function_exists('$namespacedOriginalSymbol')){
-                        function $originalSymbol(...\$args) {
-                            return $replacementSymbol(...func_get_args());
-                        }
-                    }
-                EOD . PHP_EOL;
+                $aliasesPhpString .= $this->aliasedFunctionTemplate(
+                    $namespacedOriginalSymbol,
+                    $replacementSymbol,
+                );
             }
             $aliasesPhpString .= "}" . PHP_EOL; // Close namespace.
 
@@ -299,5 +289,34 @@ class Aliases
         }
 
         return $autoloadAliasesFileString;
+    }
+
+    /**
+     * Returns the PHP for `if(!function_exists...` for an aliased function.
+     *
+     * Ensures the correct leading backslashes.
+     *
+     * @param string $namespacedOriginalFunction
+     * @param string $namespacedReplacementFunction
+     */
+    protected function aliasedFunctionTemplate(
+        string $namespacedOriginalFunction,
+        string $namespacedReplacementFunction
+    ): string {
+        $namespacedOriginalFunction = '\\\\' . trim($namespacedOriginalFunction, '\\');
+        $namespacedOriginalFunction = preg_replace('/\\\\+/', '\\\\\\\\', $namespacedOriginalFunction);
+
+        $localOriginalFunction = array_reverse(explode('\\', $namespacedOriginalFunction))[0];
+
+        $namespacedReplacementFunction = '\\' . trim($namespacedReplacementFunction, '\\');
+        $namespacedReplacementFunction = preg_replace('/\\\\+/', '\\', $namespacedReplacementFunction);
+
+        return <<<EOD
+                    if(!function_exists('$namespacedOriginalFunction')){
+                        function $localOriginalFunction(...\$args) {
+                            return $namespacedReplacementFunction(...func_get_args());
+                        }
+                    }
+                EOD . PHP_EOL;
     }
 }
