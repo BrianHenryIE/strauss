@@ -47,7 +47,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             ],
         ]));
 
-        $filesystem->write('project/vendor/composer/installed.json', json_encode([]));
+        $filesystem->write('project/vendor-prefixed/composer/installed.json', json_encode([]));
         $filesystem->write('project/vendor-prefixed/composer/ClassLoader.php', '<?php');
 
         $logger = new ColorLogger();
