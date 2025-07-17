@@ -66,6 +66,23 @@ class ComposerPackage
     protected string $license;
 
     /**
+     * Should the package be copied to the vendor-prefixed/target directory? Default: true.
+     */
+    protected bool $isCopy = true;
+    /**
+     * Has the package been copied to the vendor-prefixed/target directory? False until the package is copied.
+     */
+    protected bool $didCopy = false;
+    /**
+     * Should the package be deleted from the vendor directory? Default: false.
+     */
+    protected bool $isDelete = false;
+    /**
+     * Has the package been deleted from the vendor directory? False until the package is deleted.
+     */
+    protected bool $didDelete = false;
+
+    /**
      * @param string $absolutePath The absolute path to composer.json
      * @param ?array{files?:array<string>, classmap?:array<string>, psr?:array<string,string|array<string>>} $overrideAutoload Optional configuration to replace the package's own autoload definition with
      *                                    another which Strauss can use.
@@ -199,5 +216,69 @@ class ComposerPackage
     public function getLicense():string
     {
         return $this->license;
+    }
+
+    /**
+     * Should the file be copied? (defaults to yes)
+     */
+    public function setCopy(bool $isCopy): void
+    {
+        $this->isCopy = $isCopy;
+    }
+
+    /**
+     * Should the file be copied? (defaults to yes)
+     */
+    public function isCopy(): bool
+    {
+        return $this->isCopy;
+    }
+
+    /**
+     * Has the file been copied? (defaults to no)
+     */
+    public function setDidCopy(bool $didCopy): void
+    {
+        $this->didCopy = $didCopy;
+    }
+
+    /**
+     * Has the file been copied? (defaults to no)
+     */
+    public function didCopy(): bool
+    {
+        return $this->didCopy;
+    }
+
+    /**
+     * Should the file be deleted? (defaults to no)
+     */
+    public function setDelete(bool $isDelete): void
+    {
+        $this->isDelete = $isDelete;
+    }
+
+    /**
+     * Should the file be deleted? (defaults to no)
+     */
+    public function isDelete(): bool
+    {
+        return $this->isDelete;
+    }
+
+    /**
+     * Has the file been deleted? (defaults to no)
+     */
+    public function setDidDelete(bool $didDelete): void
+    {
+        $this->didDelete = $didDelete;
+    }
+
+    /**
+     * Has the file been deleted? (defaults to no)
+     */
+    public function didDelete(): bool
+    {
+        return $this->didDelete;
     }
 }
