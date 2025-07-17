@@ -248,7 +248,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         );
     }
 
-    protected function getLogger(): LoggerInterface
+    public function getLogger(): LoggerInterface
     {
         if (!isset($this->logger)) {
             $this->logger = $this->getNewLogger();

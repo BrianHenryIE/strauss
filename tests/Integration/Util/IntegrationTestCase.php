@@ -36,13 +36,6 @@ class IntegrationTestCase extends TestCase
 
         $this->projectDir = getcwd();
 
-        $this->logger = new class extends ColorLogger {
-            public function debug($message, array $context = array())
-            {
-                // Mute debug.
-            }
-        };
-
         $this->createWorkingDir();
 
         if (file_exists($this->projectDir . '/strauss.phar')) {
@@ -84,7 +77,7 @@ class IntegrationTestCase extends TestCase
                     }
                     protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
                     {
-                        return $this->integrationTestCase->logger;
+                        return $this->integrationTestCase->getLogger();
                     }
                 };
         }
