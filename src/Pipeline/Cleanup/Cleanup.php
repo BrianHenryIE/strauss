@@ -238,6 +238,8 @@ class Cleanup
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
+
+                $package->setDidDelete(true);
             } else {
                 // TODO: log _where_ the symlink is pointing to.
                 $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
@@ -261,6 +263,8 @@ class Cleanup
                 } else {
                     unlink($symlinkPath);
                 }
+
+                $package->setDidDelete(true);
             }
             if ($this->dirIsEmpty(dirname($package->getPackageAbsolutePath()))) {
                 $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));
