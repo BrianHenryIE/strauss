@@ -152,7 +152,7 @@ class InstalledJson
             $packageName = $packageArray['name'];
             $package = $flatDependencyTree[$packageName] ?? null;
             if (!$package) {
-                $this->logger->warning('When does this happen? Package not found in flat dependency tree: ' . $packageName);
+                // Probably a dev dependency that we aren't tracking.
                 continue;
             }
 
@@ -165,7 +165,7 @@ class InstalledJson
     }
 
     /**
-     * Remove the autoload key for packages from `installed.json` whose target directory does not exist after deleting.
+     * Remove the autoload key for packages from `vendor-prefixed/composer/installed.json` whose target directory does not exist in `vendor-prefixed`.
      *
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      *
@@ -189,7 +189,7 @@ class InstalledJson
             } else {
                 $package = $flatDependencyTree[$packageName] ?? null;
                 if (!$package) {
-                    $this->logger->warning('When does this happen? Package not found in flat dependency tree: ' . $packageName);
+                    // Probably a dev dependency.
                     continue;
                 }
                 if (!$package->didCopy()) {
