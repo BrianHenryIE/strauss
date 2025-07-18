@@ -205,6 +205,10 @@ class IntegrationTestCase extends TestCase
             return;
         }
 
+        if (!$filesystem->directoryExists($dir)) {
+            return;
+        }
+
         $filesystem->deleteDirectory($dir);
     }
 
