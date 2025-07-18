@@ -261,7 +261,7 @@ class ComposerPackage
     /**
      * Should the file be deleted? (defaults to no)
      */
-    public function isDelete(): bool
+    public function isDoDelete(): bool
     {
         return $this->isDelete;
     }

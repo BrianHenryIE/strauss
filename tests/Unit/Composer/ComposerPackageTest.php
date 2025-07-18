@@ -210,7 +210,7 @@ EOD;
     }
 
     /**
-     * @covers ::isDelete
+     * @covers ::isDoDelete
      * @covers ::setDelete
      */
     public function test_is_delete(): void
@@ -219,11 +219,11 @@ EOD;
         $sut = ComposerPackage::fromFile($testFile);
 
         // Default is `false`.
-        $this->assertFalse($sut->isDelete());
+        $this->assertFalse($sut->isDoDelete());
 
         $sut->setDelete(true);
 
-        $this->assertTrue($sut->isDelete());
+        $this->assertTrue($sut->isDoDelete());
     }
 
     /**
