@@ -21,8 +21,10 @@ class File implements FileBase
 
     /**
      * Should this file be deleted from the source directory?
+     *
+     * `null` means defer to the package's `isDelete` setting.
      */
-    protected bool $doDelete = false;
+    protected ?bool $doDelete = false;
 
     /** @var DiscoveredSymbol[] */
     protected array $discoveredSymbols = [];

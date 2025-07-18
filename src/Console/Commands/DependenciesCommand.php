@@ -345,6 +345,17 @@ class DependenciesCommand extends Command
             ARRAY_FILTER_USE_KEY)
         );
 
+        foreach ($this->flatDependencyTree as $dependency) {
+            // Sort of duplicating the logic above.
+            $dependency->setCopy(
+                !in_array($dependency, $this->config->getExcludePackagesFromCopy())
+            );
+
+            if ($this->config->isDeleteVendorPackages()) {
+                $dependency->setDelete(true);
+            }
+        }
+
         // TODO: Print the dependency tree that Strauss has determined.
     }
 
@@ -410,6 +421,12 @@ class DependenciesCommand extends Command
 
         $copier->prepareTarget();
         $copier->copy();
+
+        foreach ($this->flatDependencyTree as $package) {
+            if ($package->isCopy()) {
+                $package->setDidCopy(true);
+            }
+        }
 
         $installedJson = new InstalledJson(
             $this->config,

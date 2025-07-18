@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
+use Mockery\MockInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -151,8 +152,12 @@ EOD;
             new NullLogger()
         );
 
+        /** @var ComposerPackage|MockInterface $composerPackageMock */
+        $composerPackageMock = Mockery::mock(ComposerPackage::class);
+        $composerPackageMock->expects('didDelete')->once()->andReturnFalse();
+
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
-        $flatDependencyTree = ['psr/container'=> Mockery::mock(ComposerPackage::class)];
+        $flatDependencyTree = ['psr/container'=> $composerPackageMock];
 
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
@@ -197,8 +202,12 @@ EOD;
             new NullLogger()
         );
 
+        /** @var ComposerPackage|MockInterface $composerPackageMock */
+        $composerPackageMock = Mockery::mock(ComposerPackage::class);
+        $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
+
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
-        $flatDependencyTree = ['psr/container'=> Mockery::mock(ComposerPackage::class)];
+        $flatDependencyTree = ['psr/container'=> $composerPackageMock];
 
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
@@ -289,8 +298,12 @@ EOD;
             new NullLogger()
         );
 
+        /** @var ComposerPackage|MockInterface $composerPackageMock */
+        $composerPackageMock = Mockery::mock(ComposerPackage::class);
+        $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
+
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
-        $flatDependencyTree = ['psr/log'=> Mockery::mock(ComposerPackage::class)];
+        $flatDependencyTree = ['psr/log'=> $composerPackageMock];
 
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->andReturn('vendor/psr/log/src/AbstractLogger.php');

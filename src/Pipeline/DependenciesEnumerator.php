@@ -106,7 +106,7 @@ class DependenciesEnumerator
             } else {
                 // Some packages download with NO `composer.json`! E.g. woocommerce/action-scheduler.
                 // Some packages download to a different directory than the package name.
-                $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock');
+                $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock: ' . $packageComposerFile);
 
                 // TODO: These (.json, .lock) should be read once and reused.
                 $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . Factory::getComposerFile());

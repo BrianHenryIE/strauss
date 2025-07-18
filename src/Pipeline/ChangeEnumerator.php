@@ -2,7 +2,7 @@
 /**
  * Determine the replacements to be made to the discovered symbols.
  *
- * Typically this will just be a prefix, but more complex rules allow for replacements specific to individual symbols/namespaces.
+ * Typically, this will just be a prefix, but more complex rules allow for replacements specific to individual symbols/namespaces.
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
