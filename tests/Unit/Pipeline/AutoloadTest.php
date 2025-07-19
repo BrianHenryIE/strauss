@@ -16,17 +16,6 @@ use Psr\Log\Test\TestLogger;
  */
 class AutoloadTest extends TestCase
 {
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-        /** @var FilesystemRegistry $registry */
-        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-
-        $registry->unregister('mem');
-    }
-
     /**
      * @covers ::generateClassmap
      */
