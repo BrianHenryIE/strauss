@@ -194,6 +194,34 @@ class DependenciesCommand extends Command
             : new ConsoleLogger($output, $logLevel);
     }
 
+    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
+    {
+        $normalizer = new WhitespacePathNormalizer();
+        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+
+        $pathPrefixer = new PathPrefixer('mem://', '/');
+
+        $this->filesystem =
+            new FileSystem(
+                new ReadOnlyFileSystem(
+                    $this->filesystem->getAdapter(),
+                ),
+                [],
+                $normalizer,
+                $pathPrefixer
+            );
+
+        /**
+         * Register a file stream mem:// to handle file operations by third party libraries.
+         *
+         * @var FilesystemRegistry $registry
+         */
+        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+        $registry->register('mem', $this->filesystem);
+
+        return $filesystem;
+    }
+
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
@@ -217,28 +245,7 @@ class DependenciesCommand extends Command
             $this->updateConfigFromCli($input);
 
             if ($this->config->isDryRun()) {
-                $normalizer = new WhitespacePathNormalizer();
-                $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
-
-                $pathPrefixer = new PathPrefixer('mem://', '/');
-
-                $this->filesystem =
-                    new FileSystem(
-                        new ReadOnlyFileSystem(
-                            $this->filesystem->getAdapter(),
-                        ),
-                        [],
-                        $normalizer,
-                        $pathPrefixer
-                    );
-
-                /**
-                 * Register a file stream mem:// to handle file operations by third party libraries.
-                 *
-                 * @var FilesystemRegistry $registry
-                 */
-                $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-                $registry->register('mem', $this->filesystem);
+                $this->filesystem = $this->getReadOnlyFileSystem($this->filesystem);
 
                 $this->setLogger($this->getLogger($input, $output));
             }

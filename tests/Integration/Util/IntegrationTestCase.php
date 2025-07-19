@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration\Util;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -68,6 +69,7 @@ class IntegrationTestCase extends TestCase
             default:
                 $strauss = new class($this) extends DependenciesCommand {
                     protected IntegrationTestCase $integrationTestCase;
+
                     public function __construct(
                         IntegrationTestCase $integrationTestCase,
                         ?string $name = null
@@ -75,9 +77,15 @@ class IntegrationTestCase extends TestCase
                         $this->integrationTestCase = $integrationTestCase;
                         parent::__construct($name);
                     }
+
                     protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
                     {
                         return $this->integrationTestCase->getLogger();
+                    }
+
+                    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
+                    {
+                        return $this->integrationTestCase->getReadOnlyFileSystem($filesystem);
                     }
                 };
         }
