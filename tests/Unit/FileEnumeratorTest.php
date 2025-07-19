@@ -28,7 +28,7 @@ class FileEnumeratorTest extends TestCase
     public function test_file_does_not_exist()
     {
         $config = Mockery::mock(FileEnumeratorConfig::class);
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getReadOnlyFileSystem($this->getSymlinkProtectFilesystem());
         $logger = $this->getLogger();
 
         $sut = new FileEnumerator($config, $filesystem, $logger);

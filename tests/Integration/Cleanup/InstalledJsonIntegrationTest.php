@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson

@@ -15,6 +15,7 @@ use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
 
 /**
@@ -33,34 +34,41 @@ class LicenserTest extends TestCase
 
         $dependencies = array();
 
-        $dependency = $this->createStub(ComposerPackage::class);
-        $dependency->method('getRelativePath')->willReturn('developer-name/project-name/');
-        $dependency->method('getPackageAbsolutePath')->willReturn(__DIR__.'/vendor/developer-name/project-name/');
+        $packagePath = __DIR__.'/vendor/developer-name/project-name/';
+
+        $dependency = Mockery::mock(ComposerPackage::class);
+        $dependency->expects('getPackageName')->andReturn('developer-name/project-name');
+        $dependency->expects('getPackageAbsolutePath')->andReturn($packagePath);
         $dependencies[] = $dependency;
 
         $filesystemMock = Mockery::mock(FileSystem::class);
 
         $file = Mockery::mock(FileAttributes::class);
         $file->expects('path')->andReturn(__DIR__.'/vendor/developer-name/project-name/license.md');
-        $file->expects('isFile')->andReturn(true);
+//        $file->expects('isFile')->andReturn(true);
 
         $fileWithLicenseInPath = Mockery::mock(FileAttributes::class);
         $fileWithLicenseInPath->expects('path')->andReturn(__DIR__.'/vendor/developer-name/license-path/other-file.md');
-        $fileWithLicenseInPath->expects('isFile')->andReturn(true);
+//        $fileWithLicenseInPath->expects('isFile')->andReturn(true);
 
-        $directory = Mockery::mock(DirectoryAttributes::class);
-        $directory->expects('isFile')->andReturn(false);
-        // directories should be skipped before accessing path
-        $directory->shouldNotReceive('path');
+//        $directory = Mockery::mock(DirectoryAttributes::class);
+//        $directory->expects('isFile')->andReturn(false);
+//        // directories should be skipped before accessing path
+//        $directory->shouldNotReceive('path');
 
         $finderArrayIterator = new ArrayIterator(array(
             $file,
             $fileWithLicenseInPath,
-            $directory,
         ));
-        $directoryListing = new DirectoryListing($finderArrayIterator);
 
-        $filesystemMock->expects('listContents')->andReturn($directoryListing);
+        $directoryListingMock = Mockery::mock(DirectoryListing::class);
+        $directoryListingMock->expects('filter')->andReturn($directoryListingMock);
+        $directoryListingMock->expects('getIterator')->andReturn($finderArrayIterator);
+
+        $normalizer = new WhitespacePathNormalizer();
+        $normalizedPath = $normalizer->normalizePath($packagePath);
+        $filesystemMock->expects('normalize')->with($packagePath)->once()->andReturn($normalizedPath);
+        $filesystemMock->expects('listContents')->with($normalizedPath, true)->once()->andReturn($directoryListingMock);
 
         $sut = new Licenser($config, $dependencies, 'BrianHenryIE', $filesystemMock);
 

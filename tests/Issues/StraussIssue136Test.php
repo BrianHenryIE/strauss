@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -51,7 +51,7 @@ class Whatever {
 
 	public function execute(): void {
 		$var = new \Symfony\Component\VarDumper\VarDumper();
-	} 
+	}
 }
 EOD;
 
@@ -64,7 +64,7 @@ class Whatever {
 
 	public function execute(): void {
 		$var = new \Symfony\Component\VarDumper\VarDumper();
-	} 
+	}
 }
 EOD;
 

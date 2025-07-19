@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -44,7 +44,7 @@ class StraussIssue34Test extends IntegrationTestCase
 }
 EOD;
         $phpFileJsonString = <<<'EOD'
-<?php 
+<?php
 
 namespace My_Namespace\My_Project;
 
