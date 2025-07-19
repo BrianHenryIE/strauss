@@ -93,6 +93,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
     /**
      * TODO: If a symlinked file is "deleted", keep a record of it and prevent any future access to it.
+     * TODO: If a symlinked directory is "deleted" forbid access to any files inside it.
      *
      * @var array<string, string> Array of flysystem relative paths : flysystem relative paths.
      */
