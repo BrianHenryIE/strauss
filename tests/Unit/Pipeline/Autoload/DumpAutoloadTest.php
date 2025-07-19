@@ -19,7 +19,9 @@ use Psr\Log\NullLogger;
 class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
 {
     /**
+     * @covers ::__construct
      * @covers ::generatedPrefixedAutoloader
+     * @covers ::generatedMainAutoloader
      */
     public function testGeneratedPrefixedAutoloader():void
     {
