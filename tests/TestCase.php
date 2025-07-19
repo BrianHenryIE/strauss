@@ -299,7 +299,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $logger->pushProcessor(
             new RelativeFilepathLogProcessor(
                 $this->getReadOnlyFileSystem(
-                    $this->getFilesystem()
+                    $this->getSymlinkProtectFilesystem()
                 )
             )
         );
@@ -307,8 +307,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $logger;
     }
 
-    protected function getFilesystem(): FileSystem
+    protected FileSystem $symlinkProtectFilesystem;
+
+    protected function getSymlinkProtectFilesystem(): FileSystem
     {
+        if (isset($this->symlinkProtectFilesystem)) {
+            return $this->symlinkProtectFilesystem;
+        }
 
         $localFilesystemLocation = PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
 
@@ -320,7 +325,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             $this->getTestLogger()
         );
 
-        $filesystem = new Filesystem(
+        $this->symlinkProtectFilesystem = new Filesystem(
             $symlinkProtectFilesystemAdapter,
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
@@ -329,7 +334,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             $pathPrefixer
         );
 
-        return $filesystem;
+        return $this->symlinkProtectFilesystem;
     }
 
     protected function getTestLogger(): TestLogger
