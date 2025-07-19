@@ -35,7 +35,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
         $sut = new SymlinkProtectFilesystemAdapter(
             null,
             null,
-            $this->logger
+            $this->getLogger()
         );
 
         $this->filesystem = new \League\Flysystem\FileSystem($sut);
@@ -60,7 +60,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
     {
         $this->filesystem->deleteDirectory($this->testsWorkingDir . 'fakedir');
 
-        $this->assertTrue($this->logger->hasNoticeRecords());
+        $this->assertTrue($this->getTestLogger()->hasNoticeRecords());
 
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . '/fakedir');
     }
@@ -74,7 +74,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
     {
         $this->filesystem->deleteDirectory($this->testsWorkingDir . 'fakedir/subdir');
 
-        $this->assertTrue($this->logger->hasErrorRecords());
+        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
 
         $this->assertDirectoryExists($this->testsWorkingDir . '/fakedir');
     }
@@ -89,7 +89,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
     {
         $this->filesystem->delete($this->testsWorkingDir . 'fakedir/file.txt');
 
-        $this->assertTrue($this->logger->hasErrorRecords());
+        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
 
         $this->assertFileExists($this->testsWorkingDir . '/realdir/file.txt');
         $this->assertFileExists($this->testsWorkingDir . '/fakedir/file.txt');
@@ -105,7 +105,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
     {
         $this->filesystem->write($this->testsWorkingDir . 'fakedir/file2.txt', 'test');
 
-        $this->assertTrue($this->logger->hasWarningRecords());
+        $this->assertTrue($this->getTestLogger()->hasWarningRecords());
 
         $this->assertFileDoesNotExist($this->testsWorkingDir . '/realdir/file2.txt');
         $this->assertFileDoesNotExist($this->testsWorkingDir . '/fakedir/file2.txt');

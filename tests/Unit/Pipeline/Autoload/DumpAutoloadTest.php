@@ -50,8 +50,6 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $filesystem->write('project/vendor-prefixed/composer/installed.json', json_encode([]));
         $filesystem->write('project/vendor-prefixed/composer/ClassLoader.php', '<?php');
 
-        $logger = new ColorLogger();
-
         $prefixer = Mockery::mock(Prefixer::class);
 
         $projectFiles = Mockery::mock(DiscoveredFiles::class);
@@ -68,7 +66,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $composerAutoloadGeneratorFactory->expects('get')->once()->andReturn($composerAutoloadGenerator);
         $composerAutoloadGenerator->expects('dump')->once();
 
-        $sut = new DumpAutoload($config, $filesystem, $logger, $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory);
+        $sut = new DumpAutoload($config, $filesystem, $this->getLogger(), $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory);
 
         $sut->generatedPrefixedAutoloader();
 
