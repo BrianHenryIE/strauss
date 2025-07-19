@@ -195,10 +195,14 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $filesystem;
     }
 
-    public function getReadOnlyFileSystem(FileSystem $filesystem)
+    public function getReadOnlyFileSystem(?FileSystem $filesystem = null)
     {
         if (isset($this->readOnlyFileSystem)) {
             return $this->readOnlyFileSystem;
+        }
+
+        if (is_null($filesystem)) {
+            $filesystem = $this->getSymlinkProtectFilesystem();
         }
 
         $normalizer = new WhitespacePathNormalizer();

@@ -38,7 +38,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('project/vendor/');
 
         /** @var FileSystem $filesystem */
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getReadOnlyFileSystem($this->getSymlinkProtectFilesystem());
         $filesystem->createDirectory('project/vendor-prefixed');
 
         $filesystem->write('project/composer.json', json_encode([
