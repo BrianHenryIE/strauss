@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -26,7 +26,7 @@ class StraussIssue188Test extends IntegrationTestCase
   "extra": {
     "strauss": {
       "namespace_prefix": "Company\\PluginFramework\\"
-    }   
+    }
   }
 }
 EOD;
@@ -69,7 +69,7 @@ EOD;
         }
       },
       "namespace_prefix": "Company\\PluginFramework\\"
-    }   
+    }
   }
 }
 EOD;

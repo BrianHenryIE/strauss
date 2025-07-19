@@ -5,12 +5,9 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use BrianHenryIE\Strauss\Helpers\PathPrefixer;
-use Psr\Log\Test\TestLogger;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use League\Flysystem\Filesystem as FlysystemFilesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter

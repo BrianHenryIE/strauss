@@ -9,7 +9,7 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Symfony\Component\Console\Input\InputInterface;

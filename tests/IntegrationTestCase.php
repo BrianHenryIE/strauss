@@ -5,13 +5,11 @@
  * Could just system temp directory, but this is useful for setting breakpoints and seeing what has happened.
  */
 
-namespace BrianHenryIE\Strauss\Tests\Integration\Util;
+namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
