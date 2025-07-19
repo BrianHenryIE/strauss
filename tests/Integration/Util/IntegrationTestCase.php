@@ -78,9 +78,11 @@ class IntegrationTestCase extends TestCase
                         parent::__construct($name);
                     }
 
-                    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+                    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
                     {
-                        return $this->integrationTestCase->getLogger();
+                        return method_exists($this->integrationTestCase, 'getIOLogger')
+                            ? $this->integrationTestCase->getIOLogger($input, $output)
+                            : $this->integrationTestCase->getLogger();
                     }
 
                     protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem

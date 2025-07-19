@@ -169,7 +169,7 @@ class DependenciesCommand extends Command
      * @param InputInterface $input The command line input to check for `--debug`, `--silent` etc.
      * @param OutputInterface $output The Symfony object that actually prints the messages.
      */
-    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         $isDryRun = isset($this->config) && $this->config->isDryRun();
 
@@ -232,7 +232,7 @@ class DependenciesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->setLogger($this->getLogger($input, $output));
+        $this->setLogger($this->getIOLogger($input, $output));
 
         $workingDir       = getcwd() . '/';
         $this->workingDir = $workingDir;
@@ -247,13 +247,13 @@ class DependenciesCommand extends Command
             if ($this->config->isDryRun()) {
                 $this->filesystem = $this->getReadOnlyFileSystem($this->filesystem);
 
-                $this->setLogger($this->getLogger($input, $output));
+                $this->setLogger($this->getIOLogger($input, $output));
             }
 
             $logger = new Logger('logger');
             $logger->pushProcessor(new PsrLogMessageProcessor());
             $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
-            $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
+            $logger->pushHandler(new PsrHandler($this->getIOLogger($input, $output)));
             $this->setLogger($logger);
 
             $this->buildDependencyList();
