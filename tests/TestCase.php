@@ -41,6 +41,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected PathNormalizer $pathNormalizer;
 
+    protected FileSystem $symlinkProtectFilesystem;
+
+    protected FileSystem $readOnlyFileSystem;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -226,8 +230,6 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $filesystem;
     }
 
-    protected FileSystem $readOnlyFileSystem;
-
     public function getReadOnlyFileSystem(FileSystem $filesystem)
     {
         if (isset($this->readOnlyFileSystem)) {
@@ -306,8 +308,6 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $logger->pushHandler(new PsrHandler($this->getTestLogger()));
         return $logger;
     }
-
-    protected FileSystem $symlinkProtectFilesystem;
 
     protected function getSymlinkProtectFilesystem(): FileSystem
     {
