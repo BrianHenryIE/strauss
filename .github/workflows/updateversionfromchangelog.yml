@@ -7,7 +7,7 @@ on:
     branches:
       - master
     paths:
-      - 'CHANGELOG.md'
+      - "CHANGELOG.md"
 
 concurrency:
   # Cancel previous runs of this workflow if they are testing the same branch
@@ -16,22 +16,31 @@ concurrency:
 
 jobs:
   update-version:
+    name: "Create Strauss phar on new release"
     runs-on: ubuntu-latest
-    name: Create Strauss phar on new release
+    permissions:
+      contents: write
     steps:
-      - name: Git checkout
-        uses: actions/checkout@v2
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
         with:
           ref: master
 
-      - name: "Edit `strauss/bin/strauss` to update the version number"
+      - name: "Update version number in `bin/strauss`"
         run: |
-          CURRENT_RELEASE=$(cat CHANGELOG.md | grep --max-count=1 -o '##.*' | awk '{print $2}')
-          find bin -name 'strauss' -exec sed -i "s/}, '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*');/}, '$CURRENT_RELEASE');/" {} +
+          CURRENT_RELEASE="$(sed -n -e '0,/^## \([0-9.]\+\).*$/ s//\1/p' CHANGELOG.md)"
+          test -n "${CURRENT_RELEASE}"
+          sed -i -e "s/^}, '[0-9.]\\+');\$/}, '${CURRENT_RELEASE}');/" bin/strauss
 
-      - name: Commit updated README.md
-        uses: stefanzweifel/git-auto-commit-action@v4.1.1
-        with:
-          branch: master
-          file_pattern: "bin/strauss"
-          commit_message: "🤖 Update version number in bin"
+      - name: "Commit `bin/strauss` changes"
+        run: |
+          if git diff --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "${{ github.actor }}"
+          # https://api.github.com/users/github-actions%5Bbot%5D
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- bin/strauss
+          git commit -m "🤖 Update version number in bin"
+          git push
