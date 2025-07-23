@@ -78,7 +78,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpStringAfter = file_get_contents($this->testsWorkingDir . '/src/whatever.php');
 

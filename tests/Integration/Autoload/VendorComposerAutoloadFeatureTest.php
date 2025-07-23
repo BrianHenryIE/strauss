@@ -38,7 +38,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
 
@@ -71,7 +71,7 @@ EOD;
         exec('composer install --no-dev');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
 
@@ -103,16 +103,16 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output, '--debug');
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $exitCode = $this->runStrauss($output, 'include-autoloader');
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $exitCode = $this->runStrauss($output, 'include-autoloader');
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $exitCode = $this->runStrauss($output, 'include-autoloader');
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
 
@@ -148,13 +148,13 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output, 'include-autoloader');
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $exitCode = $this->runStrauss($output, 'include-autoloader');
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $exitCode = $this->runStrauss($output, 'include-autoloader');
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
 
@@ -191,7 +191,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
 
@@ -232,7 +232,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
 
@@ -273,7 +273,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
 

@@ -49,7 +49,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $autoloadPhpString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
 
@@ -95,7 +95,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $autoloadAliasesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
 
@@ -128,7 +128,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $autoloadAliasesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
 
@@ -161,7 +161,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $autoloadAliasesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
 

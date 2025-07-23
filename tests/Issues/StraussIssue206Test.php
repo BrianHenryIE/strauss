@@ -40,7 +40,7 @@ EOD;
 
         exec('composer install');
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $installedJsonString = file_get_contents($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
         $this->assertStringContainsString('dataGet', $installedJsonString);

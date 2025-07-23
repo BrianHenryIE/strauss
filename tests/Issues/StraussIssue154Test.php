@@ -43,7 +43,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Latte/Loaders/FileLoader.php');
 
@@ -85,7 +85,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Latte/Loaders/FileLoader.php');
 
@@ -127,7 +127,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Latte/Macros/BlockMacros.php');
 
@@ -169,7 +169,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Latte/Macros/BlockMacros.php');
 
@@ -212,7 +212,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/compatibility.php');
 
@@ -254,7 +254,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/compatibility.php');
 
@@ -295,7 +295,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Latte/Macros/MacroSet.php');
 
@@ -334,7 +334,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Latte/Macros/MacroSet.php');
 
@@ -373,7 +373,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Latte/Runtime/Filters.php');
 
@@ -412,7 +412,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Tools/Linter.php');
 
@@ -451,7 +451,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Tools/Linter.php');
 
@@ -489,7 +489,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/latte/latte/src/Bridges/Tracy/BlueScreenPanel.php');
 

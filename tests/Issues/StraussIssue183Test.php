@@ -61,7 +61,7 @@ EOD;
         );
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         // `2>&1` redirect stderr to stdout
         exec('composer dump-autoload 2>&1', $output, $result_code);
@@ -103,7 +103,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         // Directive 'allow_url_include' is deprecated
 
