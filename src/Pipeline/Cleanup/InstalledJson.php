@@ -97,7 +97,7 @@ class InstalledJson
      * @param InstalledJsonArray $installedJsonArray
      * @param array<string,ComposerPackage> $flatDependencyTree
      */
-    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree): array
+    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree, string $path): array
     {
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
@@ -109,19 +109,19 @@ class InstalledJson
             $this->logger->info('Checking package: ' . $package['name']);
 
             // `composer/` is here because the install-path is relative to the `vendor/composer` directory.
-            $packageDir = $this->config->getVendorDirectory() . 'composer/' . $package['install-path'] . '/';
+            $packageDir = $path . 'composer/' . $package['install-path'] . '/';
             if (!$this->filesystem->directoryExists($packageDir)) {
-                $this->logger->debug('Original package directory does not exist at : ' . $packageDir);
+                $this->logger->debug('Package directory does not exist at : ' . $packageDir);
 
-                $newInstallPath = $this->config->getTargetDirectory() . str_replace('../', '', $package['install-path']);
+                $newInstallPath = $path . str_replace('../', '', $package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
-                    $this->logger->warning('Target package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
+                    $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
                     continue;
                 }
 
                 $newRelativePath = $this->filesystem->getRelativePath(
-                    $this->config->getVendorDirectory() . 'composer/',
+                    $path . 'composer/',
                     $newInstallPath
                 );
 
@@ -419,7 +419,7 @@ class InstalledJson
 
         $this->logger->debug('Installed.json before: ' . json_encode($installedJsonArray));
 
-        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
+        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getTargetDirectory());
 
         $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getTargetDirectory());
 
@@ -472,7 +472,7 @@ class InstalledJson
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson($installedJsonArray, $flatDependencyTree);
 
-        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
+        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getVendorDirectory());
 
         // Only relevant when source = target.
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);

@@ -54,7 +54,7 @@ EOD;
         $vendorPrefixedInstalledJsonString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString("Company\\\\Project\\\\WP_Forge\\\\Helpers\\\\", $vendorPrefixedInstalledJsonString);
 
-        $this->assertStringContainsString('"install-path": "../../vendor-prefixed/wp-forge/helpers/"', $vendorPrefixedInstalledJsonString);
+        $this->assertStringContainsString('"install-path": "../wp-forge/helpers"', $vendorPrefixedInstalledJsonString);
 
         $vendorAutoloadFilesString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
         $this->assertStringNotContainsString("/wp-forge/helpers/includes/functions.php", $vendorAutoloadFilesString);
