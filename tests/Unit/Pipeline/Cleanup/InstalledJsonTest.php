@@ -70,6 +70,7 @@ EOD;
 
     /**
      * @covers ::cleanupVendorInstalledJson
+     * @covers ::removeMissingAutoloadKeyPaths
      * @covers ::updateNamespaces
      */
     public function test_updates_path(): void
@@ -141,6 +142,7 @@ EOD;
         $fileSystem->write('vendor/composer/installed.json', $installedJson);
         $fileSystem->write('vendor-prefixed/psr/container/src/ContainerInterface.php', '<?php namespace Psr\Container;');
         $fileSystem->createDirectory('vendor/psr/container');
+        $fileSystem->createDirectory('vendor/psr/container/src');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');

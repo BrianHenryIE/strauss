@@ -133,6 +133,77 @@ class InstalledJson
         return $installedJsonArray;
     }
 
+    /**
+     * Remove autoload key entries from `installed.json` whose file or directory does not exist after deleting.
+     */
+    protected function removeMissingAutoloadKeyPaths(array $installedJsonArray, string $vendorDir): array
+    {
+        foreach ($installedJsonArray['packages'] as $packageIndex => $packageArray) {
+            $path = $vendorDir . 'composer/' . $packageArray['install-path'];
+            $pathExists = $this->filesystem->directoryExists($path);
+            // delete_vendor_packages
+            if (!$pathExists) {
+                $this->logger->info('Removing package autoload key from installed.json: ' . $packageArray['name']);
+                $installedJsonArray['packages'][$packageIndex]['autoload'] = [];
+            }
+            // delete_vendor_files
+            foreach ($installedJsonArray['packages'][$packageIndex]['autoload'] as $type => $autoload) {
+                $pathExistsInPackage = function (string $vendorDir, array $packageArray, string $relativePath) {
+                    return $this->filesystem->exists(
+                        $vendorDir . 'composer/' . $packageArray['install-path'] . '/' . $relativePath
+                    );
+                };
+
+                switch ($type) {
+                    case 'files':
+                    case 'classmap':
+                        $installedJsonArray['packages'][$packageIndex]['autoload'][$type] = array_filter(
+                            $installedJsonArray['packages'][$packageIndex]['autoload'][$type],
+                            fn(string $relativePath) => $pathExistsInPackage($vendorDir, $packageArray, $relativePath)
+                        );
+                        break;
+                    case 'psr-0':
+                    case 'psr-4':
+                        foreach ($autoload as $namespace => $paths) {
+                            switch (true) {
+                                case is_array($paths):
+                                    // e.g. [ 'psr-4' => [ 'BrianHenryIE\Project' => ['src','lib] ] ]
+                                    $validPaths = [];
+                                    foreach ($paths as $path) {
+                                        if ($pathExistsInPackage($vendorDir, $packageArray, $path)) {
+                                            $validPaths[] = $path;
+                                        } else {
+                                            $this->logger->debug('Removing non-existent path from autoload: ' . $path);
+                                        }
+                                    }
+                                    if (!empty($validPaths)) {
+                                        $installedJsonArray['packages'][$packageIndex]['autoload'][$type][$namespace] = $validPaths;
+                                    } else {
+                                        $this->logger->debug('Removing autoload key: ' . $type);
+                                        unset($installedJsonArray['packages'][$packageIndex]['autoload'][$type][$namespace]);
+                                    }
+                                    break;
+                                case is_string($paths):
+                                    // e.g. [ 'psr-4' => [ 'BrianHenryIE\Project' => 'src' ] ]
+                                    if (!$pathExistsInPackage($vendorDir, $packageArray, $paths)) {
+                                        $this->logger->debug('Removing autoload key: ' . $type . ' for ' . $paths);
+                                        unset($installedJsonArray['packages'][$packageIndex]['autoload'][$type][$namespace]);
+                                    }
+                                    break;
+                                default:
+                                    $this->logger->warning('Unexpectedly got neither a string nor array for autoload key in installed.json: ' . $type . ' ' . json_encode($paths));
+                                    break;
+                            }
+                        }
+                        break;
+                    default:
+                        $this->logger->warning('Unexpected autoload type in installed.json: ' . $type);
+                        break;
+                }
+            }
+        }
+        return $installedJsonArray;
+    }
 
     /**
      * Remove the autoload key for packages from `installed.json` whose target directory does not exist after deleting.
@@ -394,6 +465,8 @@ class InstalledJson
          * @var InstalledJsonArray $installedJsonArray
          */
         $installedJsonArray = $vendorInstalledJsonFile->read();
+
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getVendorDirectory());
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson($installedJsonArray, $flatDependencyTree);
 
