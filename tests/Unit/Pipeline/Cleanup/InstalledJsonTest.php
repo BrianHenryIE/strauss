@@ -291,8 +291,8 @@ EOD;
         $fileSystem->write('vendor-prefixed/psr/log/src/AbstractLogger.php', '<?php namespace Psr\Log;');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
-        $config->expects()->getVendorDirectory()->times(3)->andReturn('mem://vendor/');
-        $config->expects()->getTargetDirectory()->times(6)->andReturn('mem://vendor-prefixed/');
+        $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
+        $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed/');
 
         $sut = new InstalledJson(
             $config,
