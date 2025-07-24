@@ -7,6 +7,7 @@ namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -51,11 +52,11 @@ class Cleanup
      * Maybe delete the source files that were copied (depending on config),
      * then delete empty directories.
      *
-     * @param File[] $files
+     * @param array<string,ComposerPackage> $flatDependencyTree
      *
      * @throws FilesystemException
      */
-    public function deleteFiles(array $files): void
+    public function deleteFiles(array $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
             $this->logger->info('No cleanup required.');
@@ -65,12 +66,14 @@ class Cleanup
         $this->logger->info('Beginning cleanup.');
 
         if ($this->isDeleteVendorPackages) {
-            $this->doIsDeleteVendorPackages($files);
-        } elseif ($this->isDeleteVendorFiles) {
-            $this->doIsDeleteVendorFiles($files);
+            $this->doIsDeleteVendorPackages($flatDependencyTree, $discoveredFiles);
         }
 
-        $this->deleteEmptyDirectories($files);
+        if ($this->isDeleteVendorFiles) {
+            $this->doIsDeleteVendorFiles($discoveredFiles->getFiles());
+        }
+
+        $this->deleteEmptyDirectories($discoveredFiles->getFiles());
     }
 
     /** @param array<string,ComposerPackage> $flatDependencyTree */
@@ -218,26 +221,35 @@ class Cleanup
     }
 
     /**
-     * @param array<File> $files
      */
-    protected function doIsDeleteVendorPackages(array $files)
+    protected function doIsDeleteVendorPackages(array $flatDependencyTree, DiscoveredFiles $discoveredFiles)
     {
         $this->logger->info('Deleting original vendor packages.');
 
-        $packages = [];
-        foreach ($files as $file) {
-            if ($file instanceof FileWithDependency) {
-                $packages[ $file->getDependency()->getPackageName() ] = $file->getDependency();
-            }
-        }
+//        if ($this->isDeleteVendorPackages) {
+//            foreach ($flatDependencyTree as $packageName => $package) {
+//                if ($package->isDoDelete()) {
+//                    $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
+//                    $package->setDidDelete(true);
+////                $files = $package->getFiles();
+////                foreach($files as $file){
+////                    $file->setDidDelete(true);
+////                }
+//                }
+//            }
+//        }
+
+        $files = $discoveredFiles->getFiles();
 
         /** @var ComposerPackage $package */
-        foreach ($packages as $package) {
+        foreach ($flatDependencyTree as $packageName => $package) {
             // Normal package.
             if ($this->filesystem->isSubDirOf($this->config->getVendorDirectory(), $package->getPackageAbsolutePath())) {
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
+
+                $package->setDidDelete(true);
             } else {
                 // TODO: log _where_ the symlink is pointing to.
                 $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
@@ -261,6 +273,8 @@ class Cleanup
                 } else {
                     unlink($symlinkPath);
                 }
+
+                $package->setDidDelete(true);
             }
             if ($this->dirIsEmpty(dirname($package->getPackageAbsolutePath()))) {
                 $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));

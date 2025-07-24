@@ -174,4 +174,72 @@ EOD;
     {
         $this->markTestIncomplete();
     }
+
+    /**
+     * @covers ::isCopy
+     * @covers ::setCopy
+     */
+    public function test_is_copy(): void
+    {
+        $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
+        $sut = ComposerPackage::fromFile($testFile);
+
+        // Default is `true`.
+        $this->assertTrue($sut->isCopy());
+
+        $sut->setCopy(false);
+
+        $this->assertFalse($sut->isCopy());
+    }
+
+    /**
+     * @covers ::didCopy
+     * @covers ::setDidCopy
+     */
+    public function test_did_copy(): void
+    {
+        $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
+        $sut = ComposerPackage::fromFile($testFile);
+
+        // Default is `false`.
+        $this->assertFalse($sut->didCopy());
+
+        $sut->setDidCopy(true);
+
+        $this->assertTrue($sut->didCopy());
+    }
+
+    /**
+     * @covers ::isDoDelete
+     * @covers ::setDelete
+     */
+    public function test_is_delete(): void
+    {
+        $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
+        $sut = ComposerPackage::fromFile($testFile);
+
+        // Default is `false`.
+        $this->assertFalse($sut->isDoDelete());
+
+        $sut->setDelete(true);
+
+        $this->assertTrue($sut->isDoDelete());
+    }
+
+    /**
+     * @covers ::didDelete
+     * @covers ::setDidDelete
+     */
+    public function test_did_delete(): void
+    {
+        $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
+        $sut = ComposerPackage::fromFile($testFile);
+
+        // Default is `false`.
+        $this->assertFalse($sut->didDelete());
+
+        $sut->setDidDelete(true);
+
+        $this->assertTrue($sut->didDelete());
+    }
 }

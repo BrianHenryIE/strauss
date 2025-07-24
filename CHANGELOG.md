@@ -1,9 +1,13 @@
 # Change Log
 
+## 0.24.1 July 2025
+
+* Fix: inadvertently removing autoload keys from `installed.json` when `target_directory` is not `vendor-prefixed`
+
 ## 0.24.0 July 2025
 
 * Add: `functions_prefix` string|false config option
-* Fix: Don't use the root composer.json's autoload key when generating the vendor-prefixed autoloader
+* Fix: Don't use the root `composer.json`'s autoload key when generating the `vendor-prefixed` autoloader
 
 ## 0.23.0 July 2025
 

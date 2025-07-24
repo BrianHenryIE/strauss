@@ -43,7 +43,7 @@ EOD;
         assert(file_exists($this->testsWorkingDir. 'vendor/psr/log/Psr/Log/LogLevel.php'));
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         self::assertFileDoesNotExist($this->testsWorkingDir. 'vendor/psr/log/Psr/Log/LogLevel.php');
     }

@@ -38,7 +38,7 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
         assert(is_dir($relative_symlinked_package_dir));
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $this->assertFileExists($main_package_dir . 'vendor_prefixed/strauss-test/symlinked-package/src/File.php');
 

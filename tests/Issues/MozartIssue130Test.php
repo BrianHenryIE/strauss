@@ -62,7 +62,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         self::assertFileExists($this->testsWorkingDir .'strauss/htmlburger/carbon-fields/config.php');
     }

@@ -90,6 +90,11 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         return null;
     }
 
+    public function exists(string $location): bool
+    {
+        return $this->fileExists($location) || $this->directoryExists($location);
+    }
+
     public function fileExists(string $location): bool
     {
         return $this->flysystem->fileExists(

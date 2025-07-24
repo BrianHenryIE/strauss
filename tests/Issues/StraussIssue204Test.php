@@ -63,7 +63,7 @@ EOD;
 
         $env = 'COMPOSER=composer-free.json';
         $exitCode = $this->runStrauss($output, '', $env);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString("Saltus\\\\WP\\\\Plugin\\\\InteractiveGlobes\\\\Psr\\\\Log\\\\", $php_string);

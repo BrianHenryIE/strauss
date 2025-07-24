@@ -80,7 +80,8 @@
             "@cs"
         ],
         "test": [
-            "phpunit"
+            "Composer\\Config::disableProcessTimeout",
+            "phpunit --stop-on-failure --order-by=random"
         ],
         "test-changes": [
             "if [ -z \"$(command -v ./tools/php-diff-test)\" ]; then echo \"Please install 'php-diff-test' with 'phive install'.\"; exit 1; fi;",

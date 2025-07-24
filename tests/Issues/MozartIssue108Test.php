@@ -63,7 +63,7 @@ EOD;
         assert(file_exists($this->testsWorkingDir . 'vendor/deliciousbrains/wp-background-processing/classes/wp-async-request.php'));
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $php_contents = file_get_contents($this->testsWorkingDir .'vendor-prefixed/deliciousbrains/wp-background-processing/classes/wp-async-request.php');
         self::assertStringContainsString('abstract class Strauss_WP_Async_Request', $php_contents);
