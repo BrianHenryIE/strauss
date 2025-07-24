@@ -10,11 +10,15 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\ServiceLocator;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\Finder;
 
 /**
  * Class IntegrationTestCase
@@ -124,7 +128,7 @@ class IntegrationTestCase extends TestCase
 
         /** @var FilesystemRegistry $registry */
         try {
-            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+            $registry = ServiceLocator::get(FilesystemRegistry::class);
             $registry->unregister('mem');
         } catch (\Exception $e) {
         }
@@ -136,10 +140,7 @@ class IntegrationTestCase extends TestCase
             return;
         }
         $filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
+            new LocalFilesystemAdapter('/'),
         );
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
