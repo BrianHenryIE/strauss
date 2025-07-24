@@ -620,7 +620,7 @@ class DependenciesCommand extends Command
         );
 
         // This will check the config to check should it delete or not.
-        $cleanup->deleteFiles($this->discoveredFiles->getFiles());
+        $cleanup->deleteFiles($this->flatDependencyTree, $this->discoveredFiles);
 
         $cleanup->cleanupVendorInstalledJson($this->flatDependencyTree, $this->discoveredSymbols);
         if ($this->config->isDeleteVendorFiles() || $this->config->isDeleteVendorPackages()) {
