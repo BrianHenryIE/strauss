@@ -10,7 +10,6 @@ use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
 use Mockery\MockInterface;
 use Psr\Log\NullLogger;
-use function PHPUnit\Framework\atLeastOnce;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson
