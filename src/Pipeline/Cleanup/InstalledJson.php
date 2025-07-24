@@ -421,6 +421,8 @@ class InstalledJson
 
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
 
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getTargetDirectory());
+
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(
             $installedJsonArray,
             $flatDependencyTree
