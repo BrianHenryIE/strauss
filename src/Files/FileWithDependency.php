@@ -26,7 +26,7 @@ class FileWithDependency extends File implements HasDependency
     {
         parent::__construct($sourceAbsolutePath);
 
-        $this->vendorRelativePath = ltrim($vendorRelativePath, '/\\');
+        $this->vendorRelativePath = $vendorRelativePath;
         $this->dependency         = $dependency;
 
         // Set this to null so we query the package's `isDelete` setting.

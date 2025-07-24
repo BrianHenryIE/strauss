@@ -20,7 +20,7 @@ on:
 
 concurrency:
   # Cancel previous runs of this workflow if they are testing the same branch
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ (github.event_name == 'pull_request' && github.head_ref) || github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -28,8 +28,8 @@ jobs:
     strategy:
       matrix:
         php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
-        os: [ubuntu-latest]
-#        os: [ubuntu-latest, windows-latest]
+#        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
       fail-fast: false
     name: PHP tests ${{ matrix.php }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -40,11 +40,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:v2, phive
+          tools: composer:v2
           extensions: fileinfo
-
-      - name: Install Phive tools
-        uses: ngmy/phive-install-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup problem matcher for PHPUnit
         run: |
@@ -57,7 +56,7 @@ jobs:
           composer --version
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --verbose
 
       - name: Run tests
         run: vendor/bin/phpunit --stop-on-failure --order-by=random
@@ -105,10 +104,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          tools: composer, cs2pr, phive
-
-      - name: Install Phive tools
-        uses: ngmy/phive-install-action@master
+          tools: composer, cs2pr
 
       - name: Debugging
         run: |

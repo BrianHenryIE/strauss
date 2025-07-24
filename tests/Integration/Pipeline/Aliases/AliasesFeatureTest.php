@@ -2,10 +2,12 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Aliases;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
+ * @see Aliases
  */
 class AliasesFeatureTest extends IntegrationTestCase
 {

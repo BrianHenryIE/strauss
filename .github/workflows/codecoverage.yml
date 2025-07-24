@@ -40,17 +40,16 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          tools: composer:v2, phive
+          tools: composer:v2
           coverage: xdebug
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout GitHub Pages branch for code coverage report
         uses: actions/checkout@v4
         with:
           ref: gh-pages
           path: tests/_reports/html
-
-      - name: Install Phive tools
-        uses: ngmy/phive-install-action@master
 
       - name: Install dependencies
         run: composer update --prefer-dist --verbose
