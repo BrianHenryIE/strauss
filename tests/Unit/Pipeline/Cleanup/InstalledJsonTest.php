@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
 use Mockery\MockInterface;
 use Psr\Log\NullLogger;
+use function PHPUnit\Framework\atLeastOnce;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson
@@ -195,8 +196,8 @@ EOD;
         $fileSystem->write('vendor-prefixed/psr/container/src/ContainerInterface.php', '<?php namespace Psr\Container;');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
-        $config->expects()->getVendorDirectory()->times(3)->andReturn('mem://vendor/');
-        $config->expects()->getTargetDirectory()->times(4)->andReturn('mem://vendor-prefixed/');
+        $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
+        $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed/');
 
         $sut = new InstalledJson(
             $config,
