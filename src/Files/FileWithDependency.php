@@ -28,6 +28,9 @@ class FileWithDependency extends File implements HasDependency
 
         $this->vendorRelativePath = $vendorRelativePath;
         $this->dependency         = $dependency;
+
+        // Set this to null so we query the package's `isDelete` setting.
+        $this->doDelete = null;
     }
 
     public function getDependency(): ComposerPackage
@@ -56,5 +59,10 @@ class FileWithDependency extends File implements HasDependency
     public function getVendorRelativePath(): string
     {
         return $this->vendorRelativePath;
+    }
+
+    public function isDoDelete(): bool
+    {
+        return $this->doDelete ?? $this->dependency->isDoDelete();
     }
 }

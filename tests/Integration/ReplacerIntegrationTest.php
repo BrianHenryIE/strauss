@@ -53,7 +53,7 @@ EOD;
         $absoluteTargetDir = $workingDir . $relativeTargetDir;
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $updatedFile = file_get_contents($absoluteTargetDir . 'google/apiclient/src/Client.php');
 
@@ -86,7 +86,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $updatedFile = file_get_contents($this->testsWorkingDir .'vendor-prefixed/' . 'setasign/fpdf/fpdf.php');
 
@@ -121,7 +121,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $updatedFile = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/class-logger.php');
 
@@ -156,7 +156,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $updatedFile = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/class-logger.php');
 
@@ -191,7 +191,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $updatedFile = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/api/class-api.php');
 

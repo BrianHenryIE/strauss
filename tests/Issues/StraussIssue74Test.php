@@ -42,7 +42,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/illuminate/support/helpers.php');
 
@@ -79,7 +79,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/twig/twig/src/Extension/CoreExtension.php');
 

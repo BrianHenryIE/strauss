@@ -121,6 +121,11 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         return null;
     }
 
+    public function exists(string $location): bool
+    {
+        return $this->fileExists($location) || $this->directoryExists($location);
+    }
+
     /**
      *
      * /path/to/this/dir, /path/to/file.php => ../../file.php

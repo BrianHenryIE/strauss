@@ -51,7 +51,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         // vendor/aws/aws-sdk-php/src/Endpoint/UseDualstackEndpoint/Configuration.php
 

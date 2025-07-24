@@ -64,7 +64,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output, '--debug');
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         self::assertFileExists($this->testsWorkingDir . 'strauss/php-di/php-di/src/functions.php');
     }

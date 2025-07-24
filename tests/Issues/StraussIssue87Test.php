@@ -48,7 +48,7 @@ EOD;
         $autoload_classmap_php_string = file_get_contents($this->testsWorkingDir . '/vendor/composer/autoload_classmap.php');
         self::assertStringContainsString("'Psr\\\\Container\\\\ContainerExceptionInterface' => \$vendorDir . '/psr/container/src/ContainerExceptionInterface.php',", $autoload_classmap_php_string);
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         exec('composer dump-autoload');
 

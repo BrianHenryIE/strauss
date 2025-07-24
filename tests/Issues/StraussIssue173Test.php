@@ -79,10 +79,10 @@ EOD;
 
         exec('composer install');
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/src/LoggerInterface.php');
         $this->assertStringContainsString("WPSoup\\Vendor\\Psr\\Log\\", $php_string);

@@ -121,6 +121,74 @@ class IntegrationTestCase extends TestCase
         $dir = $this->testsWorkingDir;
 
         $this->deleteDir($dir);
+
+        /** @var FilesystemRegistry $registry */
+        try {
+            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+            $registry->unregister('mem');
+        } catch (\Exception $e) {
+        }
+    }
+
+    protected function deleteDir($dir)
+    {
+        if (!file_exists($dir)) {
+            return;
+        }
+        $filesystem = new Filesystem(
+            new \League\Flysystem\Filesystem(
+                new LocalFilesystemAdapter('/')
+            ),
+            $this->testsWorkingDir
+        );
+
+        $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
+        $isSymlink = function ($file) use ($symfonyFilesystem) {
+            return ! is_null($symfonyFilesystem->readlink($file));
+        };
+
+        /**
+         * Delete symlinks first.
+         *
+         * @see https://github.com/thephpleague/flysystem/issues/1560
+         */
+        $finder = new Finder();
+        $finder->in($dir);
+        if ($finder->hasResults()) {
+
+            /** @var \SplFileInfo[] $files */
+            $files = iterator_to_array($finder->getIterator());
+            /** @var \SplFileInfo[] $links */
+            $links = array_filter(
+                $files,
+                function ($file) use ($isSymlink) {
+                    return $isSymlink($file->getPath());
+                }
+            );
+
+            // Sort by longest filename first.
+            uasort($links, function ($a, $b) {
+                return strlen($b->getPath()) <=> strlen($a->getPath());
+            });
+
+            foreach ($links as $link) {
+                $linkPath = "{$link->getPath()}/{$link->getFilename()}";
+                unlink($linkPath);
+                if (is_readable($linkPath)) {
+                    rmdir($linkPath);
+                }
+            }
+        }
+
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        if (!$filesystem->directoryExists($dir)) {
+            return;
+        }
+
+        $filesystem->deleteDirectory($dir);
     }
 
     public function markTestSkippedOnPhpVersionBelow(string $php_version, string $message = '')

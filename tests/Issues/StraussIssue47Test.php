@@ -73,7 +73,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
 
@@ -159,7 +159,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
 
@@ -225,7 +225,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
 

@@ -44,7 +44,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $vendorAutoloadFilesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
         $this->assertStringContainsString('DumpAutoloadFeatureTest.php', $vendorAutoloadFilesPhpString);

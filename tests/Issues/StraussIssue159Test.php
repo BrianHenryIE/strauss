@@ -46,7 +46,7 @@ EOD;
         exec('composer install --no-dev');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/composer/platform_check.php');
     }

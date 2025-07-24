@@ -49,7 +49,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $phpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
@@ -61,7 +61,7 @@ EOD;
         $this->assertStringContainsString('"name": "psr/log",', $installedJsonString);
 
         $exitCode = $this->runStrauss($output, 'include-autoloader');
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
         $this->assertStringContainsString('/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
@@ -116,7 +116,7 @@ EOD;
          * @see DependenciesCommand::execute()
          */
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
     }
@@ -150,7 +150,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         exec($this->testsWorkingDir . '/vendor/bin/strauss dependencies  2>&1', $output);
 

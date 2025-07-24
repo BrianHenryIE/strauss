@@ -100,7 +100,7 @@ class InstalledJson
      * @param InstalledJsonArray $installedJsonArray
      * @param array<string,ComposerPackage> $flatDependencyTree
      */
-    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree): array
+    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree, string $path): array
     {
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
@@ -112,19 +112,19 @@ class InstalledJson
             $this->logger->info('Checking package: ' . $package['name']);
 
             // `composer/` is here because the install-path is relative to the `vendor/composer` directory.
-            $packageDir = $this->config->getVendorDirectory() . 'composer/' . $package['install-path'] . '/';
+            $packageDir = $path . 'composer/' . $package['install-path'] . '/';
             if (!$this->filesystem->directoryExists($packageDir)) {
-                $this->logger->debug('Original package directory does not exist at : ' . $packageDir);
+                $this->logger->debug('Package directory does not exist at : ' . $packageDir);
 
-                $newInstallPath = $this->filesystem->normalize($this->config->getTargetDirectory() . '/composer/' .$package['install-path']);
+                $newInstallPath = $this->filesystem->normalize($path . '/composer/' .$package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
-                    $this->logger->warning('Target package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
+                    $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
                     continue;
                 }
 
                 $newRelativePath = $this->filesystem->getRelativePath(
-                    $this->config->getVendorDirectory() . 'composer/',
+                    $path . 'composer/',
                     $newInstallPath
                 );
 
@@ -136,20 +136,144 @@ class InstalledJson
         return $installedJsonArray;
     }
 
+    /**
+     * Remove autoload key entries from `installed.json` whose file or directory does not exist after deleting.
+     */
+    protected function removeMissingAutoloadKeyPaths(array $installedJsonArray, string $vendorDir): array
+    {
+        foreach ($installedJsonArray['packages'] as $packageIndex => $packageArray) {
+            $path = $vendorDir . 'composer/' . $packageArray['install-path'];
+            $pathExists = $this->filesystem->directoryExists($path);
+            // delete_vendor_packages
+            if (!$pathExists) {
+                $this->logger->info('Removing package autoload key from installed.json: ' . $packageArray['name']);
+                $installedJsonArray['packages'][$packageIndex]['autoload'] = [];
+            }
+            // delete_vendor_files
+            foreach ($installedJsonArray['packages'][$packageIndex]['autoload'] as $type => $autoload) {
+                $pathExistsInPackage = function (string $vendorDir, array $packageArray, string $relativePath) {
+                    return $this->filesystem->exists(
+                        $vendorDir . 'composer/' . $packageArray['install-path'] . '/' . $relativePath
+                    );
+                };
+
+                switch ($type) {
+                    case 'files':
+                    case 'classmap':
+                        $installedJsonArray['packages'][$packageIndex]['autoload'][$type] = array_filter(
+                            $installedJsonArray['packages'][$packageIndex]['autoload'][$type],
+                            fn(string $relativePath) => $pathExistsInPackage($vendorDir, $packageArray, $relativePath)
+                        );
+                        break;
+                    case 'psr-0':
+                    case 'psr-4':
+                        foreach ($autoload as $namespace => $paths) {
+                            switch (true) {
+                                case is_array($paths):
+                                    // e.g. [ 'psr-4' => [ 'BrianHenryIE\Project' => ['src','lib] ] ]
+                                    $validPaths = [];
+                                    foreach ($paths as $path) {
+                                        if ($pathExistsInPackage($vendorDir, $packageArray, $path)) {
+                                            $validPaths[] = $path;
+                                        } else {
+                                            $this->logger->debug('Removing non-existent path from autoload: ' . $path);
+                                        }
+                                    }
+                                    if (!empty($validPaths)) {
+                                        $installedJsonArray['packages'][$packageIndex]['autoload'][$type][$namespace] = $validPaths;
+                                    } else {
+                                        $this->logger->debug('Removing autoload key: ' . $type);
+                                        unset($installedJsonArray['packages'][$packageIndex]['autoload'][$type][$namespace]);
+                                    }
+                                    break;
+                                case is_string($paths):
+                                    // e.g. [ 'psr-4' => [ 'BrianHenryIE\Project' => 'src' ] ]
+                                    if (!$pathExistsInPackage($vendorDir, $packageArray, $paths)) {
+                                        $this->logger->debug('Removing autoload key: ' . $type . ' for ' . $paths);
+                                        unset($installedJsonArray['packages'][$packageIndex]['autoload'][$type][$namespace]);
+                                    }
+                                    break;
+                                default:
+                                    $this->logger->warning('Unexpectedly got neither a string nor array for autoload key in installed.json: ' . $type . ' ' . json_encode($paths));
+                                    break;
+                            }
+                        }
+                        break;
+                    default:
+                        $this->logger->warning('Unexpected autoload type in installed.json: ' . $type);
+                        break;
+                }
+            }
+        }
+        return $installedJsonArray;
+    }
 
     /**
      * Remove the autoload key for packages from `installed.json` whose target directory does not exist after deleting.
      *
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
+     *
+     * @param InstalledJsonArray $installedJsonArray
+     * @param array<string,ComposerPackage> $flatDependencyTree
      */
-    protected function removeMovedPackagesAutoloadKey(array $installedJsonArray, string $vendorDir): array
+    protected function removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson(array $installedJsonArray, array $flatDependencyTree): array
     {
-        foreach ($installedJsonArray['packages'] as $key => $package) {
-            $path = $vendorDir . 'composer/' . $package['install-path'];
-            // TODO: Use a getter on the package.
-            $pathExists = $this->filesystem->directoryExists($path);
-            if (!$pathExists) {
-                $this->logger->info('Removing package autoload key from installed.json: ' . $package['name']);
+        /**
+         * @var int $key
+         * @var InstalledJsonPackageArray $package
+         */
+        foreach ($installedJsonArray['packages'] as $key => $packageArray) {
+            $packageName = $packageArray['name'];
+            $package = $flatDependencyTree[$packageName] ?? null;
+            if (!$package) {
+                // Probably a dev dependency that we aren't tracking.
+                continue;
+            }
+
+            if ($package->didDelete()) {
+                $this->logger->info('Removing deleted package autoload key from installed.json: ' . $packageName);
+                $installedJsonArray['packages'][$key]['autoload'] = [];
+            }
+        }
+        return $installedJsonArray;
+    }
+
+    /**
+     * Remove the autoload key for packages from `vendor-prefixed/composer/installed.json` whose target directory does not exist in `vendor-prefixed`.
+     *
+     * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
+     *
+     * @param InstalledJsonArray $installedJsonArray
+     * @param array<string,ComposerPackage> $flatDependencyTree
+     */
+    protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, array $flatDependencyTree): array
+    {
+        /**
+         * @var int $key
+         * @var InstalledJsonPackageArray $package
+         */
+        foreach ($installedJsonArray['packages'] as $key => $packageArray) {
+            $packageName = $packageArray['name'];
+
+            $remove = false;
+
+            if (!in_array($packageName, array_keys($flatDependencyTree))) {
+                // If it's not a package we were ever considering copying, then we can remove it.
+                $remove = true;
+            } else {
+                $package = $flatDependencyTree[$packageName] ?? null;
+                if (!$package) {
+                    // Probably a dev dependency.
+                    continue;
+                }
+                if (!$package->didCopy()) {
+                    // If it was marked not to copy, then we know it's not in the vendor-prefixed directory, and we can remove it.
+                    $remove = true;
+                }
+            }
+
+            if ($remove) {
+                $this->logger->info('Removing deleted package autoload key from installed.json: ' . $packageName);
                 $installedJsonArray['packages'][$key]['autoload'] = [];
             }
         }
@@ -298,9 +422,14 @@ class InstalledJson
 
         $this->logger->debug('Installed.json before: ' . json_encode($installedJsonArray));
 
-        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
+        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getTargetDirectory());
 
-        $installedJsonArray = $this->removeMovedPackagesAutoloadKey($installedJsonArray, $targetDir);
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getTargetDirectory());
+
+        $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(
+            $installedJsonArray,
+            $flatDependencyTree
+        );
 
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
@@ -309,6 +438,7 @@ class InstalledJson
                 unset($installedJsonArray['packages'][$index]);
             }
         }
+
         $installedJsonArray['dev'] = false;
         $installedJsonArray['dev-package-names'] = [];
 
@@ -321,9 +451,8 @@ class InstalledJson
         $this->logger->info('Installed.json written to ' . $targetDir);
     }
 
-
     /**
-     * Composer creates a file `vendor/composer/installed.json` which is uses when running `composer dump-autoload`.
+     * Composer creates a file `vendor/composer/installed.json` which is used when running `composer dump-autoload`.
      * When `delete-vendor-packages` or `delete-vendor-files` is true, files and directories which have been deleted
      * must also be removed from `installed.json` or Composer will throw an error.
      *
@@ -342,9 +471,11 @@ class InstalledJson
          */
         $installedJsonArray = $vendorInstalledJsonFile->read();
 
-        $installedJsonArray = $this->removeMovedPackagesAutoloadKey($installedJsonArray, $vendorDir);
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getVendorDirectory());
 
-        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree);
+        $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson($installedJsonArray, $flatDependencyTree);
+
+        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getVendorDirectory());
 
         // Only relevant when source = target.
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);

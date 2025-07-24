@@ -40,7 +40,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         // EigenvalueDecomposition.php
         // assert file exists somewhere in the tree

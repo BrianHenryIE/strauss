@@ -17,7 +17,7 @@ class StraussIssue88Test extends IntegrationTestCase
 {
     public function test_returned_casted_function_call()
     {
-        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2');
 
         $composerJsonString = <<<'EOD'
 {
@@ -51,7 +51,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/aws/aws-sdk-php/src/S3/S3Client.php');
 

@@ -60,7 +60,7 @@ EOD;
 
         assert(file_exists($this->testsWorkingDir .'vendor/nesbot/carbon/src/Carbon/Carbon.php'));
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/nesbot/carbon/src/Carbon/Carbon.php');
 

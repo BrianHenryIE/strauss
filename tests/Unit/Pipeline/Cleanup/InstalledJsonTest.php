@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
+use Mockery\MockInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -69,6 +70,7 @@ EOD;
 
     /**
      * @covers ::cleanupVendorInstalledJson
+     * @covers ::removeMissingAutoloadKeyPaths
      * @covers ::updateNamespaces
      */
     public function test_updates_path(): void
@@ -140,6 +142,7 @@ EOD;
         $fileSystem->write('vendor/composer/installed.json', $installedJson);
         $fileSystem->write('vendor-prefixed/psr/container/src/ContainerInterface.php', '<?php namespace Psr\Container;');
         $fileSystem->createDirectory('vendor/psr/container');
+        $fileSystem->createDirectory('vendor/psr/container/src');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects()->getVendorDirectory()->atLeast()->once()->andReturn('vendor/');
@@ -151,8 +154,12 @@ EOD;
             new NullLogger()
         );
 
+        /** @var ComposerPackage|MockInterface $composerPackageMock */
+        $composerPackageMock = Mockery::mock(ComposerPackage::class);
+        $composerPackageMock->expects('didDelete')->once()->andReturnFalse();
+
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
-        $flatDependencyTree = ['psr/container'=> Mockery::mock(ComposerPackage::class)];
+        $flatDependencyTree = ['psr/container'=> $composerPackageMock];
 
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
@@ -188,8 +195,8 @@ EOD;
         $fileSystem->write('vendor-prefixed/psr/container/src/ContainerInterface.php', '<?php namespace Psr\Container;');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
-        $config->expects()->getVendorDirectory()->times(3)->andReturn('vendor/');
-        $config->expects()->getTargetDirectory()->times(4)->andReturn('vendor-prefixed/');
+        $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
+        $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed/');
 
         $sut = new InstalledJson(
             $config,
@@ -197,8 +204,12 @@ EOD;
             new NullLogger()
         );
 
+        /** @var ComposerPackage|MockInterface $composerPackageMock */
+        $composerPackageMock = Mockery::mock(ComposerPackage::class);
+        $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
+
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
-        $flatDependencyTree = ['psr/container'=> Mockery::mock(ComposerPackage::class)];
+        $flatDependencyTree = ['psr/container'=> $composerPackageMock];
 
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
@@ -280,8 +291,8 @@ EOD;
         $fileSystem->write('vendor-prefixed/psr/log/src/AbstractLogger.php', '<?php namespace Psr\Log;');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
-        $config->expects()->getVendorDirectory()->times(3)->andReturn('vendor/');
-        $config->expects()->getTargetDirectory()->times(6)->andReturn('vendor-prefixed/');
+        $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
+        $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed/');
 
         $sut = new InstalledJson(
             $config,
@@ -289,8 +300,12 @@ EOD;
             new NullLogger()
         );
 
+        /** @var ComposerPackage|MockInterface $composerPackageMock */
+        $composerPackageMock = Mockery::mock(ComposerPackage::class);
+        $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
+
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
-        $flatDependencyTree = ['psr/log'=> Mockery::mock(ComposerPackage::class)];
+        $flatDependencyTree = ['psr/log'=> $composerPackageMock];
 
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->andReturn('vendor/psr/log/src/AbstractLogger.php');

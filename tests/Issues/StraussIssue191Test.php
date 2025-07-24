@@ -44,7 +44,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $this->assertStringNotContainsString(
             "Couldn't find constant \\League\\MimeTypeDetection\\FinfoMimeTypeDetector::INCONCLUSIVE_MIME_TYPES",

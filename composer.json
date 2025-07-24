@@ -87,7 +87,8 @@
             "@cs"
         ],
         "test": [
-            "phpunit"
+            "Composer\\Config::disableProcessTimeout",
+            "phpunit --stop-on-failure --order-by=random"
         ],
         "test-coverage": [
             "Composer\\Config::disableProcessTimeout",

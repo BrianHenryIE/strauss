@@ -38,7 +38,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         exec('composer dump-autoload');
 
@@ -75,7 +75,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $vendorInstalledJsonStringAfter = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
 
@@ -109,7 +109,7 @@ EOD;
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         exec('composer dump-autoload');
 
@@ -195,7 +195,7 @@ EOD;
         //  },
 
         $exitCode = $this->runStrauss($output);
-        assert(0 === $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
 
         exec('composer dump-autoload');
 

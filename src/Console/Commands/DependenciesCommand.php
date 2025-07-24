@@ -359,6 +359,17 @@ class DependenciesCommand extends Command
             ARRAY_FILTER_USE_KEY)
         );
 
+        foreach ($this->flatDependencyTree as $dependency) {
+            // Sort of duplicating the logic above.
+            $dependency->setCopy(
+                !in_array($dependency, $this->config->getExcludePackagesFromCopy())
+            );
+
+            if ($this->config->isDeleteVendorPackages()) {
+                $dependency->setDelete(true);
+            }
+        }
+
         // TODO: Print the dependency tree that Strauss has determined.
 
         $symlinkedDependencies = array_filter($this->flatDependencyTree, fn ($dependency) => $dependency->getPackageAbsolutePath() !== $dependency->getRealPath());
@@ -448,6 +459,12 @@ class DependenciesCommand extends Command
 
         $copier->prepareTarget();
         $copier->copy();
+
+        foreach ($this->flatDependencyTree as $package) {
+            if ($package->isCopy()) {
+                $package->setDidCopy(true);
+            }
+        }
 
         $installedJson = new InstalledJson(
             $this->config,
@@ -641,7 +658,7 @@ class DependenciesCommand extends Command
         );
 
         // This will check the config to check should it delete or not.
-        $cleanup->deleteFiles($this->discoveredFiles->getFiles());
+        $cleanup->deleteFiles($this->flatDependencyTree, $this->discoveredFiles);
 
         $cleanup->cleanupVendorInstalledJson($this->flatDependencyTree, $this->discoveredSymbols);
         if ($this->config->isDeleteVendorFiles() || $this->config->isDeleteVendorPackages()) {
