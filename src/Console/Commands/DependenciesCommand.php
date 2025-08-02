@@ -591,7 +591,8 @@ class DependenciesCommand extends Command
 
         $aliases = new Aliases(
             $this->config,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
         $aliases->writeAliasesFileForSymbols($this->discoveredSymbols);
 
