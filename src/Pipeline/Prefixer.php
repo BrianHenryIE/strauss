@@ -174,8 +174,14 @@ class Prefixer
             if ($theclass->getNamespace() !== '\\') {
                 $newNamespace = $namespacesChanges[$theclass->getNamespace()];
                 if ($newNamespace) {
+					// TODO: This should be in ChangeEnumerator.
+                    // `str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
+                    $determineReplacement = function ($originalNamespace, $newNamespace, $fqdnClassname) {
+                        $search = '/'.preg_quote($originalNamespace, '/').'/';
+                        return preg_replace($search, $newNamespace, $fqdnClassname, 1);
+                    };
                     $theclass->setReplacement(
-                        str_replace(
+                        $determineReplacement(
                             $newNamespace->getOriginalSymbol(),
                             $newNamespace->getReplacement(),
                             $theclass->getOriginalSymbol()

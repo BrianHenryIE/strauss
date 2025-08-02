@@ -167,4 +167,52 @@ EOD;
 
         $this->assertStringNotContainsString('function trigger_deprecation(...$args)', $autoloadAliasesPhpString);
     }
+
+	/**
+	 * myclabs/deep-copy
+	 *
+	 * in autoload_aliases.php:
+	 *
+	 * 'DeepCopy\\DeepCopy' =>
+	 * array (
+	 * 'type' => 'class',
+	 * 'classname' => 'DeepCopy',
+	 * 'isabstract' => false,
+	 * 'namespace' => 'DeepCopy',
+	 * 'extends' => 'BrianHenryIE\\WC_Auto_Purchase_Shipping\\DeepCopy\\BrianHenryIE\\WC_Auto_Purchase_Shipping\\DeepCopy',
+	 * 'implements' =>
+	 * array (
+	 * ),
+	 * ),
+	 */
+    public function test_double_prefixing(): void
+    {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/aliases-feature-test",
+  "require": {
+    "myclabs/deep-copy": "1.13.4"
+  },
+  "extra": {
+    "strauss": {
+      "target_directory": "vendor",
+      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $autoloadAliasesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
+
+        $this->assertStringNotContainsString('BrianHenryIE\\\\Strauss\\\\DeepCopy\\\\BrianHenryIE\\\\Strauss\\\\DeepCopy', $autoloadAliasesPhpString);
+    }
 }
