@@ -453,7 +453,7 @@ class InstalledJson
 
         $this->logger->debug(
             '{installedJsonFilePath} before: {installedJsonArray}',
-            ['installedJsonFile' => $installedJsonFile, 'installedJsonArray' => json_encode($installedJsonArray)]
+            ['installedJsonFilePath' => $installedJsonFile, 'installedJsonArray' => json_encode($installedJsonArray)]
         );
 
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getTargetDirectory());
