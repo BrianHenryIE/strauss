@@ -159,40 +159,6 @@ class Prefixer
 
         $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
 
-        $classesTraitsInterfaces = array_merge(
-            $discoveredSymbols->getDiscoveredTraits(),
-            $discoveredSymbols->getDiscoveredInterfaces(),
-            $discoveredSymbols->getAllClasses()
-        );
-
-        foreach ($classesTraitsInterfaces as $theclass) {
-            if (str_starts_with($theclass->getOriginalSymbol(), $classmapPrefix)) {
-                // Already prefixed / second scan.
-                continue;
-            }
-
-            if ($theclass->getNamespace() !== '\\') {
-                $newNamespace = $namespacesChanges[$theclass->getNamespace()];
-                if ($newNamespace) {
-					// TODO: This should be in ChangeEnumerator.
-                    // `str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
-                    $determineReplacement = function ($originalNamespace, $newNamespace, $fqdnClassname) {
-                        $search = '/'.preg_quote($originalNamespace, '/').'/';
-                        return preg_replace($search, $newNamespace, $fqdnClassname, 1);
-                    };
-                    $theclass->setReplacement(
-                        $determineReplacement(
-                            $newNamespace->getOriginalSymbol(),
-                            $newNamespace->getReplacement(),
-                            $theclass->getOriginalSymbol()
-                        )
-                    );
-                    unset($newNamespace);
-                }
-                continue;
-            }
-            $theclass->setReplacement($classmapPrefix . $theclass->getOriginalSymbol());
-        }
 
         foreach ($discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix()) as $classsname) {
             if ($classmapPrefix) {

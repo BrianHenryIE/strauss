@@ -250,9 +250,13 @@ class DependenciesCommand extends Command
 
             $this->copyFiles();
 
-            $this->determineChanges();
+
+            $this->discoveredSymbols = new DiscoveredSymbols();
 
             $this->enumeratePsr4Namespaces();
+            $this->scanFiles();
+            $this->determineChanges();
+
 
             $this->performReplacements();
 
@@ -359,32 +363,6 @@ class DependenciesCommand extends Command
         // TODO: Print the dependency tree that Strauss has determined.
     }
 
-    /**
-     * TODO: currently this must run after ::determineChanges() so the discoveredSymbols object exists,
-     * but logically it should run first.
-     */
-    protected function enumeratePsr4Namespaces(): void
-    {
-        foreach ($this->config->getPackagesToPrefix() as $package) {
-            $autoloadKey = $package->getAutoload();
-            if (! isset($autoloadKey['psr-4'])) {
-                continue;
-            }
-
-            $psr4autoloadKey = $autoloadKey['psr-4'];
-            $namespaces = array_keys($psr4autoloadKey);
-
-            $file = new File($package->getPackageAbsolutePath() . 'composer.json');
-
-            foreach ($namespaces as $namespace) {
-                // TODO: log.
-                $symbol = new NamespaceSymbol(trim($namespace, '\\'), $file);
-                // TODO: respect all config options.
-                $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
-                $this->discoveredSymbols->add($symbol);
-            }
-        }
-    }
 
     protected function enumerateFiles(): void
     {
@@ -436,24 +414,59 @@ class DependenciesCommand extends Command
         $installedJson->copyInstalledJson();
     }
 
-    // 4. Determine namespace and classname changes
-    protected function determineChanges(): void
+
+    /**
+     * TODO: currently this must run after ::determineChanges() so the discoveredSymbols object exists,
+     * but logically it should run first.
+     */
+    protected function enumeratePsr4Namespaces(): void
     {
-        $this->logger->notice('Determining changes...');
+        foreach ($this->config->getPackagesToPrefix() as $package) {
+            $autoloadKey = $package->getAutoload();
+            if (! isset($autoloadKey['psr-4'])) {
+                continue;
+            }
+
+            $psr4autoloadKey = $autoloadKey['psr-4'];
+            $namespaces = array_keys($psr4autoloadKey);
+
+            $file = new File($package->getPackageAbsolutePath() . 'composer.json');
+
+            foreach ($namespaces as $namespace) {
+                // TODO: log.
+                $symbol = new NamespaceSymbol(trim($namespace, '\\'), $file);
+                // TODO: respect all config options.
+//              $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
+                $this->discoveredSymbols->add($symbol);
+            }
+        }
+    }
+
+    // 4. Determine namespace and classname changes
+    protected function scanFiles(): void
+    {
+        $this->logger->notice('Scanning files...');
 
         $fileScanner = new FileSymbolScanner(
             $this->config,
+            $this->discoveredSymbols,
             $this->filesystem,
             $this->logger
         );
 
-        $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
+        $fileScanner->findInFiles($this->discoveredFiles);
+    }
+
+    protected function determineChanges(): void
+    {
+        $this->logger->notice('Determining changes...');
 
         $changeEnumerator = new ChangeEnumerator(
             $this->config,
             $this->filesystem,
             $this->logger
         );
+        $changeEnumerator->markFilesForExclusion($this->discoveredFiles);
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 

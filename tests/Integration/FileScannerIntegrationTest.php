@@ -11,6 +11,7 @@ use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 
@@ -92,7 +93,9 @@ EOD;
         $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
         $config->method('getPackagesToPrefix')->willReturn(array('google/apiclient'=>''));
 
-        $fileScanner = new FileSymbolScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
+		$discoveredSymbols = new DiscoveredSymbols();
+
+        $fileScanner = new FileSymbolScanner($config, $discoveredSymbols, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
 
         $discoveredSymbols = $fileScanner->findInFiles($files);
 

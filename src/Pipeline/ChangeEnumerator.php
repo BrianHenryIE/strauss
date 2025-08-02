@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -35,32 +36,36 @@ class ChangeEnumerator
         $this->setLogger($logger ?? new NullLogger());
     }
 
-    public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void
+    public function markFilesForExclusion(DiscoveredFiles $files)
     {
 
-        foreach ($discoveredSymbols->getSymbols() as $symbol) {
-            // TODO: this is a bit of a mess. Should be reconsidered. Previously there was 1-1 relationship between symbols and files.
-            $symbolSourceFiles = $symbol->getSourceFiles();
-            $symbolSourceFile = $symbolSourceFiles[array_key_first($symbolSourceFiles)];
-            if ($symbolSourceFile instanceof FileWithDependency) {
+        foreach ($files->getFiles() as $file) {
+            if ($file instanceof FileWithDependency) {
                 if (in_array(
-                    $symbolSourceFile->getDependency()->getPackageName(),
+                    $file->getDependency()->getPackageName(),
                     $this->config->getExcludePackagesFromPrefixing(),
                     true
                 )) {
-                    $symbolSourceFile->setDoPrefix(false);
+                    $file->setDoPrefix(false);
                     continue;
                 }
 
                 foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
                     // TODO: This source relative path should be from the vendor dir.
                     // TODO: Should the target path be used here?
-                    if (1 === preg_match($excludeFilePattern, $symbolSourceFile->getSourcePath())) {
-                        continue 2;
+                    if (1 === preg_match($excludeFilePattern, $file->getSourcePath())) {
+                        $file->setDoPrefix(false);
                     }
                 }
             }
-            
+        }
+    }
+
+    public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void
+    {
+        $discoveredNamespaces = $discoveredSymbols->getDiscoveredNamespaces();
+
+        foreach ($discoveredNamespaces as $symbol) {
             if ($symbol instanceof NamespaceSymbol) {
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
 
@@ -68,23 +73,23 @@ class ChangeEnumerator
 
                 // TODO: Maybe need to preg_quote and add regex delimiters to the patterns here.
                 foreach ($namespaceReplacementPatterns as $pattern => $replacement) {
-                    if (substr($pattern, 0, 1) !== substr($pattern, -1, 1)) {
-                        unset($namespaceReplacementPatterns[$pattern]);
-                        $pattern = '~'. preg_quote($pattern, '~') . '~';
-                        $namespaceReplacementPatterns[$pattern] = $replacement;
+                    if (substr($pattern, 0, 1) !== substr($pattern, - 1, 1)) {
+                        unset($namespaceReplacementPatterns[ $pattern ]);
+                        $pattern                                  = '~' . preg_quote($pattern, '~') . '~';
+                        $namespaceReplacementPatterns[ $pattern ] = $replacement;
                     }
                     unset($pattern, $replacement);
                 }
 
-                if (!is_null($this->config->getNamespacePrefix())) {
-                    $stripPattern = '~^('.preg_quote($this->config->getNamespacePrefix(), '~') .'\\\\*)*(.*)~';
+                if (! is_null($this->config->getNamespacePrefix())) {
+                    $stripPattern   = '~^(' . preg_quote($this->config->getNamespacePrefix(), '~') . '\\\\*)*(.*)~';
                     $strippedSymbol = preg_replace(
                         $stripPattern,
                         '$2',
                         $symbol->getOriginalSymbol()
                     );
                     $namespaceReplacementPatterns[ "~(" . preg_quote($this->config->getNamespacePrefix(), '~') . '\\\\*)*' . preg_quote($strippedSymbol, '~') . '~' ]
-                        = "{$this->config->getNamespacePrefix()}\\{$strippedSymbol}";
+                                    = "{$this->config->getNamespacePrefix()}\\{$strippedSymbol}";
                     unset($stripPattern, $strippedSymbol);
                 }
 
@@ -103,28 +108,70 @@ class ChangeEnumerator
                 }
                 $this->logger->debug("Namespace {$symbol->getOriginalSymbol()} not changed.");
             }
+        }
 
-            if ($symbol instanceof ClassSymbol) {
-                // Don't double-prefix classnames.
-                if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
-                    continue;
-                }
+        $classmapPrefix = $this->config->getClassmapPrefix();
 
-                $symbol->setReplacement($this->config->getClassmapPrefix() . $symbol->getOriginalSymbol());
+
+        $classesTraitsInterfaces = array_merge(
+            $discoveredSymbols->getDiscoveredTraits(),
+            $discoveredSymbols->getDiscoveredInterfaces(),
+            $discoveredSymbols->getAllClasses()
+        );
+
+        foreach ($classesTraitsInterfaces as $theclass) {
+            if (str_starts_with($theclass->getOriginalSymbol(), $classmapPrefix)) {
+                // Already prefixed / second scan.
+                continue;
             }
 
-            if ($symbol instanceof FunctionSymbol) {
-                // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
-                if ($symbol->getNamespace() !== '\\') {
-                    continue;
-                }
-                $functionPrefix = $this->config->getFunctionsPrefix();
-                if (empty($functionPrefix) || str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
-                    continue;
-                }
+            if ($theclass->getNamespace() === '\\') {
+                if ($symbol instanceof ClassSymbol) {
+                    // Don't double-prefix classnames.
+                    if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
+                        continue;
+                    }
 
-                $symbol->setReplacement($functionPrefix . $symbol->getOriginalSymbol());
+                    $symbol->setReplacement($this->config->getClassmapPrefix() . $symbol->getOriginalSymbol());
+                }
             }
+
+            if ($theclass->getNamespace() !== '\\') {
+                $newNamespace = $discoveredNamespaces[$theclass->getNamespace()];
+                if ($newNamespace) {
+                    // TODO: This should be in ChangeEnumerator.
+                    // `str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
+                    $determineReplacement = function ($originalNamespace, $newNamespace, $fqdnClassname) {
+                        $search = '/'.preg_quote($originalNamespace, '/').'/';
+                        return preg_replace($search, $newNamespace, $fqdnClassname, 1);
+                    };
+                    $theclass->setReplacement(
+                        $determineReplacement(
+                            $newNamespace->getOriginalSymbol(),
+                            $newNamespace->getReplacement(),
+                            $theclass->getOriginalSymbol()
+                        )
+                    );
+                    unset($newNamespace);
+                }
+                continue;
+            }
+            $theclass->setReplacement($classmapPrefix . $theclass->getOriginalSymbol());
+        }
+
+        $functionsSymbols = $discoveredSymbols->getDiscoveredFunctions();
+
+        foreach ($functionsSymbols as $symbol) {
+            // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
+            if ($symbol->getNamespace() !== '\\') {
+                continue;
+            }
+            $functionPrefix = $this->config->getFunctionsPrefix();
+            if (empty($functionPrefix) || str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
+                continue;
+            }
+
+            $symbol->setReplacement($functionPrefix . $symbol->getOriginalSymbol());
         }
     }
 }

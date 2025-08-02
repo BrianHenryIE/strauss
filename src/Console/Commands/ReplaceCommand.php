@@ -118,6 +118,8 @@ class ReplaceCommand extends Command
 
             // Pipeline
 
+            $this->discoveredSymbols = new DiscoveredSymbols();
+
             $this->enumerateFiles($config);
 
             $this->determineChanges($config);
@@ -173,15 +175,17 @@ class ReplaceCommand extends Command
 
         $fileScanner = new FileSymbolScanner(
             $config,
+            $this->discoveredSymbols,
             $this->filesystem
         );
 
-        $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
+        $fileScanner->findInFiles($this->discoveredFiles);
 
         $changeEnumerator = new ChangeEnumerator(
             $config,
             $this->filesystem
         );
+        $changeEnumerator->markFilesForExclusion($this->discoveredFiles);
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 

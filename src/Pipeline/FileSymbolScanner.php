@@ -57,10 +57,11 @@ class FileSymbolScanner
      */
     public function __construct(
         FileSymbolScannerConfigInterface $config,
+        DiscoveredSymbols $discoveredSymbols,
         FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
-        $this->discoveredSymbols = new DiscoveredSymbols();
+        $this->discoveredSymbols = $discoveredSymbols;
         $this->excludeNamespacesFromPrefixing = $config->getExcludeNamespacesFromPrefixing();
 
         $this->config = $config;
