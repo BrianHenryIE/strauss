@@ -43,7 +43,7 @@ class FileEnumerator
     public function __construct(
         FileEnumeratorConfig $config,
         FileSystem $filesystem,
-        ?LoggerInterface $logger = null
+        LoggerInterface $logger
     ) {
         $this->discoveredFiles = new DiscoveredFiles();
 
@@ -51,7 +51,7 @@ class FileEnumerator
 
         $this->filesystem = $filesystem;
 
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger;
     }
 
     /**

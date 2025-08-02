@@ -71,7 +71,8 @@ EOD;
                     new LocalFilesystemAdapter('/')
                 ),
                 $this->testsWorkingDir
-            )
+            ),
+            $this->getLogger()
         );
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);

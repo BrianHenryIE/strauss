@@ -125,6 +125,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
         Mockery::close();
     }
 
+    /**
+     * Use this method when passing the logger to a class constructor.
+     */
     protected function getLogger(): LoggerInterface
     {
         if (!isset($this->logger)) {
@@ -141,6 +144,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $logger;
     }
 
+    /**
+     * Use this method to retrieve the test logger for assertions.
+     */
     protected function getTestLogger(): TestLogger
     {
         if (!isset($this->testLogger)) {

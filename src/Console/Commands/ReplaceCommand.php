@@ -162,7 +162,7 @@ class ReplaceCommand extends Command
             fn($path) => false !== strpos($path, trim($this->workingDir, '/')) ? $path : $this->workingDir . $path,
             $relativeUpdateCallSites
         );
-        $fileEnumerator = new FileEnumerator($config, $this->filesystem);
+        $fileEnumerator = new FileEnumerator($config, $this->filesystem, $this->logger);
         $this->discoveredFiles = $fileEnumerator->compileFileListForPaths($updateCallSites);
     }
 
@@ -214,7 +214,8 @@ class ReplaceCommand extends Command
 
         $fileEnumerator = new FileEnumerator(
             $config,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $phpFilePaths = $fileEnumerator->compileFileListForPaths($callSitePaths);

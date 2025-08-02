@@ -496,7 +496,8 @@ class DependenciesCommand extends Command
 
         $fileEnumerator = new FileEnumerator(
             $this->config,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $projectFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);

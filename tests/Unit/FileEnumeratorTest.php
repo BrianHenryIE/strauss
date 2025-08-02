@@ -31,7 +31,7 @@ class FileEnumeratorTest extends TestCase
         $filesystem = $this->getInMemoryFileSystem();
         $logger = $this->getLogger();
 
-        $sut = new FileEnumerator($config, $filesystem, $logger);
+        $sut = new FileEnumerator($config, $filesystem, $this->getLogger());
 
         $dependency = Mockery::mock(ComposerPackage::class);
         $dependency->expects('getPackageName')->andReturn('test/package');
