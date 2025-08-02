@@ -58,14 +58,24 @@ class InstalledJson
 
     public function copyInstalledJson(): void
     {
-        $this->logger->info('Copying vendor/composer/installed.json to vendor-prefixed/composer/installed.json');
+        $source = $this->config->getVendorDirectory() . 'composer/installed.json';
+        $target = $this->config->getTargetDirectory() . 'composer/installed.json';
+
+        $this->logger->info('Copying {sourcePath} to {targetPath}', [
+            'sourcePath' => $source,
+            'targetPath' => $target
+        ]);
 
         $this->filesystem->copy(
-            $this->config->getVendorDirectory() . 'composer/installed.json',
-            $this->config->getTargetDirectory() . 'composer/installed.json'
+            $source,
+            $target
         );
 
-        $this->logger->debug('Copied vendor/composer/installed.json to vendor-prefixed/composer/installed.json');
+        $this->logger->info('Copied {sourcePath} to {targetPath}', [
+            'sourcePath' => $source,
+            'targetPath' => $target
+        ]);
+
         $this->logger->debug($this->filesystem->read($this->config->getTargetDirectory() . 'composer/installed.json'));
     }
 
@@ -82,13 +92,16 @@ class InstalledJson
             )
         );
         if (!$installedJsonFile->exists()) {
-            $this->logger->error('Expected vendor/composer/installed.json does not exist.');
+            $this->logger->error(
+                'Expected {installedJsonFilePath} does not exist.',
+                ['installedJsonFilePath' => $installedJsonFile->getPath()]
+            );
             throw new \Exception('Expected vendor/composer/installed.json does not exist.');
         }
 
         $installedJsonFile->validateSchema(JsonFile::LAX_SCHEMA);
 
-        $this->logger->info('Loaded installed.json file: ' . $installedJsonFile->getPath());
+        $this->logger->info('Loaded file: {installedJsonFilePath}', ['installedJsonFilePath' => $installedJsonFile->getPath()]);
 
         return $installedJsonFile;
     }
@@ -136,14 +149,24 @@ class InstalledJson
     /**
      * Remove autoload key entries from `installed.json` whose file or directory does not exist after deleting.
      */
-    protected function removeMissingAutoloadKeyPaths(array $installedJsonArray, string $vendorDir): array
+    protected function removeMissingAutoloadKeyPaths(array $installedJsonArray, string $vendorDir, string $installedJsonPath): array
     {
         foreach ($installedJsonArray['packages'] as $packageIndex => $packageArray) {
+            if (!isset($packageArray['autoload'])) {
+                $this->logger->info(
+                    'Package {packageName} has no autoload key in {installedJsonPath}',
+                    ['packageName' => $packageArray['name'],'installedJsonPath'=>$installedJsonPath]
+                );
+                continue;
+            }
             $path = $vendorDir . 'composer/' . $packageArray['install-path'];
             $pathExists = $this->filesystem->directoryExists($path);
             // delete_vendor_packages
             if (!$pathExists) {
-                $this->logger->info('Removing package autoload key from installed.json: ' . $packageArray['name']);
+                $this->logger->info(
+                    'Removing package autoload key from {installedJsonPath}: {packageName}',
+                    ['packageName' => $packageArray['name'],'installedJsonPath'=>$installedJsonPath]
+                );
                 $installedJsonArray['packages'][$packageIndex]['autoload'] = [];
             }
             // delete_vendor_files
@@ -196,8 +219,13 @@ class InstalledJson
                             }
                         }
                         break;
+                    case 'exclude-from-classmap':
+                        break;
                     default:
-                        $this->logger->warning('Unexpected autoload type in installed.json: ' . $type);
+                        $this->logger->warning(
+                            'Unexpected autoload type in {installedJsonPath}: {type}',
+                            ['installedJsonPath'=>$installedJsonPath,'type'=>$type]
+                        );
                         break;
                 }
             }
@@ -213,7 +241,7 @@ class InstalledJson
      * @param InstalledJsonArray $installedJsonArray
      * @param array<string,ComposerPackage> $flatDependencyTree
      */
-    protected function removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson(array $installedJsonArray, array $flatDependencyTree): array
+    protected function removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson(array $installedJsonArray, array $flatDependencyTree, string $installedJsonPath): array
     {
         /**
          * @var int $key
@@ -228,7 +256,10 @@ class InstalledJson
             }
 
             if ($package->didDelete()) {
-                $this->logger->info('Removing deleted package autoload key from installed.json: ' . $packageName);
+                $this->logger->info(
+                    'Removing deleted package autoload key from {installedJsonPath}: {packageName}',
+                    ['installedJsonPath' => $installedJsonPath, 'packageName' => $packageName]
+                );
                 $installedJsonArray['packages'][$key]['autoload'] = [];
             }
         }
@@ -243,7 +274,7 @@ class InstalledJson
      * @param InstalledJsonArray $installedJsonArray
      * @param array<string,ComposerPackage> $flatDependencyTree
      */
-    protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, array $flatDependencyTree): array
+    protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, array $flatDependencyTree, string $installedJsonPath): array
     {
         /**
          * @var int $key
@@ -270,7 +301,10 @@ class InstalledJson
             }
 
             if ($remove) {
-                $this->logger->info('Removing deleted package autoload key from installed.json: ' . $packageName);
+                $this->logger->info(
+                    'Removing deleted package autoload key from {installedJsonPath}: {packageName}',
+                    ['installedJsonPath' => $installedJsonPath, 'packageName' => $packageName]
+                );
                 $installedJsonArray['packages'][$key]['autoload'] = [];
             }
         }
@@ -417,15 +451,19 @@ class InstalledJson
          */
         $installedJsonArray = $installedJsonFile->read();
 
-        $this->logger->debug('Installed.json before: ' . json_encode($installedJsonArray));
+        $this->logger->debug(
+            '{installedJsonFilePath} before: {installedJsonArray}',
+            ['installedJsonFile' => $installedJsonFile, 'installedJsonArray' => json_encode($installedJsonArray)]
+        );
 
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getTargetDirectory());
 
-        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getTargetDirectory());
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getTargetDirectory(), $installedJsonFile->getPath());
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(
             $installedJsonArray,
-            $flatDependencyTree
+            $flatDependencyTree,
+            $installedJsonFile->getPath()
         );
 
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
@@ -457,20 +495,21 @@ class InstalledJson
      */
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
-        $this->logger->info('Cleaning up installed.json');
 
         $vendorDir = $this->config->getVendorDirectory();
 
         $vendorInstalledJsonFile = $this->getJsonFile($vendorDir);
+
+        $this->logger->info('Cleaning up {installedJsonPath}', ['installedJsonPath' => $vendorInstalledJsonFile->getPath()]);
 
         /**
          * @var InstalledJsonArray $installedJsonArray
          */
         $installedJsonArray = $vendorInstalledJsonFile->read();
 
-        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getVendorDirectory());
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getVendorDirectory(), $vendorInstalledJsonFile->getPath());
 
-        $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson($installedJsonArray, $flatDependencyTree);
+        $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson($installedJsonArray, $flatDependencyTree, $vendorInstalledJsonFile->getPath());
 
         $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getVendorDirectory());
 
