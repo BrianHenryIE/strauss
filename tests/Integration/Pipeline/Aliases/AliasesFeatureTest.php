@@ -168,23 +168,23 @@ EOD;
         $this->assertStringNotContainsString('function trigger_deprecation(...$args)', $autoloadAliasesPhpString);
     }
 
-	/**
-	 * myclabs/deep-copy
-	 *
-	 * in autoload_aliases.php:
-	 *
-	 * 'DeepCopy\\DeepCopy' =>
-	 * array (
-	 * 'type' => 'class',
-	 * 'classname' => 'DeepCopy',
-	 * 'isabstract' => false,
-	 * 'namespace' => 'DeepCopy',
-	 * 'extends' => 'BrianHenryIE\\WC_Auto_Purchase_Shipping\\DeepCopy\\BrianHenryIE\\WC_Auto_Purchase_Shipping\\DeepCopy',
-	 * 'implements' =>
-	 * array (
-	 * ),
-	 * ),
-	 */
+    /**
+     * myclabs/deep-copy
+     *
+     * in autoload_aliases.php:
+     *
+     * 'DeepCopy\\DeepCopy' =>
+     * array (
+     * 'type' => 'class',
+     * 'classname' => 'DeepCopy',
+     * 'isabstract' => false,
+     * 'namespace' => 'DeepCopy',
+     * 'extends' => 'BrianHenryIE\\WC_Auto_Purchase_Shipping\\DeepCopy\\BrianHenryIE\\WC_Auto_Purchase_Shipping\\DeepCopy',
+     * 'implements' =>
+     * array (
+     * ),
+     * ),
+     */
     public function test_double_prefixing(): void
     {
         $composerJsonString = <<<'EOD'
