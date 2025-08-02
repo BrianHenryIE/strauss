@@ -784,7 +784,7 @@ class StraussConfig implements
      */
     public function isCreateAliases(): bool
     {
-        return $this->deleteVendorPackages || $this->deleteVendorFiles || $this->getTargetDirectory() === 'vendor/';
+        return $this->deleteVendorPackages || $this->deleteVendorFiles || trim($this->targetDirectory, '\\/') === 'vendor';
     }
 
     public function getProjectDirectory(): string
