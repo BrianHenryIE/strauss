@@ -24,7 +24,7 @@ class ChangeEnumeratorTest extends TestCase
         $config = Mockery::mock(\BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface::class);
         $config->expects('getClassmapPrefix')->andReturn('Class_Prefix_');
 //        $config->expects('getNamespaceReplacementPatterns')->andReturn([]);
-        $config->expects('getNamespacePrefix')->andReturn('Prefix')->atLeast()->once();
+//        $config->expects('getNamespacePrefix')->andReturn('Prefix')->atLeast()->once();
         $config->expects('getFunctionsPrefix')->andReturn('functions_prefix_')->atLeast()->once();
 
         $sut = new ChangeEnumerator($config, $this->getInMemoryFileSystem());
