@@ -93,7 +93,7 @@ EOD;
         $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
         $config->method('getPackagesToPrefix')->willReturn(array('google/apiclient'=>''));
 
-		$discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols = new DiscoveredSymbols();
 
         $fileScanner = new FileSymbolScanner($config, $discoveredSymbols, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
 
