@@ -187,6 +187,11 @@ class StraussConfig implements
     protected bool $dryRun = false;
 
     /**
+     * Should the root autoload be included when generating the strauss autoloader?
+     */
+    protected bool $includeRootAutoload = false;
+
+    /**
      * Read any existing Mozart config.
      * Overwrite it with any Strauss config.
      * Provide sensible defaults.
@@ -225,6 +230,7 @@ class StraussConfig implements
 
             $rename->addMapping(StraussConfig::class, 'exclude_prefix_packages', 'excludePackagesFromPrefixing');
 
+            $rename->addMapping(StraussConfig::class, 'include_root_autoload', 'includeRootAutoload');
 
             $rename->addMapping(StraussConfig::class, 'function_prefix', 'functionsPrefix');
 
@@ -730,6 +736,22 @@ class StraussConfig implements
     public function setDryRun(bool $dryRun): void
     {
         $this->dryRun = $dryRun;
+    }
+
+    /**
+     * Should the root autoload be included when generating the strauss autoloader?
+     */
+    public function isIncludeRootAutoload(): bool
+    {
+        return $this->includeRootAutoload;
+    }
+
+    /**
+     * @param bool $includeRootAutoload
+     */
+    public function setIncludeRootAutoload(bool $includeRootAutoload): void
+    {
+        $this->includeRootAutoload = $includeRootAutoload;
     }
 
     /**

@@ -87,8 +87,8 @@ class DumpAutoload
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
         }
 
-        // Do not include the autoload section from the project composer.json in the vendor-prefixed autoloader.
-        if (isset($projectComposerJsonArray['autoload'])) {
+        // Include the project root autoload in the vendor-prefixed autoloader?
+        if (isset($projectComposerJsonArray['autoload']) && !$this->config->isIncludeRootAutoload()) {
             $projectComposerJsonArray['autoload'] = [];
         }
 
