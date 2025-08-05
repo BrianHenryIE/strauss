@@ -98,8 +98,8 @@ EOD;
      * Test the `include_root_autoload` option. Expect autoload classes in both the vendor and vendor-prefixed
      * autoloader if the option is set true, otherwise only in the vendor autoloader.
      *
-     * @param string $composerJsonString    Contents of the composer.json file.
-     * @param bool   $expectAutoloadClasses Whether autoload classes are expected in the vendor-prefixed autoloader.
+     * @param string $composerJsonString  Contents of the composer.json file.
+     * @param bool   $expectRootAutoload  Whether autoload classes are expected in the vendor-prefixed autoloader.
      *
      * @dataProvider provider_option_include_root_autoload
      */

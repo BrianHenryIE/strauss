@@ -747,7 +747,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param bool $includeRootAutoload
+     * @param bool $includeRootAutoload Include the project root autoload in the strauss autoloader.
      */
     public function setIncludeRootAutoload(bool $includeRootAutoload): void
     {
