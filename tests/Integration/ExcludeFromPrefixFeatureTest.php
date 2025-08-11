@@ -14,6 +14,7 @@ class ExcludeFromPrefixFeatureTest extends IntegrationTestCase
 {
     "name": "strauss/exclude-from-prefix",
     "require": {
+        "lucatume/di52": "4.0.1",
         "psr/container": "*"
     },
     "extra": {
@@ -38,11 +39,12 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        exec('composer dump-autoload');
+        $psrContainerPhpString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/psr/container/src/ContainerInterface.php');
+        $this->assertStringNotContainsString('namespace Strauss\ExcludeFromPrefixTest\Psr\Container;', $psrContainerPhpString);
+        $this->assertStringContainsString('namespace Psr\Container;', $psrContainerPhpString);
 
-        $vendorPrefixedAutoloadFilesPhpString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/psr/container/src/ContainerInterface.php');
-
-        $this->assertStringNotContainsString('namespace Strauss\ExcludeFromPrefixTest\Psr\Container;', $vendorPrefixedAutoloadFilesPhpString);
-        $this->assertStringContainsString('namespace Psr\Container;', $vendorPrefixedAutoloadFilesPhpString);
+        $di52ContainerPhpString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/lucatume/di52/src/Container.php');
+        $this->assertStringNotContainsString('use Strauss\ExcludeFromPrefixTest\Psr\Container\ContainerInterface;', $di52ContainerPhpString);
+        $this->assertStringContainsString('use Psr\Container\ContainerInterface;', $di52ContainerPhpString);
     }
 }
