@@ -58,6 +58,16 @@ abstract class DiscoveredSymbol
 
     public function getReplacement(): string
     {
+        $shouldRename = array_reduce(
+            $this->sourceFiles,
+            fn(bool $carry, File $file) => $file->isDoPrefix() && $carry,
+            true
+        );
+
+        if (!$shouldRename) {
+            return $this->fqdnOriginalSymbol;
+        }
+
         return $this->replacement ?? $this->fqdnOriginalSymbol;
     }
 
