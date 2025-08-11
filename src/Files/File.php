@@ -33,6 +33,8 @@ class File implements FileBase
 
     protected bool $didDelete = false;
 
+    protected bool $doPrefix = true;
+
     public function __construct(string $sourceAbsolutePath)
     {
         $this->sourceAbsolutePath = $sourceAbsolutePath;
@@ -66,6 +68,7 @@ class File implements FileBase
 
     public function setDoPrefix(bool $doPrefix): void
     {
+        $this->doPrefix = $doPrefix;
     }
 
     /**
@@ -76,7 +79,7 @@ class File implements FileBase
      */
     public function isDoPrefix(): bool
     {
-        return true;
+        return $this->doPrefix;
     }
 
     /**
