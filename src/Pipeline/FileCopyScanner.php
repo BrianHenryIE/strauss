@@ -100,6 +100,11 @@ class FileCopyScanner
 
             $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->fileSystem->isSymlinkedFile($file);
             $file->setDoDelete($shouldDelete);
+
+            // If a file isn't copied, don't unintentionally edit the source file.
+            if (!$file->isDoCopy() && $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
+                $file->setDoPrefix(false);
+            }
         };
     }
 }
