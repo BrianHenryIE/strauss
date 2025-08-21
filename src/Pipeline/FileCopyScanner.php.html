@@ -52,7 +52,7 @@
        </div>
 </td>
        <td class="danger small"><div align="right">0.00%</div></td>
-       <td class="danger small"><div align="right">0&nbsp;/&nbsp;33</div></td>
+       <td class="danger small"><div align="right">0&nbsp;/&nbsp;35</div></td>
        <td class="danger big">       <div class="progress">
          <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="0.00" aria-valuemin="0" aria-valuemax="100" style="width: 0.00%">
            <span class="sr-only">0.00% covered (danger)</span>
@@ -81,7 +81,7 @@
        </div>
 </td>
        <td class="danger small"><div align="right">0.00%</div></td>
-       <td class="danger small"><div align="right">0&nbsp;/&nbsp;33</div></td>
+       <td class="danger small"><div align="right">0&nbsp;/&nbsp;35</div></td>
        <td class="danger big">       <div class="progress">
          <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="0.00" aria-valuemin="0" aria-valuemax="100" style="width: 0.00%">
            <span class="sr-only">0.00% covered (danger)</span>
@@ -90,7 +90,7 @@
 </td>
        <td class="danger small"><div align="right">0.00%</div></td>
        <td class="danger small"><div align="right">0&nbsp;/&nbsp;2</div></td>
-       <td class="danger small">306</td>
+       <td class="danger small">380</td>
        <td class="danger big">       <div class="progress">
          <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="0.00" aria-valuemin="0" aria-valuemax="100" style="width: 0.00%">
            <span class="sr-only">0.00% covered (danger)</span>
@@ -132,7 +132,7 @@
        </div>
 </td>
        <td class="danger small"><div align="right">0.00%</div></td>
-       <td class="danger small"><div align="right">0&nbsp;/&nbsp;30</div></td>
+       <td class="danger small"><div align="right">0&nbsp;/&nbsp;32</div></td>
        <td class="danger big">       <div class="progress">
          <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="0.00" aria-valuemin="0" aria-valuemax="100" style="width: 0.00%">
            <span class="sr-only">0.00% covered (danger)</span>
@@ -141,7 +141,7 @@
 </td>
        <td class="danger small"><div align="right">0.00%</div></td>
        <td class="danger small"><div align="right">0&nbsp;/&nbsp;1</div></td>
-       <td class="danger small">272</td>
+       <td class="danger small">342</td>
        <td class="danger" colspan="3"></td>
       </tr>
 
@@ -253,9 +253,14 @@
     <tr class=" d-flex"><td  class="col-1 text-right"><a id="100" href="#100">100</a></td><td class="col-11 codeLine"></td></tr>
     <tr class="danger d-flex"><td  class="col-1 text-right"><a id="101" href="#101">101</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="default">$shouldDelete</span><span class="default">&nbsp;</span><span class="keyword">=</span><span class="default">&nbsp;</span><span class="default">$this</span><span class="default">-&gt;</span><span class="default">config</span><span class="default">-&gt;</span><span class="default">isDeleteVendorFiles</span><span class="keyword">(</span><span class="keyword">)</span><span class="default">&nbsp;</span><span class="default">&amp;&amp;</span><span class="default">&nbsp;</span><span class="keyword">!</span><span class="default">&nbsp;</span><span class="default">$this</span><span class="default">-&gt;</span><span class="default">fileSystem</span><span class="default">-&gt;</span><span class="default">isSymlinkedFile</span><span class="keyword">(</span><span class="default">$file</span><span class="keyword">)</span><span class="keyword">;</span></td></tr>
     <tr class="danger d-flex"><td  class="col-1 text-right"><a id="102" href="#102">102</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="default">$file</span><span class="default">-&gt;</span><span class="default">setDoDelete</span><span class="keyword">(</span><span class="default">$shouldDelete</span><span class="keyword">)</span><span class="keyword">;</span></td></tr>
-    <tr class=" d-flex"><td  class="col-1 text-right"><a id="103" href="#103">103</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">}</span><span class="keyword">;</span></td></tr>
-    <tr class=" d-flex"><td  class="col-1 text-right"><a id="104" href="#104">104</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">}</span></td></tr>
-    <tr class=" d-flex"><td  class="col-1 text-right"><a id="105" href="#105">105</a></td><td class="col-11 codeLine"><span class="keyword">}</span></td></tr>
+    <tr class=" d-flex"><td  class="col-1 text-right"><a id="103" href="#103">103</a></td><td class="col-11 codeLine"></td></tr>
+    <tr class=" d-flex"><td  class="col-1 text-right"><a id="104" href="#104">104</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="comment">//&nbsp;If&nbsp;a&nbsp;file&nbsp;isn't&nbsp;copied,&nbsp;don't&nbsp;unintentionally&nbsp;edit&nbsp;the&nbsp;source&nbsp;file.</span></td></tr>
+    <tr class="danger d-flex"><td  class="col-1 text-right"><a id="105" href="#105">105</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">if</span><span class="default">&nbsp;</span><span class="keyword">(</span><span class="keyword">!</span><span class="default">$file</span><span class="default">-&gt;</span><span class="default">isDoCopy</span><span class="keyword">(</span><span class="keyword">)</span><span class="default">&nbsp;</span><span class="default">&amp;&amp;</span><span class="default">&nbsp;</span><span class="default">$this</span><span class="default">-&gt;</span><span class="default">config</span><span class="default">-&gt;</span><span class="default">getTargetDirectory</span><span class="keyword">(</span><span class="keyword">)</span><span class="default">&nbsp;</span><span class="default">!==</span><span class="default">&nbsp;</span><span class="default">$this</span><span class="default">-&gt;</span><span class="default">config</span><span class="default">-&gt;</span><span class="default">getVendorDirectory</span><span class="keyword">(</span><span class="keyword">)</span><span class="keyword">)</span><span class="default">&nbsp;</span><span class="keyword">{</span></td></tr>
+    <tr class="danger d-flex"><td  class="col-1 text-right"><a id="106" href="#106">106</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="default">$file</span><span class="default">-&gt;</span><span class="default">setDoPrefix</span><span class="keyword">(</span><span class="default">false</span><span class="keyword">)</span><span class="keyword">;</span></td></tr>
+    <tr class=" d-flex"><td  class="col-1 text-right"><a id="107" href="#107">107</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">}</span></td></tr>
+    <tr class=" d-flex"><td  class="col-1 text-right"><a id="108" href="#108">108</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">}</span><span class="keyword">;</span></td></tr>
+    <tr class=" d-flex"><td  class="col-1 text-right"><a id="109" href="#109">109</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">}</span></td></tr>
+    <tr class=" d-flex"><td  class="col-1 text-right"><a id="110" href="#110">110</a></td><td class="col-11 codeLine"><span class="keyword">}</span></td></tr>
 
 </tbody>
 </table>
@@ -266,7 +271,7 @@
     <h4>Legend</h4>
     <p><span class="legend covered-by-small-tests">Covered by small (and larger) tests</span><span class="legend covered-by-medium-tests">Covered by medium (and large) tests</span><span class="legend covered-by-large-tests">Covered by large tests (and tests of unknown size)</span><span class="legend not-covered">Not covered</span><span class="legend not-coverable">Not coverable</span></p>
     <p>
-     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 9.2.32</a> using <a href="https://secure.php.net/" target="_top">PHP 7.4.33</a> and <a href="https://phpunit.de/">PHPUnit 9.6.24</a> at Mon Aug 11 3:24:33 UTC 2025.</small>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 9.2.32</a> using <a href="https://secure.php.net/" target="_top">PHP 7.4.33</a> and <a href="https://phpunit.de/">PHPUnit 9.6.25</a> at Thu Aug 21 6:19:01 UTC 2025.</small>
     </p>
     <a title="Back to the top" id="toplink" href="#">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16"><path fill-rule="evenodd" d="M12 11L6 5l-6 6h12z"/></svg>
