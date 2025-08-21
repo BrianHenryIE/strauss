@@ -55,6 +55,9 @@ class ChangeEnumerator
                     // TODO: Should the target path be used here?
                     if (1 === preg_match($excludeFilePattern, $file->getVendorRelativePath())) {
                         $file->setDoPrefix(false);
+                        foreach ($file->getDiscoveredSymbols() as $discoveredSymbol) {
+                            $discoveredSymbol->setDoRename(false);
+                        }
                     }
                 }
             }
@@ -66,8 +69,17 @@ class ChangeEnumerator
         $discoveredNamespaces = $discoveredSymbols->getDiscoveredNamespaces();
 
         foreach ($discoveredNamespaces as $symbol) {
+            // This line seems redundant.
             if ($symbol instanceof NamespaceSymbol) {
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
+
+                if (in_array(
+                    $symbol->getOriginalSymbol(),
+                    $this->config->getExcludeNamespacesFromPrefixing(),
+                    true
+                )) {
+                    $symbol->setDoRename(false);
+                }
 
                 // `namespace_prefix` is just a shorthand for a replacement pattern that applies to all namespaces.
 
@@ -136,27 +148,26 @@ class ChangeEnumerator
                 }
             }
 
+            // If we're a namespaced class, apply the fqdnchange.
             if ($theclass->getNamespace() !== '\\') {
                 $newNamespace = $discoveredNamespaces[$theclass->getNamespace()];
                 if ($newNamespace) {
-                    // TODO: This should be in ChangeEnumerator.
-                    // `str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
-                    $determineReplacement = function ($originalNamespace, $newNamespace, $fqdnClassname) {
-                        $search = '/'.preg_quote($originalNamespace, '/').'/';
-                        return preg_replace($search, $newNamespace, $fqdnClassname, 1);
-                    };
-                    $theclass->setReplacement(
-                        $determineReplacement(
-                            $newNamespace->getOriginalSymbol(),
-                            $newNamespace->getReplacement(),
-                            $theclass->getOriginalSymbol()
-                        )
+                    $replacement = $this->determineNamespaceReplacement(
+                        $newNamespace->getOriginalSymbol(),
+                        $newNamespace->getReplacement(),
+                        $theclass->getOriginalSymbol()
                     );
-                    unset($newNamespace);
+
+                    $theclass->setReplacement($replacement);
+
+                    unset($newNamespace, $replacement);
                 }
                 continue;
+            } else {
+                // Global class.
+                $replacement = $classmapPrefix . $theclass->getOriginalSymbol();
+                $theclass->setReplacement($replacement);
             }
-            $theclass->setReplacement($classmapPrefix . $theclass->getOriginalSymbol());
         }
 
         $functionsSymbols = $discoveredSymbols->getDiscoveredFunctions();
@@ -173,5 +184,15 @@ class ChangeEnumerator
 
             $symbol->setReplacement($functionPrefix . $symbol->getOriginalSymbol());
         }
+    }
+
+    /**
+     *`str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
+     */
+    protected function determineNamespaceReplacement(string $originalNamespace, string $newNamespace, string $fqdnClassname): string
+    {
+            $search = '/' . preg_quote($originalNamespace, '/') . '/';
+
+            return preg_replace($search, $newNamespace, $fqdnClassname, 1);
     }
 }

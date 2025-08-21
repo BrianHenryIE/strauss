@@ -80,7 +80,7 @@ class FileCopyScanner
 
             $filePath = $file->getSourcePath();
             foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
-                if (1 == preg_match($pattern, $filePath)) {
+                if (1 === preg_match($pattern, $filePath)) {
                     $this->logger->debug("File {$file->getSourcePath()} will not be copied because it matches pattern {$pattern}.");
                     $copy = false;
                 }

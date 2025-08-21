@@ -1708,7 +1708,6 @@ EOD;
         $file = Mockery::mock(File::class);
         $file->expects('addDiscoveredSymbol')->twice();
         $file->expects('getSourcePath')->twice();
-        $file->expects('isDoPrefix')->atLeast()->once()->andReturn(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 

@@ -19,6 +19,8 @@ abstract class DiscoveredSymbol
 
     protected string $replacement;
 
+    protected bool $doRename = true;
+
     /**
      * @param string $fqdnSymbol The classname / namespace etc.
      * @param File $sourceFile The file it was discovered in.
@@ -58,17 +60,9 @@ abstract class DiscoveredSymbol
 
     public function getReplacement(): string
     {
-        $shouldRename = array_reduce(
-            $this->sourceFiles,
-            fn(bool $carry, File $file) => $file->isDoPrefix() && $carry,
-            true
-        );
-
-        if (!$shouldRename) {
-            return $this->fqdnOriginalSymbol;
-        }
-
-        return $this->replacement ?? $this->fqdnOriginalSymbol;
+        return $this->isDoRename()
+            ? ($this->replacement ?? $this->fqdnOriginalSymbol)
+            : $this->fqdnOriginalSymbol;
     }
 
     public function setReplacement(string $replacement): void
@@ -84,5 +78,15 @@ abstract class DiscoveredSymbol
     public function getOriginalLocalName(): string
     {
         return array_reverse(explode('\\', $this->fqdnOriginalSymbol))[0];
+    }
+
+    public function setDoRename(bool $doRename): void
+    {
+        $this->doRename = $doRename;
+    }
+
+    public function isDoRename(): bool
+    {
+        return $this->doRename;
     }
 }
