@@ -61,6 +61,7 @@ class DiscoveredSymbolTest extends TestCase
         $fileMock = Mockery::mock(File::class);
         $fileMock->expects('getSourcePath')->once()->andReturn('/path/to/file.php');
         $fileMock->expects('addDiscoveredSymbol')->once();
+        $fileMock->expects('isDoPrefix')->once()->andReturnTrue();
 
         $sut = new ClassSymbol('MyClass', $fileMock);
 

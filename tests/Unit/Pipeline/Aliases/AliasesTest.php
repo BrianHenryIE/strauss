@@ -57,6 +57,7 @@ class AliasesTest extends TestCase
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->times(1)->andReturn('vendor/foo/bar/baz.php');
         $file->expects('addDiscoveredSymbol')->once();
+        $file->expects('isDoPrefix')->atLeast()->once()->andReturn(true);
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; class Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; class Baz {}');
@@ -109,6 +110,7 @@ EOD;
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->atLeast()->once()->andReturn('vendor/foo/bar/baz.php');
         $file->expects('addDiscoveredSymbol')->atLeast()->once();
+        $file->expects('isDoPrefix')->atLeast()->once()->andReturn(true);
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; class Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; class Baz {}');
@@ -152,6 +154,7 @@ EOD;
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->times(1)->andReturn('vendor/foo/bar/baz.php');
         $file->expects('addDiscoveredSymbol')->once();
+        $file->expects('isDoPrefix')->atLeast()->once()->andReturn(true);
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; interface Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; interface Baz {}');
@@ -202,6 +205,7 @@ EOD;
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->atLeast()->once()->andReturn('vendor/foo/bar/baz.php');
         $file->expects('addDiscoveredSymbol')->atLeast()->once();
+        $file->expects('isDoPrefix')->atLeast()->once()->andReturn(true);
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Bar; function baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Foo\\Bar; function baz {}');

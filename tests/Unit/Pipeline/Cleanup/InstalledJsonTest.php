@@ -164,6 +164,7 @@ EOD;
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
         $file->expects('addDiscoveredSymbol');
+        $file->expects('isDoPrefix')->atLeast()->once()->andReturn(true);
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
         $namespaceSymbol->setReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
@@ -214,6 +215,7 @@ EOD;
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
         $file->expects('addDiscoveredSymbol');
+        $file->expects('isDoPrefix')->atLeast()->once()->andReturn(true);
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
         $namespaceSymbol->setReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
@@ -310,6 +312,7 @@ EOD;
         $file = Mockery::mock(FileWithDependency::class);
         $file->expects('getSourcePath')->andReturn('vendor/psr/log/src/AbstractLogger.php');
         $file->expects('addDiscoveredSymbol');
+        $file->expects('isDoPrefix')->atLeast()->once()->andReturn(true);
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Log', $file);
         $namespaceSymbol->setReplacement('BrianHenryIE\\Tests\\Psr\\Log',);

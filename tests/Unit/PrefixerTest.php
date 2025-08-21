@@ -1708,6 +1708,7 @@ EOD;
         $file = Mockery::mock(File::class);
         $file->expects('addDiscoveredSymbol')->twice();
         $file->expects('getSourcePath')->twice();
+        $file->expects('isDoPrefix')->atLeast()->once()->andReturn(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -2010,7 +2011,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $symbol = new FunctionSymbol('append_config', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $symbol = new FunctionSymbol('append_config', $fileMock);
         $symbol->setReplacement('myprefix_append_config');
 
         $symbols = new DiscoveredSymbols();
@@ -2105,7 +2110,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2184,7 +2193,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $namespaceSymbol = new NamespaceSymbol('GuzzleHttp', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+        $namespaceSymbol = new NamespaceSymbol('GuzzleHttp', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\GuzzleHttp');
 
         $symbols = new DiscoveredSymbols();
@@ -2236,7 +2249,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2296,7 +2313,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2346,7 +2367,12 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+          ->method('isDoPrefix')
+          ->willReturn(true);
+
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2399,7 +2425,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2466,7 +2496,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2524,7 +2558,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2606,7 +2644,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $namespaceSymbol = new NamespaceSymbol('Latte', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2669,11 +2711,19 @@ EOD;
 
         $symbols = new DiscoveredSymbols();
 
-        $namespaceSymbol = new NamespaceSymbol('FontLib\\Table', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $namespaceSymbol = new NamespaceSymbol('FontLib\\Table', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\FontLib\\Table');
         $symbols->add($namespaceSymbol);
 
-        $namespaceSymbol = new NamespaceSymbol('Dompdf', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $namespaceSymbol = new NamespaceSymbol('Dompdf', $fileMock);
         $namespaceSymbol->setReplacement('Strauss\\Test\\Dompdf');
         $symbols->add($namespaceSymbol);
 
@@ -2736,7 +2786,11 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $symbol = new FunctionSymbol('my_function', $this->createMock(File::class));
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                  ->method('isDoPrefix')
+                  ->willReturn(true);
+                $symbol = new FunctionSymbol('my_function', $fileMock);
         $symbol->setReplacement('myprefix_my_function');
 
         $symbols = new DiscoveredSymbols();
@@ -2786,6 +2840,9 @@ EOD;
         $file = $this->createMock(File::class);
         $file->expects($this->any())->method('addDiscoveredSymbol');
         $file->expects($this->any())->method('getSourcePath');
+        $file->expects($this->any())
+                 ->method('isDoPrefix')
+                 ->willReturn(true);
 
         $symbols = new DiscoveredSymbols();
 
