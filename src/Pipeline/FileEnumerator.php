@@ -90,6 +90,7 @@ class FileEnumerator
                 }
 
                 foreach ($value as $namespace => $namespace_relative_paths) {
+                    // TODO: case insensitive match.
                     if (!empty($namespace) && in_array($namespace, $this->config->getExcludeNamespacesFromCopy())) {
                         $this->logger->info("Excluding namespace " . $namespace);
                         continue;
