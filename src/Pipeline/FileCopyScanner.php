@@ -70,6 +70,7 @@ class FileCopyScanner
                 foreach ($this->config->getExcludeNamespacesFromCopy() as $namespace) {
                     if (in_array($file->getSourcePath(), array_keys($symbol->getSourceFiles()), true)
                         && $symbol instanceof NamespaceSymbol
+                        // TODO: case insensitive check. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
                         && str_starts_with($symbol->getOriginalSymbol(), $namespace)
                     ) {
                         $this->logger->debug("File {$file->getSourcePath()} will not be copied because namespace {$namespace} is excluded from copy.");
