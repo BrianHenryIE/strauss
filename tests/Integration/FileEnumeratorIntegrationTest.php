@@ -72,4 +72,34 @@ EOD;
 
         $this->assertNotNull($files->getFile($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php'));
     }
+
+    public function test_exclude_from_classmap(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/exceludefromclassmap",
+  "require": {
+    "giggsey/libphonenumber-for-php-lite": "8.13.55"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+    }
+  }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/giggsey/libphonenumber-for-php-lite/src/data/PhoneNumberMetadata_800.php');
+        // TODO: This test really should be to not prefix exclude-from-classmap files but these files are just arrays.
+        // When I remember a package that has classes in exclude-from-classmap, I'll update this test.
+    }
 }
