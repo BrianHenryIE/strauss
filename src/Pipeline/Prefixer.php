@@ -783,12 +783,8 @@ class Prefixer
 
         $modifiedStmts = $traverser->traverse($ast);
 
-        $updatedContent = (new Standard())->prettyPrintFile($modifiedStmts);
-
-        $updatedContent = str_replace('namespace \\', 'namespace ', $updatedContent);
-
         return $visitor->countChanges == 0
             ? $phpFileContent
-            : $updatedContent;
+            : (new Standard())->prettyPrintFile($modifiedStmts);
     }
 }
