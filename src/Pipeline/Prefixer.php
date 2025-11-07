@@ -85,14 +85,16 @@ class Prefixer
                 continue;
             }
 
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
+
+            $this->logger->debug("Updating contents of file: {$relativeFilePath}");
+
             /**
              * Throws an exception, but unlikely to happen.
              */
             $contents = $this->filesystem->read($file->getAbsoluteTargetPath());
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
-
-            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
 
             if ($updatedContents !== $contents) {
                 // TODO: diff here and debug log.
@@ -127,6 +129,8 @@ class Prefixer
                 $this->logger->warning("Expected file does not exist: {$relativeFilePath}");
                 continue;
             }
+
+            $this->logger->debug("Updating contents of file: {$relativeFilePath}");
 
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
