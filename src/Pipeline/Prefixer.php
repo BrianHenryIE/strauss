@@ -776,7 +776,7 @@ class Prefixer
              */
             private function prefixWithSingleLeadingSlash(string $maybePrefixed): string
             {
-                return preg_replace('/\\+/', '\\', $maybePrefixed);
+                return preg_replace('/^\\+/', '\\', '\\' . $maybePrefixed);
             }
         };
         $traverser->addVisitor($visitor);
