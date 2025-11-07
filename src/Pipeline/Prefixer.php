@@ -85,14 +85,16 @@ class Prefixer
                 continue;
             }
 
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
+
+            $this->logger->debug("Updating contents of file: {$relativeFilePath}");
+
             /**
              * Throws an exception, but unlikely to happen.
              */
             $contents = $this->filesystem->read($file->getAbsoluteTargetPath());
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
-
-            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
 
             if ($updatedContents !== $contents) {
                 // TODO: diff here and debug log.
@@ -127,6 +129,8 @@ class Prefixer
                 $this->logger->warning("Expected file does not exist: {$relativeFilePath}");
                 continue;
             }
+
+            $this->logger->debug("Updating contents of file: {$relativeFilePath}");
 
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
@@ -748,12 +752,12 @@ class Prefixer
                         array_pop($parts);
                         $namespace = implode('\\', $parts);
                         if (in_array($namespace, $this->discoveredNamespaces)) {
-                            $nameNode->name = '\\' . $nameNode->name;
+                            $nameNode->name = $this->prefixWithSingleLeadingSlash($nameNode->name);
                             $this->countChanges++;
                         } else {
                             foreach ($this->using as $namespaceBase) {
                                 if (in_array($namespaceBase . '\\' . $namespace, $this->discoveredNamespaces)) {
-                                    $nameNode->name = '\\' . $namespaceBase . '\\' . $nameNode->name;
+                                    $nameNode->name = $this->prefixWithSingleLeadingSlash($namespaceBase . '\\' . $nameNode->name);
                                     $this->countChanges++;
                                     break;
                                 }
@@ -764,18 +768,23 @@ class Prefixer
                 $this->lastNode = $node;
                 return $node;
             }
+
+            /**
+             * "brian" -> "\brian"
+             * "\brian" -> "\brian"
+             * "\\brian" -> "\brian"
+             */
+            private function prefixWithSingleLeadingSlash(string $maybePrefixed): string
+            {
+                return preg_replace('/^\\+/', '\\', '\\' . $maybePrefixed);
+            }
         };
         $traverser->addVisitor($visitor);
 
         $modifiedStmts = $traverser->traverse($ast);
 
-        $updatedContent = (new Standard())->prettyPrintFile($modifiedStmts);
-
-        $updatedContent = str_replace('namespace \\', 'namespace ', $updatedContent);
-        $updatedContent = str_replace('use \\\\', 'use \\', $updatedContent);
-
         return $visitor->countChanges == 0
             ? $phpFileContent
-            : $updatedContent;
+            : (new Standard())->prettyPrintFile($modifiedStmts);
     }
 }
