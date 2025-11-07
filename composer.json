@@ -63,6 +63,12 @@
     "conflict": {
       "json-mapper/json-mapper": "2.23.0 | 2.24.0"
     },
+    "extra": {
+      "strauss": {
+          "namespace_prefix": "BrianHenryIE\\Strauss\\Vendor\\",
+          "target_directory": "vendor"
+      }
+    },
     "scripts": {
         "post-install-cmd": [
             "@install-phive-dependencies"
