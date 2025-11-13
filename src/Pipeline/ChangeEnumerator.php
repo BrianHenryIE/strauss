@@ -47,7 +47,7 @@ class ChangeEnumerator
                 }
 
                 // If any of the files the symbol was found in are marked not to prefix, don't prefix the symbol.
-                if (!array_reduce($symbol->getSourceFiles(), fn(bool $carry, File $file) => $carry && $file->isDoPrefix(), true)) {
+                if ($symbol->getNamespace() !== '\\' && !array_reduce($symbol->getSourceFiles(), fn(bool $carry, File $file) => $carry && $file->isDoPrefix(), true)) {
                     $symbol->setDoRename(false);
                 }
 
