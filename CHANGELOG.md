@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.0
+
+* Prefix own classes in phar
+
 ## 0.24.1 August 2025
 
 * Fix: inadvertently removing autoload keys from `installed.json` when `target_directory` is not `vendor-prefixed`
@@ -8,7 +12,7 @@
 * Fix: only update a _class extends_ namespace if it is global 
 * Fix: log message replacement in `InstalledJson::cleanTargetDirInstalledJson()`
 * Dependencies: use `conflict` to allow newer jsonmapper versions
-* Release: update `.editorconfig` 
+* Release: update `.gitattributes` 
 * Slightly better logging
 * [...more](https://github.com/BrianHenryIE/strauss/compare/0.24.0...0.24.1)
 
