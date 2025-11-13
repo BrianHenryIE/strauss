@@ -25,7 +25,7 @@ class ChangeEnumerator
         LoggerInterface $logger
     ) {
         $this->config = $config;
-        $this->setLogger($logger );
+        $this->setLogger($logger);
     }
 
     public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void
