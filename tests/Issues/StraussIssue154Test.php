@@ -135,9 +135,7 @@ EOD;
      */
     public function test_constant()
     {
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
