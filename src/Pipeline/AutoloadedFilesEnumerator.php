@@ -51,6 +51,10 @@ class AutoloadedFilesEnumerator
     {
         $this->logger->info("Scanning for autoloaded files in package {packageName}", ['packageName' => $dependency->getPackageName()]);
 
+        if ($this->isPackageExcluded($dependency->getPackageName())) {
+            return;
+        }
+
         $dependencyAutoloadKey = $dependency->getAutoload();
         $excludeFromClassmap = isset($dependencyAutoloadKey['exclude_from_classmap']) ? $dependencyAutoloadKey['exclude_from_classmap'] : [];
 
@@ -90,6 +94,10 @@ class AutoloadedFilesEnumerator
                     );
                     $filesAutoloaderFiles = $this->filesystem->findAllFilesAbsolutePaths($filesAbsolutePaths, true);
                     foreach ($filesAutoloaderFiles as $filePackageAbsolutePath) {
+                        if ($this->isFileExcluded($filePackageAbsolutePath)) {
+                            continue;
+                        }
+
                         $filePackageRelativePath = $this->filesystem->getRelativePath(
                             $dependencyPackageAbsolutePath,
                             $filePackageAbsolutePath
@@ -101,7 +109,7 @@ class AutoloadedFilesEnumerator
                     $autoloadKeyPaths = array_map(
                         fn(string $path) =>
                             '/'. $this->filesystem->normalize(
-                                $dependencyPackageAbsolutePath . '/' . $path
+                                $dependencyPackageAbsolutePath . $path
                             ),
                         (array)$value
                     );
@@ -119,9 +127,7 @@ class AutoloadedFilesEnumerator
                 case 'psr-0':
                 case 'psr-4':
                     foreach ((array)$value as $namespace => $namespaceRelativePaths) {
-                        // TODO: case insensitive match.
-                        if (!empty($namespace) && in_array($namespace, $this->config->getExcludeNamespacesFromCopy())) {
-                            $this->logger->info("Excluding namespace " . $namespace);
+                        if ($this->isNamespaceExcluded($namespace)) {
                             continue;
                         }
 
@@ -151,6 +157,10 @@ class AutoloadedFilesEnumerator
         $classMap = $classMapGenerator->getClassMap();
         $classMapPaths = $classMap->getMap();
         foreach ($classMapPaths as $fileAbsolutePath) {
+            if ($this->isFileExcluded($fileAbsolutePath)) {
+                continue;
+            }
+
             $relativePath = $this->filesystem->getRelativePath($dependency->getPackageAbsolutePath(), $fileAbsolutePath);
             $dependency->getFile($relativePath)->setDoPrefix(true);
         }
@@ -182,5 +192,43 @@ class AutoloadedFilesEnumerator
                 }
             }
         }
+    }
+
+    protected function isPackageExcluded(string $packageName): bool
+    {
+        if (in_array(
+            $packageName,
+            $this->config->getExcludePackagesFromPrefixing(),
+            true
+        )) {
+            return true;
+        }
+        return false;
+    }
+
+    protected function isNamespaceExcluded(string $namespace): bool
+    {
+        if (!empty($namespace) && in_array($namespace, $this->config->getExcludeNamespacesFromCopy())) {
+            $this->logger->info("Excluding namespace " . $namespace);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Compares the relative path from the vendor dir with `exclude_file_patterns` config.
+     *
+     * @param string $absoluteFilePath
+     * @return bool
+     */
+    protected function isFileExcluded(string $absoluteFilePath): bool
+    {
+        foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
+            $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
+            if (1 === preg_match($excludeFilePattern, $vendorRelativePath)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -42,6 +43,11 @@ class ChangeEnumerator
                     $this->config->getExcludeNamespacesFromPrefixing(),
                     true
                 )) {
+                    $symbol->setDoRename(false);
+                }
+
+                // If any of the files the symbol was found in are marked not to prefix, don't prefix the symbol.
+                if (!array_reduce($symbol->getSourceFiles(), fn(bool $carry, File $file) => $carry && $file->isDoPrefix(), true)) {
                     $symbol->setDoRename(false);
                 }
 
