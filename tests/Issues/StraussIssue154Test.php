@@ -15,9 +15,7 @@ class StraussIssue154Test extends IntegrationTestCase
 {
     public function test_relative_namespaces()
     {
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -57,9 +55,7 @@ EOD;
      */
     public function test_use()
     {
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -99,9 +95,7 @@ EOD;
      */
     public function test_parameter()
     {
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -183,10 +177,7 @@ EOD;
      */
     public function test_class_prefix(): void
     {
-
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -225,10 +216,7 @@ EOD;
      */
     public function test_multiple_namespaces(): void
     {
-
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -266,10 +254,7 @@ EOD;
 
     public function test_return_type(): void
     {
-
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -305,10 +290,7 @@ EOD;
 
     public function test_phpdoc(): void
     {
-
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -344,10 +326,7 @@ EOD;
 
     public function test_static_property(): void
     {
-
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -383,10 +362,7 @@ EOD;
 
     public function test_constructor_parameter(): void
     {
-
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -422,10 +398,7 @@ EOD;
 
     public function test_exception_type(): void
     {
-
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
@@ -460,10 +433,7 @@ EOD;
     }
     public function test_instanceof(): void
     {
-
-        if (!version_compare(phpversion(), '8.4', '<')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.4 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
 {
