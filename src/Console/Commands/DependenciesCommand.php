@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
+use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
@@ -445,6 +446,16 @@ class DependenciesCommand extends Command
     // 4. Determine namespace and classname changes
     protected function scanFiles(): void
     {
+        $this->logger->notice('Enumerating autoload files...');
+
+        $autoloadFilesEnumerator = new AutoloadedFilesEnumerator(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+        $autoloadFilesEnumerator->markFilesForInclusion($this->flatDependencyTree);
+        $autoloadFilesEnumerator->markFilesForExclusion($this->discoveredFiles);
+
         $this->logger->notice('Scanning files...');
 
         $fileScanner = new FileSymbolScanner(
