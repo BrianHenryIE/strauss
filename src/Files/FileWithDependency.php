@@ -26,7 +26,7 @@ class FileWithDependency extends File implements HasDependency
 
     public function __construct(ComposerPackage $dependency, string $vendorRelativePath, string $sourceAbsolutePath)
     {
-        parent::__construct($sourceAbsolutePath);
+        parent::__construct($sourceAbsolutePath, $vendorRelativePath);
 
         $this->vendorRelativePath = ltrim($vendorRelativePath, '/\\');
         $this->packageRelativePath = str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsolutePath);

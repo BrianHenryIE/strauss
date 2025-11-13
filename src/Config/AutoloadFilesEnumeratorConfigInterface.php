@@ -18,4 +18,18 @@ interface AutoloadFilesEnumeratorConfigInterface
      * @return string[]
      */
     public function getExcludeNamespacesFromPrefixing(): array;
+   /**
+     * @return string[]
+     */
+    public function getExcludePackagesFromCopy(): array;
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFilePatternsFromCopy(): array;
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeNamespacesFromCopy(): array;
 }

@@ -115,8 +115,11 @@ class FileEnumerator
             $autoloaderType && $f->addAutoloader($autoloaderType);
             $f->setDoDelete($isOutsideProjectDir);
         } else {
+            $vendorRelativePath = str_replace($this->config->getVendorDirectory(), '', $sourceAbsoluteFilepath);
+            $vendorRelativePath = str_replace($this->config->getTargetDirectory(), '', $vendorRelativePath);
+
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
-                 ?? new File($sourceAbsoluteFilepath);
+                 ?? new File($sourceAbsoluteFilepath, $vendorRelativePath);
         }
 
         $this->discoveredFiles->add($f);

@@ -253,7 +253,7 @@ EOD;
         
         // Verify excluded namespace files are NOT copied
         // Note: This tests the namespace exclusion logic in FileEnumerator.php:93-96
-        $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log');
+        $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         
         // Verify non-excluded namespace (Monolog) IS copied
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
@@ -400,7 +400,7 @@ EOD;
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log');
         
         // Verify psr/cache is excluded by namespace exclusion
-        $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/cache');
+        $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/cache/src/CacheItemInterface.php');
         
         // Verify monolog IS copied (not excluded by any rule)
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');

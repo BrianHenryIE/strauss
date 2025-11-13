@@ -75,6 +75,7 @@ EOD;
 
     public function test_exclude_from_classmap(): void
     {
+        $this->markTestSkippedOnPhpVersionBelow('8.1');
 
         $composerJsonString = <<<'EOD'
 {

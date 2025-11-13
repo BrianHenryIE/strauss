@@ -203,11 +203,22 @@ class AutoloadedFilesEnumerator
         )) {
             return true;
         }
+        if (in_array(
+            $packageName,
+            $this->config->getExcludePackagesFromCopy(),
+            true
+        )) {
+            return true;
+        }
         return false;
     }
 
     protected function isNamespaceExcluded(string $namespace): bool
     {
+        if (!empty($namespace) && in_array($namespace, $this->config->getExcludeNamespacesFromPrefixing())) {
+            $this->logger->info("Excluding namespace " . $namespace);
+            return true;
+        }
         if (!empty($namespace) && in_array($namespace, $this->config->getExcludeNamespacesFromCopy())) {
             $this->logger->info("Excluding namespace " . $namespace);
             return true;
@@ -224,6 +235,12 @@ class AutoloadedFilesEnumerator
     protected function isFileExcluded(string $absoluteFilePath): bool
     {
         foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
+            $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
+            if (1 === preg_match($excludeFilePattern, $vendorRelativePath)) {
+                return true;
+            }
+        }
+        foreach ($this->config->getExcludeFilePatternsFromCopy() as $excludeFilePattern) {
             $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
             if (1 === preg_match($excludeFilePattern, $vendorRelativePath)) {
                 return true;

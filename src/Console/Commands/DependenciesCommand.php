@@ -249,15 +249,14 @@ class DependenciesCommand extends Command
 
             $this->enumerateFiles();
 
-            $this->copyFiles();
-
-
             $this->discoveredSymbols = new DiscoveredSymbols();
 
             $this->enumeratePsr4Namespaces();
             $this->scanFiles();
             $this->determineChanges();
 
+            $this->analyseFilesToCopy();
+            $this->copyFiles();
 
             $this->performReplacements();
 
@@ -275,7 +274,6 @@ class DependenciesCommand extends Command
             $this->logger->notice('Done');
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
-
             return Command::FAILURE;
         }
 
@@ -378,44 +376,6 @@ class DependenciesCommand extends Command
         $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);
     }
 
-    // 3. Copy autoloaded files for each
-    protected function copyFiles(): void
-    {
-        (new FileCopyScanner($this->config, $this->filesystem, $this->logger))->scanFiles($this->discoveredFiles);
-
-        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
-            // Nothing to do.
-            return;
-        }
-
-        $this->logger->notice('Copying files...');
-
-        $copier = new Copier(
-            $this->discoveredFiles,
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-
-
-        $copier->prepareTarget();
-        $copier->copy();
-
-        foreach ($this->flatDependencyTree as $package) {
-            if ($package->isCopy()) {
-                $package->setDidCopy(true);
-            }
-        }
-
-        $installedJson = new InstalledJson(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-        $installedJson->copyInstalledJson();
-    }
-
-
     /**
      * TODO: currently this must run after ::determineChanges() so the discoveredSymbols object exists,
      * but logically it should run first.
@@ -431,7 +391,7 @@ class DependenciesCommand extends Command
             $psr4autoloadKey = $autoloadKey['psr-4'];
             $namespaces = array_keys($psr4autoloadKey);
 
-            $file = new File($package->getPackageAbsolutePath() . 'composer.json');
+            $file = new File($package->getPackageAbsolutePath() . 'composer.json', '../composer.json');
 
             foreach ($namespaces as $namespace) {
                 // TODO: log.
@@ -479,6 +439,47 @@ class DependenciesCommand extends Command
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 
+    protected function analyseFilesToCopy(): void
+    {
+        (new FileCopyScanner($this->config, $this->filesystem, $this->logger))->scanFiles($this->discoveredFiles);
+    }
+
+    protected function copyFiles(): void
+    {
+
+        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+            // Nothing to do.
+            return;
+        }
+
+        $this->logger->notice('Copying files...');
+
+        $copier = new Copier(
+            $this->discoveredFiles,
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+
+
+        $copier->prepareTarget();
+        $copier->copy();
+
+        foreach ($this->flatDependencyTree as $package) {
+            if ($package->isCopy()) {
+                $package->setDidCopy(true);
+            }
+        }
+
+        $installedJson = new InstalledJson(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+        $installedJson->copyInstalledJson();
+    }
+
+
     // 5. Update namespaces and class names.
     // Replace references to updated namespaces and classnames throughout the dependencies.
     protected function performReplacements(): void
@@ -496,7 +497,7 @@ class DependenciesCommand extends Command
 
     protected function performReplacementsInProjectFiles(): void
     {
-
+        // TODO: this doesn't do tests?!
         $relativeCallSitePaths =
             $this->config->getUpdateCallSites()
             ?? $this->projectComposerPackage->getFlatAutoloadKey();

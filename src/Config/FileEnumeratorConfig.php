@@ -7,6 +7,8 @@ interface FileEnumeratorConfig
 
     public function getVendorDirectory(): string;
 
+    public function getTargetDirectory(): string;
+
     /** @return string[] */
     public function getExcludeNamespacesFromCopy(): array;
 

@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
@@ -32,6 +33,8 @@ class ChangeEnumerator
     public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void
     {
         $discoveredNamespaces = $discoveredSymbols->getDiscoveredNamespaces();
+
+        $this->determineExclusions($discoveredSymbols);
 
         foreach ($discoveredNamespaces as $symbol) {
             // This line seems redundant.
@@ -155,6 +158,33 @@ class ChangeEnumerator
             $symbol->setReplacement($functionPrefix . $symbol->getOriginalSymbol());
         }
     }
+
+    protected function determineExclusions(DiscoveredSymbols $discoveredSymbols)
+    {
+        foreach ($discoveredSymbols->getSymbols() as $symbol) {
+            $this->checkExcludedSymbol($symbol);
+        }
+    }
+
+    protected function checkExcludedSymbol(DiscoveredSymbol $symbol): void
+    {
+        foreach ($this->config->getExcludeNamespacesFromPrefixing() as $excludeNamespace) {
+            $excludeNamespace = rtrim($excludeNamespace, '\\');
+            if (str_starts_with($symbol->getNamespace(), $excludeNamespace)) {
+                $symbol->setDoRename(false);
+            }
+        }
+        /** @var File $file */
+        foreach ($symbol->getSourceFiles() as $file) {
+            $relativePath = $file->getVendorRelativePath();
+            foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $filePattern) {
+                if (1 === preg_match($filePattern, $relativePath)) {
+                    $symbol->setDoRename(false);
+                }
+            }
+        }
+    }
+
 
     /**
      *`str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.

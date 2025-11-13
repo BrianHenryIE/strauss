@@ -7,6 +7,7 @@ use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\NamespaceSort;
+use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -157,16 +158,17 @@ class Prefixer
     {
         $classmapPrefix = $this->config->getClassmapPrefix();
 
-        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
+        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
         $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
-        $functions = $discoveredSymbols->getDiscoveredFunctions();
+//        $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
+        $classes = $discoveredSymbols->getGlobalClassChanges();
+        $functions = $discoveredSymbols->getDiscoveredFunctionChanges();
 
         $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
 
-
-        foreach ($discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix()) as $classsname) {
-            if ($classmapPrefix) {
-                $contents = $this->replaceClassname($contents, $classsname, $classmapPrefix);
+        if ($classmapPrefix) {
+            foreach ($classes as $classSymbol) {
+                $contents = $this->replaceClassname($contents, $classSymbol->getOriginalSymbol(), $classmapPrefix);
             }
         }
 
