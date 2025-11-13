@@ -209,12 +209,12 @@ class FileSymbolScanner
     {
         $result = [];
 
-        // Don't bother with parsing the php if there's only one namespace.
-        preg_match_all('/namespace\s+([^;]+);/', $contents, $matches);
-        if (!isset($matches[0]) || count($matches[0])<=1) {
-            $result['\\'] = $contents;
-            return $result;
-        }
+//        // Don't bother with parsing the php if there's only one namespace.
+//        preg_match_all('/namespace\s+([^;]+);/', $contents, $matches);
+//        if (!isset($matches[0]) || count($matches[0])<=1) {
+//            $result['\\'] = $contents;
+//            return $result;
+//        }
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
