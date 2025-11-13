@@ -12,6 +12,8 @@ class FileWithDependency extends File implements HasDependency
      */
     protected string $vendorRelativePath;
 
+    protected string $packageRelativePath;
+
     /**
      * The project dependency that this file belongs to.
      */
@@ -27,10 +29,14 @@ class FileWithDependency extends File implements HasDependency
         parent::__construct($sourceAbsolutePath);
 
         $this->vendorRelativePath = ltrim($vendorRelativePath, '/\\');
+        $this->packageRelativePath = str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsolutePath);
+
         $this->dependency         = $dependency;
 
         // Set this to null so we query the package's `isDelete` setting.
         $this->doDelete = null;
+
+        $this->dependency->addFile($this);
     }
 
     public function getDependency(): ComposerPackage
@@ -59,6 +65,11 @@ class FileWithDependency extends File implements HasDependency
     public function getVendorRelativePath(): string
     {
         return $this->vendorRelativePath;
+    }
+
+    public function getPackageRelativePath(): string
+    {
+        return $this->packageRelativePath;
     }
 
     public function isDoDelete(): bool
