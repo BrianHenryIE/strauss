@@ -1,8 +1,12 @@
 # Change Log
 
-## 0.25.0
+## 0.26.0
 
 * Prefix own classes in phar
+
+## 0.25.0 November 2025
+
+* Copy all files from packages (previously only copied autoloaded files)
 
 ## 0.24.1 August 2025
 

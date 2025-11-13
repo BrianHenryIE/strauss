@@ -52,20 +52,18 @@ EOD;
 {
   "name": "issue/188",
   "require": {
-    "mpdf/mpdf": "^8.2"
+    "mpdf/mpdf": "v8.2.6"
   },
   "extra": {
     "strauss": {
       "override_autoload": {
         "mpdf/mpdf": {
-          "autoload": {
-            "files": [
-              "data/",
-              "src/",
-              "tmp/",
-              "ttfonts"
-            ]
-          }
+          "files": [
+            "data/",
+            "src/",
+            "tmp/",
+            "ttfonts"
+          ]
         }
       },
       "namespace_prefix": "Company\\PluginFramework\\"
@@ -84,7 +82,7 @@ EOD;
 
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/mpdf/mpdf/src/Exception/FontException.php');
 
-        $this->assertStringNotContainsString("class FontException extends \\\\Mpdf\\MpdfException", $php_string);
+        $this->assertStringNotContainsString("class FontException extends \\Mpdf\\MpdfException", $php_string);
         $this->assertStringNotContainsString("class FontException extends \\\\Company\\PluginFramework\\Mpdf\\MpdfException", $php_string);
         $this->assertStringContainsString("class FontException extends \\Company\\PluginFramework\\Mpdf\\MpdfException", $php_string);
     }

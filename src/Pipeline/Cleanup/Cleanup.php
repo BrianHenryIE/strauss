@@ -292,6 +292,7 @@ class Cleanup
     {
         $this->logger->info('Deleting original vendor files.');
 
+        /** @var File $file */
         foreach ($files as $file) {
             if (! $file->isDoDelete()) {
                 $this->logger->debug('Skipping/preserving ' . $file->getSourcePath());

@@ -14,6 +14,8 @@ class File implements FileBase
      */
     protected string $sourceAbsolutePath;
 
+    protected string $vendorRelativePath;
+
     /**
      * Should this file be copied to the target directory?
      */
@@ -33,11 +35,12 @@ class File implements FileBase
 
     protected bool $didDelete = false;
 
-    protected bool $doPrefix = true;
+    protected bool $doPrefix = false;
 
-    public function __construct(string $sourceAbsolutePath)
+    public function __construct(string $sourceAbsolutePath, string $vendorRelativePath)
     {
         $this->sourceAbsolutePath = $sourceAbsolutePath;
+        $this->vendorRelativePath = $vendorRelativePath;
     }
 
     public function getSourcePath(): string
@@ -147,5 +150,10 @@ class File implements FileBase
     public function getDidUpdate(): bool
     {
         return $this->didUpdate;
+    }
+
+    public function getVendorRelativePath(): string
+    {
+        return $this->vendorRelativePath;
     }
 }

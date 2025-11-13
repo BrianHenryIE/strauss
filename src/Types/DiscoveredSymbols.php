@@ -25,7 +25,7 @@ class DiscoveredSymbols
             T_INTERFACE => [],
         ];
 
-        $this->types[T_NAMESPACE]['\\'] = new NamespaceSymbol('\\', new \BrianHenryIE\Strauss\Files\File(''));
+        $this->types[T_NAMESPACE]['\\'] = new NamespaceSymbol('\\', new \BrianHenryIE\Strauss\Files\File('', ''));
     }
 
     /**
@@ -107,6 +107,17 @@ class DiscoveredSymbols
     /**
      * @return array<string, ClassSymbol>
      */
+    public function getGlobalClassChanges(): array
+    {
+        return array_filter(
+            $this->getGlobalClasses(),
+            fn($classSymbol) => $classSymbol->isDoRename()
+        );
+    }
+
+    /**
+     * @return array<string, ClassSymbol>
+     */
     public function getAllClasses(): array
     {
         return $this->types[T_CLASS];
@@ -134,6 +145,14 @@ class DiscoveredSymbols
         unset($discoveredNamespaceReplacements['\\']);
 
         return $discoveredNamespaceReplacements;
+    }
+
+    public function getDiscoveredNamespaceChanges(?string $namespacePrefix = ''): array
+    {
+        return array_filter(
+            $this->getdiscoveredNamespaces($namespacePrefix),
+            fn($namespaceSymbol) => $namespaceSymbol->isDoRename()
+        );
     }
 
     /**
@@ -169,9 +188,31 @@ class DiscoveredSymbols
         return $discoveredConstants;
     }
 
+//  public function getDiscoveredConstantChanges(?string $functionsPrefix = ''): array
+//  {
+//      return array_filter(
+//          $this->getDiscoveredConstants($functionsPrefix),
+//          fn( $discoveredConstant ) => $discoveredConstant->isDoRename()
+//      );
+//  }
+
+    /**
+     * @return FunctionSymbol[]
+     */
     public function getDiscoveredFunctions()
     {
         return $this->types[T_FUNCTION];
+    }
+
+    /**
+     * @return FunctionSymbol[]
+     */
+    public function getDiscoveredFunctionChanges(): array
+    {
+        return array_filter(
+            $this->getDiscoveredFunctions(),
+            fn($discoveredFunction) => $discoveredFunction->isDoRename()
+        );
     }
 
     public function getAll(): array

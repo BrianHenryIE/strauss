@@ -25,7 +25,7 @@ class StraussIssue173Test extends IntegrationTestCase
     "guzzlehttp/guzzle": "7.9.3",
     "kucrut/vite-for-wp": "0.10.0",
     "laravel/framework": "11.44.7",
-    "livewire/livewire": "3.6.3",
+    "livewire/livewire": "3.6.4",
     "spatie/color": "1.8.0",
     "spatie/invade": "2.1.0",
     "spatie/laravel-ignition": "2.9.1",

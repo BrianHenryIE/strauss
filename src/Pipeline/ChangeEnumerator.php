@@ -8,65 +8,33 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
-use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
-use League\Flysystem\FilesystemReader;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 class ChangeEnumerator
 {
     use LoggerAwareTrait;
 
     protected ChangeEnumeratorConfigInterface $config;
-    protected FilesystemReader $filesystem;
 
     public function __construct(
         ChangeEnumeratorConfigInterface $config,
-        FilesystemReader $filesystem,
-        ?LoggerInterface $logger = null
+        LoggerInterface $logger
     ) {
         $this->config = $config;
-        $this->filesystem = $filesystem;
-        $this->setLogger($logger ?? new NullLogger());
-    }
-
-    public function markFilesForExclusion(DiscoveredFiles $files)
-    {
-
-        foreach ($files->getFiles() as $file) {
-            if ($file instanceof FileWithDependency) {
-                if (in_array(
-                    $file->getDependency()->getPackageName(),
-                    $this->config->getExcludePackagesFromPrefixing(),
-                    true
-                )) {
-                    $file->setDoPrefix(false);
-                    continue;
-                }
-
-                foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
-                    // TODO: This source relative path should be from the vendor dir.
-                    // TODO: Should the target path be used here?
-                    if (1 === preg_match($excludeFilePattern, $file->getVendorRelativePath())) {
-                        $file->setDoPrefix(false);
-                        foreach ($file->getDiscoveredSymbols() as $discoveredSymbol) {
-                            $discoveredSymbol->setDoRename(false);
-                        }
-                    }
-                }
-            }
-        }
+        $this->setLogger($logger);
     }
 
     public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void
     {
         $discoveredNamespaces = $discoveredSymbols->getDiscoveredNamespaces();
+
+        $this->determineExclusions($discoveredSymbols);
 
         foreach ($discoveredNamespaces as $symbol) {
             // This line seems redundant.
@@ -78,6 +46,11 @@ class ChangeEnumerator
                     $this->config->getExcludeNamespacesFromPrefixing(),
                     true
                 )) {
+                    $symbol->setDoRename(false);
+                }
+
+                // If any of the files the symbol was found in are marked not to prefix, don't prefix the symbol.
+                if ($symbol->getNamespace() !== '\\' && !array_reduce($symbol->getSourceFiles(), fn(bool $carry, File $file) => $carry && $file->isDoPrefix(), true)) {
                     $symbol->setDoRename(false);
                 }
 
@@ -131,13 +104,13 @@ class ChangeEnumerator
             $discoveredSymbols->getAllClasses()
         );
 
-        foreach ($classesTraitsInterfaces as $theclass) {
-            if (str_starts_with($theclass->getOriginalSymbol(), $classmapPrefix)) {
+        foreach ($classesTraitsInterfaces as $symbol) {
+            if (str_starts_with($symbol->getOriginalSymbol(), $classmapPrefix)) {
                 // Already prefixed / second scan.
                 continue;
             }
 
-            if ($theclass->getNamespace() === '\\') {
+            if ($symbol->getNamespace() === '\\') {
                 if ($symbol instanceof ClassSymbol) {
                     // Don't double-prefix classnames.
                     if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
@@ -149,24 +122,24 @@ class ChangeEnumerator
             }
 
             // If we're a namespaced class, apply the fqdnchange.
-            if ($theclass->getNamespace() !== '\\') {
-                $newNamespace = $discoveredNamespaces[$theclass->getNamespace()];
+            if ($symbol->getNamespace() !== '\\') {
+                $newNamespace = $discoveredNamespaces[$symbol->getNamespace()];
                 if ($newNamespace) {
                     $replacement = $this->determineNamespaceReplacement(
                         $newNamespace->getOriginalSymbol(),
                         $newNamespace->getReplacement(),
-                        $theclass->getOriginalSymbol()
+                        $symbol->getOriginalSymbol()
                     );
 
-                    $theclass->setReplacement($replacement);
+                    $symbol->setReplacement($replacement);
 
                     unset($newNamespace, $replacement);
                 }
                 continue;
             } else {
                 // Global class.
-                $replacement = $classmapPrefix . $theclass->getOriginalSymbol();
-                $theclass->setReplacement($replacement);
+                $replacement = $classmapPrefix . $symbol->getOriginalSymbol();
+                $symbol->setReplacement($replacement);
             }
         }
 
@@ -185,6 +158,33 @@ class ChangeEnumerator
             $symbol->setReplacement($functionPrefix . $symbol->getOriginalSymbol());
         }
     }
+
+    protected function determineExclusions(DiscoveredSymbols $discoveredSymbols)
+    {
+        foreach ($discoveredSymbols->getSymbols() as $symbol) {
+            $this->checkExcludedSymbol($symbol);
+        }
+    }
+
+    protected function checkExcludedSymbol(DiscoveredSymbol $symbol): void
+    {
+        foreach ($this->config->getExcludeNamespacesFromPrefixing() as $excludeNamespace) {
+            $excludeNamespace = rtrim($excludeNamespace, '\\');
+            if (str_starts_with($symbol->getNamespace(), $excludeNamespace)) {
+                $symbol->setDoRename(false);
+            }
+        }
+        /** @var File $file */
+        foreach ($symbol->getSourceFiles() as $file) {
+            $relativePath = $file->getVendorRelativePath();
+            foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $filePattern) {
+                if (1 === preg_match($filePattern, $relativePath)) {
+                    $symbol->setDoRename(false);
+                }
+            }
+        }
+    }
+
 
     /**
      *`str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.

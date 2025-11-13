@@ -26,6 +26,7 @@ class MozartIssue99Test extends IntegrationTestCase
      */
     public function test_mustache()
     {
+        $this->markTestSkipped('found mustache/mustache[v2.13.0] but these were not loaded, because they are affected by security advisories.');
 
         $composerJsonString = <<<'EOD'
 {
