@@ -216,7 +216,7 @@ class DumpAutoload
             $phpFiles
         );
 
-        $sourceFile = new File(__DIR__);
+        $sourceFile = new File(__DIR__, __DIR__);
         $composerAutoloadNamespaceSymbol = new NamespaceSymbol(
             'Composer\\Autoload',
             $sourceFile

@@ -35,9 +35,6 @@ class FileSymbolScanner
 {
     use LoggerAwareTrait;
 
-    /** @var string[]  */
-    protected array $excludeNamespacesFromPrefixing = array();
-
     protected DiscoveredSymbols $discoveredSymbols;
 
     protected FileSystem $filesystem;
@@ -62,7 +59,6 @@ class FileSymbolScanner
         ?LoggerInterface $logger = null
     ) {
         $this->discoveredSymbols = $discoveredSymbols;
-        $this->excludeNamespacesFromPrefixing = $config->getExcludeNamespacesFromPrefixing();
 
         $this->config = $config;
 
@@ -111,9 +107,10 @@ class FileSymbolScanner
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
         foreach ($files->getFiles() as $file) {
+            $doPrefix = true;
             if ($file instanceof FileWithDependency && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
-                $file->setDoPrefix(false);
-                continue;
+                $doPrefix = false;
+                $file->setDoPrefix($doPrefix);
             }
 
             $relativeFilePath = $this->filesystem->getRelativePath(
@@ -205,6 +202,13 @@ class FileSymbolScanner
     {
         $result = [];
 
+//        // Don't bother with parsing the php if there's only one namespace.
+//        preg_match_all('/namespace\s+([^;]+);/', $contents, $matches);
+//        if (!isset($matches[0]) || count($matches[0])<=1) {
+//            $result['\\'] = $contents;
+//            return $result;
+//        }
+
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
         $ast = $parser->parse(trim($contents));
@@ -246,14 +250,6 @@ class FileSymbolScanner
 
     protected function addDiscoveredNamespaceChange(string $namespace, File $file): void
     {
-
-        foreach ($this->excludeNamespacesFromPrefixing as $excludeNamespace) {
-            if (0 === strpos($namespace, $excludeNamespace)) {
-                // TODO: Log.
-                return;
-            }
-        }
-
         $namespaceObj = $this->discoveredSymbols->getNamespace($namespace);
         if ($namespaceObj) {
             $namespaceObj->addSourceFile($file);
