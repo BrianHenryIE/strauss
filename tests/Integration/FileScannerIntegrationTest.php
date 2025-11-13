@@ -77,6 +77,9 @@ EOD;
         );
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        foreach ($files->getFiles() as $file) {
+            $file->setDoPrefix($file->isPhpFile());
+        }
 
         (new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir)))->scanFiles($files);
 
