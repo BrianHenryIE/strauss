@@ -183,9 +183,8 @@ class ReplaceCommand extends Command
 
         $changeEnumerator = new ChangeEnumerator(
             $config,
-            $this->filesystem
+            $this->logger
         );
-        $changeEnumerator->markFilesForExclusion($this->discoveredFiles);
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 

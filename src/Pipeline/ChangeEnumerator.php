@@ -8,60 +8,24 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
-use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
-use League\Flysystem\FilesystemReader;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 class ChangeEnumerator
 {
     use LoggerAwareTrait;
 
     protected ChangeEnumeratorConfigInterface $config;
-    protected FilesystemReader $filesystem;
 
     public function __construct(
         ChangeEnumeratorConfigInterface $config,
-        FilesystemReader $filesystem,
-        ?LoggerInterface $logger = null
+        LoggerInterface $logger
     ) {
         $this->config = $config;
-        $this->filesystem = $filesystem;
-        $this->setLogger($logger ?? new NullLogger());
-    }
-
-    public function markFilesForExclusion(DiscoveredFiles $files)
-    {
-
-        foreach ($files->getFiles() as $file) {
-            if ($file instanceof FileWithDependency) {
-                if (in_array(
-                    $file->getDependency()->getPackageName(),
-                    $this->config->getExcludePackagesFromPrefixing(),
-                    true
-                )) {
-                    $file->setDoPrefix(false);
-                    continue;
-                }
-
-                foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
-                    // TODO: This source relative path should be from the vendor dir.
-                    // TODO: Should the target path be used here?
-                    if (1 === preg_match($excludeFilePattern, $file->getVendorRelativePath())) {
-                        $file->setDoPrefix(false);
-                        foreach ($file->getDiscoveredSymbols() as $discoveredSymbol) {
-                            $discoveredSymbol->setDoRename(false);
-                        }
-                    }
-                }
-            }
-        }
+        $this->setLogger($logger );
     }
 
     public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void

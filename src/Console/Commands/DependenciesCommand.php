@@ -463,10 +463,8 @@ class DependenciesCommand extends Command
 
         $changeEnumerator = new ChangeEnumerator(
             $this->config,
-            $this->filesystem,
             $this->logger
         );
-        $changeEnumerator->markFilesForExclusion($this->discoveredFiles);
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 
