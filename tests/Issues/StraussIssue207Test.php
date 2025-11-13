@@ -47,7 +47,7 @@ EOD;
 
         // Do not prefix.
         $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/freemius/wordpress-sdk/includes/class-freemius.php');
-        $this->assertStringContainsString("class FS_Api {", $php_string);
+        $this->assertStringContainsString("class Freemius extends Freemius_Abstract", $php_string);
     }
 
     public function test_action_scheduler_files_are_copied()
@@ -107,7 +107,7 @@ EOD;
 
         // Do not prefix.
         $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/Puc/v5p6/Autoloader.php');
-        $this->assertStringContainsString("namespace YahnisElsts\PluginUpdateChecker\v5p6;", $php_string);
+        $this->assertStringContainsString("namespace YahnisElsts\\PluginUpdateChecker\\v5p6;", $php_string);
     }
 
     public function test_abilities_api_files_are_copied()
