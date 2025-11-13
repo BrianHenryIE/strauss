@@ -131,13 +131,13 @@ class ChangeEnumerator
             $discoveredSymbols->getAllClasses()
         );
 
-        foreach ($classesTraitsInterfaces as $theclass) {
-            if (str_starts_with($theclass->getOriginalSymbol(), $classmapPrefix)) {
+        foreach ($classesTraitsInterfaces as $symbol) {
+            if (str_starts_with($symbol->getOriginalSymbol(), $classmapPrefix)) {
                 // Already prefixed / second scan.
                 continue;
             }
 
-            if ($theclass->getNamespace() === '\\') {
+            if ($symbol->getNamespace() === '\\') {
                 if ($symbol instanceof ClassSymbol) {
                     // Don't double-prefix classnames.
                     if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
@@ -149,24 +149,24 @@ class ChangeEnumerator
             }
 
             // If we're a namespaced class, apply the fqdnchange.
-            if ($theclass->getNamespace() !== '\\') {
-                $newNamespace = $discoveredNamespaces[$theclass->getNamespace()];
+            if ($symbol->getNamespace() !== '\\') {
+                $newNamespace = $discoveredNamespaces[$symbol->getNamespace()];
                 if ($newNamespace) {
                     $replacement = $this->determineNamespaceReplacement(
                         $newNamespace->getOriginalSymbol(),
                         $newNamespace->getReplacement(),
-                        $theclass->getOriginalSymbol()
+                        $symbol->getOriginalSymbol()
                     );
 
-                    $theclass->setReplacement($replacement);
+                    $symbol->setReplacement($replacement);
 
                     unset($newNamespace, $replacement);
                 }
                 continue;
             } else {
                 // Global class.
-                $replacement = $classmapPrefix . $theclass->getOriginalSymbol();
-                $theclass->setReplacement($replacement);
+                $replacement = $classmapPrefix . $symbol->getOriginalSymbol();
+                $symbol->setReplacement($replacement);
             }
         }
 
