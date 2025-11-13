@@ -324,14 +324,7 @@ class Prefixer
 
         $result = preg_replace_callback($pattern, $replacingFunction, $contents);
 
-        $matchingError = preg_last_error();
-        if (0 !== $matchingError) {
-            $message = "Matching error {$matchingError}";
-            if (PREG_BACKTRACK_LIMIT_ERROR === $matchingError) {
-                $message = 'Preg Backtrack limit was exhausted!';
-            }
-            throw new Exception($message);
-        }
+        $this->checkPregError();
 
         // For prefixed functions which do not begin with a backslash, add one.
         // I'm not certain this is a good idea.
@@ -410,14 +403,7 @@ class Prefixer
             throw new Exception('preg_replace_callback returned null');
         }
 
-        $matchingError = preg_last_error();
-        if (0 !== $matchingError) {
-            $message = "Matching error {$matchingError}";
-            if (PREG_BACKTRACK_LIMIT_ERROR === $matchingError) {
-                $message = 'Backtrack limit was exhausted!';
-            }
-            throw new Exception($message);
-        }
+        $this->checkPregError();
 
         return $result;
     }
@@ -452,6 +438,8 @@ class Prefixer
             $contents
         );
 
+        $this->checkPregError();
+
         $bodyPattern =
             '/([^a-zA-Z0-9_\x7f-\xff]  # Not a class character
 			\\\)                       # Followed by a backslash to indicate global namespace
@@ -459,13 +447,25 @@ class Prefixer
 			([^\\\;]{1})               # Not a backslash or semicolon which might indicate a namespace
 			/x'; //                    # x: ignore whitespace in regex.
 
-        return preg_replace_callback(
+        $result = preg_replace_callback(
             $bodyPattern,
             function ($matches) use ($replacement) {
                 return $matches[1] . $replacement . $matches[3];
             },
             $contents
         ) ?? $contents; // TODO: If this happens, it should raise an exception.
+
+        $this->checkPregError();
+
+        return $result;
+    }
+
+    protected function checkPregError(): void
+    {
+        $matchingError = preg_last_error();
+        if (0 !== $matchingError) {
+            throw new Exception(preg_last_error_msg());
+        }
     }
 
     /**
