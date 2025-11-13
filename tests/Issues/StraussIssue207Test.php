@@ -109,4 +109,34 @@ EOD;
         $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/Puc/v5p6/Autoloader.php');
         $this->assertStringContainsString("namespace YahnisElsts\PluginUpdateChecker\v5p6;", $php_string);
     }
+
+    public function test_abilities_api_files_are_copied()
+    {
+        $packageComposerJson = <<<'EOD'
+{   
+	"name": "test/abilities-api-uses-bootstrap-in-files-autoloader",
+    "extra": {
+        "strauss": {
+            "namespace_prefix": "Strauss\\Issue207_4\\"
+        }
+    },
+    "require": {
+        "wordpress/abilities-api": "0.4.0"
+    }
+}
+EOD;
+        file_put_contents($this->testsWorkingDir . '/composer.json', $packageComposerJson);
+
+        chdir($this->testsWorkingDir);
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
+
+        // Do not prefix.
+        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
+        $this->assertStringContainsString("function wp_register_ability(", $php_string);
+    }
 }
