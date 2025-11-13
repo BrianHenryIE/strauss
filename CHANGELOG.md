@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.0 November 2025
+
+* Copy all files from packages (previously only copied autoloaded files)
+
 ## 0.24.1 August 2025
 
 * Fix: inadvertently removing autoload keys from `installed.json` when `target_directory` is not `vendor-prefixed`

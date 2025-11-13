@@ -261,6 +261,7 @@ I don't have a strong opinion on these. I began using Mozart because it was easy
 
 ## Breaking Changes
 
+* v0.25.0 – will copy all files from a package to the target directory
 * v0.21.0 – will prefix global functions
 * v0.16.0 – will no longer prefix PHP built-in classes seen in polyfill packages
 * v0.14.0 – `psr/*` packages no longer excluded by default
