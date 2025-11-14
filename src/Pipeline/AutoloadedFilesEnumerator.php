@@ -236,16 +236,27 @@ class AutoloadedFilesEnumerator
     {
         foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
             $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
-            if (1 === preg_match($excludeFilePattern, $vendorRelativePath)) {
+            if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
                 return true;
             }
         }
         foreach ($this->config->getExcludeFilePatternsFromCopy() as $excludeFilePattern) {
             $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
-            if (1 === preg_match($excludeFilePattern, $vendorRelativePath)) {
+            if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private function preparePattern(string $pattern): string
+    {
+        $delimiter = '/';
+
+        if (substr($pattern, 0, 1) !== substr($pattern, - 1, 1)) {
+            $pattern = trim($pattern, substr($pattern, 0, 1));
+        }
+
+        return $delimiter . preg_quote($pattern, $delimiter) . $delimiter;
     }
 }
