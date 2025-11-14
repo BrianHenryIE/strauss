@@ -129,6 +129,7 @@ class InstalledJson
                 $newInstallPath = $path . str_replace('../', '', $package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
+                    // Should `unset($installedJsonArray['packages'][$key])`?
                     $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
                     continue;
                 }
