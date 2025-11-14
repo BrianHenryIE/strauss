@@ -33,7 +33,10 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      * @var ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter|FilesystemAdapter
      */
     protected $flysystemAdapter;
+
     /**
+     * For calculating project-relative file paths.
+     *
      * @var false|string
      */
     protected string $workingDir;

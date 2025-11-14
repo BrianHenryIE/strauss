@@ -94,21 +94,19 @@ class FileEnumerator
             return;
         }
 
-        $isOutsideProjectDir = $this->filesystem->normalize($dependency->getRealPath())
-                               !== $this->filesystem->normalize($dependency->getPackageAbsolutePath());
-
         if ($dependency) {
-//            $vendorRelativePath = $this->filesystem->getRelativePath(
-//                $this->config->getVendorDirectory(),
-//                $sourceAbsoluteFilepath
-//            );
-            $vendorRelativePath = substr(
-                $sourceAbsoluteFilepath,
-                strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
+//        $isOutsideProjectDir = $this->filesystem->normalize($dependency->getRealPath())
+//                               !== $this->filesystem->normalize($dependency->getPackageAbsolutePath());
+
+            $isOutsideProjectDir = str_starts_with($dependency->getPackageAbsolutePath(), $this->config->getVendorDirectory());
+
+            $vendorRelativePath = $this->filesystem->getRelativePath(
+                $this->config->getVendorDirectory(),
+                $sourceAbsoluteFilepath
             );
 
             if ($vendorRelativePath === $sourceAbsoluteFilepath) {
-                $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
+                $vendorRelativePath = $dependency->getVendorSubdir() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
             }
 
             /** @var FileWithDependency $f */

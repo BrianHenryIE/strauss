@@ -8,7 +8,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -19,7 +19,7 @@ class StraussIssue215Test extends IntegrationTestCase
     public function test_all_files_are_copied()
     {
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/package-with-version-file",
     "extra": {
         "strauss": {

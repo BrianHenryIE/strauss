@@ -95,7 +95,7 @@ class ComposerPackage
      *
      * @var FileWithDependency[]
      */
-    protected array $files;
+    protected array $files = [];
 
     /**
      * @param string $absolutePath The absolute path to composer.json

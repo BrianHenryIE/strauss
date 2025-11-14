@@ -250,7 +250,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Use this method when passing the logger to a class constructor.
      */
-    protected function getLogger(): LoggerInterface
+    public function getLogger(): LoggerInterface
     {
         if (!isset($this->logger)) {
             $this->logger = $this->getNewLogger();

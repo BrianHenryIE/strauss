@@ -21,7 +21,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Integration
@@ -63,11 +63,11 @@ EOD;
 
         // Verify default target directory is created
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
-        
+
         // Verify files are copied to vendor-prefixed
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        
+
         // Verify original files still exist in vendor
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor/psr/log');
         $this->assertFileExists($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
@@ -108,11 +108,11 @@ EOD;
 
         // Verify custom target directory is created
         $this->assertDirectoryExists($this->testsWorkingDir . 'custom-lib');
-        
+
         // Verify files are copied to custom directory
         $this->assertDirectoryExists($this->testsWorkingDir . 'custom-lib/psr/log');
         $this->assertFileExists($this->testsWorkingDir . 'custom-lib/psr/log/Psr/Log/LoggerInterface.php');
-        
+
         // Verify vendor-prefixed directory is NOT created
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed');
     }
@@ -155,7 +155,7 @@ EOD;
 
         // Verify no vendor-prefixed directory is created
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed');
-        
+
         // Verify files are modified in place (namespaces prefixed)
         $modifiedContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Test\\Copier\\Psr\\Log', $modifiedContent);
@@ -200,13 +200,13 @@ EOD;
 
         // Verify vendor-prefixed directory is created
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
-        
+
         // Verify excluded package (psr/log) is NOT copied
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        
+
         // Verify non-excluded package (monolog) IS copied
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
-        
+
         // Verify original files still exist in vendor
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor/psr/log');
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor/monolog/monolog');
@@ -250,11 +250,11 @@ EOD;
 
         // Verify vendor-prefixed directory is created
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
-        
+
         // Verify excluded namespace files are NOT copied
         // Note: This tests the namespace exclusion logic in FileEnumerator.php:93-96
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        
+
         // Verify non-excluded namespace (Monolog) IS copied
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
     }
@@ -296,11 +296,11 @@ EOD;
 
         // Verify vendor-prefixed directory is created
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
-        
+
         // Verify main files are copied
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        
+
         // Verify README.md files are excluded (if they exist)
         if (file_exists($this->testsWorkingDir . 'vendor/psr/log/README.md')) {
             $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log/README.md');
@@ -345,11 +345,11 @@ EOD;
 
         // Verify vendor-prefixed directory is created
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
-        
+
         // Verify ONLY psr/log files are copied (inverted regex excludes everything except psr/log)
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        
+
         // Verify monolog is excluded by the inverted regex
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
     }
@@ -395,13 +395,13 @@ EOD;
 
         // Verify vendor-prefixed directory is created
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
-        
+
         // Verify psr/log is excluded by package exclusion
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        
+
         // Verify psr/cache is excluded by namespace exclusion
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/cache/src/CacheItemInterface.php');
-        
+
         // Verify monolog IS copied (not excluded by any rule)
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
     }
@@ -446,7 +446,7 @@ EOD;
 
         // Verify excluded files are NOT copied
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        
+
         // Verify original files remain unchanged (not prefixed)
         $currentContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertEquals($originalContent, $currentContent);
@@ -493,7 +493,7 @@ EOD;
         $this->assertDirectoryExists($this->testsWorkingDir . 'deeply');
         $this->assertDirectoryExists($this->testsWorkingDir . 'deeply/nested');
         $this->assertDirectoryExists($this->testsWorkingDir . 'deeply/nested/custom-directory');
-        
+
         // Verify files are copied to the nested directory
         $this->assertDirectoryExists($this->testsWorkingDir . 'deeply/nested/custom-directory/psr/log');
         $this->assertFileExists($this->testsWorkingDir . 'deeply/nested/custom-directory/psr/log/Psr/Log/LoggerInterface.php');
@@ -534,11 +534,11 @@ EOD;
 
         // Verify files are created
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        
+
         // Modify the target file to test overwriting
         $testContent = "<?php\n// This is a test modification\nnamespace Test\\Modified;";
         file_put_contents($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php', $testContent);
-        
+
         // Verify our modification is there
         $modifiedContent = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('This is a test modification', $modifiedContent);
@@ -595,10 +595,10 @@ EOD;
         // Verify vendor-prefixed directory is still created
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        
+
         // Verify the missing file is not copied (obviously)
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        
+
         // Verify other files in the package are still processed
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
     }
@@ -640,11 +640,11 @@ EOD;
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr');
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log');
-        
+
         // Verify files are copied
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
-        
+
         // Verify composer.json is copied (if it exists in source and Strauss copies it)
         if (file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json')) {
             // Note: Strauss may or may not copy composer.json files depending on configuration
@@ -652,7 +652,7 @@ EOD;
                 $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/composer.json');
             }
         }
-        
+
         // Verify subdirectory files are copied
         if (file_exists($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/Test')) {
             $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/Test');
@@ -672,7 +672,7 @@ EOD;
         // This test is complex to set up reliably across different systems
         // so we'll mark it as skipped for now but provide the test structure
         $this->markTestSkipped('Symlink test requires complex setup - implementation depends on system symlink support');
-        
+
         // The test would verify:
         // 1. Symlinked files are detected by FileCopyScanner.php:101
         // 2. Symlinked files have setDoDelete(false) applied
@@ -716,7 +716,7 @@ EOD;
         // Verify relative path works
         $this->assertDirectoryExists($this->testsWorkingDir . 'relative-lib');
         $this->assertFileExists($this->testsWorkingDir . 'relative-lib/psr/log/Psr/Log/LoggerInterface.php');
-        
+
         // Clean up for absolute path test
         if (file_exists($this->testsWorkingDir . 'relative-lib')) {
             $this->deleteDir($this->testsWorkingDir . 'relative-lib');
@@ -827,14 +827,14 @@ EOD;
 
         // Run Strauss with invalid regex - should handle gracefully
         $exitCode = $this->runStrauss($output);
-        
+
         // The exact behavior depends on implementation - it might:
         // 1. Exit with non-zero code
         // 2. Log warning and continue
         // 3. Treat invalid regex as non-matching
         // We'll accept any reasonable behavior
         $this->assertIsInt($exitCode);
-        
+
         // If it continues, verify basic functionality still works
         if ($exitCode === 0) {
             $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
@@ -879,7 +879,7 @@ EOD;
         // Note: Current implementation uses exact match in FileEnumerator.php:94
         // and string comparison in FileCopyScanner.php:73
         // So "psr\\log\\" (lowercase) would NOT match "Psr\\Log\\" namespace
-        
+
         // Verify case-sensitive behavior - lowercase exclusion should NOT exclude Psr\Log
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
@@ -923,7 +923,7 @@ EOD;
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        
+
         // Note: psr/log doesn't have 'files' autoloader, but this tests the overall
         // copying functionality which includes files autoloader handling in FileEnumerator.php:87-90
     }

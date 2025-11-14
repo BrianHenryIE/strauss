@@ -70,9 +70,10 @@ EOD;
         $fileEnumerator = new FileEnumerator(
             $config,
             new Filesystem(
-                new \League\Flysystem\Filesystem(
-                    new LocalFilesystemAdapter('/')
-                ),
+                new LocalFilesystemAdapter('/'),
+                [],
+                null,
+                null,
                 $this->testsWorkingDir
             ),
             $this->getLogger()
@@ -101,7 +102,17 @@ EOD;
 //        $fileScanner = new FileSymbolScanner($config, new Filesystem(new LocalFilesystemAdapter('/')));
         $discoveredSymbols = new DiscoveredSymbols();
 
-        $fileScanner = new FileSymbolScanner($config, $discoveredSymbols, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
+        $fileScanner = new FileSymbolScanner(
+            $config,
+            $discoveredSymbols,
+            new Filesystem(
+                new LocalFilesystemAdapter('/'),
+                [],
+                null,
+                null,
+                $this->testsWorkingDir
+            )
+        );
 
         $discoveredSymbols = $fileScanner->findInFiles($files);
 
