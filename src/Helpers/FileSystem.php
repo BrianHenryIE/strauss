@@ -77,7 +77,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      *
      * @return string[]
      */
-    public function findAllFilesAbsolutePaths(array $fileAndDirPaths): array
+    public function findAllFilesAbsolutePaths(array $fileAndDirPaths, bool $excludeDirectories = false): array
     {
         $files = [];
 
@@ -96,6 +96,10 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
             $fileAttributesArray = $directoryListing->toArray();
 
             $paths = array_map(fn($file) => $file->path(), $fileAttributesArray);
+
+            if ($excludeDirectories) {
+                $paths = array_filter($paths, fn($path) => !$this->directoryExists($path));
+            }
 
             $files = array_merge($files, $paths);
         }

@@ -28,7 +28,7 @@
         "composer/composer": "dev-main#598e88e43cb5f9d6d2bf444b911cee532fa6d428",
         "composer-runtime-api": "^2.0",
         "elazar/flystream": "^0.6.0|^1.4",
-        "json-mapper/json-mapper": ">=2.0.0 <=2.22.3",
+        "json-mapper/json-mapper": "^2.0.0",
         "league/flysystem": "^2.1|^3.0",
         "league/flysystem-memory": "*",
         "monolog/monolog": "^2.10",
@@ -76,6 +76,9 @@
                 "Catch exceptions; return false ": "https://github.com/elazar/flystream/pull/17.patch"
             }
         }
+    },
+    "conflict": {
+      "json-mapper/json-mapper": "2.23.0 | 2.24.0"
     },
     "scripts": {
         "cs": [

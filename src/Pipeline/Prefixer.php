@@ -7,6 +7,7 @@ use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\NamespaceSort;
+use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -85,14 +86,16 @@ class Prefixer
                 continue;
             }
 
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
+
+            $this->logger->debug("Updating contents of file: {$relativeFilePath}");
+
             /**
              * Throws an exception, but unlikely to happen.
              */
             $contents = $this->filesystem->read($file->getAbsoluteTargetPath());
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
-
-            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
 
             if ($updatedContents !== $contents) {
                 // TODO: diff here and debug log.
@@ -128,6 +131,8 @@ class Prefixer
                 continue;
             }
 
+            $this->logger->debug("Updating contents of file: {$relativeFilePath}");
+
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
 
@@ -153,44 +158,17 @@ class Prefixer
     {
         $classmapPrefix = $this->config->getClassmapPrefix();
 
-        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
+        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
         $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
-        $functions = $discoveredSymbols->getDiscoveredFunctions();
+//        $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
+        $classes = $discoveredSymbols->getGlobalClassChanges();
+        $functions = $discoveredSymbols->getDiscoveredFunctionChanges();
 
         $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
 
-        $classesTraitsInterfaces = array_merge(
-            $discoveredSymbols->getDiscoveredTraits(),
-            $discoveredSymbols->getDiscoveredInterfaces(),
-            $discoveredSymbols->getAllClasses()
-        );
-
-        foreach ($classesTraitsInterfaces as $theclass) {
-            if (str_starts_with($theclass->getOriginalSymbol(), $classmapPrefix)) {
-                // Already prefixed / second scan.
-                continue;
-            }
-
-            if ($theclass->getNamespace() !== '\\') {
-                $newNamespace = $namespacesChanges[$theclass->getNamespace()];
-                if ($newNamespace) {
-                    $theclass->setReplacement(
-                        str_replace(
-                            $newNamespace->getOriginalSymbol(),
-                            $newNamespace->getReplacement(),
-                            $theclass->getOriginalSymbol()
-                        )
-                    );
-                    unset($newNamespace);
-                }
-                continue;
-            }
-            $theclass->setReplacement($classmapPrefix . $theclass->getOriginalSymbol());
-        }
-
-        foreach ($discoveredSymbols->getDiscoveredClasses($this->config->getClassmapPrefix()) as $classsname) {
-            if ($classmapPrefix) {
-                $contents = $this->replaceClassname($contents, $classsname, $classmapPrefix);
+        if ($classmapPrefix) {
+            foreach ($classes as $classSymbol) {
+                $contents = $this->replaceClassname($contents, $classSymbol->getOriginalSymbol(), $classmapPrefix);
             }
         }
 
@@ -298,7 +276,7 @@ class Prefixer
             |\"                            # inside a string that does not contain spaces - needs work
             |'                             #   right now its just inside a string that doesnt start with a space
             |implements\s+
-            |extends\s+                    # when the class being extended is namespaced inline
+            |extends\s+\\\\                    # when the class being extended is namespaced inline
             |return\s+
             |instanceof\s+                 # when checking the class type of an object in a conditional
             |\(\s*                         # inside a function declaration as the first parameters type
@@ -348,14 +326,7 @@ class Prefixer
 
         $result = preg_replace_callback($pattern, $replacingFunction, $contents);
 
-        $matchingError = preg_last_error();
-        if (0 !== $matchingError) {
-            $message = "Matching error {$matchingError}";
-            if (PREG_BACKTRACK_LIMIT_ERROR === $matchingError) {
-                $message = 'Preg Backtrack limit was exhausted!';
-            }
-            throw new Exception($message);
-        }
+        $this->checkPregError();
 
         // For prefixed functions which do not begin with a backslash, add one.
         // I'm not certain this is a good idea.
@@ -434,14 +405,7 @@ class Prefixer
             throw new Exception('preg_replace_callback returned null');
         }
 
-        $matchingError = preg_last_error();
-        if (0 !== $matchingError) {
-            $message = "Matching error {$matchingError}";
-            if (PREG_BACKTRACK_LIMIT_ERROR === $matchingError) {
-                $message = 'Backtrack limit was exhausted!';
-            }
-            throw new Exception($message);
-        }
+        $this->checkPregError();
 
         return $result;
     }
@@ -476,6 +440,8 @@ class Prefixer
             $contents
         );
 
+        $this->checkPregError();
+
         $bodyPattern =
             '/([^a-zA-Z0-9_\x7f-\xff]  # Not a class character
 			\\\)                       # Followed by a backslash to indicate global namespace
@@ -483,13 +449,25 @@ class Prefixer
 			([^\\\;]{1})               # Not a backslash or semicolon which might indicate a namespace
 			/x'; //                    # x: ignore whitespace in regex.
 
-        return preg_replace_callback(
+        $result = preg_replace_callback(
             $bodyPattern,
             function ($matches) use ($replacement) {
                 return $matches[1] . $replacement . $matches[3];
             },
             $contents
         ) ?? $contents; // TODO: If this happens, it should raise an exception.
+
+        $this->checkPregError();
+
+        return $result;
+    }
+
+    protected function checkPregError(): void
+    {
+        $matchingError = preg_last_error();
+        if (0 !== $matchingError) {
+            throw new Exception(preg_last_error_msg());
+        }
     }
 
     /**
@@ -797,13 +775,15 @@ class Prefixer
 
         $modifiedStmts = $traverser->traverse($ast);
 
+        if ($visitor->countChanges === 0) {
+            return $phpFileContent;
+        }
+
         $updatedContent = (new Standard())->prettyPrintFile($modifiedStmts);
 
         $updatedContent = str_replace('namespace \\', 'namespace ', $updatedContent);
         $updatedContent = str_replace('use \\\\', 'use \\', $updatedContent);
 
-        return $visitor->countChanges == 0
-            ? $phpFileContent
-            : $updatedContent;
+        return $updatedContent;
     }
 }

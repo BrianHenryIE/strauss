@@ -22,15 +22,15 @@ class ChangeEnumeratorTest extends TestCase
     public function testFunctionReplacement(): void
     {
         $config = Mockery::mock(\BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface::class);
-        $config->expects('getClassmapPrefix')->never();
-        $config->expects('getNamespaceReplacementPatterns')->andReturn([]);
-        $config->expects('getNamespacePrefix')->andReturn('Prefix')->atLeast()->once();
+        $config->expects('getClassmapPrefix')->andReturn('Class_Prefix_');
+        $config->expects('getExcludeNamespacesFromPrefixing')->andReturn([])->times(2);
+        $config->expects('getExcludeFilePatternsFromPrefixing')->andReturn([])->times(2);
         $config->expects('getFunctionsPrefix')->andReturn('functions_prefix_')->atLeast()->once();
 
-        $sut = new ChangeEnumerator($config, $this->getInMemoryFileSystem());
+        $sut = new ChangeEnumerator($config, $this->getTestLogger());
 
         $discoveredSymbols = new DiscoveredSymbols();
-        $symbol = new FunctionSymbol('myFunction', new File('/path/to/file.php'));
+        $symbol = new FunctionSymbol('myFunction', new File('/path/to/file.php', 'file.php'));
         $discoveredSymbols->add($symbol);
 
         $sut->determineReplacements($discoveredSymbols);

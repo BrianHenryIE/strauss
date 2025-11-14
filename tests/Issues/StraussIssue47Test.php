@@ -184,18 +184,13 @@ EOD;
         }
     },
     "require": {
-        "dragon-public/framework": "*"
+        "dragon-public/framework": "1.3.16"
     },
     "extra": {
         "strauss": {
             "namespace_prefix": "Dragon\\Dependencies\\",
             "target_directory": "/strauss/",
-            "classmap_prefix": "Dragon_Dependencies_",
-            "exclude_from_copy": {
-                "file_patterns": [
-                    "/^((?!Form\\/TextArea.php$).)*$/"
-                ]
-            }
+            "classmap_prefix": "Dragon_Dependencies_"
         }
     },
     "provide": {

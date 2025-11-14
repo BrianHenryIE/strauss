@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
@@ -69,11 +70,18 @@ EOD;
         $fileEnumerator = new FileEnumerator(
             $config,
             new Filesystem(
-                new LocalFilesystemAdapter('/')
-            )
+                new \League\Flysystem\Filesystem(
+                    new LocalFilesystemAdapter('/')
+                ),
+                $this->testsWorkingDir
+            ),
+            $this->getLogger()
         );
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        foreach ($files->getFiles() as $file) {
+            $file->setDoPrefix($file->isPhpFile());
+        }
 
         (new FileCopyScanner($config, new Filesystem(new LocalFilesystemAdapter('/'))))->scanFiles($files);
 
@@ -90,7 +98,10 @@ EOD;
         $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
         $config->method('getPackagesToPrefix')->willReturn(array('google/apiclient'=>''));
 
-        $fileScanner = new FileSymbolScanner($config, new Filesystem(new LocalFilesystemAdapter('/')));
+//        $fileScanner = new FileSymbolScanner($config, new Filesystem(new LocalFilesystemAdapter('/')));
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $fileScanner = new FileSymbolScanner($config, $discoveredSymbols, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
 
         $discoveredSymbols = $fileScanner->findInFiles($files);
 

@@ -55,8 +55,8 @@ class DependenciesEnumerator
      * @param StraussConfig $config
      */
     public function __construct(
-        StraussConfig $config,
-        FileSystem $filesystem,
+        StraussConfig    $config,
+        FileSystem       $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->overrideAutoload = $config->getOverrideAutoload();

@@ -14,6 +14,7 @@ use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
+use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
@@ -260,11 +261,14 @@ class DependenciesCommand extends Command
 
             $this->enumerateFiles();
 
-            $this->copyFiles();
-
-            $this->determineChanges();
+            $this->discoveredSymbols = new DiscoveredSymbols();
 
             $this->enumeratePsr4Namespaces();
+            $this->scanFiles();
+            $this->determineChanges();
+
+            $this->analyseFilesToCopy();
+            $this->copyFiles();
 
             $this->performReplacements();
 
@@ -282,7 +286,6 @@ class DependenciesCommand extends Command
             $this->logger->notice('Done');
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
-
             return Command::FAILURE;
         }
 
@@ -397,6 +400,20 @@ class DependenciesCommand extends Command
         }
     }
 
+
+    protected function enumerateFiles(): void
+    {
+        $this->logger->notice('Enumerating files...');
+
+        $fileEnumerator = new FileEnumerator(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+
+        $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);
+    }
+
     /**
      * TODO: currently this must run after ::determineChanges() so the discoveredSymbols object exists,
      * but logically it should run first.
@@ -412,35 +429,61 @@ class DependenciesCommand extends Command
             $psr4autoloadKey = $autoloadKey['psr-4'];
             $namespaces = array_keys($psr4autoloadKey);
 
-            $file = new File($package->getPackageAbsolutePath() . 'composer.json');
+            $file = new File($package->getPackageAbsolutePath() . 'composer.json', '../composer.json');
 
             foreach ($namespaces as $namespace) {
                 // TODO: log.
                 $symbol = new NamespaceSymbol(trim($namespace, '\\'), $file);
                 // TODO: respect all config options.
-                $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
+//              $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
                 $this->discoveredSymbols->add($symbol);
             }
         }
     }
 
-    protected function enumerateFiles(): void
+    // 4. Determine namespace and classname changes
+    protected function scanFiles(): void
     {
-        $this->logger->notice('Enumerating files...');
+        $this->logger->notice('Enumerating autoload files...');
 
-        $fileEnumerator = new FileEnumerator(
+        $autoloadFilesEnumerator = new AutoloadedFilesEnumerator(
             $this->config,
             $this->filesystem,
             $this->logger
         );
+        $autoloadFilesEnumerator->markFilesForInclusion($this->flatDependencyTree);
+        $autoloadFilesEnumerator->markFilesForExclusion($this->discoveredFiles);
 
-        $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);
+        $this->logger->notice('Scanning files...');
+
+        $fileScanner = new FileSymbolScanner(
+            $this->config,
+            $this->discoveredSymbols,
+            $this->filesystem,
+            $this->logger
+        );
+
+        $fileScanner->findInFiles($this->discoveredFiles);
     }
 
-    // 3. Copy autoloaded files for each
-    protected function copyFiles(): void
+    protected function determineChanges(): void
+    {
+        $this->logger->notice('Determining changes...');
+
+        $changeEnumerator = new ChangeEnumerator(
+            $this->config,
+            $this->logger
+        );
+        $changeEnumerator->determineReplacements($this->discoveredSymbols);
+    }
+
+    protected function analyseFilesToCopy(): void
     {
         (new FileCopyScanner($this->config, $this->filesystem, $this->logger))->scanFiles($this->discoveredFiles);
+    }
+
+    protected function copyFiles(): void
+    {
 
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
             // Nothing to do.
@@ -474,26 +517,6 @@ class DependenciesCommand extends Command
         $installedJson->copyInstalledJson();
     }
 
-    // 4. Determine namespace and classname changes
-    protected function determineChanges(): void
-    {
-        $this->logger->notice('Determining changes...');
-
-        $fileScanner = new FileSymbolScanner(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-
-        $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
-
-        $changeEnumerator = new ChangeEnumerator(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-        $changeEnumerator->determineReplacements($this->discoveredSymbols);
-    }
 
     // 5. Update namespaces and class names.
     // Replace references to updated namespaces and classnames throughout the dependencies.
@@ -512,7 +535,7 @@ class DependenciesCommand extends Command
 
     protected function performReplacementsInProjectFiles(): void
     {
-
+        // TODO: this doesn't do tests?!
         $relativeCallSitePaths =
             $this->config->getUpdateCallSites()
             ?? $this->projectComposerPackage->getFlatAutoloadKey();
@@ -534,7 +557,8 @@ class DependenciesCommand extends Command
 
         $fileEnumerator = new FileEnumerator(
             $this->config,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $projectFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
@@ -628,7 +652,8 @@ class DependenciesCommand extends Command
 
         $aliases = new Aliases(
             $this->config,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
         $aliases->writeAliasesFileForSymbols($this->discoveredSymbols);
 

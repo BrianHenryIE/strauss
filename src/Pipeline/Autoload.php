@@ -85,7 +85,8 @@ class Autoload
             ),
             new FileEnumerator(
                 $this->config,
-                $this->filesystem
+                $this->filesystem,
+                $this->logger
             ),
             new ComposerAutoloadGeneratorFactory()
         ))->generatedPrefixedAutoloader();

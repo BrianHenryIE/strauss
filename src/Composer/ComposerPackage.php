@@ -7,6 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Composer;
 
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
@@ -88,6 +89,13 @@ class ComposerPackage
      * Has the package been deleted from the vendor directory? False until the package is deleted.
      */
     protected bool $didDelete = false;
+
+    /**
+     * List of files found in the package directory.
+     *
+     * @var FileWithDependency[]
+     */
+    protected array $files;
 
     /**
      * @param string $absolutePath The absolute path to composer.json
@@ -305,5 +313,15 @@ class ComposerPackage
     public function getRealPath(): ?string
     {
         return $this->packageRealPath ?? $this->getPackageAbsolutePath();
+    }
+
+    public function addFile(\BrianHenryIE\Strauss\Files\FileWithDependency $file)
+    {
+        $this->files[$file->getPackageRelativePath()] = $file;
+    }
+
+    public function getFile($path): ?FileWithDependency
+    {
+        return $this->files[$path] ?? null;
     }
 }

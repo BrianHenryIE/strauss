@@ -35,11 +35,11 @@ class Aliases
     public function __construct(
         AliasesConfigInterface $config,
         FileSystem $fileSystem,
-        ?LoggerInterface $logger = null
+        LoggerInterface $logger
     ) {
         $this->config = $config;
         $this->fileSystem = $fileSystem;
-        $this->setLogger($logger ?? new NullLogger());
+        $this->setLogger($logger);
     }
 
     protected function getTemplate(array $aliasesArray, ?string $autoloadAliasesFunctionsString): string

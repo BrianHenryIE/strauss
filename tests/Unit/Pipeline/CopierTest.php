@@ -27,7 +27,7 @@ class CopierTest extends TestCase
         $filepath = $sourceDir . '/file.php';
         $filesystem->write($filepath, 'test');
 
-        $file = new File($filepath);
+        $file = new File($filepath, 'file.php');
         $file->setAbsoluteTargetPath($targetDir . '/file.php');
 
         $discoveredFiles = new DiscoveredFiles();
@@ -58,7 +58,7 @@ class CopierTest extends TestCase
         $filepath = $sourceDir . '/file.php';
         $filesystem->write($filepath, 'test');
 
-        $file = new File($filepath);
+        $file = new File($filepath, 'file.php');
         $file->setAbsoluteTargetPath($targetDir . '/file.php');
         $file->setDoCopy(false);
 
@@ -114,7 +114,7 @@ class CopierTest extends TestCase
 
         $filesystem->createDirectory($sourceDir);
 
-        $file = new File($sourceDir);
+        $file = new File($sourceDir, 'file.php');
         $file->setAbsoluteTargetPath($targetDir);
 
         $discoveredFiles = new DiscoveredFiles();

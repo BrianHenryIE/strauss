@@ -8,6 +8,7 @@ namespace BrianHenryIE\Strauss\Composer\Extra;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
+use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\CopierConfigInterface;
@@ -26,6 +27,7 @@ use Symfony\Component\Console\Input\InputInterface;
 class StraussConfig implements
     AliasesConfigInterface,
     AutoloadConfigInterface,
+    AutoloadFilesEnumeratorConfigInterface,
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     CopierConfigInterface,
@@ -788,7 +790,7 @@ class StraussConfig implements
      */
     public function isCreateAliases(): bool
     {
-        return $this->deleteVendorPackages || $this->deleteVendorFiles || $this->targetDirectory === 'vendor';
+        return $this->deleteVendorPackages || $this->deleteVendorFiles || trim($this->targetDirectory, '\\/') === 'vendor';
     }
 
     public function getProjectDirectory(): string

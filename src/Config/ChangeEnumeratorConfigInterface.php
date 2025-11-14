@@ -15,6 +15,11 @@ interface ChangeEnumeratorConfigInterface
     public function getExcludeFilePatternsFromPrefixing(): array;
 
     /**
+     * @return string[]
+     */
+    public function getExcludeNamespacesFromPrefixing(): array;
+    
+    /**
      * @return array<string, string>
      */
     public function getNamespaceReplacementPatterns(): array;

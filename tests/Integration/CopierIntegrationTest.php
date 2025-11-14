@@ -66,8 +66,12 @@ EOD;
         $fileEnumerator = new FileEnumerator(
             $config,
             new Filesystem(
-                new LocalFilesystemAdapter('/')
-            )
+                new \League\Flysystem\Filesystem(
+                    new LocalFilesystemAdapter('/')
+                ),
+                $this->testsWorkingDir
+            ),
+            $this->getLogger()
         );
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
@@ -136,8 +140,12 @@ EOD;
         $fileEnumerator = new FileEnumerator(
             $config,
             new Filesystem(
-                new LocalFilesystemAdapter('/')
-            )
+                new \League\Flysystem\Filesystem(
+                    new LocalFilesystemAdapter('/')
+                ),
+                $this->testsWorkingDir
+            ),
+            $this->getLogger()
         );
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 

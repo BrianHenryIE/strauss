@@ -1,8 +1,20 @@
 # Change Log
 
-## 0.24.1 July 2025
+## 0.25.0 November 2025
+
+* Copy all files from packages (previously only copied autoloaded files)
+
+## 0.24.1 August 2025
 
 * Fix: inadvertently removing autoload keys from `installed.json` when `target_directory` is not `vendor-prefixed`
+* Fix: double-prefixing case
+* Fix: `exclude_from_prefix` config option not working correctly
+* Fix: only update a _class extends_ namespace if it is global 
+* Fix: log message replacement in `InstalledJson::cleanTargetDirInstalledJson()`
+* Dependencies: use `conflict` to allow newer jsonmapper versions
+* Release: update `.editorconfig` 
+* Slightly better logging
+* [...more](https://github.com/BrianHenryIE/strauss/compare/0.24.0...0.24.1)
 
 ## 0.24.0 July 2025
 

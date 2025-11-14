@@ -197,4 +197,81 @@ EOD;
 
         self::assertStringContainsString('namespace AnotherProject\WP_Logger\MyProject\API;', $updatedFile);
     }
+
+    public function test_replace_classname_is_namespace_name(): void
+    {
+        $pdfHelpersComposer = <<<'JSON'
+{
+    "name": "brianhenryie/pdf-helpers",
+    "autoload": {
+        "psr-4": {
+            "BrianHenryIE\\PdfHelpers\\": "src/"
+        }
+    },
+    "require": {
+        "mpdf/mpdf": "*",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.3"
+    }
+}
+JSON;
+
+        $pdfHelpersPhp = <<<'PHP'
+<?php
+
+namespace BrianHenryIE\PdfHelpers;
+
+use Mpdf\Mpdf;
+
+class MpdfCrop extends Mpdf {
+
+	public function clipRect( $x, $y, $width, $height ) {
+		$this->pages[ $this->page ] .= $this->_setClippingPath( $x, $y, $width, $height );
+	}
+
+}
+PHP;
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strauss",
+  "repositories": {
+    "brianhenryie/pdf-helpers": {
+        "type": "path",
+        "url": "../bh-pdf-helpers"
+    }
+  },
+  "require": {
+    "brianhenryie/pdf-helpers": "*"
+  },
+  "minimum-stability": "dev",
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\MyProject\\",
+      "namespace_replacement_patterns": {
+        "/BrianHenryIE\\\\(.*)/": "BrianHenryIE\\MyProject\\\\$1"
+      }
+    }
+  }
+}
+EOD;
+
+        mkdir($this->testsWorkingDir . 'bh-pdf-helpers/src', 0777, true);
+        file_put_contents($this->testsWorkingDir . 'bh-pdf-helpers/composer.json', $pdfHelpersComposer);
+        file_put_contents($this->testsWorkingDir . 'bh-pdf-helpers/src/MpdfCrop.php', $pdfHelpersPhp);
+
+        mkdir($this->testsWorkingDir . 'project', 0777, true);
+        file_put_contents($this->testsWorkingDir . 'project/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir.'project/');
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = file_get_contents($this->testsWorkingDir . 'project/vendor-prefixed/brianhenryie/pdf-helpers/src/MpdfCrop.php');
+
+        self::assertStringContainsString('extends Mpdf', $updatedFile);
+    }
 }

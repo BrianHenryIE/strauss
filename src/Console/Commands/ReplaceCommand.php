@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
@@ -117,6 +118,8 @@ class ReplaceCommand extends Command
 
             // Pipeline
 
+            $this->discoveredSymbols = new DiscoveredSymbols();
+
             $this->enumerateFiles($config);
 
             $this->determineChanges($config);
@@ -162,7 +165,7 @@ class ReplaceCommand extends Command
             fn($path) => false !== strpos($path, trim($this->workingDir, '/')) ? $path : $this->workingDir . $path,
             $relativeUpdateCallSites
         );
-        $fileEnumerator = new FileEnumerator($config, $this->filesystem);
+        $fileEnumerator = new FileEnumerator($config, $this->filesystem, $this->logger);
         $this->discoveredFiles = $fileEnumerator->compileFileListForPaths($updateCallSites);
     }
 
@@ -173,14 +176,23 @@ class ReplaceCommand extends Command
 
         $fileScanner = new FileSymbolScanner(
             $config,
+            $this->discoveredSymbols,
             $this->filesystem
         );
 
-        $this->discoveredSymbols = $fileScanner->findInFiles($this->discoveredFiles);
+        $fileScanner->findInFiles($this->discoveredFiles);
+
+        $autoloadFilesEnumerator = new AutoloadedFilesEnumerator(
+            $config,
+            $this->filesystem,
+            $this->logger
+        );
+        $autoloadFilesEnumerator->markFilesForInclusion($this->flatDependencyTree);
+        $autoloadFilesEnumerator->markFilesForExclusion($this->discoveredFiles);
 
         $changeEnumerator = new ChangeEnumerator(
             $config,
-            $this->filesystem
+            $this->logger
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
@@ -214,7 +226,8 @@ class ReplaceCommand extends Command
 
         $fileEnumerator = new FileEnumerator(
             $config,
-            $this->filesystem
+            $this->filesystem,
+            $this->logger
         );
 
         $phpFilePaths = $fileEnumerator->compileFileListForPaths($callSitePaths);

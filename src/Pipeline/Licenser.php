@@ -61,10 +61,10 @@ class Licenser
      * @param string $author To add to each modified file's header
      */
     public function __construct(
-        StraussConfig $config,
-        array $dependencies,
-        string $author,
-        FileSystem $filesystem,
+        StraussConfig    $config,
+        array            $dependencies,
+        string           $author,
+        FileSystem       $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->dependencies = $dependencies;

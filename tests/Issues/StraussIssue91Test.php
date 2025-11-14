@@ -21,7 +21,7 @@ class StraussIssue91Test extends IntegrationTestCase
 {
   "name": "pr/91",
   "require": {
-    "phpoffice/phpspreadsheet": "1.29"
+    "phpoffice/phpspreadsheet": "*"
   },
   "extra": {
     "strauss": {

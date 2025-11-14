@@ -23,7 +23,7 @@ use Mockery;
 class FileEnumeratorTest extends TestCase
 {
     /**
-     * @covers ::addFileWithDependency
+     * @covers ::addFile
      */
     public function test_file_does_not_exist()
     {
@@ -31,11 +31,10 @@ class FileEnumeratorTest extends TestCase
         $filesystem = $this->getReadOnlyFileSystem($this->getSymlinkProtectFilesystem());
         $logger = $this->getLogger();
 
-        $sut = new FileEnumerator($config, $filesystem, $logger);
+        $sut = new FileEnumerator($config, $filesystem, $this->getLogger());
 
         $dependency = Mockery::mock(ComposerPackage::class);
         $dependency->expects('getPackageName')->andReturn('test/package');
-        $dependency->expects('getAutoload')->andReturn(['classmap' => ['src']]);
         $dependency->expects('getPackageAbsolutePath')->andReturn('/path/to/project/vendor/package');
 
         /** @var ComposerPackage[] $dependencies */

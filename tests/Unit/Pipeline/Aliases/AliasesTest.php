@@ -50,7 +50,7 @@ class AliasesTest extends TestCase
         $sut = new Aliases(
             $config,
             $fileSystem,
-            new NullLogger()
+            $this->getLogger()
         );
 
         $symbols = new DiscoveredSymbols();
@@ -101,7 +101,7 @@ EOD;
         $sut = new Aliases(
             $config,
             $fileSystem,
-            new NullLogger()
+            $this->getLogger()
         );
 
         $symbols = new DiscoveredSymbols();
@@ -145,7 +145,7 @@ EOD;
         $sut = new Aliases(
             $config,
             $fileSystem,
-            new NullLogger()
+            $this->getLogger()
         );
 
         $symbols = new DiscoveredSymbols();
@@ -195,7 +195,7 @@ EOD;
         $sut = new Aliases(
             $config,
             $fileSystem,
-            new NullLogger()
+            $this->getLogger()
         );
 
         $symbols = new DiscoveredSymbols();
