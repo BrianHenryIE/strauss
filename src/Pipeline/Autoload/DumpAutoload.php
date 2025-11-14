@@ -26,17 +26,19 @@ class DumpAutoload
     protected AutoloadConfigInterface $config;
 
     protected FileSystem $filesystem;
-    
+
     protected Prefixer $projectReplace;
 
     protected FileEnumerator $fileEnumerator;
+    protected ComposerAutoloadGeneratorFactory $composerAutoloadGeneratorFactory;
 
     public function __construct(
         AutoloadConfigInterface $config,
         Filesystem $filesystem,
         LoggerInterface $logger,
         Prefixer $projectReplace,
-        FileEnumerator $fileEnumerator
+        FileEnumerator $fileEnumerator,
+        ComposerAutoloadGeneratorFactory $composerAutoloadGeneratorFactory
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
@@ -45,6 +47,8 @@ class DumpAutoload
         $this->projectReplace = $projectReplace;
 
         $this->fileEnumerator = $fileEnumerator;
+
+        $this->composerAutoloadGeneratorFactory = $composerAutoloadGeneratorFactory;
     }
 
     /**
@@ -81,7 +85,10 @@ class DumpAutoload
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
-        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
+        $projectComposerJsonFilePath = $this->config->getProjectDirectory() . Factory::getComposerFile();
+        $projectComposerJsonFilePath = $this->filesystem->normalize($projectComposerJsonFilePath);
+        $projectComposerJsonFilePath = $this->filesystem->prefixPath($projectComposerJsonFilePath);
+        $projectComposerJson = new JsonFile($projectComposerJsonFilePath);
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
@@ -99,13 +106,18 @@ class DumpAutoload
         /**
          * Cannot use `$composer->getConfig()`, need to create a new one so the vendor-dir is correct.
          */
-        $config = new \Composer\Config(false, $this->config->getProjectDirectory());
+        $config = new \Composer\Config(
+            false,
+            $this->filesystem->prefixPath(
+                $this->config->getProjectDirectory()
+            )
+        );
 
         $config->merge([
             'config' => $projectComposerJsonArray['config'] ?? []
         ]);
 
-        $generator = new ComposerAutoloadGenerator(
+        $generator = $this->composerAutoloadGeneratorFactory->get(
             $this->config->getNamespacePrefix(),
             $composer->getEventDispatcher()
         );
@@ -117,7 +129,10 @@ class DumpAutoload
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
         $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
 
-        $installedJsonFile = new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json');
+        $installedJsonFilePath = $this->config->getTargetDirectory() . 'composer/installed.json';
+        $installedJsonFilePath = $this->filesystem->normalize($installedJsonFilePath);
+        $installedJsonFilePath = $this->filesystem->prefixPath($installedJsonFilePath);
+        $installedJsonFile = new JsonFile($installedJsonFilePath);
         $installedJson = $installedJsonFile->read();
         $localRepo = new InstalledFilesystemRepository($installedJsonFile);
 
@@ -171,7 +186,19 @@ class DumpAutoload
             return;
         }
 
-        $this->filesystem->copy($this->config->getVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getTargetDirectory() . 'composer/InstalledVersions.php');
+        $sourcePath = $this->config->getVendorDirectory() . '/composer/InstalledVersions.php';
+
+        if (!file_exists($sourcePath)) {
+            $this->logger->debug('InstalledVersions.php does not exist at {sourcePath}, skipping copy.', [
+                'sourcePath' => $sourcePath
+            ]);
+            return;
+        }
+
+        $this->filesystem->copy(
+            $sourcePath,
+            $this->config->getTargetDirectory() . 'composer/InstalledVersions.php'
+        );
 
         // This is just `<?php return array(...);`
         $installedPhpString = $this->filesystem->read($this->config->getVendorDirectory() . '/composer/installed.php');

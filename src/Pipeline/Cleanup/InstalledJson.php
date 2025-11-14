@@ -85,11 +85,14 @@ class InstalledJson
      */
     protected function getJsonFile(string $vendorDir): JsonFile
     {
-        $installedJsonFile = new JsonFile(
+        $installedJsonFilePath = $this->filesystem->prefixPath(
             sprintf(
                 '%scomposer/installed.json',
                 $vendorDir
             )
+        );
+        $installedJsonFile = new JsonFile(
+            $installedJsonFilePath
         );
         if (!$installedJsonFile->exists()) {
             $this->logger->error(
@@ -126,7 +129,7 @@ class InstalledJson
             if (!$this->filesystem->directoryExists($packageDir)) {
                 $this->logger->debug('Package directory does not exist at : ' . $packageDir);
 
-                $newInstallPath = $path . str_replace('../', '', $package['install-path']);
+                $newInstallPath = $this->filesystem->normalize($path . '/composer/' .$package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
                     $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);

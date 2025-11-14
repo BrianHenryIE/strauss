@@ -54,8 +54,7 @@ class IncludeAutoloaderCommand extends Command
 
         // TODO: permissions?
         $this->filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')),
-            getcwd() . '/'
+            new LocalFilesystemAdapter('/')
         );
     }
 
@@ -120,5 +119,7 @@ class IncludeAutoloaderCommand extends Command
         $this->logger->notice('Loading composer.json config...');
 
         $this->config = $this->projectComposerPackage->getStraussConfig();
+        $config = new StraussConfig();
+        $config->setProjectDirectory(getcwd());
     }
 }

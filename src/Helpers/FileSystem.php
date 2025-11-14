@@ -3,42 +3,76 @@
  * This class extends Flysystem's Filesystem class to add some additional functionality, particularly around
  * symlinks which are not supported by Flysystem.
  *
- * TODO: Delete and modify operations on files in symlinked directories should fail with a warning.
- *
  * @see https://github.com/thephpleague/flysystem/issues/599
  */
 
 namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\Strauss\Files\FileBase;
-use Elazar\Flystream\StripProtocolPathNormalizer;
-use League\Flysystem\DirectoryListing;
+use BrianHenryIE\Strauss\Pipeline\Autoload;
+use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
+use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
+use Composer\Factory;
 use League\Flysystem\FileAttributes;
-use League\Flysystem\FilesystemOperator;
+use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\StorageAttributes;
+use League\Flysystem\WhitespacePathNormalizer;
 
-class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
+class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCompatTraitInterface
 {
     use FlysystemBackCompatTrait;
 
-    protected FilesystemOperator $flysystem;
     protected PathNormalizer $normalizer;
 
+    protected PathPrefixer $pathPrefixer;
+    /**
+     * @var ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter|FilesystemAdapter
+     */
+    protected $flysystemAdapter;
+
+    /**
+     * For calculating project-relative file paths.
+     *
+     * @var false|string
+     */
     protected string $workingDir;
 
     /**
-     * TODO: maybe restrict the constructor to only accept a LocalFilesystemAdapter.
-     *
-     * TODO: Check are any of these methods unused
+     * @param ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter $adapter
+     * @param array $config
+     * @param PathNormalizer|null $pathNormalizer
      */
-    public function __construct(FilesystemOperator $flysystem, string $workingDir)
-    {
-        $this->flysystem = $flysystem;
-        $this->normalizer = new StripProtocolPathNormalizer('mem');
+    public function __construct(
+        FilesystemAdapter $adapter,
+        array $config = [],
+        PathNormalizer $pathNormalizer = null,
+        PathPrefixer $pathPrefixer = null,
+        ?string $workingDir = null
+    ) {
+        parent::__construct($adapter, $config, $pathNormalizer);
 
-        $this->workingDir = $workingDir;
+        // Parent is private.
+        $this->normalizer = $pathNormalizer ?? new WhitespacePathNormalizer();
+        $this->flysystemAdapter = $adapter;
+
+        $this->pathPrefixer = $pathPrefixer ?? new PathPrefixer($this->getFileSystemRoot());
+
+        $this->workingDir = $workingDir ?? getcwd();
+    }
+
+    // TODO: or `mem://`
+    protected function getFileSystemRoot(): string
+    {
+        return PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
+    }
+
+    public function getAdapter(): FilesystemAdapter
+    {
+        return $this->flysystemAdapter;
     }
 
     /**
@@ -64,13 +98,13 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             /** @var FileAttributes[] $files */
             $fileAttributesArray = $directoryListing->toArray();
 
-            $f = array_map(fn($file) => '/'.$file->path(), $fileAttributesArray);
+            $paths = array_map(fn($file) => $file->path(), $fileAttributesArray);
 
             if ($excludeDirectories) {
-                $f = array_filter($f, fn($path) => !$this->directoryExists($path));
+                $paths = array_filter($paths, fn($path) => !$this->directoryExists($path));
             }
 
-            $files = array_merge($files, $f);
+            $files = array_merge($files, $paths);
         }
 
         return $files;
@@ -97,129 +131,6 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     public function exists(string $location): bool
     {
         return $this->fileExists($location) || $this->directoryExists($location);
-    }
-
-    public function fileExists(string $location): bool
-    {
-        return $this->flysystem->fileExists(
-            $this->normalizer->normalizePath($location)
-        );
-    }
-
-    public function read(string $location): string
-    {
-        return $this->flysystem->read(
-            $this->normalizer->normalizePath($location)
-        );
-    }
-
-    public function readStream(string $location)
-    {
-        return $this->flysystem->readStream(
-            $this->normalizer->normalizePath($location)
-        );
-    }
-
-    public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
-    {
-        return $this->flysystem->listContents(
-            $this->normalizer->normalizePath($location),
-            $deep
-        );
-    }
-
-    public function lastModified(string $path): int
-    {
-        return $this->flysystem->lastModified(
-            $this->normalizer->normalizePath($path)
-        );
-    }
-
-    public function fileSize(string $path): int
-    {
-        return $this->flysystem->fileSize(
-            $this->normalizer->normalizePath($path)
-        );
-    }
-
-    public function mimeType(string $path): string
-    {
-        return $this->flysystem->mimeType(
-            $this->normalizer->normalizePath($path)
-        );
-    }
-
-    public function visibility(string $path): string
-    {
-        return $this->flysystem->visibility(
-            $this->normalizer->normalizePath($path)
-        );
-    }
-
-    public function write(string $location, string $contents, array $config = []): void
-    {
-        $this->flysystem->write(
-            $this->normalizer->normalizePath($location),
-            $contents,
-            $config
-        );
-    }
-
-    public function writeStream(string $location, $contents, array $config = []): void
-    {
-        $this->flysystem->writeStream(
-            $this->normalizer->normalizePath($location),
-            $contents,
-            $config
-        );
-    }
-
-    public function setVisibility(string $path, string $visibility): void
-    {
-        $this->flysystem->setVisibility(
-            $this->normalizer->normalizePath($path),
-            $visibility
-        );
-    }
-
-    public function delete(string $location): void
-    {
-        $this->flysystem->delete(
-            $this->normalizer->normalizePath($location)
-        );
-    }
-
-    public function deleteDirectory(string $location): void
-    {
-        $this->flysystem->deleteDirectory(
-            $this->normalizer->normalizePath($location)
-        );
-    }
-
-    public function createDirectory(string $location, array $config = []): void
-    {
-        $this->flysystem->createDirectory(
-            $this->normalizer->normalizePath($location),
-            $config
-        );
-    }
-
-    public function move(string $source, string $destination, array $config = []): void
-    {
-        $this->flysystem->move(
-            $this->normalizer->normalizePath($source),
-            $this->normalizer->normalizePath($destination),
-            $config
-        );
-    }
-
-    public function copy(string $source, string $destination, array $config = []): void
-    {
-        $this->flysystem->copy(
-            $this->normalizer->normalizePath($source),
-            $this->normalizer->normalizePath($destination),
-            $config
-        );
     }
 
     /**
@@ -274,17 +185,6 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
 
     /**
-     * Check does the filepath point to a file outside the working directory.
-     * If `realpath()` fails to resolve the path, assume it's a symlink.
-     */
-    public function isSymlinkedFile(FileBase $file): bool
-    {
-        $realpath = realpath($file->getSourcePath());
-
-        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
-    }
-
-    /**
      * Does the subdir path start with the dir path?
      */
     public function isSubDirOf(string $dir, string $subdir): bool
@@ -298,5 +198,100 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     public function normalize(string $path)
     {
         return $this->normalizer->normalizePath($path);
+    }
+
+    /**
+     * Check is a file under a symlinked path.
+     *
+     * Check does the filepath point to a file outside the working directory.
+     * If `realpath()` fails to resolve the path, assume it's a symlink.
+     */
+    public function isSymlinkedFile(FileBase $file): bool
+    {
+        $adapter = $this->flysystemAdapter;
+
+        if ($adapter instanceof ReadOnlyFileSystem) {
+            $adapter = $adapter->getAdapter();
+        }
+
+        if ($adapter instanceof SymlinkProtectFilesystemAdapter) {
+            return $adapter->isSymlinked($file->getSourcePath());
+        }
+
+//        $realpath = realpath($file->getSourcePath());
+//
+//        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
+
+        throw new \Exception('Cannot determine symbolic link for files');
+    }
+
+    public function dirIsEmpty(string $dir): bool
+    {
+        // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
+        return empty($this->listContents($dir)->toArray());
+    }
+
+    /**
+     * @see FlysystemBackCompatTrait::directoryExists()
+     */
+    public function getNormalizer(): PathNormalizer
+    {
+        return $this->normalizer;
+    }
+
+    public function prefixPath(string $packageComposerFile): string
+    {
+        if ($this->flysystemAdapter instanceof InMemoryFilesystemAdapter) {
+            return $this->pathPrefixer->prefixPath($packageComposerFile);
+        }
+
+        if (!($this->flysystemAdapter instanceof ReadOnlyFileSystem)
+                || $this->shouldUseFilesystemPrefix()) {
+            $prefixer = new PathPrefixer(
+                $this->getFileSystemRoot(),
+                DIRECTORY_SEPARATOR,
+            );
+
+            return $prefixer->prefixPath($packageComposerFile);
+        }
+
+        return $this->pathPrefixer->prefixPath($packageComposerFile);
+    }
+
+    /**
+     * Temporary solution.
+     *
+     * when a filepath is being passed to a class that cannot use stream wrappers, always just pass the filesystem path
+     */
+    private function shouldUseFilesystemPrefix(): bool
+    {
+        $callingMethod = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 3)[2];
+
+        $enableFor = [
+            DependenciesEnumerator::class => ['recursiveGetAllDependencies'],
+            DumpAutoload::class => null,
+            Autoload::class => null,
+        ];
+
+        if (isset($enableFor[$callingMethod['class']])
+            &&
+           (
+                is_null($enableFor[$callingMethod['class']])
+                ||
+                in_array($callingMethod['function'], $enableFor[$callingMethod['class']])
+           )
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @see Factory::createComposer() uses {@see realpath()} which doesn't work with stream wrappers.
+     */
+    public function prefixPathRealpath(string $packageComposerFile): string
+    {
+        return $this->pathPrefixer->prefixPath($packageComposerFile);
     }
 }

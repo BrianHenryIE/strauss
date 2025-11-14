@@ -12,7 +12,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * Class MozartIssue99Test
