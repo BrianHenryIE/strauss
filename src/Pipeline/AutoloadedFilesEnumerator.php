@@ -251,12 +251,12 @@ class AutoloadedFilesEnumerator
 
     private function preparePattern(string $pattern): string
     {
-        $delimiter = '/';
+        $delimiter = '#';
 
         if (substr($pattern, 0, 1) !== substr($pattern, - 1, 1)) {
-            $pattern = trim($pattern, substr($pattern, 0, 1));
+            $pattern = $delimiter . $pattern . $delimiter;
         }
 
-        return $delimiter . preg_quote($pattern, $delimiter) . $delimiter;
+        return $pattern;
     }
 }
