@@ -30,4 +30,6 @@ interface AutoloadConfigInterface
     public function getNamespacePrefix(): ?string;
 
     public function getPackagesToCopy(): array;
+
+    public function getPackagesToPrefix(): array;
 }
