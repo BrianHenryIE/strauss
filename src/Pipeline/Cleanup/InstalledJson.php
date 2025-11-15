@@ -130,6 +130,7 @@ class InstalledJson
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
                     // Should `unset($installedJsonArray['packages'][$key])`?
+                    // Is this post `delete_vendor_packages`?
                     $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
                     continue;
                 }
