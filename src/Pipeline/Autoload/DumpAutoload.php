@@ -18,6 +18,7 @@ use Composer\Repository\InstalledFilesystemRepository;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Seld\JsonLint\ParsingException;
 
 class DumpAutoload
 {
@@ -40,10 +41,8 @@ class DumpAutoload
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
-        $this->setLogger($logger ?? new NullLogger());
-
+        $this->setLogger($logger);
         $this->projectReplace = $projectReplace;
-
         $this->fileEnumerator = $fileEnumerator;
     }
 
@@ -61,6 +60,8 @@ class DumpAutoload
 
     /**
      * Uses `vendor/composer/installed.json` to output autoload files to `vendor-prefixed/composer`.
+     *
+     * @throws ParsingException
      */
     protected function generatedMainAutoloader(): void
     {
@@ -87,6 +88,17 @@ class DumpAutoload
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
         }
 
+        /**
+         * Loop over all packages that should be included and ensure the root package requires them. Composer only
+         * includes packages in the autoloader that are required by a parent package (including root). Without this
+         * packages that are selectively prefixed are not included in the autoloader.
+         *
+         * @see AutoloadGenerator::filterPackageMap()
+         */
+        foreach ($this->config->getPackagesToPrefix() as $name => $package) {
+            $projectComposerJsonArray['require'][$name] = '*';
+        }
+
         // Do not include the autoload section from the project composer.json in the vendor-prefixed autoloader.
         if (isset($projectComposerJsonArray['autoload'])) {
             $projectComposerJsonArray['autoload'] = [];
@@ -97,13 +109,13 @@ class DumpAutoload
         $package = $composer->getPackage();
 
         /**
-         * Cannot use `$composer->getConfig()`, need to create a new one so the vendor-dir is correct.
+         * Cannot use `$composer->getConfig()`, need to create a new one so the `vendor-dir` is correct.
          */
-        $config = new \Composer\Config(false, $this->config->getProjectDirectory());
+        $config = new Config(false, $this->config->getProjectDirectory());
 
-        $config->merge([
-            'config' => $projectComposerJsonArray['config'] ?? []
-        ]);
+        $config->merge(
+            ['config' => $projectComposerJsonArray['config']] ?? []
+        );
 
         $generator = new ComposerAutoloadGenerator(
             $this->config->getNamespacePrefix(),

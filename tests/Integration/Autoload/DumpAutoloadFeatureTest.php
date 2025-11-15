@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Autoload;
 
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use Composer\Autoload\AutoloadGenerator;
 
 class DumpAutoloadFeatureTest extends IntegrationTestCase
 {
@@ -55,6 +56,13 @@ EOD;
 
     /**
      * vendor-prefixed/autoload* with setAuthoritativeClassmap aren't including the classes in classmap for indirect dependency
+     *
+     * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+     * @see AutoloadGenerator::filterPackageMap()
+     *
+     * Composer only includes autolaoders for packages that are required by another package. Typically this is the
+     * root package, but when only a subset of packages are set for prefixing, there is no "parent" package requiring
+     * them. Let's fix that.
      */
     public function test_check_prefixed_autoloader_indirect(): void
     {
