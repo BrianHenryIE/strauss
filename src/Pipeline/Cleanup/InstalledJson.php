@@ -172,13 +172,12 @@ class InstalledJson
                 $installedJsonArray['packages'][$packageIndex]['autoload'] = [];
             }
             // delete_vendor_files
+            $pathExistsInPackage = function (string $vendorDir, array $packageArray, string $relativePath) {
+                return $this->filesystem->exists(
+                    $vendorDir . 'composer/' . $packageArray['install-path'] . '/' . $relativePath
+                );
+            };
             foreach ($installedJsonArray['packages'][$packageIndex]['autoload'] as $type => $autoload) {
-                $pathExistsInPackage = function (string $vendorDir, array $packageArray, string $relativePath) {
-                    return $this->filesystem->exists(
-                        $vendorDir . 'composer/' . $packageArray['install-path'] . '/' . $relativePath
-                    );
-                };
-
                 switch ($type) {
                     case 'files':
                     case 'classmap':
