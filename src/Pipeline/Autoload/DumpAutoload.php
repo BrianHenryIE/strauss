@@ -113,9 +113,9 @@ class DumpAutoload
          */
         $config = new Config(false, $this->config->getProjectDirectory());
 
-        $config->merge(
-            ['config' => $projectComposerJsonArray['config']] ?? []
-        );
+        $config->merge([
+            'config' => $projectComposerJsonArray['config'] ?? []
+        ]);
 
         $generator = new ComposerAutoloadGenerator(
             $this->config->getNamespacePrefix(),
