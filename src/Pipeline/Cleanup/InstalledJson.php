@@ -129,6 +129,8 @@ class InstalledJson
                 $newInstallPath = $path . str_replace('../', '', $package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
+                    // Should `unset($installedJsonArray['packages'][$key])`?
+                    // Is this post `delete_vendor_packages`?
                     $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
                     continue;
                 }
@@ -170,13 +172,12 @@ class InstalledJson
                 $installedJsonArray['packages'][$packageIndex]['autoload'] = [];
             }
             // delete_vendor_files
+            $pathExistsInPackage = function (string $vendorDir, array $packageArray, string $relativePath) {
+                return $this->filesystem->exists(
+                    $vendorDir . 'composer/' . $packageArray['install-path'] . '/' . $relativePath
+                );
+            };
             foreach ($installedJsonArray['packages'][$packageIndex]['autoload'] as $type => $autoload) {
-                $pathExistsInPackage = function (string $vendorDir, array $packageArray, string $relativePath) {
-                    return $this->filesystem->exists(
-                        $vendorDir . 'composer/' . $packageArray['install-path'] . '/' . $relativePath
-                    );
-                };
-
                 switch ($type) {
                     case 'files':
                     case 'classmap':

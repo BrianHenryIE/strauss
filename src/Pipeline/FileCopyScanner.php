@@ -145,11 +145,23 @@ class FileCopyScanner
     protected function isFilePathExcluded(string $absoluteFilePath): bool
     {
         foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
-            if (1 === preg_match($pattern, $absoluteFilePath)) {
+            $escapedPattern = $this->preparePattern($pattern);
+            if (1 === preg_match($escapedPattern, $absoluteFilePath)) {
                 $this->logger->debug("File {$absoluteFilePath} will not be copied because it matches pattern {$pattern}.");
                 return true;
             }
         }
         return false;
+    }
+
+    private function preparePattern(string $pattern): string
+    {
+        $delimiter = '#';
+
+        if (substr($pattern, 0, 1) !== substr($pattern, - 1, 1)) {
+            $pattern = $delimiter . $pattern . $delimiter;
+        }
+
+        return $pattern;
     }
 }

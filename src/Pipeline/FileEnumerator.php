@@ -86,10 +86,13 @@ class FileEnumerator
         ?string $autoloaderType = null
     ): void {
 
+        if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+            $this->logger->debug("Skipping directory at {sourcePath}", ['sourcePath' => $sourceAbsoluteFilepath]);
+            return;
+        }
+
         // Do not add a file if its source does not exist!
-        if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)
-        ) {
-//            && !$this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+        if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)) {
             $this->logger->warning("File does not exist: {sourcePath}", ['sourcePath' => $sourceAbsoluteFilepath]);
             return;
         }
