@@ -91,7 +91,7 @@
 </td>
        <td class="danger small"><div align="right">16.67%</div></td>
        <td class="danger small"><div align="right">1&nbsp;/&nbsp;6</div></td>
-       <td class="danger small">130.46</td>
+       <td class="danger small">148.70</td>
        <td class="danger big">       <div class="progress">
          <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="0.00" aria-valuemin="0" aria-valuemax="100" style="width: 0.00%">
            <span class="sr-only">0.00% covered (danger)</span>
@@ -164,7 +164,7 @@
 </td>
        <td class="danger small"><div align="right">0.00%</div></td>
        <td class="danger small"><div align="right">0&nbsp;/&nbsp;1</div></td>
-       <td class="danger small">42</td>
+       <td class="danger small">56</td>
        <td class="danger" colspan="3"></td>
       </tr>
 
@@ -341,8 +341,8 @@
     <tr class="danger d-flex"><td  class="col-1 text-right"><a id="99" href="#99">99</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="default">$projectComposerJsonArray</span><span class="keyword">[</span><span class="default">'require'</span><span class="keyword">]</span><span class="keyword">[</span><span class="default">$name</span><span class="keyword">]</span><span class="default">&nbsp;</span><span class="keyword">=</span><span class="default">&nbsp;</span><span class="default">'*'</span><span class="keyword">;</span></td></tr>
     <tr class=" d-flex"><td  class="col-1 text-right"><a id="100" href="#100">100</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">}</span></td></tr>
     <tr class=" d-flex"><td  class="col-1 text-right"><a id="101" href="#101">101</a></td><td class="col-11 codeLine"></td></tr>
-    <tr class=" d-flex"><td  class="col-1 text-right"><a id="102" href="#102">102</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="comment">//&nbsp;Do&nbsp;not&nbsp;include&nbsp;the&nbsp;autoload&nbsp;section&nbsp;from&nbsp;the&nbsp;project&nbsp;composer.json&nbsp;in&nbsp;the&nbsp;vendor-prefixed&nbsp;autoloader.</span></td></tr>
-    <tr class="danger d-flex"><td  class="col-1 text-right"><a id="103" href="#103">103</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">if</span><span class="default">&nbsp;</span><span class="keyword">(</span><span class="keyword">isset</span><span class="keyword">(</span><span class="default">$projectComposerJsonArray</span><span class="keyword">[</span><span class="default">'autoload'</span><span class="keyword">]</span><span class="keyword">)</span><span class="keyword">)</span><span class="default">&nbsp;</span><span class="keyword">{</span></td></tr>
+    <tr class=" d-flex"><td  class="col-1 text-right"><a id="102" href="#102">102</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="comment">//&nbsp;Include&nbsp;the&nbsp;project&nbsp;root&nbsp;autoload&nbsp;in&nbsp;the&nbsp;vendor-prefixed&nbsp;autoloader?</span></td></tr>
+    <tr class="danger d-flex"><td  class="col-1 text-right"><a id="103" href="#103">103</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">if</span><span class="default">&nbsp;</span><span class="keyword">(</span><span class="keyword">isset</span><span class="keyword">(</span><span class="default">$projectComposerJsonArray</span><span class="keyword">[</span><span class="default">'autoload'</span><span class="keyword">]</span><span class="keyword">)</span><span class="default">&nbsp;</span><span class="default">&amp;&amp;</span><span class="default">&nbsp;</span><span class="keyword">!</span><span class="default">$this</span><span class="default">-&gt;</span><span class="default">config</span><span class="default">-&gt;</span><span class="default">isIncludeRootAutoload</span><span class="keyword">(</span><span class="keyword">)</span><span class="keyword">)</span><span class="default">&nbsp;</span><span class="keyword">{</span></td></tr>
     <tr class="danger d-flex"><td  class="col-1 text-right"><a id="104" href="#104">104</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="default">$projectComposerJsonArray</span><span class="keyword">[</span><span class="default">'autoload'</span><span class="keyword">]</span><span class="default">&nbsp;</span><span class="keyword">=</span><span class="default">&nbsp;</span><span class="keyword">[</span><span class="keyword">]</span><span class="keyword">;</span></td></tr>
     <tr class=" d-flex"><td  class="col-1 text-right"><a id="105" href="#105">105</a></td><td class="col-11 codeLine"><span class="default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="keyword">}</span></td></tr>
     <tr class=" d-flex"><td  class="col-1 text-right"><a id="106" href="#106">106</a></td><td class="col-11 codeLine"></td></tr>
@@ -521,7 +521,7 @@
     <h4>Legend</h4>
     <p><span class="legend covered-by-small-tests">Covered by small (and larger) tests</span><span class="legend covered-by-medium-tests">Covered by medium (and large) tests</span><span class="legend covered-by-large-tests">Covered by large tests (and tests of unknown size)</span><span class="legend not-covered">Not covered</span><span class="legend not-coverable">Not coverable</span></p>
     <p>
-     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 9.2.32</a> using <a href="https://secure.php.net/" target="_top">PHP 7.4.33</a> and <a href="https://phpunit.de/">PHPUnit 9.6.29</a> at Sat Nov 15 17:25:54 UTC 2025.</small>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 9.2.32</a> using <a href="https://secure.php.net/" target="_top">PHP 7.4.33</a> and <a href="https://phpunit.de/">PHPUnit 9.6.29</a> at Sun Nov 16 22:59:18 UTC 2025.</small>
     </p>
     <a title="Back to the top" id="toplink" href="#">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16"><path fill-rule="evenodd" d="M12 11L6 5l-6 6h12z"/></svg>
