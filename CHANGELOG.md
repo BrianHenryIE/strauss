@@ -1,8 +1,27 @@
 # Change Log
 
-## 0.24.1 July 2025
+## 0.26.0 November 2025
+
+* Add: `include_root_autoload` option
+* Fix: `preg_match(): Delimiter must not be alphanumeric or backslash for exclude regexp patterns`
+* Fix: Mute "File does not exist" for directories (that don't matter)
+* Fix: `vendor-prefixed/composer/autoload_classmap.php` for packages not directly included
+
+## 0.25.0 November 2025
+
+* Copy all files from packages (previously only copied autoloaded files)
+
+## 0.24.1 August 2025
 
 * Fix: inadvertently removing autoload keys from `installed.json` when `target_directory` is not `vendor-prefixed`
+* Fix: double-prefixing case
+* Fix: `exclude_from_prefix` config option not working correctly
+* Fix: only update a _class extends_ namespace if it is global 
+* Fix: log message replacement in `InstalledJson::cleanTargetDirInstalledJson()`
+* Dependencies: use `conflict` to allow newer jsonmapper versions
+* Release: update `.editorconfig` 
+* Slightly better logging
+* [...more](https://github.com/BrianHenryIE/strauss/compare/0.24.0...0.24.1)
 
 ## 0.24.0 July 2025
 

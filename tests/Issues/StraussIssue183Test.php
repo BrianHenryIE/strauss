@@ -84,9 +84,6 @@ EOD;
   "require": {
     "psr/log": "*"
   },
-  "require-dev": {
-    "brianhenryie/strauss": "dev-master"
-  },
   "extra": {
     "strauss": {
       "namespace_prefix": "Strauss\\\\Issue183\\\\",

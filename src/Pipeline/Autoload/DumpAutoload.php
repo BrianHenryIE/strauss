@@ -18,6 +18,7 @@ use Composer\Repository\InstalledFilesystemRepository;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Seld\JsonLint\ParsingException;
 
 class DumpAutoload
 {
@@ -40,10 +41,8 @@ class DumpAutoload
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
-        $this->setLogger($logger ?? new NullLogger());
-
+        $this->setLogger($logger);
         $this->projectReplace = $projectReplace;
-
         $this->fileEnumerator = $fileEnumerator;
     }
 
@@ -61,6 +60,8 @@ class DumpAutoload
 
     /**
      * Uses `vendor/composer/installed.json` to output autoload files to `vendor-prefixed/composer`.
+     *
+     * @throws ParsingException
      */
     protected function generatedMainAutoloader(): void
     {
@@ -87,7 +88,18 @@ class DumpAutoload
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
         }
 
-        // Include the project root autoload in the vendor-prefixed autoloader?
+	    /**
+	     * Loop over all packages that should be included and ensure the root package requires them. Composer only
+	     * includes packages in the autoloader that are required by a parent package (including root). Without this
+	     * packages that are selectively prefixed are not included in the autoloader.
+	     *
+	     * @see AutoloadGenerator::filterPackageMap()
+	     */
+	    foreach ($this->config->getPackagesToPrefix() as $name => $package) {
+		    $projectComposerJsonArray['require'][$name] = '*';
+	    }
+
+	    // Include the project root autoload in the vendor-prefixed autoloader?
         if (isset($projectComposerJsonArray['autoload']) && !$this->config->isIncludeRootAutoload()) {
             $projectComposerJsonArray['autoload'] = [];
         }
@@ -97,9 +109,9 @@ class DumpAutoload
         $package = $composer->getPackage();
 
         /**
-         * Cannot use `$composer->getConfig()`, need to create a new one so the vendor-dir is correct.
+         * Cannot use `$composer->getConfig()`, need to create a new one so the `vendor-dir` is correct.
          */
-        $config = new \Composer\Config(false, $this->config->getProjectDirectory());
+        $config = new Config(false, $this->config->getProjectDirectory());
 
         $config->merge([
             'config' => $projectComposerJsonArray['config'] ?? []
@@ -216,7 +228,7 @@ class DumpAutoload
             $phpFiles
         );
 
-        $sourceFile = new File(__DIR__);
+        $sourceFile = new File(__DIR__, __DIR__);
         $composerAutoloadNamespaceSymbol = new NamespaceSymbol(
             'Composer\\Autoload',
             $sourceFile
