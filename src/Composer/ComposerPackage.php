@@ -97,7 +97,7 @@ class ComposerPackage
      *                                    another which Strauss can use.
      * @return ComposerPackage
      */
-    public static function fromFile(string $absolutePath, array $overrideAutoload = null): ComposerPackage
+    public static function fromFile(string $absolutePath, ?array $overrideAutoload = null): ComposerPackage
     {
         $composer = Factory::create(new NullIO(), $absolutePath, true);
 
@@ -110,7 +110,7 @@ class ComposerPackage
      * @param array{name?:string, license?:string, requires?:array<string,string>, autoload?:AutoloadKeyArray} $jsonArray composer.json decoded to array
      * @param ?AutoloadKeyArray $overrideAutoload New autoload rules to replace the existing ones.
      */
-    public static function fromComposerJsonArray($jsonArray, array $overrideAutoload = null): ComposerPackage
+    public static function fromComposerJsonArray($jsonArray, ?array $overrideAutoload = null): ComposerPackage
     {
         $factory = new Factory();
         $io = new NullIO();
@@ -125,7 +125,7 @@ class ComposerPackage
      * @param Composer $composer
      * @param ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
      */
-    public function __construct(Composer $composer, array $overrideAutoload = null)
+    public function __construct(Composer $composer, ?array $overrideAutoload = null)
     {
         $this->composer = $composer;
 
