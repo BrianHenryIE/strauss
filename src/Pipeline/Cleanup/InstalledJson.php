@@ -186,7 +186,7 @@ class InstalledJson
                     case 'files':
                     case 'classmap':
                         $installedJsonArray['packages'][$packageIndex]['autoload'][$type] = array_filter(
-                            $autoload[$type],
+                            $installedJsonArray['packages'][$packageIndex]['autoload'][$type],
                             fn(string $relativePath) => $pathExistsInPackage($vendorDir, $packageArray, $relativePath)
                         );
                         break;
