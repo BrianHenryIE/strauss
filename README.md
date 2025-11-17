@@ -150,6 +150,7 @@ Strauss potentially requires zero configuration, but likely you'll want to custo
         "packages": [
         ],
         "update_call_sites": false,
+        "include_root_autoload": false,
         "override_autoload": {
         },
         "exclude_from_copy": {
@@ -191,6 +192,7 @@ The following configuration is default:
 - `include_modified_date` is a `bool` to decide if Strauss should include a date in the (phpdoc) header written to modified files. Defaults to `true`.
 - `include_author` is a `bool` to decide if Strauss should include the author name in the (phpdoc) header written to modified files. Defaults to `true`.
 - `update_call_sites`: `false`. This can be `true`, `false` or an `array` of directories/filepaths. When set to `true` it defaults to the directories and files in the project's `autoload` key. The PHP files and directories' PHP files will be updated where they call the prefixed classes.
+- `include_root_autoload`: `false` is a boolean flag to indicate whether Strauss should include the root autoload section of your project when creating its autoloader. It is false by default. Enabling this option will allow you to require only the Strauss autoloader in your project. Note that conflicts may occur if your project enables this option, requires both the Composer and Strauss autoloaders, and uses `files` autoloading.
 
 The remainder is empty:
 
@@ -216,7 +218,9 @@ require_once __DIR__ . '/vendor-prefixed/autoload.php';
 
 If you plan to continue using Composer's autoloader you probably want to turn on `delete_vendor_packages` or set `target_directory` to `vendor`.
 
-You can use `strauss include-autoloader` to add a line to `vendor/autoload.php` which includes the autoloader for the new files. 
+You can use `strauss include-autoloader` to add a line to `vendor/autoload.php` which includes the autoloader for the new files.
+
+If you don't plan to use Composer's autoloader, you may wish to enable `include_root_autoload` so that the Strauss autoloader includes the autoload for your project.
 
 When `delete_vendor_packages` is enabled, `vendor/composer/autoload_aliases.php` is created to allow modified classes to be loaded with their old name during development. This file should not be included in your production code.
 
@@ -261,6 +265,7 @@ I don't have a strong opinion on these. I began using Mozart because it was easy
 
 ## Breaking Changes
 
+* v0.25.0 – will copy all files from a package to the target directory
 * v0.21.0 – will prefix global functions
 * v0.16.0 – will no longer prefix PHP built-in classes seen in polyfill packages
 * v0.14.0 – `psr/*` packages no longer excluded by default

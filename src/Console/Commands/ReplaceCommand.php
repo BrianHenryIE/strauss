@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
@@ -181,11 +182,18 @@ class ReplaceCommand extends Command
 
         $fileScanner->findInFiles($this->discoveredFiles);
 
+        $autoloadFilesEnumerator = new AutoloadedFilesEnumerator(
+            $config,
+            $this->filesystem,
+            $this->logger
+        );
+        $autoloadFilesEnumerator->markFilesForInclusion($this->flatDependencyTree);
+        $autoloadFilesEnumerator->markFilesForExclusion($this->discoveredFiles);
+
         $changeEnumerator = new ChangeEnumerator(
             $config,
-            $this->filesystem
+            $this->logger
         );
-        $changeEnumerator->markFilesForExclusion($this->discoveredFiles);
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 

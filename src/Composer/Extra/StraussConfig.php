@@ -8,6 +8,7 @@ namespace BrianHenryIE\Strauss\Composer\Extra;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
+use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\CopierConfigInterface;
@@ -26,6 +27,7 @@ use Symfony\Component\Console\Input\InputInterface;
 class StraussConfig implements
     AliasesConfigInterface,
     AutoloadConfigInterface,
+    AutoloadFilesEnumeratorConfigInterface,
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     CopierConfigInterface,
@@ -101,7 +103,6 @@ class StraussConfig implements
     protected array $packages = [];
 
     /**
-     *
      * @var array<string,ComposerPackage>
      */
     protected array $packagesToCopy = [];
@@ -187,6 +188,11 @@ class StraussConfig implements
     protected bool $dryRun = false;
 
     /**
+     * Should the root autoload be included when generating the strauss autoloader?
+     */
+    protected bool $includeRootAutoload = false;
+
+    /**
      * Read any existing Mozart config.
      * Overwrite it with any Strauss config.
      * Provide sensible defaults.
@@ -225,6 +231,7 @@ class StraussConfig implements
 
             $rename->addMapping(StraussConfig::class, 'exclude_prefix_packages', 'excludePackagesFromPrefixing');
 
+            $rename->addMapping(StraussConfig::class, 'include_root_autoload', 'includeRootAutoload');
 
             $rename->addMapping(StraussConfig::class, 'function_prefix', 'functionsPrefix');
 
@@ -400,19 +407,15 @@ class StraussConfig implements
         $this->classmapPrefix = $classmapPrefix;
     }
 
-    /**
-     * @return string
-     */
     public function getFunctionsPrefix(): ?string
     {
+        if (is_string($this->functionsPrefix)) {
+            return $this->functionsPrefix;
+        }
         if (!isset($this->functionsPrefix)) {
             return strtolower($this->getClassmapPrefix());
         }
-        if (empty($this->functionsPrefix)) {
-            return null;
-        }
-
-        return $this->functionsPrefix;
+        return null;
     }
 
     /**
@@ -450,7 +453,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string[]|null $updateCallSites
+     * @param string[]|array{0:bool}|null $updateCallSites
      */
     public function setUpdateCallSites($updateCallSites): void
     {
@@ -626,17 +629,25 @@ class StraussConfig implements
 
     /**
      * @used-by DependenciesCommand::buildDependencyList()
+     *
+     * @param array<string,ComposerPackage> $packagesToCopy
      */
     public function setPackagesToCopy(array $packagesToCopy): void
     {
         $this->packagesToCopy = $packagesToCopy;
     }
 
+    /**
+     * @return array<string,ComposerPackage>
+     */
     public function getPackagesToPrefix(): array
     {
         return $this->packagesToPrefix;
     }
 
+    /**
+     * @param array<string,ComposerPackage> $packagesToPrefix
+     */
     public function setPackagesToPrefix(array $packagesToPrefix): void
     {
         $this->packagesToPrefix = $packagesToPrefix;
@@ -733,6 +744,22 @@ class StraussConfig implements
     }
 
     /**
+     * Should the root autoload be included when generating the strauss autoloader?
+     */
+    public function isIncludeRootAutoload(): bool
+    {
+        return $this->includeRootAutoload;
+    }
+
+    /**
+     * @param bool $includeRootAutoload Include the project root autoload in the strauss autoloader.
+     */
+    public function setIncludeRootAutoload(bool $includeRootAutoload): void
+    {
+        $this->includeRootAutoload = $includeRootAutoload;
+    }
+
+    /**
      * @param InputInterface $input To access the command line options.
      */
     public function updateFromCli(InputInterface $input): void
@@ -749,7 +776,7 @@ class StraussConfig implements
                 $this->updateCallSites = array();
             } elseif ('true' === $updateCallSitesInput) {
                 $this->updateCallSites = null;
-            } elseif (! is_null($updateCallSitesInput)) {
+            } elseif (is_string($updateCallSitesInput)) {
                 $this->updateCallSites = explode(',', $updateCallSitesInput);
             }
         }
@@ -766,9 +793,7 @@ class StraussConfig implements
 
         if ($input->hasOption('dry-run') && $input->getOption('dry-run') !== false) {
             // If we're here, the parameter was passed in the CLI command.
-            $this->dryRun = empty($input->getOption('dry-run'))
-                ? true
-                : filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $this->dryRun = empty($input->getOption('dry-run')) || (bool)filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
     }
 

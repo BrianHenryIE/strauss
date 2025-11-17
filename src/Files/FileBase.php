@@ -46,7 +46,7 @@ interface FileBase
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void;
 
     /**
-     * @return DiscoveredSymbol[]
+     * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
      */
     public function getDiscoveredSymbols(): array;
 }

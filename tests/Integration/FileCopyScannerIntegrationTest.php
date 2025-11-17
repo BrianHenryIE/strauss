@@ -20,13 +20,13 @@ use Psr\Log\NullLogger;
  * @package BrianHenryIE\Strauss
  * @coversNothing
  */
-class FileScannerIntegrationTest extends IntegrationTestCase
+class FileCopyScannerIntegrationTest extends IntegrationTestCase
 {
 
     /**
      * Given a list of files, find all the global classes and the namespaces.
      */
-    public function testOne()
+    public function test_find_namespace_and_global_classes(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -77,6 +77,9 @@ EOD;
         );
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        foreach ($files->getFiles() as $file) {
+            $file->setDoPrefix($file->isPhpFile());
+        }
 
         (new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir)))->scanFiles($files);
 
@@ -107,5 +110,52 @@ EOD;
         self::assertNotEmpty($namespaces);
 
         self::assertContains('Google_Task_Composer', $classes);
+    }
+
+    /**
+     * Fix: "preg_match(): Delimiter must not be alphanumeric or backslash"
+     *
+     * @see FileCopyScanner::isFilePathExcluded()
+     */
+    public function test_exclude_copy_file_patterns(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+    "name": "brianhenryie/file-copy-scanner",
+    "require": {
+        "wordpress/mcp-adapter": "0.3.0"
+    },
+    "extra": {
+        "strauss": {
+            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "target_directory": "vendor-prefixed",
+            "delete_vendor_packages": true,
+	        "exclude_from_copy": {
+	          "file_patterns": [
+	            "wordpress/mcp-adapter/.github",
+	            "wordpress/mcp-adapter/docs",
+	            "wordpress/mcp-adapter/tests",
+	            "wordpress/mcp-adapter/CONTRIBUTING.md",
+	            "wordpress/mcp-adapter/phpcs.xml.dist",
+	            "wordpress/mcp-adapter/phpunit.xml.dist",
+	            "wordpress/mcp-adapter/README-INITIAL.md",
+	            "wordpress/mcp-adapter/phpstan.neon.dist"
+	          ]
+	        }
+        }
+    }
+}
+EOD;
+        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/wordpress/mcp-adapter/phpunit.xml.dist');
     }
 }

@@ -46,7 +46,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      *
      * @return string[]
      */
-    public function findAllFilesAbsolutePaths(array $fileAndDirPaths): array
+    public function findAllFilesAbsolutePaths(array $fileAndDirPaths, bool $excludeDirectories = false): array
     {
         $files = [];
 
@@ -65,6 +65,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             $fileAttributesArray = $directoryListing->toArray();
 
             $f = array_map(fn($file) => '/'.$file->path(), $fileAttributesArray);
+
+            if ($excludeDirectories) {
+                $f = array_filter($f, fn($path) => !$this->directoryExists($path));
+            }
 
             $files = array_merge($files, $f);
         }
