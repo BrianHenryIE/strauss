@@ -43,6 +43,8 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
 
     /**
      * Data provider for test_fix_double_loading_of_files_autoloaders.
+     *
+     * @return array<string, array{0:string, 1:bool}>
      */
     public static function provider_fix_double_loading_of_files_autoloaders(): array
     {
@@ -142,6 +144,8 @@ EOD;
 
     /**
      * Data provider for test_option_include_root_autoload.
+     *
+     * @return array<string, array{0:string, 1:bool}>
      */
     public static function provider_option_include_root_autoload(): array
     {

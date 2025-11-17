@@ -2,6 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -17,9 +18,12 @@ use Composer\Json\JsonFile;
 use Composer\Repository\InstalledFilesystemRepository;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Seld\JsonLint\ParsingException;
 
+/**
+ * @phpstan-import-type AutoloadKeyArray from ComposerPackage
+ * @phpstan-import-type ComposerConfigArray from ComposerPackage
+ */
 class DumpAutoload
 {
     use LoggerAwareTrait;
@@ -27,7 +31,7 @@ class DumpAutoload
     protected AutoloadConfigInterface $config;
 
     protected FileSystem $filesystem;
-    
+
     protected Prefixer $projectReplace;
 
     protected FileEnumerator $fileEnumerator;
@@ -83,23 +87,24 @@ class DumpAutoload
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
         $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
+        /** @var array{require?:array<string,string>,autoload?:AutoloadKeyArray,config?:ComposerConfigArray} $projectComposerJsonArray */
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
         }
 
-	    /**
-	     * Loop over all packages that should be included and ensure the root package requires them. Composer only
-	     * includes packages in the autoloader that are required by a parent package (including root). Without this
-	     * packages that are selectively prefixed are not included in the autoloader.
-	     *
-	     * @see AutoloadGenerator::filterPackageMap()
-	     */
-	    foreach ($this->config->getPackagesToPrefix() as $name => $package) {
-		    $projectComposerJsonArray['require'][$name] = '*';
-	    }
+        /**
+         * Loop over all packages that should be included and ensure the root package requires them. Composer only
+         * includes packages in the autoloader that are required by a parent package (including root). Without this
+         * packages that are selectively prefixed are not included in the autoloader.
+         *
+         * @see AutoloadGenerator::filterPackageMap()
+         */
+        foreach ($this->config->getPackagesToPrefix() as $name => $package) {
+            $projectComposerJsonArray['require'][$name] = '*';
+        }
 
-	    // Include the project root autoload in the vendor-prefixed autoloader?
+        // Include the project root autoload in the vendor-prefixed autoloader?
         if (isset($projectComposerJsonArray['autoload']) && !$this->config->isIncludeRootAutoload()) {
             $projectComposerJsonArray['autoload'] = [];
         }
@@ -130,6 +135,7 @@ class DumpAutoload
         $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
 
         $installedJsonFile = new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json');
+        /** @var array{dev?:bool} $installedJson */
         $installedJson = $installedJsonFile->read();
         $localRepo = new InstalledFilesystemRepository($installedJsonFile);
 
@@ -140,7 +146,7 @@ class DumpAutoload
         if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()) {
             $isDevMode = false;
         } else {
-            $isDevMode = $installedJson['dev'];
+            $isDevMode = (bool) ($installedJson['dev'] ?? false);
         }
         $generator->setDevMode($isDevMode);
 

@@ -115,7 +115,7 @@ class FileCopyScanner
         return false;
     }
 
-    protected function isNamespaceExcluded(File $file): bool
+    protected function isNamespaceExcluded(FileBase $file): bool
     {
         /** @var DiscoveredSymbol $symbol */
         foreach ($file->getDiscoveredSymbols() as $symbol) {

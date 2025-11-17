@@ -32,13 +32,10 @@ class AutoloadedFilesEnumerator
     }
 
     /**
-     *
-     *
      * @param ComposerPackage[] $dependencies
      */
     public function markFilesForInclusion(array $dependencies): void
     {
-
         foreach ($dependencies as $dependency) {
             $this->scanPackage($dependency);
         }
@@ -102,7 +99,15 @@ class AutoloadedFilesEnumerator
                             $dependencyPackageAbsolutePath,
                             $filePackageAbsolutePath
                         );
-                        $dependency->getFile($filePackageRelativePath)->setDoPrefix(true);
+                        $file = $dependency->getFile($filePackageRelativePath);
+                        if (!$file) {
+                            $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
+                                'relativePath' => $filePackageRelativePath,
+                                'packageName' => $dependency->getPackageName(),
+                            ]);
+                        } else {
+                            $file->setDoPrefix(true);
+                        }
                     }
                     break;
                 case 'classmap':
@@ -162,13 +167,20 @@ class AutoloadedFilesEnumerator
             }
 
             $relativePath = $this->filesystem->getRelativePath($dependency->getPackageAbsolutePath(), $fileAbsolutePath);
-            $dependency->getFile($relativePath)->setDoPrefix(true);
+            $file = $dependency->getFile($relativePath);
+            if (!$file) {
+                $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
+                    'relativePath' => $relativePath,
+                    'packageName' => $dependency->getPackageName(),
+                ]);
+            } else {
+                $file->setDoPrefix(true);
+            }
         }
     }
 
-    public function markFilesForExclusion(DiscoveredFiles $files)
+    public function markFilesForExclusion(DiscoveredFiles $files): void
     {
-
         foreach ($files->getFiles() as $file) {
             if ($file instanceof FileWithDependency) {
                 if (in_array(

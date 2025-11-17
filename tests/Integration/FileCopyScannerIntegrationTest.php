@@ -26,7 +26,7 @@ class FileCopyScannerIntegrationTest extends IntegrationTestCase
     /**
      * Given a list of files, find all the global classes and the namespaces.
      */
-    public function testOne()
+    public function test_find_namespace_and_global_classes(): void
     {
 
         $composerJsonString = <<<'EOD'

@@ -13,7 +13,8 @@ use Composer\Factory;
 use Composer\IO\NullIO;
 
 /**
- * @phpstan-type AutoloadKey array{files?:array<string>,classmap?:array<string>,"psr-4"?:array<string,string|array<string>>}
+ * @phpstan-type AutoloadKeyArray array{files?:array<string>,classmap?:array<string>,"psr-4"?:array<string,string|array<string>>,exclude_from_classmap?:array<string>}
+ * @phpstan-type ComposerConfigArray array{config?: array<string, mixed>, repositories?: array<mixed>} {@see \Composer\Config::merge()}
  */
 class ComposerPackage
 {
@@ -46,14 +47,14 @@ class ComposerPackage
     /**
      * Packages can be symlinked from outside the current project directory.
      *
-     * @var ?string
+     * TODO: When could a package _not_ have an absolute path? Virtual packages, ext-*...
      */
     protected ?string $packageAbsolutePath = null;
 
     /**
      * The discovered files, classmap, psr0 and psr4 autoload keys discovered (as parsed by Composer).
      *
-     * @var AutoloadKey
+     * @var AutoloadKeyArray
      */
     protected array $autoload = [];
 
@@ -106,8 +107,8 @@ class ComposerPackage
     /**
      * This is used for virtual packages, which don't have a composer.json.
      *
-     * @param array{name?:string, license?:string, requires?:array<string,string>, autoload?:AutoloadKey} $jsonArray composer.json decoded to array
-     * @param ?AutoloadKey $overrideAutoload New autoload rules to replace the existing ones.
+     * @param array{name?:string, license?:string, requires?:array<string,string>, autoload?:AutoloadKeyArray} $jsonArray composer.json decoded to array
+     * @param ?AutoloadKeyArray $overrideAutoload New autoload rules to replace the existing ones.
      */
     public static function fromComposerJsonArray($jsonArray, array $overrideAutoload = null): ComposerPackage
     {
@@ -122,7 +123,7 @@ class ComposerPackage
      * Create a PHP object to represent a composer package.
      *
      * @param Composer $composer
-     * @param ?AutoloadKey $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
+     * @param ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
      */
     public function __construct(Composer $composer, array $overrideAutoload = null)
     {
@@ -197,7 +198,7 @@ class ComposerPackage
      * e.g. ['classmap' => [ 'src', 'lib' ]]
      * e.g. ['files' => [ 'lib', 'functions.php' ]]
      *
-     * @return AutoloadKey
+     * @return AutoloadKeyArray
      */
     public function getAutoload(): array
     {

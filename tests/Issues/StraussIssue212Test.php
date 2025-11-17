@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  */
 class StraussIssue212Test extends IntegrationTestCase
 {
-    public function test_symfony_polyfill_php83()
+    public function test_symfony_polyfill_php83(): void
     {
         $packageComposerJson = <<<'EOD'
 {
