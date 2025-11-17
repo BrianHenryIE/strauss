@@ -2,6 +2,8 @@
 
 namespace BrianHenryIE\Strauss\Config;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+
 interface AutoloadConfigInterface
 {
 
@@ -31,7 +33,13 @@ interface AutoloadConfigInterface
 
     public function getNamespacePrefix(): ?string;
 
+    /**
+     * @return array<string,ComposerPackage>
+     */
     public function getPackagesToCopy(): array;
 
+    /**
+     * @return array<string,ComposerPackage>
+     */
     public function getPackagesToPrefix(): array;
 }

@@ -14,7 +14,6 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 class FileEnumerator
 {
@@ -43,6 +42,9 @@ class FileEnumerator
         $this->logger = $logger;
     }
 
+    /**
+     * @param ComposerPackage[] $dependencies
+     */
     public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
     {
         foreach ($dependencies as $dependency) {

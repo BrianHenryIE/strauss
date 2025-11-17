@@ -103,7 +103,6 @@ class StraussConfig implements
     protected array $packages = [];
 
     /**
-     *
      * @var array<string,ComposerPackage>
      */
     protected array $packagesToCopy = [];
@@ -408,19 +407,15 @@ class StraussConfig implements
         $this->classmapPrefix = $classmapPrefix;
     }
 
-    /**
-     * @return string
-     */
     public function getFunctionsPrefix(): ?string
     {
+        if (is_string($this->functionsPrefix)) {
+            return $this->functionsPrefix;
+        }
         if (!isset($this->functionsPrefix)) {
             return strtolower($this->getClassmapPrefix());
         }
-        if (empty($this->functionsPrefix)) {
-            return null;
-        }
-
-        return $this->functionsPrefix;
+        return null;
     }
 
     /**
@@ -458,7 +453,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string[]|null $updateCallSites
+     * @param string[]|array{0:bool}|null $updateCallSites
      */
     public function setUpdateCallSites($updateCallSites): void
     {
@@ -634,17 +629,25 @@ class StraussConfig implements
 
     /**
      * @used-by DependenciesCommand::buildDependencyList()
+     *
+     * @param array<string,ComposerPackage> $packagesToCopy
      */
     public function setPackagesToCopy(array $packagesToCopy): void
     {
         $this->packagesToCopy = $packagesToCopy;
     }
 
+    /**
+     * @return array<string,ComposerPackage>
+     */
     public function getPackagesToPrefix(): array
     {
         return $this->packagesToPrefix;
     }
 
+    /**
+     * @param array<string,ComposerPackage> $packagesToPrefix
+     */
     public function setPackagesToPrefix(array $packagesToPrefix): void
     {
         $this->packagesToPrefix = $packagesToPrefix;
@@ -773,7 +776,7 @@ class StraussConfig implements
                 $this->updateCallSites = array();
             } elseif ('true' === $updateCallSitesInput) {
                 $this->updateCallSites = null;
-            } elseif (! is_null($updateCallSitesInput)) {
+            } elseif (is_string($updateCallSitesInput)) {
                 $this->updateCallSites = explode(',', $updateCallSitesInput);
             }
         }
@@ -790,9 +793,7 @@ class StraussConfig implements
 
         if ($input->hasOption('dry-run') && $input->getOption('dry-run') !== false) {
             // If we're here, the parameter was passed in the CLI command.
-            $this->dryRun = empty($input->getOption('dry-run'))
-                ? true
-                : filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $this->dryRun = empty($input->getOption('dry-run')) || (bool)filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
     }
 
