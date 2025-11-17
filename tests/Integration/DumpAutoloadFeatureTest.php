@@ -5,7 +5,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @covers \BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload

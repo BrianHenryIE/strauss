@@ -66,10 +66,9 @@ class AutoloadedFilesEnumerator
             return 'exclude-from-classmap' !== $type;
         }, ARRAY_FILTER_USE_KEY);
 
-        $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
+        $dependencyPackageAbsolutePath = '/' . $dependency->getPackageAbsolutePath();
 
         $classMapGenerator = new ClassMapGenerator();
-
 
         $excluded = null;
         $autoloadType = 'classmap';
@@ -78,7 +77,6 @@ class AutoloadedFilesEnumerator
             fn(string $path) => $dependencyPackageAbsolutePath . '/' . $path,
             $excludeFromClassmap
         );
-
 
         foreach ($autoloaders as $type => $value) {
             // Might have to switch/case here.
@@ -153,7 +151,7 @@ class AutoloadedFilesEnumerator
                     }
                     break;
                 default:
-                    $this->logger->info('Unexpected autoloader type');
+                    $this->logger->warning('Unexpected autoloader type');
                     // TODO: include everything;
                     break;
             }

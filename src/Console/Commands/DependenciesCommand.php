@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -33,6 +34,7 @@ use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
@@ -144,21 +146,23 @@ class DependenciesCommand extends Command
             );
         }
 
-        $localFilesystemAdapter = new LocalFilesystemAdapter(
-            '/',
+        $localFilesystemLocation = PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
+
+        $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
+
+        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
             null,
-            LOCK_EX,
-            LocalFilesystemAdapter::SKIP_LINKS
+            $pathPrefixer,
+            $this->logger
         );
 
         $this->filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                $localFilesystemAdapter,
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
-            ),
-            getcwd() . '/'
+            $symlinkProtectFilesystemAdapter,
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            $pathPrefixer
         );
     }
 
@@ -166,7 +170,7 @@ class DependenciesCommand extends Command
      * @param InputInterface $input The command line input to check for `--debug`, `--silent` etc.
      * @param OutputInterface $output The Symfony object that actually prints the messages.
      */
-    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         $isDryRun = isset($this->config) && $this->config->isDryRun();
 
@@ -191,6 +195,34 @@ class DependenciesCommand extends Command
             : new ConsoleLogger($output, $logLevel);
     }
 
+    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
+    {
+        $normalizer = new WhitespacePathNormalizer();
+        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+
+        $pathPrefixer = new PathPrefixer('mem://', '/');
+
+        $this->filesystem =
+            new FileSystem(
+                new ReadOnlyFileSystem(
+                    $this->filesystem->getAdapter(),
+                ),
+                [],
+                $normalizer,
+                $pathPrefixer
+            );
+
+        /**
+         * Register a file stream mem:// to handle file operations by third party libraries.
+         *
+         * @var FilesystemRegistry $registry
+         */
+        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+        $registry->register('mem', $this->filesystem);
+
+        return $filesystem;
+    }
+
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
@@ -201,7 +233,7 @@ class DependenciesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->setLogger($this->getLogger($input, $output));
+        $this->setLogger($this->getIOLogger($input, $output));
 
         $workingDir       = getcwd() . '/';
         $this->workingDir = $workingDir;
@@ -214,35 +246,15 @@ class DependenciesCommand extends Command
             $this->updateConfigFromCli($input);
 
             if ($this->config->isDryRun()) {
-                $normalizer = new WhitespacePathNormalizer();
-                $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+                $this->filesystem = $this->getReadOnlyFileSystem($this->filesystem);
 
-                $this->filesystem =
-                    new FileSystem(
-                        new ReadOnlyFileSystem(
-                            $this->filesystem,
-                            $normalizer
-                        ),
-                        $this->workingDir
-                    );
-
-                /** @var FilesystemRegistry $registry */
-                $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-
-                // Register a file stream mem:// to handle file operations by third party libraries.
-                // This exception handling probably doesn't matter in real life but does in unit tests.
-                try {
-                    $registry->get('mem');
-                } catch (\Exception $e) {
-                    $registry->register('mem', $this->filesystem);
-                }
-                $this->setLogger($this->getLogger($input, $output));
+                $this->setLogger($this->getIOLogger($input, $output));
             }
 
             $logger = new Logger('logger');
             $logger->pushProcessor(new PsrLogMessageProcessor());
             $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
-            $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
+            $logger->pushHandler(new PsrHandler($this->getIOLogger($input, $output)));
             $this->setLogger($logger);
 
             $this->buildDependencyList();
@@ -296,7 +308,9 @@ class DependenciesCommand extends Command
             $this->logger->info('Using: ' . $composerFilePath);
         }
 
-        $this->projectComposerPackage = new ProjectComposerPackage('/'.$composerFilePath);
+        $composerFilePath = $this->filesystem->normalize($composerFilePath);
+        $composerFilePath = $this->filesystem->prefixPath($composerFilePath);
+        $this->projectComposerPackage = new ProjectComposerPackage($composerFilePath);
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.
@@ -360,6 +374,30 @@ class DependenciesCommand extends Command
         }
 
         // TODO: Print the dependency tree that Strauss has determined.
+
+        $symlinkedDependencies = array_filter($this->flatDependencyTree, fn ($dependency) => $dependency->getPackageAbsolutePath() !== $dependency->getRealPath());
+
+        if (!empty($symlinkedDependencies) &&
+            ($this->config->isDeleteVendorFiles() || ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()))
+        ) {
+            $list = implode(
+                ', ',
+                array_map(
+                    fn($dependency) => $dependency->getPackageName(),
+                    $symlinkedDependencies
+                )
+            );
+            $this->logger->error(
+                sprintf(
+                    'Symlinked package%s detected: %s',
+                    count($symlinkedDependencies) ? 's' : '',
+                    $list
+                )
+            );
+            // https://stackoverflow.com/a/65009324/336146
+            $this->logger->notice('Use `COMPOSER_MIRROR_PATH_REPOS=1 composer install` to copy symlinked packages to vendor directory.');
+            throw new Exception();
+        }
     }
 
 

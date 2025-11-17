@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
@@ -16,10 +16,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
     public function test_is_dir(): void
     {
         $fs = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
+            new LocalFilesystemAdapter('/')
         );
 
         $dir = $this->testsWorkingDir . 'dir';
@@ -36,10 +33,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
     public function test_find_all_files_absolute_paths(): void
     {
         $fs = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
+            new LocalFilesystemAdapter('/')
         );
 
         $dir = $this->testsWorkingDir . 'dir';
@@ -59,8 +53,8 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         $files = $fs->findAllFilesAbsolutePaths([ $dir ]);
 
-        $this->assertContains($file1, $files);
-        $this->assertContains($file2, $files);
-        $this->assertContains($file3, $files);
+        $this->assertContains($this->pathNormalizer->normalizePath($file1), $files);
+        $this->assertContains($this->pathNormalizer->normalizePath($file2), $files);
+        $this->assertContains($this->pathNormalizer->normalizePath($file3), $files);
     }
 }

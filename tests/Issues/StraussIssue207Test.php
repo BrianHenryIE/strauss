@@ -9,7 +9,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -20,7 +20,7 @@ class StraussIssue207Test extends IntegrationTestCase
     public function test_fremius_files_are_copied()
     {
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/package-with-custom-autoloader",
     "extra": {
         "strauss": {
@@ -53,7 +53,7 @@ EOD;
     public function test_action_scheduler_files_are_copied()
     {
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/package-with-custom-autoloader",
     "extra": {
         "strauss": {
@@ -83,7 +83,7 @@ EOD;
     public function test_plugin_update_checker_files_are_copied()
     {
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/package-with-custom-autoloader",
     "extra": {
         "strauss": {
@@ -113,7 +113,7 @@ EOD;
     public function test_abilities_api_files_are_copied()
     {
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/abilities-api-uses-bootstrap-in-files-autoloader",
     "extra": {
         "strauss": {

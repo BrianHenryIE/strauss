@@ -42,14 +42,21 @@ class ComposerPackage
      *
      * @var ?string
      */
-    protected ?string $relativePath = null;
+    protected ?string $vendorSubdir = null;
+
+    /**
+     * The full path to the package.
+     *
+     * This may be relative to the Flysystem adapter.
+     */
+    protected ?string $packageAbsolutePath = null;
 
     /**
      * Packages can be symlinked from outside the current project directory.
      *
      * TODO: When could a package _not_ have an absolute path? Virtual packages, ext-*...
      */
-    protected ?string $packageAbsolutePath = null;
+    protected ?string $packageRealPath = null;
 
     /**
      * The discovered files, classmap, psr0 and psr4 autoload keys discovered (as parsed by Composer).
@@ -89,7 +96,7 @@ class ComposerPackage
      *
      * @var FileWithDependency[]
      */
-    protected array $files;
+    protected array $files = [];
 
     /**
      * @param string $absolutePath The absolute path to composer.json
@@ -110,7 +117,7 @@ class ComposerPackage
      * @param array{name?:string, license?:string, requires?:array<string,string>, autoload?:AutoloadKeyArray} $jsonArray composer.json decoded to array
      * @param ?AutoloadKeyArray $overrideAutoload New autoload rules to replace the existing ones.
      */
-    public static function fromComposerJsonArray($jsonArray, array $overrideAutoload = null): ComposerPackage
+    public static function fromComposerJsonArray(array $jsonArray, array $overrideAutoload = null): ComposerPackage
     {
         $factory = new Factory();
         $io = new NullIO();
@@ -131,23 +138,24 @@ class ComposerPackage
 
         $this->packageName = $composer->getPackage()->getName();
 
+        $packageVendorDir = $this->composer->getConfig()->get('vendor-dir');
+        preg_match('/(.*vendor)/U', $packageVendorDir, $projectVendorDirRegex);
+        $projectVendorDir = $projectVendorDirRegex[1];
+
         $composerJsonFileAbsolute = $composer->getConfig()->getConfigSource()->getName();
 
-        $absolutePath = realpath(dirname($composerJsonFileAbsolute));
-        if (false !== $absolutePath) {
-            $this->packageAbsolutePath = $absolutePath . '/';
-        }
+        $absolutePath = dirname($composerJsonFileAbsolute);
 
-        $vendorDirectory = $this->composer->getConfig()->get('vendor-dir');
-        if (file_exists($vendorDirectory . '/' . $this->packageName)) {
-            $this->relativePath = $this->packageName;
-            $this->packageAbsolutePath = realpath($vendorDirectory . '/' . $this->packageName) . '/';
+        $this->packageAbsolutePath = $absolutePath . '/';
+
+        if (file_exists($projectVendorDir . '/' . $this->packageName)) {
+            $this->vendorSubdir = $this->packageName;
         // If the package is symlinked, the path will be outside the working directory.
-        } elseif (0 !== strpos($absolutePath, getcwd()) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorDirectory, $output_array)) {
-            $this->relativePath = $output_array[1];
+        } elseif (0 !== strpos($absolutePath, getcwd()) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $projectVendorDir, $output_array)) {
+            $this->vendorSubdir = $output_array[1];
         } elseif (1 === preg_match('/.*[\/\\\\]([^\/\\\\]+[\/\\\\][^\/\\\\]+)[\/\\\\]composer.json/', $composerJsonFileAbsolute, $output_array)) {
         // Not every package gets installed to a folder matching its name (crewlabs/unsplash).
-            $this->relativePath = $output_array[1];
+            $this->vendorSubdir = $output_array[1];
         }
 
         if (!is_null($overrideAutoload)) {
@@ -179,11 +187,13 @@ class ComposerPackage
     }
 
     /**
-     * Is this relative to vendor?
+     * This is relative to vendor.
      */
-    public function getRelativePath(): ?string
+    public function getVendorSubdir(): ?string
     {
-        return $this->relativePath . '/';
+        return is_null($this->vendorSubdir)
+               ? null
+             : $this->vendorSubdir . '/';
     }
 
     public function getPackageAbsolutePath(): ?string
@@ -289,6 +299,21 @@ class ComposerPackage
     public function didDelete(): bool
     {
         return $this->didDelete;
+    }
+
+    public function setProjectVendorDirectory(string $parentProjectVendorDirectory)
+    {
+        $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorSubdir . '/';
+    }
+
+    public function setRealpath(string $realpath)
+    {
+        $this->packageRealPath = $realpath;
+    }
+
+    public function getRealPath(): ?string
+    {
+        return $this->packageRealPath ?? $this->getPackageAbsolutePath();
     }
 
     public function addFile(\BrianHenryIE\Strauss\Files\FileWithDependency $file)

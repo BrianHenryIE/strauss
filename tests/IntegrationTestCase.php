@@ -5,17 +5,17 @@
  * Could just system temp directory, but this is useful for setting breakpoints and seeing what has happened.
  */
 
-namespace BrianHenryIE\Strauss\Tests\Integration\Util;
+namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
-use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\ServiceLocator;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Psr\Log\Test\TestLogger;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
@@ -29,8 +29,6 @@ class IntegrationTestCase extends TestCase
 {
     protected string $projectDir;
 
-    protected $testsWorkingDir;
-
     protected array $envBeforeTest = [];
 
     public function setUp(): void
@@ -41,30 +39,7 @@ class IntegrationTestCase extends TestCase
 
         $this->projectDir = getcwd();
 
-        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
-
-        $this->logger = new class extends ColorLogger {
-            public function debug($message, array $context = array())
-            {
-                // Mute debug.
-            }
-        };
-
-        if ('Darwin' === PHP_OS) {
-            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
-        }
-
-        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
-        // we set breakpoints, we can easily browse the files.
-        if ($this->isPhpStormRunning()) {
-            $this->testsWorkingDir = getcwd() . '/teststempdir/';
-        }
-
-        if (file_exists($this->testsWorkingDir)) {
-            $this->deleteDir($this->testsWorkingDir);
-        }
-
-        @mkdir($this->testsWorkingDir);
+        $this->createWorkingDir();
 
         if (file_exists($this->projectDir . '/strauss.phar')) {
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
@@ -72,23 +47,11 @@ class IntegrationTestCase extends TestCase
         }
     }
 
-    protected function isPhpStormRunning(): bool
-    {
-        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
-            return true;
-        }
-
-        if (isset($_SERVER['IDE_PHPUNIT_CUSTOM_LOADER'])) {
-            return true;
-        }
-        return false;
-    }
-
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             // TODO add xdebug to the command
-            exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+            exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params .' 2>&1', $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
             return $return_var;
@@ -106,10 +69,30 @@ class IntegrationTestCase extends TestCase
                 unset($paramsSplit[0]);
                 break;
             default:
-                $strauss = new DependenciesCommand();
-        }
+                $strauss = new class($this) extends DependenciesCommand {
+                    protected IntegrationTestCase $integrationTestCase;
 
-        $this->logger && $strauss->setLogger($this->logger);
+                    public function __construct(
+                        IntegrationTestCase $integrationTestCase,
+                        ?string $name = null
+                    ) {
+                        $this->integrationTestCase = $integrationTestCase;
+                        parent::__construct($name);
+                    }
+
+                    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+                    {
+                        return method_exists($this->integrationTestCase, 'getIOLogger')
+                            ? $this->integrationTestCase->getIOLogger($input, $output)
+                            : $this->integrationTestCase->getLogger();
+                    }
+
+                    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
+                    {
+                        return $this->integrationTestCase->getReadOnlyFileSystem($filesystem);
+                    }
+                };
+        }
 
         foreach (array_filter(explode(' ', $env)) as $pair) {
             $kv = explode('=', $pair);
@@ -145,7 +128,7 @@ class IntegrationTestCase extends TestCase
 
         /** @var FilesystemRegistry $registry */
         try {
-            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+            $registry = ServiceLocator::get(FilesystemRegistry::class);
             $registry->unregister('mem');
         } catch (\Exception $e) {
         }
@@ -157,10 +140,7 @@ class IntegrationTestCase extends TestCase
             return;
         }
         $filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
+            new LocalFilesystemAdapter('/'),
         );
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
@@ -228,6 +208,7 @@ class IntegrationTestCase extends TestCase
     {
         $this->markTestSkippedOnPhpVersion($php_version, '>=', $message);
     }
+
     /**
      * Checks both the PHP version the tests are running under and the system PHP version.
      */
