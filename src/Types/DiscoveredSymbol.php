@@ -5,6 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 
@@ -88,5 +89,10 @@ abstract class DiscoveredSymbol
     public function isDoRename(): bool
     {
         return $this->doRename;
+    }
+
+    public function getPackage(): ?ComposerPackage
+    {
+        return $this->package;
     }
 }
