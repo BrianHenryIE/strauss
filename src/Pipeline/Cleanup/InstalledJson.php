@@ -33,7 +33,7 @@ use Seld\JsonLint\ParsingException;
  * @phpstan-type InstalledJsonPackageAuthorArray array{name:string,email:string}
  * @phpstan-type InstalledJsonPackageSupportArray array{issues:string, source:string}
  *
- * @phpstan-type InstalledJsonPackageArray array{name:string, version:string, version_normalized:string, source:InstalledJsonPackageSourceArray, dist:InstalledJsonPackageDistArray, require:array<string,string>, require-dev:array<string,string>, time:string, type:string, installation-source:string, autoload:InstalledJsonPackageAutoloadArray, notification-url:string, license:array<string>, authors:array<InstalledJsonPackageAuthorArray>, description:string, homepage:string, keywords:array<string>, support:InstalledJsonPackageSupportArray, install-path:string}
+ * @phpstan-type InstalledJsonPackageArray array{name:string, version:string, version_normalized:string, source:InstalledJsonPackageSourceArray, dist:InstalledJsonPackageDistArray, require:array<string,string>, require-dev:array<string,string>, time:string, type:string, installation-source:string, autoload?:InstalledJsonPackageAutoloadArray, notification-url:string, license:array<string>, authors:array<InstalledJsonPackageAuthorArray>, description:string, homepage:string, keywords:array<string>, support:InstalledJsonPackageSupportArray, install-path:string}
  *
  * @phpstan-type InstalledJsonArray array{packages:array<InstalledJsonPackageArray>, dev:bool, dev-package-names:array<string>}
  */
@@ -112,6 +112,7 @@ class InstalledJson
     /**
      * @param InstalledJsonArray $installedJsonArray
      * @param array<string,ComposerPackage> $flatDependencyTree
+     * @return InstalledJsonArray
      */
     protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree, string $path): array
     {
@@ -132,6 +133,8 @@ class InstalledJson
                 $newInstallPath = $this->filesystem->normalize($path . '/composer/' .$package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
+                    // Should `unset($installedJsonArray['packages'][$key])`?
+                    // Is this post `delete_vendor_packages`?
                     $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
                     continue;
                 }
@@ -151,6 +154,9 @@ class InstalledJson
 
     /**
      * Remove autoload key entries from `installed.json` whose file or directory does not exist after deleting.
+     *
+     * @param InstalledJsonArray $installedJsonArray
+     * @return InstalledJsonArray
      */
     protected function removeMissingAutoloadKeyPaths(array $installedJsonArray, string $vendorDir, string $installedJsonPath): array
     {
@@ -173,13 +179,12 @@ class InstalledJson
                 $installedJsonArray['packages'][$packageIndex]['autoload'] = [];
             }
             // delete_vendor_files
-            foreach ($installedJsonArray['packages'][$packageIndex]['autoload'] as $type => $autoload) {
-                $pathExistsInPackage = function (string $vendorDir, array $packageArray, string $relativePath) {
-                    return $this->filesystem->exists(
-                        $vendorDir . 'composer/' . $packageArray['install-path'] . '/' . $relativePath
-                    );
-                };
-
+            $pathExistsInPackage = function (string $vendorDir, array $packageArray, string $relativePath) {
+                return $this->filesystem->exists(
+                    $vendorDir . 'composer/' . $packageArray['install-path'] . '/' . $relativePath
+                );
+            };
+            foreach ($installedJsonArray['packages'][$packageIndex]['autoload'] ?? [] as $type => $autoload) {
                 switch ($type) {
                     case 'files':
                     case 'classmap':
@@ -243,12 +248,13 @@ class InstalledJson
      *
      * @param InstalledJsonArray $installedJsonArray
      * @param array<string,ComposerPackage> $flatDependencyTree
+     * @return InstalledJsonArray
      */
     protected function removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson(array $installedJsonArray, array $flatDependencyTree, string $installedJsonPath): array
     {
         /**
          * @var int $key
-         * @var InstalledJsonPackageArray $package
+         * @var InstalledJsonPackageArray $packageArray
          */
         foreach ($installedJsonArray['packages'] as $key => $packageArray) {
             $packageName = $packageArray['name'];
@@ -276,12 +282,13 @@ class InstalledJson
      *
      * @param InstalledJsonArray $installedJsonArray
      * @param array<string,ComposerPackage> $flatDependencyTree
+     * @return InstalledJsonArray
      */
     protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, array $flatDependencyTree, string $installedJsonPath): array
     {
         /**
          * @var int $key
-         * @var InstalledJsonPackageArray $package
+         * @var InstalledJsonPackageArray $packageArray
          */
         foreach ($installedJsonArray['packages'] as $key => $packageArray) {
             $packageName = $packageArray['name'];
@@ -314,6 +321,9 @@ class InstalledJson
         return $installedJsonArray;
     }
 
+    /**
+     * @param InstalledJsonArray $installedJsonArray
+     */
     protected function updateNamespaces(array $installedJsonArray, DiscoveredSymbols $discoveredSymbols): array
     {
         $discoveredNamespaces = $discoveredSymbols->getNamespaces();

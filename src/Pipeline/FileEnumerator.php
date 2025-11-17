@@ -14,7 +14,6 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 class FileEnumerator
 {
@@ -43,6 +42,9 @@ class FileEnumerator
         $this->logger = $logger;
     }
 
+    /**
+     * @param ComposerPackage[] $dependencies
+     */
     public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
     {
         foreach ($dependencies as $dependency) {
@@ -86,10 +88,13 @@ class FileEnumerator
         ?string $autoloaderType = null
     ): void {
 
+        if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+            $this->logger->debug("Skipping directory at {sourcePath}", ['sourcePath' => $sourceAbsoluteFilepath]);
+            return;
+        }
+
         // Do not add a file if its source does not exist!
-        if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)
-        ) {
-//            && !$this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
+        if (!$this->filesystem->fileExists($sourceAbsoluteFilepath)) {
             $this->logger->warning("File does not exist: {sourcePath}", ['sourcePath' => $sourceAbsoluteFilepath]);
             return;
         }

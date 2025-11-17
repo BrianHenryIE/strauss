@@ -2,6 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -17,8 +18,12 @@ use Composer\Json\JsonFile;
 use Composer\Repository\InstalledFilesystemRepository;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Seld\JsonLint\ParsingException;
 
+/**
+ * @phpstan-import-type AutoloadKeyArray from ComposerPackage
+ * @phpstan-import-type ComposerConfigArray from ComposerPackage
+ */
 class DumpAutoload
 {
     use LoggerAwareTrait;
@@ -42,10 +47,8 @@ class DumpAutoload
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
-        $this->setLogger($logger ?? new NullLogger());
-
+        $this->setLogger($logger);
         $this->projectReplace = $projectReplace;
-
         $this->fileEnumerator = $fileEnumerator;
 
         $this->composerAutoloadGeneratorFactory = $composerAutoloadGeneratorFactory;
@@ -65,6 +68,8 @@ class DumpAutoload
 
     /**
      * Uses `vendor/composer/installed.json` to output autoload files to `vendor-prefixed/composer`.
+     *
+     * @throws ParsingException
      */
     protected function generatedMainAutoloader(): void
     {
@@ -89,13 +94,25 @@ class DumpAutoload
         $projectComposerJsonFilePath = $this->filesystem->normalize($projectComposerJsonFilePath);
         $projectComposerJsonFilePath = $this->filesystem->prefixPath($projectComposerJsonFilePath);
         $projectComposerJson = new JsonFile($projectComposerJsonFilePath);
+        /** @var array{require?:array<string,string>,autoload?:AutoloadKeyArray,config?:ComposerConfigArray} $projectComposerJsonArray */
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
         }
 
-        // Do not include the autoload section from the project composer.json in the vendor-prefixed autoloader.
-        if (isset($projectComposerJsonArray['autoload'])) {
+        /**
+         * Loop over all packages that should be included and ensure the root package requires them. Composer only
+         * includes packages in the autoloader that are required by a parent package (including root). Without this
+         * packages that are selectively prefixed are not included in the autoloader.
+         *
+         * @see AutoloadGenerator::filterPackageMap()
+         */
+        foreach ($this->config->getPackagesToPrefix() as $name => $package) {
+            $projectComposerJsonArray['require'][$name] = '*';
+        }
+
+        // Include the project root autoload in the vendor-prefixed autoloader?
+        if (isset($projectComposerJsonArray['autoload']) && !$this->config->isIncludeRootAutoload()) {
             $projectComposerJsonArray['autoload'] = [];
         }
 
@@ -104,9 +121,9 @@ class DumpAutoload
         $package = $composer->getPackage();
 
         /**
-         * Cannot use `$composer->getConfig()`, need to create a new one so the vendor-dir is correct.
+         * Cannot use `$composer->getConfig()`, need to create a new one so the `vendor-dir` is correct.
          */
-        $config = new \Composer\Config(
+        $config = new Config(
             false,
             $this->filesystem->prefixPath(
                 $this->config->getProjectDirectory()
@@ -133,6 +150,7 @@ class DumpAutoload
         $installedJsonFilePath = $this->filesystem->normalize($installedJsonFilePath);
         $installedJsonFilePath = $this->filesystem->prefixPath($installedJsonFilePath);
         $installedJsonFile = new JsonFile($installedJsonFilePath);
+        /** @var array{dev?:bool} $installedJson */
         $installedJson = $installedJsonFile->read();
         $localRepo = new InstalledFilesystemRepository($installedJsonFile);
 
@@ -143,7 +161,7 @@ class DumpAutoload
         if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()) {
             $isDevMode = false;
         } else {
-            $isDevMode = $installedJson['dev'];
+            $isDevMode = (bool) ($installedJson['dev'] ?? false);
         }
         $generator->setDevMode($isDevMode);
 
