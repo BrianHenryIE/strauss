@@ -9,12 +9,11 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
-use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
@@ -40,92 +39,89 @@ class MarkSymbolsForRenaming
     {
         foreach ($symbols->getSymbols() as $symbol) {
             // $this->config->getFlatDependencyTree
-            $symbol->setDoRename(
-                $this->fileIsAutoloaded($symbol)
-                && !$this->excludeFromPrefix($symbol)
-                && !$this->excludeFromCopy($symbol)
-            );
-        }
-    }
 
-    protected function fileIsAutoloaded(DiscoveredSymbol $symbol): bool
-    {
-        return array_reduce(
-            $symbol->getSourceFiles(),
-            fn(bool $carry, File $fileBase) => $carry && $fileBase->isAutoloaded(),
-            true
-        );
-    }
+            if (!$this->fileIsAutoloaded($symbol)) {
+//                $this->logger->debug()
+                $symbol->setDoRename(false);
+                continue;
+            }
 
-    protected function excludeFromPrefix(DiscoveredSymbol $symbol): bool
-    {
+            if ($this->excludeFromPrefix($symbol)) {
+                $symbol->setDoRename(false);
+                continue;
+            }
 
-        return !$this->isExcludeFromPrefixPackage($symbol->getPackage())
-            && !$this->isExcludeFromPrefixNamespace($symbol->getNamespace())
-            && !$this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles());
-    }
-
-    /**
-     * If any of the files the symbol was found in are marked not to prefix, don't prefix the symbol.
-     */
-    protected function excludeFromCopy(DiscoveredSymbol $symbol): bool
-    {
-        return !array_reduce(
-            $symbol->getSourceFiles(),
-            fn(bool $carry, File $file) => $carry && $file->isDoPrefix(),
-            true
-        );
-
-//        if (in_array($namespace, $this->config->getExcludeNamespacesFromCopy())) {
-//            $this->logger->info("Excluding namespace " . $namespace);
-//            return true;
-//        }
-
-//        if (in_array(
-//            $packageName,
-//            $this->config->getExcludePackagesFromCopy(),
-//            true
-//        )) {
-//            return true;
-//        }
-
-//        foreach ($this->config->getExcludeFilePatternsFromCopy() as $excludeFilePattern) {
-//            $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
-//            if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
-//                return true;
-//            }
-//        }
-    }
-
-    public function markFilesForExclusion(DiscoveredFiles $files): void
-    {
-        foreach ($files->getFiles() as $file) {
-            if ($file instanceof FileWithDependency) {
-                if (in_array(
-                    $file->getDependency()->getPackageName(),
-                    $this->config->getExcludePackagesFromPrefixing(),
-                    true
-                )) {
-                    $file->setDoPrefix(false);
-                    continue;
-                }
-
-                foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
-                    // TODO: This source relative path should be from the vendor dir.
-                    // TODO: Should the target path be used here?
-                    if (1 === preg_match($excludeFilePattern, $file->getVendorRelativePath())) {
-                        $file->setDoPrefix(false);
-                        foreach ($file->getDiscoveredSymbols() as $discoveredSymbol) {
-                            $discoveredSymbol->setDoRename(false);
-                        }
-                    }
-                }
+            if ($this->excludeFromCopy($symbol)) {
+                $symbol->setDoRename(false);
             }
         }
     }
 
-    protected function isExcludeFromPrefixPackage(string $packageName): bool
+    /**
+     * If all the files a symbol is defined in are autoloaded, prefix the symbol.
+     *
+     * There are packages where a class may be defined in two different files and they are conditionally loaded.
+     * TODO: How best to handle this scenario?
+     */
+    protected function fileIsAutoloaded(DiscoveredSymbol $symbol): bool
     {
+        // The same namespace symbols are found in lots of files so this test isn't useful.
+        if ($symbol instanceof NamespaceSymbol) {
+            return true;
+        }
+
+        $sourceFiles = array_filter(
+            $symbol->getSourceFiles(),
+            fn (File $file) => basename($file->getVendorRelativePath()) !== 'composer.json'
+        );
+
+        $isAutoloaded = array_reduce(
+            $sourceFiles,
+            fn(bool $carry, File $fileBase) => $carry && $fileBase->isAutoloaded(),
+            true
+        );
+        return $isAutoloaded;
+    }
+
+    /**
+     * Check the `exclude_from_prefix` rules for this symbol's package name, namespace and file-paths.
+     */
+    protected function excludeFromPrefix(DiscoveredSymbol $symbol): bool
+    {
+        return $this->isExcludeFromPrefixPackage($symbol->getPackageName())
+            || $this->isExcludeFromPrefixNamespace($symbol->getNamespace())
+            || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles());
+    }
+
+    /**
+     * If any of the files the symbol was found in are marked not to prefix, don't prefix the symbol.
+     *
+     * `config.strauss.exclude_from_copy`.
+     *
+     * This requires {@see FileCopyScanner} to have been run first.
+     */
+    protected function excludeFromCopy(DiscoveredSymbol $symbol): bool
+    {
+        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+            return false;
+        }
+
+        return !array_reduce(
+            $symbol->getSourceFiles(),
+            fn(bool $carry, File $file) => $carry && $file->isDoCopy(),
+            true
+        );
+    }
+
+    /**
+     * Config: `extra.strauss.exclude_from_prefix.packages`.
+     */
+    protected function isExcludeFromPrefixPackage(?string $packageName): bool
+    {
+        if (is_null($packageName)) {
+            return false;
+        }
+
         if (in_array(
             $packageName,
             $this->config->getExcludePackagesFromPrefixing(),
@@ -137,6 +133,9 @@ class MarkSymbolsForRenaming
         return false;
     }
 
+    /**
+     * Config: `extra.strauss.exclude_from_prefix.namespaces`.
+     */
     protected function isExcludeFromPrefixNamespace(?string $namespace): bool
     {
         if (empty($namespace)) {
@@ -144,7 +143,6 @@ class MarkSymbolsForRenaming
         }
 
         foreach ($this->config->getExcludeNamespacesFromPrefixing() as $excludeNamespace) {
-            $excludeNamespace = rtrim($excludeNamespace, '\\');
             if (str_starts_with($namespace, $excludeNamespace)) {
                 return true;
             }
@@ -156,16 +154,15 @@ class MarkSymbolsForRenaming
     /**
      * Compares the relative path from the vendor dir with `exclude_file_patterns` config.
      *
-     * @param string $absoluteFilePath
-     * @return bool
+     * Config: `extra.strauss.exclude_from_prefix.file_patterns`.
      */
     protected function isExcludedFromPrefixFilePattern(array $files): bool
     {
         /** @var File $file */
         foreach ($files as $file) {
             $absoluteFilePath = $file->getAbsoluteTargetPath();
+            $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
             foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
-                $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
                 if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
                     return true;
                 }
@@ -174,6 +171,9 @@ class MarkSymbolsForRenaming
         return false;
     }
 
+    /**
+     * TODO: This should be moved into the class parsing the config.
+     */
     private function preparePattern(string $pattern): string
     {
         $delimiter = '#';
