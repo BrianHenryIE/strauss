@@ -207,7 +207,7 @@ class FileSymbolScanner
                     if (count($ast) === 1) {
                         $result['\\'] = $contents;
                     } else {
-                        $result['\\'] = '<?php' . PHP_EOL . (new Standard())->prettyPrintFile($rootNode->stmts);
+                        $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . (new Standard())->prettyPrintFile($rootNode->stmts);
                     }
                 } else {
                     $namespaceName = $rootNode->name->name;
@@ -223,7 +223,7 @@ class FileSymbolScanner
 
         // TODO: is this necessary?
         if (empty($result)) {
-            $result['\\'] = $contents;
+            $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . $contents;
         }
 
         return $result;
