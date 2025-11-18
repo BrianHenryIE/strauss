@@ -8,9 +8,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
-use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
-use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
@@ -34,8 +32,6 @@ class ChangeEnumerator
     {
         $discoveredNamespaces = $discoveredSymbols->getDiscoveredNamespaces();
 
-        $this->determineExclusions($discoveredSymbols);
-
         foreach ($discoveredNamespaces as $symbol) {
             // This line seems redundant.
             if ($symbol instanceof NamespaceSymbol) {
@@ -46,11 +42,6 @@ class ChangeEnumerator
                     $this->config->getExcludeNamespacesFromPrefixing(),
                     true
                 )) {
-                    $symbol->setDoRename(false);
-                }
-
-                // If any of the files the symbol was found in are marked not to prefix, don't prefix the symbol.
-                if ($symbol->getNamespace() !== '\\' && !array_reduce($symbol->getSourceFiles(), fn(bool $carry, File $file) => $carry && $file->isDoPrefix(), true)) {
                     $symbol->setDoRename(false);
                 }
 
@@ -159,40 +150,13 @@ class ChangeEnumerator
         }
     }
 
-    protected function determineExclusions(DiscoveredSymbols $discoveredSymbols)
-    {
-        foreach ($discoveredSymbols->getSymbols() as $symbol) {
-            $this->checkExcludedSymbol($symbol);
-        }
-    }
-
-    protected function checkExcludedSymbol(DiscoveredSymbol $symbol): void
-    {
-        foreach ($this->config->getExcludeNamespacesFromPrefixing() as $excludeNamespace) {
-            $excludeNamespace = rtrim($excludeNamespace, '\\');
-            if (str_starts_with($symbol->getNamespace(), $excludeNamespace)) {
-                $symbol->setDoRename(false);
-            }
-        }
-        /** @var File $file */
-        foreach ($symbol->getSourceFiles() as $file) {
-            $relativePath = $file->getVendorRelativePath();
-            foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $filePattern) {
-                if (1 === preg_match($filePattern, $relativePath)) {
-                    $symbol->setDoRename(false);
-                }
-            }
-        }
-    }
-
-
     /**
      *`str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
      */
     protected function determineNamespaceReplacement(string $originalNamespace, string $newNamespace, string $fqdnClassname): string
     {
-            $search = '/' . preg_quote($originalNamespace, '/') . '/';
+        $search = '/' . preg_quote($originalNamespace, '/') . '/';
 
-            return preg_replace($search, $newNamespace, $fqdnClassname, 1);
+        return preg_replace($search, $newNamespace, $fqdnClassname, 1);
     }
 }

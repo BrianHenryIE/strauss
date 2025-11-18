@@ -17,6 +17,7 @@ use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
+use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
@@ -187,8 +188,14 @@ class ReplaceCommand extends Command
             $this->filesystem,
             $this->logger
         );
-        $autoloadFilesEnumerator->markFilesForInclusion($this->flatDependencyTree);
-        $autoloadFilesEnumerator->markFilesForExclusion($this->discoveredFiles);
+        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree);
+
+        $markSymbolsForRenaming = new MarkSymbolsForRenaming(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+        $markSymbolsForRenaming->scanSymbols($this->discoveredSymbols);
 
         $changeEnumerator = new ChangeEnumerator(
             $config,

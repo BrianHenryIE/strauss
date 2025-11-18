@@ -22,7 +22,7 @@ use stdClass;
 class CopierIntegrationTest extends IntegrationTestCase
 {
 
-    public function testsPrepareTarget()
+    public function testPrepareTarget(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -94,7 +94,7 @@ EOD;
         self::assertFileDoesNotExist($targetFile);
     }
 
-    public function testsCopy()
+    public function testsCopy(): void
     {
 
         $composerJsonString = <<<'EOD'

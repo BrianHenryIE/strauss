@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\CopierConfigInterface;
+use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
@@ -31,6 +32,7 @@ class StraussConfig implements
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     CopierConfigInterface,
+    MarkSymbolsForRenamingConfigInterface,
     FileSymbolScannerConfigInterface,
     FileEnumeratorConfig,
     FileCopyScannerConfigInterface,
@@ -409,11 +411,14 @@ class StraussConfig implements
 
     public function getFunctionsPrefix(): ?string
     {
-        if (is_string($this->functionsPrefix)) {
-            return $this->functionsPrefix;
-        }
         if (!isset($this->functionsPrefix)) {
             return strtolower($this->getClassmapPrefix());
+        }
+        if (empty($this->functionsPrefix)) {
+            return null;
+        }
+        if (is_string($this->functionsPrefix)) {
+            return $this->functionsPrefix;
         }
         return null;
     }
@@ -526,7 +531,7 @@ class StraussConfig implements
      */
     public function getExcludePackagesFromPrefixing(): array
     {
-        return $this->excludeFromPrefix['packages'] ?? array();
+        return $this->excludeFromPrefix['packages'] ?? [];
     }
 
     /**
@@ -542,7 +547,10 @@ class StraussConfig implements
      */
     public function getExcludeNamespacesFromPrefixing(): array
     {
-        return $this->excludeFromPrefix['namespaces'] ?? array();
+        return array_map(
+            fn(string $packageName) => trim($packageName, '\\/'),
+            $this->excludeFromPrefix['namespaces'] ?? []
+        );
     }
 
     /**

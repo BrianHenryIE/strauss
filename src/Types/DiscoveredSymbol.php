@@ -5,6 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 
@@ -21,18 +22,25 @@ abstract class DiscoveredSymbol
 
     protected bool $doRename = true;
 
+    protected ?ComposerPackage $package;
+
     /**
      * @param string $fqdnSymbol The classname / namespace etc.
      * @param File $sourceFile The file it was discovered in.
      */
-    public function __construct(string $fqdnSymbol, File $sourceFile, string $namespace = '\\')
-    {
+    public function __construct(
+        string $fqdnSymbol,
+        File $sourceFile,
+        string $namespace = '\\',
+        ?ComposerPackage $package = null
+    ) {
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 
         $this->addSourceFile($sourceFile);
         $sourceFile->addDiscoveredSymbol($this);
 
         $this->namespace = $namespace;
+        $this->package = $package;
     }
 
     public function getOriginalSymbol(): string
@@ -88,5 +96,18 @@ abstract class DiscoveredSymbol
     public function isDoRename(): bool
     {
         return $this->doRename;
+    }
+
+    public function getPackage(): ?ComposerPackage
+    {
+        return $this->package;
+    }
+
+    public function getPackageName(): ?string
+    {
+        if (!$this->package) {
+            return null;
+        }
+        return $this->package->getPackageName();
     }
 }

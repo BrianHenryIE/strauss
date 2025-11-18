@@ -21,6 +21,8 @@ class File implements FileBase
      */
     protected bool $doCopy = true;
 
+    protected bool $isAutoloaded = false;
+
     /**
      * Should this file be deleted from the source directory?
      *
@@ -69,6 +71,16 @@ class File implements FileBase
         return $this->doCopy;
     }
 
+    public function setIsAutoloaded(bool $isAutoloaded): void
+    {
+        $this->isAutoloaded = $isAutoloaded;
+    }
+
+    public function isAutoloaded(): bool
+    {
+        return $this->isAutoloaded;
+    }
+
     public function setDoPrefix(bool $doPrefix): void
     {
         $this->doPrefix = $doPrefix;
@@ -109,6 +121,7 @@ class File implements FileBase
     {
         $this->didDelete = $didDelete;
     }
+
     public function getDidDelete(): bool
     {
         return $this->didDelete;
@@ -143,10 +156,12 @@ class File implements FileBase
     }
 
     protected bool $didUpdate = false;
+
     public function setDidUpdate(): void
     {
         $this->didUpdate = true;
     }
+
     public function getDidUpdate(): bool
     {
         return $this->didUpdate;
