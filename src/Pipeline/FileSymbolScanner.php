@@ -7,6 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
@@ -127,19 +128,20 @@ class FileSymbolScanner
             $this->logger->info(self::pad("Scanning file:") . $relativeFilePath);
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
-                $file
+                $file,
+                $file->getDependency()
             );
         }
 
         return $this->discoveredSymbols;
     }
 
-    protected function find(string $contents, File $file): void
+    protected function find(string $contents, File $file, ?ComposerPackage $package = null): void
     {
         $namespaces = $this->splitByNamespace($contents);
 
         foreach ($namespaces as $namespaceName => $contents) {
-            $this->addDiscoveredNamespaceChange($namespaceName, $file);
+            $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
 
             // Because we split the file by namespace, we need to add it back to avoid the case where `class A extends \A`.
             $contents = trim($contents);
@@ -173,26 +175,26 @@ class FileSymbolScanner
                 if (in_array($functionName, $this->getBuiltIns())) {
                     continue;
                 }
-                $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceName);
+                $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceName, $package);
                 $this->add($functionSymbol);
             }
 
             /** @var PHPConst $phpConstants */
             $phpConstants = $phpCode->getConstants();
             foreach ($phpConstants as $constantName => $constant) {
-                $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName);
+                $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName, $package);
                 $this->add($constantSymbol);
             }
 
             $phpInterfaces = $phpCode->getInterfaces();
             foreach ($phpInterfaces as $interfaceName => $interface) {
-                $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceName);
+                $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceName, $package);
                 $this->add($interfaceSymbol);
             }
 
             $phpTraits =  $phpCode->getTraits();
             foreach ($phpTraits as $traitName => $trait) {
-                $traitSymbol = new TraitSymbol($traitName, $file, $namespaceName);
+                $traitSymbol = new TraitSymbol($traitName, $file, $namespaceName, $package);
                 $this->add($traitSymbol);
             }
         }
@@ -248,7 +250,7 @@ class FileSymbolScanner
         $this->add($classSymbol);
     }
 
-    protected function addDiscoveredNamespaceChange(string $namespace, File $file): void
+    protected function addDiscoveredNamespaceChange(string $namespace, File $file, ?ComposerPackage $package = null): void
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($namespace);
         if ($namespaceObj) {
@@ -256,7 +258,7 @@ class FileSymbolScanner
             $file->addDiscoveredSymbol($namespaceObj);
             return;
         } else {
-            $namespaceObj = new NamespaceSymbol($namespace, $file);
+            $namespaceObj = new NamespaceSymbol($namespace, $file, '\\', $package);
         }
 
         $this->add($namespaceObj);

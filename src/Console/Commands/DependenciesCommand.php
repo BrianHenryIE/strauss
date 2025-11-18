@@ -395,7 +395,12 @@ class DependenciesCommand extends Command
 
             foreach ($namespaces as $namespace) {
                 // TODO: log.
-                $symbol = new NamespaceSymbol(trim($namespace, '\\'), $file);
+                $symbol = new NamespaceSymbol(
+                    trim($namespace, '\\'),
+                    $file,
+                    '\\',
+                    $package
+                );
                 // TODO: respect all config options.
 //              $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
                 $this->discoveredSymbols->add($symbol);

@@ -2,6 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
 
 class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
@@ -12,9 +13,10 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         string $fqdnClassname,
         File $sourceFile,
         ?string $namespace = null,
+        ?ComposerPackage $composerPackage = null,
         ?array $uses = null
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace, $composerPackage);
 
         $this->uses = (array) $uses;
     }
