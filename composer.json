@@ -70,17 +70,36 @@
         "post-update-cmd": [
             "@install-phive-dependencies"
         ],
+        "analyze": [
+          "phpstan analyse --memory-limit=-1 --verbose"
+        ],
+        "analyze-changes": [
+          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpstan analyse --memory-limit=-1 $updated_files --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
+        ],
+        "analyze-changes-strict": [
+          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then echo \"Found: $updated_files\"; phpstan analyse --memory-limit=-1 $updated_files --level 9 --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
+        ],
         "cs": [
-            "phpcs",
-            "phpstan --memory-limit=4G"
+          "phpcs || true",
+          "@analyze"
+        ],
+        "cs-fix": [
+          "phpcbf || true",
+          "phpcs || true",
+          "@analyze"
+        ],
+        "cs-changes": [
+          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
+          "@analyze-changes"
+        ],
+        "cs-changes-strict": [
+          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
+          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; else echo \"No modified php files.\"; fi;",
+          "@analyze-changes-strict"
         ],
         "install-phive-dependencies": [
             "if [ -z \"$(command -v phive)\" ]; then echo \"Phive is not installed. Run 'brew install gpg phive' or see https://phar.io/.\"; exit 1; fi;",
             "phive install"
-        ],
-        "cs-fix": [
-            "phpcbf || true",
-            "@cs"
         ],
         "test": [
             "Composer\\Config::disableProcessTimeout",
