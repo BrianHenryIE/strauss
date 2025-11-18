@@ -129,7 +129,7 @@ class FileSymbolScanner
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
                 $file,
-                $file->getDependency()
+                $file instanceof FileWithDependency ? $file->getDependency() : null
             );
         }
 
