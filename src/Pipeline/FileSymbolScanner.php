@@ -143,13 +143,6 @@ class FileSymbolScanner
         foreach ($namespaces as $namespaceName => $contents) {
             $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
 
-            // Because we split the file by namespace, we need to add it back to avoid the case where `class A extends \A`.
-            $contents = trim($contents);
-            $contents = false === strpos($contents, '<?php') ? "<?php\n" . $contents : $contents;
-            if ($namespaceName !== '\\') {
-                $contents = preg_replace('#<\?php#', '<?php' . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL, $contents, 1);
-            }
-
             PhpCodeParser::$classExistsAutoload = false;
             $phpCode = PhpCodeParser::getFromString($contents);
 
@@ -204,13 +197,6 @@ class FileSymbolScanner
     {
         $result = [];
 
-//        // Don't bother with parsing the php if there's only one namespace.
-//        preg_match_all('/namespace\s+([^;]+);/', $contents, $matches);
-//        if (!isset($matches[0]) || count($matches[0])<=1) {
-//            $result['\\'] = $contents;
-//            return $result;
-//        }
-
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
         $ast = $parser->parse(trim($contents));
@@ -218,9 +204,19 @@ class FileSymbolScanner
         foreach ($ast as $rootNode) {
             if ($rootNode instanceof Node\Stmt\Namespace_) {
                 if (is_null($rootNode->name)) {
-                    $result['\\'] = (new Standard())->prettyPrintFile($rootNode->stmts);
+                    if (count($ast) === 1) {
+                        $result['\\'] = $contents;
+                    } else {
+                        $result['\\'] = '<?php' . PHP_EOL . (new Standard())->prettyPrintFile($rootNode->stmts);
+                    }
                 } else {
-                    $result[$rootNode->name->name] = (new Standard())->prettyPrintFile($rootNode->stmts);
+                    $namespaceName = $rootNode->name->name;
+                    if (count($ast) === 1) {
+                        $result[$namespaceName] = $contents;
+                    } else {
+                        // This was failing for `phpoffice/phpspreadsheet/src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php`
+                        $result[$namespaceName] = '<?php' . PHP_EOL . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL . PHP_EOL . (new Standard())->prettyPrintFile($rootNode->stmts);
+                    }
                 }
             }
         }
