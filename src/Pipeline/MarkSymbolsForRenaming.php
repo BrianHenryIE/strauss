@@ -161,6 +161,10 @@ class MarkSymbolsForRenaming
         /** @var File $file */
         foreach ($files as $file) {
             $absoluteFilePath = $file->getAbsoluteTargetPath();
+            if (empty($absoluteFilePath)) {
+                // root namespace is in a fake file.
+                continue;
+            }
             $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
             foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
                 if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
