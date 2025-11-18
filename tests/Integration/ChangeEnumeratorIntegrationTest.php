@@ -22,35 +22,8 @@ class ChangeEnumeratorIntegrationTest extends IntegrationTestCase
      * After v0.25.0, v0.26.0, the `tests` directory of `wordpress/mcp-adapter` was being considered for changes
      * although it is not in the package's autoload key.
      */
-    public function testsPrepareTarget()
+    public function testPrepareTarget()
     {
-
-        $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "repositories": {
-      "newfold": {
-        "type": "composer",
-        "url": "https://newfold-labs.github.io/satis/",
-        "only": [
-            "newfold-labs/*"
-        ]
-      }
-    },
-  "require": {
-    "newfold-labs/wp-module-mcp": "1.2.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "packages": [
-        "wordpress/mcp-adapter"
-      ]
-    }
-  }
-}
-EOD;
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
