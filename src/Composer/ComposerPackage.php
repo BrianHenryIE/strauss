@@ -14,7 +14,8 @@ use Composer\IO\NullIO;
 
 /**
  * @phpstan-type AutoloadKeyArray array{files?:array<string>,classmap?:array<string>,"psr-4"?:array<string,string|array<string>>,exclude_from_classmap?:array<string>}
- * @phpstan-type ComposerConfigArray array{config?: array<string, mixed>, repositories?: array<mixed>} {@see \Composer\Config::merge()}
+ * @phpstan-type ComposerConfigArray array{config?: array<string, mixed>, repositories?: array<mixed>}
+ * @see \Composer\Config::merge()
  */
 class ComposerPackage
 {
@@ -291,12 +292,12 @@ class ComposerPackage
         return $this->didDelete;
     }
 
-    public function addFile(\BrianHenryIE\Strauss\Files\FileWithDependency $file)
+    public function addFile(FileWithDependency $file): void
     {
         $this->files[$file->getPackageRelativePath()] = $file;
     }
 
-    public function getFile($path): ?FileWithDependency
+    public function getFile(string $path): ?FileWithDependency
     {
         return $this->files[$path] ?? null;
     }

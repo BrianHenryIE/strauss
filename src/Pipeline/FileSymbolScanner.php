@@ -237,8 +237,8 @@ class FileSymbolScanner
         string $fqdnClassname,
         bool $isAbstract,
         File $file,
-        $namespaceName,
-        $extends,
+        string $namespaceName,
+        ?string $extends,
         array $interfaces
     ): void {
         // TODO: This should be included but marked not to prefix.

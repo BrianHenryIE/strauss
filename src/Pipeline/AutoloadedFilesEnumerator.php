@@ -68,7 +68,7 @@ class AutoloadedFilesEnumerator
 
         $excluded = null;
         $autoloadType = 'classmap';
-        $namespace = null;
+
         $excludedDirs = array_map(
             fn(string $path) => $dependencyPackageAbsolutePath . '/' . $path,
             $excludeFromClassmap
@@ -76,6 +76,9 @@ class AutoloadedFilesEnumerator
 
         foreach ($autoloaders as $type => $value) {
             // Might have to switch/case here.
+
+            /** @var ?string $namespace */
+            $namespace = null;
 
             switch ($type) {
                 case 'files':

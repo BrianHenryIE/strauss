@@ -15,7 +15,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ReplacerIntegrationTest extends IntegrationTestCase
 {
 
-    public function testReplaceNamespace()
+    public function testReplaceNamespace(): void
     {
         $this->markTestSkipped('Ironically, this is failing because it downloads a newer psr/log but strauss has already loaded an older one.');
 
@@ -63,7 +63,7 @@ EOD;
         self::assertStringContainsString('use BrianHenryIE\Strauss\Google\AccessToken\Revoke;', $updatedFile);
     }
 
-    public function testReplaceClass()
+    public function testReplaceClass(): void
     {
 
         $composerJsonString = <<<'EOD'

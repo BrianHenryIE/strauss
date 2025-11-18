@@ -2,16 +2,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Pipeline\Copier;
-use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
-use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use Psr\Log\NullLogger;
 
 /**
  * @coversNothing
@@ -22,7 +13,7 @@ class ChangeEnumeratorIntegrationTest extends IntegrationTestCase
      * After v0.25.0, v0.26.0, the `tests` directory of `wordpress/mcp-adapter` was being considered for changes
      * although it is not in the package's autoload key.
      */
-    public function testPrepareTarget()
+    public function testPrepareTarget(): void
     {
         $composerJsonString = <<<'EOD'
 {

@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -35,7 +36,7 @@ class MarkSymbolsForRenaming
         $this->setLogger($logger);
     }
 
-    public function scanSymbols(DiscoveredSymbols $symbols)
+    public function scanSymbols(DiscoveredSymbols $symbols): void
     {
         foreach ($symbols->getSymbols() as $symbol) {
             // $this->config->getFlatDependencyTree
@@ -155,6 +156,8 @@ class MarkSymbolsForRenaming
      * Compares the relative path from the vendor dir with `exclude_file_patterns` config.
      *
      * Config: `extra.strauss.exclude_from_prefix.file_patterns`.
+     *
+     * @param array<FileBase> $files
      */
     protected function isExcludedFromPrefixFilePattern(array $files): bool
     {
