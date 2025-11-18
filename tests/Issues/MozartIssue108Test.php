@@ -44,7 +44,7 @@ class MozartIssue108Test extends IntegrationTestCase
             "classmap": [
                 "classes/",
                 "deprecated/",
-                "lib/cron-expression/"
+                "lib/"
             ]
         }
       }
