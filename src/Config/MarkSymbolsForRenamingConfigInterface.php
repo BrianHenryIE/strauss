@@ -6,6 +6,8 @@ interface MarkSymbolsForRenamingConfigInterface
 {
     public function getVendorDirectory(): string;
 
+    public function getTargetDirectory(): string;
+
     /**
      * @return string[]
      */
