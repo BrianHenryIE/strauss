@@ -528,7 +528,7 @@ class StraussConfig implements
      */
     public function getExcludePackagesFromPrefixing(): array
     {
-        return $this->excludeFromPrefix['packages'] ?? array();
+        return $this->excludeFromPrefix['packages'] ?? [];
     }
 
     /**
@@ -544,7 +544,10 @@ class StraussConfig implements
      */
     public function getExcludeNamespacesFromPrefixing(): array
     {
-        return $this->excludeFromPrefix['namespaces'] ?? array();
+        return array_map(
+            fn(string $packageName) => trim($packageName, '\\/'),
+            $this->excludeFromPrefix['namespaces'] ?? []
+        );
     }
 
     /**
