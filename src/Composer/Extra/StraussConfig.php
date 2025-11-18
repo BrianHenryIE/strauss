@@ -411,11 +411,14 @@ class StraussConfig implements
 
     public function getFunctionsPrefix(): ?string
     {
-        if (is_string($this->functionsPrefix)) {
-            return $this->functionsPrefix;
-        }
         if (!isset($this->functionsPrefix)) {
             return strtolower($this->getClassmapPrefix());
+        }
+        if (empty($this->functionsPrefix)) {
+            return null;
+        }
+        if (is_string($this->functionsPrefix)) {
+            return $this->functionsPrefix;
         }
         return null;
     }
