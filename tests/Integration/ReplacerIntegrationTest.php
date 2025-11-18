@@ -208,7 +208,7 @@ EOD;
     "name": "brianhenryie/pdf-helpers",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\PdfHelpers\\": "src/"
+            "BrianHenryIE\\PdfHelpers\\": "src"
         }
     },
     "require": {
