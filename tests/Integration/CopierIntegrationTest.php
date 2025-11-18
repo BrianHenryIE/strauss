@@ -22,7 +22,7 @@ use stdClass;
 class CopierIntegrationTest extends IntegrationTestCase
 {
 
-    public function testsPrepareTarget()
+    public function testPrepareTarget()
     {
 
         $composerJsonString = <<<'EOD'
