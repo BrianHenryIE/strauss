@@ -32,7 +32,7 @@ class AutoloadedFilesEnumerator
     /**
      * @param ComposerPackage[] $dependencies
      */
-    public function markFilesForInclusion(array $dependencies): void
+    public function scanForAutoloadedFiles(array $dependencies): void
     {
         foreach ($dependencies as $dependency) {
             $this->scanPackage($dependency);
@@ -97,6 +97,7 @@ class AutoloadedFilesEnumerator
                             ]);
                         } else {
                             $file->setIsAutoloaded(true);
+                            $file->setDoPrefix(true);
                         }
                     }
                     break;
@@ -157,6 +158,7 @@ class AutoloadedFilesEnumerator
                 ]);
             } else {
                 $file->setIsAutoloaded(true);
+                $file->setDoPrefix(true);
             }
         }
     }
