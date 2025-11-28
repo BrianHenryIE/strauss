@@ -69,7 +69,9 @@ class Prefixer
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
         foreach ($files as $file) {
-            if (!$file->isDoPrefix()) {
+            if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()
+                && !$file->isDoCopy()
+            ) {
                 continue;
             }
 
