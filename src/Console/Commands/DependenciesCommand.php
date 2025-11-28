@@ -253,10 +253,11 @@ class DependenciesCommand extends Command
             $this->discoveredSymbols = new DiscoveredSymbols();
 
             $this->enumeratePsr4Namespaces();
-            $this->scanFiles();
-            $this->determineChanges();
-
+            $this->enumerateAutoloadedFiles();
+            $this->scanFilesForSymbols();
             $this->analyseFilesToCopy();
+            $this->markSymbolsForRenaming();
+            $this->determineChanges();
             $this->copyFiles();
 
             $this->performReplacements();
@@ -409,8 +410,7 @@ class DependenciesCommand extends Command
         }
     }
 
-    // 4. Determine namespace and classname changes
-    protected function scanFiles(): void
+    protected function enumerateAutoloadedFiles(): void
     {
         $this->logger->notice('Enumerating autoload files...');
 
@@ -420,7 +420,10 @@ class DependenciesCommand extends Command
             $this->logger
         );
         $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree);
+    }
 
+    protected function scanFilesForSymbols(): void
+    {
         $this->logger->notice('Scanning files...');
 
         $fileSymbolScanner = new FileSymbolScanner(
@@ -431,8 +434,6 @@ class DependenciesCommand extends Command
         );
 
         $fileSymbolScanner->findInFiles($this->discoveredFiles);
-
-        $this->markSymbolsForRenaming();
     }
 
     protected function markSymbolsForRenaming(): void
