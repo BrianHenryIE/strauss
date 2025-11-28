@@ -48,7 +48,7 @@ EOD;
         $this->assertStringContainsString('use Psr\Container\ContainerInterface;', $di52ContainerPhpString);
     }
 
-    public function test_namespace_excluded()
+    public function test_namespace_excluded(): void
     {
         $packageComposerJson = <<<'EOD'
 {   

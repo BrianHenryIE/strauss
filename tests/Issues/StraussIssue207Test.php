@@ -17,7 +17,7 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  */
 class StraussIssue207Test extends IntegrationTestCase
 {
-    public function test_fremius_files_are_copied()
+    public function test_fremius_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
 {   
@@ -50,7 +50,7 @@ EOD;
         $this->assertStringContainsString("class Freemius extends Freemius_Abstract", $php_string);
     }
 
-    public function test_action_scheduler_files_are_copied()
+    public function test_action_scheduler_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
 {   
@@ -80,7 +80,7 @@ EOD;
         $this->assertStringContainsString("class ActionScheduler_Action {", $php_string);
     }
 
-    public function test_plugin_update_checker_files_are_copied()
+    public function test_plugin_update_checker_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
 {   
@@ -112,7 +112,7 @@ EOD;
         $this->assertStringContainsString("namespace YahnisElsts\\PluginUpdateChecker\\v5p6;", $php_string);
     }
 
-    public function test_abilities_api_files_are_copied()
+    public function test_abilities_api_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
 {   
