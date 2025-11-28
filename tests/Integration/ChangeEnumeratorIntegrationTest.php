@@ -46,4 +46,43 @@ EOD;
         $this->assertStringNotContainsString('class McpCommand extends \\BrianHenryIE_Strauss_WP_CLI_Command', $phpString);
         $this->assertStringContainsString('class McpCommand extends \\WP_CLI_Command', $phpString);
     }
+
+    public function testNamespaceInTwoPackagesExclude(): void
+    {
+        $packageComposerJson = <<<'EOD'
+{   
+	"name": "test/namespaced-files-not-in-autoloader",
+	 "require": {
+        "art4/requests-psr18-adapter": "1.3.0"
+    },
+    "extra": {
+        "strauss": {
+            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+			"exclude_from_copy": {
+                "packages": [
+                    "rmccue/requests"
+                ]
+            },
+			"exclude_from_prefix": {
+                "file_patterns": [
+                    "art4/requests-psr18-adapter/v1-compat"
+                ]
+            }
+        }
+    }
+}
+EOD;
+
+        file_put_contents($this->testsWorkingDir . 'composer.json', $packageComposerJson);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $this->runStrauss();
+
+        $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/art4/requests-psr18-adapter/v1-compat/autoload.php');
+        $this->assertStringNotContainsString("class_exists('BrianHenryIE\\Strauss\\WpOrg\\Requests\\Requests')", $phpString);
+        $this->assertStringContainsString("class_exists('WpOrg\\Requests\\Requests')", $phpString);
+    }
 }
