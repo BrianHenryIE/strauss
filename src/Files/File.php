@@ -81,6 +81,9 @@ class File implements FileBase
         return $this->isAutoloaded;
     }
 
+    /**
+     * Should symbols discovered in this file be prefixed. (i.e. class definitions etc., not usages)
+     */
     public function setDoPrefix(bool $doPrefix): void
     {
         $this->doPrefix = $doPrefix;
