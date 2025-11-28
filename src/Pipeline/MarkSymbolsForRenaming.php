@@ -38,7 +38,8 @@ class MarkSymbolsForRenaming
 
     public function scanSymbols(DiscoveredSymbols $symbols): void
     {
-        foreach ($symbols->getSymbols() as $symbol) {
+        $allSymbols = $symbols->getSymbols();
+        foreach ($allSymbols as $symbol) {
             // $this->config->getFlatDependencyTree
 
             if (!$this->fileIsAutoloaded($symbol)) {
@@ -52,7 +53,13 @@ class MarkSymbolsForRenaming
                 continue;
             }
 
-            if ($this->excludeFromCopy($symbol)) {
+//            if ($this->isSymbolFoundInFileThatIsNotCopied($symbol)) {
+//                if (count($symbol->getSourceFiles())===1) {
+//                    $symbol->setDoRename(false);
+//                }
+//            }
+            if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()
+                && !$this->isSymbolFoundInFileThatIsCopied($symbol)) {
                 $symbol->setDoRename(false);
             }
         }
@@ -101,7 +108,7 @@ class MarkSymbolsForRenaming
      *
      * This requires {@see FileCopyScanner} to have been run first.
      */
-    protected function excludeFromCopy(DiscoveredSymbol $symbol): bool
+    protected function isSymbolFoundInFileThatIsNotCopied(DiscoveredSymbol $symbol): bool
     {
         if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
             return false;
@@ -111,6 +118,19 @@ class MarkSymbolsForRenaming
             $symbol->getSourceFiles(),
             fn(bool $carry, File $file) => $carry && $file->isDoCopy(),
             true
+        );
+    }
+
+    protected function isSymbolFoundInFileThatIsCopied(DiscoveredSymbol $symbol): bool
+    {
+        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+            return false;
+        }
+
+        return array_reduce(
+            $symbol->getSourceFiles(),
+            fn(bool $carry, File $file) => $carry || $file->isDoCopy(),
+            false
         );
     }
 
@@ -168,7 +188,7 @@ class MarkSymbolsForRenaming
                 // root namespace is in a fake file.
                 continue;
             }
-            $vendorRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $absoluteFilePath);
+            $vendorRelativePath = $file->getVendorRelativePath();
             foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
                 if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
                     return true;
