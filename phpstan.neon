@@ -15,3 +15,6 @@ parameters:
         -   # Allow type errors in test assertions to just throw.
             message: '#Parameter .* of .*method PHPUnit\\Framework\\Assert::.* expects .* given.#'
             path: tests
+        -   # Allow skipping tests
+            identifier: deadCode.unreachable
+            path: tests

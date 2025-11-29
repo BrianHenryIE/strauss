@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.26.2 November 2025
+
+* Fix: namespaces not updated in non-autoloaded files
+
 ## 0.26.1 November 2025
 
 * Fix: implicitly nullable warning
