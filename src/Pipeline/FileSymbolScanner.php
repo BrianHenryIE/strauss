@@ -7,6 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
@@ -127,26 +128,20 @@ class FileSymbolScanner
             $this->logger->info(self::pad("Scanning file:") . $relativeFilePath);
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
-                $file
+                $file,
+                $file instanceof FileWithDependency ? $file->getDependency() : null
             );
         }
 
         return $this->discoveredSymbols;
     }
 
-    protected function find(string $contents, File $file): void
+    protected function find(string $contents, File $file, ?ComposerPackage $package = null): void
     {
         $namespaces = $this->splitByNamespace($contents);
 
         foreach ($namespaces as $namespaceName => $contents) {
-            $this->addDiscoveredNamespaceChange($namespaceName, $file);
-
-            // Because we split the file by namespace, we need to add it back to avoid the case where `class A extends \A`.
-            $contents = trim($contents);
-            $contents = false === strpos($contents, '<?php') ? "<?php\n" . $contents : $contents;
-            if ($namespaceName !== '\\') {
-                $contents = preg_replace('#<\?php#', '<?php' . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL, $contents, 1);
-            }
+            $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
 
             PhpCodeParser::$classExistsAutoload = false;
             $phpCode = PhpCodeParser::getFromString($contents);
@@ -173,26 +168,26 @@ class FileSymbolScanner
                 if (in_array($functionName, $this->getBuiltIns())) {
                     continue;
                 }
-                $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceName);
+                $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceName, $package);
                 $this->add($functionSymbol);
             }
 
             /** @var PHPConst $phpConstants */
             $phpConstants = $phpCode->getConstants();
             foreach ($phpConstants as $constantName => $constant) {
-                $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName);
+                $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName, $package);
                 $this->add($constantSymbol);
             }
 
             $phpInterfaces = $phpCode->getInterfaces();
             foreach ($phpInterfaces as $interfaceName => $interface) {
-                $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceName);
+                $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceName, $package);
                 $this->add($interfaceSymbol);
             }
 
             $phpTraits =  $phpCode->getTraits();
             foreach ($phpTraits as $traitName => $trait) {
-                $traitSymbol = new TraitSymbol($traitName, $file, $namespaceName);
+                $traitSymbol = new TraitSymbol($traitName, $file, $namespaceName, $package);
                 $this->add($traitSymbol);
             }
         }
@@ -202,13 +197,6 @@ class FileSymbolScanner
     {
         $result = [];
 
-//        // Don't bother with parsing the php if there's only one namespace.
-//        preg_match_all('/namespace\s+([^;]+);/', $contents, $matches);
-//        if (!isset($matches[0]) || count($matches[0])<=1) {
-//            $result['\\'] = $contents;
-//            return $result;
-//        }
-
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
         $ast = $parser->parse(trim($contents));
@@ -216,16 +204,26 @@ class FileSymbolScanner
         foreach ($ast as $rootNode) {
             if ($rootNode instanceof Node\Stmt\Namespace_) {
                 if (is_null($rootNode->name)) {
-                    $result['\\'] = (new Standard())->prettyPrintFile($rootNode->stmts);
+                    if (count($ast) === 1) {
+                        $result['\\'] = $contents;
+                    } else {
+                        $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . (new Standard())->prettyPrintFile($rootNode->stmts);
+                    }
                 } else {
-                    $result[$rootNode->name->name] = (new Standard())->prettyPrintFile($rootNode->stmts);
+                    $namespaceName = $rootNode->name->name;
+                    if (count($ast) === 1) {
+                        $result[$namespaceName] = $contents;
+                    } else {
+                        // This was failing for `phpoffice/phpspreadsheet/src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php`
+                        $result[$namespaceName] = '<?php' . PHP_EOL . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL . PHP_EOL . (new Standard())->prettyPrintFile($rootNode->stmts);
+                    }
                 }
             }
         }
 
         // TODO: is this necessary?
         if (empty($result)) {
-            $result['\\'] = $contents;
+            $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . $contents;
         }
 
         return $result;
@@ -235,8 +233,8 @@ class FileSymbolScanner
         string $fqdnClassname,
         bool $isAbstract,
         File $file,
-        $namespaceName,
-        $extends,
+        string $namespaceName,
+        ?string $extends,
         array $interfaces
     ): void {
         // TODO: This should be included but marked not to prefix.
@@ -248,7 +246,7 @@ class FileSymbolScanner
         $this->add($classSymbol);
     }
 
-    protected function addDiscoveredNamespaceChange(string $namespace, File $file): void
+    protected function addDiscoveredNamespaceChange(string $namespace, File $file, ?ComposerPackage $package = null): void
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($namespace);
         if ($namespaceObj) {
@@ -256,7 +254,7 @@ class FileSymbolScanner
             $file->addDiscoveredSymbol($namespaceObj);
             return;
         } else {
-            $namespaceObj = new NamespaceSymbol($namespace, $file);
+            $namespaceObj = new NamespaceSymbol($namespace, $file, '\\', $package);
         }
 
         $this->add($namespaceObj);

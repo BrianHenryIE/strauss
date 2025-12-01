@@ -13,5 +13,8 @@ parameters:
         - '#.*expects Psr\\Log\\LoggerInterface, Psr\\Log\\LoggerInterface\|null given#'
 
         -   # Allow type errors in test assertions to just throw.
-            message: '#Parameter .* of method PHPUnit\\Framework\\Assert::.* expects .* given.#'
+            message: '#Parameter .* of .*method PHPUnit\\Framework\\Assert::.* expects .* given.#'
+            path: tests
+        -   # Allow skipping tests
+            identifier: deadCode.unreachable
             path: tests

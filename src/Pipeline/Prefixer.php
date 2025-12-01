@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\NamespaceSort;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
@@ -60,7 +61,7 @@ class Prefixer
     /**
      * @param DiscoveredSymbols $discoveredSymbols
      * ///param array<string,array{dependency:ComposerPackage,sourceAbsoluteFilepath:string,targetRelativeFilepath:string}> $phpFileArrays
-     * @param array<File> $files
+     * @param array<string, FileBase> $files
      *
      * @throws FilesystemException
      * @throws FilesystemException
@@ -68,7 +69,9 @@ class Prefixer
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
         foreach ($files as $file) {
-            if (!$file->isDoPrefix()) {
+            if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()
+                && !$file->isDoCopy()
+            ) {
                 continue;
             }
 
@@ -602,6 +605,7 @@ class Prefixer
         $visitor = new class($discoveredNamespaceSymbols) extends \PhpParser\NodeVisitorAbstract {
 
             public int $countChanges = 0;
+            /** @var string[] */
             protected array $discoveredNamespaces;
 
             protected Node $lastNode;
@@ -613,6 +617,9 @@ class Prefixer
              */
             protected array $using = [];
 
+            /**
+             * @param NamespaceSymbol[] $discoveredNamespaceSymbols
+             */
             public function __construct(array $discoveredNamespaceSymbols)
             {
 

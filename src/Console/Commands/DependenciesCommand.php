@@ -23,6 +23,7 @@ use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
+use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -252,10 +253,11 @@ class DependenciesCommand extends Command
             $this->discoveredSymbols = new DiscoveredSymbols();
 
             $this->enumeratePsr4Namespaces();
-            $this->scanFiles();
-            $this->determineChanges();
-
+            $this->enumerateAutoloadedFiles();
+            $this->scanFilesForSymbols();
             $this->analyseFilesToCopy();
+            $this->markSymbolsForRenaming();
+            $this->determineChanges();
             $this->copyFiles();
 
             $this->performReplacements();
@@ -395,7 +397,12 @@ class DependenciesCommand extends Command
 
             foreach ($namespaces as $namespace) {
                 // TODO: log.
-                $symbol = new NamespaceSymbol(trim($namespace, '\\'), $file);
+                $symbol = new NamespaceSymbol(
+                    trim($namespace, '\\'),
+                    $file,
+                    '\\',
+                    $package
+                );
                 // TODO: respect all config options.
 //              $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
                 $this->discoveredSymbols->add($symbol);
@@ -403,8 +410,7 @@ class DependenciesCommand extends Command
         }
     }
 
-    // 4. Determine namespace and classname changes
-    protected function scanFiles(): void
+    protected function enumerateAutoloadedFiles(): void
     {
         $this->logger->notice('Enumerating autoload files...');
 
@@ -413,19 +419,33 @@ class DependenciesCommand extends Command
             $this->filesystem,
             $this->logger
         );
-        $autoloadFilesEnumerator->markFilesForInclusion($this->flatDependencyTree);
-        $autoloadFilesEnumerator->markFilesForExclusion($this->discoveredFiles);
+        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree);
+    }
 
+    protected function scanFilesForSymbols(): void
+    {
         $this->logger->notice('Scanning files...');
 
-        $fileScanner = new FileSymbolScanner(
+        $fileSymbolScanner = new FileSymbolScanner(
             $this->config,
             $this->discoveredSymbols,
             $this->filesystem,
             $this->logger
         );
 
-        $fileScanner->findInFiles($this->discoveredFiles);
+        $fileSymbolScanner->findInFiles($this->discoveredFiles);
+    }
+
+    protected function markSymbolsForRenaming(): void
+    {
+
+        $markSymbolsForRenaming = new MarkSymbolsForRenaming(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+
+        $markSymbolsForRenaming->scanSymbols($this->discoveredSymbols);
     }
 
     protected function determineChanges(): void
@@ -492,7 +512,10 @@ class DependenciesCommand extends Command
             $this->logger
         );
 
-        $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
+        $this->replacer->replaceInFiles(
+            $this->discoveredSymbols,
+            $this->discoveredFiles->getFiles()
+        );
     }
 
     protected function performReplacementsInProjectFiles(): void

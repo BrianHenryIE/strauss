@@ -25,6 +25,7 @@ class DiscoveredSymbols
             T_INTERFACE => [],
         ];
 
+        // TODO: Should this have the root package?
         $this->types[T_NAMESPACE]['\\'] = new NamespaceSymbol('\\', new \BrianHenryIE\Strauss\Files\File('', ''));
     }
 

@@ -27,7 +27,7 @@ class MozartIssue108Test extends IntegrationTestCase
     /**
      * WooCommerce Action Scheduler ... has no autoload key. But also needs some Mozart patches to work correctly.
      */
-    public function test_woocommerce_actionscheduler()
+    public function test_woocommerce_actionscheduler(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -44,7 +44,7 @@ class MozartIssue108Test extends IntegrationTestCase
             "classmap": [
                 "classes/",
                 "deprecated/",
-                "lib/cron-expression/"
+                "lib/"
             ]
         }
       }
