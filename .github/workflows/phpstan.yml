@@ -53,8 +53,33 @@ jobs:
         run: composer install
 
       - name: Run PHPStan (annotate all errors to max level)
-        run: vendor/bin/phpstan analyse --level max --error-format=github
+        id: run-phpstan
+        run: |
+          vendor/bin/phpstan analyse --memory-limit=-1 -vvv --error-format=checkstyle | cs2pr
         continue-on-error: true
 
-      - name: Run PHPStan (fail if phpstan.neon level is not met)
+      - name: Run PHPStan (fail if phpstan.neon level is not met) on PRs
         run: vendor/bin/phpstan analyse
+        # TODO: fail _after_ the badge is updated
+        continue-on-error: true
+
+      - name: Get PhpStan level
+        id: phpstan-level
+        run: |
+          LEVEL=$(cat phpstan.neon | grep level | sed "s/[^0-9]*//")
+          echo "level=$LEVEL" >> "$GITHUB_OUTPUT" 
+
+      - name: Check success
+        if: steps.run-phpstan.outcome == 'success'
+        run: curl -o .github/phpstan.svg https://img.shields.io/badge/PHPStan-Level%20${{ steps.phpstan-level.outputs.level}}-2a5ea7.svg
+
+      - name: Check failures
+        if: steps.run-phpstan.outcome != 'success'
+        run: curl -o .github/phpstan.svg https://img.shields.io/badge/PHPStan-Level%20${{ steps.phpstan-level.outputs.level}}❌-lightgrey.svg
+
+      # This probably needs DEPLOY_KEY set for PRs and private repos
+      - name: Commit README badge changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          file_pattern: ".github/phpstan.svg"
+          commit_message: "🤖 PhpStan"

@@ -1,4 +1,4 @@
-[![PHPUnit ](.github/coverage.svg)](https://brianhenryie.github.io/strauss/) [![PHPStan ](https://img.shields.io/badge/PHPStan-Level%207-2a5ea7.svg)](https://phpstan.org/)
+[![PHPUnit ](.github/coverage.svg)](https://brianhenryie.github.io/strauss/) [![PHPStan ](.github/phpstan.svg)](https://phpstan.org/)
 
 # Strauss – PHP Namespace Renamer
 
