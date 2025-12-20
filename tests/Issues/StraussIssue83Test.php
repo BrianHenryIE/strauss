@@ -27,6 +27,13 @@ class StraussIssue83Test extends IntegrationTestCase
   "require": {
     "aws/aws-sdk-php": "3.293.8"
   },
+  "config": {
+    "audit": {
+      "ignore": {
+        "PKSA-dxyf-6n16-t87m": "We are not running prod"
+      }
+    }
+  },
   "extra": {
     "strauss": {
       "namespace_prefix": "Company\\Project\\",
