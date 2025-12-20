@@ -1,3 +1,6 @@
+# phpstan analyse --memory-limit=-1 --level 6
+# phpstan analyse --memory-limit=-1 --level max --generate-baseline
+
 includes:
     - phpstan-baseline.neon
 
