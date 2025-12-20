@@ -1,5 +1,9 @@
 parameters:
+
     level: 7
+
+    reportUnmatchedIgnoredErrors: false
+
     paths:
         - src
         - bin/strauss
