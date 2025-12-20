@@ -1,0 +1,35 @@
+name: PHPStan PR Analysis
+
+on:
+  pull_request:
+#    branches: [ master ] # all PRs?
+
+jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0 # needed for baseline comparison
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@ccf2c627fe61b1b4d924adfcbd19d661a18133a0 # v2.35.2
+        with:
+          php-version: 7.4
+          tools: composer:v2, phive
+          coverage: none
+
+      - name: Install Phive tools
+        uses: ngmy/phive-install-action@71d6a786bec7f3012a8a1125bdb712a5eb4c607c # v0.13.0
+
+      - name: Install Project Dependencies
+        run: composer install
+
+      - name: Run PHPStan (annotate all errors to max level)
+        run: vendor/bin/phpstan analyse --level max --error-format=github
+        continue-on-error: true
+
+      - name: Run PHPStan (fail if phpstan.neon level is not met)
+        run: vendor/bin/phpstan analyse
