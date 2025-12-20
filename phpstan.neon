@@ -1,10 +1,16 @@
+includes:
+    - phpstan-baseline.neon
+
 parameters:
+
     level: 7
+
+    reportUnmatchedIgnoredErrors: false
+
     paths:
         - src
         - bin/strauss
-    bootstrapFiles:
-        - phpstanbootstrap.php
+
     ignoreErrors:
         -
             message: '#Property.*excludePackages is unused#'
