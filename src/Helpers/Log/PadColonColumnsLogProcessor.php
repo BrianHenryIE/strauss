@@ -9,7 +9,6 @@
 
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use DateTimeInterface;
 use Monolog\Processor\ProcessorInterface;
 
@@ -30,6 +29,13 @@ class PadColonColumnsLogProcessor implements ProcessorInterface
         $message = $record['message'];
 
         $messageParts = explode(':::', $message, 2);
+
+        /**
+         * @see https://github.com/BrianHenryIE/strauss/pull/231#pullrequestreview-3600736232
+         */
+        if (count($messageParts) < 2) {
+            return $record;
+        }
 
         $this->padLength = max($this->padLength, strlen($messageParts[0]) + 1);
 
