@@ -17,6 +17,7 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
+use Composer\Factory;
 use Exception;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Console\Command\Command;
@@ -26,8 +27,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
 {
     use LoggerAwareTrait;
-
-    protected ProjectComposerPackage $projectComposerPackage;
 
     /**
      * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
@@ -56,6 +55,10 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
     {
         try {
             // Pipeline
+            $this->loadProjectComposerPackage();
+            $this->loadConfigFromComposerJson();
+
+            parent::execute($input, $output);
 
             // TODO: check for `--no-dev` somewhere.
 
@@ -74,5 +77,25 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
         }
 
         return Command::SUCCESS;
+    }
+
+
+    /**
+     * 1. Load the composer.json.
+     *
+     * @throws Exception
+     */
+    protected function loadProjectComposerPackage(): void
+    {
+        $this->logger->notice('Loading package...');
+
+        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . Factory::getComposerFile());
+    }
+
+    protected function loadConfigFromComposerJson(): void
+    {
+        $this->logger->notice('Loading composer.json config...');
+
+        $this->config = $this->projectComposerPackage->getStraussConfig();
     }
 }

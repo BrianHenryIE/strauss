@@ -17,6 +17,7 @@ class StraussIssue88Test extends IntegrationTestCase
 {
     public function test_returned_casted_function_call()
     {
+        // Why is this here? It seemed to work.
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2');
 
         $composerJsonString = <<<'EOD'
@@ -24,6 +25,13 @@ class StraussIssue88Test extends IntegrationTestCase
   "name": "issue/83",
   "require": {
     "aws/aws-sdk-php": "3.293.8"
+  },
+  "config": {
+    "audit": {
+      "ignore": {
+        "PKSA-dxyf-6n16-t87m": "We are not running prod"
+      }
+    }
   },
   "extra": {
     "strauss": {

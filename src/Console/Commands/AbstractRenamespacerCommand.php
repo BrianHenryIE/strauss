@@ -21,6 +21,7 @@ use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -56,7 +57,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->addOption(
             'dry-run',
             null,
-            4,
+            InputOption::VALUE_OPTIONAL,
             'Do not actually make any changes',
             false
         );
@@ -64,7 +65,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->addOption(
             'info',
             null,
-            4,
+            InputOption::VALUE_OPTIONAL,
             'output level',
             false
         );
@@ -72,7 +73,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->addOption(
             'debug',
             null,
-            4,
+            InputOption::VALUE_OPTIONAL,
             'output level',
             false
         );
@@ -84,7 +85,7 @@ abstract class AbstractRenamespacerCommand extends Command
             $this->addOption(
                 'silent',
                 's',
-                4,
+                InputOption::VALUE_OPTIONAL,
                 'output level',
                 false
             );
@@ -120,7 +121,6 @@ abstract class AbstractRenamespacerCommand extends Command
             } catch (\Exception $e) {
                 $registry->register('mem', $this->filesystem);
             }
-            $this->setLogger($this->getLogger($input, $output));
         }
 
         $logger = new Logger('logger');
@@ -130,7 +130,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
         $this->setLogger($logger);
 
-        return 1;
+        return Command::SUCCESS;
     }
 
     /**
