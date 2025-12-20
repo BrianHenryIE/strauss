@@ -128,7 +128,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
         $this->setLogger($logger);
 
-        return 0;
+        return Command::SUCCESS;
     }
 
             /**
