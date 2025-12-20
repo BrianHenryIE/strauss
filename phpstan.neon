@@ -3,8 +3,7 @@ parameters:
     paths:
         - src
         - bin/strauss
-    bootstrapFiles:
-        - phpstanbootstrap.php
+
     ignoreErrors:
         -
             message: '#Property.*excludePackages is unused#'
