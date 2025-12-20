@@ -120,7 +120,6 @@ abstract class AbstractRenamespacerCommand extends Command
             } catch (\Exception $e) {
                 $registry->register('mem', $this->filesystem);
             }
-            $this->setLogger($this->getLogger($input, $output));
         }
 
         $logger = new Logger('logger');
