@@ -32,7 +32,8 @@ class ProjectComposerPackage extends ComposerPackage
             $this->author = $authors[0]['name'];
         }
 
-        $this->vendorDirectory = is_string($this->composer->getConfig()->get('vendor-dir'))
+        $composerVendorDir = $this->composer->getConfig()->get('vendor-dir');
+        $this->vendorDirectory = is_string($composerVendorDir) && !empty($composerVendorDir)
             ? ltrim(str_replace(dirname($absolutePathFile), '', $this->composer->getConfig()->get('vendor-dir')), '\\/')
             :  'vendor';
     }

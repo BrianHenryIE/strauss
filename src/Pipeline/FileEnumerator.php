@@ -44,6 +44,7 @@ class FileEnumerator
 
     /**
      * @param ComposerPackage[] $dependencies
+     * @throws FilesystemException
      */
     public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
     {
@@ -53,13 +54,13 @@ class FileEnumerator
             $this->compileFileListForPaths([$dependencyPackageAbsolutePath], $dependency);
         }
 
-
         $this->discoveredFiles->sort();
         return $this->discoveredFiles;
     }
 
     /**
      * @param string[] $paths
+     * @throws FilesystemException
      */
     public function compileFileListForPaths(array $paths, ?ComposerPackage $dependency = null): DiscoveredFiles
     {
@@ -74,9 +75,9 @@ class FileEnumerator
     }
 
     /**
-     * @param ComposerPackage $dependency
      * @param string $sourceAbsoluteFilepath
-     * @param string $autoloaderType
+     * @param ?ComposerPackage $dependency
+     * @param ?string $autoloaderType
      *
      * @throws FilesystemException
      * @uses DiscoveredFiles::add

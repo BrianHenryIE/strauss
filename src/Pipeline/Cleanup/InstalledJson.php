@@ -22,6 +22,8 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Json\JsonFile;
 use Composer\Json\JsonValidationException;
+use Exception;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Seld\JsonLint\ParsingException;
@@ -96,7 +98,7 @@ class InstalledJson
                 'Expected {installedJsonFilePath} does not exist.',
                 ['installedJsonFilePath' => $installedJsonFile->getPath()]
             );
-            throw new \Exception('Expected vendor/composer/installed.json does not exist.');
+            throw new Exception('Expected vendor/composer/installed.json does not exist.');
         }
 
         $installedJsonFile->validateSchema(JsonFile::LAX_SCHEMA);
@@ -154,6 +156,7 @@ class InstalledJson
      *
      * @param InstalledJsonArray $installedJsonArray
      * @return InstalledJsonArray
+     * @throws FilesystemException
      */
     protected function removeMissingAutoloadKeyPaths(array $installedJsonArray, string $vendorDir, string $installedJsonPath): array
     {
@@ -320,6 +323,7 @@ class InstalledJson
 
     /**
      * @param InstalledJsonArray $installedJsonArray
+     * @return InstalledJsonArray
      */
     protected function updateNamespaces(array $installedJsonArray, DiscoveredSymbols $discoveredSymbols): array
     {
@@ -446,9 +450,11 @@ class InstalledJson
 
         return $installedJsonArray;
     }
+
     /**
      * @param array<string,ComposerPackage> $flatDependencyTree
      * @param DiscoveredSymbols $discoveredSymbols
+     * @throws Exception
      */
     public function cleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
@@ -502,6 +508,7 @@ class InstalledJson
      * must also be removed from `installed.json` or Composer will throw an error.
      *
      * @param array<string,ComposerPackage> $flatDependencyTree
+     * @throws Exception
      */
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {

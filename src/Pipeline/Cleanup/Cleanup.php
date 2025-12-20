@@ -152,7 +152,7 @@ class Cleanup
     /**
      * @throws FilesystemException
      */
-    protected function deleteEmptyDirectories(array $files)
+    protected function deleteEmptyDirectories(array $files): void
     {
         $this->logger->info('Deleting empty directories.');
 
@@ -222,7 +222,7 @@ class Cleanup
 
     /**
      */
-    protected function doIsDeleteVendorPackages(array $flatDependencyTree, DiscoveredFiles $discoveredFiles)
+    protected function doIsDeleteVendorPackages(array $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
     {
         $this->logger->info('Deleting original vendor packages.');
 
@@ -288,7 +288,7 @@ class Cleanup
      *
      * @throws FilesystemException
      */
-    public function doIsDeleteVendorFiles(array $files)
+    public function doIsDeleteVendorFiles(array $files): void
     {
         $this->logger->info('Deleting original vendor files.');
 

@@ -5,28 +5,29 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
+use BrianHenryIE\Strauss\Files\File;
+use InvalidArgumentException;
+
 class DiscoveredSymbols
 {
     /**
      * All discovered symbols, grouped by type, indexed by original name.
      *
-     * @var array{T_NAME_QUALIFIED:array<string,NamespaceSymbol>, T_CONST:array<string,ConstantSymbol>, T_CLASS:array<string,ClassSymbol>}
+     * @var array{T_NAMESPACE:array<string,NamespaceSymbol>, T_CONST:array<string,ConstantSymbol>, T_CLASS:array<string,ClassSymbol>, T_FUNCTION:array<string,FunctionSymbol>, T_TRAIT:array<string,TraitSymbol>, T_INTERFACE:array<string,InterfaceSymbol>}
      */
-    protected array $types = [];
+    protected array $types = [
+        T_CLASS => [],
+        T_CONST => [],
+        T_NAMESPACE => [],
+        T_FUNCTION => [],
+        T_TRAIT => [],
+        T_INTERFACE => [],
+    ];
 
     public function __construct()
     {
-        $this->types = [
-            T_CLASS => [],
-            T_CONST => [],
-            T_NAMESPACE => [],
-            T_FUNCTION => [],
-            T_TRAIT => [],
-            T_INTERFACE => [],
-        ];
-
         // TODO: Should this have the root package?
-        $this->types[T_NAMESPACE]['\\'] = new NamespaceSymbol('\\', new \BrianHenryIE\Strauss\Files\File('', ''));
+        $this->types[T_NAMESPACE]['\\'] = new NamespaceSymbol('\\', new File('', ''));
     }
 
     /**
@@ -54,7 +55,7 @@ class DiscoveredSymbols
                 $type = T_TRAIT;
                 break;
             default:
-                throw new \InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
+                throw new InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
         }
         // TODO: This should merge the symbols instead of overwriting them.
         $this->types[$type][$symbol->getOriginalSymbol()] = $symbol;
@@ -76,7 +77,7 @@ class DiscoveredSymbols
     /**
      * @return array<string, ConstantSymbol>
      */
-    public function getConstants()
+    public function getConstants(): array
     {
         return $this->types[T_CONST];
     }
@@ -163,14 +164,12 @@ class DiscoveredSymbols
     {
         $discoveredClasses = $this->getGlobalClasses();
 
-        $discoveredClasses = array_filter(
+        return array_filter(
             array_keys($discoveredClasses),
             function (string $replacement) use ($classmapPrefix) {
                 return empty($classmapPrefix) || ! str_starts_with($replacement, $classmapPrefix);
             }
         );
-
-        return $discoveredClasses;
     }
 
     /**
@@ -218,7 +217,7 @@ class DiscoveredSymbols
 
     public function getAll(): array
     {
-        return array_merge(...$this->types);
+        return array_merge(...array_values($this->types));
     }
 
     public function getDiscoveredTraits(): array

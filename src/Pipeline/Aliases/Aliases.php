@@ -16,14 +16,18 @@ namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\AutoloadAliasInterface;
-use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
+/**
+ * @phpstan-import-type ClassAliasArray from AutoloadAliasInterface
+ * @phpstan-import-type InterfaceAliasArray from AutoloadAliasInterface
+ * @phpstan-import-type TraitAliasArray from AutoloadAliasInterface
+ */
 class Aliases
 {
     use LoggerAwareTrait;
@@ -42,6 +46,11 @@ class Aliases
         $this->setLogger($logger);
     }
 
+    /**
+     * @param array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray> $aliasesArray
+     * @param string|null $autoloadAliasesFunctionsString
+     * @return string
+     */
     protected function getTemplate(array $aliasesArray, ?string $autoloadAliasesFunctionsString): string
     {
         $namespace = $this->config->getNamespacePrefix();
@@ -152,12 +161,8 @@ class Aliases
     }
 
     /**
-     * @param ClassSymbol $modifiedSymbols
-     * @param array $sourceDirClassmap
-     * @param array $targetDirClasssmap
-     *
-     * @return array{}
-     * @throws \League\Flysystem\FilesystemException
+     * @return array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray>
+     * @throws FilesystemException
      */
     protected function getAliasesArray(DiscoveredSymbols $symbols): array
     {
@@ -204,7 +209,7 @@ class Aliases
         if (!empty($symbolsByNamespace['\\'])) {
             $globalAliasesPhpString = 'namespace {' . PHP_EOL;
 
-            /** @var FunctionSymbol & ConstantSymbol $symbol */
+            /** @var FunctionSymbol | ConstantSymbol $symbol */
             foreach ($symbolsByNamespace['\\'] as $symbol) {
                 $aliasesPhpString = '';
 

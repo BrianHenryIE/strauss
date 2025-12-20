@@ -2,6 +2,8 @@
 
 namespace BrianHenryIE\Strauss\Config;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+
 interface ChangeEnumeratorConfigInterface
 {
     /**
@@ -18,7 +20,7 @@ interface ChangeEnumeratorConfigInterface
      * @return string[]
      */
     public function getExcludeNamespacesFromPrefixing(): array;
-    
+
     /**
      * @return array<string, string>
      */
@@ -28,6 +30,9 @@ interface ChangeEnumeratorConfigInterface
 
     public function getClassmapPrefix(): ?string;
 
+    /**
+     * @return array<string,ComposerPackage>
+     */
     public function getPackagesToPrefix(): array;
 
     /**

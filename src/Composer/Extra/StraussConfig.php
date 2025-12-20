@@ -21,7 +21,9 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
 use Exception;
+use JsonMapper\Enums\TextNotation;
 use JsonMapper\JsonMapperFactory;
+use JsonMapper\Middleware\CaseConversion;
 use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -65,7 +67,7 @@ class StraussConfig implements
     protected ?string $namespacePrefix = null;
 
     /**
-     * @var string
+     *
      */
     protected ?string $classmapPrefix = null;
 
@@ -172,17 +174,13 @@ class StraussConfig implements
 
     /**
      * Should a modified date be included in the header for modified files?
-     *
-     * @var bool
      */
-    protected $includeModifiedDate = true;
+    protected bool $includeModifiedDate = true;
 
     /**
      * Should the author name be included in the header for modified files?
-     *
-     * @var bool
      */
-    protected $includeAuthor = true;
+    protected bool $includeAuthor = true;
 
     /**
      * Should the changes be printed to console rather than files modified?
@@ -199,7 +197,7 @@ class StraussConfig implements
      * Overwrite it with any Strauss config.
      * Provide sensible defaults.
      *
-     * @param Composer $composer
+     * @param ?Composer $composer
      *
      * @throws Exception
      */
@@ -238,10 +236,7 @@ class StraussConfig implements
             $rename->addMapping(StraussConfig::class, 'function_prefix', 'functionsPrefix');
 
             $mapper->unshift($rename);
-            $mapper->push(new \JsonMapper\Middleware\CaseConversion(
-                \JsonMapper\Enums\TextNotation::UNDERSCORE(),
-                \JsonMapper\Enums\TextNotation::CAMEL_CASE()
-            ));
+            $mapper->push(new CaseConversion(TextNotation::UNDERSCORE(), TextNotation::CAMEL_CASE()));
 
             $mapper->mapObject($configExtraSettings, $this);
         }
@@ -305,7 +300,7 @@ class StraussConfig implements
             }, $composer->getPackage()->getRequires());
         }
 
-        // If the bool flag for classmapOutput wasn't set in the Json config.
+        // If the bool flag for classmapOutput wasn't set in the JSON config.
         if (!isset($this->classmapOutput)) {
             $this->classmapOutput = true;
             // Check each autoloader.

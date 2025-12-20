@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Helpers;
 use BrianHenryIE\Strauss\TestCase;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
+use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
@@ -14,12 +15,13 @@ class FileSystemTest extends TestCase
 {
 
     /**
-     * Am I crazy or is there no easy way to get a file's attributes with Flystem?
+     * Am I crazy or is there no easy way to get a file's attributes with Flysystem?
      * So I'm doing a directory listing then filtering to the file I want.
+     * @throws FilesystemException
      */
     public function testFileAttributes(): void
     {
-        $sut = new Filesystem(
+        $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter('/'),
                 [
@@ -34,9 +36,9 @@ class FileSystemTest extends TestCase
         $this->assertInstanceOf(FileAttributes::class, $result);
     }
 
-    public function testIsDirTrue()
+    public function testIsDirTrue(): void
     {
-        $sut = new Filesystem(
+        $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter('/'),
                 [
@@ -51,9 +53,9 @@ class FileSystemTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function testIsDirFalse()
+    public function testIsDirFalse(): void
     {
-        $sut = new Filesystem(
+        $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter('/'),
                 [

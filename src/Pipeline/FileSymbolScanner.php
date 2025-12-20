@@ -10,7 +10,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
@@ -21,6 +21,7 @@ use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
+use League\Flysystem\FilesystemException;
 use PhpParser\Node;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
@@ -90,7 +91,7 @@ class FileSymbolScanner
     }
 
     /**
-     * @param DiscoveredFiles $files
+     * @throws FilesystemException
      */
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
@@ -123,7 +124,7 @@ class FileSymbolScanner
         return $this->discoveredSymbols;
     }
 
-    protected function find(string $contents, File $file, ?ComposerPackage $package = null): void
+    protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
     {
         $namespaces = $this->splitByNamespace($contents);
 
@@ -159,7 +160,7 @@ class FileSymbolScanner
                 $this->add($functionSymbol);
             }
 
-            /** @var PHPConst $phpConstants */
+            /** @var PHPConst[] $phpConstants */
             $phpConstants = $phpCode->getConstants();
             foreach ($phpConstants as $constantName => $constant) {
                 $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName, $package);
@@ -219,7 +220,7 @@ class FileSymbolScanner
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,
-        File $file,
+        FileBase $file,
         string $namespaceName,
         ?string $extends,
         array $interfaces
@@ -233,7 +234,7 @@ class FileSymbolScanner
         $this->add($classSymbol);
     }
 
-    protected function addDiscoveredNamespaceChange(string $namespace, File $file, ?ComposerPackage $package = null): void
+    protected function addDiscoveredNamespaceChange(string $namespace, FileBase $file, ?ComposerPackage $package = null): void
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($namespace);
         if ($namespaceObj) {

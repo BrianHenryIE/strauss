@@ -12,8 +12,10 @@ namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\Strauss\Files\FileBase;
 use Elazar\Flystream\StripProtocolPathNormalizer;
+use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
+use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
@@ -24,6 +26,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     use FlysystemBackCompatTrait;
 
     protected FilesystemOperator $flysystem;
+
     protected PathNormalizer $normalizer;
 
     protected string $workingDir;
@@ -45,6 +48,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      * @param string[] $fileAndDirPaths
      *
      * @return string[]
+     * @throws FilesystemException
      */
     public function findAllFilesAbsolutePaths(array $fileAndDirPaths, bool $excludeDirectories = false): array
     {
@@ -61,10 +65,11 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
                 FilesystemReader::LIST_DEEP
             );
 
-            /** @var FileAttributes[] $files */
+            /** @var FileAttributes[] $fileAttributesArray */
             $fileAttributesArray = $directoryListing->toArray();
 
-            $f = array_map(fn($file) => '/'.$file->path(), $fileAttributesArray);
+            /** @var FileAttributes|DirectoryAttributes $attributes */
+            $f = array_map(fn($attributes): string => '/'.$attributes->path(), $fileAttributesArray);
 
             if ($excludeDirectories) {
                 $f = array_filter($f, fn($path) => !$this->directoryExists($path));
@@ -76,8 +81,12 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         return $files;
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function getAttributes(string $absolutePath): ?StorageAttributes
     {
+        // TODO: check if this is a bad idea here.
         $fileDirectory = realpath(dirname($absolutePath));
 
         $absolutePath = $this->normalizer->normalizePath($absolutePath);
@@ -94,6 +103,9 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         return null;
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function exists(string $location): bool
     {
         return $this->fileExists($location) || $this->directoryExists($location);
@@ -156,6 +168,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         );
     }
 
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
     public function write(string $location, string $contents, array $config = []): void
     {
         $this->flysystem->write(
@@ -165,6 +181,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         );
     }
 
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
     public function writeStream(string $location, $contents, array $config = []): void
     {
         $this->flysystem->writeStream(
@@ -196,6 +216,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         );
     }
 
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
     public function createDirectory(string $location, array $config = []): void
     {
         $this->flysystem->createDirectory(
@@ -204,6 +228,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         );
     }
 
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
     public function move(string $source, string $destination, array $config = []): void
     {
         $this->flysystem->move(
@@ -213,6 +241,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         );
     }
 
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
     public function copy(string $source, string $destination, array $config = []): void
     {
         $this->flysystem->copy(
@@ -272,7 +304,6 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         );
     }
 
-
     /**
      * Check does the filepath point to a file outside the working directory.
      * If `realpath()` fails to resolve the path, assume it's a symlink.
@@ -285,17 +316,17 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     }
 
     /**
-     * Does the subdir path start with the dir path?
+     * Does the subDir path start with the dir path?
      */
-    public function isSubDirOf(string $dir, string $subdir): bool
+    public function isSubDirOf(string $dir, string $subDir): bool
     {
         return str_starts_with(
-            $this->normalizer->normalizePath($subdir),
+            $this->normalizer->normalizePath($subDir),
             $this->normalizer->normalizePath($dir)
         );
     }
 
-    public function normalize(string $path)
+    public function normalize(string $path): string
     {
         return $this->normalizer->normalizePath($path);
     }

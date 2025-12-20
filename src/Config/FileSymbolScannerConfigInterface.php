@@ -5,6 +5,8 @@
 
 namespace BrianHenryIE\Strauss\Config;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+
 interface FileSymbolScannerConfigInterface
 {
     /**
@@ -12,6 +14,9 @@ interface FileSymbolScannerConfigInterface
      */
     public function getExcludeNamespacesFromPrefixing(): array;
 
+    /**
+     * @return array<string,ComposerPackage>
+     */
     public function getPackagesToPrefix(): array;
 
     /**

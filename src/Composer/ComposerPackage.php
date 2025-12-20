@@ -13,8 +13,9 @@ use Composer\Factory;
 use Composer\IO\NullIO;
 
 /**
- * @phpstan-type AutoloadKeyArray array{files?:array<string>,classmap?:array<string>,"psr-4"?:array<string,string|array<string>>,exclude_from_classmap?:array<string>}
- * @phpstan-type ComposerConfigArray array{config?: array<string, mixed>, repositories?: array<mixed>}
+ * @phpstan-type AutoloadKeyArray array{files?:array<string>, "classmap"?:array<string>, "psr-4"?:array<string,string|array<string>>, "exclude_from_classmap"?:array<string>}
+ * @phpstan-type ComposerConfigArray array{vendor-dir?:string}
+ * @phpstan-type ComposerJsonArray array{require?:array<string,string>, autoload?:AutoloadKeyArray, config?:ComposerConfigArray, repositories?:array<mixed>}
  * @see \Composer\Config::merge()
  */
 class ComposerPackage

@@ -10,11 +10,15 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Factory;
 use Exception;
-use League\Flysystem\FilesystemReader;
+use JsonException;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * @phpstan-import-type ComposerJsonArray from ComposerPackage
+ */
 class DependenciesEnumerator
 {
     use LoggerAwareTrait;
@@ -51,8 +55,6 @@ class DependenciesEnumerator
 
     /**
      * Constructor.
-     *
-     * @param StraussConfig $config
      */
     public function __construct(
         StraussConfig    $config,
@@ -71,6 +73,7 @@ class DependenciesEnumerator
     /**
      * @return array<string, ComposerPackage> Packages indexed by package name.
      * @throws Exception
+     * @throws FilesystemException
      */
     public function getAllDependencies(): array
     {
@@ -81,6 +84,8 @@ class DependenciesEnumerator
 
     /**
      * @param string[] $requiredPackageNames
+     * @throws FilesystemException
+     * @throws JsonException
      */
     protected function recursiveGetAllDependencies(array $requiredPackageNames): void
     {
@@ -110,7 +115,8 @@ class DependenciesEnumerator
 
                 // TODO: These (.json, .lock) should be read once and reused.
                 $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . Factory::getComposerFile());
-                $composerJson       = json_decode($composerJsonString, true);
+                /** @var ComposerJsonArray $composerJson */
+                $composerJson       = json_decode($composerJsonString, true, 512, JSON_THROW_ON_ERROR);
 
                 if (isset($composerJson['provide']) && in_array($requiredPackageName, array_keys($composerJson['provide']))) {
                     $this->logger->info('Skipping ' . $requiredPackageName . ' as it is in the composer.json provide list');
@@ -119,7 +125,8 @@ class DependenciesEnumerator
 
                 $composerLockPath = $this->config->getProjectDirectory() . Factory::getLockFile(Factory::getComposerFile());
                 $composerLockString     = $this->filesystem->read($composerLockPath);
-                $composerLock           = json_decode($composerLockString, true);
+                /** @var array{packages:array{name:string}} $composerLock */
+                $composerLock           = json_decode($composerLockString, true) ?: ['packages'=>[]];
 
                 $requiredPackageComposerJson = null;
                 foreach ($composerLock['packages'] as $packageJson) {
@@ -197,8 +204,6 @@ class DependenciesEnumerator
 
     /**
      * Unset PHP, ext-*, ...
-     *
-     * @param string $requiredPackageName
      */
     protected function removeVirtualPackagesFilter(string $requiredPackageName): bool
     {

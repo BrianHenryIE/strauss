@@ -80,15 +80,14 @@ class MarkSymbolsForRenaming
 
         $sourceFiles = array_filter(
             $symbol->getSourceFiles(),
-            fn (File $file) => basename($file->getVendorRelativePath()) !== 'composer.json'
+            fn (FileBase $file) => basename($file->getVendorRelativePath()) !== 'composer.json'
         );
 
-        $isAutoloaded = array_reduce(
+        return array_reduce(
             $sourceFiles,
-            fn(bool $carry, File $fileBase) => $carry && $fileBase->isAutoloaded(),
+            fn(bool $carry, FileBase $fileBase) => $carry && $fileBase->isAutoloaded(),
             true
         );
-        return $isAutoloaded;
     }
 
     /**
@@ -116,7 +115,7 @@ class MarkSymbolsForRenaming
 
         return !array_reduce(
             $symbol->getSourceFiles(),
-            fn(bool $carry, File $file) => $carry && $file->isDoCopy(),
+            fn(bool $carry, FileBase $file) => $carry && $file->isDoCopy(),
             true
         );
     }
@@ -129,7 +128,7 @@ class MarkSymbolsForRenaming
 
         return array_reduce(
             $symbol->getSourceFiles(),
-            fn(bool $carry, File $file) => $carry || $file->isDoCopy(),
+            fn(bool $carry, FileBase $file) => $carry || $file->isDoCopy(),
             false
         );
     }
