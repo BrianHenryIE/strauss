@@ -68,15 +68,6 @@ class FileSymbolScanner
     }
 
 
-    private static function pad(string $text, int $length = 25): string
-    {
-        /** @var int $padLength */
-        static $padLength;
-        $padLength = max(isset($padLength) ? $padLength : 0, $length);
-        $padLength = max($padLength, strlen($text) + 1);
-        return str_pad($text, $padLength, ' ', STR_PAD_RIGHT);
-    }
-
     protected function add(DiscoveredSymbol $symbol): void
     {
         $this->discoveredSymbols->add($symbol);
@@ -89,14 +80,10 @@ class FileSymbolScanner
         $this->logger->log(
             $level,
             sprintf(
-                "%s%s",
-                // The part up until the original symbol. I.e. the first "column" of the message.
-                self::pad(sprintf(
-                    "Found %s%s:",
-                    $newText,
-                    // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
-                    strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
-                )),
+                "Found %s%s:::%s",
+                $newText,
+                // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
+                strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
                 $symbol->getOriginalSymbol()
             )
         );
@@ -121,11 +108,11 @@ class FileSymbolScanner
 
             if (!$file->isPhpFile()) {
                 $file->setDoPrefix(false);
-                $this->logger->debug(self::pad("Skipping non-PHP file:"). $relativeFilePath);
+                $this->logger->debug("Skipping non-PHP file:::". $relativeFilePath);
                 continue;
             }
 
-            $this->logger->info(self::pad("Scanning file:") . $relativeFilePath);
+            $this->logger->info("Scanning file:::" . $relativeFilePath);
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
                 $file,

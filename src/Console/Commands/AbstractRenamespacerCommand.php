@@ -8,6 +8,7 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use Composer\InstalledVersions;
@@ -125,13 +126,14 @@ abstract class AbstractRenamespacerCommand extends Command
         $logger = new Logger('logger');
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
+        $logger->pushProcessor(new PadColonColumnsLogProcessor());
         $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
         $this->setLogger($logger);
 
         return Command::SUCCESS;
     }
 
-            /**
+    /**
      * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
      */
     protected function initialize(InputInterface $input, OutputInterface $output): void
