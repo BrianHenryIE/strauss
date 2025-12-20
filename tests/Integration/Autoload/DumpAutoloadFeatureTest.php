@@ -244,7 +244,12 @@ EOD;
 			"newfold-labs/*"
 		]
       }
-	},
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
     "require": {
         "newfold-labs/wp-module-mcp": "*"
     },

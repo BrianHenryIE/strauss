@@ -15,14 +15,21 @@ use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
  */
 class StraussIssue114Test extends IntegrationTestCase
 {
-    public function test_muted_errors()
+    public function test_muted_errors(): void
     {
 
         $composerJsonString = <<<'EOD'
 {
   "name": "issue/114",
   "require": {
-    "aws/aws-sdk-php": "3.317"
+    "aws/aws-sdk-php": "3.317.0"
+  },
+  "config": {
+    "audit": {
+      "ignore": {
+        "PKSA-dxyf-6n16-t87m": "We are not running prod"
+      }
+    }
   },
   "extra": {
     "strauss": {
