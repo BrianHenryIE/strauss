@@ -1,16 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Parameter \\#1 \\$haystack of function strpos expects string, string\\|false given\\.$#"
-			count: 1
-			path: src/Composer/ComposerPackage.php
-
-		-
-			message: "#^Parameter \\#2 \\$needle of function strpos expects string, string\\|false given\\.$#"
-			count: 1
-			path: src/Composer/ComposerPackage.php
-
-		-
 			message: "#^Parameter \\#1 \\$namespacePrefix of method BrianHenryIE\\\\Strauss\\\\Composer\\\\Extra\\\\StraussConfig\\:\\:setNamespacePrefix\\(\\) expects string, string\\|null given\\.$#"
 			count: 3
 			path: src/Composer/Extra/StraussConfig.php
@@ -36,21 +26,6 @@ parameters:
 			path: src/Composer/Extra/StraussConfig.php
 
 		-
-			message: "#^Property BrianHenryIE\\\\Strauss\\\\Composer\\\\Extra\\\\StraussConfig\\:\\:\\$updateCallSites \\(array\\<string\\>\\|null\\) does not accept array\\<bool\\|string\\>\\|null\\.$#"
-			count: 1
-			path: src/Composer/Extra/StraussConfig.php
-
-		-
-			message: "#^Parameter \\#1 \\$location of method BrianHenryIE\\\\Strauss\\\\Helpers\\\\FileSystem\\:\\:listContents\\(\\) expects string, string\\|false given\\.$#"
-			count: 1
-			path: src/Helpers/FileSystem.php
-
-		-
-			message: "#^Variable \\$attributes in PHPDoc tag @var does not match assigned variable \\$f\\.$#"
-			count: 1
-			path: src/Helpers/FileSystem.php
-
-		-
 			message: "#^Cannot call method getOriginalSymbol\\(\\) on BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\|null\\.$#"
 			count: 1
 			path: src/Pipeline/Aliases/Aliases.php
@@ -63,11 +38,6 @@ parameters:
 		-
 			message: "#^Cannot call method isChangedNamespace\\(\\) on BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\|null\\.$#"
 			count: 2
-			path: src/Pipeline/Aliases/Aliases.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Aliases\\\\Aliases\\:\\:registerAutoloader\\(\\) has parameter \\$classmap with no value type specified in iterable type array\\.$#"
-			count: 1
 			path: src/Pipeline/Aliases/Aliases.php
 
 		-
@@ -89,21 +59,6 @@ parameters:
 			message: "#^Parameter \\#2 \\$string of function explode expects string, string\\|null given\\.$#"
 			count: 1
 			path: src/Pipeline/Aliases/Aliases.php
-
-		-
-			message: "#^Parameter \\#3 \\$subject of function str_replace expects array\\|string, string\\|false given\\.$#"
-			count: 1
-			path: src/Pipeline/Aliases/Aliases.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Autoload\\:\\:generate\\(\\) has parameter \\$flatDependencyTree with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Pipeline/Autoload.php
-
-		-
-			message: "#^Cannot call method read\\(\\) on array\\<string, array\\>\\.$#"
-			count: 1
-			path: src/Pipeline/Autoload/DumpAutoload.php
 
 		-
 			message: "#^Parameter \\#1 \\$projectUniqueString of class BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Autoload\\\\ComposerAutoloadGenerator constructor expects string, string\\|null given\\.$#"
@@ -156,31 +111,6 @@ parameters:
 			path: src/Pipeline/ChangeEnumerator.php
 
 		-
-			message: "#^Cannot access offset 'dev' on mixed\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/Cleanup.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Cleanup\\\\Cleanup\\:\\:deleteEmptyDirectories\\(\\) has parameter \\$files with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/Cleanup.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Cleanup\\\\Cleanup\\:\\:doIsDeleteVendorFiles\\(\\) has parameter \\$files with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/Cleanup.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Cleanup\\\\Cleanup\\:\\:doIsDeleteVendorPackages\\(\\) has parameter \\$flatDependencyTree with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/Cleanup.php
-
-		-
-			message: "#^Parameter \\#1 \\$devMode of method Composer\\\\Autoload\\\\AutoloadGenerator\\:\\:setDevMode\\(\\) expects bool, mixed given\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/Cleanup.php
-
-		-
 			message: "#^Parameter \\#1 \\$location of method BrianHenryIE\\\\Strauss\\\\Helpers\\\\FileSystem\\:\\:deleteDirectory\\(\\) expects string, string\\|null given\\.$#"
 			count: 1
 			path: src/Pipeline/Cleanup/Cleanup.php
@@ -196,12 +126,12 @@ parameters:
 			path: src/Pipeline/Cleanup/Cleanup.php
 
 		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Cleanup\\\\InstalledJson\\:\\:removeMissingAutoloadKeyPaths\\(\\) should return array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\: bool, dev\\-package\\-names\\: array\\<string\\>\\} but returns array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\: bool, dev\\-package\\-names\\: array\\<string\\>\\}\\.$#"
+			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Cleanup\\\\InstalledJson\\:\\:removeMissingAutoloadKeyPaths\\(\\) should return array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\?\\: bool, dev\\-package\\-names\\: array\\<string\\>\\} but returns array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\?\\: bool, dev\\-package\\-names\\: array\\<string\\>\\}\\.$#"
 			count: 1
 			path: src/Pipeline/Cleanup/InstalledJson.php
 
 		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Cleanup\\\\InstalledJson\\:\\:updateNamespaces\\(\\) should return array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\: bool, dev\\-package\\-names\\: array\\<string\\>\\} but returns array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\: bool, dev\\-package\\-names\\: array\\<string\\>\\}\\.$#"
+			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Cleanup\\\\InstalledJson\\:\\:updateNamespaces\\(\\) should return array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\?\\: bool, dev\\-package\\-names\\: array\\<string\\>\\} but returns array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\?\\: bool, dev\\-package\\-names\\: array\\<string\\>\\}\\.$#"
 			count: 1
 			path: src/Pipeline/Cleanup/InstalledJson.php
 
@@ -226,92 +156,17 @@ parameters:
 			path: src/Pipeline/Cleanup/InstalledJson.php
 
 		-
-			message: "#^Offset 'autoload' on string in isset\\(\\) does not exist\\.$#"
-			count: 1
-			path: src/Pipeline/DependenciesEnumerator.php
-
-		-
-			message: "#^Offset 'name' does not exist on string\\.$#"
-			count: 1
-			path: src/Pipeline/DependenciesEnumerator.php
-
-		-
-			message: "#^Offset 'provide' on array\\{require\\?\\: array\\<string, string\\>, autoload\\?\\: array\\{files\\?\\: array\\<string\\>, classmap\\?\\: array\\<string\\>, psr\\-4\\?\\: array\\<string, array\\<string\\>\\|string\\>, exclude_from_classmap\\?\\: array\\<string\\>\\}, config\\?\\: array\\{vendor\\-dir\\?\\: string\\}, repositories\\?\\: array\\} in isset\\(\\) does not exist\\.$#"
-			count: 1
-			path: src/Pipeline/DependenciesEnumerator.php
-
-		-
-			message: "#^Offset 'require' on string in empty\\(\\) does not exist\\.$#"
-			count: 1
-			path: src/Pipeline/DependenciesEnumerator.php
-
-		-
-			message: "#^Offset 'type' does not exist on string\\.$#"
-			count: 1
-			path: src/Pipeline/DependenciesEnumerator.php
-
-		-
-			message: "#^Parameter \\#1 \\$jsonArray of static method BrianHenryIE\\\\Strauss\\\\Composer\\\\ComposerPackage\\:\\:fromComposerJsonArray\\(\\) expects array\\{name\\?\\: string, license\\?\\: string, requires\\?\\: array\\<string, string\\>, autoload\\?\\: array\\{files\\?\\: array\\<string\\>, classmap\\?\\: array\\<string\\>, psr\\-4\\?\\: array\\<string, array\\<string\\>\\|string\\>, exclude_from_classmap\\?\\: array\\<string\\>\\}\\}, string given\\.$#"
-			count: 1
-			path: src/Pipeline/DependenciesEnumerator.php
-
-		-
-			message: "#^Result of && is always false\\.$#"
-			count: 1
-			path: src/Pipeline/DependenciesEnumerator.php
-
-		-
-			message: "#^Result of && is always true\\.$#"
-			count: 1
-			path: src/Pipeline/DependenciesEnumerator.php
-
-		-
-			message: "#^Parameter \\#1 \\$paths of method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\FileEnumerator\\:\\:compileFileListForPaths\\(\\) expects array\\<string\\>, array\\<int, string\\|null\\> given\\.$#"
+			message: "#^Parameter \\#2 \\$needle of function strpos expects string, string\\|null given\\.$#"
 			count: 1
 			path: src/Pipeline/FileEnumerator.php
 
 		-
-			message: "#^Parameter \\#1 \\$search of function str_replace expects array\\|string, string\\|null given\\.$#"
-			count: 1
-			path: src/Pipeline/FileEnumerator.php
-
-		-
-			message: "#^Parameter \\#2 \\$needle of function strpos expects string, int\\|string given\\.$#"
-			count: 1
-			path: src/Pipeline/FileEnumerator.php
-
-		-
-			message: "#^Parameter \\#2 \\$offset of function substr expects int, int\\<0, max\\>\\|false given\\.$#"
-			count: 1
-			path: src/Pipeline/FileEnumerator.php
-
-		-
-			message: "#^Argument of an invalid type array\\<PhpParser\\\\Node\\\\Stmt\\>\\|null supplied for foreach, only iterables are supported\\.$#"
-			count: 1
-			path: src/Pipeline/FileSymbolScanner.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\FileSymbolScanner\\:\\:addDiscoveredClassChange\\(\\) has parameter \\$interfaces with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Pipeline/FileSymbolScanner.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\FileSymbolScanner\\:\\:splitByNamespace\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Pipeline/FileSymbolScanner.php
-
-		-
-			message: "#^Parameter \\#1 \\$value of function count expects array\\|Countable, array\\<PhpParser\\\\Node\\\\Stmt\\>\\|null given\\.$#"
-			count: 2
-			path: src/Pipeline/FileSymbolScanner.php
-
-		-
-			message: "#^Call to an undefined method BrianHenryIE\\\\Strauss\\\\Files\\\\FileBase\\:\\:getVendorRelativePath\\(\\)\\.$#"
+			message: "#^Parameter \\#2 \\$callback of function array_filter expects \\(callable\\(BrianHenryIE\\\\Strauss\\\\Files\\\\FileBase\\)\\: bool\\)\\|null, Closure\\(BrianHenryIE\\\\Strauss\\\\Files\\\\File\\)\\: bool given\\.$#"
 			count: 1
 			path: src/Pipeline/MarkSymbolsForRenaming.php
 
 		-
-			message: "#^Call to an undefined method BrianHenryIE\\\\Strauss\\\\Files\\\\FileBase\\:\\:isAutoloaded\\(\\)\\.$#"
+			message: "#^Parameter \\#2 \\$callback of function array_reduce expects callable\\(bool, BrianHenryIE\\\\Strauss\\\\Files\\\\FileBase\\)\\: bool, Closure\\(bool, BrianHenryIE\\\\Strauss\\\\Files\\\\File\\)\\: bool given\\.$#"
 			count: 1
 			path: src/Pipeline/MarkSymbolsForRenaming.php
 
@@ -371,66 +226,6 @@ parameters:
 			path: src/Pipeline/Prefixer.php
 
 		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbols\\:\\:getAll\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbols\\:\\:getDiscoveredInterfaces\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbols\\:\\:getDiscoveredNamespaceChanges\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbols\\:\\:getDiscoveredTraits\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Offset 310 does not exist on array\\{T_NAMESPACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\>, T_CONST\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ConstantSymbol\\>, T_CLASS\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\>, T_FUNCTION\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\FunctionSymbol\\>, T_TRAIT\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\TraitSymbol\\>, T_INTERFACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\InterfaceSymbol\\>\\}\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Offset 312 does not exist on array\\{T_NAMESPACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\>, T_CONST\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ConstantSymbol\\>, T_CLASS\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\>, T_FUNCTION\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\FunctionSymbol\\>, T_TRAIT\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\TraitSymbol\\>, T_INTERFACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\InterfaceSymbol\\>\\}\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Offset 336 does not exist on array\\{T_NAMESPACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\>, T_CONST\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ConstantSymbol\\>, T_CLASS\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\>, T_FUNCTION\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\FunctionSymbol\\>, T_TRAIT\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\TraitSymbol\\>, T_INTERFACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\InterfaceSymbol\\>\\}\\.$#"
-			count: 2
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Offset 337 does not exist on array\\{T_NAMESPACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\>, T_CONST\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ConstantSymbol\\>, T_CLASS\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\>, T_FUNCTION\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\FunctionSymbol\\>, T_TRAIT\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\TraitSymbol\\>, T_INTERFACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\InterfaceSymbol\\>\\}\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Offset 338 does not exist on array\\{T_NAMESPACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\>, T_CONST\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ConstantSymbol\\>, T_CLASS\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\>, T_FUNCTION\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\FunctionSymbol\\>, T_TRAIT\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\TraitSymbol\\>, T_INTERFACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\InterfaceSymbol\\>\\}\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Offset 342 does not exist on array\\{T_NAMESPACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\>, T_CONST\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ConstantSymbol\\>, T_CLASS\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\>, T_FUNCTION\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\FunctionSymbol\\>, T_TRAIT\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\TraitSymbol\\>, T_INTERFACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\InterfaceSymbol\\>\\}\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Offset 342 on array\\{T_NAMESPACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\>, T_CONST\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ConstantSymbol\\>, T_CLASS\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\>, T_FUNCTION\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\FunctionSymbol\\>, T_TRAIT\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\TraitSymbol\\>, T_INTERFACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\InterfaceSymbol\\>\\} on left side of \\?\\? does not exist\\.$#"
-			count: 2
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Property BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbols\\:\\:\\$types \\(array\\{T_NAMESPACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\>, T_CONST\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ConstantSymbol\\>, T_CLASS\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\>, T_FUNCTION\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\FunctionSymbol\\>, T_TRAIT\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\TraitSymbol\\>, T_INTERFACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\InterfaceSymbol\\>\\}\\) does not accept default value of type array\\{336\\: array\\{\\}, 312\\: array\\{\\}, 342\\: array\\{\\}, 310\\: array\\{\\}, 337\\: array\\{\\}, 338\\: array\\{\\}\\}\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
-
-		-
-			message: "#^Property BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbols\\:\\:\\$types \\(array\\{T_NAMESPACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\>, T_CONST\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ConstantSymbol\\>, T_CLASS\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\>, T_FUNCTION\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\FunctionSymbol\\>, T_TRAIT\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\TraitSymbol\\>, T_INTERFACE\\: array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\InterfaceSymbol\\>\\}\\) does not accept non\\-empty\\-array\\<310\\|312\\|336\\|337\\|338\\|342\\|'T_CLASS'\\|'T_CONST'\\|'T_FUNCTION'\\|'T_INTERFACE'\\|'T_NAMESPACE'\\|'T_TRAIT', mixed\\>\\.$#"
+			message: "#^Method BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbols\\:\\:getDiscoveredClasses\\(\\) should return array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\> but returns array\\<int, string\\>\\.$#"
 			count: 1
 			path: src/Types/DiscoveredSymbols.php
