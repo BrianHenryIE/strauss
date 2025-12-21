@@ -37,7 +37,7 @@ use Seld\JsonLint\ParsingException;
  *
  * @phpstan-type InstalledJsonPackageArray array{name:string, version:string, version_normalized:string, source:InstalledJsonPackageSourceArray, dist:InstalledJsonPackageDistArray, require:array<string,string>, require-dev:array<string,string>, time:string, type:string, installation-source:string, autoload?:InstalledJsonPackageAutoloadArray, notification-url:string, license:array<string>, authors:array<InstalledJsonPackageAuthorArray>, description:string, homepage:string, keywords:array<string>, support:InstalledJsonPackageSupportArray, install-path:string}
  *
- * @phpstan-type InstalledJsonArray array{packages:array<InstalledJsonPackageArray>, dev:bool, dev-package-names:array<string>}
+ * @phpstan-type InstalledJsonArray array{packages:array<InstalledJsonPackageArray>, dev?:bool, dev-package-names:array<string>}
  */
 class InstalledJson
 {
@@ -58,6 +58,9 @@ class InstalledJson
         $this->setLogger($logger);
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function copyInstalledJson(): void
     {
         $source = $this->config->getVendorDirectory() . 'composer/installed.json';
@@ -84,6 +87,7 @@ class InstalledJson
     /**
      * @throws JsonValidationException
      * @throws ParsingException
+     * @throws Exception
      */
     protected function getJsonFile(string $vendorDir): JsonFile
     {
@@ -455,6 +459,7 @@ class InstalledJson
      * @param array<string,ComposerPackage> $flatDependencyTree
      * @param DiscoveredSymbols $discoveredSymbols
      * @throws Exception
+     * @throws FilesystemException
      */
     public function cleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
@@ -509,6 +514,7 @@ class InstalledJson
      *
      * @param array<string,ComposerPackage> $flatDependencyTree
      * @throws Exception
+     * @throws FilesystemException
      */
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {

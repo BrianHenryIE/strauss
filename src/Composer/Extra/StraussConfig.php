@@ -21,6 +21,7 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
 use Exception;
+use InvalidArgumentException;
 use JsonMapper\Enums\TextNotation;
 use JsonMapper\JsonMapperFactory;
 use JsonMapper\Middleware\CaseConversion;
@@ -454,17 +455,25 @@ class StraussConfig implements
 
     /**
      * @param string[]|array{0:bool}|null $updateCallSites
+     * @throws InvalidArgumentException
      */
     public function setUpdateCallSites($updateCallSites): void
     {
         if (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === true) {
             // Setting `null` instructs Strauss to update call sites in the project's autoload key.
             $this->updateCallSites = null;
+            return;
         } elseif (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === false) {
             $this->updateCallSites = array();
-        } else {
-            $this->updateCallSites = $updateCallSites;
+            return;
+        } elseif (is_array($updateCallSites) && isset($updateCallSites[0]) && !is_bool($updateCallSites[0])) {
+            $this->updateCallSites = array_filter(
+                $updateCallSites,
+                'is_string'
+            );
+            return;
         }
+        throw new InvalidArgumentException('Unexpected value for updateCallSites');
     }
 
     /**

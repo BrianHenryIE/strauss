@@ -8,21 +8,24 @@ namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Autoload\AutoloadGenerator;
-use Composer\Config as ComposerConfig;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Json\JsonFile;
 use Composer\Repository\InstalledFilesystemRepository;
+use Exception;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+use Seld\JsonLint\ParsingException;
 
+/**
+ * @phpstan-import-type InstalledJsonArray from InstalledJson
+ */
 class Cleanup
 {
     use LoggerAwareTrait;
@@ -76,7 +79,10 @@ class Cleanup
         $this->deleteEmptyDirectories($discoveredFiles->getFiles());
     }
 
-    /** @param array<string,ComposerPackage> $flatDependencyTree */
+    /** @param array<string,ComposerPackage> $flatDependencyTree
+     * @throws Exception
+     * @throws FilesystemException
+     */
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $installedJson = new InstalledJson(
@@ -110,6 +116,7 @@ class Cleanup
      *
      * Shares a lot of code with {@see DumpAutoload::generatedPrefixedAutoloader()} but I've done lots of work
      * on that in another branch so I don't want to cause merge conflicts.
+     * @throws ParsingException
      */
     public function rebuildVendorAutoloader(): void
     {
@@ -133,6 +140,7 @@ class Cleanup
         $installedJson = new JsonFile($this->config->getVendorDirectory() . 'composer/installed.json');
         $localRepo = new InstalledFilesystemRepository($installedJson);
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
+        /** @var InstalledJsonArray $installedJsonArray */
         $installedJsonArray = $installedJson->read();
         $generator->setDevMode($installedJsonArray['dev'] ?? false);
         // This will output the autoload_static.php etc. files to `vendor/composer`.
@@ -150,6 +158,7 @@ class Cleanup
     }
 
     /**
+     * @param FileBase[] $files
      * @throws FilesystemException
      */
     protected function deleteEmptyDirectories(array $files): void
@@ -213,7 +222,11 @@ class Cleanup
 //        }
     }
 
-    // TODO: Move to FileSystem class.
+    /**
+     * TODO: Move to FileSystem class.
+     *
+     * @throws FilesystemException
+     */
     protected function dirIsEmpty(string $dir): bool
     {
         // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
@@ -221,6 +234,8 @@ class Cleanup
     }
 
     /**
+     * @param array<string,ComposerPackage> $flatDependencyTree
+     * @throws FilesystemException
      */
     protected function doIsDeleteVendorPackages(array $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
     {
@@ -239,10 +254,7 @@ class Cleanup
 //            }
 //        }
 
-        $files = $discoveredFiles->getFiles();
-
-        /** @var ComposerPackage $package */
-        foreach ($flatDependencyTree as $packageName => $package) {
+        foreach ($flatDependencyTree as $package) {
             // Normal package.
             if ($this->filesystem->isSubDirOf($this->config->getVendorDirectory(), $package->getPackageAbsolutePath())) {
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
@@ -284,7 +296,7 @@ class Cleanup
     }
 
     /**
-     * @param array $files
+     * @param FileBase[] $files
      *
      * @throws FilesystemException
      */
@@ -292,7 +304,6 @@ class Cleanup
     {
         $this->logger->info('Deleting original vendor files.');
 
-        /** @var File $file */
         foreach ($files as $file) {
             if (! $file->isDoDelete()) {
                 $this->logger->debug('Skipping/preserving ' . $file->getSourcePath());

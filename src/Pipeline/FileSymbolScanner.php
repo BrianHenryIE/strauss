@@ -96,7 +96,6 @@ class FileSymbolScanner
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
         foreach ($files->getFiles() as $file) {
-            $doPrefix = true;
             if ($file instanceof FileWithDependency && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
                 $doPrefix = false;
                 $file->setDoPrefix($doPrefix);
@@ -181,13 +180,17 @@ class FileSymbolScanner
         }
     }
 
+    /**
+     * @param string $contents
+     * @return array<string,string>
+     */
     protected function splitByNamespace(string $contents):array
     {
         $result = [];
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
-        $ast = $parser->parse(trim($contents));
+        $ast = $parser->parse(trim($contents)) ?? [];
 
         foreach ($ast as $rootNode) {
             if ($rootNode instanceof Node\Stmt\Namespace_) {
@@ -217,6 +220,14 @@ class FileSymbolScanner
         return $result;
     }
 
+    /**
+     * @param string $fqdnClassname
+     * @param bool $isAbstract
+     * @param FileBase $file
+     * @param string $namespaceName
+     * @param ?string $extends
+     * @param string[] $interfaces
+     */
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,

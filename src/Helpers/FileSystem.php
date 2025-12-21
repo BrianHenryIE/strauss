@@ -68,8 +68,11 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             /** @var FileAttributes[] $fileAttributesArray */
             $fileAttributesArray = $directoryListing->toArray();
 
-            /** @var FileAttributes|DirectoryAttributes $attributes */
-            $f = array_map(fn($attributes): string => '/'.$attributes->path(), $fileAttributesArray);
+
+            $f = array_map(
+                fn(StorageAttributes $attributes): string => '/'.$attributes->path(),
+                $fileAttributesArray
+            );
 
             if ($excludeDirectories) {
                 $f = array_filter($f, fn($path) => !$this->directoryExists($path));
@@ -86,8 +89,8 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      */
     public function getAttributes(string $absolutePath): ?StorageAttributes
     {
-        // TODO: check if this is a bad idea here.
-        $fileDirectory = realpath(dirname($absolutePath));
+        // TODO: check if `realpath()` is a bad idea here.
+        $fileDirectory = realpath(dirname($absolutePath)) ?: dirname($absolutePath);
 
         $absolutePath = $this->normalizer->normalizePath($absolutePath);
 

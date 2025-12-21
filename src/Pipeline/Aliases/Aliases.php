@@ -22,6 +22,7 @@ use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * @phpstan-import-type ClassAliasArray from AutoloadAliasInterface
@@ -50,6 +51,7 @@ class Aliases
      * @param array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray> $aliasesArray
      * @param string|null $autoloadAliasesFunctionsString
      * @return string
+     * @throws RuntimeException
      */
     protected function getTemplate(array $aliasesArray, ?string $autoloadAliasesFunctionsString): string
     {
@@ -64,6 +66,10 @@ class Aliases
 
         $template = file_get_contents(__DIR__ . '/autoload_aliases.template.php');
 
+        if ($template === false) {
+            throw new RuntimeException('Expected file not found at: ' . __DIR__ . '/autoload_aliases.template.php');
+        }
+
         $template = str_replace(
             '// FunctionsAndConstants',
             $globalFunctionsString,
@@ -76,13 +82,11 @@ class Aliases
             $template
         );
 
-        $template = str_replace(
+        return str_replace(
             'private array $autoloadAliases = [];',
             "private array \$autoloadAliases = $autoloadAliases;",
             $template
         );
-
-        return $template;
     }
 
     public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
@@ -127,6 +131,9 @@ class Aliases
         return $modifiedSymbols;
     }
 
+    /**
+     * @param array<string,string> $classmap FQDN classname : absolute file path.
+     */
     protected function registerAutoloader(array $classmap): void
     {
 

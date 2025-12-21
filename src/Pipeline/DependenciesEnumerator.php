@@ -18,6 +18,7 @@ use Psr\Log\NullLogger;
 
 /**
  * @phpstan-import-type ComposerJsonArray from ComposerPackage
+ * @phpstan-import-type AutoloadKeyArray from ComposerPackage
  */
 class DependenciesEnumerator
 {
@@ -86,6 +87,7 @@ class DependenciesEnumerator
      * @param string[] $requiredPackageNames
      * @throws FilesystemException
      * @throws JsonException
+     * @throws Exception
      */
     protected function recursiveGetAllDependencies(array $requiredPackageNames): void
     {
@@ -125,11 +127,17 @@ class DependenciesEnumerator
 
                 $composerLockPath = $this->config->getProjectDirectory() . Factory::getLockFile(Factory::getComposerFile());
                 $composerLockString     = $this->filesystem->read($composerLockPath);
-                /** @var array{packages:array{name:string}} $composerLock */
-                $composerLock           = json_decode($composerLockString, true) ?: ['packages'=>[]];
+                /** @var null|array{packages:array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray}} $composerLockJsonArray */
+                $composerLockJsonArray           = json_decode($composerLockString, true);
 
+                if (is_null($composerLockJsonArray)) {
+                    continue;
+                }
+
+                /** @var ?ComposerJsonArray $requiredPackageComposerJson */
                 $requiredPackageComposerJson = null;
-                foreach ($composerLock['packages'] as $packageJson) {
+                /** @var array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray} $packageJson */
+                foreach ($composerLockJsonArray['packages'] as $packageJson) {
                     if ($requiredPackageName === $packageJson['name']) {
                         $requiredPackageComposerJson = $packageJson;
                         break;
@@ -144,7 +152,7 @@ class DependenciesEnumerator
 
                 if (!isset($requiredPackageComposerJson['autoload'])
                     && empty($requiredPackageComposerJson['require'])
-                    && $requiredPackageComposerJson['type'] != 'metapackage'
+                    && (!isset($requiredPackageComposerJson['type']) || $requiredPackageComposerJson['type'] != 'metapackage')
                     && ! $this->filesystem->directoryExists(dirname($packageComposerFile))
                 ) {
                     // e.g. symfony/polyfill-php72 when installed on PHP 7.2 or later.

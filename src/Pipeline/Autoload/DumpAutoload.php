@@ -89,9 +89,9 @@ class DumpAutoload
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
         Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
 
-        /** @var ComposerJsonArray $projectComposerJson */
         $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
 
+        /** @var ComposerJsonArray $projectComposerJsonArray */
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
@@ -99,7 +99,7 @@ class DumpAutoload
 
         /**
          * Loop over all packages that should be included and ensure the root package requires them. Composer only
-         * includes packages in the autoloader that are required by a parent package (including root). Without this
+         * includes packages in the autoloader that are required by a parent package (including root). Without this,
          * packages that are selectively prefixed are not included in the autoloader.
          *
          * @see AutoloadGenerator::filterPackageMap()

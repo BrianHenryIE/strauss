@@ -50,6 +50,7 @@ class FileEnumerator
     {
         foreach ($dependencies as $dependency) {
             $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
+            /** @var string $dependencyPackageAbsolutePath */
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
             $this->compileFileListForPaths([$dependencyPackageAbsolutePath], $dependency);
         }
@@ -105,11 +106,13 @@ class FileEnumerator
         if ($dependency) {
             $vendorRelativePath = substr(
                 $sourceAbsoluteFilepath,
-                strpos($sourceAbsoluteFilepath, $dependency->getRelativePath() ?: 0)
+                strpos($sourceAbsoluteFilepath, $dependency->getRelativePath()) ?: 0
             );
 
+            /** @var string $dependencyPackageAbsolutePath */
+            $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
             if ($vendorRelativePath === $sourceAbsoluteFilepath) {
-                $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
+                $vendorRelativePath = $dependency->getRelativePath() . str_replace($dependencyPackageAbsolutePath, '', $sourceAbsoluteFilepath);
             }
 
             /** @var FileWithDependency $f */

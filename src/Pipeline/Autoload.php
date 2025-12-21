@@ -7,15 +7,19 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use Exception;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Seld\JsonLint\ParsingException;
 
 class Autoload
 {
@@ -54,6 +58,12 @@ class Autoload
         $this->setLogger($logger ?? new NullLogger());
     }
 
+    /**
+     * @param array<string,ComposerPackage> $flatDependencyTree
+     * @throws FilesystemException
+     * @throws ParsingException
+     * @throws Exception
+     */
     public function generate(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         if (!$this->config->isClassmapOutput()) {
