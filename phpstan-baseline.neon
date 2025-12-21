@@ -126,49 +126,9 @@ parameters:
 			path: src/Pipeline/Cleanup/Cleanup.php
 
 		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Cleanup\\\\InstalledJson\\:\\:removeMissingAutoloadKeyPaths\\(\\) should return array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\?\\: bool, dev\\-package\\-names\\: array\\<string\\>\\} but returns array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\?\\: bool, dev\\-package\\-names\\: array\\<string\\>\\}\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/InstalledJson.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Cleanup\\\\InstalledJson\\:\\:updateNamespaces\\(\\) should return array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\?\\: bool, dev\\-package\\-names\\: array\\<string\\>\\} but returns array\\{packages\\: array\\<array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\>, dev\\?\\: bool, dev\\-package\\-names\\: array\\<string\\>\\}\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/InstalledJson.php
-
-		-
-			message: "#^Offset 'autoload' does not exist on array\\{name\\: string, version\\: string, version_normalized\\: string, source\\: array\\{type\\: string, url\\: string, reference\\: string\\}, dist\\: array\\{type\\: string, url\\: string, reference\\: string, shasum\\: string\\}, require\\: array\\<string, string\\>, require\\-dev\\: array\\<string, string\\>, time\\: string, \\.\\.\\.\\}\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/InstalledJson.php
-
-		-
-			message: "#^Parameter \\#1 \\$string of function trim expects string, int\\<min, \\-1\\>\\|int\\<1, max\\>\\|string given\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/InstalledJson.php
-
-		-
-			message: "#^Parameter \\#2 \\$callback of function array_filter expects \\(callable\\(array\\{never\\}\\|string\\)\\: bool\\)\\|null, Closure\\(string\\)\\: bool given\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/InstalledJson.php
-
-		-
-			message: "#^Parameter \\#3 \\$subject of function str_replace expects array\\|string, int\\<min, \\-1\\>\\|int\\<1, max\\>\\|string given\\.$#"
-			count: 1
-			path: src/Pipeline/Cleanup/InstalledJson.php
-
-		-
 			message: "#^Parameter \\#2 \\$needle of function strpos expects string, string\\|null given\\.$#"
 			count: 1
 			path: src/Pipeline/FileEnumerator.php
-
-		-
-			message: "#^Parameter \\#2 \\$callback of function array_filter expects \\(callable\\(BrianHenryIE\\\\Strauss\\\\Files\\\\FileBase\\)\\: bool\\)\\|null, Closure\\(BrianHenryIE\\\\Strauss\\\\Files\\\\File\\)\\: bool given\\.$#"
-			count: 1
-			path: src/Pipeline/MarkSymbolsForRenaming.php
-
-		-
-			message: "#^Parameter \\#2 \\$callback of function array_reduce expects callable\\(bool, BrianHenryIE\\\\Strauss\\\\Files\\\\FileBase\\)\\: bool, Closure\\(bool, BrianHenryIE\\\\Strauss\\\\Files\\\\File\\)\\: bool given\\.$#"
-			count: 1
-			path: src/Pipeline/MarkSymbolsForRenaming.php
 
 		-
 			message: "#^Cannot access property \\$name on PhpParser\\\\Node\\\\Name\\|null\\.$#"
@@ -219,13 +179,3 @@ parameters:
 			message: "#^Parameter \\#3 \\$subject of function preg_replace_callback expects array\\|string, string\\|null given\\.$#"
 			count: 1
 			path: src/Pipeline/Prefixer.php
-
-		-
-			message: "#^Property PhpParser\\\\Node\\\\Name\\:\\:\\$name \\(non\\-empty\\-string\\) does not accept string\\.$#"
-			count: 1
-			path: src/Pipeline/Prefixer.php
-
-		-
-			message: "#^Method BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbols\\:\\:getDiscoveredClasses\\(\\) should return array\\<string, BrianHenryIE\\\\Strauss\\\\Types\\\\ClassSymbol\\> but returns array\\<int, string\\>\\.$#"
-			count: 1
-			path: src/Types/DiscoveredSymbols.php
