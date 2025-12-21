@@ -648,7 +648,9 @@ class Prefixer
                 }
                 if ($node instanceof \PhpParser\Node\Stmt\Use_) {
                     foreach ($node->uses as $use) {
-                        $use->name->name = ltrim($use->name->name, '\\');
+                        $use->name->name = ltrim($use->name->name, '\\') ?: (function () {
+                            throw new Exception('$use->name->name was empty');
+                        })();
                         $this->using[] = $use->name->name;
                     }
                     $this->lastNode = $node;

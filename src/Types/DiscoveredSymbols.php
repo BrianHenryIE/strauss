@@ -168,7 +168,7 @@ class DiscoveredSymbols
     }
 
     /**
-     * @return array<string, ClassSymbol>
+     * @return string[]
      */
     public function getDiscoveredClasses(?string $classmapPrefix = ''): array
     {
@@ -254,7 +254,7 @@ class DiscoveredSymbols
     public function getClassmapSymbols(): array
     {
         return array_merge(
-            $this->getDiscoveredClasses(),
+            $this->getGlobalClasses(),
             $this->getDiscoveredInterfaces(),
             $this->getDiscoveredTraits(),
         );

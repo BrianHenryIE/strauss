@@ -80,12 +80,12 @@ class MarkSymbolsForRenaming
 
         $sourceFiles = array_filter(
             $symbol->getSourceFiles(),
-            fn (File $file) => basename($file->getVendorRelativePath()) !== 'composer.json'
+            fn (FileBase $file) => basename($file->getVendorRelativePath()) !== 'composer.json'
         );
 
         return array_reduce(
             $sourceFiles,
-            fn(bool $carry, File $fileBase) => $carry && $fileBase->isAutoloaded(),
+            fn(bool $carry, FileBase $fileBase) => $carry && $fileBase->isAutoloaded(),
             true
         );
     }

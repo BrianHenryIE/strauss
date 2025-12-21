@@ -65,11 +65,6 @@ class FileWithDependency extends File implements HasDependency
         return in_array('files', $this->autoloaderTypes, true);
     }
 
-    public function getVendorRelativePath(): string
-    {
-        return $this->vendorRelativePath;
-    }
-
     public function getPackageRelativePath(): string
     {
         return $this->packageRelativePath;

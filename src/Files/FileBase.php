@@ -13,7 +13,11 @@ interface FileBase
 
     public function setAbsoluteTargetPath(string $absoluteTargetPath): void;
 
+    public function getVendorRelativePath(): string;
+
     public function isPhpFile(): bool;
+
+    public function isAutoloaded(): bool;
 
     public function setDoCopy(bool $doCopy): void;
 
