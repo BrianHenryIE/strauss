@@ -1,4 +1,4 @@
-# phpstan analyse --memory-limit=-1 --level 6
+# phpstan analyse --memory-limit=-1 --level 8 --verbose
 # phpstan analyse --memory-limit=-1 --level max --generate-baseline
 
 includes:
