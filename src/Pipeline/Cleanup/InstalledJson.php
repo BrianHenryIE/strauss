@@ -440,8 +440,7 @@ class InstalledJson
                         break;
                 }
             }
-//            $installedJsonArray['packages'][$key]['autoload'] = array_filter($autoload_key);
-            $installedJsonArray['packages'][$key]['autoload'] = $autoload_key;
+            $installedJsonArray['packages'][$key]['autoload'] = array_filter($autoload_key);
         }
 
         return $installedJsonArray;
