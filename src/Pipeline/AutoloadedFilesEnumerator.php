@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\ClassMapGenerator\ClassMapGenerator;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
@@ -41,6 +42,7 @@ class AutoloadedFilesEnumerator
 
     /**
      * Read the autoload keys of the dependencies and marks the appropriate files to be prefixed
+     * @throws FilesystemException
      */
     protected function scanPackage(ComposerPackage $dependency): void
     {

@@ -3,31 +3,47 @@
 namespace BrianHenryIE\Strauss\Types;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileBase;
 
+/**
+ * @phpstan-import-type TraitAliasArray from AutoloadAliasInterface
+ */
 class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
 {
+    /**
+     * @var string[]
+     */
     protected array $uses;
 
+    /**
+     * @param string $fqdnClassname
+     * @param FileBase $sourceFile
+     * @param ?string $namespace
+     * @param ?ComposerPackage $composerPackage
+     * @param ?string[] $uses
+     */
     public function __construct(
         string $fqdnClassname,
-        File $sourceFile,
+        FileBase $sourceFile,
         ?string $namespace = null,
         ?ComposerPackage $composerPackage = null,
         ?array $uses = null
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace, $composerPackage);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace ?? '\\', $composerPackage);
 
         $this->uses = (array) $uses;
     }
 
+    /**
+     * @return string[]
+     */
     public function getUses(): array
     {
         return $this->uses;
     }
 
     /**
-     * @return array{type:string,traitname:string,namespace:string,use:array<string>}
+     * @return TraitAliasArray
      */
     public function getAutoloadAliasArray(): array
     {

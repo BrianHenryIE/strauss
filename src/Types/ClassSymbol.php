@@ -2,27 +2,42 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
-use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileBase;
 
+/**
+ * @phpstan-import-type ClassAliasArray from AutoloadAliasInterface
+ */
 class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
 {
     protected ?string $extends;
     protected bool $isAbstract;
+
+    /**
+     * @var string[]
+     */
     protected array $interfaces;
 
+    /**
+     * @param string $fqdnClassname
+     * @param FileBase $sourceFile
+     * @param bool $isAbstract
+     * @param string $namespace
+     * @param ?string $extends
+     * @param string[] $interfaces
+     */
     public function __construct(
         string $fqdnClassname,
-        File $sourceFile,
+        FileBase $sourceFile,
         bool $isAbstract = false,
         string $namespace = '\\',
         ?string $extends = null,
-        ?array $interfaces = null
+        array $interfaces = []
     ) {
         parent::__construct($fqdnClassname, $sourceFile, $namespace);
 
         $this->isAbstract = $isAbstract;
         $this->extends = $extends;
-        $this->interfaces = (array) $interfaces;
+        $this->interfaces = $interfaces;
     }
 
     public function getExtends(): ?string
@@ -30,6 +45,9 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return $this->extends;
     }
 
+    /**
+     * @return string[]
+     */
     public function getInterfaces(): array
     {
         return $this->interfaces;
@@ -41,7 +59,7 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
     }
 
     /**
-     * @return array{type:string,classname:string,isabstract:bool,namespace:string,extends:string,implements:array<string>}
+     * @return ClassAliasArray
      */
     public function getAutoloadAliasArray(): array
     {

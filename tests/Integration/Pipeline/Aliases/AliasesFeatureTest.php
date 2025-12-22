@@ -27,7 +27,7 @@ class AliasesFeatureTest extends IntegrationTestCase
 {
   "name": "brianhenryie/aliasfeaturetest",
   "require": {
-    "psr/log": "*"
+    "psr/log": "1.1.4"
   },
   "require-dev": {
     "brianhenryie/color-logger": "*",
@@ -63,7 +63,7 @@ EOD;
          * `cat vendor/composer/autoload_aliases.php`
          */
         // TODO: This shows that the alias file does work.
-        exec('php -r "require_once \'vendor-prefixed/autoload.php\'; require_once \'vendor/composer/autoload_aliases.php\';  require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
+        exec('php -r "require_once \'vendor-prefixed/autoload.php\'; require_once \'vendor/composer/autoload_aliases.php\'; require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
         // TODO: This would show that running `composer dump-autoload` doesn't break the loading of the alias file.
 //        exec('php -r "require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
         $output = implode(PHP_EOL, $output);

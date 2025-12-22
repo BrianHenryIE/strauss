@@ -13,4 +13,9 @@ interface CleanupConfigInterface
     public function getTargetDirectory(): string;
 
     public function isDryRun(): bool;
+
+    /**
+     * The directory containing `composer.json`.
+     */
+    public function getProjectDirectory(): string;
 }

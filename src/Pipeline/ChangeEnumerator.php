@@ -114,8 +114,8 @@ class ChangeEnumerator
 
             // If we're a namespaced class, apply the fqdnchange.
             if ($symbol->getNamespace() !== '\\') {
-                $newNamespace = $discoveredNamespaces[$symbol->getNamespace()];
-                if ($newNamespace) {
+                if (isset($discoveredNamespaces[$symbol->getNamespace()])) {
+                    $newNamespace = $discoveredNamespaces[$symbol->getNamespace()];
                     $replacement = $this->determineNamespaceReplacement(
                         $newNamespace->getOriginalSymbol(),
                         $newNamespace->getReplacement(),

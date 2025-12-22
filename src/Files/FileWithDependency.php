@@ -28,8 +28,11 @@ class FileWithDependency extends File implements HasDependency
     {
         parent::__construct($sourceAbsolutePath, $vendorRelativePath);
 
+        /** @var string $packageAbsolutePath */
+        $packageAbsolutePath = $dependency->getPackageAbsolutePath();
+
         $this->vendorRelativePath = ltrim($vendorRelativePath, '/\\');
-        $this->packageRelativePath = str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsolutePath);
+        $this->packageRelativePath = str_replace($packageAbsolutePath, '', $sourceAbsolutePath);
 
         $this->dependency         = $dependency;
 
@@ -60,11 +63,6 @@ class FileWithDependency extends File implements HasDependency
     public function isFilesAutoloaderFile(): bool
     {
         return in_array('files', $this->autoloaderTypes, true);
-    }
-
-    public function getVendorRelativePath(): string
-    {
-        return $this->vendorRelativePath;
     }
 
     public function getPackageRelativePath(): string

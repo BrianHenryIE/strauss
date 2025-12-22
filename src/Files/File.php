@@ -117,7 +117,7 @@ class File implements FileBase
      */
     public function isDoDelete(): bool
     {
-        return $this->doDelete;
+        return (bool) $this->doDelete;
     }
 
     public function setDidDelete(bool $didDelete): void
