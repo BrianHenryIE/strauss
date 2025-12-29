@@ -160,7 +160,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger->info('Using: ' . $composerFilePath);
         }
 
-        $this->projectComposerPackage = new ProjectComposerPackage('/'.$composerFilePath);
+        $this->projectComposerPackage = new ProjectComposerPackage($composerFilePath);
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.
