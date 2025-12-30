@@ -333,4 +333,30 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     {
         return $this->normalizer->normalizePath($path);
     }
+
+    /**
+     * Normalize a path and ensure it's absolute.
+     *
+     * Flysystem's normalizer strips leading slashes because paths are relative to the adapter root.
+     * When we need paths for external use (Composer, realpath, etc.), they must be absolute.
+     *
+     * - On Unix: prepends '/' if not present
+     * - On Windows: paths already have drive letters (e.g., 'C:/...') so no prefix needed
+     */
+    public function makeAbsolute(string $path): string
+    {
+        $normalized = $this->normalizer->normalizePath($path);
+
+        // Windows paths start with drive letter (e.g., 'C:/' or 'D:\')
+        if (preg_match('/^[a-zA-Z]:/', $normalized)) {
+            return $normalized;
+        }
+
+        // Unix paths need leading slash
+        if (!str_starts_with($normalized, '/')) {
+            return '/' . $normalized;
+        }
+
+        return $normalized;
+    }
 }
