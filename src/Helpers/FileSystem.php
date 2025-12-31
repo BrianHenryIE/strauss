@@ -45,6 +45,19 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     }
 
     /**
+     * Normalize directory separators to forward slashes.
+     *
+     * PHP native functions (realpath, getcwd, dirname) return backslashes on Windows,
+     * but Flysystem always uses forward slashes. This method ensures consistency.
+     *
+     * Accepts null to preserve original str_replace() behavior where null is treated as empty string.
+     */
+    public static function normalizeDirSeparator(?string $path): string
+    {
+        return str_replace('\\', '/', $path ?? '');
+    }
+
+    /**
      * @param string[] $fileAndDirPaths
      *
      * @return string[]
@@ -70,7 +83,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
 
             $f = array_map(
-                fn(StorageAttributes $attributes): string => '/'.$attributes->path(),
+                fn(StorageAttributes $attributes): string => $this->makeAbsolute($attributes->path()),
                 $fileAttributesArray
             );
 
@@ -314,8 +327,13 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     public function isSymlinkedFile(FileBase $file): bool
     {
         $realpath = realpath($file->getSourcePath());
+        if ($realpath === false) {
+            return true; // Assume symlink if realpath fails
+        }
+        $realpath = self::normalizeDirSeparator($realpath);
+        $workingDir = self::normalizeDirSeparator($this->workingDir);
 
-        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
+        return ! str_starts_with($realpath, $workingDir);
     }
 
     /**
