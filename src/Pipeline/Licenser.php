@@ -154,7 +154,7 @@ class Licenser
                 ->filter(fn (StorageAttributes $attributes) => $attributes->isFile());
             /** @var FileAttributes $file */
             foreach ($files as $file) {
-                $filePath = '/' . $file->path();
+                $filePath = $this->filesystem->makeAbsolute($file->path());
 
                 // If packages happen to have their vendor dir, i.e. locally required packages, don't included the licenses
                 // from their vendor dir (they should be included otherwise anyway).

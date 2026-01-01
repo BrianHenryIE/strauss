@@ -45,6 +45,19 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     }
 
     /**
+     * Normalize directory separators to forward slashes.
+     *
+     * PHP native functions (realpath, getcwd, dirname) return backslashes on Windows,
+     * but Flysystem always uses forward slashes. This method ensures consistency.
+     *
+     * Accepts null to preserve original str_replace() behavior where null is treated as empty string.
+     */
+    public static function normalizeDirSeparator(?string $path): string
+    {
+        return str_replace('\\', '/', $path ?? '');
+    }
+
+    /**
      * @param string[] $fileAndDirPaths
      *
      * @return string[]
@@ -70,7 +83,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
 
             $f = array_map(
-                fn(StorageAttributes $attributes): string => '/'.$attributes->path(),
+                fn(StorageAttributes $attributes): string => $this->makeAbsolute($attributes->path()),
                 $fileAttributesArray
             );
 
@@ -314,8 +327,13 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     public function isSymlinkedFile(FileBase $file): bool
     {
         $realpath = realpath($file->getSourcePath());
+        if ($realpath === false) {
+            return true; // Assume symlink if realpath fails
+        }
+        $realpath = self::normalizeDirSeparator($realpath);
+        $workingDir = self::normalizeDirSeparator($this->workingDir);
 
-        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
+        return ! str_starts_with($realpath, $workingDir);
     }
 
     /**
@@ -332,5 +350,31 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     public function normalize(string $path): string
     {
         return $this->normalizer->normalizePath($path);
+    }
+
+    /**
+     * Normalize a path and ensure it's absolute.
+     *
+     * Flysystem's normalizer strips leading slashes because paths are relative to the adapter root.
+     * When we need paths for external use (Composer, realpath, etc.), they must be absolute.
+     *
+     * - On Unix: prepends '/' if not present
+     * - On Windows: paths already have drive letters (e.g., 'C:/...') so no prefix needed
+     */
+    public function makeAbsolute(string $path): string
+    {
+        $normalized = $this->normalizer->normalizePath($path);
+
+        // Windows paths start with drive letter (e.g., 'C:/' or 'D:\')
+        if (preg_match('/^[a-zA-Z]:/', $normalized)) {
+            return $normalized;
+        }
+
+        // Unix paths need leading slash
+        if (!str_starts_with($normalized, '/')) {
+            return '/' . $normalized;
+        }
+
+        return $normalized;
     }
 }

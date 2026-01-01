@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
@@ -142,9 +143,10 @@ class ComposerPackage
 
         $composerAbsoluteDirectoryPath = realpath(dirname($composerJsonFileAbsolute));
         if (false !== $composerAbsoluteDirectoryPath) {
+            $composerAbsoluteDirectoryPath = FileSystem::normalizeDirSeparator($composerAbsoluteDirectoryPath);
             $this->packageAbsolutePath = $composerAbsoluteDirectoryPath . '/';
         }
-        $composerAbsoluteDirectoryPath = $composerAbsoluteDirectoryPath ?: dirname($composerJsonFileAbsolute);
+        $composerAbsoluteDirectoryPath = $composerAbsoluteDirectoryPath ?: FileSystem::normalizeDirSeparator(dirname($composerJsonFileAbsolute));
 
         $currentWorkingDirectory = getcwd();
         if ($currentWorkingDirectory === false) {
@@ -153,12 +155,13 @@ class ComposerPackage
              */
             throw new Exception('Could not determine working directory. Please comment out ~'.__LINE__.' in ' . __FILE__.' and see does it work regardless.');
         }
+        $currentWorkingDirectory = FileSystem::normalizeDirSeparator($currentWorkingDirectory);
 
         /** @var string $vendorAbsoluteDirectoryPath */
         $vendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
         if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
             $this->relativePath = $this->packageName;
-            $this->packageAbsolutePath = realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName) . '/';
+            $this->packageAbsolutePath = FileSystem::normalizeDirSeparator(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) . '/';
         // If the package is symlinked, the path will be outside the working directory.
         } elseif (0 !== strpos($composerAbsoluteDirectoryPath, $currentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
             $this->relativePath = $output_array[1];
@@ -200,7 +203,7 @@ class ComposerPackage
      */
     public function getRelativePath(): ?string
     {
-        return is_null($this->relativePath) ? null : $this->relativePath . '/';
+        return is_null($this->relativePath) ? null : FileSystem::normalizeDirSeparator($this->relativePath) . '/';
     }
 
     public function getPackageAbsolutePath(): ?string
