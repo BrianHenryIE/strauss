@@ -236,7 +236,7 @@ class StraussConfig implements
 
             $rename->addMapping(StraussConfig::class, 'function_prefix', 'functionsPrefix');
 
-	        $rename->addMapping(StraussConfig::class, 'constant_prefix', 'constantsPrefix');
+            $rename->addMapping(StraussConfig::class, 'constant_prefix', 'constantsPrefix');
 
             $mapper->unshift($rename);
             $mapper->push(new CaseConversion(TextNotation::UNDERSCORE(), TextNotation::CAMEL_CASE()));
