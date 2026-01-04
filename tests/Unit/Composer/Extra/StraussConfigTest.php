@@ -1009,4 +1009,27 @@ EOD;
 
         $this->assertEquals('brianhenryie_strauss_function_prefix_not_set_', $result);
     }
+
+	public function testConstantPrefixIsMappedFromComposerExtra(): void
+	{
+		$composerExtraStraussJson = <<<'EOD'
+    {
+     "extra":{
+      "strauss": {
+       "constant_prefix": "ST_TEST_"
+      }
+     }
+    }
+    EOD;
+		$tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+		file_put_contents($tmpfname, $composerExtraStraussJson);
+
+		$composer = Factory::create(new NullIO(), $tmpfname);
+
+		$sut = new StraussConfig($composer);
+
+		$this->assertEquals('ST_TEST_', $sut->getConstantsPrefix());
+
+		unlink($tmpfname);
+	}
 }
