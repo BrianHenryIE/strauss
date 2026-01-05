@@ -218,7 +218,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         foreach ($this->flatDependencyTree as $dependency) {
             // Sort of duplicating the logic above.
             $dependency->setCopy(
-                !in_array($dependency, $this->config->getExcludePackagesFromCopy())
+                !in_array($dependency->getPackageName(), $this->config->getExcludePackagesFromCopy())
             );
 
             if ($this->config->isDeleteVendorPackages()) {
