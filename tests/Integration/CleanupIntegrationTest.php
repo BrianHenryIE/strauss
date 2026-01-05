@@ -68,7 +68,7 @@ EOD;
      * Packages in `exclude_from_copy.packages` should NOT be deleted when `delete_vendor_packages` is true.
      * They are excluded from copying, so they should remain in vendor/ for use by non-prefixed code.
      */
-    public function test_excluded_packages_not_deleted_when_delete_vendor_packages_enabled(): void
+    public function testExcludedPackagesNotDeletedWhenDeleteVendorPackagesEnabled(): void
     {
         $composerJsonString = <<<'EOD'
 {
