@@ -63,6 +63,9 @@ class FileSystemTest extends TestCase
      */
     public function testMakeAbsoluteAddsLeadingSlashForUnixPaths(): void
     {
+        // Use a Unix-style working directory to test Unix behavior
+        $unixWorkingDir = '/home/user/project/';
+        
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter('/'),
@@ -70,7 +73,7 @@ class FileSystemTest extends TestCase
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
             ),
-            __DIR__
+            $unixWorkingDir
         );
 
         // Simulate a path that's been through Flysystem's normalizer (no leading slash)
@@ -133,6 +136,9 @@ class FileSystemTest extends TestCase
      */
     public function testMakeAbsoluteRestoresLeadingSlashAfterNormalization(): void
     {
+        // Use a Unix-style working directory to test Unix behavior
+        $unixWorkingDir = '/home/user/project/';
+        
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter('/'),
@@ -140,7 +146,7 @@ class FileSystemTest extends TestCase
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
             ),
-            __DIR__
+            $unixWorkingDir
         );
 
         // Input has leading slash, but Flysystem normalizer will strip it
