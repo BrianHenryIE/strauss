@@ -24,7 +24,9 @@ class AutoloadTest extends TestCase
         /** @var FilesystemRegistry $registry */
         $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
 
-        $registry->unregister('mem');
+        if ($registry->has('mem')) {
+            $registry->unregister('mem');
+        }
     }
 
     /**

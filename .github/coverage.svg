@@ -1,21 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="99" height="20">
-    <linearGradient id="b" x2="0" y2="100%">
-        <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
-        <stop offset="1" stop-opacity=".1"/>
-    </linearGradient>
-    <mask id="a">
-        <rect width="99" height="20" rx="3" fill="#fff"/>
-    </mask>
-    <g mask="url(#a)">
-        <path fill="#555" d="M0 0h63v20H0z"/>
-        <path fill="#fe7d37" d="M63 0h36v20H63z"/>
-        <path fill="url(#b)" d="M0 0h99v20H0z"/>
-    </g>
-    <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
-        <text x="31.5" y="15" fill="#010101" fill-opacity=".3">coverage</text>
-        <text x="31.5" y="14">coverage</text>
-        <text x="80" y="15" fill="#010101" fill-opacity=".3">40%</text>
-        <text x="80" y="14">40%</text>
-    </g>
+<svg width="89.9" height="20" viewBox="0 0 899 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PHPUnit: 40%">
+  <title>PHPUnit: 40%</title>
+  <linearGradient id="a" x2="0" y2="100%">
+    <stop offset="0" stop-opacity=".1" stop-color="#EEE"/>
+    <stop offset="1" stop-opacity=".1"/>
+  </linearGradient>
+  <mask id="m"><rect width="899" height="200" rx="30" fill="#FFF"/></mask>
+  <g mask="url(#m)">
+    <rect width="539" height="200" fill="#555"/>
+    <rect width="360" height="200" fill="#E43" x="539"/>
+    <rect width="899" height="200" fill="url(#a)"/>
+  </g>
+  <g aria-hidden="true" fill="#fff" text-anchor="start" font-family="Verdana,DejaVu Sans,sans-serif" font-size="110">
+    <text x="60" y="148" textLength="439" fill="#000" opacity="0.25">PHPUnit</text>
+    <text x="50" y="138" textLength="439">PHPUnit</text>
+    <text x="594" y="148" textLength="260" fill="#000" opacity="0.25">40%</text>
+    <text x="584" y="138" textLength="260">40%</text>
+  </g>
+  
 </svg>
