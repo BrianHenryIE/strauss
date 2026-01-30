@@ -15,7 +15,7 @@ name: Code Coverage
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, ready_for_review, reopened]
   push:
     branches:
       - master
@@ -23,6 +23,7 @@ on:
       - '**.php'
       - 'composer.json'
       - '.github/workflows/codecoverage.yml'
+  workflow_dispatch:
 
 concurrency:
   # Cancel previous runs of this workflow if they are testing the same branch
