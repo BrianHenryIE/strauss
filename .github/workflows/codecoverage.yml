@@ -14,6 +14,8 @@ name: Code Coverage
 # @author BrianHenryIE
 
 on:
+  pull_request:
+    types: [opened, synchronize]
   push:
     branches:
       - master
@@ -27,66 +29,169 @@ concurrency:
   group: ${{ github.workflow }}-${{ (github.event_name == 'pull_request' && github.head_ref) || github.sha }}
   cancel-in-progress: true
 
+env:
+  COVERAGE_PHP_VERSION: '7.4'
+
 jobs:
   tests:
     runs-on: ubuntu-latest
 
+    permissions:
+      pull-requests: write # To add coverage comment
+      contents: write # To commit coverage badge & report
+
+    strategy:
+      matrix:
+        php: [ '7.4' ]
+
     steps:
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install PHP
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'
-          tools: composer:v2, phive
-          coverage: xdebug
+          php-version: ${{ matrix.php }}
+          coverage: ${{ matrix.php == env.COVERAGE_PHP_VERSION && 'xdebug' || 'none' }}
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # Value already defaults to true, but `persist-credentials` is required to push new commits to the repository.
+          persist-credentials: true
 
       - name: Checkout GitHub Pages branch for code coverage report
-        uses: actions/checkout@v4
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }}
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: gh-pages
-          path: tests/_reports/html
+          path: gh-pages
+
+      # TODO: merge master into this branch and run tests against what master will become, not just the isolated branch.
+      # NB: how would that affect tj-actions/changed-files?
 
       - name: Install Phive tools
         uses: ngmy/phive-install-action@master
 
-      - name: Install dependencies
+      - name: Install PHP dependencies
         run: composer update --prefer-dist --verbose
 
-      - name: Print composer.lock
+      - name: Print composer.lock (for debug)
         run: cat composer.lock
 
-      - name: Clear previous code coverage
-        working-directory: tests/_reports/html
+      - name: Run tests without coverage
+        if: ${{ matrix.php != env.COVERAGE_PHP_VERSION }}
         run: |
-          rm -rf *
+          vendor/bin/phpunit ./tests/Unit/ --debug
 
-      - name: Generate code coverage
-        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover tests/_reports/clover.xml --coverage-html tests/_reports/html ./tests/Unit/
-
-      - name: Add code coverage output to gh-pages
-        working-directory: tests/_reports/html
+      - name: Run tests with coverage
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }} # We only need the coverage once
         run: |
-          touch .nojekyll
-          git add -- .nojekyll *
+          XDEBUG_MODE=coverage \
+            vendor/bin/phpunit \
+            --coverage-text \ 
+            --coverage-clover tests/_reports/clover.xml \
+            --coverage-html tests/_reports/html \
+            ./tests/Unit/ \
+            --debug
 
-      - name: Commit code coverage to gh-pages
-        uses: stefanzweifel/git-auto-commit-action@v5
+      # This makes the coverage percentage available in `{{ steps.coverage-percentage.outputs.coverage }}`.
+      - name: Check test coverage
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }}
+        uses: johanvanhelden/gha-clover-test-coverage-check@2543c79a701f179bd63aa14c16c6938c509b2cec # v1
+        id: coverage-percentage
         with:
-          repository: tests/_reports/html
+          percentage: 25
+          exit: false
+          filename: tests/_output/clover.xml
+          rounded-precision: "0"
+
+      - name: Generate the badge SVG image
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }}
+        uses: emibcn/badge-action@v2
+        id: badge
+        with:
+          label: 'PHPUnit'
+          status: ${{ format('{0}%', steps.coverage-percentage.outputs.coverage-rounded) }}
+          path: .github/coverage.svg
+          color: ${{ steps.coverage.outputs.coverage >= 90 && 'green'
+            || steps.coverage.outputs.coverage >= 80 && 'orange'
+            || 'red' }}
+
+      - name: Copy badge for PR comment display
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }}
+        run: cp .github/coverage.svg gh-pages/${{ github.sha }}/phpunit/coverage.svg
+
+      - name: Update root gh pages to redirect to commit for master
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION && github.ref == 'refs/heads/master' }}
+        run: |
+          echo '<script>window.location.href="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ github.sha }}/phpunit/html/index.html";</script><a href="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ github.sha }}/phpunit/html/index.html">Coverage at ${{ github.sha }}</a>' > gh-pages/index.html
+
+      # https://github.blog/news-insights/bypassing-jekyll-on-github-pages/
+      # https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll
+      - name: Disable Jekyll for GitHub Pages
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }}
+        run: |
+          if [ ! -f "gh-pages/.nojekyll" ]; then
+            touch gh-pages/.nojekyll
+          fi
+
+      - name: Commit HTML code coverage + badge to gh-pages
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }}
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          repository: gh-pages
           branch: gh-pages
-          commit_message: "🤖 Update code coverage to gh-pages"
-          commit_options: ""
-        env:
-          GITHUB_TOKEN: "${{ github.token }}"
+          commit_message: "🤖 Commit code coverage to gh-pages"
 
-      - name: Update README badge
-        run: vendor/bin/php-coverage-badger tests/_reports/clover.xml .github/coverage.svg
-
-      - name: Commit code coverage badge
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Commit code coverage badge to master/main
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION && github.ref == 'refs/heads/master' }}
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: "🤖 Update code coverage badge"
+          file_pattern: .github/coverage.svg
+          commit_message: "🤖 Commit code coverage badge"
 
+      - name: Get changed files
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION && github.event_name == 'pull_request' }}
+        id: changed-files
+        uses: tj-actions/changed-files@v47
+        with:
+          separator: ','
+          files: '**/**.php'
+
+      - name: Generate markdown report
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION && github.event_name == 'pull_request' }} # We only need it added once
+        run: |
+          vendor/bin/php-codecoverage-markdown \
+            --input-file gh-pages/${{ github.sha }}/phpunit/coveragephp.cov \
+            --covered-files=${{ steps.changed-files.outputs.all_changed_files }} \
+            --base-url ${{ format('https://{0}.github.io/{1}/{2}/phpunit/html/', github.repository_owner, github.event.repository.name, github.sha) }} \
+            --output-file coverage-report.md
+
+      - name: Add to the PR message
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION && github.event_name == 'pull_request' }}
+        run: |
+          echo "[![Project Code Coverage](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ github.sha }}/phpunit/coverage.svg)](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ github.sha }}/phpunit/html/index.html)" > coverage-comment-header.md
+          echo "${{ format('[project coverage report {0}%](https://{1}.github.io/{2}/{3}/phpunit/html/) @ {4}', steps.coverage-percentage.outputs.coverage-rounded, github.repository_owner, github.event.repository.name, github.sha, github.sha) }}" >> coverage-comment-header.md
+          echo "$(cat coverage-comment-header.md)" > coverage-comment.md
+          echo "" >> coverage-comment.md
+          echo "" >> coverage-comment.md
+          echo "$(cat coverage-report.md)" >> coverage-comment.md
+
+      - name: Add phpcov uncovered lines report to PR comment
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION && github.event_name == 'pull_request' }}
+        continue-on-error: true # `phpcov` can fail if there are no uncovered lines
+        run: |
+          BRANCHED_COMMIT=$(git rev-list origin..HEAD | tail -n 1);
+          echo "BRANCHED_COMMIT=$BRANCHED_COMMIT"
+          git diff $BRANCHED_COMMIT...${{ github.event.pull_request.head.sha }} > branch.diff
+          cat branch.diff
+          OUTPUT=${vendor/bin/phpcov patch-coverage --path-prefix $(pwd) ./gh-pages/${{ github.event.pull_request.head.sha }}/phpunit/phpunit.cov branch.diff || true}
+          echo $OUTPUT
+          echo "" >> coverage-comment.md
+          echo "$OUTPUT" >> coverage-comment.md
+
+      - name: Comment on PR
+        uses: mshick/add-pr-comment@v2
+        if: ${{ matrix.php == env.COVERAGE_PHP_VERSION && github.event_name == 'pull_request' }} # We only need it added once
+        with:
+          message-id: coverage-report
+          message-path: coverage-comment.md
+        continue-on-error: true # When a PR is opened by a non-member, there are no write permissions (and no access to secrets), so this step will always fail.
