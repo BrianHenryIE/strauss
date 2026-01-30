@@ -2,10 +2,12 @@ name: PHPStan Analysis
 
 on:
   pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
 #    branches: [ master ] # all PRs?
   push:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   phpstan:

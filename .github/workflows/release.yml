@@ -4,7 +4,6 @@ on:
   release:
     types: [published]
 
-
 concurrency:
   # Cancel previous runs of this workflow if they are testing the same branch
   group: ${{ github.workflow }}-${{ github.ref }}
