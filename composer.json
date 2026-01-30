@@ -53,7 +53,6 @@
         "brianhenryie/color-logger": "^1.2",
         "clue/phar-composer": "^1.2",
         "jaschilz/php-coverage-badger": "^2.0",
-        "mheap/phpunit-github-actions-printer": "^1.4",
         "mockery/mockery": "^1.6",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^1.10",
