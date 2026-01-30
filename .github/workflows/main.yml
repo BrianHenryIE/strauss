@@ -45,8 +45,8 @@ jobs:
           tools: composer:v2, phive
           extensions: fileinfo
 
-
       - name: Install Phive tools
+        if: ${{ github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.author_association == 'OWNER' }}
         # Keys taken from `phive status`
         # `phive status | grep -oE '[A-F0-9]{16}' | tr '\n' ',' | sed 's/,$//'`
         # sed -i "s|^\s*phive install --trust-gpg-keys .*| phive install --trust-gpg-keys $(phive status | grep -oE '[A-F0-9]{16}' | paste -sd,)|" .github/workflows/phpstan.yml
@@ -69,6 +69,12 @@ jobs:
           # Fix for rate limited GitHub API requests. See https://github.com/phar-io/phive/issues/384#issuecomment-1337064012
           GITHUB_AUTH_TOKEN: ${{ secrets.PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 }}
 
+      - name: Install Phive tools (unauthenticated)
+        # secrets are not available to users without write access
+        if: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' }}
+        run: |
+          phive install --trust-gpg-keys A9DB489A9190DE9B,4AA394086372C20A
+          phive status
 
       - name: Setup problem matcher for PHPUnit
         run: |
