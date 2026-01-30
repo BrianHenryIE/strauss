@@ -67,10 +67,8 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "@install-phive-dependencies"
         ],
         "post-update-cmd": [
-            "@install-phive-dependencies"
         ],
         "analyze": [
           "phpstan analyse --memory-limit=-1 --verbose"
