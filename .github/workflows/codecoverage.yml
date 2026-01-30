@@ -105,7 +105,7 @@ jobs:
 
       - name: Run tests with coverage
         if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }} # We only need the coverage once
-        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover tests/_reports/clover.xml --coverage-html tests/_reports/html ./tests/Unit/ --debug
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover tests/_output/clover.xml --coverage-html tests/_output/html ./tests/Unit/ --debug
 
       # This makes the coverage percentage available in `{{ steps.coverage-percentage.outputs.coverage }}`.
       - name: Check test coverage
