@@ -43,12 +43,7 @@ class IntegrationTestCase extends TestCase
 
         $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
 
-        $this->logger = new class extends ColorLogger {
-            public function debug($message, array $context = array())
-            {
-                // Mute debug.
-            }
-        };
+        $this->logger = new ColorLogger();
 
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
