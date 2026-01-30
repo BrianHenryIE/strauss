@@ -68,8 +68,30 @@ jobs:
       # TODO: merge master into this branch and run tests against what master will become, not just the isolated branch.
       # NB: how would that affect tj-actions/changed-files?
 
+
       - name: Install Phive tools
-        uses: ngmy/phive-install-action@master
+        # Keys taken from `phive status`
+        # `phive status | grep -oE '[A-F0-9]{16}' | tr '\n' ',' | sed 's/,$//'`
+        # sed -i "s|^\s*phive install --trust-gpg-keys .*| phive install --trust-gpg-keys $(phive status | grep -oE '[A-F0-9]{16}' | paste -sd,)|" .github/workflows/phpstan.yml
+        run: |
+          phive install --trust-gpg-keys A9DB489A9190DE9B,4AA394086372C20A
+          phive status
+        env:
+          # We need to be authenticated to skip GitHub rate limits
+          # Generate a key at: https://github.com/settings/tokens, "classic"
+          # Approve the 2FA notification on your phone (I presume/hope)
+          # "Note" what it is for, I use ~PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 etc.
+          # Choose "Expiration", "Custom"
+          # For "Select Date", the Expiration date can only be set ~364 days ahead
+          # No scopes are needed, scroll down and click "Generate Token"
+          # Copied the displayed key
+          # Visit https://github.com/your/repo/settings/secrets/actions
+          # Click "New repository secret" and fill it in
+          # Do the same at https://github.com/your/repo/settings/secrets/dependabot
+          #
+          # Fix for rate limited GitHub API requests. See https://github.com/phar-io/phive/issues/384#issuecomment-1337064012
+          GITHUB_AUTH_TOKEN: ${{ secrets.PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 }}
+
 
       - name: Install PHP dependencies
         run: composer update --prefer-dist --verbose
