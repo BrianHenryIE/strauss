@@ -26,8 +26,8 @@ jobs:
           php-version: 7.4
           tools: composer:v2, phive
 
-
       - name: Install Phive tools
+        if: ${{ secrets.PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 }} # secrets are not available to users without write access
         # Keys taken from `phive status`
         # `phive status | grep -oE '[A-F0-9]{16}' | tr '\n' ',' | sed 's/,$//'`
         # sed -i "s|^\s*phive install --trust-gpg-keys .*| phive install --trust-gpg-keys $(phive status | grep -oE '[A-F0-9]{16}' | paste -sd,)|" .github/workflows/phpstan.yml
@@ -45,13 +45,16 @@ jobs:
           # Copied the displayed key
           # Visit https://github.com/your/repo/settings/secrets/actions
           # Click "New repository secret" and fill it in
-          # `gh secret set SECRET_NAME --body "your-token-value" --repo your/repo`
           # Do the same at https://github.com/your/repo/settings/secrets/dependabot
-          # `gh secret set SECRET_NAME --body "your-token-value" --repo your/repo --app dependabot`
           #
           # Fix for rate limited GitHub API requests. See https://github.com/phar-io/phive/issues/384#issuecomment-1337064012
           GITHUB_AUTH_TOKEN: ${{ secrets.PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 }}
 
+      - name: Install Phive tools (unauthenticated)
+        if: ${{ !secrets.PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 }} # secrets are not available to users without write access
+        run: |
+          phive install --trust-gpg-keys A9DB489A9190DE9B,4AA394086372C20A
+          phive status
 
       - name: Install dependencies
         run: composer install --no-dev --prefer-dist --no-progress
