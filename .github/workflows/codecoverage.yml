@@ -92,7 +92,6 @@ jobs:
           # Fix for rate limited GitHub API requests. See https://github.com/phar-io/phive/issues/384#issuecomment-1337064012
           GITHUB_AUTH_TOKEN: ${{ secrets.PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 }}
 
-
       - name: Install PHP dependencies
         run: composer update --prefer-dist --verbose
 
@@ -106,14 +105,7 @@ jobs:
 
       - name: Run tests with coverage
         if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }} # We only need the coverage once
-        run: |
-          XDEBUG_MODE=coverage \
-            vendor/bin/phpunit \
-            --coverage-text \ 
-            --coverage-clover tests/_reports/clover.xml \
-            --coverage-html tests/_reports/html \
-            ./tests/Unit/ \
-            --debug
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover tests/_reports/clover.xml --coverage-html tests/_reports/html ./tests/Unit/ --debug
 
       # This makes the coverage percentage available in `{{ steps.coverage-percentage.outputs.coverage }}`.
       - name: Check test coverage
