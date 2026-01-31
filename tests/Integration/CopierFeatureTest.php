@@ -54,7 +54,7 @@ class CopierFeatureTest extends IntegrationTestCase
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -99,7 +99,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -143,12 +143,12 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
         // Store original file content
-        $originalContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $originalContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
@@ -157,7 +157,7 @@ EOD;
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed');
         
         // Verify files are modified in place (namespaces prefixed)
-        $modifiedContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $modifiedContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Test\\Copier\\Psr\\Log', $modifiedContent);
         $this->assertNotEquals($originalContent, $modifiedContent);
     }
@@ -191,7 +191,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -241,7 +241,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -287,7 +287,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -336,7 +336,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -386,7 +386,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -434,12 +434,12 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
         // Store original file content
-        $originalContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $originalContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
@@ -448,7 +448,7 @@ EOD;
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log');
         
         // Verify original files remain unchanged (not prefixed)
-        $currentContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $currentContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertEquals($originalContent, $currentContent);
         $this->assertStringNotContainsString('namespace Test\\Copier\\Psr\\Log', $currentContent);
     }
@@ -479,7 +479,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -524,7 +524,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -537,10 +537,10 @@ EOD;
         
         // Modify the target file to test overwriting
         $testContent = "<?php\n// This is a test modification\nnamespace Test\\Modified;";
-        file_put_contents($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php', $testContent);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php', $testContent);
         
         // Verify our modification is there
-        $modifiedContent = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $modifiedContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('This is a test modification', $modifiedContent);
 
         // Run Strauss again
@@ -548,7 +548,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify the file was overwritten (our modification is gone)
-        $newContent = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $newContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringNotContainsString('This is a test modification', $newContent);
         $this->assertStringContainsString('namespace Test\\Copier\\Psr\\Log', $newContent);
     }
@@ -578,7 +578,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -628,7 +628,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -706,7 +706,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonRelative);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonRelative);
 
         exec('composer install');
 
@@ -739,7 +739,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonAbsolute);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonAbsolute);
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
@@ -779,7 +779,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -821,7 +821,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -869,7 +869,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -912,7 +912,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 

@@ -109,7 +109,7 @@ class AutoloadedFilesEnumerator
                 case 'classmap':
                     $autoloadKeyPaths = array_map(
                         fn(string $path) =>
-                            '/'. $this->filesystem->normalize(
+                            $this->filesystem->makeAbsolute(
                                 $dependencyPackageAbsolutePath . $path
                             ),
                         (array)$value

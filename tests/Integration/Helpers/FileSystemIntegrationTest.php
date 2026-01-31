@@ -53,9 +53,9 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         $file3 = $dir . '/subdir/file3.php';
 
-        file_put_contents($file1, 'file1');
-        file_put_contents($file2, 'file2');
-        file_put_contents($file3, 'file3');
+        $this->getFileSystem()->write($file1, 'file1');
+        $this->getFileSystem()->write($file2, 'file2');
+        $this->getFileSystem()->write($file3, 'file3');
 
         $files = $fs->findAllFilesAbsolutePaths([ $dir ]);
 

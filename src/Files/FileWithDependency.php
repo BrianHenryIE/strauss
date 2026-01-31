@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 
 class FileWithDependency extends File implements HasDependency
 {
@@ -32,7 +33,11 @@ class FileWithDependency extends File implements HasDependency
         $packageAbsolutePath = $dependency->getPackageAbsolutePath();
 
         $this->vendorRelativePath = ltrim($vendorRelativePath, '/\\');
-        $this->packageRelativePath = str_replace($packageAbsolutePath, '', $sourceAbsolutePath);
+        $this->packageRelativePath = str_replace(
+            FileSystem::normalizeDirSeparator($packageAbsolutePath),
+            '',
+            FileSystem::normalizeDirSeparator($sourceAbsolutePath)
+        );
 
         $this->dependency         = $dependency;
 

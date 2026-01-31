@@ -47,7 +47,7 @@ class MozartIssue93Test extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -56,7 +56,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir .'strauss/brianhenryie/wp-logger/src/class-logger.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'strauss/brianhenryie/wp-logger/src/class-logger.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BrianHenryIE_Strauss_Logger extends', $php_string);

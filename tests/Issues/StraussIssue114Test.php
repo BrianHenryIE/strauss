@@ -47,14 +47,14 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/Configuration/ConfigurationResolver.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/Configuration/ConfigurationResolver.php');
 
         self::assertStringNotContainsString('@\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);', $php_string);
         self::assertStringContainsString('@\Company\Project\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);', $php_string);
