@@ -146,6 +146,7 @@
     "config": {
         "sort-packages": true,
         "allow-plugins": {
+            "brianhenryie/composer-prefer-local": true,
             "phpstan/extension-installer": true
         }
     }
