@@ -59,12 +59,7 @@ EOD;
 
         $fileEnumerator = new FileEnumerator(
             $config,
-            new Filesystem(
-                new \League\Flysystem\Filesystem(
-                    new LocalFilesystemAdapter('/')
-                ),
-                $this->testsWorkingDir
-            ),
+            $this->getFileSystem(),
             $this->getLogger()
         );
 

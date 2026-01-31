@@ -63,20 +63,15 @@ EOD;
 
         $fileEnumerator = new FileEnumerator(
             $config,
-            new Filesystem(
-                new \League\Flysystem\Filesystem(
-                    new LocalFilesystemAdapter('/')
-                ),
-                $this->testsWorkingDir
-            ),
+            $this->getFileSystem(),
             $this->getLogger()
         );
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $fileCopyScanner = new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
+        $fileCopyScanner = new FileCopyScanner($config, $this->getFileSystem());
         $fileCopyScanner->scanFiles($files);
 
-        $copier = new Copier($files, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir), new NullLogger());
+        $copier = new Copier($files, $config, $this->getFileSystem(), new NullLogger());
 
         $file = 'ContainerAwareTrait.php';
         $relativePath = 'league/container/src/';
@@ -135,19 +130,14 @@ EOD;
 
         $fileEnumerator = new FileEnumerator(
             $config,
-            new Filesystem(
-                new \League\Flysystem\Filesystem(
-                    new LocalFilesystemAdapter('/')
-                ),
-                $this->testsWorkingDir
-            ),
+            $this->getFileSystem(),
             $this->getLogger()
         );
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        (new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir)))->scanFiles($files);
+        (new FileCopyScanner($config, $this->getFileSystem()))->scanFiles($files);
 
-        $copier = new Copier($files, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir), new NullLogger());
+        $copier = new Copier($files, $config, $this->getFileSystem(), new NullLogger());
 
         $file = 'Client.php';
         $relativePath = 'google/apiclient/src/';
@@ -170,13 +160,6 @@ EOD;
      */
     protected function createComposer(): void
     {
-//        parent::setUp();
-
-        $this->testsWorkingDir = __DIR__ . '/temptestdir/';
-        if (!file_exists($this->testsWorkingDir)) {
-            mkdir($this->testsWorkingDir);
-        }
-
         $mozartConfig = new stdClass();
         $mozartConfig->dep_directory = "/dep_directory/";
         $mozartConfig->classmap_directory = "/classmap_directory/";

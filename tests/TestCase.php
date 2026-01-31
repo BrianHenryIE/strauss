@@ -68,27 +68,36 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
-    protected function getFileSystem(): Filesystem {
+    protected function getFileSystem(): Filesystem
+    {
 
         if (!isset($this->filesystem)) {
-            $localFilesystemAdapter = new LocalFilesystemAdapter(
-                '/',
-                null,
-                LOCK_EX,
-                LocalFilesystemAdapter::SKIP_LINKS
-            );
-
-            $this->filesystem = new FileSystem(
-                new \League\Flysystem\Filesystem(
-                    $localFilesystemAdapter,
-                    [
-                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ]
-                ),
-                '/'
-            );
+            $this->filesystem = $this->getNewFileSystem();
         }
         return $this->filesystem;
+    }
+
+    protected function getNewFileSystem(): Filesystem
+    {
+        $localFilesystemAdapter = new LocalFilesystemAdapter(
+            '/',
+            null,
+            LOCK_EX,
+            LocalFilesystemAdapter::SKIP_LINKS
+        );
+
+        $normalizer = new WhitespacePathNormalizer();
+
+        return new FileSystem(
+            new \League\Flysystem\Filesystem(
+                $localFilesystemAdapter,
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
+                $normalizer
+            ),
+            isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd()
+        );
     }
 
     /**

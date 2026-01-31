@@ -151,12 +151,7 @@ class IntegrationTestCase extends TestCase
         if (!file_exists($dir)) {
             return;
         }
-        $filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
-        );
+        $filesystem = $this->getFileSystem();
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
         $isSymlink = function ($file) use ($symfonyFilesystem) {
