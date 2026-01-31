@@ -22,7 +22,7 @@ on:
 
 concurrency:
   # Cancel previous runs of this workflow if they are testing the same branch
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ (github.event_name == 'pull_request' && github.head_ref) || github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -87,7 +87,7 @@ jobs:
           composer --version
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --verbose
 
       - name: Run tests
         run: vendor/bin/phpunit --stop-on-failure --order-by=random
@@ -135,7 +135,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          tools: composer, cs2pr, phive
+          tools: composer:v2, cs2pr, phive
 
       - name: Install Phive tools
         if: ${{ github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.author_association == 'OWNER' }} # secrets are not available to users without write access

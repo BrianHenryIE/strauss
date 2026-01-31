@@ -97,5 +97,7 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
         $this->logger->notice('Loading composer.json config...');
 
         $this->config = $this->projectComposerPackage->getStraussConfig();
+        $config = new StraussConfig();
+        $config->setProjectDirectory(getcwd());
     }
 }

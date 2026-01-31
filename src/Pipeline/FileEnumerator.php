@@ -101,17 +101,21 @@ class FileEnumerator
             return;
         }
 
-        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getVendorDirectory());
-
         if ($dependency) {
-            $vendorRelativePath = substr(
-                $sourceAbsoluteFilepath,
-                strpos($sourceAbsoluteFilepath, $dependency->getRelativePath()) ?: 0
+//        $isOutsideProjectDir = $this->filesystem->normalize($dependency->getRealPath())
+//                               !== $this->filesystem->normalize($dependency->getPackageAbsolutePath());
+
+            $isOutsideProjectDir = str_starts_with($dependency->getPackageAbsolutePath(), $this->config->getVendorDirectory());
+
+            $vendorRelativePath = $this->filesystem->getRelativePath(
+                $this->config->getVendorDirectory(),
+                $sourceAbsoluteFilepath
             );
 
             /** @var string $dependencyPackageAbsolutePath */
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
             if ($vendorRelativePath === $sourceAbsoluteFilepath) {
+                $vendorRelativePath = $dependency->getVendorSubdir() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
                 $vendorRelativePath = $dependency->getRelativePath() . str_replace(
                     FileSystem::normalizeDirSeparator($dependencyPackageAbsolutePath),
                     '',
@@ -123,21 +127,15 @@ class FileEnumerator
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
                 ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
 
-            $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
+//            $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
+            $f->setAbsoluteTargetPath($this->config->getTargetDirectory() . $vendorRelativePath);
 
             $autoloaderType && $f->addAutoloader($autoloaderType);
+            //         $f->setDoDelete(!$isOutsideProjectDir);
             $f->setDoDelete($isOutsideProjectDir);
         } else {
-            $vendorRelativePath = str_replace(
-                FileSystem::normalizeDirSeparator($this->config->getVendorDirectory()),
-                '',
-                FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath)
-            );
-            $vendorRelativePath = str_replace(
-                FileSystem::normalizeDirSeparator($this->config->getTargetDirectory()),
-                '',
-                $vendorRelativePath
-            );
+            $vendorRelativePath = str_replace($this->config->getVendorDirectory(), '', $sourceAbsoluteFilepath);
+            $vendorRelativePath = str_replace($this->config->getTargetDirectory(), '', $vendorRelativePath);
 
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
                  ?? new File($sourceAbsoluteFilepath, $vendorRelativePath);

@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
@@ -19,6 +20,7 @@ use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -86,6 +88,11 @@ class ReplaceCommand extends AbstractRenamespacerCommand
             getcwd()
         );
 
+        // TODO: permissions?
+        $this->filesystem = new Filesystem(
+            new LocalFilesystemAdapter('/')
+        );
+
         parent::configure();
     }
 
@@ -131,6 +138,9 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     protected function updateConfigFromCli(InputInterface $input): void
     {
         $this->logger->notice('Loading cli config...');
+
+        $config = new StraussConfig();
+        $config->setProjectDirectory(getcwd());
 
         /** @var string $inputFrom */
         $inputFrom = $input->getOption('from');

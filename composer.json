@@ -15,13 +15,19 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "license": "MIT",
+    "repositories": {
+        "composer/composer": {
+            "type": "vcs",
+            "url": "https://github.com/brianhenryie/composer"
+        }
+    },
     "require": {
         "ext-json": "*",
         "brianhenryie/simple-php-code-parser": "^0.15.3",
-        "composer-runtime-api": "^2.0",
         "composer/class-map-generator": "^1.6.0",
-        "composer/composer": "^2.6.0",
-        "elazar/flystream": "^0.5.0|^1",
+        "composer/composer": "dev-main#598e88e43cb5f9d6d2bf444b911cee532fa6d428",
+        "composer-runtime-api": "^2.0",
+        "elazar/flystream": "^0.6.0|^1.4",
         "json-mapper/json-mapper": "^2.0.0",
         "league/flysystem": "^2.1|^3.0",
         "league/flysystem-memory": "*",
@@ -62,6 +68,16 @@
         "phpunit/phpunit": "^9|^10",
         "squizlabs/php_codesniffer": "^3.5"
     },
+    "extra": {
+        "patches": {
+            "composer/composer": {
+                "Improve stream wrapper support": "https://github.com/composer/composer/pull/12396.patch"
+            },
+            "elazar/flystream": {
+                "Catch exceptions; return false ": "https://github.com/elazar/flystream/pull/17.patch"
+            }
+        }
+    },
     "conflict": {
       "json-mapper/json-mapper": "2.23.0 | 2.24.0"
     },
@@ -83,11 +99,6 @@
           "phpcs || true",
           "@analyze"
         ],
-        "cs-fix": [
-          "phpcbf || true",
-          "phpcs || true",
-          "@analyze"
-        ],
         "cs-changes": [
           "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
           "@analyze-changes"
@@ -96,6 +107,10 @@
           "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
           "@analyze-changes-strict"
         ],
+        "cs-fix": [
+            "phpcbf || true",
+            "@cs"
+        ],
         "install-phive-dependencies": [
             "if [ -z \"$(command -v phive)\" ]; then echo \"Phive is not installed. Run 'brew install gpg phive' or see https://phar.io/.\"; exit 1; fi;",
             "phive install"
@@ -103,21 +118,6 @@
         "test": [
             "Composer\\Config::disableProcessTimeout",
             "phpunit --stop-on-failure --order-by=random"
-        ],
-        "test-changes": [
-            "if [ -z \"$(command -v ./tools/php-diff-test)\" ]; then echo \"Please install 'php-diff-test' with 'phive install'.\"; exit 1; fi;",
-            "if [ \"$XDEBUG_MODE\" != \"coverage\" ]; then echo 'Run with XDEBUG_MODE=coverage composer test-changes'; exit 1; fi;",
-            "phpunit --filter=\"$(./tools/php-diff-test filter --input-files tests/_reports/php.cov --granularity=line)\" --coverage-text;"
-        ],
-        "test-changes-report": [
-            "if [ -z \"$(command -v ./tools/php-diff-test)\" ]; then echo \"Please install 'php-diff-test' with 'phive install'.\"; exit 1; fi;",
-            "if [ -z \"$(command -v ./tools/phpcov)\" ]; then echo \"Please install 'phpcov' with 'phive install'.\"; exit 1; fi;",
-            "if [ \"$XDEBUG_MODE\" != \"coverage\" ]; then echo 'Run with XDEBUG_MODE=coverage composer test-changes-report'; exit 1; fi;",
-            "if [ -d \"tests/_reports/diff\" ]; then rm -rf tests/_reports/diff; fi;",
-            "phpunit --filter=\"$(./tools/php-diff-test filter --input-files tests/_reports/php.cov --granularity file)\" --coverage-text --coverage-php tests/_reports/diff/php.cov -d memory_limit=-1;",
-            "./tools/php-diff-test coverage --input-files tests/_reports/diff/php.cov --output-file tests/_reports/diff/php.cov;",
-            "./tools/phpcov merge tests/_reports/diff --html tests/_reports/diff/html;",
-            "open tests/_reports/diff/html/index.html"
         ],
         "test-coverage": [
             "Composer\\Config::disableProcessTimeout",

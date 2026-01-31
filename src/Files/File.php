@@ -101,7 +101,8 @@ class File implements FileBase
     }
 
     /**
-     * Used to mark files that are symlinked as not-to-be-deleted.
+     * For marking moved files to be deleted when delete_vendor_files is enabled. (should that be deprecated?)
+     * For marking files that are symlinked as not-to-be-deleted.
      *
      * @param bool $doDelete
      */
@@ -120,6 +121,9 @@ class File implements FileBase
         return (bool) $this->doDelete;
     }
 
+    /**
+     * @see Cleanup::doIsDeleteVendorFiles()
+     */
     public function setDidDelete(bool $didDelete): void
     {
         $this->didDelete = $didDelete;

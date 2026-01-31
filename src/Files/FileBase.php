@@ -28,6 +28,7 @@ interface FileBase
     public function isDoPrefix(): bool;
 
     /**
+     * Used to mark files that should be deleted after moving when `delete_vendor_files` is enabled.
      * Used to mark files that are symlinked as not-to-be-deleted.
      *
      * @param bool $doDelete

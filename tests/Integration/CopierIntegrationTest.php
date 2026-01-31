@@ -9,7 +9,7 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 use stdClass;
@@ -51,7 +51,9 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
@@ -118,7 +120,9 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';

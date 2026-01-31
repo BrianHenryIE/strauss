@@ -93,6 +93,16 @@ class DependenciesEnumerator
     {
         $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
 
+        $installedJsonPath = sprintf("%scomposer/installed.json", $this->config->getVendorDirectory());
+        $installedJsonPath = $this->filesystem->normalize($installedJsonPath);
+        $installedJsonPath = $this->filesystem->prefixPath($installedJsonPath);
+        $installedJsonTxt = $this->filesystem->read($installedJsonPath);
+        $installedJson = json_decode($installedJsonTxt, true);
+        $installedJsonPackages = [];
+        foreach ($installedJson['packages'] as $package) {
+            $installedJsonPackages[$package['name']] = $package;
+        }
+
         foreach ($requiredPackageNames as $requiredPackageName) {
             // Avoid infinite recursion.
             if (isset($this->flatDependencyTree[$requiredPackageName])) {
@@ -104,12 +114,15 @@ class DependenciesEnumerator
                 $this->config->getVendorDirectory(),
                 $requiredPackageName
             );
-            $packageComposerFile = str_replace('mem://', '/', $packageComposerFile);
+            $packageComposerFile = $this->filesystem->normalize($packageComposerFile);
 
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
             if ($this->filesystem->fileExists($packageComposerFile)) {
-                $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
+                $requiredComposerPackage = ComposerPackage::fromFile(
+                    $this->filesystem->prefixPath($packageComposerFile),
+                    $overrideAutoload
+                );
             } else {
                 // Some packages download with NO `composer.json`! E.g. woocommerce/action-scheduler.
                 // Some packages download to a different directory than the package name.
@@ -162,6 +175,22 @@ class DependenciesEnumerator
 
                 $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
             }
+
+            $installedPackage = $installedJsonPackages[$requiredPackageName];
+            if (isset($installedPackage['dist'], $installedPackage['dist']['type']) && $installedPackage['dist']['type'] === 'path') {
+                $path = $installedPackage['dist']['url'];
+
+                $packageRealPath = $this->filesystem->normalize($this->config->getProjectDirectory() . $path);
+                $requiredComposerPackage->setRealpath(
+                    $packageRealPath
+                );
+            }
+            unset($installedPackage);
+            $requiredComposerPackage->setProjectVendorDirectory(
+                $this->filesystem->normalize(
+                    $this->config->getVendorDirectory()
+                )
+            );
 
             $this->logger->info('Analysing package ' . $requiredComposerPackage->getPackageName());
             $this->flatDependencyTree[$requiredComposerPackage->getPackageName()] = $requiredComposerPackage;

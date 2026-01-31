@@ -105,10 +105,9 @@ abstract class AbstractRenamespacerCommand extends Command
             $this->filesystem =
                 new FileSystem(
                     new ReadOnlyFileSystem(
-                        $this->filesystem,
+                        $this->filesystem->getAdapter(),
                         $normalizer
-                    ),
-                    $this->workingDir
+                    )
                 );
 
             /** @var FilesystemRegistry $registry */

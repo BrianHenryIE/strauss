@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Autoload;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use Composer\Autoload\AutoloadGenerator;
 
 class DumpAutoloadFeatureTest extends IntegrationTestCase

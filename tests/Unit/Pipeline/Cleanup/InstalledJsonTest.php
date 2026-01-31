@@ -145,8 +145,8 @@ EOD;
         $fileSystem->createDirectory('vendor/psr/container/src');
 
         $config = Mockery::mock(CleanupConfigInterface::class);
-        $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
-//        $config->expects('getTargetDirectory')->times(1)->andReturn('mem://vendor-prefixed/');
+        $config->expects()->getVendorDirectory()->atLeast()->once()->andReturn('vendor/');
+//        $config->expects()->getTargetDirectory()->times(1)->andReturn('vendor-prefixed/');
 
         $sut = new InstalledJson(
             $config,

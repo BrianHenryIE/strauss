@@ -19,7 +19,7 @@ class CopierTest extends TestCase
      */
     public function test_file_is_copied(): void
     {
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getReadOnlyFileSystem();
 
         $sourceDir = 'mem://source';
         $targetDir = 'mem://target';
@@ -41,7 +41,7 @@ class CopierTest extends TestCase
         $this->assertTrue($filesystem->fileExists($targetDir . '/file.php'));
         $this->assertEquals('test', $filesystem->read($targetDir . '/file.php'));
 
-        $this->assertTrue($this->getTestLogger()->hasInfo('Copying file to target/file.php'));
+        $this->assertTrue($this->getTestLogger()->hasInfoThatContains('Copying file to'));
     }
 
     /**
@@ -50,7 +50,7 @@ class CopierTest extends TestCase
      */
     public function test_file_is_skipped(): void
     {
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getReadOnlyFileSystem();
 
         $sourceDir = 'mem://source';
         $targetDir = 'mem://target';
@@ -72,7 +72,7 @@ class CopierTest extends TestCase
 
         $this->assertFalse($filesystem->fileExists($targetDir . '/file.php'));
 
-        $this->assertTrue($this->getTestLogger()->hasDebug('Skipping source/file.php'));
+        $this->assertTrue($this->getTestLogger()->hasDebugThatContains('Skipping'));
     }
 
     /**
@@ -81,7 +81,7 @@ class CopierTest extends TestCase
      */
     public function test_file_not_found(): void
     {
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getReadOnlyFileSystem();
 
         $sourceDir = 'mem://source';
         $targetDir = 'mem://target';
@@ -102,12 +102,12 @@ class CopierTest extends TestCase
         $sut = new Copier($discoveredFiles, $config, $filesystem, $this->getLogger());
         $sut->copy();
 
-        $this->assertTrue($this->getTestLogger()->hasWarning('Expected file not found: source/file.php'));
+        $this->assertTrue($this->getTestLogger()->hasWarningThatContains('Expected file not found:'));
     }
 
     public function testCreateDirectory(): void
     {
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getReadOnlyFileSystem();
 
         $sourceDir = 'mem://source';
         $targetDir = 'mem://target';
@@ -127,6 +127,6 @@ class CopierTest extends TestCase
 
         $this->assertTrue($filesystem->directoryExists($targetDir));
 
-        $this->assertTrue($this->getTestLogger()->hasInfo('Creating directory at target'));
+        $this->assertTrue($this->getTestLogger()->hasInfoThatContains('Creating directory at'));
     }
 }

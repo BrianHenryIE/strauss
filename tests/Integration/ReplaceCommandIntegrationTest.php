@@ -9,8 +9,8 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues

@@ -5,9 +5,9 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
@@ -48,14 +48,16 @@ EOD;
         // Only one because we haven't run "flat dependency list".
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $a = ComposerPackage::fromFile($composerFile);
+            $a->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
+            return $a;
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
         $vendorDir = 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getVendorDirectory')->willReturn($vendorDir);
+        $config->method('getVendorDirectory')->willReturn($workingDir . $vendorDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,
@@ -65,7 +67,7 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $this->assertNotNull($files->getFile($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php'));
+        $this->assertNotNull($files->getFile($this->pathNormalizer->normalizePath($workingDir . 'vendor/google/apiclient/src/aliases.php')));
     }
 
     public function test_exclude_from_classmap(): void

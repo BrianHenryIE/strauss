@@ -2,9 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\FileAttributes;
-use League\Flysystem\WhitespacePathNormalizer;
 
 /**
  * @see FlysystemBackCompatInterface
@@ -16,18 +14,26 @@ trait FlysystemBackCompatTrait
     // directoryExists
     public function directoryExists(string $location): bool
     {
-        $normalizer = new WhitespacePathNormalizer();
-        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
-        $location = $normalizer->normalizePath($location);
 
-        if (method_exists($this->flysystem, 'directoryExists')) {
-            return $this->flysystem->directoryExists($location);
+        $normalizer = $this->getNormalizer();
+        $normalizedLocation = $normalizer->normalizePath($location);
+
+        /**
+         * Use `self::class` here to check the parent of the current class, not necessarily the parent of the class
+         * which was called.
+         */
+//        if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'directoryExists')) {
+//            return parent::directoryExists($location);
+//        }
+
+        if (property_exists($this, 'filesystem') && method_exists($this->filesystem, 'directoryExists')) {
+            return $this->filesystem->directoryExists($normalizedLocation);
         }
 
-        $parentDirectoryContents = $this->listContents(dirname($location));
+        $parentDirectoryContents = $this->listContents(dirname($normalizedLocation), false);
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
-            if ($entry->path() == $location) {
+            if ($entry->path() == $normalizedLocation) {
                 return $entry->isDir();
             }
         }
@@ -39,8 +45,8 @@ trait FlysystemBackCompatTrait
     // has
     public function has(string $location): bool
     {
-        if (method_exists($this->flysystem, 'has')) {
-            return $this->flysystem->has($location);
+        if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'has')) {
+            return parent::has($location);
         }
         return $this->fileExists($location) || $this->directoryExists($location);
     }

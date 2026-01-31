@@ -2,8 +2,11 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
+use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\Visibility;
+use Mockery;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem
@@ -23,13 +26,22 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $source = $this->testsWorkingDir . 'source.php';
         $this->getFileSystem()->write($source, 'source');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
 
         $target = $this->testsWorkingDir . 'target.php';
 
         $contents = $sut->read($source);
 
-        $sut->write($target, $contents);
+        $config = Mockery::mock(Config::class);
+        $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC)->atLeast()->once();
+        /**
+         * `InMemoryFilesystemAdapter` v4 sets the timestamp from Config where available.
+         *
+         * https://github.com/thephpleague/flysystem-memory/blob/874b022ed7bd095765d1ebf187b750bb809176a9/InMemoryFilesystemAdapter.php#L58
+         */
+        $config->expects('get')->with('timestamp')->zeroOrMoreTimes()->andReturnNull();
+
+        $sut->write($target, $contents, $config);
 
         $this->assertFileDoesNotExist($target);
     }
@@ -44,9 +56,18 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         assert(!file_exists($source));
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
-        
-        $sut->write($source, 'source');
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
+
+        $config = Mockery::mock(Config::class);
+        $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC)->atLeast()->once();
+        /**
+         * `InMemoryFilesystemAdapter` v4 sets the timestamp from Config where available.
+         *
+         * https://github.com/thephpleague/flysystem-memory/blob/874b022ed7bd095765d1ebf187b750bb809176a9/InMemoryFilesystemAdapter.php#L58
+         */
+        $config->expects('get')->with('timestamp')->zeroOrMoreTimes()->andReturnNull();
+
+        $sut->write($source, 'source', $config);
 
         assert(!file_exists($source));
 
@@ -61,7 +82,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $source = $this->testsWorkingDir . 'source.php';
         $this->getFileSystem()->write($source, 'source');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
 
         $sut->delete($source);
 
@@ -77,7 +98,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $source = $this->testsWorkingDir . 'source.php';
         $this->getFileSystem()->write($source, 'source');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
         $sut->delete($source);
 
         // when I try to read the file
@@ -97,14 +118,14 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $aRealFile = $this->testsWorkingDir . 'file1.php';
         $this->getFileSystem()->write($aRealFile, 'file1');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
-        assert(1 === count($sut->listContents($this->testsWorkingDir)->toArray()));
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
+        assert(1 === count($sut->listContents($this->testsWorkingDir, false)->toArray()));
 
         // When it is deleted
         $sut->delete($aRealFile);
 
         // Then it should not be in the directory listing
-        $this->assertCount(0, $sut->listContents($this->testsWorkingDir)->toArray());
+        $this->assertCount(0, $sut->listContents($this->testsWorkingDir, false)->toArray());
 
         // And the file should still exist
         $this->assertFileExists($aRealFile);
@@ -121,15 +142,24 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $aRealFile = $this->testsWorkingDir . 'file1.php';
         $this->getFileSystem()->write($aRealFile, 'file1');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
-        assert(1 === count($sut->listContents($this->testsWorkingDir)->toArray()));
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
+        assert(1 === count($sut->listContents($this->testsWorkingDir, false)->toArray()));
+
+        $config = Mockery::mock(Config::class);
+        $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC)->atLeast()->once();
+        /**
+         * `InMemoryFilesystemAdapter` v4 sets the timestamp from Config where available.
+         *
+         * https://github.com/thephpleague/flysystem-memory/blob/874b022ed7bd095765d1ebf187b750bb809176a9/InMemoryFilesystemAdapter.php#L58
+         */
+        $config->expects('get')->with('timestamp')->zeroOrMoreTimes()->andReturnNull();
 
         $file2Path = $this->testsWorkingDir . 'file2.php';
         // And a new file
-        $sut->write($file2Path, '<?php whatever ?>');
+        $sut->write($file2Path, '<?php whatever ?>', $config);
 
         // Then both should be in the directory listing
-        $this->assertCount(2, $sut->listContents($this->testsWorkingDir)->toArray());
+        $this->assertCount(2, $sut->listContents($this->testsWorkingDir, false)->toArray());
 
         // And the file should not actually exist
         $this->assertFileDoesNotExist($file2Path);
@@ -141,11 +171,14 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $contents = 'source';
         $this->getFileSystem()->write($source, $contents);
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
 
         $destination = $this->testsWorkingDir . 'destination.php';
 
-        $sut->copy($source, $destination);
+        $config = Mockery::mock(Config::class);
+        $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC)->atLeast()->once();
+
+        $sut->copy($source, $destination, $config);
 
         $this->assertEquals($contents, $sut->read($destination));
 
@@ -160,7 +193,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $newDir = $this->testsWorkingDir . 'dir1';
         mkdir($newDir);
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
 
         $this->assertTrue($sut->directoryExists($newDir));
     }
@@ -173,7 +206,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $newDir = $this->testsWorkingDir . 'dir1';
         mkdir($newDir);
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
 
         $sut->deleteDirectory($newDir);
 
@@ -188,11 +221,20 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     {
         $newDir = $this->testsWorkingDir . 'dir1';
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
 
-        $sut->createDirectory($newDir);
+        $config = Mockery::mock(Config::class);
+        $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC);
+        /**
+         * `InMemoryFilesystemAdapter` v4 sets the timestamp from Config where available.
+         *
+         * https://github.com/thephpleague/flysystem-memory/blob/874b022ed7bd095765d1ebf187b750bb809176a9/InMemoryFilesystemAdapter.php#L58
+         */
+        $config->expects('get')->with('timestamp')->zeroOrMoreTimes()->andReturnNull();
 
-        $this->assertDirectoryDoesNotExist($newDir);
-        $this->assertTrue($sut->directoryExists($newDir));
+        $sut->createDirectory($newDir, $config);
+
+        $this->assertDirectoryDoesNotExist($newDir, $newDir);
+        $this->assertTrue($sut->directoryExists($newDir), $newDir);
     }
 }
