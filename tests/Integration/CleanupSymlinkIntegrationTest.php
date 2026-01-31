@@ -23,9 +23,9 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
         mkdir($main_package_dir);
         mkdir($symlinked_package_dir . 'src/', 0777, true);
 
-        file_put_contents($main_package_dir . 'composer.json', $this->packageComposerFile());
-        file_put_contents($symlinked_package_dir . 'composer.json', $this->symlinkedComposerFile());
-        file_put_contents($symlinked_package_dir . 'src/File.php', $this->symlinkedPhpFile());
+        $this->getFileSystem()->write($main_package_dir . 'composer.json', $this->packageComposerFile());
+        $this->getFileSystem()->write($symlinked_package_dir . 'composer.json', $this->symlinkedComposerFile());
+        $this->getFileSystem()->write($symlinked_package_dir . 'src/File.php', $this->symlinkedPhpFile());
 
         chdir($main_package_dir);
         exec('composer install');

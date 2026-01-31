@@ -45,7 +45,7 @@ class MozartIssue124Test extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -54,7 +54,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = file_get_contents($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Mpdf.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Mpdf.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BrianHenryIE\Strauss\Mpdf implements', $mpdf_php);
@@ -93,7 +93,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -102,7 +102,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = file_get_contents($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Conversion/DecToOther.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Conversion/DecToOther.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('public function __construct(BrianHenryIE\Strauss\Mpdf $mpdf)', $mpdf_php);
@@ -138,7 +138,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -147,7 +147,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = file_get_contents($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Barcode/BarcodeException.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Barcode/BarcodeException.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BarcodeException extends \Mpdf\MpdfException', $mpdf_php);

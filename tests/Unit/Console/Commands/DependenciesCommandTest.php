@@ -94,7 +94,7 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ "name": "coenjacobs/mozart", }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
@@ -132,7 +132,7 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
@@ -169,7 +169,7 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ "name": "coenjacobs/mozart", "extra": [] }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
@@ -207,7 +207,7 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ "name": "coenjacobs/mozart", "extra": { "moozart": {} } }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
@@ -247,7 +247,7 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ "name": "coenjacobs/mozart", "extra": { "mozart": []  }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);

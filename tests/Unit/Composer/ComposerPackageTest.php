@@ -142,7 +142,7 @@ class ComposerPackageTest extends TestCase
 
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerJson);
+        $this->getFileSystem()->write($tmpfname, $composerJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 

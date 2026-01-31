@@ -66,7 +66,7 @@ class StraussIssue47Test extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -75,7 +75,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
 
         self::assertStringNotContainsString('namespace Dragon\Dependencies\Dragon\Dependencies\Dragon\Form;', $php_string);
         self::assertStringContainsString('namespace Dragon\Dependencies\Dragon\Form;', $php_string);
@@ -152,7 +152,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -161,7 +161,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
 
         self::assertStringNotContainsString('namespace Dragon\Dependencies\Dragon\Dependencies\Dragon\Form;', $php_string);
         self::assertStringContainsString('namespace Dragon\Dependencies\Dragon\Form;', $php_string);
@@ -213,7 +213,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -222,7 +222,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
 
         self::assertStringNotContainsString('namespace Dragon\Dependencies\Dragon\Dependencies\Dragon\Form;', $php_string);
         self::assertStringContainsString('namespace Dragon\Dependencies\Dragon\Form;', $php_string);
