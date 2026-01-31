@@ -67,13 +67,13 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
     }
 
     /**
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function write(string $path, string $contents, Config $configArray): void
+    public function write(string $path, string $contents, $config): void
     {
-        $config = new \League\Flysystem\Config($configArray);
-        $this->inMemoryFiles->write($path, $contents, $config);
+        $configObject = $config instanceof Config ? $config : new Config($config);
+        $this->inMemoryFiles->write($path, $contents, $configObject);
 
         if ($this->deletedFiles->fileExists($path)) {
             $this->deletedFiles->delete($path);
