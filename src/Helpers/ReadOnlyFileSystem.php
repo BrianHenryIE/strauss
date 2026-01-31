@@ -34,15 +34,17 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 {
     use FlysystemBackCompatTrait;
 
-    protected FilesystemAdapter $parentFilesystemAdapter;
+    protected FilesystemAdapter $delegateFilesystemAdapter;
     protected ModifiedFilesInMemoryFilesystemAdapter $inMemoryFiles;
     protected DeletedFilesInMemoryFilesystemAdapter $deletedFiles;
 
     protected PathNormalizer $pathNormalizer;
 
-    public function __construct(FilesystemAdapter $filesystem, ?PathNormalizer $pathNormalizer = null)
-    {
-        $this->parentFilesystemAdapter = $filesystem;
+    public function __construct(
+        FilesystemAdapter $delegateFilesystem,
+        ?PathNormalizer $pathNormalizer = null
+    ) {
+        $this->delegateFilesystemAdapter = $delegateFilesystem;
 
         $this->inMemoryFiles = new ModifiedFilesInMemoryFilesystemAdapter();
         $this->deletedFiles = new DeletedFilesInMemoryFilesystemAdapter();
@@ -52,7 +54,7 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
     public function getAdapter(): FilesystemAdapter
     {
-        return $this->parentFilesystemAdapter;
+        return $this->delegateFilesystemAdapter;
     }
 
     public function fileExists(string $path): bool
@@ -61,7 +63,7 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
             return false;
         }
         return $this->inMemoryFiles->fileExists($path)
-                || $this->parentFilesystemAdapter->fileExists($path);
+                || $this->delegateFilesystemAdapter->fileExists($path);
     }
 
     /**
@@ -112,7 +114,7 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         if ($this->inMemoryFiles->fileExists($path)) {
             return $this->inMemoryFiles->read($path);
         }
-        return $this->parentFilesystemAdapter->read($path);
+        return $this->delegateFilesystemAdapter->read($path);
     }
 
     public function readStream(string $path)
@@ -123,7 +125,7 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         if ($this->inMemoryFiles->fileExists($path)) {
             return $this->inMemoryFiles->readStream($path);
         }
-        return $this->parentFilesystemAdapter->readStream($path);
+        return $this->delegateFilesystemAdapter->readStream($path);
     }
 
     public function delete(string $path): void
@@ -181,7 +183,7 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
 
         /** @var FileAttributes[] $parentFilesystemArray */
-        $parentFilesystemGenerator = $this->parentFilesystemAdapter->listContents($path, $deep);
+        $parentFilesystemGenerator = $this->delegateFilesystemAdapter->listContents($path, $deep);
         $parentFilesystemArray = $parentFilesystemGenerator instanceof Traversable
             ? iterator_to_array($parentFilesystemGenerator, false)
             : (array) $parentFilesystemGenerator;
@@ -265,8 +267,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
         if ($this->inMemoryFiles->fileExists($path)) {
             $filesize = $this->inMemoryFiles->fileSize($path);
-        } elseif ($this->parentFilesystemAdapter->fileExists($path)) {
-            $filesize = $this->parentFilesystemAdapter->fileSize($path);
+        } elseif ($this->delegateFilesystemAdapter->fileExists($path)) {
+            $filesize = $this->delegateFilesystemAdapter->fileSize($path);
         }
 
         if ($filesize instanceof FileAttributes) {
@@ -304,7 +306,7 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
             return $this->inMemoryFiles->visibility($path);
         }
 
-        return $this->parentFilesystemAdapter->visibility($path);
+        return $this->delegateFilesystemAdapter->visibility($path);
     }
 
     public function directoryExists(string $path): bool
@@ -316,7 +318,7 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         }
 
         return  $this->directoryExistsIn($path, $this->inMemoryFiles)
-            || $this->directoryExistsIn($path, $this->parentFilesystemAdapter);
+            || $this->directoryExistsIn($path, $this->delegateFilesystemAdapter);
     }
 
     /**
