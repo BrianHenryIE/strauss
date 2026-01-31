@@ -26,8 +26,8 @@ trait FlysystemBackCompatTrait
 //            return parent::directoryExists($location);
 //        }
 
-        if (method_exists($this->delegateFilesystem, 'directoryExists')) {
-            return $this->delegateFilesystem->directoryExists($normalizedLocation);
+        if (method_exists($this->filesystem, 'directoryExists')) {
+            return $this->filesystem->directoryExists($normalizedLocation);
         }
 
         $parentDirectoryContents = $this->listContents(dirname($normalizedLocation), false);

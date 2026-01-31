@@ -11,21 +11,15 @@ namespace BrianHenryIE\Strauss\Helpers;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
-use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
 use Composer\Factory;
-use Elazar\Flystream\StripProtocolPathNormalizer;
-use League\Flysystem\Config;
-use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
-use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\WhitespacePathNormalizer;
 
@@ -33,7 +27,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 {
     use FlysystemBackCompatTrait;
 
-    protected FilesystemOperator $delegateFilesystem;
+    protected FilesystemOperator $filesystem;
 
     protected PathNormalizer $normalizer;
 
@@ -68,7 +62,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         // Parent is private.
         $this->normalizer = $pathNormalizer ?? new WhitespacePathNormalizer();
         $this->flysystemAdapter = $adapter;
-        $this->delegateFilesystem = new \League\Flysystem\Filesystem(
+        $this->filesystem = new \League\Flysystem\Filesystem(
             $adapter,
             $config,
             $pathNormalizer
@@ -175,28 +169,28 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     public function fileExists(string $location): bool
     {
-        return $this->delegateFilesystem->fileExists(
+        return $this->filesystem->fileExists(
             $this->normalizer->normalizePath($location)
         );
     }
 
     public function read(string $location): string
     {
-        return $this->delegateFilesystem->read(
+        return $this->filesystem->read(
             $this->normalizer->normalizePath($location)
         );
     }
 
     public function readStream(string $location)
     {
-        return $this->delegateFilesystem->readStream(
+        return $this->filesystem->readStream(
             $this->normalizer->normalizePath($location)
         );
     }
 
     public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
     {
-        return $this->delegateFilesystem->listContents(
+        return $this->filesystem->listContents(
             $this->normalizer->normalizePath($location),
             $deep
         );
@@ -204,28 +198,28 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     public function lastModified(string $path): int
     {
-        return $this->delegateFilesystem->lastModified(
+        return $this->filesystem->lastModified(
             $this->normalizer->normalizePath($path)
         );
     }
 
     public function fileSize(string $path): int
     {
-        return $this->delegateFilesystem->fileSize(
+        return $this->filesystem->fileSize(
             $this->normalizer->normalizePath($path)
         );
     }
 
     public function mimeType(string $path): string
     {
-        return $this->delegateFilesystem->mimeType(
+        return $this->filesystem->mimeType(
             $this->normalizer->normalizePath($path)
         );
     }
 
     public function visibility(string $path): string
     {
-        return $this->delegateFilesystem->visibility(
+        return $this->filesystem->visibility(
             $this->normalizer->normalizePath($path)
         );
     }
@@ -236,7 +230,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      */
     public function write(string $location, string $contents, array $config = []): void
     {
-        $this->delegateFilesystem->write(
+        $this->filesystem->write(
             $this->normalizer->normalizePath($location),
             $contents,
             $config
@@ -249,7 +243,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      */
     public function writeStream(string $location, $contents, array $config = []): void
     {
-        $this->delegateFilesystem->writeStream(
+        $this->filesystem->writeStream(
             $this->normalizer->normalizePath($location),
             $contents,
             $config
@@ -258,7 +252,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     public function setVisibility(string $path, string $visibility): void
     {
-        $this->delegateFilesystem->setVisibility(
+        $this->filesystem->setVisibility(
             $this->normalizer->normalizePath($path),
             $visibility
         );
@@ -266,14 +260,14 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     public function delete(string $location): void
     {
-        $this->delegateFilesystem->delete(
+        $this->filesystem->delete(
             $this->normalizer->normalizePath($location)
         );
     }
 
     public function deleteDirectory(string $location): void
     {
-        $this->delegateFilesystem->deleteDirectory(
+        $this->filesystem->deleteDirectory(
             $this->normalizer->normalizePath($location)
         );
     }
@@ -284,7 +278,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      */
     public function createDirectory(string $location, array $config = []): void
     {
-        $this->delegateFilesystem->createDirectory(
+        $this->filesystem->createDirectory(
             $this->normalizer->normalizePath($location),
             $config
         );
@@ -296,7 +290,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      */
     public function move(string $source, string $destination, array $config = []): void
     {
-        $this->delegateFilesystem->move(
+        $this->filesystem->move(
             $this->normalizer->normalizePath($source),
             $this->normalizer->normalizePath($destination),
             $config
@@ -309,7 +303,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      */
     public function copy(string $source, string $destination, array $config = []): void
     {
-        $this->delegateFilesystem->copy(
+        $this->filesystem->copy(
             $this->normalizer->normalizePath($source),
             $this->normalizer->normalizePath($destination),
             $config
