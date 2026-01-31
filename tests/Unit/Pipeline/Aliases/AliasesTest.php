@@ -28,7 +28,7 @@ class AliasesTest extends TestCase
         if (!class_exists('Foo\\Bar\\Baz')) {
             $includeFilePath = sys_get_temp_dir() . '/foo_bar_baz.php';
             $includeFile = '<?php namespace Foo\\Bar; class Baz {}';
-            file_put_contents($includeFilePath, $includeFile);
+            $this->getFileSystem()->write($includeFilePath, $includeFile);
             include $includeFilePath;
             file_exists($includeFilePath) && unlink($includeFilePath);
         }

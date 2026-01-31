@@ -50,10 +50,10 @@
     },
     "require-dev": {
         "php": "^7.4|^8.0",
-        "brianhenryie/color-logger": "^1.2",
+        "brianhenryie/color-logger": "*",
+        "brianhenryie/php-codecoverage-markdown": "^0.1.0",
         "clue/phar-composer": "^1.2",
         "jaschilz/php-coverage-badger": "^2.0",
-        "mheap/phpunit-github-actions-printer": "^1.4",
         "mockery/mockery": "^1.6",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^1.10",
@@ -67,10 +67,8 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "@install-phive-dependencies"
         ],
         "post-update-cmd": [
-            "@install-phive-dependencies"
         ],
         "analyze": [
           "phpstan analyse --memory-limit=-1 --verbose"

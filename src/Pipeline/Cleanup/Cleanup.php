@@ -255,6 +255,12 @@ class Cleanup
 //        }
 
         foreach ($flatDependencyTree as $package) {
+            // Skip packages excluded from copy - they should remain in vendor/
+            if (in_array($package->getPackageName(), $this->config->getExcludePackagesFromCopy(), true)) {
+                $this->logger->debug('Skipping deletion of excluded package: ' . $package->getPackageName());
+                continue;
+            }
+
             // Normal package.
             if ($this->filesystem->isSubDirOf($this->config->getVendorDirectory(), $package->getPackageAbsolutePath())) {
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());

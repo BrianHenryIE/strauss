@@ -35,14 +35,14 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/stripe/stripe-php/lib/Billing/CreditGrant.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/stripe/stripe-php/lib/Billing/CreditGrant.php');
 
         $this->assertStringNotContainsString('use \\\\Company\\\\Project\\\\Stripe\\ApiOperations\\Update;', $php_string);
 
