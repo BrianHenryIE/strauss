@@ -98,9 +98,8 @@ class DumpAutoload
         $projectComposerJsonFilePath = $this->config->getProjectDirectory() . Factory::getComposerFile();
         $projectComposerJsonFilePath = $this->filesystem->normalize($projectComposerJsonFilePath);
         $projectComposerJsonFilePath = $this->filesystem->prefixPath($projectComposerJsonFilePath);
-        $projectComposerJson = new JsonFile($projectComposerJsonFilePath);
         /** @var array{require?:array<string,string>,autoload?:AutoloadKeyArray,config?:ComposerConfigArray} $projectComposerJsonArray */
-        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
+        $projectComposerJson = new JsonFile($projectComposerJsonFilePath);
 
         /** @var ComposerJsonArray $projectComposerJsonArray */
         $projectComposerJsonArray = $projectComposerJson->read();
