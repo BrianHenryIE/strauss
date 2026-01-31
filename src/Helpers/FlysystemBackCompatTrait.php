@@ -14,16 +14,21 @@ trait FlysystemBackCompatTrait
     // directoryExists
     public function directoryExists(string $location): bool
     {
+
+        $normalizer = $this->getNormalizer();
+        $normalizedLocation = $normalizer->normalizePath($location);
+
         /**
          * Use `self::class` here to check the parent of the current class, not necessarily the parent of the class
          * which was called.
          */
-        if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'directoryExists')) {
-             return parent::directoryExists($location);
-        }
+//        if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'directoryExists')) {
+//            return parent::directoryExists($location);
+//        }
 
-        $normalizer = $this->getNormalizer();
-        $normalizedLocation = $normalizer->normalizePath($location);
+        if (method_exists($this->flysystem, 'directoryExists')) {
+            return $this->flysystem->directoryExists($normalizedLocation);
+        }
 
         $parentDirectoryContents = $this->listContents(dirname($normalizedLocation), false);
         /** @var FileAttributes $entry */

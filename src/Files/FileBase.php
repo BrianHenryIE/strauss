@@ -13,7 +13,11 @@ interface FileBase
 
     public function setAbsoluteTargetPath(string $absoluteTargetPath): void;
 
+    public function getVendorRelativePath(): string;
+
     public function isPhpFile(): bool;
+
+    public function isAutoloaded(): bool;
 
     public function setDoCopy(bool $doCopy): void;
 
@@ -43,6 +47,8 @@ interface FileBase
     public function setDidDelete(bool $didDelete): void;
 
     public function getDidDelete(): bool;
+
+    public function setDidUpdate(): void;
 
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void;
 

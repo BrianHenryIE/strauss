@@ -17,6 +17,7 @@ class StraussIssue88Test extends IntegrationTestCase
 {
     public function test_returned_casted_function_call()
     {
+        // Why is this here? It seemed to work.
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2');
 
         $composerJsonString = <<<'EOD'
@@ -24,6 +25,13 @@ class StraussIssue88Test extends IntegrationTestCase
   "name": "issue/83",
   "require": {
     "aws/aws-sdk-php": "3.293.8"
+  },
+  "config": {
+    "audit": {
+      "ignore": {
+        "PKSA-dxyf-6n16-t87m": "We are not running prod"
+      }
+    }
   },
   "extra": {
     "strauss": {
@@ -46,14 +54,14 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/aws/aws-sdk-php/src/S3/S3Client.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/aws/aws-sdk-php/src/S3/S3Client.php');
 
         self::assertStringNotContainsString('return (string) \Aws\serialize($command)->getUri();', $php_string);
         self::assertStringContainsString('return (string) \Company\Project\Aws\serialize($command)->getUri();', $php_string);

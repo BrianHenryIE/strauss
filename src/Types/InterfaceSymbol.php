@@ -2,30 +2,48 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
-use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Files\FileBase;
 
+/**
+ * @phpstan-import-type InterfaceAliasArray from AutoloadAliasInterface
+ */
 class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
 {
+    /**
+     * @var string[]
+     */
     protected array $extends;
 
+    /**
+     * @param string $fqdnClassname
+     * @param FileBase $sourceFile
+     * @param ?string $namespace
+     * @param ?ComposerPackage $package
+     * @param string[] $extends
+     */
     public function __construct(
         string $fqdnClassname,
-        File $sourceFile,
+        FileBase $sourceFile,
         ?string $namespace = null,
-        ?array $extends = null
+        ?ComposerPackage $package = null,
+        array $extends = []
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace ?? '\\', $package);
 
-        $this->extends = (array) $extends;
+        $this->extends = $extends;
     }
 
+    /**
+     * @return string[]
+     */
     public function getExtends(): array
     {
         return $this->extends;
     }
 
     /**
-     * @return array{type:string,interfacename:string,namespace:string,extends:array<string>}
+     * @return InterfaceAliasArray
      */
     public function getAutoloadAliasArray(): array
     {
@@ -33,7 +51,7 @@ class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
             'type' => 'interface',
             'interfacename' => $this->getOriginalLocalName(),
             'namespace' => $this->namespace,
-            'extends' => [$this->getReplacement()] + $this->extends,
+            'extends' => [$this->getReplacement()] + $this->getExtends(),
         );
     }
 }

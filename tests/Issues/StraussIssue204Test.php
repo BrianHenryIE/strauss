@@ -56,8 +56,8 @@ EOD;
         mkdir($this->testsWorkingDir . '/projectdir');
         chdir($this->testsWorkingDir . '/projectdir');
 
-        file_put_contents($this->testsWorkingDir . '/projectdir/composer.json', $composerJsonString);
-        file_put_contents($this->testsWorkingDir . '/projectdir/composer-free.json', $composerFreeJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/projectdir/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/projectdir/composer-free.json', $composerFreeJsonString);
 
         exec('COMPOSER=composer-free.json composer install');
 
@@ -65,7 +65,7 @@ EOD;
         $exitCode = $this->runStrauss($output, '', $env);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString("Saltus\\\\WP\\\\Plugin\\\\InteractiveGlobes\\\\Psr\\\\Log\\\\", $php_string);
     }
 }

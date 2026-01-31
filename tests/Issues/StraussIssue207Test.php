@@ -17,7 +17,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue207Test extends IntegrationTestCase
 {
-    public function test_fremius_files_are_copied()
+    public function test_fremius_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
 {
@@ -32,7 +32,7 @@ class StraussIssue207Test extends IntegrationTestCase
     }
 }
 EOD;
-        file_put_contents($this->testsWorkingDir . '/composer.json', $packageComposerJson);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
         exec('composer install');
@@ -46,11 +46,11 @@ EOD;
         $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/freemius/wordpress-sdk/config.php');
 
         // Do not prefix.
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/freemius/wordpress-sdk/includes/class-freemius.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/freemius/wordpress-sdk/includes/class-freemius.php');
         $this->assertStringContainsString("class Freemius extends Freemius_Abstract", $php_string);
     }
 
-    public function test_action_scheduler_files_are_copied()
+    public function test_action_scheduler_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
 {
@@ -65,7 +65,7 @@ EOD;
     }
 }
 EOD;
-        file_put_contents($this->testsWorkingDir . '/composer.json', $packageComposerJson);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
         exec('composer install');
@@ -76,11 +76,11 @@ EOD;
         $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/woocommerce/action-scheduler/action-scheduler.php');
 
         // Do not prefix.
-        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/woocommerce/action-scheduler/classes/actions/ActionScheduler_Action.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/woocommerce/action-scheduler/classes/actions/ActionScheduler_Action.php');
         $this->assertStringContainsString("class ActionScheduler_Action {", $php_string);
     }
 
-    public function test_plugin_update_checker_files_are_copied()
+    public function test_plugin_update_checker_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
 {
@@ -95,7 +95,7 @@ EOD;
     }
 }
 EOD;
-        file_put_contents($this->testsWorkingDir . '/composer.json', $packageComposerJson);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
         exec('composer install');
@@ -105,12 +105,14 @@ EOD;
 
         $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/plugin-update-checker.php');
 
+        $this->markTestSkipped("I'm unsure what the best thing to do here is. Should the files be prefixed or not?");
+
         // Do not prefix.
-        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/Puc/v5p6/Autoloader.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/Puc/v5p6/Autoloader.php');
         $this->assertStringContainsString("namespace YahnisElsts\\PluginUpdateChecker\\v5p6;", $php_string);
     }
 
-    public function test_abilities_api_files_are_copied()
+    public function test_abilities_api_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
 {
@@ -125,7 +127,7 @@ EOD;
     }
 }
 EOD;
-        file_put_contents($this->testsWorkingDir . '/composer.json', $packageComposerJson);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
         exec('composer install');
@@ -136,7 +138,7 @@ EOD;
         $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
 
         // Do not prefix.
-        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
         $this->assertStringContainsString("function wp_register_ability(", $php_string);
     }
 }

@@ -41,7 +41,7 @@ EOD;
         mkdir($this->testsWorkingDir . '/src');
         chdir($this->testsWorkingDir . '/build');
 
-        file_put_contents($this->testsWorkingDir . '/build/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/build/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -52,18 +52,18 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        $phpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Strauss\\Issue143\\Psr\\Log;', $phpString);
 
         $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
 
-        $installedJsonString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
+        $installedJsonString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString('"name": "psr/log",', $installedJsonString);
 
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         $this->assertEquals(0, $exitCode, $output);
 
-        $classmapString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
+        $classmapString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
         $this->assertStringContainsString('/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
         $this->assertStringNotContainsString('\'Psr\\\\Log\\\\NullLogger', $classmapString);
         $this->assertStringContainsString('\'Strauss\\\\Issue143\\\\Psr\\\\Log\\\\NullLogger', $classmapString);
@@ -108,7 +108,7 @@ EOD;
         mkdir($this->testsWorkingDir . '/src');
         chdir($this->testsWorkingDir . '/build');
 
-        file_put_contents($this->testsWorkingDir . '/build/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/build/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -144,7 +144,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
         chdir($this->testsWorkingDir);
 
         exec('composer install');

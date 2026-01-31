@@ -37,14 +37,14 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/illuminate/support/helpers.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/illuminate/support/helpers.php');
 
         $this->assertStringNotContainsString('function append_config(array $array)', $phpString);
         $this->assertStringContainsString('function myprefix_append_config(array $array)', $phpString);
@@ -74,14 +74,14 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/twig/twig/src/Extension/CoreExtension.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/twig/twig/src/Extension/CoreExtension.php');
 
         $this->assertStringNotContainsString('function twig_cycle(', $phpString);
         $this->assertStringContainsString('function myprefix_twig_cycle(', $phpString);

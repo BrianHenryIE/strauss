@@ -71,16 +71,16 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
         mkdir($this->testsWorkingDir . 'src');
-        file_put_contents($this->testsWorkingDir . 'src/whatever.php', $phpString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'src/whatever.php', $phpString);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpStringAfter = file_get_contents($this->testsWorkingDir . '/src/whatever.php');
+        $phpStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . '/src/whatever.php');
 
         $this->assertEquals($expectedPhpString, $phpStringAfter);
     }

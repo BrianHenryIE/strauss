@@ -2065,7 +2065,7 @@ class FileLoader implements Latte\Loader
 			}
 		}
 
-		return file_get_contents($file);
+		return $this->getFileSystem()->read($file);
 	}
 }
 EOD;
@@ -2102,7 +2102,7 @@ class FileLoader implements \Latte\Loader
 			}
 		}
 
-		return file_get_contents($file);
+		return $this->getFileSystem()->read($file);
 	}
 }
 EOD;

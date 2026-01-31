@@ -27,7 +27,7 @@ class MozartIssue108Test extends IntegrationTestCase
     /**
      * WooCommerce Action Scheduler ... has no autoload key. But also needs some Mozart patches to work correctly.
      */
-    public function test_woocommerce_actionscheduler()
+    public function test_woocommerce_actionscheduler(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -44,7 +44,7 @@ class MozartIssue108Test extends IntegrationTestCase
             "classmap": [
                 "classes/",
                 "deprecated/",
-                "lib/cron-expression/"
+                "lib/"
             ]
         }
       }
@@ -53,7 +53,7 @@ class MozartIssue108Test extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -65,16 +65,16 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_contents = file_get_contents($this->testsWorkingDir .'vendor-prefixed/deliciousbrains/wp-background-processing/classes/wp-async-request.php');
+        $php_contents = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/deliciousbrains/wp-background-processing/classes/wp-async-request.php');
         self::assertStringContainsString('abstract class Strauss_WP_Async_Request', $php_contents);
 
-//        $pdf_contents = file_get_contents($this->testsWorkingDir .'strauss/mtdowling/cron-expression/src/Cron/CronExpression.php');
+//        $pdf_contents = $this->getFileSystem()->read($this->testsWorkingDir .'strauss/mtdowling/cron-expression/src/Cron/CronExpression.php');
 //        self::assertStringContainsString('namespace Strauss\\CronExpression', $pdf_contents);
 
-        $php_contents = file_get_contents($this->testsWorkingDir .'vendor-prefixed/woocommerce/action-scheduler/lib/cron-expression/CronExpression.php');
+        $php_contents = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/woocommerce/action-scheduler/lib/cron-expression/CronExpression.php');
         self::assertStringContainsString('class Strauss_CronExpression', $php_contents);
 
-        $php_contents = file_get_contents($this->testsWorkingDir .'vendor-prefixed/woocommerce/action-scheduler/classes/schedules/ActionScheduler_CronSchedule.php');
+        $php_contents = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/woocommerce/action-scheduler/classes/schedules/ActionScheduler_CronSchedule.php');
         self::assertStringContainsString('if ( ! is_a( $recurrence, \'Strauss_CronExpression\' ) ) {', $php_contents);
     }
 }

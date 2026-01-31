@@ -16,6 +16,7 @@ use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Json\JsonFile;
 use Composer\Repository\InstalledFilesystemRepository;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Seld\JsonLint\ParsingException;
@@ -23,6 +24,7 @@ use Seld\JsonLint\ParsingException;
 /**
  * @phpstan-import-type AutoloadKeyArray from ComposerPackage
  * @phpstan-import-type ComposerConfigArray from ComposerPackage
+ * @phpstan-import-type ComposerJsonArray from ComposerPackage
  */
 class DumpAutoload
 {
@@ -56,6 +58,8 @@ class DumpAutoload
 
     /**
      * Create `autoload.php` and the `vendor-prefixed/composer` directory.
+     * @throws ParsingException
+     * @throws FilesystemException
      */
     public function generatedPrefixedAutoloader(): void
     {
@@ -70,6 +74,7 @@ class DumpAutoload
      * Uses `vendor/composer/installed.json` to output autoload files to `vendor-prefixed/composer`.
      *
      * @throws ParsingException
+     * @throws FilesystemException
      */
     protected function generatedMainAutoloader(): void
     {
@@ -95,6 +100,9 @@ class DumpAutoload
         $projectComposerJsonFilePath = $this->filesystem->prefixPath($projectComposerJsonFilePath);
         $projectComposerJson = new JsonFile($projectComposerJsonFilePath);
         /** @var array{require?:array<string,string>,autoload?:AutoloadKeyArray,config?:ComposerConfigArray} $projectComposerJsonArray */
+        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
+
+        /** @var ComposerJsonArray $projectComposerJsonArray */
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
@@ -102,7 +110,7 @@ class DumpAutoload
 
         /**
          * Loop over all packages that should be included and ensure the root package requires them. Composer only
-         * includes packages in the autoloader that are required by a parent package (including root). Without this
+         * includes packages in the autoloader that are required by a parent package (including root). Without this,
          * packages that are selectively prefixed are not included in the autoloader.
          *
          * @see AutoloadGenerator::filterPackageMap()
@@ -130,9 +138,10 @@ class DumpAutoload
             )
         );
 
-        $config->merge([
-            'config' => $projectComposerJsonArray['config'] ?? []
-        ]);
+        /** @var array{config?: array<string, mixed>} $projectComposerConfigMergeArray */
+        $projectComposerConfigMergeArray = ['config' => $projectComposerJsonArray['config'] ?? []];
+
+        $config->merge($projectComposerConfigMergeArray);
 
         $generator = $this->composerAutoloadGeneratorFactory->get(
             $this->config->getNamespacePrefix(),
@@ -197,6 +206,7 @@ class DumpAutoload
      * If the file does not exist, its entry in the classmap will not be prefixed and will cause autoloading issues for the real class.
      *
      * The accompanying `installed.php` is unique per install. Copy it and filter its packages to the packages that was copied.
+     * @throws FilesystemException
      */
     protected function createInstalledVersionsFiles(): void
     {
@@ -239,6 +249,9 @@ class DumpAutoload
         $this->filesystem->write($this->config->getTargetDirectory() . '/composer/installed.php', $newInstalledPhpString);
     }
 
+    /**
+     * @throws FilesystemException
+     */
     protected function prefixNewAutoloader(): void
     {
         if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
@@ -292,8 +305,10 @@ class DumpAutoload
      * If there is an existing autoloader, it will use the same suffix. If there is not, it pulls the suffix from
      * {Composer::getLocker()} and clashes with the existing autoloader.
      *
-     * @see AutoloadGenerator::dump() 412:431
      * @see https://github.com/composer/composer/blob/ae208dc1e182bd45d99fcecb956501da212454a1/src/Composer/Autoload/AutoloadGenerator.php#L429
+     * @see AutoloadGenerator::dump() 412:431
+     * @throws \Random\RandomException in PHP 8.2+
+     * @throws FilesystemException
      */
     protected function getSuffix(): ?string
     {

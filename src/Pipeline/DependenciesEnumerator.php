@@ -10,11 +10,16 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Factory;
 use Exception;
-use League\Flysystem\FilesystemReader;
+use JsonException;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * @phpstan-import-type ComposerJsonArray from ComposerPackage
+ * @phpstan-import-type AutoloadKeyArray from ComposerPackage
+ */
 class DependenciesEnumerator
 {
     use LoggerAwareTrait;
@@ -51,8 +56,6 @@ class DependenciesEnumerator
 
     /**
      * Constructor.
-     *
-     * @param StraussConfig $config
      */
     public function __construct(
         StraussConfig    $config,
@@ -71,6 +74,7 @@ class DependenciesEnumerator
     /**
      * @return array<string, ComposerPackage> Packages indexed by package name.
      * @throws Exception
+     * @throws FilesystemException
      */
     public function getAllDependencies(): array
     {
@@ -81,6 +85,9 @@ class DependenciesEnumerator
 
     /**
      * @param string[] $requiredPackageNames
+     * @throws FilesystemException
+     * @throws JsonException
+     * @throws Exception
      */
     protected function recursiveGetAllDependencies(array $requiredPackageNames): void
     {
@@ -123,7 +130,8 @@ class DependenciesEnumerator
 
                 // TODO: These (.json, .lock) should be read once and reused.
                 $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . Factory::getComposerFile());
-                $composerJson       = json_decode($composerJsonString, true);
+                /** @var ComposerJsonArray $composerJson */
+                $composerJson       = json_decode($composerJsonString, true, 512, JSON_THROW_ON_ERROR);
 
                 if (isset($composerJson['provide']) && in_array($requiredPackageName, array_keys($composerJson['provide']))) {
                     $this->logger->info('Skipping ' . $requiredPackageName . ' as it is in the composer.json provide list');
@@ -132,10 +140,17 @@ class DependenciesEnumerator
 
                 $composerLockPath = $this->config->getProjectDirectory() . Factory::getLockFile(Factory::getComposerFile());
                 $composerLockString     = $this->filesystem->read($composerLockPath);
-                $composerLock           = json_decode($composerLockString, true);
+                /** @var null|array{packages:array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray}} $composerLockJsonArray */
+                $composerLockJsonArray           = json_decode($composerLockString, true);
 
+                if (is_null($composerLockJsonArray)) {
+                    continue;
+                }
+
+                /** @var ?ComposerJsonArray $requiredPackageComposerJson */
                 $requiredPackageComposerJson = null;
-                foreach ($composerLock['packages'] as $packageJson) {
+                /** @var array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray} $packageJson */
+                foreach ($composerLockJsonArray['packages'] as $packageJson) {
                     if ($requiredPackageName === $packageJson['name']) {
                         $requiredPackageComposerJson = $packageJson;
                         break;
@@ -150,7 +165,7 @@ class DependenciesEnumerator
 
                 if (!isset($requiredPackageComposerJson['autoload'])
                     && empty($requiredPackageComposerJson['require'])
-                    && $requiredPackageComposerJson['type'] != 'metapackage'
+                    && (!isset($requiredPackageComposerJson['type']) || $requiredPackageComposerJson['type'] != 'metapackage')
                     && ! $this->filesystem->directoryExists(dirname($packageComposerFile))
                 ) {
                     // e.g. symfony/polyfill-php72 when installed on PHP 7.2 or later.
@@ -226,8 +241,6 @@ class DependenciesEnumerator
 
     /**
      * Unset PHP, ext-*, ...
-     *
-     * @param string $requiredPackageName
      */
     protected function removeVirtualPackagesFilter(string $requiredPackageName): bool
     {

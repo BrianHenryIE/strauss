@@ -5,58 +5,67 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
+use BrianHenryIE\Strauss\Files\File;
+use InvalidArgumentException;
+
 class DiscoveredSymbols
 {
+    private const CLASS_SYMBOL = 'CLASS';
+    private const CONST_SYMBOL = 'CONST';
+    private const NAMESPACE_SYMBOL = 'NAMESPACE';
+    private const FUNCTION_SYMBOL = 'FUNCTION';
+    private const TRAIT_SYMBOL = 'TRAIT';
+    private const INTERFACE_SYMBOL = 'INTERFACE';
+
     /**
      * All discovered symbols, grouped by type, indexed by original name.
      *
-     * @var array{T_NAME_QUALIFIED:array<string,NamespaceSymbol>, T_CONST:array<string,ConstantSymbol>, T_CLASS:array<string,ClassSymbol>}
+     * @var array{'NAMESPACE':array<string,NamespaceSymbol>, 'CONST':array<string,ConstantSymbol>, 'CLASS':array<string,ClassSymbol>, 'FUNCTION':array<string,FunctionSymbol>, 'TRAIT':array<string,TraitSymbol>, 'INTERFACE':array<string,InterfaceSymbol>}
      */
-    protected array $types = [];
+    protected array $types = [
+        self::CLASS_SYMBOL => [],
+        self::CONST_SYMBOL => [],
+        self::NAMESPACE_SYMBOL => [],
+        self::FUNCTION_SYMBOL => [],
+        self::TRAIT_SYMBOL => [],
+        self::INTERFACE_SYMBOL => [],
+    ];
 
     public function __construct()
     {
-        $this->types = [
-            T_CLASS => [],
-            T_CONST => [],
-            T_NAMESPACE => [],
-            T_FUNCTION => [],
-            T_TRAIT => [],
-            T_INTERFACE => [],
-        ];
-
-        $this->types[T_NAMESPACE]['\\'] = new NamespaceSymbol('\\', new \BrianHenryIE\Strauss\Files\File('', ''));
+        // TODO: Should this have the root package?
+        $this->types[self::NAMESPACE_SYMBOL]['\\'] = new NamespaceSymbol('\\', new File('', ''));
     }
 
     /**
+     * TODO: This should merge the symbols instead of overwriting them.
+     *
      * @param DiscoveredSymbol $symbol
      */
     public function add(DiscoveredSymbol $symbol): void
     {
         switch (get_class($symbol)) {
             case NamespaceSymbol::class:
-                $type = T_NAMESPACE;
-                break;
+                $this->types[self::NAMESPACE_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                return;
             case ConstantSymbol::class:
-                $type = T_CONST;
-                break;
+                $this->types[self::CONST_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                return;
             case ClassSymbol::class:
-                $type = T_CLASS;
-                break;
+                $this->types[self::CLASS_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                return;
             case FunctionSymbol::class:
-                $type = T_FUNCTION;
-                break;
+                $this->types[self::FUNCTION_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                return;
             case InterfaceSymbol::class:
-                $type = T_INTERFACE;
-                break;
+                $this->types[self::INTERFACE_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                return;
             case TraitSymbol::class:
-                $type = T_TRAIT;
-                break;
+                $this->types[self::TRAIT_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                return;
             default:
-                throw new \InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
+                throw new InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
         }
-        // TODO: This should merge the symbols instead of overwriting them.
-        $this->types[$type][$symbol->getOriginalSymbol()] = $symbol;
     }
 
     /**
@@ -75,9 +84,9 @@ class DiscoveredSymbols
     /**
      * @return array<string, ConstantSymbol>
      */
-    public function getConstants()
+    public function getConstants(): array
     {
-        return $this->types[T_CONST];
+        return $this->types[self::CONST_SYMBOL];
     }
 
     /**
@@ -85,12 +94,12 @@ class DiscoveredSymbols
      */
     public function getNamespaces(): array
     {
-        return $this->types[T_NAMESPACE];
+        return $this->types[self::NAMESPACE_SYMBOL];
     }
 
     public function getNamespace(string $namespace): ?NamespaceSymbol
     {
-        return $this->types[T_NAMESPACE][$namespace] ?? null;
+        return $this->types[self::NAMESPACE_SYMBOL][$namespace] ?? null;
     }
 
     /**
@@ -99,7 +108,7 @@ class DiscoveredSymbols
     public function getGlobalClasses(): array
     {
         return array_filter(
-            $this->types[T_CLASS],
+            $this->types[self::CLASS_SYMBOL],
             fn($classSymbol) => '\\' === $classSymbol->getNamespace()
         );
     }
@@ -120,7 +129,7 @@ class DiscoveredSymbols
      */
     public function getAllClasses(): array
     {
-        return $this->types[T_CLASS];
+        return $this->types[self::CLASS_SYMBOL];
     }
 
     /**
@@ -134,8 +143,8 @@ class DiscoveredSymbols
 
         // When running subsequent times, try to discover the original namespaces.
         // This is naive: it will not work where namespace replacement patterns have been used.
-        foreach ($this->getNamespaces() as $key => $value) {
-            $discoveredNamespaceReplacements[ $value->getOriginalSymbol() ] = $value;
+        foreach ($this->getNamespaces() as $namespaceSymbol) {
+            $discoveredNamespaceReplacements[ $namespaceSymbol->getOriginalSymbol() ] = $namespaceSymbol;
         }
 
         uksort($discoveredNamespaceReplacements, function ($a, $b) {
@@ -147,6 +156,9 @@ class DiscoveredSymbols
         return $discoveredNamespaceReplacements;
     }
 
+    /**
+     * @return array<string, NamespaceSymbol>
+     */
     public function getDiscoveredNamespaceChanges(?string $namespacePrefix = ''): array
     {
         return array_filter(
@@ -162,14 +174,12 @@ class DiscoveredSymbols
     {
         $discoveredClasses = $this->getGlobalClasses();
 
-        $discoveredClasses = array_filter(
+        return array_filter(
             array_keys($discoveredClasses),
             function (string $replacement) use ($classmapPrefix) {
                 return empty($classmapPrefix) || ! str_starts_with($replacement, $classmapPrefix);
             }
         );
-
-        return $discoveredClasses;
     }
 
     /**
@@ -177,15 +187,12 @@ class DiscoveredSymbols
      */
     public function getDiscoveredConstants(?string $constantsPrefix = ''): array
     {
-        $discoveredConstants = $this->getConstants();
-        $discoveredConstants = array_filter(
-            array_keys($discoveredConstants),
+        return array_filter(
+            array_keys($this->getConstants()),
             function (string $replacement) use ($constantsPrefix) {
                 return empty($constantsPrefix) || ! str_starts_with($replacement, $constantsPrefix);
             }
         );
-
-        return $discoveredConstants;
     }
 
 //  public function getDiscoveredConstantChanges(?string $functionsPrefix = ''): array
@@ -199,9 +206,9 @@ class DiscoveredSymbols
     /**
      * @return FunctionSymbol[]
      */
-    public function getDiscoveredFunctions()
+    public function getDiscoveredFunctions(): array
     {
-        return $this->types[T_FUNCTION];
+        return $this->types[self::FUNCTION_SYMBOL];
     }
 
     /**
@@ -215,19 +222,28 @@ class DiscoveredSymbols
         );
     }
 
+    /**
+     * @return array<string,DiscoveredSymbol>
+     */
     public function getAll(): array
     {
-        return array_merge(...$this->types);
+        return array_merge(...array_values($this->types));
     }
 
+    /**
+     * @return array<string,TraitSymbol>
+     */
     public function getDiscoveredTraits(): array
     {
-        return (array) $this->types[T_TRAIT];
+        return (array) $this->types[self::TRAIT_SYMBOL];
     }
 
+    /**
+     * @return array<string,InterfaceSymbol>
+     */
     public function getDiscoveredInterfaces(): array
     {
-        return (array) $this->types[T_INTERFACE];
+        return (array) $this->types[self::INTERFACE_SYMBOL];
     }
 
     /**
@@ -238,7 +254,7 @@ class DiscoveredSymbols
     public function getClassmapSymbols(): array
     {
         return array_merge(
-            $this->getDiscoveredClasses(),
+            $this->getGlobalClasses(),
             $this->getDiscoveredInterfaces(),
             $this->getDiscoveredTraits(),
         );
@@ -246,6 +262,6 @@ class DiscoveredSymbols
 
     public function getNamespaceSymbolByString(string $namespace): ?NamespaceSymbol
     {
-        return $this->types[T_NAMESPACE][$namespace] ?? null;
+        return $this->types[self::NAMESPACE_SYMBOL][$namespace] ?? null;
     }
 }

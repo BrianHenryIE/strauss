@@ -16,6 +16,19 @@ use Psr\Log\Test\TestLogger;
  */
 class AutoloadTest extends TestCase
 {
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        /** @var FilesystemRegistry $registry */
+        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+
+        if ($registry->has('mem')) {
+            $registry->unregister('mem');
+        }
+    }
+
     /**
      * @covers ::generateClassmap
      */
@@ -36,7 +49,7 @@ class AutoloadTest extends TestCase
 
         $filesystem->write(
             'vendor-prefixed/psr/log/Psr/Log/Test/TestLogger.php',
-            file_get_contents(getcwd() . '/vendor/psr/log/Psr/Log/Test/TestLogger.php')
+            $this->getFileSystem()->read(getcwd() . '/vendor/psr/log/Psr/Log/Test/TestLogger.php')
         );
 
         $sut = new Autoload(
@@ -77,7 +90,7 @@ class AutoloadTest extends TestCase
 
         $filesystem->write(
             'path/to/myproject/vendor-prefixed/psr/log/Psr/Log/Test/TestLogger.php',
-            file_get_contents(getcwd() . '/vendor/psr/log/Psr/Log/Test/TestLogger.php')
+            $this->getFileSystem()->read(getcwd() . '/vendor/psr/log/Psr/Log/Test/TestLogger.php')
         );
 
         $sut = new Autoload(

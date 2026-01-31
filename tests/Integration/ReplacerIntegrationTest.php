@@ -12,7 +12,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 class ReplacerIntegrationTest extends IntegrationTestCase
 {
 
-    public function testReplaceNamespace()
+    public function testReplaceNamespace(): void
     {
         $this->markTestSkipped('Ironically, this is failing because it downloads a newer psr/log but strauss has already loaded an older one.');
 
@@ -42,7 +42,7 @@ class ReplacerIntegrationTest extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -55,12 +55,12 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $updatedFile = file_get_contents($absoluteTargetDir . 'google/apiclient/src/Client.php');
+        $updatedFile = $this->getFileSystem()->read($absoluteTargetDir . 'google/apiclient/src/Client.php');
 
         self::assertStringContainsString('use BrianHenryIE\Strauss\Google\AccessToken\Revoke;', $updatedFile);
     }
 
-    public function testReplaceClass()
+    public function testReplaceClass(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -79,7 +79,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -88,7 +88,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $updatedFile = file_get_contents($this->testsWorkingDir .'vendor-prefixed/' . 'setasign/fpdf/fpdf.php');
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/' . 'setasign/fpdf/fpdf.php');
 
         self::assertStringContainsString('class BrianHenryIE_Strauss_FPDF', $updatedFile);
     }
@@ -114,7 +114,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -123,7 +123,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $updatedFile = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/class-logger.php');
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/class-logger.php');
 
         self::assertStringContainsString('namespace BrianHenryIE\MyProject\WP_Logger;', $updatedFile);
     }
@@ -149,7 +149,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -158,7 +158,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $updatedFile = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/class-logger.php');
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/class-logger.php');
 
         self::assertStringContainsString('namespace AnotherProject\Logger;', $updatedFile);
     }
@@ -184,7 +184,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -193,9 +193,50 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $updatedFile = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/api/class-api.php');
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/api/class-api.php');
 
         self::assertStringContainsString('namespace AnotherProject\WP_Logger\MyProject\API;', $updatedFile);
+    }
+
+    /**
+     * After 0.25.0 namespaces not in psr-4 keys, i.e. only found by classmap scan, were not updated.
+     */
+    public function testSimpleReplacement(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strausstest",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "brianhenryie/bh-wp-logger": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\MyProject\\",
+      "exclude_from_copy": {
+        "file_patterns": [
+          "#[^/]*/[^/]*/tests/#"
+        ]
+      }
+    }
+  }
+}
+EOD;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/brianhenryie/bh-wp-logger/src/interface-api-interface.php');
+
+        $this->assertStringContainsString('namespace BrianHenryIE\\MyProject\\BrianHenryIE\\WP_Logger;', $updatedFile);
     }
 
     public function test_replace_classname_is_namespace_name(): void
@@ -257,11 +298,11 @@ PHP;
 EOD;
 
         mkdir($this->testsWorkingDir . 'bh-pdf-helpers/src', 0777, true);
-        file_put_contents($this->testsWorkingDir . 'bh-pdf-helpers/composer.json', $pdfHelpersComposer);
-        file_put_contents($this->testsWorkingDir . 'bh-pdf-helpers/src/MpdfCrop.php', $pdfHelpersPhp);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'bh-pdf-helpers/composer.json', $pdfHelpersComposer);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'bh-pdf-helpers/src/MpdfCrop.php', $pdfHelpersPhp);
 
         mkdir($this->testsWorkingDir . 'project', 0777, true);
-        file_put_contents($this->testsWorkingDir . 'project/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'project/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir.'project/');
 
@@ -270,7 +311,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $updatedFile = file_get_contents($this->testsWorkingDir . 'project/vendor-prefixed/brianhenryie/pdf-helpers/src/MpdfCrop.php');
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . 'project/vendor-prefixed/brianhenryie/pdf-helpers/src/MpdfCrop.php');
 
         self::assertStringContainsString('extends Mpdf', $updatedFile);
     }

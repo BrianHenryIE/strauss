@@ -35,17 +35,17 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
         $this->assertStringContainsString("Company\\\\Project\\\\Psr\\\\Log\\\\", $php_string);
         $this->assertStringContainsString("\"Psr\\\\SimpleCache\\\\", $php_string);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
         $this->assertStringContainsString("Company\\\\Project\\\\Psr\\\\Log\\\\", $php_string);
         $this->assertStringNotContainsString("'Psr\\\\Log\\\\", $php_string);
         $this->assertStringContainsString("Psr\\\\SimpleCache\\\\", $php_string);

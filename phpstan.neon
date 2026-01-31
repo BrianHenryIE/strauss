@@ -1,10 +1,19 @@
+# phpstan analyse --memory-limit=-1 --level 8 --verbose
+# phpstan analyse --memory-limit=-1 --level max --generate-baseline
+
+includes:
+    - phpstan-baseline.neon
+
 parameters:
+
     level: 7
+
+    reportUnmatchedIgnoredErrors: false
+
     paths:
         - src
         - bin/strauss
-    bootstrapFiles:
-        - phpstanbootstrap.php
+
     ignoreErrors:
         -
             message: '#Property.*excludePackages is unused#'
@@ -13,5 +22,8 @@ parameters:
         - '#.*expects Psr\\Log\\LoggerInterface, Psr\\Log\\LoggerInterface\|null given#'
 
         -   # Allow type errors in test assertions to just throw.
-            message: '#Parameter .* of method PHPUnit\\Framework\\Assert::.* expects .* given.#'
+            message: '#Parameter .* of .*method PHPUnit\\Framework\\Assert::.* expects .* given.#'
+            path: tests
+        -   # Allow skipping tests
+            identifier: deadCode.unreachable
             path: tests

@@ -507,8 +507,8 @@ EOD;
 
         // Attempt to replicate the failing test, since the contents seem the same but the input manner is different.
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $contents);
-        $contents = file_get_contents($tmpfname);
+        $this->getFileSystem()->write($tmpfname, $contents);
+        $contents = $this->getFileSystem()->read($tmpfname);
 
         $expected = <<<'EOD'
 <?php

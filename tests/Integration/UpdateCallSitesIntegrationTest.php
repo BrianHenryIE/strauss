@@ -56,9 +56,9 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
-        file_put_contents($this->testsWorkingDir . 'file1.php', $file1);
-        file_put_contents($this->testsWorkingDir . 'file2.php', $file2);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'file1.php', $file1);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'file2.php', $file2);
 
         chdir($this->testsWorkingDir);
 
@@ -71,16 +71,16 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
         assert($exitCode === 0);
 
-        $project_file_php_string = file_get_contents($this->testsWorkingDir . 'file1.php');
+        $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'file1.php');
         $this->assertStringNotContainsString('$v = twig_cycle(', $project_file_php_string);
         $this->assertStringContainsString('$v = bh_strauss_twig_cycle(', $project_file_php_string);
 
-        $project_file_php_string = file_get_contents($this->testsWorkingDir . 'file2.php');
+        $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'file2.php');
         $this->assertStringNotContainsString('use function twig_cycle as my_twig_cycle;', $project_file_php_string);
         $this->assertStringContainsString('use function bh_strauss_twig_cycle as my_twig_cycle;', $project_file_php_string);
 
         // This test isn't the actual thing being tested but might as well include it as a regression test.
-        $phpString = file_get_contents($this->testsWorkingDir .'vendor/twig/twig/src/Extension/CoreExtension.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/twig/twig/src/Extension/CoreExtension.php');
         $this->assertStringNotContainsString('function twig_cycle(', $phpString);
         $this->assertStringContainsString('function bh_strauss_twig_cycle(', $phpString);
     }

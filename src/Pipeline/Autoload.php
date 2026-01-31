@@ -7,6 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -14,9 +15,12 @@ use BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGeneratorFactory;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use Exception;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Seld\JsonLint\ParsingException;
 
 class Autoload
 {
@@ -24,7 +28,10 @@ class Autoload
 
     protected FileSystem $filesystem;
 
-    protected AutoloadConfigInterface $config;
+    /**
+     * @var StraussConfig&AutoloadConfigInterface
+     */
+    protected StraussConfig $config;
 
     /**
      * The files autoloaders of packages that have been copied by Strauss.
@@ -34,16 +41,14 @@ class Autoload
      */
     protected array $discoveredFilesAutoloaders;
 
-    protected string $absoluteTargetDirectory;
-
     /**
      * Autoload constructor.
      *
-     * @param StraussConfig $config
+     * @param StraussConfig&AutoloadConfigInterface $config
      * @param array<string, array<string>> $discoveredFilesAutoloaders
      */
     public function __construct(
-        AutoloadConfigInterface $config,
+        StraussConfig $config,
         array $discoveredFilesAutoloaders,
         Filesystem $filesystem,
         ?LoggerInterface $logger = null
@@ -54,6 +59,12 @@ class Autoload
         $this->setLogger($logger ?? new NullLogger());
     }
 
+    /**
+     * @param array<string,ComposerPackage> $flatDependencyTree
+     * @throws FilesystemException
+     * @throws ParsingException
+     * @throws Exception
+     */
     public function generate(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         if (!$this->config->isClassmapOutput()) {

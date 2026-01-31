@@ -3,7 +3,6 @@
 namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
@@ -24,13 +23,11 @@ use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
+use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Factory;
-use Composer\InstalledVersions;
-use Elazar\Flystream\FilesystemRegistry;
-use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -46,20 +43,10 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class DependenciesCommand extends Command
+class DependenciesCommand extends AbstractRenamespacerCommand
 {
-    use LoggerAwareTrait;
-
-    /** @var string */
-    protected string $workingDir;
-
-    protected StraussConfig $config;
-
-    protected ProjectComposerPackage $projectComposerPackage;
-
     /** @var Prefixer */
     protected Prefixer $replacer;
 
@@ -78,9 +65,12 @@ class DependenciesCommand extends Command
     protected DiscoveredFiles $discoveredFiles;
     protected DiscoveredSymbols $discoveredSymbols;
 
-    protected Filesystem $filesystem;
-
     /**
+     * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
+     *
+     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
+     *
      * @return void
      */
     protected function configure()
@@ -174,25 +164,7 @@ class DependenciesCommand extends Command
     {
         $isDryRun = isset($this->config) && $this->config->isDryRun();
 
-        // Who would want to dry-run without output?
-        if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
-            return new NullLogger();
-        }
-
-        $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
-
-        if ($input->hasOption('info') && $input->getOption('info') !== false) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        if ($isDryRun || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-            $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        return isset($this->logger) && $this->logger instanceof \Psr\Log\Test\TestLogger
-            ? $this->logger
-            : new ConsoleLogger($output, $logLevel);
+        parent::configure();
     }
 
     protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
@@ -239,23 +211,13 @@ class DependenciesCommand extends Command
         $this->workingDir = $workingDir;
 
         try {
-            $this->logger->notice('Starting... ' /** version */); // + PHP version
+            $this->logger->notice('Starting... '/** version */); // + PHP version
 
             $this->loadProjectComposerPackage();
             $this->loadConfigFromComposerJson();
             $this->updateConfigFromCli($input);
 
-            if ($this->config->isDryRun()) {
-                $this->filesystem = $this->getReadOnlyFileSystem($this->filesystem);
-
-                $this->setLogger($this->getIOLogger($input, $output));
-            }
-
-            $logger = new Logger('logger');
-            $logger->pushProcessor(new PsrLogMessageProcessor());
-            $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
-            $logger->pushHandler(new PsrHandler($this->getIOLogger($input, $output)));
-            $this->setLogger($logger);
+            parent::execute($input, $output);
 
             $this->buildDependencyList();
 
@@ -264,10 +226,11 @@ class DependenciesCommand extends Command
             $this->discoveredSymbols = new DiscoveredSymbols();
 
             $this->enumeratePsr4Namespaces();
-            $this->scanFiles();
-            $this->determineChanges();
-
+            $this->enumerateAutoloadedFiles();
+            $this->scanFilesForSymbols();
             $this->analyseFilesToCopy();
+            $this->markSymbolsForRenaming();
+            $this->determineChanges();
             $this->copyFiles();
 
             $this->performReplacements();
@@ -293,7 +256,7 @@ class DependenciesCommand extends Command
     }
 
     /**
-     * 1. Load the composer.json.
+     * Load the project's composer package using the current working directory.
      *
      * @throws Exception
      */
@@ -301,9 +264,8 @@ class DependenciesCommand extends Command
     {
         $this->logger->notice('Loading package...');
 
-
-        $composerFilePath = $this->filesystem->normalize($this->workingDir . Factory::getComposerFile());
-        $defaultComposerFilePath = $this->filesystem->normalize($this->workingDir . 'composer.json');
+        $composerFilePath = $this->filesystem->makeAbsolute($this->workingDir . Factory::getComposerFile());
+        $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . 'composer.json');
         if ($composerFilePath !== $defaultComposerFilePath) {
             $this->logger->info('Using: ' . $composerFilePath);
         }
@@ -316,6 +278,9 @@ class DependenciesCommand extends Command
         // Maybe even highlight what is default config and what is custom config.
     }
 
+    /**
+     * Load Strauss config from the project's composer.json.
+     */
     protected function loadConfigFromComposerJson(): void
     {
         $this->logger->notice('Loading composer.json config...');
@@ -365,7 +330,7 @@ class DependenciesCommand extends Command
         foreach ($this->flatDependencyTree as $dependency) {
             // Sort of duplicating the logic above.
             $dependency->setCopy(
-                !in_array($dependency, $this->config->getExcludePackagesFromCopy())
+                !in_array($dependency->getPackageName(), $this->config->getExcludePackagesFromCopy())
             );
 
             if ($this->config->isDeleteVendorPackages()) {
@@ -433,7 +398,12 @@ class DependenciesCommand extends Command
 
             foreach ($namespaces as $namespace) {
                 // TODO: log.
-                $symbol = new NamespaceSymbol(trim($namespace, '\\'), $file);
+                $symbol = new NamespaceSymbol(
+                    trim($namespace, '\\'),
+                    $file,
+                    '\\',
+                    $package
+                );
                 // TODO: respect all config options.
 //              $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
                 $this->discoveredSymbols->add($symbol);
@@ -441,8 +411,7 @@ class DependenciesCommand extends Command
         }
     }
 
-    // 4. Determine namespace and classname changes
-    protected function scanFiles(): void
+    protected function enumerateAutoloadedFiles(): void
     {
         $this->logger->notice('Enumerating autoload files...');
 
@@ -451,19 +420,33 @@ class DependenciesCommand extends Command
             $this->filesystem,
             $this->logger
         );
-        $autoloadFilesEnumerator->markFilesForInclusion($this->flatDependencyTree);
-        $autoloadFilesEnumerator->markFilesForExclusion($this->discoveredFiles);
+        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree);
+    }
 
+    protected function scanFilesForSymbols(): void
+    {
         $this->logger->notice('Scanning files...');
 
-        $fileScanner = new FileSymbolScanner(
+        $fileSymbolScanner = new FileSymbolScanner(
             $this->config,
             $this->discoveredSymbols,
             $this->filesystem,
             $this->logger
         );
 
-        $fileScanner->findInFiles($this->discoveredFiles);
+        $fileSymbolScanner->findInFiles($this->discoveredFiles);
+    }
+
+    protected function markSymbolsForRenaming(): void
+    {
+
+        $markSymbolsForRenaming = new MarkSymbolsForRenaming(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+
+        $markSymbolsForRenaming->scanSymbols($this->discoveredSymbols);
     }
 
     protected function determineChanges(): void
@@ -530,7 +513,10 @@ class DependenciesCommand extends Command
             $this->logger
         );
 
-        $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
+        $this->replacer->replaceInFiles(
+            $this->discoveredSymbols,
+            $this->discoveredFiles->getFiles()
+        );
     }
 
     protected function performReplacementsInProjectFiles(): void

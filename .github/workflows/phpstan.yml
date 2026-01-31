@@ -1,0 +1,98 @@
+name: PHPStan Analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+#    branches: [ master ] # all PRs?
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0 # needed for baseline comparison
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@ccf2c627fe61b1b4d924adfcbd19d661a18133a0 # v2.35.2
+        with:
+          php-version: 7.4
+          tools: composer:v2, phive, cs2pr
+          coverage: none
+
+      - name: Install Phive tools
+        if: ${{ github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.author_association == 'OWNER' }}
+        # Keys taken from `phive status`
+        # `phive status | grep -oE '[A-F0-9]{16}' | tr '\n' ',' | sed 's/,$//'`
+        # sed -i "s|^\s*phive install --trust-gpg-keys .*| phive install --trust-gpg-keys $(phive status | grep -oE '[A-F0-9]{16}' | paste -sd,)|" .github/workflows/phpstan.yml
+        run: |
+          phive install --trust-gpg-keys A9DB489A9190DE9B,4AA394086372C20A
+          phive status
+        env:
+          # We need to be authenticated to skip GitHub rate limits
+          # Generate a key at: https://github.com/settings/tokens, "classic"
+          # Approve the 2FA notification on your phone (I presume/hope)
+          # "Note" what it is for, I use ~PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 etc.
+          # Choose "Expiration", "Custom"
+          # For "Select Date", the Expiration date can only be set ~364 days ahead
+          # No scopes are needed, scroll down and click "Generate Token"
+          # Copied the displayed key
+          # Visit https://github.com/your/repo/settings/secrets/actions
+          # Click "New repository secret" and fill it in
+          # Do the same at https://github.com/your/repo/settings/secrets/dependabot
+          #
+          # Fix for rate limited GitHub API requests. See https://github.com/phar-io/phive/issues/384#issuecomment-1337064012
+          GITHUB_AUTH_TOKEN: ${{ secrets.PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 }}
+
+      - name: Install Phive tools (unauthenticated)
+        # secrets are not available to users without write access
+        if: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' }}
+        run: |
+          phive install --trust-gpg-keys A9DB489A9190DE9B,4AA394086372C20A
+          phive status
+
+      - name: Install Project Dependencies
+        run: composer install
+
+      - name: Run PHPStan (annotate all errors to max level)
+        id: run-phpstan
+        run: |
+          vendor/bin/phpstan analyse --memory-limit=-1 -vvv --error-format=checkstyle | cs2pr
+        continue-on-error: true
+
+      - name: Run PHPStan (fail if phpstan.neon level is not met) on PRs
+        run: vendor/bin/phpstan analyse
+        # TODO: fail _after_ the badge is updated
+        continue-on-error: true
+
+      - name: Get PhpStan level
+        id: phpstan-level
+        run: |
+          # After adding the example commands at the top of the phpstan.neon file, which contain the word "level", we 
+          # now have to use `tail`+`head` to skip the first few lines. (I'm sure there's a suitable regex, but this is 
+          # easy to implement and follow)
+          LEVEL=$(tail -n +3 phpstan.neon | head -n 10 | grep level | sed "s/[^0-9]*//")
+          echo "level=$LEVEL" >> "$GITHUB_OUTPUT" 
+
+      - name: Check success
+        if: steps.run-phpstan.outcome == 'success'
+        run: curl -o .github/phpstan.svg https://img.shields.io/badge/PHPStan-Level%20${{ steps.phpstan-level.outputs.level}}-2a5ea7.svg
+
+      - name: Check failures
+        if: steps.run-phpstan.outcome != 'success'
+        run: curl -o .github/phpstan.svg https://img.shields.io/badge/PHPStan-Level%20${{ steps.phpstan-level.outputs.level}}❌-lightgrey.svg
+
+      # This probably needs DEPLOY_KEY set for PRs and private repos
+      - name: Commit README badge changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          file_pattern: ".github/phpstan.svg"
+          commit_message: "🤖 PhpStan"

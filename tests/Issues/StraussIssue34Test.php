@@ -51,9 +51,9 @@ namespace My_Namespace\My_Project;
 use Psr\Log\LoggerInterface;
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
         @mkdir($this->testsWorkingDir . 'src');
-        file_put_contents($this->testsWorkingDir . 'src/library.php', $phpFileJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'src/library.php', $phpFileJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -65,11 +65,11 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $project_file_php_string = file_get_contents($this->testsWorkingDir . 'src/library.php');
+        $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'src/library.php');
         self::assertStringNotContainsString('use Psr\Log\LoggerInterface', $project_file_php_string);
         self::assertStringContainsString('use BrianHenryIE\Strauss\Psr\Log\LoggerInterface', $project_file_php_string);
 
-        $project_file_php_string = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
         self::assertStringNotContainsString('namespace Psr\Log;', $project_file_php_string);
         self::assertStringContainsString('namespace BrianHenryIE\Strauss\Psr\Log;', $project_file_php_string);
     }

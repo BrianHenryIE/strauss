@@ -15,14 +15,21 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue114Test extends IntegrationTestCase
 {
-    public function test_muted_errors()
+    public function test_muted_errors(): void
     {
 
         $composerJsonString = <<<'EOD'
 {
   "name": "issue/114",
   "require": {
-    "aws/aws-sdk-php": "3.317"
+    "aws/aws-sdk-php": "3.317.0"
+  },
+  "config": {
+    "audit": {
+      "ignore": {
+        "PKSA-dxyf-6n16-t87m": "We are not running prod"
+      }
+    }
   },
   "extra": {
     "strauss": {
@@ -40,14 +47,14 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/Configuration/ConfigurationResolver.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/Configuration/ConfigurationResolver.php');
 
         self::assertStringNotContainsString('@\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);', $php_string);
         self::assertStringContainsString('@\Company\Project\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);', $php_string);

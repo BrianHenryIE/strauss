@@ -66,8 +66,8 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
-        file_put_contents($this->testsWorkingDir . '/file1.php', $file1);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/file1.php', $file1);
 
         exec('composer install');
 
@@ -77,7 +77,7 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_aliases.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/autoload_aliases.php');
         $this->assertStringContainsString("'extends' => 'Strauss\\\\Alias\\\\Psr\\\\Log\\\\NullLogger'", $phpString);
 
         exec('composer dump-autoload');
@@ -114,7 +114,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -145,7 +145,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -176,7 +176,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -207,7 +207,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -237,7 +237,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -268,7 +268,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 

@@ -9,34 +9,25 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
+use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ReplaceCommand extends Command
+class ReplaceCommand extends AbstractRenamespacerCommand
 {
     use LoggerAwareTrait;
-
-    /** @var string */
-    protected string $workingDir;
-
-    protected ReplaceConfigInterface $config;
 
     /** @var Prefixer */
     protected Prefixer $replacer;
@@ -54,9 +45,17 @@ class ReplaceCommand extends Command
     protected DiscoveredFiles $discoveredFiles;
     protected DiscoveredSymbols $discoveredSymbols;
 
-    protected Filesystem $filesystem;
+    protected function getConfig(): ReplaceConfigInterface
+    {
+        return $this->config;
+    }
 
     /**
+     * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
+     *
+     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
+     *
      * @return void
      */
     protected function configure()
@@ -91,6 +90,8 @@ class ReplaceCommand extends Command
         $this->filesystem = new Filesystem(
             new LocalFilesystemAdapter('/')
         );
+
+        parent::configure();
     }
 
     /**
@@ -102,21 +103,14 @@ class ReplaceCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->setLogger(
-            new ConsoleLogger(
-                $output,
-                [ LogLevel::INFO => OutputInterface::VERBOSITY_NORMAL ]
-            )
-        );
-
-        $workingDir       = getcwd() . '/';
-        $this->workingDir = $workingDir;
-
         try {
-            $config = $this->createConfig($input);
-            $this->config = $config;
+            // TODO: where?!
+            parent::execute($input, $output);
 
+            $this->updateConfigFromCli($input);
             // Pipeline
+
+            $config = $this->getConfig();
 
             $this->discoveredSymbols = new DiscoveredSymbols();
 
@@ -138,29 +132,37 @@ class ReplaceCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function createConfig(InputInterface $input): ReplaceConfigInterface
+
+    protected function updateConfigFromCli(InputInterface $input): void
     {
+        $this->logger->notice('Loading cli config...');
+
         $config = new StraussConfig();
         $config->setProjectDirectory(getcwd());
 
-        $from = $input->getOption('from');
-        $to = $input->getOption('to');
+        /** @var string $inputFrom */
+        $inputFrom = $input->getOption('from');
+
+        /** @var string $inputTo */
+        $inputTo = $input->getOption('to');
+
+        // TODO: validate input exists.
 
         // TODO:
-        $config->setNamespaceReplacementPatterns([$from => $to]);
+        $this->config->setNamespaceReplacementPatterns([$inputFrom => $inputTo]);
 
-        $paths = explode(',', $input->getOption('paths'));
+        /** @var string $inputPaths */
+        $inputPaths = $input->getOption('paths');
+        $paths = explode(',', $inputPaths);
 
-        $config->setUpdateCallSites($paths);
-
-        return $config;
+        $this->config->setUpdateCallSites($paths);
     }
 
 
     protected function enumerateFiles(ReplaceConfigInterface $config): void
     {
         $this->logger->info('Enumerating files...');
-        $relativeUpdateCallSites = $config->getUpdateCallSites();
+        $relativeUpdateCallSites = $config->getUpdateCallSites() ?? [];
         $updateCallSites = array_map(
             fn($path) => false !== strpos($path, trim($this->workingDir, '/')) ? $path : $this->workingDir . $path,
             $relativeUpdateCallSites
@@ -187,8 +189,14 @@ class ReplaceCommand extends Command
             $this->filesystem,
             $this->logger
         );
-        $autoloadFilesEnumerator->markFilesForInclusion($this->flatDependencyTree);
-        $autoloadFilesEnumerator->markFilesForExclusion($this->discoveredFiles);
+        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree);
+
+        $markSymbolsForRenaming = new MarkSymbolsForRenaming(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+        $markSymbolsForRenaming->scanSymbols($this->discoveredSymbols);
 
         $changeEnumerator = new ChangeEnumerator(
             $config,
@@ -248,8 +256,8 @@ class ReplaceCommand extends Command
     {
         $this->logger->info('Adding licenses...');
 
-        $username = trim(shell_exec('git config user.name'));
-        $email = trim(shell_exec('git config user.email'));
+        $username = trim(shell_exec('git config user.name') ?: '');
+        $email = trim(shell_exec('git config user.email') ?: '');
 
         if (!empty($username) && !empty($email)) {
             // e.g. "Brian Henry <BrianHenryIE@gmail.com>".

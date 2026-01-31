@@ -7,11 +7,12 @@
 
 namespace BrianHenryIE\Strauss;
 
+use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
-use Elazar\Flystream\ServiceLocator;
+use Exception;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -39,12 +40,43 @@ class IntegrationTestCase extends TestCase
 
         $this->projectDir = getcwd();
 
+        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
+
+        $this->logger = new ColorLogger();
+
+        if ('Darwin' === PHP_OS) {
+            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
+        }
+
+        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
+        // we set breakpoints, we can easily browse the files.
+        if ($this->isPhpStormRunning()) {
+            $this->testsWorkingDir = getcwd() . '/teststempdir/';
+        }
+
+        if (file_exists($this->testsWorkingDir)) {
+            $this->deleteDir($this->testsWorkingDir);
+        }
+
+        @mkdir($this->testsWorkingDir);
         $this->createWorkingDir();
 
         if (file_exists($this->projectDir . '/strauss.phar')) {
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
             ob_flush();
         }
+    }
+
+    protected function isPhpStormRunning(): bool
+    {
+        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
+            return true;
+        }
+
+        if (isset($_SERVER['IDE_PHPUNIT_CUSTOM_LOADER'])) {
+            return true;
+        }
+        return false;
     }
 
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
@@ -124,13 +156,17 @@ class IntegrationTestCase extends TestCase
 
         $dir = $this->testsWorkingDir;
 
-        $this->deleteDir($dir);
+        try {
+            $this->deleteDir($dir);
+        } catch (Exception $exception) {
+            // Not ideal, but not important enough to fail hard.
+        }
 
         /** @var FilesystemRegistry $registry */
         try {
             $registry = ServiceLocator::get(FilesystemRegistry::class);
             $registry->unregister('mem');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 
@@ -139,9 +175,7 @@ class IntegrationTestCase extends TestCase
         if (!file_exists($dir)) {
             return;
         }
-        $filesystem = new Filesystem(
-            new LocalFilesystemAdapter('/'),
-        );
+        $filesystem = $this->getFileSystem();
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
         $isSymlink = function ($file) use ($symfonyFilesystem) {

@@ -14,8 +14,13 @@ use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
 use Composer\Factory;
+use Elazar\Flystream\StripProtocolPathNormalizer;
+use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
@@ -25,6 +30,8 @@ use League\Flysystem\WhitespacePathNormalizer;
 class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCompatTraitInterface
 {
     use FlysystemBackCompatTrait;
+
+    protected FilesystemOperator $flysystem;
 
     protected PathNormalizer $normalizer;
 
@@ -76,9 +83,23 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
+     * Normalize directory separators to forward slashes.
+     *
+     * PHP native functions (realpath, getcwd, dirname) return backslashes on Windows,
+     * but Flysystem always uses forward slashes. This method ensures consistency.
+     *
+     * Accepts null to preserve original str_replace() behavior where null is treated as empty string.
+     */
+    public static function normalizeDirSeparator(?string $path): string
+    {
+        return str_replace('\\', '/', $path ?? '');
+    }
+
+    /**
      * @param string[] $fileAndDirPaths
      *
      * @return string[]
+     * @throws FilesystemException
      */
     public function findAllFilesAbsolutePaths(array $fileAndDirPaths, bool $excludeDirectories = false): array
     {
@@ -95,10 +116,14 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
                 FilesystemReader::LIST_DEEP
             );
 
-            /** @var FileAttributes[] $files */
+            /** @var FileAttributes[] $fileAttributesArray */
             $fileAttributesArray = $directoryListing->toArray();
 
-            $paths = array_map(fn($file) => $file->path(), $fileAttributesArray);
+
+            $paths = array_map(
+                fn(StorageAttributes $attributes): string => $this->makeAbsolute($attributes->path()),
+                $fileAttributesArray
+            );
 
             if ($excludeDirectories) {
                 $paths = array_filter($paths, fn($path) => !$this->directoryExists($path));
@@ -110,9 +135,13 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         return $files;
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function getAttributes(string $absolutePath): ?StorageAttributes
     {
-        $fileDirectory = realpath(dirname($absolutePath));
+        // TODO: check if `realpath()` is a bad idea here.
+        $fileDirectory = realpath(dirname($absolutePath)) ?: dirname($absolutePath);
 
         $absolutePath = $this->normalizer->normalizePath($absolutePath);
 
@@ -128,9 +157,155 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         return null;
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function exists(string $location): bool
     {
         return $this->fileExists($location) || $this->directoryExists($location);
+    }
+
+    public function fileExists(string $location): bool
+    {
+        return $this->flysystem->fileExists(
+            $this->normalizer->normalizePath($location)
+        );
+    }
+
+    public function read(string $location): string
+    {
+        return $this->flysystem->read(
+            $this->normalizer->normalizePath($location)
+        );
+    }
+
+    public function readStream(string $location)
+    {
+        return $this->flysystem->readStream(
+            $this->normalizer->normalizePath($location)
+        );
+    }
+
+    public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
+    {
+        return $this->flysystem->listContents(
+            $this->normalizer->normalizePath($location),
+            $deep
+        );
+    }
+
+    public function lastModified(string $path): int
+    {
+        return $this->flysystem->lastModified(
+            $this->normalizer->normalizePath($path)
+        );
+    }
+
+    public function fileSize(string $path): int
+    {
+        return $this->flysystem->fileSize(
+            $this->normalizer->normalizePath($path)
+        );
+    }
+
+    public function mimeType(string $path): string
+    {
+        return $this->flysystem->mimeType(
+            $this->normalizer->normalizePath($path)
+        );
+    }
+
+    public function visibility(string $path): string
+    {
+        return $this->flysystem->visibility(
+            $this->normalizer->normalizePath($path)
+        );
+    }
+
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
+    public function write(string $location, string $contents, array $config = []): void
+    {
+        $this->flysystem->write(
+            $this->normalizer->normalizePath($location),
+            $contents,
+            $config
+        );
+    }
+
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
+    public function writeStream(string $location, $contents, array $config = []): void
+    {
+        $this->flysystem->writeStream(
+            $this->normalizer->normalizePath($location),
+            $contents,
+            $config
+        );
+    }
+
+    public function setVisibility(string $path, string $visibility): void
+    {
+        $this->flysystem->setVisibility(
+            $this->normalizer->normalizePath($path),
+            $visibility
+        );
+    }
+
+    public function delete(string $location): void
+    {
+        $this->flysystem->delete(
+            $this->normalizer->normalizePath($location)
+        );
+    }
+
+    public function deleteDirectory(string $location): void
+    {
+        $this->flysystem->deleteDirectory(
+            $this->normalizer->normalizePath($location)
+        );
+    }
+
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
+    public function createDirectory(string $location, array $config = []): void
+    {
+        $this->flysystem->createDirectory(
+            $this->normalizer->normalizePath($location),
+            $config
+        );
+    }
+
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
+    public function move(string $source, string $destination, array $config = []): void
+    {
+        $this->flysystem->move(
+            $this->normalizer->normalizePath($source),
+            $this->normalizer->normalizePath($destination),
+            $config
+        );
+    }
+
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
+    public function copy(string $source, string $destination, array $config = []): void
+    {
+        $this->flysystem->copy(
+            $this->normalizer->normalizePath($source),
+            $this->normalizer->normalizePath($destination),
+            $config
+        );
     }
 
     /**
@@ -183,23 +358,6 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         );
     }
 
-
-    /**
-     * Does the subdir path start with the dir path?
-     */
-    public function isSubDirOf(string $dir, string $subdir): bool
-    {
-        return str_starts_with(
-            $this->normalizer->normalizePath($subdir),
-            $this->normalizer->normalizePath($dir)
-        );
-    }
-
-    public function normalize(string $path)
-    {
-        return $this->normalizer->normalizePath($path);
-    }
-
     /**
      * Check is a file under a symlinked path.
      *
@@ -223,6 +381,48 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 //        return ! $realpath || ! str_starts_with($realpath, $this->workingDir);
 
         throw new \Exception('Cannot determine symbolic link for files');
+    }
+
+    /**
+     * Does the subDir path start with the dir path?
+     */
+    public function isSubDirOf(string $dir, string $subDir): bool
+    {
+        return str_starts_with(
+            $this->normalizer->normalizePath($subDir),
+            $this->normalizer->normalizePath($dir)
+        );
+    }
+
+    public function normalize(string $path): string
+    {
+        return $this->normalizer->normalizePath($path);
+    }
+
+    /**
+     * Normalize a path and ensure it's absolute.
+     *
+     * Flysystem's normalizer strips leading slashes because paths are relative to the adapter root.
+     * When we need paths for external use (Composer, realpath, etc.), they must be absolute.
+     *
+     * - On Unix: prepends '/' if not present
+     * - On Windows: paths already have drive letters (e.g., 'C:/...') so no prefix needed
+     */
+    public function makeAbsolute(string $path): string
+    {
+        $normalized = $this->normalizer->normalizePath($path);
+
+        // Windows paths start with drive letter (e.g., 'C:/' or 'D:\')
+        if (preg_match('/^[a-zA-Z]:/', $normalized)) {
+            return $normalized;
+        }
+
+        // Unix paths need leading slash
+        if (!str_starts_with($normalized, '/')) {
+            return '/' . $normalized;
+        }
+
+        return $normalized;
     }
 
     public function dirIsEmpty(string $dir): bool

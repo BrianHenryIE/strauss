@@ -1459,7 +1459,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 		}
 
 		if (file_exists($this->defaultCssFile)) {
-			$css = file_get_contents($this->defaultCssFile);
+			$css = $this->getFileSystem()->read($this->defaultCssFile);
 			$this->cssManager->ReadCSS('<style> ' . $css . ' </style>');
 		} else {
 			throw new \Mpdf\MpdfException(sprintf('Unable to read default CSS file "%s"', $this->defaultCssFile));
@@ -27131,7 +27131,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 	// ========== OVERWRITE SEARCH STRING IN A PDF FILE ================
 	function OverWrite($file_in, $search, $replacement, $dest = Destination::DOWNLOAD, $file_out = "mpdf")
 	{
-		$pdf = file_get_contents($file_in);
+		$pdf = $this->getFileSystem()->read($file_in);
 
 		if (!is_array($search)) {
 			$x = $search;

@@ -44,15 +44,16 @@ class FileEnumerator
 
     /**
      * @param ComposerPackage[] $dependencies
+     * @throws FilesystemException
      */
     public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
     {
         foreach ($dependencies as $dependency) {
             $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
+            /** @var string $dependencyPackageAbsolutePath */
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
             $this->compileFileListForPaths([$dependencyPackageAbsolutePath], $dependency);
         }
-
 
         $this->discoveredFiles->sort();
         return $this->discoveredFiles;
@@ -60,6 +61,7 @@ class FileEnumerator
 
     /**
      * @param string[] $paths
+     * @throws FilesystemException
      */
     public function compileFileListForPaths(array $paths, ?ComposerPackage $dependency = null): DiscoveredFiles
     {
@@ -74,9 +76,9 @@ class FileEnumerator
     }
 
     /**
-     * @param ComposerPackage $dependency
      * @param string $sourceAbsoluteFilepath
-     * @param string $autoloaderType
+     * @param ?ComposerPackage $dependency
+     * @param ?string $autoloaderType
      *
      * @throws FilesystemException
      * @uses DiscoveredFiles::add
@@ -110,8 +112,15 @@ class FileEnumerator
                 $sourceAbsoluteFilepath
             );
 
+            /** @var string $dependencyPackageAbsolutePath */
+            $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
             if ($vendorRelativePath === $sourceAbsoluteFilepath) {
                 $vendorRelativePath = $dependency->getVendorSubdir() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
+                $vendorRelativePath = $dependency->getRelativePath() . str_replace(
+                    FileSystem::normalizeDirSeparator($dependencyPackageAbsolutePath),
+                    '',
+                    FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath)
+                );
             }
 
             /** @var FileWithDependency $f */

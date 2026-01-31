@@ -37,7 +37,7 @@ class CopierFeatureTest extends IntegrationTestCase
      * Configuration: Default target_directory (vendor-prefixed), no exclusions
      * Validates: Basic copying functionality, directory structure preservation
      */
-    public function test_default_copy_behavior_with_vendor_prefixed_target()
+    public function test_default_copy_behavior_with_vendor_prefixed_target(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -54,7 +54,7 @@ class CopierFeatureTest extends IntegrationTestCase
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -81,7 +81,7 @@ EOD;
      * Configuration: "target_directory": "/custom-lib/"
      * Validates: Custom target directory functionality from FileCopyScanner.php:96
      */
-    public function test_custom_target_directory()
+    public function test_custom_target_directory(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -99,7 +99,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -125,7 +125,7 @@ EOD;
      * Configuration: "target_directory": "vendor"
      * Validates: FileCopyScanner.php:63-66 logic where copying is skipped
      */
-    public function test_target_directory_same_as_vendor_directory()
+    public function test_target_directory_same_as_vendor_directory(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -143,12 +143,12 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
         // Store original file content
-        $originalContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $originalContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
@@ -157,7 +157,7 @@ EOD;
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed');
 
         // Verify files are modified in place (namespaces prefixed)
-        $modifiedContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $modifiedContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Test\\Copier\\Psr\\Log', $modifiedContent);
         $this->assertNotEquals($originalContent, $modifiedContent);
     }
@@ -170,7 +170,7 @@ EOD;
      * Configuration: "exclude_from_copy": { "packages": ["psr/log", "monolog/monolog"] }
      * Validates: FileCopyScanner.php:57-61 package exclusion logic
      */
-    public function test_exclude_packages_from_copy()
+    public function test_exclude_packages_from_copy(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -191,7 +191,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -220,7 +220,7 @@ EOD;
      * Configuration: "exclude_from_copy": { "namespaces": ["Psr\\Log\\", "Monolog\\"] }
      * Validates: FileEnumerator.php:93-96 and FileCopyScanner.php:70-78 namespace exclusion
      */
-    public function test_exclude_namespaces_from_copy()
+    public function test_exclude_namespaces_from_copy(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -241,7 +241,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -267,7 +267,7 @@ EOD;
      * Configuration: "exclude_from_copy": { "file_patterns": ["/.*Test\\.php$/", "/.*\\.md$/"] }
      * Validates: FileCopyScanner.php:82-87 file pattern exclusion logic
      */
-    public function test_exclude_file_patterns_from_copy()
+    public function test_exclude_file_patterns_from_copy(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -287,7 +287,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -315,7 +315,7 @@ EOD;
      * Configuration: "exclude_from_copy": { "file_patterns": ["/^((?!aws\\/aws-sdk-php).)*$/"] }
      * Validates: Complex regex patterns from StraussIssue83Test.php and StraussIssue88Test.php
      */
-    public function test_exclude_with_inverted_regex_pattern()
+    public function test_exclude_with_inverted_regex_pattern(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -336,7 +336,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -362,7 +362,7 @@ EOD;
      * Configuration: All exclude_from_copy options used together
      * Validates: Multiple exclusion logic working in combination
      */
-    public function test_combined_exclusions_from_copy()
+    public function test_combined_exclusions_from_copy(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -386,7 +386,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -414,7 +414,7 @@ EOD;
      * Configuration: exclude_from_copy configured to skip certain files
      * Validates: FileCopyScanner.php:104-107 logic preventing source file modification
      */
-    public function test_excluded_files_not_prefixed()
+    public function test_excluded_files_not_prefixed(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -434,12 +434,12 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
         // Store original file content
-        $originalContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $originalContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
@@ -448,7 +448,7 @@ EOD;
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log');
 
         // Verify original files remain unchanged (not prefixed)
-        $currentContent = file_get_contents($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $currentContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertEquals($originalContent, $currentContent);
         $this->assertStringNotContainsString('namespace Test\\Copier\\Psr\\Log', $currentContent);
     }
@@ -461,7 +461,7 @@ EOD;
      * Configuration: "target_directory": "/new-custom-dir/"
      * Validates: Copier.php:62-65 directory creation logic
      */
-    public function test_target_directory_creation()
+    public function test_target_directory_creation(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -479,7 +479,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -507,7 +507,7 @@ EOD;
      * Configuration: Standard setup with existing target files
      * Validates: Copier.php:75-78 file deletion before copy logic
      */
-    public function test_existing_target_files_overwritten()
+    public function test_existing_target_files_overwritten(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -524,7 +524,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -537,10 +537,10 @@ EOD;
 
         // Modify the target file to test overwriting
         $testContent = "<?php\n// This is a test modification\nnamespace Test\\Modified;";
-        file_put_contents($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php', $testContent);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php', $testContent);
 
         // Verify our modification is there
-        $modifiedContent = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $modifiedContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('This is a test modification', $modifiedContent);
 
         // Run Strauss again
@@ -548,7 +548,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify the file was overwritten (our modification is gone)
-        $newContent = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $newContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringNotContainsString('This is a test modification', $newContent);
         $this->assertStringContainsString('namespace Test\\Copier\\Psr\\Log', $newContent);
     }
@@ -561,7 +561,7 @@ EOD;
      * Configuration: Standard setup with missing source files
      * Validates: Copier.php:114-119 missing file handling
      */
-    public function test_missing_source_files_handled_gracefully()
+    public function test_missing_source_files_handled_gracefully(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -578,7 +578,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -611,7 +611,7 @@ EOD;
      * Configuration: Package with mixed file and directory structure
      * Validates: Copier.php:101-119 handling of both files and directories
      */
-    public function test_directory_and_file_copying()
+    public function test_directory_and_file_copying(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -628,7 +628,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -667,7 +667,7 @@ EOD;
      * Configuration: Package with symlinked files
      * Validates: FileCopyScanner.php:101 symlink detection and Copier behavior
      */
-    public function test_symlink_files_copying()
+    public function test_symlink_files_copying(): void
     {
         // This test is complex to set up reliably across different systems
         // so we'll mark it as skipped for now but provide the test structure
@@ -687,7 +687,7 @@ EOD;
      * Configuration: Various target_directory path formats
      * Validates: Path resolution in FileEnumerator.php:177 and Copier
      */
-    public function test_absolute_vs_relative_target_paths()
+    public function test_absolute_vs_relative_target_paths(): void
     {
         // Test relative path first
         $composerJsonRelative = <<<'EOD'
@@ -706,7 +706,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonRelative);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonRelative);
 
         exec('composer install');
 
@@ -739,7 +739,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonAbsolute);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonAbsolute);
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
@@ -757,7 +757,7 @@ EOD;
      * Configuration: "exclude_from_copy": { "packages": [], "namespaces": [], "file_patterns": [] }
      * Validates: Graceful handling of empty exclusion arrays
      */
-    public function test_empty_exclude_configuration()
+    public function test_empty_exclude_configuration(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -779,7 +779,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -801,7 +801,7 @@ EOD;
      * Configuration: "exclude_from_copy": { "file_patterns": ["/invalid[regex/"] }
      * Validates: Error handling in FileCopyScanner.php:83 preg_match
      */
-    public function test_invalid_regex_pattern_handling()
+    public function test_invalid_regex_pattern_handling(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -821,7 +821,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -849,7 +849,7 @@ EOD;
      * Configuration: Mixed case namespace exclusions
      * Validates: Case handling in FileEnumerator.php:93 and FileCopyScanner.php:73
      */
-    public function test_case_sensitivity_in_namespace_exclusions()
+    public function test_case_sensitivity_in_namespace_exclusions(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -869,7 +869,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -894,7 +894,7 @@ EOD;
      * Configuration: Package with "autoload": { "files": ["src/functions.php"] }
      * Validates: FileEnumerator.php:87-90 files autoloader processing
      */
-    public function test_files_autoloader_copying()
+    public function test_files_autoloader_copying(): void
     {
         // Use a simple package instead of complex path repository to avoid symlink issues
         $composerJsonString = <<<'EOD'
@@ -912,7 +912,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         exec('composer install');
 

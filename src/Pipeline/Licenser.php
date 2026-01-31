@@ -18,7 +18,9 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Config\LicenserConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\StorageAttributes;
 use Psr\Log\LoggerAwareTrait;
@@ -52,7 +54,7 @@ class Licenser
 
     protected FileSystem $filesystem;
 
-    protected StraussConfig $config;
+    protected LicenserConfigInterface $config;
 
     /**
      * Licenser constructor.
@@ -61,7 +63,7 @@ class Licenser
      * @param string $author To add to each modified file's header
      */
     public function __construct(
-        StraussConfig    $config,
+        LicenserConfigInterface $config,
         array            $dependencies,
         string           $author,
         FileSystem       $filesystem,
@@ -142,11 +144,18 @@ class Licenser
             $packagePath = $dependency->getPackageAbsolutePath();
             $packagePath = $this->filesystem->normalize($packagePath);
 
+            if (!$packagePath) {
+                $this->logger->debug('Dependency {dependency} had no package path?', [
+                    'dependency' => $dependency->getPackageName()
+                ]);
+                continue;
+            }
+
             $files = $this->filesystem->listContents($packagePath, true)
                 ->filter(fn (StorageAttributes $attributes) => $attributes->isFile());
-
+            /** @var FileAttributes $file */
             foreach ($files as $file) {
-                $filePath = $file->path();
+                $filePath = $this->filesystem->makeAbsolute($file->path());
 
                 // If packages happen to have their vendor dir, i.e. locally required packages, don't included the licenses
                 // from their vendor dir (they should be included otherwise anyway).

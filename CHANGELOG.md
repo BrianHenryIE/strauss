@@ -1,5 +1,22 @@
 # Change Log
 
+## 0.26.4 January 2025
+
+## 0.26.3 December 2025
+
+* Refactoring
+* PHPStan fixes
+
+## 0.26.2 November 2025
+
+* Fix: namespaces not updated in non-autoloaded files
+
+## 0.26.1 November 2025
+
+* Fix: implicitly nullable warning
+* Refactor: Split `exclude_from_prefixing` code from `AutoloadedFilesEnumerator` to `MarkSymbolsForRenaming` to fix bug
+* Dev: Add scripts `analyze-changes`, `cs-changes-strict`...
+
 ## 0.26.0 November 2025
 
 * Add: `include_root_autoload` option

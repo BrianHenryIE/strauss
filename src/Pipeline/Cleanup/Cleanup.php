@@ -8,21 +8,24 @@ namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Autoload\AutoloadGenerator;
-use Composer\Config as ComposerConfig;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Json\JsonFile;
 use Composer\Repository\InstalledFilesystemRepository;
+use Exception;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+use Seld\JsonLint\ParsingException;
 
+/**
+ * @phpstan-import-type InstalledJsonArray from InstalledJson
+ */
 class Cleanup
 {
     use LoggerAwareTrait;
@@ -76,7 +79,10 @@ class Cleanup
         $this->deleteEmptyDirectories($discoveredFiles->getFiles());
     }
 
-    /** @param array<string,ComposerPackage> $flatDependencyTree */
+    /** @param array<string,ComposerPackage> $flatDependencyTree
+     * @throws Exception
+     * @throws FilesystemException
+     */
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $installedJson = new InstalledJson(
@@ -110,6 +116,7 @@ class Cleanup
      *
      * Shares a lot of code with {@see DumpAutoload::generatedPrefixedAutoloader()} but I've done lots of work
      * on that in another branch so I don't want to cause merge conflicts.
+     * @throws ParsingException
      */
     public function rebuildVendorAutoloader(): void
     {
@@ -140,6 +147,7 @@ class Cleanup
         $installedJson = new JsonFile($installedJsonFilePath);
         $localRepo = new InstalledFilesystemRepository($installedJson);
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
+        /** @var InstalledJsonArray $installedJsonArray */
         $installedJsonArray = $installedJson->read();
         $generator->setDevMode($installedJsonArray['dev'] ?? false);
 
@@ -158,9 +166,10 @@ class Cleanup
     }
 
     /**
+     * @param FileBase[] $files
      * @throws FilesystemException
      */
-    protected function deleteEmptyDirectories(array $files)
+    protected function deleteEmptyDirectories(array $files): void
     {
         $this->logger->info('Deleting empty directories.');
 
@@ -222,8 +231,22 @@ class Cleanup
     }
 
     /**
+     * TODO: Move to FileSystem class.
+     * TODO: Is this already moved in SymlinkProtectFileSystem branch?
+     *
+     * @throws FilesystemException
      */
-    protected function doIsDeleteVendorPackages(array $flatDependencyTree, DiscoveredFiles $discoveredFiles)
+    protected function dirIsEmpty(string $dir): bool
+    {
+        // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
+        return empty($this->filesystem->listContents($dir)->toArray());
+    }
+
+    /**
+     * @param array<string,ComposerPackage> $flatDependencyTree
+     * @throws FilesystemException
+     */
+    protected function doIsDeleteVendorPackages(array $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
     {
         $this->logger->info('Deleting original vendor packages.');
 
@@ -240,10 +263,13 @@ class Cleanup
 //            }
 //        }
 
-        $files = $discoveredFiles->getFiles();
+        foreach ($flatDependencyTree as $package) {
+            // Skip packages excluded from copy - they should remain in vendor/
+            if (in_array($package->getPackageName(), $this->config->getExcludePackagesFromCopy(), true)) {
+                $this->logger->debug('Skipping deletion of excluded package: ' . $package->getPackageName());
+                continue;
+            }
 
-        /** @var ComposerPackage $package */
-        foreach ($flatDependencyTree as $packageName => $package) {
             // Normal package.
             $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
@@ -263,7 +289,7 @@ class Cleanup
      *
      * @throws FilesystemException
      */
-    public function doIsDeleteVendorFiles(array $files)
+    public function doIsDeleteVendorFiles(array $files): void
     {
         $this->logger->info('Deleting original vendor files.');
 
