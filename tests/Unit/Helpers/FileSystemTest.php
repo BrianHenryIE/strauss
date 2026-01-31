@@ -27,6 +27,7 @@ class FileSystemTest extends TestCase
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
+            )
         );
 
         $result = $sut->getAttributes(__FILE__);
