@@ -24,7 +24,6 @@
     "require": {
         "ext-json": "*",
         "brianhenryie/simple-php-code-parser": "^0.15.3",
-        "brianhenryie/composer-prefer-local": "^0.1.4",
         "composer/class-map-generator": "^1.6.0",
         "composer/composer": "dev-main#598e88e43cb5f9d6d2bf444b911cee532fa6d428",
         "composer-runtime-api": "^2.0",
@@ -141,7 +140,6 @@
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "brianhenryie/composer-prefer-local": true,
             "phpstan/extension-installer": true
         }
     }
