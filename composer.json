@@ -100,11 +100,6 @@
           "phpcs || true",
           "@analyze"
         ],
-        "cs-fix": [
-          "phpcbf || true",
-          "phpcs || true",
-          "@analyze"
-        ],
         "cs-changes": [
           "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
           "@analyze-changes"
