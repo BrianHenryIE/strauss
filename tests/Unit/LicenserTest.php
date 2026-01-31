@@ -67,8 +67,10 @@ class LicenserTest extends TestCase
 
         $normalizer = new WhitespacePathNormalizer();
         $normalizedPath = $normalizer->normalizePath($packagePath);
+
         $filesystemMock->expects('normalize')->with($packagePath)->once()->andReturn($normalizedPath);
         $filesystemMock->expects('listContents')->with($normalizedPath, true)->once()->andReturn($directoryListingMock);
+        $filesystemMock->expects('makeAbsolute')->zeroOrMoreTimes()->andReturnArg(0);
 
         $sut = new Licenser($config, $dependencies, 'BrianHenryIE', $filesystemMock);
 
