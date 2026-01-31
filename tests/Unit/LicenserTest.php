@@ -61,6 +61,7 @@ class LicenserTest extends TestCase
         $directoryListing = new DirectoryListing($finderArrayIterator);
 
         $filesystemMock->expects('listContents')->andReturn($directoryListing);
+        $filesystemMock->shouldReceive('makeAbsolute')->andReturnArg(0);
 
         $sut = new Licenser($config, $dependencies, 'BrianHenryIE', $filesystemMock);
 
