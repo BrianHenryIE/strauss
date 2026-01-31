@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
 use Monolog\Handler\PsrHandler;
@@ -67,6 +68,37 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
+    protected function getFileSystem(): Filesystem
+    {
+
+        if (!isset($this->filesystem)) {
+            $this->filesystem = $this->getNewFileSystem();
+        }
+        return $this->filesystem;
+    }
+
+    protected function getNewFileSystem(): Filesystem
+    {
+        $localFilesystemAdapter = new LocalFilesystemAdapter(
+            '/',
+            null,
+            LOCK_EX,
+            LocalFilesystemAdapter::SKIP_LINKS
+        );
+
+        $normalizer = new WhitespacePathNormalizer();
+
+        return new FileSystem(
+            new \League\Flysystem\Filesystem(
+                $localFilesystemAdapter,
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
+                $normalizer
+            ),
+            isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd()
+        );
+    }
 
     /**
      * Get an in-memory filesystem.

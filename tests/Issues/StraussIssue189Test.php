@@ -38,7 +38,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
 
         exec('composer install');
@@ -46,7 +46,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $installedJson = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $installedJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
         $installedJsonArray = json_decode($installedJson, true);
 
         $psr4AutoloadKey = $installedJsonArray["packages"][0]["autoload"]["psr-4"];

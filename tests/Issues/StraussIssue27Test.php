@@ -39,7 +39,7 @@ class StraussIssue27Test extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -48,7 +48,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/symfony/polyfill-intl-normalizer/Normalizer.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/symfony/polyfill-intl-normalizer/Normalizer.php');
 
         self::assertStringNotContainsString('namespace Normalizer_Test\Symfony\Polyfill\Intl\Normalizer_Test_Normalizer;', $php_string);
         self::assertStringContainsString('namespace Normalizer_Test\Symfony\Polyfill\Intl\Normalizer;', $php_string);
@@ -57,7 +57,7 @@ EOD;
         self::assertStringContainsString('class Normalizer', $php_string);
 
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php');
 
         self::assertStringNotContainsString('class Normalizer_Test_Normalizer extends Normalizer_Test\Symfony\Polyfill\Intl\Normalizer_Test_Normalizer\Normalizer', $php_string);
         self::assertStringContainsString('class Normalizer_Test_Normalizer extends Normalizer_Test\Symfony\Polyfill\Intl\Normalizer\Normalizer', $php_string);

@@ -77,7 +77,7 @@ class StraussConfigTest extends TestCase
 EOD;
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -136,7 +136,7 @@ EOD;
 EOD;
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -187,7 +187,7 @@ EOD;
 EOD;
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -218,7 +218,7 @@ EOD;
 EOD;
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -248,7 +248,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -275,7 +275,7 @@ EOD;
 EOD;
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -306,7 +306,7 @@ EOD;
 EOD;
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -336,7 +336,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -364,7 +364,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -410,7 +410,7 @@ EOD;
 
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -438,7 +438,7 @@ EOD;
 
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -467,7 +467,7 @@ EOD;
 
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -487,7 +487,7 @@ EOD;
 
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -519,7 +519,7 @@ EOD;
 
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -562,7 +562,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -603,7 +603,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -646,7 +646,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -668,7 +668,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -696,7 +696,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -719,7 +719,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -743,7 +743,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -766,7 +766,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -791,7 +791,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -815,7 +815,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -841,7 +841,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -867,7 +867,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
 
         $composer = Factory::create(new NullIO(), $tmpfname);
@@ -895,7 +895,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -924,7 +924,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -950,7 +950,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -974,7 +974,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -999,7 +999,7 @@ EOD;
 }
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 

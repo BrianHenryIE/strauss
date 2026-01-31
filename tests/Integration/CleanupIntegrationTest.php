@@ -33,7 +33,7 @@ class CleanupIntegrationTest extends IntegrationTestCase
 EOD;
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -42,7 +42,7 @@ EOD;
         $exitCode = $this->runStrauss();
         assert($exitCode === 0);
 
-        $installedJsonFile = file_get_contents($this->testsWorkingDir .'vendor/composer/installed.json');
+        $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/installed.json');
         $installedJson = json_decode($installedJsonFile, true);
         $entry = array_reduce($installedJson['packages'], function ($carry, $item) {
             if ($item['name'] === 'symfony/polyfill-php80') {
@@ -52,15 +52,15 @@ EOD;
         }, null);
         $this->assertEmpty($entry['autoload'], json_encode($entry['autoload'], JSON_PRETTY_PRINT));
 
-        $autoloadStaticPhp = file_get_contents($this->testsWorkingDir .'vendor/composer/autoload_static.php');
+        $autoloadStaticPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/autoload_static.php');
         $this->assertStringNotContainsString("__DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php'", $autoloadStaticPhp);
 
         $this->assertFileDoesNotExist($this->testsWorkingDir .'vendor/composer/autoload_files.php');
 
-        $autoloadFilesPhp = file_get_contents($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
+        $autoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("\$vendorDir . '/symfony/polyfill-php80/bootstrap.php'", $autoloadFilesPhp);
 
-        $newAutoloadFilesPhp = file_get_contents($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
+        $newAutoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("/symfony/polyfill-php80/bootstrap.php'", $newAutoloadFilesPhp);
     }
 }
