@@ -28,6 +28,8 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Factory;
+use Composer\InstalledVersions;
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -40,9 +42,11 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
+use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class DependenciesCommand extends AbstractRenamespacerCommand
@@ -154,6 +158,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             null,
             $pathPrefixer
         );
+
+        parent::configure();
     }
 
     /**
@@ -164,7 +170,25 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
         $isDryRun = isset($this->config) && $this->config->isDryRun();
 
-        parent::configure();
+        // Who would want to dry-run without output?
+        if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
+            return new NullLogger();
+        }
+
+        $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
+
+        if ($input->hasOption('info') && $input->getOption('info') !== false) {
+            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        if ($isDryRun || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {
+            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
+            $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        return isset($this->logger) && $this->logger instanceof TestLogger
+            ? $this->logger
+            : new ConsoleLogger($output, $logLevel);
     }
 
     protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
