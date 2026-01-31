@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
+use Exception;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -136,13 +137,17 @@ class IntegrationTestCase extends TestCase
 
         $dir = $this->testsWorkingDir;
 
-        $this->deleteDir($dir);
+        try {
+            $this->deleteDir($dir);
+        } catch (Exception $exception) {
+            // Not ideal, but not important enough to fail hard.
+        }
 
         /** @var FilesystemRegistry $registry */
         try {
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
             $registry->unregister('mem');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 
