@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
@@ -50,7 +50,7 @@ EOD;
     public function testNamespaceInTwoPackagesExclude(): void
     {
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/namespaced-files-not-in-autoloader",
 	 "require": {
         "art4/requests-psr18-adapter": "1.3.0"
