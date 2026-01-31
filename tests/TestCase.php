@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
+use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
@@ -256,6 +257,17 @@ class TestCase extends \PHPUnit\Framework\TestCase
          * @var FilesystemRegistry $registry
          */
         $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+
+        if (method_exists($registry, 'has') && $registry->has('mem')) {
+            $registry->unregister('mem');
+        } else {
+            try {
+                $registry->get('mem');
+                $registry->unregister('mem');
+            } catch (Exception $exception) {
+            }
+        }
+
         $registry->register('mem', $this->readOnlyFileSystem);
 
         return $this->readOnlyFileSystem;
