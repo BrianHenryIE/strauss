@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use Elazar\Flystream\FilesystemRegistry;
@@ -12,14 +13,12 @@ use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
-use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Psr\Log\Test\TestLogger;
 use Symfony\Component\Finder\Finder;
 
@@ -98,7 +97,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
         $isSymlink = function ($file) use ($symfonyFilesystem) {
-            return ! is_null($symfonyFilesystem->readlink($file));
+            return !is_null($symfonyFilesystem->readlink($file));
         };
 
         /**
@@ -174,14 +173,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $normalizer = new WhitespacePathNormalizer();
 
         return new FileSystem(
-            new \League\Flysystem\Filesystem(
-                $localFilesystemAdapter,
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ],
-                $normalizer
-            ),
-            isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd()
+            $localFilesystemAdapter,
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            $normalizer,
+            null,
+            $this->testsWorkingDir ?? getcwd()
         );
     }
 
@@ -289,6 +287,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         }
         return $this->logger;
     }
+
     protected function getNewLogger(): LoggerInterface
     {
         $logger = new Logger('logger');
