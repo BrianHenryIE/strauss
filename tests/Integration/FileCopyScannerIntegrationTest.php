@@ -67,12 +67,7 @@ EOD;
 
         $fileEnumerator = new FileEnumerator(
             $config,
-            new Filesystem(
-                new \League\Flysystem\Filesystem(
-                    new LocalFilesystemAdapter('/')
-                ),
-                $this->testsWorkingDir
-            ),
+            $this->getFileSystem(),
             $this->getLogger()
         );
 
@@ -81,9 +76,9 @@ EOD;
             $file->setDoPrefix($file->isPhpFile());
         }
 
-        (new FileCopyScanner($config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir)))->scanFiles($files);
+        (new FileCopyScanner($config, $this->getFileSystem()))->scanFiles($files);
 
-        $copier = new Copier($files, $config, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir), new NullLogger());
+        $copier = new Copier($files, $config, $this->getFileSystem(), new NullLogger());
 
         $copier->prepareTarget();
 
@@ -98,7 +93,7 @@ EOD;
 
         $discoveredSymbols = new DiscoveredSymbols();
 
-        $fileScanner = new FileSymbolScanner($config, $discoveredSymbols, new Filesystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir));
+        $fileScanner = new FileSymbolScanner($config, $discoveredSymbols, $this->getFileSystem());
 
         $discoveredSymbols = $fileScanner->findInFiles($files);
 
