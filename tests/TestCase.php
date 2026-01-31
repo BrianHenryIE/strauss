@@ -68,7 +68,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
-    protected function getFileSystem(): Filesystem {
+    protected function getFileSystem(): Filesystem
+    {
 
         if (!isset($this->filesystem)) {
             $localFilesystemAdapter = new LocalFilesystemAdapter(
