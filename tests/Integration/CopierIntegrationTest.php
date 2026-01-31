@@ -41,7 +41,7 @@ class CopierIntegrationTest extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -85,7 +85,7 @@ EOD;
 
         mkdir(rtrim($targetPath, '\\/'), 0777, true);
 
-        file_put_contents($targetFile, 'dummy file');
+        $this->getFileSystem()->write($targetFile, 'dummy file');
 
         assert(file_exists($targetFile));
 
@@ -113,7 +113,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -203,7 +203,7 @@ EOD;
 
         $composerFilepath = $this->testsWorkingDir . 'composer.json';
         $composerJson = json_encode($composer) ;
-        file_put_contents($composerFilepath, $composerJson);
+        $this->getFileSystem()->write($composerFilepath, $composerJson);
 
         $this->config = StraussConfig::loadFromFile($composerFilepath);
     }
@@ -294,7 +294,7 @@ EOD;
             $testDummyComposerPath = $testDummyComposerDir . '/composer.json';
             $testDummyComposerContents = json_encode(new stdClass());
 
-            file_put_contents($testDummyComposerPath, $testDummyComposerContents);
+            $this->getFileSystem()->write($testDummyComposerPath, $testDummyComposerContents);
             $parsedPackage = new ComposerPackageConfig($testDummyComposerDir, $this->config->getOverrideAutoload()[$packageString]);
             $parsedPackage->findAutoloaders();
             $packages[] = $parsedPackage;

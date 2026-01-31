@@ -59,7 +59,7 @@ class StraussIssue11Test extends IntegrationTestCase
 EOD;
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -113,7 +113,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -122,7 +122,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = file_get_contents($this->testsWorkingDir .'src/Mozart/htmlburger/carbon-fields/core/Carbon_Fields.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'src/Mozart/htmlburger/carbon-fields/core/Carbon_Fields.php');
 
         // This was not being prefixed.
         self::assertStringNotContainsString('$ioc->register( new \Carbon_Fields\Provider\Container_Condition_Provider() );', $phpString);
@@ -171,7 +171,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -180,7 +180,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = file_get_contents($this->testsWorkingDir .'src/Mozart/htmlburger/carbon-fields/core/Container.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'src/Mozart/htmlburger/carbon-fields/core/Container.php');
 
         // This was not being prefixed.
         self::assertStringNotContainsString('@method static \Carbon_Fields\Container\Comment_Meta_Container', $phpString);
