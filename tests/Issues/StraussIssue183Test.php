@@ -51,13 +51,13 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         file_put_contents(
             $this->testsWorkingDir . '/vendor/brianhenryie/strauss/bootstrap.php',
-            file_get_contents($straussAbsoluteDir . '/bootstrap.php')
+            $this->getFileSystem()->read($straussAbsoluteDir . '/bootstrap.php')
         );
 
         $exitCode = $this->runStrauss($output);
@@ -95,7 +95,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 

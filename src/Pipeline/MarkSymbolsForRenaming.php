@@ -48,6 +48,12 @@ class MarkSymbolsForRenaming
                 continue;
             }
 
+            // If the symbol's package is excluded from copy, don't prefix it
+            if ($this->isExcludeFromCopyPackage($symbol->getPackageName())) {
+                $symbol->setDoRename(false);
+                continue;
+            }
+
             if ($this->excludeFromPrefix($symbol)) {
                 $symbol->setDoRename(false);
                 continue;
@@ -131,6 +137,14 @@ class MarkSymbolsForRenaming
             fn(bool $carry, FileBase $file) => $carry || $file->isDoCopy(),
             false
         );
+    }
+
+    /**
+     * Config: `extra.strauss.exclude_from_copy.packages`.
+     */
+    protected function isExcludeFromCopyPackage(?string $packageName): bool
+    {
+        return !is_null($packageName) && in_array($packageName, $this->config->getExcludePackagesFromCopy(), true);
     }
 
     /**

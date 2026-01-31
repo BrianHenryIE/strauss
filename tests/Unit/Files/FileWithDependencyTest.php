@@ -20,6 +20,7 @@ class FileWithDependencyTest extends TestCase
     {
         $dependency = Mockery::mock(ComposerPackage::class)->makePartial();
         $dependency->expects('isDoDelete')->once()->andReturnTrue();
+        $dependency->allows('getPackageAbsolutePath')->andReturn('/absolute/path/to/project/vendor/company/package/');
 
         $sut = new FileWithDependency(
             $dependency,
@@ -34,5 +35,29 @@ class FileWithDependencyTest extends TestCase
 
         // Should use its specific setting.
         $this->assertFalse($sut->isDoDelete());
+    }
+
+    /**
+     * Verifies that FileWithDependency handles null packageAbsolutePath gracefully.
+     * This preserves original str_replace() behavior where null is treated as empty string.
+     *
+     * @covers ::__construct
+     * @covers ::getPackageRelativePath
+     */
+    public function test_handles_null_package_absolute_path(): void
+    {
+        $dependency = Mockery::mock(ComposerPackage::class)->makePartial();
+        $dependency->allows('getPackageAbsolutePath')->andReturnNull();
+
+        $sourceAbsolutePath = '/absolute/path/to/project/vendor/company/package/src/file.php';
+
+        $sut = new FileWithDependency(
+            $dependency,
+            'company/package/src/file.php',
+            $sourceAbsolutePath
+        );
+
+        // When packageAbsolutePath is null, nothing is replaced, so packageRelativePath equals sourceAbsolutePath
+        $this->assertSame($sourceAbsolutePath, $sut->getPackageRelativePath());
     }
 }

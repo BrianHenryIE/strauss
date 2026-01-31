@@ -21,7 +21,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     public function test_write(): void
     {
         $source = $this->testsWorkingDir . 'source.php';
-        file_put_contents($source, 'source');
+        $this->getFileSystem()->write($source, 'source');
 
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
 
@@ -59,7 +59,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     public function test_file_exists_false()
     {
         $source = $this->testsWorkingDir . 'source.php';
-        file_put_contents($source, 'source');
+        $this->getFileSystem()->write($source, 'source');
 
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
 
@@ -75,7 +75,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     {
         // given a file that was deleted in a dry run
         $source = $this->testsWorkingDir . 'source.php';
-        file_put_contents($source, 'source');
+        $this->getFileSystem()->write($source, 'source');
 
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
         $sut->delete($source);
@@ -95,7 +95,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     {
         // Given a real file
         $aRealFile = $this->testsWorkingDir . 'file1.php';
-        file_put_contents($aRealFile, 'file1');
+        $this->getFileSystem()->write($aRealFile, 'file1');
 
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
         assert(1 === count($sut->listContents($this->testsWorkingDir)->toArray()));
@@ -119,7 +119,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     {
         // Given a real file
         $aRealFile = $this->testsWorkingDir . 'file1.php';
-        file_put_contents($aRealFile, 'file1');
+        $this->getFileSystem()->write($aRealFile, 'file1');
 
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
         assert(1 === count($sut->listContents($this->testsWorkingDir)->toArray()));
@@ -139,7 +139,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     {
         $source = $this->testsWorkingDir . 'source.php';
         $contents = 'source';
-        file_put_contents($source, $contents);
+        $this->getFileSystem()->write($source, $contents);
 
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
 

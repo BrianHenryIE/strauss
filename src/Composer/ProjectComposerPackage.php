@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Factory;
 use Composer\IO\NullIO;
 
@@ -35,7 +36,11 @@ class ProjectComposerPackage extends ComposerPackage
         /** @var string $projectVendorAbsoluteDirectoryPath */
         $projectVendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
         $this->vendorDirectory = is_string($projectVendorAbsoluteDirectoryPath) && !empty($projectVendorAbsoluteDirectoryPath)
-            ? ltrim(str_replace(dirname($absolutePathFile), '', $projectVendorAbsoluteDirectoryPath), '\\/')
+            ? ltrim(str_replace(
+                FileSystem::normalizeDirSeparator(dirname($absolutePathFile)),
+                '',
+                FileSystem::normalizeDirSeparator($projectVendorAbsoluteDirectoryPath)
+            ), '\\/')
             :  'vendor';
     }
 
