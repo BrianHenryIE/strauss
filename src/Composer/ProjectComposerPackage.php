@@ -40,7 +40,7 @@ class ProjectComposerPackage extends ComposerPackage
                 FileSystem::normalizeDirSeparator(dirname($absolutePathFile)),
                 '',
                 FileSystem::normalizeDirSeparator($projectVendorAbsoluteDirectoryPath)
-              ), '\\/')
+            ), '\\/')
             :  'vendor';
     }
 
