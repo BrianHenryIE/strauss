@@ -351,11 +351,6 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         return false;
     }
 
-    public function has(string $location): bool
-    {
-        throw new BadMethodCallException('Not yet implemented');
-    }
-
     /**
      * @see FlysystemBackCompatTrait::directoryExists()
      */
