@@ -34,6 +34,8 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $config->expects('getProjectDirectory')->atLeast()->once()->andReturn('project/');
         $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('project/vendor-prefixed/');
         $config->expects('getNamespacePrefix')->atLeast()->once()->andReturn('BrianHenryIE\\Test\\');
+        $config->expects('getPackagesToPrefix')->atLeast()->once()->andReturn([]);
+        $config->expects('isIncludeRootAutoload')->atLeast()->once()->andReturnFalse();
 
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('project/vendor/');
 
