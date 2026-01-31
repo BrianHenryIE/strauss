@@ -56,8 +56,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     public function __construct(
         FilesystemAdapter $adapter,
         array $config = [],
-        PathNormalizer $pathNormalizer = null,
-        PathPrefixer $pathPrefixer = null,
+        ?PathNormalizer $pathNormalizer = null,
+        ?PathPrefixer $pathPrefixer = null,
         ?string $workingDir = null
     ) {
         parent::__construct($adapter, $config, $pathNormalizer);

@@ -100,13 +100,13 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     protected array $deletedPaths = [];
 
     public function __construct(
-        PathNormalizer $pathNormalizer = null,
-        PathPrefixer $pathPrefixer = null,
-        LoggerInterface $logger = null,
-        VisibilityConverter $visibility = null,
+        ?PathNormalizer $pathNormalizer = null,
+        ?PathPrefixer $pathPrefixer = null,
+        ?LoggerInterface $logger = null,
+        ?VisibilityConverter $visibility = null,
         int $writeFlags = LOCK_EX,
         int $linkHandling = LocalFilesystemAdapter::SKIP_LINKS,
-        MimeTypeDetector $mimeTypeDetector = null
+        ?MimeTypeDetector $mimeTypeDetector = null
     ) {
         $location = $this->isWindowsOS() ? substr(getcwd(), 0, 3) : '/';
 
