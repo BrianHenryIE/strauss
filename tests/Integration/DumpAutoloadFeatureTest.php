@@ -5,7 +5,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @covers \BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload
@@ -35,7 +35,7 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -47,8 +47,8 @@ EOD;
         exec('composer dump-autoload');
 
         $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
-//        $vendorAutoloadFilesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
-        $vendorPrefixedAutoloadFilesPhpString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
+//        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
+        $vendorPrefixedAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
 
         $this->assertStringContainsString('symfony/polyfill-ctype', $vendorPrefixedAutoloadFilesPhpString);
 //        $this->assertStringNotContainsString('symfony/polyfill-ctype', $vendorAutoloadFilesPhpString);

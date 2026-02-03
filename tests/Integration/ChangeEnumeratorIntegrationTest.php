@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
@@ -30,7 +30,7 @@ class ChangeEnumeratorIntegrationTest extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -38,11 +38,11 @@ EOD;
 
         $this->runStrauss();
 
-        $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/wordpress/mcp-adapter/includes/Transport/Infrastructure/SessionManager.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/wordpress/mcp-adapter/includes/Transport/Infrastructure/SessionManager.php');
         $this->assertStringNotContainsString(' = brianhenryie_strauss_wp_generate_uuid4(', $phpString);
         $this->assertStringContainsString(' = wp_generate_uuid4(', $phpString);
 
-        $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/wordpress/mcp-adapter/includes/Cli/McpCommand.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/wordpress/mcp-adapter/includes/Cli/McpCommand.php');
         $this->assertStringNotContainsString('class McpCommand extends \\BrianHenryIE_Strauss_WP_CLI_Command', $phpString);
         $this->assertStringContainsString('class McpCommand extends \\WP_CLI_Command', $phpString);
     }
@@ -73,7 +73,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $packageComposerJson);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
 
@@ -81,7 +81,7 @@ EOD;
 
         $this->runStrauss();
 
-        $phpString = file_get_contents($this->testsWorkingDir .'vendor-prefixed/art4/requests-psr18-adapter/v1-compat/autoload.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/art4/requests-psr18-adapter/v1-compat/autoload.php');
         $this->assertStringNotContainsString("class_exists('BrianHenryIE\\Strauss\\WpOrg\\Requests\\Requests')", $phpString);
         $this->assertStringContainsString("class_exists('WpOrg\\Requests\\Requests')", $phpString);
     }

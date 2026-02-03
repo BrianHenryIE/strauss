@@ -3,7 +3,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 class ExcludeFromPrefixFeatureTest extends IntegrationTestCase
 {
@@ -30,7 +30,7 @@ class ExcludeFromPrefixFeatureTest extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -39,11 +39,11 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $psrContainerPhpString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/psr/container/src/ContainerInterface.php');
+        $psrContainerPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/psr/container/src/ContainerInterface.php');
         $this->assertStringNotContainsString('namespace Strauss\ExcludeFromPrefixTest\Psr\Container;', $psrContainerPhpString);
         $this->assertStringContainsString('namespace Psr\Container;', $psrContainerPhpString);
 
-        $di52ContainerPhpString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/lucatume/di52/src/Container.php');
+        $di52ContainerPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/lucatume/di52/src/Container.php');
         $this->assertStringNotContainsString('use Strauss\ExcludeFromPrefixTest\Psr\Container\ContainerInterface;', $di52ContainerPhpString);
         $this->assertStringContainsString('use Psr\Container\ContainerInterface;', $di52ContainerPhpString);
     }
@@ -68,7 +68,7 @@ EOD;
     }
 }
 EOD;
-        file_put_contents($this->testsWorkingDir . '/composer.json', $packageComposerJson);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
         exec('composer install');
@@ -76,7 +76,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/art4/requests-psr18-adapter/v1-compat/autoload.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/art4/requests-psr18-adapter/v1-compat/autoload.php');
 
         $this->assertStringContainsString("class_exists('WpOrg\\Requests\\Requests')", $php_string);
     }

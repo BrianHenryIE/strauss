@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Autoload;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use Composer\Autoload\AutoloadGenerator;
 
 class DumpAutoloadFeatureTest extends IntegrationTestCase
@@ -19,9 +19,9 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
     public function test_fix_double_loading_of_files_autoloaders(string $composerJsonString, bool $includeRootAutoload): void
     {
         mkdir($this->testsWorkingDir . 'src');
-        file_put_contents($this->testsWorkingDir . 'src/DumpAutoloadFeatureTest.php', '<?php // whatever');
+        $this->getFileSystem()->write($this->testsWorkingDir . 'src/DumpAutoloadFeatureTest.php', '<?php // whatever');
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -30,10 +30,10 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
 
-        $vendorAutoloadFilesPhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
+        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
         $this->assertStringContainsString('DumpAutoloadFeatureTest.php', $vendorAutoloadFilesPhpString);
 
-        $vendorPrefixedAutoloadFilesPhpString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
+        $vendorPrefixedAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
         if ($includeRootAutoload) {
             $this->assertStringContainsString('DumpAutoloadFeatureTest.php', $vendorPrefixedAutoloadFilesPhpString);
         } else {
@@ -118,9 +118,9 @@ namespace BrianHenryIE\Strauss;
 class DumpAutoloadFeatureTest {}
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'src/DumpAutoloadFeatureTest.php', $classContent);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'src/DumpAutoloadFeatureTest.php', $classContent);
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -130,8 +130,8 @@ EOD;
         assert(0 === $exitCode, $output);
 
         $targetString = '\'BrianHenryIE\\\\Strauss\\\\\' => array($baseDir . \'/src\'),';
-        $vendorAutoloadPsr4PhpString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
-        $vendorPrefixedAutoloadPsr4PhpString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_psr4.php');
+        $vendorAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
+        $vendorPrefixedAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_psr4.php');
 
         if ($expectRootAutoload) {
             $this->assertStringContainsString($targetString, $vendorAutoloadPsr4PhpString);
@@ -244,7 +244,12 @@ EOD;
 			"newfold-labs/*"
 		]
       }
-	},
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
     "require": {
         "newfold-labs/wp-module-mcp": "*"
     },
@@ -272,7 +277,7 @@ EOD;
     }
 }
 EOD;
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -281,7 +286,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $vendorAutoloadFilesPhpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
+        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
         $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\WP\\\\MCP\\\\Abilities\\\\DiscoverAbilitiesAbility', $vendorAutoloadFilesPhpString);
 
         exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; require __DIR__ . \'/vendor-prefixed/wordpress/mcp-adapter/mcp-adapter.php\';" 2>&1', $output, $result_code);

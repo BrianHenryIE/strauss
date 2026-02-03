@@ -1,0 +1,181 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Parameter \\#1 \\$namespacePrefix of method BrianHenryIE\\\\Strauss\\\\Composer\\\\Extra\\\\StraussConfig\\:\\:setNamespacePrefix\\(\\) expects string, string\\|null given\\.$#"
+			count: 3
+			path: src/Composer/Extra/StraussConfig.php
+
+		-
+			message: "#^Parameter \\#1 \\$string of function rtrim expects string, string\\|null given\\.$#"
+			count: 2
+			path: src/Composer/Extra/StraussConfig.php
+
+		-
+			message: "#^Parameter \\#1 \\$string of function strtolower expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Composer/Extra/StraussConfig.php
+
+		-
+			message: "#^Parameter \\#3 \\$subject of function preg_replace expects array\\|string, string\\|null given\\.$#"
+			count: 1
+			path: src/Composer/Extra/StraussConfig.php
+
+		-
+			message: "#^Parameter \\#3 \\$subject of function str_replace expects array\\|string, string\\|null given\\.$#"
+			count: 5
+			path: src/Composer/Extra/StraussConfig.php
+
+		-
+			message: "#^Cannot call method getOriginalSymbol\\(\\) on BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\|null\\.$#"
+			count: 1
+			path: src/Pipeline/Aliases/Aliases.php
+
+		-
+			message: "#^Cannot call method getReplacement\\(\\) on BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\|null\\.$#"
+			count: 1
+			path: src/Pipeline/Aliases/Aliases.php
+
+		-
+			message: "#^Cannot call method isChangedNamespace\\(\\) on BrianHenryIE\\\\Strauss\\\\Types\\\\NamespaceSymbol\\|null\\.$#"
+			count: 2
+			path: src/Pipeline/Aliases/Aliases.php
+
+		-
+			message: "#^Parameter \\#1 \\$namespace of method BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbols\\:\\:getNamespaceSymbolByString\\(\\) expects string, string\\|null given\\.$#"
+			count: 2
+			path: src/Pipeline/Aliases/Aliases.php
+
+		-
+			message: "#^Parameter \\#1 \\$search of function str_replace expects array\\|string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Aliases/Aliases.php
+
+		-
+			message: "#^Parameter \\#1 \\$string of function trim expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Aliases/Aliases.php
+
+		-
+			message: "#^Parameter \\#2 \\$string of function explode expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Aliases/Aliases.php
+
+		-
+			message: "#^Parameter \\#1 \\$projectUniqueString of class BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Autoload\\\\ComposerAutoloadGenerator constructor expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Autoload/DumpAutoload.php
+
+		-
+			message: "#^Parameter \\#2 \\$contents of method BrianHenryIE\\\\Strauss\\\\Helpers\\\\FileSystem\\:\\:write\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Autoload/DumpAutoload.php
+
+		-
+			message: "#^Cannot access offset 'dev' on mixed\\.$#"
+			count: 1
+			path: src/Pipeline/Autoload/VendorComposerAutoload.php
+
+		-
+			message: "#^Parameter \\#1 \\$nodes of method PhpParser\\\\NodeTraverser\\:\\:traverse\\(\\) expects array\\<PhpParser\\\\Node\\>, array\\<PhpParser\\\\Node\\\\Stmt\\>\\|null given\\.$#"
+			count: 2
+			path: src/Pipeline/Autoload/VendorComposerAutoload.php
+
+		-
+			message: "#^Parameter \\#1 \\$value of class PhpParser\\\\Node\\\\Scalar\\\\String_ constructor expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Autoload/VendorComposerAutoload.php
+
+		-
+			message: "#^Parameter \\#1 \\$fromAbsoluteDirectory of method BrianHenryIE\\\\Strauss\\\\Helpers\\\\FileSystem\\:\\:getRelativePath\\(\\) expects string, string\\|null given\\.$#"
+			count: 2
+			path: src/Pipeline/AutoloadedFilesEnumerator.php
+
+		-
+			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\ChangeEnumerator\\:\\:determineNamespaceReplacement\\(\\) should return string but returns string\\|null\\.$#"
+			count: 1
+			path: src/Pipeline/ChangeEnumerator.php
+
+		-
+			message: "#^Parameter \\#1 \\$replacement of method BrianHenryIE\\\\Strauss\\\\Types\\\\DiscoveredSymbol\\:\\:setReplacement\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/ChangeEnumerator.php
+
+		-
+			message: "#^Parameter \\#1 \\$str of function preg_quote expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/ChangeEnumerator.php
+
+		-
+			message: "#^Parameter \\#2 \\$needle of function str_starts_with expects string, string\\|null given\\.$#"
+			count: 2
+			path: src/Pipeline/ChangeEnumerator.php
+
+		-
+			message: "#^Parameter \\#1 \\$location of method BrianHenryIE\\\\Strauss\\\\Helpers\\\\FileSystem\\:\\:deleteDirectory\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Cleanup/Cleanup.php
+
+		-
+			message: "#^Parameter \\#1 \\$path of function dirname expects string, string\\|null given\\.$#"
+			count: 3
+			path: src/Pipeline/Cleanup/Cleanup.php
+
+		-
+			message: "#^Parameter \\#2 \\$subDir of method BrianHenryIE\\\\Strauss\\\\Helpers\\\\FileSystem\\:\\:isSubDirOf\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Cleanup/Cleanup.php
+
+		-
+			message: "#^Parameter \\#2 \\$needle of function strpos expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/FileEnumerator.php
+
+		-
+			message: "#^Cannot access property \\$name on PhpParser\\\\Node\\\\Name\\|null\\.$#"
+			count: 1
+			path: src/Pipeline/Prefixer.php
+
+		-
+			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Prefixer\\:\\:getModifiedFiles\\(\\) should return array\\<string, BrianHenryIE\\\\Strauss\\\\Composer\\\\ComposerPackage\\> but returns array\\<string, BrianHenryIE\\\\Strauss\\\\Composer\\\\ComposerPackage\\|null\\>\\.$#"
+			count: 1
+			path: src/Pipeline/Prefixer.php
+
+		-
+			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Prefixer\\:\\:replaceGlobalClassInsideNamedNamespace\\(\\) should return string but returns string\\|null\\.$#"
+			count: 1
+			path: src/Pipeline/Prefixer.php
+
+		-
+			message: "#^Method BrianHenryIE\\\\Strauss\\\\Pipeline\\\\Prefixer\\:\\:replaceNamespace\\(\\) should return string but returns string\\|null\\.$#"
+			count: 1
+			path: src/Pipeline/Prefixer.php
+
+		-
+			message: "#^Parameter \\#1 \\$nodes of method PhpParser\\\\NodeFinder\\:\\:find\\(\\) expects array\\<PhpParser\\\\Node\\>\\|PhpParser\\\\Node, array\\<PhpParser\\\\Node\\\\Stmt\\>\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Prefixer.php
+
+		-
+			message: "#^Parameter \\#1 \\$nodes of method PhpParser\\\\NodeFinder\\:\\:findInstanceOf\\(\\) expects array\\<PhpParser\\\\Node\\>\\|PhpParser\\\\Node, array\\<PhpParser\\\\Node\\\\Stmt\\>\\|null given\\.$#"
+			count: 2
+			path: src/Pipeline/Prefixer.php
+
+		-
+			message: "#^Parameter \\#1 \\$nodes of method PhpParser\\\\NodeTraverser\\:\\:traverse\\(\\) expects array\\<PhpParser\\\\Node\\>, array\\<PhpParser\\\\Node\\\\Stmt\\>\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Prefixer.php
+
+		-
+			message: "#^Parameter \\#1 \\$text of class PhpParser\\\\Comment\\\\Doc constructor expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Prefixer.php
+
+		-
+			message: "#^Parameter \\#3 \\$subject of function preg_replace expects array\\|string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Prefixer.php
+
+		-
+			message: "#^Parameter \\#3 \\$subject of function preg_replace_callback expects array\\|string, string\\|null given\\.$#"
+			count: 1
+			path: src/Pipeline/Prefixer.php

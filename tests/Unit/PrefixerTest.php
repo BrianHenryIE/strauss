@@ -2065,7 +2065,7 @@ class FileLoader implements Latte\Loader
 			}
 		}
 
-		return file_get_contents($file);
+		return $this->getFileSystem()->read($file);
 	}
 }
 EOD;
@@ -2102,7 +2102,7 @@ class FileLoader implements \Latte\Loader
 			}
 		}
 
-		return file_get_contents($file);
+		return $this->getFileSystem()->read($file);
 	}
 }
 EOD;
@@ -2847,6 +2847,83 @@ EOD;
 
         $symbol = new NamespaceSymbol('Carbon_Fields', $file);
         $symbol->setReplacement('Prefix\\Strauss\\Carbon_Fields');
+        $symbols->add($symbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * Test for issue #230 - interface name should not be prefixed when it's a relative reference
+     * in the same namespace as the implementing class.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/230
+     */
+    public function testRelativeInterfaceInImplementsNotPrefixed(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+declare(strict_types=1);
+
+namespace Geocoder;
+
+use Geocoder\Model\Bounds;
+use Geocoder\Query\GeocodeQuery;
+use Geocoder\Query\ReverseQuery;
+use Geocoder\Provider\Provider;
+
+/**
+ * @author Tobias Nyholm <tobias.nyholm@gmail.com>
+ */
+final class StatefulGeocoder implements Geocoder
+{
+    /**
+     * @var string|null
+     */
+    private $locale;
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+declare(strict_types=1);
+
+namespace CommonsBooking\Geocoder;
+
+use CommonsBooking\Geocoder\Model\Bounds;
+use CommonsBooking\Geocoder\Query\GeocodeQuery;
+use CommonsBooking\Geocoder\Query\ReverseQuery;
+use CommonsBooking\Geocoder\Provider\Provider;
+
+/**
+ * @author Tobias Nyholm <tobias.nyholm@gmail.com>
+ */
+final class StatefulGeocoder implements Geocoder
+{
+    /**
+     * @var string|null
+     */
+    private $locale;
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = $this->createMock(File::class);
+        $file->expects($this->any())->method('addDiscoveredSymbol');
+        $file->expects($this->any())->method('getSourcePath');
+        $file->expects($this->any())
+                 ->method('isDoPrefix')
+                 ->willReturn(true);
+
+        $symbols = new DiscoveredSymbols();
+
+        $symbol = new NamespaceSymbol('Geocoder', $file);
+        $symbol->setReplacement('CommonsBooking\\Geocoder');
         $symbols->add($symbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());

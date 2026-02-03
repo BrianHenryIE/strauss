@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson
@@ -31,7 +31,7 @@ class InstalledJsonIntegrationTest extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -42,8 +42,8 @@ EOD;
 
         exec('composer dump-autoload');
 
-        $vendorInstalledJsonStringAfter = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
-        $vendorPrefixedInstalledJsonPsr4PhpStringAfter = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $vendorInstalledJsonStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $vendorPrefixedInstalledJsonPsr4PhpStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
 
         $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
         $this->assertStringNotContainsString('"chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
@@ -68,7 +68,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -77,7 +77,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $vendorInstalledJsonStringAfter = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $vendorInstalledJsonStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
 
         $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
         $this->assertStringNotContainsString('"chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
@@ -102,7 +102,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -113,8 +113,8 @@ EOD;
 
         exec('composer dump-autoload');
 
-        $vendorInstalledJsonStringAfter = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
-        $vendorPrefixedInstalledJsonPsr4PhpStringAfter = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $vendorInstalledJsonStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $vendorPrefixedInstalledJsonPsr4PhpStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
 
         $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
 
@@ -156,7 +156,7 @@ EOD;
         //    }
         //  }
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -199,8 +199,8 @@ EOD;
 
         exec('composer dump-autoload');
 
-        $vendorInstalledJsonStringAfter = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
-        $vendorPrefixedInstalledJsonPsr4PhpStringAfter = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $vendorInstalledJsonStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $vendorPrefixedInstalledJsonPsr4PhpStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
 
         $this->assertStringNotContainsString('"": "src/"', $vendorInstalledJsonStringAfter);
         $this->assertStringContainsString('"BrianHenryIE\\\\Strauss\\\\": "src/"', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);

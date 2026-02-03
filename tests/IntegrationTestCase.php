@@ -5,16 +5,14 @@
  * Could just system temp directory, but this is useful for setting breakpoints and seeing what has happened.
  */
 
-namespace BrianHenryIE\Strauss\Tests\Integration\Util;
+namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\TestCase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use Psr\Log\Test\TestLogger;
+use Exception;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -43,12 +41,7 @@ class IntegrationTestCase extends TestCase
 
         $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
 
-        $this->logger = new class extends ColorLogger {
-            public function debug($message, array $context = array())
-            {
-                // Mute debug.
-            }
-        };
+        $this->logger = new ColorLogger();
 
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
@@ -141,13 +134,17 @@ class IntegrationTestCase extends TestCase
 
         $dir = $this->testsWorkingDir;
 
-        $this->deleteDir($dir);
+        try {
+            $this->deleteDir($dir);
+        } catch (Exception $exception) {
+            // Not ideal, but not important enough to fail hard.
+        }
 
         /** @var FilesystemRegistry $registry */
         try {
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
             $registry->unregister('mem');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 
@@ -156,12 +153,7 @@ class IntegrationTestCase extends TestCase
         if (!file_exists($dir)) {
             return;
         }
-        $filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
-        );
+        $filesystem = $this->getFileSystem();
 
         $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
         $isSymlink = function ($file) use ($symfonyFilesystem) {

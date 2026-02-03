@@ -9,7 +9,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -37,18 +37,18 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/json-mapper/json-mapper/src/JsonMapper.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/json-mapper/json-mapper/src/JsonMapper.php');
         self::assertStringNotContainsString('throw new \BH_Strauss_Issue79_JsonException(json_last_error_msg()', $php_string);
         self::assertStringContainsString('throw new \JsonException(json_last_error_msg(), \json_last_error());', $php_string);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/json-mapper/json-mapper/src/Middleware/AbstractMiddleware.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/json-mapper/json-mapper/src/Middleware/AbstractMiddleware.php');
         self::assertStringNotContainsString(' JsonMapper\Middleware;', $php_string);
         self::assertStringContainsString(' BrianHenryIE\Issue79\JsonMapper\Middleware;', $php_string);
     }

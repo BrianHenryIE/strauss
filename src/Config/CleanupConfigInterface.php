@@ -13,4 +13,16 @@ interface CleanupConfigInterface
     public function getTargetDirectory(): string;
 
     public function isDryRun(): bool;
+
+    /**
+     * The directory containing `composer.json`.
+     */
+    public function getProjectDirectory(): string;
+
+    /**
+     * Packages to exclude from copying (and therefore from deletion).
+     *
+     * @return string[]
+     */
+    public function getExcludePackagesFromCopy(): array;
 }

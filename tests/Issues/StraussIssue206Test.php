@@ -5,7 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -36,27 +36,27 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $installedJsonString = file_get_contents($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
+        $installedJsonString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
         $this->assertStringContainsString('dataGet', $installedJsonString);
 
-        $vendorPrefixedAutoloadFilesString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
+        $vendorPrefixedAutoloadFilesString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("/wp-forge/helpers/includes/functions.php", $vendorPrefixedAutoloadFilesString);
 
-        $installedJsonString = file_get_contents($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $installedJsonString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
         $this->assertStringNotContainsString("\"WP_Forge\\Helpers", $installedJsonString);
 
-        $vendorPrefixedInstalledJsonString = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $vendorPrefixedInstalledJsonString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString("Company\\\\Project\\\\WP_Forge\\\\Helpers\\\\", $vendorPrefixedInstalledJsonString);
 
         $this->assertStringContainsString('"install-path": "../wp-forge/helpers"', $vendorPrefixedInstalledJsonString);
 
-        $vendorAutoloadFilesString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
+        $vendorAutoloadFilesString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
         $this->assertStringNotContainsString("/wp-forge/helpers/includes/functions.php", $vendorAutoloadFilesString);
     }
 }

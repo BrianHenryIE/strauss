@@ -9,7 +9,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -41,9 +41,9 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/my-plugin.php', $myPluginPhpString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/my-plugin.php', $myPluginPhpString);
         @mkdir($this->testsWorkingDir . 'includes');
-        file_put_contents($this->testsWorkingDir . '/includes/class-my-plugin.php', $myPluginClassPhpString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/includes/class-my-plugin.php', $myPluginClassPhpString);
 
         $_SERVER['argv'] = [
             $this->projectDir . '/bin/strauss',
@@ -57,7 +57,7 @@ EOD;
         $app->setAutoExit(false);
         $exitCode = $app->run();
 
-        $php_string = file_get_contents($this->testsWorkingDir . '/my-plugin.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/my-plugin.php');
 
         self::assertStringContainsString('namespace BrianHenryIE\MyPlugin;', $php_string);
     }

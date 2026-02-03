@@ -21,7 +21,10 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
 use Exception;
+use InvalidArgumentException;
+use JsonMapper\Enums\TextNotation;
 use JsonMapper\JsonMapperFactory;
+use JsonMapper\Middleware\CaseConversion;
 use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -65,7 +68,7 @@ class StraussConfig implements
     protected ?string $namespacePrefix = null;
 
     /**
-     * @var string
+     *
      */
     protected ?string $classmapPrefix = null;
 
@@ -172,17 +175,13 @@ class StraussConfig implements
 
     /**
      * Should a modified date be included in the header for modified files?
-     *
-     * @var bool
      */
-    protected $includeModifiedDate = true;
+    protected bool $includeModifiedDate = true;
 
     /**
      * Should the author name be included in the header for modified files?
-     *
-     * @var bool
      */
-    protected $includeAuthor = true;
+    protected bool $includeAuthor = true;
 
     /**
      * Should the changes be printed to console rather than files modified?
@@ -199,7 +198,7 @@ class StraussConfig implements
      * Overwrite it with any Strauss config.
      * Provide sensible defaults.
      *
-     * @param Composer $composer
+     * @param ?Composer $composer
      *
      * @throws Exception
      */
@@ -237,11 +236,10 @@ class StraussConfig implements
 
             $rename->addMapping(StraussConfig::class, 'function_prefix', 'functionsPrefix');
 
+            $rename->addMapping(StraussConfig::class, 'constant_prefix', 'constantsPrefix');
+
             $mapper->unshift($rename);
-            $mapper->push(new \JsonMapper\Middleware\CaseConversion(
-                \JsonMapper\Enums\TextNotation::UNDERSCORE(),
-                \JsonMapper\Enums\TextNotation::CAMEL_CASE()
-            ));
+            $mapper->push(new CaseConversion(TextNotation::UNDERSCORE(), TextNotation::CAMEL_CASE()));
 
             $mapper->mapObject($configExtraSettings, $this);
         }
@@ -305,7 +303,7 @@ class StraussConfig implements
             }, $composer->getPackage()->getRequires());
         }
 
-        // If the bool flag for classmapOutput wasn't set in the Json config.
+        // If the bool flag for classmapOutput wasn't set in the JSON config.
         if (!isset($this->classmapOutput)) {
             $this->classmapOutput = true;
             // Check each autoloader.
@@ -459,17 +457,25 @@ class StraussConfig implements
 
     /**
      * @param string[]|array{0:bool}|null $updateCallSites
+     * @throws InvalidArgumentException
      */
     public function setUpdateCallSites($updateCallSites): void
     {
         if (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === true) {
             // Setting `null` instructs Strauss to update call sites in the project's autoload key.
             $this->updateCallSites = null;
+            return;
         } elseif (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === false) {
             $this->updateCallSites = array();
-        } else {
-            $this->updateCallSites = $updateCallSites;
+            return;
+        } elseif (is_array($updateCallSites) && isset($updateCallSites[0]) && !is_bool($updateCallSites[0])) {
+            $this->updateCallSites = array_filter(
+                $updateCallSites,
+                'is_string'
+            );
+            return;
         }
+        throw new InvalidArgumentException('Unexpected value for updateCallSites');
     }
 
     /**

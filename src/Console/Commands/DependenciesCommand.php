@@ -3,13 +3,9 @@
 namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -28,37 +24,14 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Factory;
-use Composer\InstalledVersions;
-use Elazar\Flystream\FilesystemRegistry;
-use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
-use League\Flysystem\Config;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\WhitespacePathNormalizer;
-use Monolog\Handler\PsrHandler;
-use Monolog\Logger;
-use Monolog\Processor\PsrLogMessageProcessor;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
-use Psr\Log\NullLogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class DependenciesCommand extends Command
+class DependenciesCommand extends AbstractRenamespacerCommand
 {
-    use LoggerAwareTrait;
-
-    /** @var string */
-    protected string $workingDir;
-
-    protected StraussConfig $config;
-
-    protected ProjectComposerPackage $projectComposerPackage;
-
     /** @var Prefixer */
     protected Prefixer $replacer;
 
@@ -77,9 +50,12 @@ class DependenciesCommand extends Command
     protected DiscoveredFiles $discoveredFiles;
     protected DiscoveredSymbols $discoveredSymbols;
 
-    protected Filesystem $filesystem;
-
     /**
+     * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
+     *
+     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
+     *
      * @return void
      */
     protected function configure()
@@ -111,85 +87,7 @@ class DependenciesCommand extends Command
             false
         );
 
-        $this->addOption(
-            'dry-run',
-            null,
-            4,
-            'Do not actually make any changes',
-            false
-        );
-
-        $this->addOption(
-            'info',
-            null,
-            4,
-            'output level',
-            false
-        );
-
-        $this->addOption(
-            'debug',
-            null,
-            4,
-            'output level',
-            false
-        );
-
-        if (version_compare(InstalledVersions::getVersion('symfony/console'), '7.2', '<')) {
-            $this->addOption(
-                'silent',
-                's',
-                4,
-                'output level',
-                false
-            );
-        }
-
-        $localFilesystemAdapter = new LocalFilesystemAdapter(
-            '/',
-            null,
-            LOCK_EX,
-            LocalFilesystemAdapter::SKIP_LINKS
-        );
-
-        $this->filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                $localFilesystemAdapter,
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
-            ),
-            getcwd() . '/'
-        );
-    }
-
-    /**
-     * @param InputInterface $input The command line input to check for `--debug`, `--silent` etc.
-     * @param OutputInterface $output The Symfony object that actually prints the messages.
-     */
-    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
-    {
-        $isDryRun = isset($this->config) && $this->config->isDryRun();
-
-        // Who would want to dry-run without output?
-        if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
-            return new NullLogger();
-        }
-
-        $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
-
-        if ($input->hasOption('info') && $input->getOption('info') !== false) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        if ($isDryRun || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-            $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        return isset($this->logger) && $this->logger instanceof \Psr\Log\Test\TestLogger
-            ? $this->logger
-            : new ConsoleLogger($output, $logLevel);
+        parent::configure();
     }
 
     /**
@@ -202,49 +100,14 @@ class DependenciesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->setLogger($this->getLogger($input, $output));
-
-        $workingDir       = getcwd() . '/';
-        $this->workingDir = $workingDir;
-
         try {
-            $this->logger->notice('Starting... ' /** version */); // + PHP version
+            $this->logger->notice('Starting... '/** version */); // + PHP version
 
             $this->loadProjectComposerPackage();
             $this->loadConfigFromComposerJson();
             $this->updateConfigFromCli($input);
 
-            if ($this->config->isDryRun()) {
-                $normalizer = new WhitespacePathNormalizer();
-                $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
-
-                $this->filesystem =
-                    new FileSystem(
-                        new ReadOnlyFileSystem(
-                            $this->filesystem,
-                            $normalizer
-                        ),
-                        $this->workingDir
-                    );
-
-                /** @var FilesystemRegistry $registry */
-                $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-
-                // Register a file stream mem:// to handle file operations by third party libraries.
-                // This exception handling probably doesn't matter in real life but does in unit tests.
-                try {
-                    $registry->get('mem');
-                } catch (\Exception $e) {
-                    $registry->register('mem', $this->filesystem);
-                }
-                $this->setLogger($this->getLogger($input, $output));
-            }
-
-            $logger = new Logger('logger');
-            $logger->pushProcessor(new PsrLogMessageProcessor());
-            $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
-            $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
-            $this->setLogger($logger);
+            parent::execute($input, $output);
 
             $this->buildDependencyList();
 
@@ -283,7 +146,7 @@ class DependenciesCommand extends Command
     }
 
     /**
-     * 1. Load the composer.json.
+     * Load the project's composer package using the current working directory.
      *
      * @throws Exception
      */
@@ -291,19 +154,21 @@ class DependenciesCommand extends Command
     {
         $this->logger->notice('Loading package...');
 
-
-        $composerFilePath = $this->filesystem->normalize($this->workingDir . Factory::getComposerFile());
-        $defaultComposerFilePath = $this->filesystem->normalize($this->workingDir . 'composer.json');
+        $composerFilePath = $this->filesystem->makeAbsolute($this->workingDir . Factory::getComposerFile());
+        $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . 'composer.json');
         if ($composerFilePath !== $defaultComposerFilePath) {
             $this->logger->info('Using: ' . $composerFilePath);
         }
 
-        $this->projectComposerPackage = new ProjectComposerPackage('/'.$composerFilePath);
+        $this->projectComposerPackage = new ProjectComposerPackage($composerFilePath);
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.
     }
 
+    /**
+     * Load Strauss config from the project's composer.json.
+     */
     protected function loadConfigFromComposerJson(): void
     {
         $this->logger->notice('Loading composer.json config...');
@@ -353,7 +218,7 @@ class DependenciesCommand extends Command
         foreach ($this->flatDependencyTree as $dependency) {
             // Sort of duplicating the logic above.
             $dependency->setCopy(
-                !in_array($dependency, $this->config->getExcludePackagesFromCopy())
+                !in_array($dependency->getPackageName(), $this->config->getExcludePackagesFromCopy())
             );
 
             if ($this->config->isDeleteVendorPackages()) {

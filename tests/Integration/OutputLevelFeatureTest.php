@@ -5,7 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
@@ -17,7 +17,7 @@ class OutputLevelFeatureTest extends IntegrationTestCase
         parent::setUp();
 
         $this->logger = null;
-        
+
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
@@ -34,7 +34,7 @@ class OutputLevelFeatureTest extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 

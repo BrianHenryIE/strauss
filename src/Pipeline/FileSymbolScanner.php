@@ -10,7 +10,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
@@ -21,6 +21,7 @@ use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
+use League\Flysystem\FilesystemException;
 use PhpParser\Node;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
@@ -68,15 +69,6 @@ class FileSymbolScanner
     }
 
 
-    private static function pad(string $text, int $length = 25): string
-    {
-        /** @var int $padLength */
-        static $padLength;
-        $padLength = max(isset($padLength) ? $padLength : 0, $length);
-        $padLength = max($padLength, strlen($text) + 1);
-        return str_pad($text, $padLength, ' ', STR_PAD_RIGHT);
-    }
-
     protected function add(DiscoveredSymbol $symbol): void
     {
         $this->discoveredSymbols->add($symbol);
@@ -89,26 +81,21 @@ class FileSymbolScanner
         $this->logger->log(
             $level,
             sprintf(
-                "%s%s",
-                // The part up until the original symbol. I.e. the first "column" of the message.
-                self::pad(sprintf(
-                    "Found %s%s:",
-                    $newText,
-                    // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
-                    strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
-                )),
+                "Found %s%s:::%s",
+                $newText,
+                // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
+                strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
                 $symbol->getOriginalSymbol()
             )
         );
     }
 
     /**
-     * @param DiscoveredFiles $files
+     * @throws FilesystemException
      */
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
         foreach ($files->getFiles() as $file) {
-            $doPrefix = true;
             if ($file instanceof FileWithDependency && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
                 $doPrefix = false;
                 $file->setDoPrefix($doPrefix);
@@ -121,11 +108,11 @@ class FileSymbolScanner
 
             if (!$file->isPhpFile()) {
                 $file->setDoPrefix(false);
-                $this->logger->debug(self::pad("Skipping non-PHP file:"). $relativeFilePath);
+                $this->logger->debug("Skipping non-PHP file:::". $relativeFilePath);
                 continue;
             }
 
-            $this->logger->info(self::pad("Scanning file:") . $relativeFilePath);
+            $this->logger->info("Scanning file:::" . $relativeFilePath);
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
                 $file,
@@ -136,7 +123,7 @@ class FileSymbolScanner
         return $this->discoveredSymbols;
     }
 
-    protected function find(string $contents, File $file, ?ComposerPackage $package = null): void
+    protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
     {
         $namespaces = $this->splitByNamespace($contents);
 
@@ -172,7 +159,7 @@ class FileSymbolScanner
                 $this->add($functionSymbol);
             }
 
-            /** @var PHPConst $phpConstants */
+            /** @var PHPConst[] $phpConstants */
             $phpConstants = $phpCode->getConstants();
             foreach ($phpConstants as $constantName => $constant) {
                 $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName, $package);
@@ -193,13 +180,17 @@ class FileSymbolScanner
         }
     }
 
+    /**
+     * @param string $contents
+     * @return array<string,string>
+     */
     protected function splitByNamespace(string $contents):array
     {
         $result = [];
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
-        $ast = $parser->parse(trim($contents));
+        $ast = $parser->parse(trim($contents)) ?? [];
 
         foreach ($ast as $rootNode) {
             if ($rootNode instanceof Node\Stmt\Namespace_) {
@@ -229,10 +220,18 @@ class FileSymbolScanner
         return $result;
     }
 
+    /**
+     * @param string $fqdnClassname
+     * @param bool $isAbstract
+     * @param FileBase $file
+     * @param string $namespaceName
+     * @param ?string $extends
+     * @param string[] $interfaces
+     */
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,
-        File $file,
+        FileBase $file,
         string $namespaceName,
         ?string $extends,
         array $interfaces
@@ -246,7 +245,7 @@ class FileSymbolScanner
         $this->add($classSymbol);
     }
 
-    protected function addDiscoveredNamespaceChange(string $namespace, File $file, ?ComposerPackage $package = null): void
+    protected function addDiscoveredNamespaceChange(string $namespace, FileBase $file, ?ComposerPackage $package = null): void
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($namespace);
         if ($namespaceObj) {

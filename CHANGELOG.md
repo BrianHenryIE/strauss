@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.26.5 February 2025
+
+## 0.26.4 January 2025
+
+## 0.26.3 December 2025
+
+* Refactoring
+* PHPStan fixes
+
 ## 0.26.2 November 2025
 
 * Fix: namespaces not updated in non-autoloaded files

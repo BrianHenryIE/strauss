@@ -2,8 +2,6 @@
 
 namespace BrianHenryIE\Strauss\Files;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
-
 class DiscoveredFiles
 {
     /** @var array<string,FileBase|File|FileWithDependency> */

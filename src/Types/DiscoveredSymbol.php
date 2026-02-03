@@ -6,12 +6,12 @@
 namespace BrianHenryIE\Strauss\Types;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 
 abstract class DiscoveredSymbol
 {
-    /** @var array<File> $sourceFiles */
+    /** @var array<FileBase> $sourceFiles */
     protected array $sourceFiles = [];
 
     protected ?string $namespace;
@@ -26,11 +26,11 @@ abstract class DiscoveredSymbol
 
     /**
      * @param string $fqdnSymbol The classname / namespace etc.
-     * @param File $sourceFile The file it was discovered in.
+     * @param FileBase $sourceFile The file it was discovered in.
      */
     public function __construct(
         string $fqdnSymbol,
-        File $sourceFile,
+        FileBase $sourceFile,
         string $namespace = '\\',
         ?ComposerPackage $package = null
     ) {
@@ -49,7 +49,7 @@ abstract class DiscoveredSymbol
     }
 
     /**
-     * @return File[]
+     * @return FileBase[]
      */
     public function getSourceFiles(): array
     {
@@ -57,11 +57,9 @@ abstract class DiscoveredSymbol
     }
 
     /**
-     * @param File $sourceFile
-     *
      * @see FileSymbolScanner
      */
-    public function addSourceFile(File $sourceFile): void
+    public function addSourceFile(FileBase $sourceFile): void
     {
         $this->sourceFiles[$sourceFile->getSourcePath()] = $sourceFile;
     }

@@ -16,6 +16,7 @@
     "prefer-stable": true,
     "license": "MIT",
     "require": {
+        "ext-json": "*",
         "brianhenryie/simple-php-code-parser": "^0.15.3",
         "composer-runtime-api": "^2.0",
         "composer/class-map-generator": "^1.6.0",
@@ -45,16 +46,19 @@
                 "tests/Integration",
                 "tests/Unit"
             ]
-        }
+        },
+        "classmap": [
+            "tests"
+        ]
     },
     "require-dev": {
         "php": "^7.4|^8.0",
         "ext-json": "*",
         "ext-zip": "*",
-        "brianhenryie/color-logger": "^1.2",
+        "brianhenryie/color-logger": "*",
+        "brianhenryie/php-codecoverage-markdown": "^0.1.0",
         "clue/phar-composer": "^1.2",
         "jaschilz/php-coverage-badger": "^2.0",
-        "mheap/phpunit-github-actions-printer": "^1.4",
         "mockery/mockery": "^1.6",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^1.10",
@@ -74,10 +78,8 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "@install-phive-dependencies"
         ],
         "post-update-cmd": [
-            "@install-phive-dependencies"
         ],
         "analyze": [
           "phpstan analyse --memory-limit=-1 --verbose"
@@ -86,7 +88,7 @@
           "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpstan analyse --memory-limit=-1 $updated_files --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
         ],
         "analyze-changes-strict": [
-          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then echo \"Found: $updated_files\"; phpstan analyse --memory-limit=-1 $updated_files --level 9 --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
+          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then echo \"Found: $updated_files\"; phpstan analyse --memory-limit=-1 $updated_files --level max --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
         ],
         "cs": [
           "phpcs || true",
@@ -98,12 +100,11 @@
           "@analyze"
         ],
         "cs-changes": [
-          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
+          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
           "@analyze-changes"
         ],
         "cs-changes-strict": [
-          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
-          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; else echo \"No modified php files.\"; fi;",
+          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
           "@analyze-changes-strict"
         ],
         "install-phive-dependencies": [

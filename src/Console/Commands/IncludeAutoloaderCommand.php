@@ -15,36 +15,25 @@
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
-use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use Composer\Factory;
 use Exception;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class IncludeAutoloaderCommand extends Command
+class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
 {
     use LoggerAwareTrait;
 
-    /** @var string */
-    protected string $workingDir;
-
-    protected StraussConfig $config;
-
-    protected Filesystem $filesystem;
-    protected ProjectComposerPackage $projectComposerPackage;
-
     /**
+     * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
+     *
+     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
+     *
      * @return void
      */
     protected function configure()
@@ -52,11 +41,7 @@ class IncludeAutoloaderCommand extends Command
         $this->setName('include-autoloader');
         $this->setDescription("Adds `require autoload_aliases.php` and `require vendor-prefixed/autoload.php` to `vendor/autoload.php`.");
 
-        // TODO: permissions?
-        $this->filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')),
-            getcwd() . '/'
-        );
+        parent::configure();
     }
 
     /**
@@ -68,28 +53,19 @@ class IncludeAutoloaderCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $logger = new ConsoleLogger(
-            $output,
-            [ LogLevel::INFO => OutputInterface::VERBOSITY_NORMAL ]
-        );
-
-        $this->setLogger($logger);
-
-        $workingDir       = getcwd() . '/';
-        $this->workingDir = $workingDir;
-
         try {
+            // Pipeline
             $this->loadProjectComposerPackage();
             $this->loadConfigFromComposerJson();
 
-            // Pipeline
+            parent::execute($input, $output);
 
             // TODO: check for `--no-dev` somewhere.
 
             $vendorComposerAutoload = new VendorComposerAutoload(
                 $this->config,
                 $this->filesystem,
-                $logger
+                $this->logger
             );
 
             $vendorComposerAutoload->addAliasesFileToComposer();
@@ -102,6 +78,7 @@ class IncludeAutoloaderCommand extends Command
 
         return Command::SUCCESS;
     }
+
 
     /**
      * 1. Load the composer.json.

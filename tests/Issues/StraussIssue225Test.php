@@ -6,7 +6,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -69,26 +69,26 @@ EOD;
 EOD;
 
         mkdir($this->testsWorkingDir . 'dependency');
-        file_put_contents($this->testsWorkingDir . 'dependency/composer.json', $dependencyComposerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'dependency/composer.json', $dependencyComposerJsonString);
         mkdir($this->testsWorkingDir . 'dependency/src');
         $psr4AutoloadedFilePath = $this->testsWorkingDir . 'dependency/src/Psr4Autoloaded.php';
-        file_put_contents($psr4AutoloadedFilePath, $dependencyPsr4AutoloadedString);
+        $this->getFileSystem()->write($psr4AutoloadedFilePath, $dependencyPsr4AutoloadedString);
         mkdir($this->testsWorkingDir . 'dependency/templates');
         $notAutoloadedFilePath = $this->testsWorkingDir . 'dependency/templates/notautoloaded.php';
-        file_put_contents($notAutoloadedFilePath, $dependencyNotAutoloadedString);
+        $this->getFileSystem()->write($notAutoloadedFilePath, $dependencyNotAutoloadedString);
 
         mkdir($this->testsWorkingDir . 'project');
-        file_put_contents($this->testsWorkingDir . 'project/composer.json', $mainComposerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'project/composer.json', $mainComposerJsonString);
         chdir($this->testsWorkingDir . 'project');
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . '/project/vendor-prefixed/strausstest/dependency/src/Psr4Autoloaded.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/project/vendor-prefixed/strausstest/dependency/src/Psr4Autoloaded.php');
         $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\My\\Dependency;', $php_string);
 
-        $php_string = file_get_contents($this->testsWorkingDir . '/project/vendor-prefixed/strausstest/dependency/templates/notautoloaded.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/project/vendor-prefixed/strausstest/dependency/templates/notautoloaded.php');
         $this->assertStringNotContainsString('namespace My\\Dependency;', $php_string);
         $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\My\\Dependency;', $php_string);
     }

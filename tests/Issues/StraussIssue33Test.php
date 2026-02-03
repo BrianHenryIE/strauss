@@ -7,9 +7,7 @@ namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -45,7 +43,7 @@ class StraussIssue33Test extends IntegrationTestCase
 
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -64,7 +62,7 @@ EOD;
     public function test_unit_backtrack_limit_exhausted()
     {
 
-        $contents = file_get_contents(__DIR__.'/data/Mpdf.php');
+        $contents = $this->getFileSystem()->read(__DIR__.'/data/Mpdf.php');
 
         $originalClassname = 'WP_Dependency_Installer';
 
