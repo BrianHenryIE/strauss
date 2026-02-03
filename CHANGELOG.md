@@ -1,5 +1,7 @@
 # Change Log
 
+## 0.26.5 February 2025
+
 ## 0.26.4 January 2025
 
 ## 0.26.3 December 2025
