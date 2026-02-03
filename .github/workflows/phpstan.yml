@@ -26,6 +26,7 @@ jobs:
         with:
           php-version: 7.4
           tools: composer:v2, phive, cs2pr
+          extensions: fileinfo, gd
           coverage: none
 
       - name: Install Phive tools

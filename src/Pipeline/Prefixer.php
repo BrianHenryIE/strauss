@@ -278,7 +278,7 @@ class Prefixer
             |static\s+
             |\"                            # inside a string that does not contain spaces - needs work
             |'                             #   right now its just inside a string that doesnt start with a space
-            |implements\s+
+            |implements\s+\\\\             # when the interface being implemented is namespaced inline
             |extends\s+\\\\                    # when the class being extended is namespaced inline
             |return\s+
             |instanceof\s+                 # when checking the class type of an object in a conditional
@@ -286,12 +286,12 @@ class Prefixer
             |,\s*                          # inside a function declaration as a subsequent parameter type
             |\.\s*                         # as part of a concatenated string
             |=\s*                          # as the value being assigned to a variable
-            |\*\s+@\w+\s*                  # In a comments param etc  
+            |\*\s+@\w+\s*                  # In a comments param etc
             |&\s*                             # a static call as a second parameter of an if statement
             |\|\s*
             |!\s*                             # negating the result of a static call
             |=>\s*                            # as the value in an associative array
-            |\[\s*                         # In a square array 
+            |\[\s*                         # In a square array
             |\?\s*                         # In a ternary operator
             |:\s*                          # In a ternary operator
             |<                             # In a generic type declaration
@@ -303,16 +303,16 @@ class Prefixer
             )
             (?!:)                          # Not followed by : which would only be valid after a classname
             (
-            \s*;                           # followed by a semicolon 
+            \s*;                           # followed by a semicolon
             |\s*{                          # or an opening brace for multiple namespaces per file
-            |\\\\{1,2}[a-zA-Z0-9_\x7f-\xff]{1,}         # or a classname no slashes 
-            |\s+as                         # or the keyword as 
+            |\\\\{1,2}[a-zA-Z0-9_\x7f-\xff]{1,}         # or a classname no slashes
+            |\s+as                         # or the keyword as
             |\"                            # or quotes
-            |'                             # or single quote         
+            |'                             # or single quote
             |:                             # or a colon to access a static
             |\\\\{
             |>                             # In a generic type declaration (end)
-            )                            
+            )
             /Ux";                          // U: Non-greedy matching, x: ignore whitespace in pattern.
 
         $replacingFunction = function ($matches) use ($originalNamespace, $replacement) {

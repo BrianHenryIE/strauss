@@ -51,6 +51,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           tools: composer:v2, phive
+          extensions: fileinfo, gd
           coverage: ${{ matrix.php == env.COVERAGE_PHP_VERSION && 'xdebug' || 'none' }}
 
       - name: Checkout repository

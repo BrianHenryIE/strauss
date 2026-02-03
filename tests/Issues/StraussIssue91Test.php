@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -17,6 +17,10 @@ class StraussIssue91Test extends IntegrationTestCase
 {
     public function test_issue_91()
     {
+        if (!extension_loaded('gd')) {
+            $this->markTestSkipped('GD extension not loaded');
+        }
+
         $composerJsonString = <<<'EOD'
 {
   "name": "pr/91",
