@@ -6,9 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * Class FileEnumeratorIntegrationTest
