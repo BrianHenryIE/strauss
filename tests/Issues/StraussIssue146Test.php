@@ -10,7 +10,7 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use GuzzleHttp\Client;
 use ZipArchive;
 
