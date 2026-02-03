@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
@@ -45,7 +45,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         assert(!file_exists($source));
 
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
-        
+
         $sut->write($source, 'source');
 
         assert(!file_exists($source));

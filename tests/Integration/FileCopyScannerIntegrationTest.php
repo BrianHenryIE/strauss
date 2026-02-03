@@ -9,10 +9,8 @@ use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 
 /**

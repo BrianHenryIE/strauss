@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
