@@ -1032,4 +1032,49 @@ EOD;
 
         unlink($tmpfname);
     }
+
+    public function test_optimize_autoloader_default_true(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\"
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerExtraStraussJson);
+            $composer = Factory::create(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertTrue($sut->isOptimizeAutoloader());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
+
+    public function test_optimize_autoloader_false(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "optimize_autoloader": false
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerExtraStraussJson);
+            $composer = Factory::create(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertFalse($sut->isOptimizeAutoloader());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
 }

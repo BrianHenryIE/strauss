@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
+use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
@@ -204,5 +205,46 @@ EOD;
         $result = $filesystem->read('project/vendor-prefixed/composer/installed.php');
 
         $this->assertStringContainsString('=> __DIR__', $result);
+    }
+
+    public function test_optimize_autoloader_defaults_to_true_without_capability_interface(): void
+    {
+        $config = Mockery::mock(AutoloadConfigInterface::class);
+        $filesystem = $this->getFileSystem();
+        $logger = new NullLogger();
+        $prefixer = Mockery::mock(Prefixer::class);
+        $fileEnumerator = Mockery::mock(FileEnumerator::class);
+
+        $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator) extends DumpAutoload {
+            public function optimizeEnabledForTest(): bool
+            {
+                return $this->isOptimizeAutoloaderEnabled();
+            }
+        };
+
+        $this->assertTrue($sut->optimizeEnabledForTest());
+    }
+
+    public function test_optimize_autoloader_uses_capability_interface_when_available(): void
+    {
+        $config = Mockery::mock(
+            AutoloadConfigInterface::class,
+            OptimizeAutoloaderConfigInterface::class
+        );
+        $config->expects('isOptimizeAutoloader')->once()->andReturnFalse();
+
+        $filesystem = $this->getFileSystem();
+        $logger = new NullLogger();
+        $prefixer = Mockery::mock(Prefixer::class);
+        $fileEnumerator = Mockery::mock(FileEnumerator::class);
+
+        $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator) extends DumpAutoload {
+            public function optimizeEnabledForTest(): bool
+            {
+                return $this->isOptimizeAutoloaderEnabled();
+            }
+        };
+
+        $this->assertFalse($sut->optimizeEnabledForTest());
     }
 }

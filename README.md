@@ -151,6 +151,7 @@ Strauss potentially requires zero configuration, but likely you'll want to custo
         ],
         "update_call_sites": false,
         "include_root_autoload": false,
+        "optimize_autoloader": true,
         "override_autoload": {
         },
         "exclude_from_copy": {
@@ -193,6 +194,19 @@ The following configuration is default:
 - `include_author` is a `bool` to decide if Strauss should include the author name in the (phpdoc) header written to modified files. Defaults to `true`.
 - `update_call_sites`: `false`. This can be `true`, `false` or an `array` of directories/filepaths. When set to `true` it defaults to the directories and files in the project's `autoload` key. The PHP files and directories' PHP files will be updated where they call the prefixed classes.
 - `include_root_autoload`: `false` is a boolean flag to indicate whether Strauss should include the root autoload section of your project when creating its autoloader. It is false by default. Enabling this option will allow you to require only the Strauss autoloader in your project. Note that conflicts may occur if your project enables this option, requires both the Composer and Strauss autoloaders, and uses `files` autoloading.
+- `optimize_autoloader`: `true` is a boolean flag to indicate whether Strauss should force optimized/classmap-authoritative autoload generation. Set it to `false` to still regenerate autoload files without authoritative mode.
+
+To disable optimized/classmap-authoritative Composer autoload generation:
+
+```json
+{
+  "extra": {
+    "strauss": {
+      "optimize_autoloader": false
+    }
+  }
+}
+```
 
 The remainder is empty:
 

@@ -16,6 +16,7 @@ use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
@@ -39,6 +40,7 @@ class StraussConfig implements
     FileSymbolScannerConfigInterface,
     FileEnumeratorConfig,
     FileCopyScannerConfigInterface,
+    OptimizeAutoloaderConfigInterface,
     PrefixerConfigInterface,
     ReplaceConfigInterface
 {
@@ -192,6 +194,11 @@ class StraussConfig implements
      * Should the root autoload be included when generating the strauss autoloader?
      */
     protected bool $includeRootAutoload = false;
+
+    /**
+     * Should Composer autoload generation be optimized and classmap authoritative?
+     */
+    protected bool $optimizeAutoloader = true;
 
     /**
      * Read any existing Mozart config.
@@ -765,12 +772,22 @@ class StraussConfig implements
         return $this->includeRootAutoload;
     }
 
+    public function isOptimizeAutoloader(): bool
+    {
+        return $this->optimizeAutoloader;
+    }
+
     /**
      * @param bool $includeRootAutoload Include the project root autoload in the strauss autoloader.
      */
     public function setIncludeRootAutoload(bool $includeRootAutoload): void
     {
         $this->includeRootAutoload = $includeRootAutoload;
+    }
+
+    public function setOptimizeAutoloader(bool $optimizeAutoloader): void
+    {
+        $this->optimizeAutoloader = $optimizeAutoloader;
     }
 
     /**
