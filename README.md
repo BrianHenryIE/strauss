@@ -169,6 +169,16 @@ Strauss potentially requires zero configuration, but likely you'll want to custo
             "file_patterns": [
             ]
         },
+        "exclude_constants": {
+            "packages": [
+            ],
+            "namespaces": [
+            ],
+            "file_patterns": [
+            ],
+            "constants": [
+            ]
+        },
         "namespace_replacement_patterns" : {
         },
         "delete_vendor_packages": false,
@@ -206,6 +216,11 @@ The remainder is empty:
 - `exclude_from_prefix`
   - [`packages`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L86-L90) array of package names to exclude from prefixing.
   - [`namespaces`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L177-L181) array of exact match namespaces to exclude (i.e. not substring/parent namespaces)
+- `exclude_constants` – same shape as `exclude_from_prefix`, but applies only to constants (e.g. from `define()` or `const`). Use to avoid prefixing runtime constants like `WP_PLUGIN_DIR`, `ABSPATH`.
+  - `packages` array of package names whose constants are not prefixed
+  - `namespaces` array of namespaces (prefix match) whose constants are not prefixed
+  - `file_patterns` array of regex patterns for file paths
+  - `constants` array of constant names to never prefix (e.g. `["WP_PLUGIN_DIR", "ABSPATH"]`)
 - [`namespace_replacement_patterns`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L183-L190) a dictionary to use in `preg_replace` instead of prefixing with `namespace_prefix`.
 
 ## Autoloading
