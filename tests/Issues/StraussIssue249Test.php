@@ -24,11 +24,6 @@ class StraussIssue249Test extends IntegrationTestCase
     "require": {
       "freemius/wordpress-sdk": "^2.13"
     },
-    "autoload":{
-        "psr-4": {
-            "PrintusSmartPrintTiming\\" : "includes/"
-        }
-    },
     "extra": {
         "strauss": {
             "namespace_prefix": "PrintusSmartPrintTiming\\",
@@ -38,13 +33,7 @@ class StraussIssue249Test extends IntegrationTestCase
                 "packages": [
                   "freemius/wordpress-sdk"
                 ]
-            },
-            "exclude_from_prefix": {
-                "packages": [
-                  "freemius/wordpress-sdk"
-                ]
-            },
-            "delete_vendor_packages": true
+            }
         }
     }
 }
@@ -59,5 +48,11 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         $this->assertStringNotContainsString('Package directory unexpectedly DOES NOT exist', $output);
+
+        $vendor_prefixed_installedjson_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $this->assertStringNotContainsString("freemius/wordpress-sdk", $vendor_prefixed_installedjson_string);
+        $vendor_installedjson_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $this->assertStringContainsString("freemius/wordpress-sdk", $vendor_installedjson_string);
+
     }
 }
