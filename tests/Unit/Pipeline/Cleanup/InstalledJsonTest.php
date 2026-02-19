@@ -146,6 +146,7 @@ EOD;
 
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
+        $config->expects('getExcludePackagesFromCopy')->once()->andReturn([]);
 //        $config->expects('getTargetDirectory')->times(1)->andReturn('mem://vendor-prefixed/');
 
         $sut = new InstalledJson(
@@ -197,6 +198,7 @@ EOD;
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
         $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed/');
+        $config->expects('getExcludePackagesFromCopy')->once()->andReturn([]);
 
         $sut = new InstalledJson(
             $config,
@@ -293,6 +295,7 @@ EOD;
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
         $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed/');
+        $config->expects('getExcludePackagesFromCopy')->once()->andReturn([]);
 
         $sut = new InstalledJson(
             $config,
