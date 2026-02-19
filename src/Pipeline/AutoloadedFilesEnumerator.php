@@ -110,11 +110,18 @@ class AutoloadedFilesEnumerator
                     $autoloadKeyPaths = array_map(
                         fn(string $path) =>
                             $this->filesystem->makeAbsolute(
-                                $dependencyPackageAbsolutePath . $path
+                                $dependencyPackageAbsolutePath . '/' . ltrim($path, '/')
                             ),
                         (array)$value
                     );
                     foreach ($autoloadKeyPaths as $autoloadKeyPath) {
+                        if (!file_exists($autoloadKeyPath)) {
+                            $this->logger->warning(
+                                "Skipping non-existent autoload path in {packageName}: {path}",
+                                ['packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath]
+                            );
+                            continue;
+                        }
                         $classMapGenerator->scanPaths(
                             $autoloadKeyPath,
                             $excluded,
@@ -129,11 +136,18 @@ class AutoloadedFilesEnumerator
                 case 'psr-4':
                     foreach ((array)$value as $namespace => $namespaceRelativePaths) {
                         $psrPaths = array_map(
-                            fn(string $path) => $dependencyPackageAbsolutePath . '/' . $path,
+                            fn(string $path) => $dependencyPackageAbsolutePath . '/' . ltrim($path, '/'),
                             (array)$namespaceRelativePaths
                         );
 
                         foreach ($psrPaths as $autoloadKeyPath) {
+                            if (!file_exists($autoloadKeyPath)) {
+                                $this->logger->warning(
+                                    "Skipping non-existent autoload path in {packageName}: {path}",
+                                    ['packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath]
+                                );
+                                continue;
+                            }
                             $classMapGenerator->scanPaths(
                                 $autoloadKeyPath,
                                 $excluded,
