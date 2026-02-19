@@ -100,7 +100,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "brianhenryie/bh-wp-logger": "*"
+    "brianhenryie/bh-wp-logger": "0.1"
   },
   "minimum-stability": "dev",
   "extra": {
@@ -135,7 +135,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "brianhenryie/bh-wp-logger": "*"
+    "brianhenryie/bh-wp-logger": "0.1"
   },
   "minimum-stability": "dev",
   "extra": {
@@ -170,7 +170,7 @@ EOD;
 {
   "name": "brianhenryie/strauss",
   "require": {
-    "brianhenryie/bh-wp-logger": "*"
+    "brianhenryie/bh-wp-logger": "0.1"
   },
   "minimum-stability": "dev",
   "extra": {
@@ -210,7 +210,7 @@ EOD;
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "brianhenryie/bh-wp-logger": "*"
+    "brianhenryie/bh-wp-logger": "0.1"
   },
   "extra": {
     "strauss": {
