@@ -20,7 +20,12 @@ class ReplacerIntegrationTest extends IntegrationTestCase
 {
   "name": "brianhenryie/replacerintegrationtest",
   "require": {
-    "google/apiclient": "*"
+    "google/apiclient": "v2.16.1"
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
   },
   "extra": {
     "strauss": {
