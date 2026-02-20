@@ -53,6 +53,5 @@ EOD;
         $this->assertStringNotContainsString("freemius/wordpress-sdk", $vendor_prefixed_installedjson_string);
         $vendor_installedjson_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
         $this->assertStringContainsString("freemius/wordpress-sdk", $vendor_installedjson_string);
-
     }
 }
