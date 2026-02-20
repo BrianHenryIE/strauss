@@ -43,7 +43,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           tools: composer:v2, phive
-          extensions: fileinfo, gd
+          extensions: fileinfo, gd, zip
 
       - name: Install Phive tools
         if: ${{ github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.author_association == 'OWNER' }}
