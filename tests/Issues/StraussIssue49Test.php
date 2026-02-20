@@ -34,7 +34,7 @@ class StraussIssue49Test extends IntegrationTestCase
     }
   },
   "require": {
-    "brianhenryie/bh-wp-logger": "0.1"
+    "brianhenryie/bh-wp-logger": "dev-master"
   },
   "extra": {
     "strauss": {
@@ -50,6 +50,8 @@ EOD;
         chdir($this->testsWorkingDir);
 
         exec('git clone https://github.com/BrianHenryIE/bh-wp-logger.git');
+        chdir($this->testsWorkingDir.'bh-wp-logger');
+        exec('git checkout 0.1');
 
         mkdir($this->testsWorkingDir . 'project');
 
