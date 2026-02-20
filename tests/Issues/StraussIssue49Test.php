@@ -34,7 +34,7 @@ class StraussIssue49Test extends IntegrationTestCase
     }
   },
   "require": {
-    "brianhenryie/bh-wp-logger": "dev-master"
+    "brianhenryie/bh-wp-logger": "0.1"
   },
   "extra": {
     "strauss": {
