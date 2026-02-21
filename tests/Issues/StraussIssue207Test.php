@@ -41,9 +41,9 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Expected anyway.
-        $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/freemius/wordpress-sdk/start.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . '/vendor-prefixed/freemius/wordpress-sdk/start.php'));
         // Not part of the autoloader.
-        $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/freemius/wordpress-sdk/config.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . '/vendor-prefixed/freemius/wordpress-sdk/config.php'));
 
         // Do not prefix.
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/freemius/wordpress-sdk/includes/class-freemius.php');
@@ -73,7 +73,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/woocommerce/action-scheduler/action-scheduler.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . '/vendor-prefixed/woocommerce/action-scheduler/action-scheduler.php'));
 
         // Do not prefix.
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/woocommerce/action-scheduler/classes/actions/ActionScheduler_Action.php');
@@ -103,7 +103,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/plugin-update-checker.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/plugin-update-checker.php'));
 
         $this->markTestSkipped("I'm unsure what the best thing to do here is. Should the files be prefixed or not?");
 
@@ -135,7 +135,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php'));
 
         // Do not prefix.
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');

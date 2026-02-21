@@ -31,7 +31,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $sut->write($target, $contents);
 
-        $this->assertFileDoesNotExist($target);
+        $this->assertFileDoesNotExist($this->filesystem->normalize($target));
     }
 
     // test writing a source file doesn't really write the file but does makes the changes available within
@@ -107,7 +107,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->assertCount(0, $sut->listContents($this->testsWorkingDir)->toArray());
 
         // And the file should still exist
-        $this->assertFileExists($aRealFile);
+        $this->assertFileExists($this->filesystem->normalize($aRealFile));
     }
 
     /**
@@ -132,7 +132,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->assertCount(2, $sut->listContents($this->testsWorkingDir)->toArray());
 
         // And the file should not actually exist
-        $this->assertFileDoesNotExist($file2Path);
+        $this->assertFileDoesNotExist($this->filesystem->normalize($file2Path));
     }
 
     public function test_copy():void
@@ -149,7 +149,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $this->assertEquals($contents, $sut->read($destination));
 
-        $this->assertFileDoesNotExist($destination);
+        $this->assertFileDoesNotExist($this->filesystem->normalize($destination));
     }
 
     /**

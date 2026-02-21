@@ -121,7 +121,11 @@ class FileEnumerator
 
             /** @var FileWithDependency $f */
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
-                ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
+                ?? new FileWithDependency(
+                    $dependency,
+                    $this->filesystem->normalize($vendorRelativePath),
+                    $this->filesystem->normalize($sourceAbsoluteFilepath)
+                );
 
             $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
 

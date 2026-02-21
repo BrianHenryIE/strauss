@@ -66,11 +66,11 @@ EOD;
 
         // Verify files are copied to vendor-prefixed
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
 
         // Verify original files still exist in vendor
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor/psr/log');
-        $this->assertFileExists($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php'));
     }
 
     /**
@@ -111,7 +111,7 @@ EOD;
 
         // Verify files are copied to custom directory
         $this->assertDirectoryExists($this->testsWorkingDir . 'custom-lib/psr/log');
-        $this->assertFileExists($this->testsWorkingDir . 'custom-lib/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'custom-lib/psr/log/Psr/Log/LoggerInterface.php'));
 
         // Verify vendor-prefixed directory is NOT created
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed');
@@ -299,11 +299,11 @@ EOD;
 
         // Verify main files are copied
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
 
         // Verify README.md files are excluded (if they exist)
         if (file_exists($this->testsWorkingDir . 'vendor/psr/log/README.md')) {
-            $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log/README.md');
+            $this->assertFileDoesNotExist($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/README.md'));
         }
     }
 
@@ -348,7 +348,7 @@ EOD;
 
         // Verify ONLY psr/log files are copied (inverted regex excludes everything except psr/log)
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
 
         // Verify monolog is excluded by the inverted regex
         $this->assertDirectoryDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
@@ -496,7 +496,7 @@ EOD;
 
         // Verify files are copied to the nested directory
         $this->assertDirectoryExists($this->testsWorkingDir . 'deeply/nested/custom-directory/psr/log');
-        $this->assertFileExists($this->testsWorkingDir . 'deeply/nested/custom-directory/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'deeply/nested/custom-directory/psr/log/Psr/Log/LoggerInterface.php'));
     }
 
     /**
@@ -533,7 +533,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify files are created
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
 
         // Modify the target file to test overwriting
         $testContent = "<?php\n// This is a test modification\nnamespace Test\\Modified;";
@@ -584,9 +584,9 @@ EOD;
 
         // Delete a source file to simulate missing file scenario
         $sourceFile = $this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php';
-        $this->assertFileExists($sourceFile);
+        $this->assertFileExists($this->filesystem->normalize($sourceFile));
         unlink($sourceFile);
-        $this->assertFileDoesNotExist($sourceFile);
+        $this->assertFileDoesNotExist($this->filesystem->normalize($sourceFile));
 
         // Run Strauss - should handle missing file gracefully
         $exitCode = $this->runStrauss($output);
@@ -597,10 +597,10 @@ EOD;
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
 
         // Verify the missing file is not copied (obviously)
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileDoesNotExist($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
 
         // Verify other files in the package are still processed
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php'));
     }
 
     /**
@@ -642,14 +642,14 @@ EOD;
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log');
 
         // Verify files are copied
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php'));
 
         // Verify composer.json is copied (if it exists in source and Strauss copies it)
         if (file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json')) {
             // Note: Strauss may or may not copy composer.json files depending on configuration
             if (file_exists($this->testsWorkingDir . 'vendor-prefixed/psr/log/composer.json')) {
-                $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/composer.json');
+                $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/composer.json'));
             }
         }
 
@@ -715,7 +715,7 @@ EOD;
 
         // Verify relative path works
         $this->assertDirectoryExists($this->testsWorkingDir . 'relative-lib');
-        $this->assertFileExists($this->testsWorkingDir . 'relative-lib/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'relative-lib/psr/log/Psr/Log/LoggerInterface.php'));
 
         // Clean up for absolute path test
         if (file_exists($this->testsWorkingDir . 'relative-lib')) {
@@ -746,7 +746,7 @@ EOD;
 
         // Verify absolute path works
         $this->assertDirectoryExists($absolutePath);
-        $this->assertFileExists($absolutePath . '/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($absolutePath . '/psr/log/Psr/Log/LoggerInterface.php'));
     }
 
     /**
@@ -789,8 +789,8 @@ EOD;
         // Verify empty excludes don't prevent copying (all files copied)
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php'));
     }
 
     /**
@@ -883,7 +883,7 @@ EOD;
         // Verify case-sensitive behavior - lowercase exclusion should NOT exclude Psr\Log
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
     }
 
     /**
@@ -922,7 +922,7 @@ EOD;
         // Verify files are copied (this tests basic files autoloader functionality)
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed');
         $this->assertDirectoryExists($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
 
         // Note: psr/log doesn't have 'files' autoloader, but this tests the overall
         // copying functionality which includes files autoloader handling in FileEnumerator.php:87-90

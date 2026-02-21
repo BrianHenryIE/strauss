@@ -90,8 +90,8 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $this->assertFileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor/league/container/src/Container.php'));
+        $this->assertFileDoesNotExist($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php'));
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
@@ -130,8 +130,8 @@ EOD;
 
         $this->runStrauss($output, $params);
 
-        $this->assertFileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor/league/container/src/Container.php'));
+        $this->assertFileDoesNotExist($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php'));
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
@@ -171,7 +171,7 @@ EOD;
 
         $this->assertStringNotContainsString('Would copy', $output);
 
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php'));
     }
 
     /**
@@ -209,7 +209,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
+        $this->assertFileDoesNotExist($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/autoload.php'));
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);

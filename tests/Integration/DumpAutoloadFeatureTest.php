@@ -46,7 +46,7 @@ EOD;
 
         exec('composer dump-autoload');
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
+        $this->assertFileDoesNotExist($this->filesystem->normalize($this->testsWorkingDir . 'vendor/composer/autoload_files.php'));
 //        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
         $vendorPrefixedAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
 

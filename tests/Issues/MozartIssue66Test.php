@@ -66,6 +66,6 @@ EOD;
         $exitCode = $this->runStrauss($output, '--debug');
         $this->assertEquals(0, $exitCode, $output);
 
-        self::assertFileExists($this->testsWorkingDir . 'strauss/php-di/php-di/src/functions.php');
+        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'strauss/php-di/php-di/src/functions.php'));
     }
 }
