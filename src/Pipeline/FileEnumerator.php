@@ -127,7 +127,7 @@ class FileEnumerator
                     $this->filesystem->normalize($sourceAbsoluteFilepath)
                 );
 
-            $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
+            $f->setAbsoluteTargetPath($this->filesystem->normalize($this->config->getVendorDirectory() . $vendorRelativePath));
 
             $autoloaderType && $f->addAutoloader($autoloaderType);
             $f->setDoDelete($isOutsideProjectDir);
