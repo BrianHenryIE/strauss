@@ -18,6 +18,7 @@ class StraussIssue49Test extends IntegrationTestCase
      */
     public function test_local_symlinked_repositories_fail()
     {
+        $this->markTestSkippedOnPhpVersionBelow('8.0.0');
 
         $composerJsonString = <<<'EOD'
 {
