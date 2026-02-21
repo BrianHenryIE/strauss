@@ -279,7 +279,7 @@ class Cleanup
                         '/'
                     );
 
-                if (false !== strpos('WIN', PHP_OS)) {
+                if (false !== strpos(PHP_OS, 'WIN')) {
                     /**
                      * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
                      * "On windows, take care that `is_link()` returns false for Junctions."
