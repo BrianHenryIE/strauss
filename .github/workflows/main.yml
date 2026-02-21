@@ -95,7 +95,7 @@ jobs:
           phpunit-command: vendor/bin/phpunit
 
       - name: Run tests
-        run: vendor/bin/phpunit --stop-on-failure --order-by=random
+        run: vendor/bin/phpunit --order-by=random
 
       - name: Build phar
         run:
