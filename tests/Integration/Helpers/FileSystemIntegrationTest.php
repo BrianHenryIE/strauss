@@ -46,8 +46,8 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         mkdir($dir);
 
-        $file1 = $dir . '/file1.php';
-        $file2 = $dir . '/file2.php';
+        $file1 = $fs->normalize($dir . '/file1.php');
+        $file2 = $fs->normalize($dir . '/file2.php');
 
         mkdir($dir . '/subdir');
 
