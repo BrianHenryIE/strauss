@@ -162,8 +162,7 @@ class Prefixer
         $classmapPrefix = $this->config->getClassmapPrefix();
 
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
-        $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
-//        $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
+        $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
         $classes = $discoveredSymbols->getGlobalClassChanges();
         $functions = $discoveredSymbols->getDiscoveredFunctionChanges();
 
