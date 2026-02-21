@@ -1,8 +1,8 @@
 <?php
 /**
- * [warning] Package directory unexpectedly DOES NOT exist: /path/to/vendor-prefixed/freemius/wordpress-sdk
+ * Fix invalid constant replacements.
  *
- * @see https://github.com/BrianHenryIE/strauss/issues/249
+ * @see https://github.com/BrianHenryIE/strauss/issues/247
  */
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
