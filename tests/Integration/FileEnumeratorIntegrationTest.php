@@ -23,7 +23,12 @@ class FileEnumeratorIntegrationTest extends IntegrationTestCase
 {
   "name": "brianhenryie/fileenumeratorintegrationtest",
   "require": {
-    "google/apiclient": "*"
+    "google/apiclient": "v2.16.1"
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
   },
   "extra": {
     "strauss": {

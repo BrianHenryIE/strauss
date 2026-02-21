@@ -63,6 +63,11 @@ EOD;
   "require": {
     "google/apiclient": "2.15.1"
   },
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
+  },
   "extra": {
     "strauss": {
       "namespace_prefix": "Company\\Project\\",

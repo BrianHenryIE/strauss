@@ -59,8 +59,8 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         $files = $fs->findAllFilesAbsolutePaths([ $dir ]);
 
-        $this->assertContains($file1, $files);
-        $this->assertContains($file2, $files);
-        $this->assertContains($file3, $files);
+        $this->assertContains($file1, $files, print_r($files, true));
+        $this->assertContains($file2, $files, print_r($files, true));
+        $this->assertContains($file3, $files, print_r($files, true));
     }
 }

@@ -125,6 +125,11 @@ class InstalledJson
     {
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
+            if (in_array($package['name'], $this->config->getExcludePackagesFromCopy(), true)) {
+                unset($installedJsonArray['packages'][$key]);
+                continue;
+            }
+
             // Skip packages that were never copied in the first place.
             if (!in_array($package['name'], array_keys($flatDependencyTree))) {
                 $this->logger->debug('Skipping package: ' . $package['name']);
