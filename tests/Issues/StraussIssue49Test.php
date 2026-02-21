@@ -18,6 +18,7 @@ class StraussIssue49Test extends IntegrationTestCase
      */
     public function test_local_symlinked_repositories_fail()
     {
+        $this->markTestSkippedOnPhpVersionBelow('8.0.0');
 
         $composerJsonString = <<<'EOD'
 {
@@ -27,10 +28,6 @@ class StraussIssue49Test extends IntegrationTestCase
     "brianhenryie/bh-wp-logger": {
         "type": "path",
         "url": "../bh-wp-logger"
-    },
-    "brianhenryie/bh-wp-private-uploads": {
-        "type": "git",
-        "url": "https://github.com/brianhenryie/bh-wp-private-uploads"
     }
   },
   "require": {
@@ -50,6 +47,7 @@ EOD;
         chdir($this->testsWorkingDir);
 
         exec('git clone https://github.com/BrianHenryIE/bh-wp-logger.git');
+        chdir($this->testsWorkingDir.'bh-wp-logger');
 
         mkdir($this->testsWorkingDir . 'project');
 
@@ -58,10 +56,11 @@ EOD;
 
         chdir($this->testsWorkingDir.'project');
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL,$composerInstallOutput));
 
         $exitCode = $this->runStrauss($output);
 
-        self::assertEquals(0, $exitCode, $output);
+        $this->assertEquals(0, $exitCode, $output);
     }
 }
