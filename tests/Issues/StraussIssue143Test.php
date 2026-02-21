@@ -51,11 +51,11 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
+        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Strauss\\Issue143\\Psr\\Log;', $phpString);
 
-        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . 'vendor-prefixed/autoload.php'));
+        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/autoload.php'));
 
         $installedJsonString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString('"name": "psr/log",', $installedJsonString);
@@ -118,7 +118,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileDoesNotExist($this->filesystem->normalize($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php'));
+        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php'));
     }
 
     /**

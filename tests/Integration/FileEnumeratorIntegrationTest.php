@@ -97,7 +97,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir . '/vendor-prefixed/giggsey/libphonenumber-for-php-lite/src/data/PhoneNumberMetadata_800.php'));
+        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . '/vendor-prefixed/giggsey/libphonenumber-for-php-lite/src/data/PhoneNumberMetadata_800.php'));
         // TODO: This test really should be to not prefix exclude-from-classmap files but these files are just arrays.
         // When I remember a package that has classes in exclude-from-classmap, I'll update this test.
     }

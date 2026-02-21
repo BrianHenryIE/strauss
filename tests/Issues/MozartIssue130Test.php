@@ -64,6 +64,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExists($this->filesystem->normalize($this->testsWorkingDir .'strauss/htmlburger/carbon-fields/config.php'));
+        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir .'strauss/htmlburger/carbon-fields/config.php'));
     }
 }

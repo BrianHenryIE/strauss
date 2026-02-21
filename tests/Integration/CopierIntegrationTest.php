@@ -84,7 +84,7 @@ EOD;
 
         $copier->prepareTarget();
 
-        $this->assertFileDoesNotExist($this->filesystem->normalize($targetFile));
+        $this->assertFalse($this->getFileSystem()->fileExists($targetFile));
     }
 
     public function testsCopy(): void
@@ -151,7 +151,7 @@ EOD;
 
         $copier->copy();
 
-        $this->assertFileExists($this->filesystem->normalize($targetFile));
+        $this->assertTrue($this->getFileSystem()->fileExists($targetFile));
     }
 
 
