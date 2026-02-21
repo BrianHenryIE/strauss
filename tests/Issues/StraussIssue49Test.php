@@ -57,7 +57,7 @@ EOD;
         chdir($this->testsWorkingDir.'project');
 
         exec('composer install', $composerInstallOutput, $composerInstallExitCode);
-        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL,$composerInstallOutput));
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $exitCode = $this->runStrauss($output);
 
