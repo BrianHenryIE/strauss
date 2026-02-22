@@ -110,7 +110,6 @@ EOD;
         // SANITY CHECK: Non-excluded package should still be deleted
         $this->assertFalse($this->getFileSystem()->directoryExists(
             $this->testsWorkingDir . '/vendor/psr/container',
-            'Non-excluded package psr/container should be deleted from vendor/'
-        ));
+        ), 'Non-excluded package psr/container should be deleted from vendor/');
     }
 }
