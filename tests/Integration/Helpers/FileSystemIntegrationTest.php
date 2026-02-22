@@ -51,7 +51,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         mkdir($dir . '/subdir');
 
-        $file3 = $dir . '/subdir/file3.php';
+        $file3 = FileSystem::normalizeDirSeparator($dir . '/subdir/file3.php');
 
         $this->getFileSystem()->write($file1, 'file1');
         $this->getFileSystem()->write($file2, 'file2');
