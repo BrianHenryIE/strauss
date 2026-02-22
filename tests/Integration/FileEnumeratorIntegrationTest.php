@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 
@@ -68,7 +69,7 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $this->assertNotNull($files->getFile($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php'));
+        $this->assertNotNull($files->getFile(FileSystem::normalizeDirSeparator($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php')));
     }
 
     public function test_exclude_from_classmap(): void
