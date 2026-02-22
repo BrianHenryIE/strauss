@@ -7,6 +7,7 @@ use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
+use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
@@ -35,6 +36,10 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getExcludePackagesFromPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeNamespacesFromPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeFilePatternsFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludePackagesFromConstantPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeNamespacesFromConstantPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeFilePatternsFromConstantPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeConstantNames')->andReturn([]);
         $config->shouldReceive('getVendorDirectory')->andReturn('/vendor/');
         $config->shouldReceive('getTargetDirectory')->andReturn('/vendor-prefixed/');
 
@@ -73,6 +78,10 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getExcludePackagesFromPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeNamespacesFromPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeFilePatternsFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludePackagesFromConstantPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeNamespacesFromConstantPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeFilePatternsFromConstantPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeConstantNames')->andReturn([]);
         $config->shouldReceive('getVendorDirectory')->andReturn('/vendor/');
         $config->shouldReceive('getTargetDirectory')->andReturn('/vendor-prefixed/');
 
@@ -91,5 +100,48 @@ class MarkSymbolsForRenamingTest extends TestCase
         $sut->scanSymbols($discoveredSymbols);
 
         self::assertTrue($symbol->isDoRename(), 'Symbol from non-excluded package should remain doRename=true');
+    }
+
+    /**
+     * Constants listed in exclude_constants.constants should NOT be marked for renaming.
+     *
+     * @covers ::scanSymbols
+     * @covers ::isExcludeConstants
+     * @covers ::isExcludeConstantName
+     */
+    public function testExcludeConstantsByNameNotMarkedForRenaming(): void
+    {
+        $package = Mockery::mock(ComposerPackage::class);
+        $package->shouldReceive('getPackageName')->andReturn('some/package');
+
+        $config = Mockery::mock(MarkSymbolsForRenamingConfigInterface::class);
+        $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
+        $config->shouldReceive('getExcludePackagesFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeFilePatternsFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludePackagesFromConstantPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeNamespacesFromConstantPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeFilePatternsFromConstantPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeConstantNames')->andReturn(['WP_PLUGIN_DIR', 'ABSPATH']);
+        $config->shouldReceive('getVendorDirectory')->andReturn('/vendor/');
+        $config->shouldReceive('getTargetDirectory')->andReturn('/vendor/');
+
+        $filesystem = Mockery::mock(FileSystem::class);
+
+        $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
+
+        $file = new File('/vendor/some/package/src/bootstrap.php', 'some/package/src/bootstrap.php');
+        $file->setIsAutoloaded(true);
+
+        $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file, '\\', $package);
+
+        self::assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($symbol);
+
+        $sut->scanSymbols($discoveredSymbols);
+
+        self::assertFalse($symbol->isDoRename(), 'Constant in exclude_constants.constants should have doRename=false');
     }
 }
