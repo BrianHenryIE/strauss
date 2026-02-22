@@ -123,11 +123,11 @@ class FileEnumerator
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
                 ?? new FileWithDependency(
                     $dependency,
-                    $this->filesystem->normalize($vendorRelativePath),
-                    $this->filesystem->normalize($sourceAbsoluteFilepath)
+                    FileSystem::normalizeDirSeparator($vendorRelativePath),
+                    FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath)
                 );
 
-            $f->setAbsoluteTargetPath($this->filesystem->normalize($this->config->getVendorDirectory() . $vendorRelativePath));
+            $f->setAbsoluteTargetPath(FileSystem::normalizeDirSeparator($this->config->getVendorDirectory() . $vendorRelativePath));
 
             $autoloaderType && $f->addAutoloader($autoloaderType);
             $f->setDoDelete($isOutsideProjectDir);
@@ -144,7 +144,10 @@ class FileEnumerator
             );
 
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
-                 ?? new File($sourceAbsoluteFilepath, $vendorRelativePath);
+                 ?? new File(
+                     FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath),
+                     FileSystem::normalizeDirSeparator($vendorRelativePath)
+                 );
         }
 
         $this->discoveredFiles->add($f);
