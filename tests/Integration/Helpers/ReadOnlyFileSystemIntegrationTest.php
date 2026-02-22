@@ -94,7 +94,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     public function testListContentsDeleteFile(): void
     {
         // Given a real file
-        $aRealFile = $this->testsWorkingDir . 'file1.php';
+        $aRealFile = FileSystem::normalizeDirSeparator($this->testsWorkingDir . 'file1.php');
         $this->getFileSystem()->write($aRealFile, 'file1');
 
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
