@@ -47,6 +47,6 @@ EOD;
 
         $this->assertEquals(0, $result);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
     }
 }

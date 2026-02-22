@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 
@@ -68,7 +69,7 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $this->assertNotNull($files->getFile($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php'));
+        $this->assertNotNull($files->getFile(FileSystem::normalizeDirSeparator($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php')));
     }
 
     public function test_exclude_from_classmap(): void
@@ -97,7 +98,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExists($this->testsWorkingDir . '/vendor-prefixed/giggsey/libphonenumber-for-php-lite/src/data/PhoneNumberMetadata_800.php');
+        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . '/vendor-prefixed/giggsey/libphonenumber-for-php-lite/src/data/PhoneNumberMetadata_800.php'));
         // TODO: This test really should be to not prefix exclude-from-classmap files but these files are just arrays.
         // When I remember a package that has classes in exclude-from-classmap, I'll update this test.
     }
