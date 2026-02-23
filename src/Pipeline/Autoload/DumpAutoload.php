@@ -81,20 +81,15 @@ class DumpAutoload
             return;
         }
 
-        $relativeTargetDir = $this->filesystem->getRelativePath(
-            $this->config->getProjectDirectory(),
-            $this->config->getTargetDirectory()
-        );
-
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
-        Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
+        Config::$defaultConfig['vendor-dir'] = $this->config->getTargetDirectory();
 
         $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
 
         /** @var ComposerJsonArray $projectComposerJsonArray */
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
-            $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
+            $projectComposerJsonArray['config']['vendor-dir'] = $this->config->getTargetDirectory();
         }
 
         /**
