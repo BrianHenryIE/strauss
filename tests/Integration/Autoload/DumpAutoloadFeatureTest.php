@@ -3,8 +3,12 @@
 namespace BrianHenryIE\Strauss\Autoload;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Autoload\AutoloadGenerator;
 
+/**
+ * @see DumpAutoload
+ */
 class DumpAutoloadFeatureTest extends IntegrationTestCase
 {
     /**
