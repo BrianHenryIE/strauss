@@ -59,9 +59,9 @@ EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/projectdir/composer.json', $composerJsonString);
         $this->getFileSystem()->write($this->testsWorkingDir . '/projectdir/composer-free.json', $composerFreeJsonString);
 
-        exec('COMPOSER=composer-free.json composer install');
+        exec('COMPOSER="composer-free.json" composer install');
 
-        $env = 'COMPOSER=composer-free.json';
+        $env = 'COMPOSER="composer-free.json"';
         $exitCode = $this->runStrauss($output, '', $env);
         $this->assertEquals(0, $exitCode, $output);
 
