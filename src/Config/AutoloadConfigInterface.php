@@ -16,7 +16,7 @@ interface AutoloadConfigInterface
 
     /**
      * The directory where Strauss copied the files to.
-     * absolute? relative?
+     * absolute.
      */
     public function getTargetDirectory(): string;
 

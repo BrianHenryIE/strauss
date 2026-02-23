@@ -18,6 +18,7 @@ use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
 use Exception;
@@ -343,12 +344,10 @@ class StraussConfig implements
 
     /**
      * `target_directory` will always be returned without a leading slash and with a trailing slash.
-     *
-     * @return string
      */
     public function getTargetDirectory(): string
     {
-        return $this->getProjectDirectory() . trim($this->targetDirectory, '\\/') . '/';
+        return FileSystem::normalizeDirSeparator($this->getProjectDirectory() . rtrim($this->targetDirectory, '\\/') . '/');
     }
 
     /**
@@ -832,6 +831,6 @@ class StraussConfig implements
 
         return $this->isDryRun()
             ? 'mem:/' . $projectDirectory
-            : $projectDirectory;
+            : FileSystem::normalizeDirSeparator($projectDirectory);
     }
 }
