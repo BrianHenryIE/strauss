@@ -19,7 +19,7 @@ class StraussIssue109Test extends IntegrationTestCase
     {
         $composerJsonString = <<<'EOD'
 {
-  "name": "strauss/issue104",
+  "name": "strauss/issue109",
   "require": {
     "psr/log": "1.0.0"
   },
