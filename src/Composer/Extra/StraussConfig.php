@@ -347,7 +347,9 @@ class StraussConfig implements
      */
     public function getTargetDirectory(): string
     {
-        return FileSystem::normalizeDirSeparator($this->getProjectDirectory() . rtrim($this->targetDirectory, '\\/') . '/');
+        return FileSystem::normalizeDirSeparator(
+            rtrim($this->getProjectDirectory(), '\\/') . '/' . trim($this->targetDirectory, '\\/') . '/'
+        );
     }
 
     /**
