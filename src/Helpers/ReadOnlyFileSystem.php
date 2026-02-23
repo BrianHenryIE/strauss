@@ -45,6 +45,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function fileExists(string $location): bool
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         if ($this->deletedFiles->fileExists($location)) {
             return false;
         }
@@ -58,6 +60,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
      */
     public function write(string $location, string $contents, array $config = []): void
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         $config = new Config($config);
         $this->inMemoryFiles->write($location, $contents, $config);
 
@@ -73,6 +77,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
      */
     public function writeStream(string $location, $contents, $config = []): void
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         $config = new Config($config);
         $this->rewindStream($contents);
         $this->inMemoryFiles->writeStream($location, $contents, $config);
@@ -93,6 +99,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function read(string $location): string
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         if ($this->deletedFiles->fileExists($location)) {
             throw UnableToReadFile::fromLocation($location);
         }
@@ -104,6 +112,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function readStream(string $location)
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         if ($this->deletedFiles->fileExists($location)) {
             throw UnableToReadFile::fromLocation($location);
         }
@@ -115,6 +125,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function delete(string $location): void
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         if ($this->fileExists($location)) {
             $file = $this->read($location);
             $this->deletedFiles->write($location, $file, new Config([]));
@@ -138,6 +150,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
      */
     public function createDirectory(string $location, array $config = []): void
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         $this->inMemoryFiles->createDirectory($location, new Config($config));
 
         $this->deletedFiles->deleteDirectory($location);
@@ -145,6 +159,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         /** @var FileAttributes[] $actual */
         $actual = $this->filesystem->listContents($location, $deep)->toArray();
 
@@ -184,6 +200,9 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
      */
     public function copy(string $source, string $destination, $config = null): void
     {
+        $source = $this->pathNormalizer->normalizePath($source);
+        $destination = $this->pathNormalizer->normalizePath($destination);
+
         $sourceFile = $this->read($source);
 
         $this->inMemoryFiles->write(
@@ -207,6 +226,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
      */
     private function getAttributes(string $path): StorageAttributes
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         $parentDirectoryContents = $this->listContents(dirname($path), false);
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
@@ -219,12 +240,14 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function lastModified(string $path): int
     {
-        $attributes = $this->getAttributes($path);
+        $attributes = $this->getAttributes($this->pathNormalizer->normalizePath($path));
         return $attributes->lastModified() ?? 0;
     }
 
     public function fileSize(string $path): int
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         $filesize = 0;
 
         if ($this->inMemoryFiles->fileExists($path)) {
@@ -294,6 +317,8 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
      */
     protected function directoryExistsIn(string $location, $filesystem): bool
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         if (method_exists($filesystem, 'directoryExists')) {
             return $filesystem->directoryExists($location);
         }

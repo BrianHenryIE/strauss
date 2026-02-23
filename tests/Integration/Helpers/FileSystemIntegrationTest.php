@@ -46,12 +46,12 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         mkdir($dir);
 
-        $file1 = $dir . '/file1.php';
-        $file2 = $dir . '/file2.php';
+        $file1 = FileSystem::normalizeDirSeparator($dir . '/file1.php');
+        $file2 = FileSystem::normalizeDirSeparator($dir . '/file2.php');
 
         mkdir($dir . '/subdir');
 
-        $file3 = $dir . '/subdir/file3.php';
+        $file3 = FileSystem::normalizeDirSeparator($dir . '/subdir/file3.php');
 
         $this->getFileSystem()->write($file1, 'file1');
         $this->getFileSystem()->write($file2, 'file2');

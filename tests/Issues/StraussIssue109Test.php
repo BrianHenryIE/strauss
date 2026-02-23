@@ -19,7 +19,7 @@ class StraussIssue109Test extends IntegrationTestCase
     {
         $composerJsonString = <<<'EOD'
 {
-  "name": "strauss/issue104",
+  "name": "strauss/issue109",
   "require": {
     "psr/log": "1.0.0"
   },
@@ -47,6 +47,6 @@ EOD;
 
         $this->assertEquals(0, $result);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor/psr/log/composer.json'));
     }
 }

@@ -3,8 +3,12 @@
 namespace BrianHenryIE\Strauss\Autoload;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Autoload\AutoloadGenerator;
 
+/**
+ * @see DumpAutoload
+ */
 class DumpAutoloadFeatureTest extends IntegrationTestCase
 {
     /**
@@ -25,7 +29,8 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
 
         chdir($this->testsWorkingDir);
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);

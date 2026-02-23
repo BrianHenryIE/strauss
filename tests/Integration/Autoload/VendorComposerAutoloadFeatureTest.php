@@ -229,7 +229,8 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
@@ -270,7 +271,8 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);

@@ -50,14 +50,14 @@ EOD;
         mkdir($this->testsWorkingDir . 'project1');
         $this->getFileSystem()->write($this->testsWorkingDir . 'project1/composer.json', $composerJsonString1);
         chdir($this->testsWorkingDir . 'project1');
-        exec('composer install --no-dev;');
+        exec('composer install --no-dev');
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
         mkdir($this->testsWorkingDir . 'project2');
         $this->getFileSystem()->write($this->testsWorkingDir . 'project2/composer.json', $composerJsonString2);
         chdir($this->testsWorkingDir . 'project2');
-        exec('composer install --no-dev;');
+        exec('composer install --no-dev');
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 

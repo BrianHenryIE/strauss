@@ -86,7 +86,7 @@ class FileCopyScanner
                 ? $this->config->getTargetDirectory() . $file->getVendorRelativePath()
                 : $file->getSourcePath();
 
-            $file->setAbsoluteTargetPath($target);
+            $file->setAbsoluteTargetPath(FileSystem::normalizeDirSeparator($target));
 
             $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->filesystem->isSymlinkedFile($file);
             $file->setDoDelete($shouldDelete);

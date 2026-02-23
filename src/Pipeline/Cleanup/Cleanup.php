@@ -274,12 +274,12 @@ class Cleanup
 
                 // If it's a symlink, remove the symlink in the directory
                 $symlinkPath =
-                    rtrim(
+                    FileSystem::normalizeDirSeparator(rtrim(
                         $this->config->getVendorDirectory() . $package->getRelativePath(),
                         '/'
-                    );
+                    ));
 
-                if (false !== strpos('WIN', PHP_OS)) {
+                if (PHP_OS_FAMILY === 'Windows') {
                     /**
                      * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
                      * "On windows, take care that `is_link()` returns false for Junctions."
@@ -287,7 +287,9 @@ class Cleanup
                      * @see https://www.php.net/manual/en/function.is-link.php#113263
                      * @see https://stackoverflow.com/a/18262809/336146
                      */
-                    rmdir($symlinkPath);
+//                    rmdir($symlinkPath);
+                    (new \Composer\Util\Filesystem())->unlink($symlinkPath);
+
                 } else {
                     unlink($symlinkPath);
                 }
