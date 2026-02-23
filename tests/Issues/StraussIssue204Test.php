@@ -60,9 +60,10 @@ EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/projectdir/composer-free.json', $composerFreeJsonString);
 
         // On Windows:
+        //  exec('COMPOSER="composer-free.json" composer install')
         //     Command "=composer-free.json" is not defined.
 
-        exec('COMPOSER="composer-free.json" composer install', $composerInstallOutput, $composerInstallExitCode);
+        exec('COMPOSER=composer-free.json composer install', $composerInstallOutput, $composerInstallExitCode);
         $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $env = 'COMPOSER=composer-free.json';
