@@ -61,7 +61,7 @@ EOD;
 
         exec('COMPOSER="composer-free.json" composer install');
 
-        $env = 'COMPOSER="composer-free.json"';
+        $env = 'COMPOSER=composer-free.json';
         $exitCode = $this->runStrauss($output, '', $env);
         $this->assertEquals(0, $exitCode, $output);
 
