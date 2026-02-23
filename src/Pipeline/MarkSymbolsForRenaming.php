@@ -41,7 +41,7 @@ class MarkSymbolsForRenaming
         $allSymbols = $symbols->getSymbols();
         foreach ($allSymbols as $symbol) {
             // $this->config->getFlatDependencyTree
-
+            // TODO: This is probably incorrect. If a file is conditionally loaded, it still needs its namespace updated.
             if (!$this->fileIsAutoloaded($symbol)) {
 //                $this->logger->debug()
                 $symbol->setDoRename(false);
