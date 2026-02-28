@@ -37,10 +37,10 @@ EOD;
 
         exec('composer install');
 
-        assert(file_exists($this->testsWorkingDir . '/vendor/symfony/polyfill-php80/bootstrap.php'));
+        $this->assertFileExists($this->testsWorkingDir . '/vendor/symfony/polyfill-php80/bootstrap.php');
 
         $exitCode = $this->runStrauss();
-        assert($exitCode === 0);
+        $this->assertSame(0, $exitCode);
 
         $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/installed.json');
         $installedJson = json_decode($installedJsonFile, true);
@@ -111,5 +111,31 @@ EOD;
             $this->testsWorkingDir . '/vendor/psr/container',
             'Non-excluded package psr/container should be deleted from vendor/'
         );
+
+        $vendorInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $vendorInstalledPackageNames = $this->extractPackageNamesFromInstalledJson($vendorInstalledJson);
+        $this->assertContains('psr/log', $vendorInstalledPackageNames, 'Excluded package should remain in vendor/composer/installed.json');
+
+        $targetInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $targetInstalledPackageNames = $this->extractPackageNamesFromInstalledJson($targetInstalledJson);
+        $this->assertNotContains('psr/log', $targetInstalledPackageNames, 'Excluded package should not appear in target installed.json');
+        $this->assertContains('psr/container', $targetInstalledPackageNames, 'Non-excluded package should be present in target installed.json');
+    }
+
+    /**
+     * @return string[]
+     */
+    private function extractPackageNamesFromInstalledJson(string $installedJson): array
+    {
+        $installedJsonArray = json_decode($installedJson, true);
+
+        $this->assertIsArray($installedJsonArray, 'installed.json should decode to an array');
+        $this->assertArrayHasKey('packages', $installedJsonArray, 'installed.json should contain packages');
+        $this->assertIsArray($installedJsonArray['packages']);
+
+        return array_values(array_filter(array_map(
+            static fn(array $package): ?string => $package['name'] ?? null,
+            $installedJsonArray['packages']
+        )));
     }
 }
