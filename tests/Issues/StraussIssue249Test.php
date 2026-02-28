@@ -49,9 +49,29 @@ EOD;
 
         $this->assertStringNotContainsString('Package directory unexpectedly DOES NOT exist', $output);
 
-        $vendor_prefixed_installedjson_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
-        $this->assertStringNotContainsString("freemius/wordpress-sdk", $vendor_prefixed_installedjson_string);
-        $vendor_installedjson_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
-        $this->assertStringContainsString("freemius/wordpress-sdk", $vendor_installedjson_string);
+        $vendorPrefixedInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $vendorPrefixedPackageNames = $this->extractPackageNamesFromInstalledJson($vendorPrefixedInstalledJson);
+        $this->assertNotContains('freemius/wordpress-sdk', $vendorPrefixedPackageNames);
+
+        $vendorInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $vendorPackageNames = $this->extractPackageNamesFromInstalledJson($vendorInstalledJson);
+        $this->assertContains('freemius/wordpress-sdk', $vendorPackageNames);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function extractPackageNamesFromInstalledJson(string $installedJson): array
+    {
+        $installedJsonArray = json_decode($installedJson, true);
+
+        $this->assertIsArray($installedJsonArray, 'installed.json should decode to an array');
+        $this->assertArrayHasKey('packages', $installedJsonArray, 'installed.json should contain packages');
+        $this->assertIsArray($installedJsonArray['packages']);
+
+        return array_values(array_filter(array_map(
+            static fn(array $package): ?string => $package['name'] ?? null,
+            $installedJsonArray['packages']
+        )));
     }
 }
