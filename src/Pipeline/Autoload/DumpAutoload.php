@@ -223,11 +223,10 @@ class DumpAutoload
      */
     protected function prefixNewAutoloader(): void
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
-            return;
-        }
+        $isNewString = $this->config->getVendorDirectory() === $this->config->getTargetDirectory()
+            ? '' : ' new';
 
-        $this->logger->debug('Prefixing the new Composer autoloader.');
+        $this->logger->debug("Prefixing the{$isNewString} Composer autoloader.");
 
         $projectFiles = $this->fileEnumerator->compileFileListForPaths([
             $this->config->getTargetDirectory() . 'composer',

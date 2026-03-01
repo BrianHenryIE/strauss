@@ -53,6 +53,8 @@
     },
     "require-dev": {
         "php": "^7.4|^8.0",
+        "ext-json": "*",
+        "ext-zip": "*",
         "brianhenryie/color-logger": "*",
         "brianhenryie/php-codecoverage-markdown": "^0.1.0",
         "clue/phar-composer": "^1.2",
@@ -67,6 +69,12 @@
     },
     "conflict": {
       "json-mapper/json-mapper": "2.23.0 | 2.24.0"
+    },
+    "extra": {
+      "strauss": {
+          "namespace_prefix": "BrianHenryIE\\Strauss\\Vendor\\",
+          "target_directory": "vendor"
+      }
     },
     "scripts": {
         "post-install-cmd": [

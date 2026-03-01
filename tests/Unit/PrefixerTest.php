@@ -2931,4 +2931,49 @@ EOD;
 
         $this->assertEqualsRN($expected, $result);
     }
+
+    public function test_return_type_classname_replaced_as_namespace(): void
+    {
+
+        $contents = <<<'EOD'
+namespace Composer;
+
+class Factory
+{
+    public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): Composer
+    {}
+}
+EOD;
+
+        // public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\Strauss\Vendor\Composer
+        $expected = <<<'EOD'
+namespace BrianHenryIE\Strauss\Vendor\Composer;
+
+class Factory
+{
+    public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): Composer
+    {}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = $this->createMock(File::class);
+        $file->expects($this->any())->method('addDiscoveredSymbol');
+        $file->expects($this->any())->method('getSourcePath');
+        $file->expects($this->any())
+             ->method('isDoPrefix')
+             ->willReturn(true);
+
+        $symbols = new DiscoveredSymbols();
+
+        $symbol = new NamespaceSymbol('Composer', $file);
+        $symbol->setReplacement('BrianHenryIE\\Strauss\\Vendor\\Composer');
+        $symbols->add($symbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
+    }
 }
