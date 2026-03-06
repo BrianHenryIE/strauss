@@ -119,13 +119,14 @@ class InstalledJson
     /**
      * @param InstalledJsonArray $installedJsonArray
      * @param array<string,ComposerPackage> $flatDependencyTree
+     * @param string[] $excludedPackageNames
      * @return InstalledJsonArray
      */
-    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree, string $path): array
+    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree, string $path, array $excludedPackageNames = []): array
     {
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
-            if (in_array($package['name'], $this->config->getExcludePackagesFromCopy(), true)) {
+            if (in_array($package['name'], $excludedPackageNames, true)) {
                 unset($installedJsonArray['packages'][$key]);
                 continue;
             }
@@ -473,7 +474,12 @@ class InstalledJson
             ['installedJsonFilePath' => $installedJsonFile->getPath(), 'installedJsonArray' => json_encode($installedJsonArray)]
         );
 
-        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getTargetDirectory());
+        $installedJsonArray = $this->updatePackagePaths(
+            $installedJsonArray,
+            $flatDependencyTree,
+            $this->config->getTargetDirectory(),
+            $this->config->getExcludePackagesFromCopy()
+        );
 
         $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getTargetDirectory(), $installedJsonFile->getPath());
 
@@ -530,7 +536,11 @@ class InstalledJson
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson($installedJsonArray, $flatDependencyTree, $vendorInstalledJsonFile->getPath());
 
-        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getVendorDirectory());
+        $installedJsonArray = $this->updatePackagePaths(
+            $installedJsonArray,
+            $flatDependencyTree,
+            $this->config->getVendorDirectory()
+        );
 
         // Only relevant when source = target.
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
