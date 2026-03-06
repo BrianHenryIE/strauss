@@ -7,6 +7,7 @@ namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
+use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -131,12 +132,11 @@ class Cleanup
         $package = $composer->getPackage();
         $config = $composer->getConfig();
         $generator = new AutoloadGenerator($composer->getEventDispatcher());
-
-        $generator->setClassMapAuthoritative(true);
+        $isOptimize = $this->isOptimizeAutoloaderEnabled();
+        $generator->setClassMapAuthoritative($isOptimize);
         $generator->setRunScripts(false);
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
-        $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
         $installedJson = new JsonFile($this->config->getVendorDirectory() . 'composer/installed.json');
         $localRepo = new InstalledFilesystemRepository($installedJson);
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
@@ -150,11 +150,21 @@ class Cleanup
             $package,
             $installationManager,
             'composer',
-            $optimize,
+            $isOptimize,
             null,
             $composer->getLocker(),
             $strictAmbiguous
         );
+    }
+
+    /**
+     * Keep backward compatibility with configs implementing only CleanupConfigInterface.
+     */
+    protected function isOptimizeAutoloaderEnabled(): bool
+    {
+        return $this->config instanceof OptimizeAutoloaderConfigInterface
+            ? $this->config->isOptimizeAutoloader()
+            : true;
     }
 
     /**

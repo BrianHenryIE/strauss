@@ -2,11 +2,109 @@
 
 namespace BrianHenryIE\Strauss\Autoload;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
+use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
+use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use Composer\Autoload\AutoloadGenerator;
+use Composer\Factory;
+use Composer\IO\NullIO;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 class DumpAutoloadFeatureTest extends IntegrationTestCase
 {
+    /**
+     * @dataProvider provider_optimize_autoloader_for_prefixed_autoload_real
+     */
+    public function test_optimize_autoloader_for_prefixed_autoload_real(string $composerJsonString, bool $expectAuthoritative): void
+    {
+        try {
+            file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+            chdir($this->testsWorkingDir);
+            exec('composer install', $output, $exitCode);
+            $this->assertEquals(0, $exitCode, implode(PHP_EOL, $output));
+            @mkdir($this->testsWorkingDir . 'vendor-prefixed/composer', 0777, true);
+            $sourceComposerDir = $this->testsWorkingDir . 'vendor/composer';
+            $targetComposerDir = $this->testsWorkingDir . 'vendor-prefixed/composer';
+            foreach (scandir($sourceComposerDir) ?: [] as $entry) {
+                if ($entry === '.' || $entry === '..') {
+                    continue;
+                }
+                $sourcePath = $sourceComposerDir . '/' . $entry;
+                $targetPath = $targetComposerDir . '/' . $entry;
+                if (is_file($sourcePath)) {
+                    copy($sourcePath, $targetPath);
+                }
+            }
+            copy($this->testsWorkingDir . 'vendor/autoload.php', $this->testsWorkingDir . 'vendor-prefixed/autoload.php');
+            $composer = Factory::create(new NullIO(), $this->testsWorkingDir . 'composer.json');
+            $config = new StraussConfig($composer);
+            $psrLogPackage = ComposerPackage::fromFile($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+            $config->setPackagesToCopy(['psr/log' => $psrLogPackage]);
+            $config->setPackagesToPrefix(['psr/log' => $psrLogPackage]);
+            $filesystem = new FileSystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter('/')), $this->testsWorkingDir);
+            $dumpAutoload = new DumpAutoload($config, $filesystem, $this->logger, new Prefixer($config, $filesystem, $this->logger), new FileEnumerator($config, $filesystem, $this->logger));
+            $dumpAutoload->generatedPrefixedAutoloader();
+            $autoloadRealPath = $this->testsWorkingDir . 'vendor-prefixed/composer/autoload_real.php';
+            $this->assertFileExists($autoloadRealPath);
+            $autoloadRealPhpString = file_get_contents($autoloadRealPath);
+            if ($expectAuthoritative) {
+                $this->assertStringContainsString('setClassMapAuthoritative(true)', $autoloadRealPhpString);
+            } else {
+                $this->assertStringNotContainsString('setClassMapAuthoritative(true)', $autoloadRealPhpString);
+            }
+        } finally {
+            chdir($this->projectDir);
+        }
+    }
+
+    /**
+     * @return array<string, array{0:string, 1:bool}>
+     */
+    public static function provider_optimize_autoloader_for_prefixed_autoload_real(): array
+    {
+        $defaultOptimize = <<<'EOD'
+{
+    "name": "brianhenryie/dump-autoload-feature-test-optimize-default",
+    "require": {
+        "psr/log": "*"
+    },
+    "extra": {
+        "strauss": {
+            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "classmap_prefix": "BrianHenryIE_Strauss_",
+            "target_directory": "vendor-prefixed",
+            "delete_vendor_packages": true
+        }
+    }
+}
+EOD;
+        $disableOptimize = <<<'EOD'
+{
+    "name": "brianhenryie/dump-autoload-feature-test-optimize-disabled",
+    "require": {
+        "psr/log": "*"
+    },
+    "extra": {
+        "strauss": {
+            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "classmap_prefix": "BrianHenryIE_Strauss_",
+            "target_directory": "vendor-prefixed",
+            "delete_vendor_packages": true,
+            "optimize_autoloader": false
+        }
+    }
+}
+EOD;
+        return [
+            'key_omitted_defaults_to_optimized' => [$defaultOptimize, true],
+            'explicit_false_disables_authoritative' => [$disableOptimize, false],
+        ];
+    }
+
     /**
      * I think what's been happening is that the vendor-prefixed autoloader also includes the autoload directives
      * in the root composer.json. When `files` are involved, they get `require`d twice.

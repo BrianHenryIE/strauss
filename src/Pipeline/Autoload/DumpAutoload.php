@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
+use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
@@ -131,13 +132,12 @@ class DumpAutoload
             $this->config->getNamespacePrefix(),
             $composer->getEventDispatcher()
         );
-
+        $isOptimize = $this->isOptimizeAutoloaderEnabled();
         $generator->setDryRun($this->config->isDryRun());
-        $generator->setClassMapAuthoritative(true);
+        $generator->setClassMapAuthoritative($isOptimize);
         $generator->setRunScripts(false);
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
-        $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
 
         $installedJsonFile = new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json');
         /** @var array{dev?:bool} $installedJson */
@@ -164,7 +164,7 @@ class DumpAutoload
             $package,
             $installationManager,
             'composer',
-            $optimize,
+            $isOptimize,
             $this->getSuffix(),
             $composer->getLocker(),
             $strictAmbiguous
@@ -177,6 +177,16 @@ class DumpAutoload
          * then they might expect it to be unmodified.
          */
         Config::$defaultConfig['vendor-dir'] = $defaultVendorDirBefore;
+    }
+
+    /**
+     * Keep backward compatibility with configs implementing only AutoloadConfigInterface.
+     */
+    protected function isOptimizeAutoloaderEnabled(): bool
+    {
+        return $this->config instanceof OptimizeAutoloaderConfigInterface
+            ? $this->config->isOptimizeAutoloader()
+            : true;
     }
 
     /**
