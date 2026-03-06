@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -16,6 +17,8 @@ class StraussIssue8Test extends IntegrationTestCase
 
     /**
      * @author BrianHenryIE
+     * @see Cleanup::deleteFiles()
+     * @see Cleanup::doIsDeleteVendorFiles()
      */
     public function test_delete_vendor_files()
     {
@@ -45,6 +48,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        self::assertFileDoesNotExist($this->testsWorkingDir. 'vendor/psr/log/Psr/Log/LogLevel.php');
+        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir. 'vendor/psr/log/Psr/Log/LogLevel.php'));
     }
 }

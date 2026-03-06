@@ -94,7 +94,7 @@ class AutoloadedFilesEnumerator
                             $dependencyPackageAbsolutePath,
                             $filePackageAbsolutePath
                         );
-                        $file = $dependency->getFile($filePackageRelativePath);
+                        $file = $dependency->getFile(FileSystem::normalizeDirSeparator($filePackageRelativePath));
                         if (!$file) {
                             $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
                                 'relativePath' => $filePackageRelativePath,
