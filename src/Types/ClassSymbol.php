@@ -63,7 +63,7 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         $fqdnOriginalSymbol = $this->fqdnOriginalSymbol;
 
         while (str_starts_with($fqdnOriginalSymbol, $class_prefix)) {
-            $fqdnOriginalSymbol = preg_replace('/^Strauss_Issue258_/', '', $fqdnOriginalSymbol);
+            $fqdnOriginalSymbol = preg_replace('/^'.preg_quote($class_prefix).'/', '', $fqdnOriginalSymbol);
         }
 
         return $fqdnOriginalSymbol;
