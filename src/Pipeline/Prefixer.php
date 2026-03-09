@@ -170,7 +170,7 @@ class Prefixer
 
         if ($classmapPrefix) {
             foreach ($classes as $classSymbol) {
-                $contents = $this->replaceClassname($contents, $classSymbol->getOriginalSymbol(), $classmapPrefix);
+                $contents = $this->replaceClassname($contents, $classSymbol->getOriginalSymbolStripPrefix($classmapPrefix), $classmapPrefix);
             }
         }
 
