@@ -58,6 +58,17 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return $this->isAbstract;
     }
 
+    public function getOriginalSymbolStripPrefix(string $class_prefix): string
+    {
+        $fqdnOriginalSymbol = $this->fqdnOriginalSymbol;
+
+        while (str_starts_with($fqdnOriginalSymbol, $class_prefix)) {
+            $fqdnOriginalSymbol = preg_replace('/^Strauss_Issue258_/', '', $fqdnOriginalSymbol);
+        }
+
+        return $fqdnOriginalSymbol;
+    }
+
     /**
      * @return ClassAliasArray
      */
