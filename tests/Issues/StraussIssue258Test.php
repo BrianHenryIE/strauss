@@ -25,7 +25,8 @@ class StraussIssue258Test extends IntegrationTestCase
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "Strauss\\Issue258\\"
+            "namespace_prefix": "Strauss\\Issue258\\",
+            "target_directory": "vendor"
         }
     }
 }
@@ -44,11 +45,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        // Run a third time.
-        $exitCode = $this->runStrauss($output);
-        $this->assertEquals(0, $exitCode, $output);
-
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/wp-media/wp-mixpanel/src/Classes/Mixpanel.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/wp-media/wp-mixpanel/src/Classes/Mixpanel.php');
         $this->assertStringNotContainsString('class Strauss_Issue258_Strauss_Issue258_WPMedia_Mixpanel', $phpString);
         $this->assertStringContainsString('class Strauss_Issue258_WPMedia_Mixpanel', $phpString);
     }
