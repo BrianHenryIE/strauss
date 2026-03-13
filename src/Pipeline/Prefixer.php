@@ -762,12 +762,12 @@ class Prefixer
                         array_pop($parts);
                         $namespace = implode('\\', $parts);
                         if (in_array($namespace, $this->discoveredNamespaces)) {
-                            $nameNode->name = '\\' . $nameNode->name;
+                            $nameNode->name = $this->prefixWithSingleLeadingSlash($nameNode->name);
                             $this->countChanges++;
                         } else {
                             foreach ($this->using as $namespaceBase) {
                                 if (in_array($namespaceBase . '\\' . $namespace, $this->discoveredNamespaces)) {
-                                    $nameNode->name = '\\' . $namespaceBase . '\\' . $nameNode->name;
+                                    $nameNode->name = $this->prefixWithSingleLeadingSlash($namespaceBase . '\\' . $nameNode->name);
                                     $this->countChanges++;
                                     break;
                                 }
@@ -778,20 +778,23 @@ class Prefixer
                 $this->lastNode = $node;
                 return $node;
             }
+
+            /**
+             * "brian" -> "\brian"
+             * "\brian" -> "\brian"
+             * "\\brian" -> "\brian"
+             */
+            private function prefixWithSingleLeadingSlash(string $maybePrefixed): string
+            {
+                return preg_replace('/^\\+/', '\\', '\\' . $maybePrefixed);
+            }
         };
         $traverser->addVisitor($visitor);
 
         $modifiedStmts = $traverser->traverse($ast);
 
-        if ($visitor->countChanges === 0) {
-            return $phpFileContent;
-        }
-
-        $updatedContent = (new Standard())->prettyPrintFile($modifiedStmts);
-
-        $updatedContent = str_replace('namespace \\', 'namespace ', $updatedContent);
-        $updatedContent = str_replace('use \\\\', 'use \\', $updatedContent);
-
-        return $updatedContent;
+        return $visitor->countChanges == 0
+            ? $phpFileContent
+            : (new Standard())->prettyPrintFile($modifiedStmts);
     }
 }

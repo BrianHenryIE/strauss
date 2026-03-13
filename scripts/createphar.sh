@@ -11,8 +11,16 @@ cp -R vendor build/vendor
 cp -R src build/src
 cp -R bin build/bin
 cp composer.json build
+cp composer.lock build
 cp bootstrap.php build
 cp CHANGELOG.md build
+
+cd build;
+../bin/strauss --info;
+
+cd ..;
+
+rm strauss.phar
 php -d phar.readonly=off phar-composer.phar build ./build/
 
 rm phar-composer.phar
