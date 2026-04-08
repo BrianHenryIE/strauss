@@ -385,4 +385,13 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
         return $normalized;
     }
+
+    /**
+     * @throws FilesystemException
+     */
+    public function isDirectoryEmpty(string $dirPath): bool
+    {
+        return empty($this->listContents($dirPath)->toArray())
+            && empty(glob($this->pathPrefixer->prefixPath($this->normalize($dirPath))));
+    }
 }
