@@ -335,7 +335,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      */
     public function isSymlinked(string $path): bool
     {
-        $path = self::normalizeDirSeparator($path);
+        $path = $this->normalize($path);
         $osPath = $this->pathPrefixer->prefixPath($path);
 
         $realpath = realpath($osPath);
