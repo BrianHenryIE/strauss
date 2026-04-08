@@ -51,10 +51,12 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      * but Flysystem always uses forward slashes. This method ensures consistency.
      *
      * Accepts null to preserve original str_replace() behavior where null is treated as empty string.
+     *
+     * @param string|false|null $path
      */
-    public static function normalizeDirSeparator(?string $path): string
+    public static function normalizeDirSeparator($path): string
     {
-        return str_replace('\\', '/', $path ?? '');
+        return str_replace('\\', '/', $path ?: '');
     }
 
     /**
