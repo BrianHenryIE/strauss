@@ -115,7 +115,7 @@ class AutoloadedFilesEnumerator
                         (array)$value
                     );
                     foreach ($autoloadKeyPaths as $autoloadKeyPath) {
-                        if (!file_exists($autoloadKeyPath)) {
+                        if ($this->filesystem->exists($autoloadKeyPath)) {
                             $this->logger->warning(
                                 "Skipping non-existent autoload path in {packageName}: {path}",
                                 ['packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath]
@@ -141,7 +141,7 @@ class AutoloadedFilesEnumerator
                         );
 
                         foreach ($psrPaths as $autoloadKeyPath) {
-                            if (!file_exists($autoloadKeyPath)) {
+                            if ($this->filesystem->exists($autoloadKeyPath)) {
                                 $this->logger->warning(
                                     "Skipping non-existent autoload path in {packageName}: {path}",
                                     ['packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath]
