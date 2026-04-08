@@ -19,6 +19,7 @@ use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
+use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 
 class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
@@ -28,6 +29,8 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
     protected FilesystemOperator $flysystem;
 
     protected PathNormalizer $normalizer;
+
+    protected PathPrefixer $pathPrefixer;
 
     protected string $workingDir;
 
@@ -42,6 +45,11 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         $this->normalizer = new StripProtocolPathNormalizer('mem');
 
         $this->workingDir = $workingDir;
+
+        $this->pathPrefixer = new PathPrefixer(
+            str_contains(PHP_OS, 'WIN') ? preg_replace('/^([a-z]+:)\\.*/', '$1\\', $workingDir) : '/',
+            DIRECTORY_SEPARATOR
+        );
     }
 
     /**
