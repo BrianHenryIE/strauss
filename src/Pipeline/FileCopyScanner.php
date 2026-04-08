@@ -70,7 +70,7 @@ class FileCopyScanner
                 $copy = false;
             }
 
-            if ($this->isFilePathExcluded($file->getSourcePath())) {
+            if ($this->isFilePathExcluded($file)) {
                 $copy = false;
             }
 
@@ -141,17 +141,20 @@ class FileCopyScanner
     }
 
     /**
-     * Compares the relative path from the vendor dir with `exclude_file_patterns` config.
+     * Compares the vendor relative path with `exclude_file_patterns` config.
      *
-     * @param string $absoluteFilePath
-     * @return bool
+     * I.e. `my/package/src/file.php`.
+     *
+     * @param FileBase $file
      */
-    protected function isFilePathExcluded(string $absoluteFilePath): bool
+    protected function isFilePathExcluded(FileBase $file): bool
     {
+        $path = $file->getVendorRelativePath();
+
         foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
             $escapedPattern = $this->preparePattern($pattern);
-            if (1 === preg_match($escapedPattern, $absoluteFilePath)) {
-                $this->logger->debug("File {$absoluteFilePath} will not be copied because it matches pattern {$pattern}.");
+            if (1 === preg_match($escapedPattern, $path)) {
+                $this->logger->debug("File {$path} will not be copied because it matches pattern {$pattern}.");
                 return true;
             }
         }
