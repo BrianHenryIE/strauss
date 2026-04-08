@@ -131,8 +131,9 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      */
     public function exists(string $location): bool
     {
-        // TODO: Probably fails for sym
-        return $this->fileExists($location) || $this->directoryExists($location);
+        return $this->fileExists($location)
+               || $this->directoryExists($location)
+               || false !== realpath($this->pathPrefixer->prefixPath($this->normalize($location)));
     }
 
     public function fileExists(string $location): bool
