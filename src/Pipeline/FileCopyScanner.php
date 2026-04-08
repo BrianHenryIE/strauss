@@ -88,7 +88,7 @@ class FileCopyScanner
 
             $file->setAbsoluteTargetPath($target);
 
-            $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->filesystem->isSymlinkedFile($file);
+            $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->filesystem->isSymlinked($file->getSourcePath());
             $file->setDoDelete($shouldDelete);
 
             // If a file isn't copied, don't unintentionally edit the source file.
