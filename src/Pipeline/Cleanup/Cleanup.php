@@ -293,7 +293,10 @@ class Cleanup
 
                 $package->setDidDelete(true);
             }
-            if ($this->dirIsEmpty(dirname($package->getPackageAbsolutePath()))) {
+            if ($this->filesystem->directoryExists(dirname($package->getPackageAbsolutePath()))
+                &&
+                $this->filesystem->isDirectoryEmpty(dirname($package->getPackageAbsolutePath()))
+            ) {
                 $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));
                 $this->filesystem->deleteDirectory(dirname($package->getPackageAbsolutePath()));
             }
