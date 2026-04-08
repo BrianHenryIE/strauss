@@ -398,6 +398,13 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             return false;
         }
 
-        return empty(glob($this->pathPrefixer->prefixPath($this->normalize($dirPath) . DIRECTORY_SEPARATOR . '*')));
+        $fsPath = $this->pathPrefixer->prefixPath($this->normalize($dirPath) . DIRECTORY_SEPARATOR . '*');
+        $fsList = glob($fsPath);
+
+        if (false === $fsList) {
+            throw new \Exception('glob() failed on ' . $fsPath);
+        }
+
+        return empty($fsList);
     }
 }
