@@ -45,19 +45,19 @@ class VendorComposerAutoload
      */
     public function addVendorPrefixedAutoloadToVendorAutoload(): void
     {
-        if ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()) {
+        if ($this->config->isTargetDirectoryVendor()) {
             $this->logger->info("Target dir is source dir, no autoload.php to add.");
             return;
         }
 
-        $composerAutoloadPhpFilepath = $this->config->getAbsoluteVendorDirectory() . 'autoload.php';
+        $composerAutoloadPhpFilepath = $this->config->getAbsoluteVendorDirectory() . '/autoload.php';
 
         if (!$this->fileSystem->fileExists($composerAutoloadPhpFilepath)) {
             $this->logger->info("No autoload.php found:" . $composerAutoloadPhpFilepath);
             return;
         }
 
-        $newAutoloadPhpFilepath = $this->config->getAbsoluteTargetDirectory() . 'autoload.php';
+        $newAutoloadPhpFilepath = $this->config->getAbsoluteTargetDirectory() . '/autoload.php';
 
         if (!$this->fileSystem->fileExists($newAutoloadPhpFilepath)) {
             $this->logger->warning("No new autoload.php found: " . $newAutoloadPhpFilepath);
@@ -90,7 +90,7 @@ class VendorComposerAutoload
             return;
         }
 
-        $composerAutoloadPhpFilepath = $this->config->getAbsoluteVendorDirectory() . 'autoload.php';
+        $composerAutoloadPhpFilepath = $this->config->getAbsoluteVendorDirectory() . '/autoload.php';
 
         if (!$this->fileSystem->fileExists($composerAutoloadPhpFilepath)) {
             // No `vendor/autoload.php` file to add `autoload_aliases.php` to.
@@ -126,13 +126,13 @@ class VendorComposerAutoload
      */
     protected function isComposerInstalled(): bool
     {
-        if (!$this->fileSystem->fileExists($this->config->getAbsoluteVendorDirectory() . 'composer/installed.json')) {
+        if (!$this->fileSystem->fileExists($this->config->getAbsoluteVendorDirectory() . '/composer/installed.json')) {
             return false;
         }
 
         /** @var InstalledJsonArray $installedJsonArray */
         $installedJsonArray = json_decode(
-            $this->fileSystem->read($this->config->getAbsoluteVendorDirectory() . 'composer/installed.json'),
+            $this->fileSystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.json'),
             true,
             512,
             JSON_THROW_ON_ERROR
@@ -153,7 +153,7 @@ class VendorComposerAutoload
      */
     protected function isComposerNoDev(): bool
     {
-        $installedJson = $this->fileSystem->read($this->config->getAbsoluteVendorDirectory() . 'composer/installed.json');
+        $installedJson = $this->fileSystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.json');
         $installedJsonArray = json_decode($installedJson, true);
         return !$installedJsonArray['dev'];
     }
@@ -249,12 +249,12 @@ class VendorComposerAutoload
      */
     protected function addVendorPrefixedAutoloadToComposerAutoload(string $code): string
     {
-        if ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()) {
+        if ($this->config->isTargetDirectoryVendor()) {
             $this->logger->info('Vendor directory is target directory, no autoloader to add.');
             return $code;
         }
 
-        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $this->config->getAbsoluteTargetDirectory()) . 'autoload.php';
+        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $this->config->getAbsoluteTargetDirectory()) . '/autoload.php';
 
         if (false !== strpos($code, $targetDirAutoload)) {
             $this->logger->info('vendor/autoload.php already includes ' . $targetDirAutoload);

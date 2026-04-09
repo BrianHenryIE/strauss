@@ -330,7 +330,7 @@ class StraussConfig implements
                         $paths = (array) $entry;
                         foreach ($paths as $path) {
                             // Matches the target directory.
-                            if (trim($path, '\\/') . '/' === $this->getAbsoluteTargetDirectory()) {
+                            if (trim($path, '\\/') === $this->getAbsoluteTargetDirectory()) {
                                 $this->classmapOutput = false;
                                 break 3;
                             }
@@ -358,13 +358,18 @@ class StraussConfig implements
     }
 
     /**
-     * `target_directory` will always be returned without a leading slash and with a trailing slash.
+     * `target_directory` will always be returned without a leading nor trailing slash.
      */
     public function getAbsoluteTargetDirectory(): string
     {
         return FileSystem::normalizeDirSeparator(
-            rtrim($this->getProjectDirectory(), '\\/') . '/' . trim($this->targetDirectory, '\\/') . '/'
+            trim($this->getProjectDirectory(), '\\/') . '/' . trim($this->targetDirectory, '\\/')
         );
+    }
+
+    public function isTargetDirectoryVendor(): bool
+    {
+        return $this->getAbsoluteVendorDirectory() === $this->getAbsoluteTargetDirectory();
     }
 
     /**
@@ -386,11 +391,11 @@ class StraussConfig implements
     }
 
     /**
-     * @return string
+     * No leading or trailing slash.
      */
     public function getAbsoluteVendorDirectory(): string
     {
-        return $this->getProjectDirectory() . trim($this->vendorDirectory, '\\/') . '/';
+        return trim($this->getProjectDirectory() . '/' . $this->vendorDirectory, '\\/');
     }
 
     /**
@@ -917,10 +922,10 @@ class StraussConfig implements
 
     public function getProjectDirectory(): string
     {
-        $projectDirectory = $this->projectDirectory ?? getcwd() . '/';
+        $projectDirectory = rtrim(FileSystem::normalizeDirSeparator($this->projectDirectory ?? getcwd()), '\\/');
 
         return $this->isDryRun()
-            ? 'mem:/' . $projectDirectory
-            : FileSystem::normalizeDirSeparator($projectDirectory);
+            ? 'mem://' . ltrim($projectDirectory, '/')
+            : $projectDirectory;
     }
 }

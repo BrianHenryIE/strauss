@@ -51,7 +51,7 @@ class StraussIssue22Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -102,7 +102,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -111,6 +111,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/omnipay/common/src/Omnipay.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/omnipay/common/src/Omnipay.php');
     }
 }

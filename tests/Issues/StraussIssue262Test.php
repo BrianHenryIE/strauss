@@ -66,23 +66,23 @@ EOD;
 }
 EOD;
 
-        mkdir($this->testsWorkingDir . 'dependency');
-        $this->getFileSystem()->write($this->testsWorkingDir . 'dependency/composer.json', $dependencyComposerJsonString);
-        mkdir($this->testsWorkingDir . 'dependency/src');
-        $psr4AutoloadedFilePath = $this->testsWorkingDir . 'dependency/src/Psr4Autoloaded.php';
+        mkdir($this->testsWorkingDir . '/dependency');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/dependency/composer.json', $dependencyComposerJsonString);
+        mkdir($this->testsWorkingDir . '/dependency/src');
+        $psr4AutoloadedFilePath = $this->testsWorkingDir . '/dependency/src/Psr4Autoloaded.php';
         $this->getFileSystem()->write($psr4AutoloadedFilePath, $dependencyPsr4AutoloadedString);
 
-        mkdir($this->testsWorkingDir . 'project');
-        $this->getFileSystem()->write($this->testsWorkingDir . 'project/composer.json', $mainComposerJsonString);
-        chdir($this->testsWorkingDir . 'project');
+        mkdir($this->testsWorkingDir . '/project');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/project/composer.json', $mainComposerJsonString);
+        chdir($this->testsWorkingDir . '/project');
         exec('composer install');
 
         // teststempdir/project/vendor/strausstest/dependency
-        $this->assertFileExists($this->testsWorkingDir . 'project/vendor/strausstest/dependency');
+        $this->assertFileExists($this->testsWorkingDir . '/project/vendor/strausstest/dependency');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExists($this->testsWorkingDir . 'project/vendor/strausstest/dependency');
+        $this->assertFileExists($this->testsWorkingDir . '/project/vendor/strausstest/dependency');
     }
 }

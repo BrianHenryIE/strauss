@@ -63,10 +63,12 @@ class ProjectComposerPackage extends ComposerPackage
 
     /**
      * Relative vendor directory with trailing slash.
+     *
+     * No leading or trailing slash
      */
     public function getAbsoluteVendorDirectory(): string
     {
-        return rtrim($this->vendorDirectory, '\\/') . '/';
+        return trim($this->vendorDirectory, '\\/');
     }
 
     /**

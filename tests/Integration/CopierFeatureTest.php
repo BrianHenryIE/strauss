@@ -54,7 +54,7 @@ class CopierFeatureTest extends IntegrationTestCase
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -62,16 +62,16 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify default target directory is created
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
 
         // Verify files are copied to vendor-prefixed
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
 
         // Verify original files still exist in vendor
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor/psr/log');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log');
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LoggerInterface.php');
     }
 
     /**
@@ -100,7 +100,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install', $composerInstallOutput, $composerInstallExitCode);
         $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
@@ -109,18 +109,18 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify custom target directory is created
-        $expectedDir = $this->testsWorkingDir . 'custom-lib';
+        $expectedDir = $this->testsWorkingDir . '/custom-lib';
         $this->assertTrue(
             $this->getFileSystem()->directoryExists($expectedDir),
             'Missing ' . $expectedDir
         );
 
         // Verify files are copied to custom directory
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'custom-lib/psr/log');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'custom-lib/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/custom-lib/psr/log');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/custom-lib/psr/log/Psr/Log/LoggerInterface.php');
 
         // Verify vendor-prefixed directory is NOT created
-        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
     }
 
     /**
@@ -149,21 +149,22 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         // Store original file content
-        $originalContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $originalContent = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LoggerInterface.php');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify no vendor-prefixed directory is created
-        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
 
         // Verify files are modified in place (namespaces prefixed)
-        $modifiedContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $modifiedContent = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Test\\Copier\\Psr\\Log', $modifiedContent);
         $this->assertNotEquals($originalContent, $modifiedContent);
     }
@@ -197,7 +198,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -205,17 +206,17 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify vendor-prefixed directory is created
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
 
         // Verify excluded package (psr/log) is NOT copied
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
 
         // Verify non-excluded package (monolog) IS copied
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/monolog/monolog');
 
         // Verify original files still exist in vendor
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor/psr/log');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor/monolog/monolog');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor/monolog/monolog');
     }
 
     /**
@@ -247,7 +248,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -255,14 +256,14 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify vendor-prefixed directory is created
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
 
         // Verify excluded namespace files are NOT copied
         // Note: This tests the namespace exclusion logic in FileEnumerator.php:93-96
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
 
         // Verify non-excluded namespace (Monolog) IS copied
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/monolog/monolog');
     }
 
     /**
@@ -293,7 +294,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -301,15 +302,15 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify vendor-prefixed directory is created
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
 
         // Verify main files are copied
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
 
         // Verify README.md files are excluded (if they exist)
-        if (file_exists($this->testsWorkingDir . 'vendor/psr/log/README.md')) {
-            $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/README.md');
+        if (file_exists($this->testsWorkingDir . '/vendor/psr/log/README.md')) {
+            $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/README.md');
         }
     }
 
@@ -342,7 +343,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -350,14 +351,14 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify vendor-prefixed directory is created
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
 
         // Verify ONLY psr/log files are copied (inverted regex excludes everything except psr/log)
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
 
         // Verify monolog is excluded by the inverted regex
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/monolog/monolog');
     }
 
     /**
@@ -392,7 +393,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -400,16 +401,16 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify vendor-prefixed directory is created
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
 
         // Verify psr/log is excluded by package exclusion
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
 
         // Verify psr/cache is excluded by namespace exclusion
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/cache/src/CacheItemInterface.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/cache/src/CacheItemInterface.php');
 
         // Verify monolog IS copied (not excluded by any rule)
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/monolog/monolog');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/monolog/monolog');
     }
 
     /**
@@ -440,21 +441,21 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         // Store original file content
-        $originalContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $originalContent = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LoggerInterface.php');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify excluded files are NOT copied
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
 
         // Verify original files remain unchanged (not prefixed)
-        $currentContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $currentContent = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertEquals($originalContent, $currentContent);
         $this->assertStringNotContainsString('namespace Test\\Copier\\Psr\\Log', $currentContent);
     }
@@ -485,24 +486,24 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         // Verify target directory doesn't exist initially
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'deeply/nested/custom-directory');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/deeply/nested/custom-directory');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify deeply nested target directory is created
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'deeply');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'deeply/nested');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'deeply/nested/custom-directory');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/deeply');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/deeply/nested');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/deeply/nested/custom-directory');
 
         // Verify files are copied to the nested directory
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'deeply/nested/custom-directory/psr/log');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'deeply/nested/custom-directory/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/deeply/nested/custom-directory/psr/log');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/deeply/nested/custom-directory/psr/log/Psr/Log/LoggerInterface.php');
     }
 
     /**
@@ -530,7 +531,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -539,14 +540,14 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify files are created
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
 
         // Modify the target file to test overwriting
         $testContent = "<?php\n// This is a test modification\nnamespace Test\\Modified;";
-        $this->getFileSystem()->write($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php', $testContent);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php', $testContent);
 
         // Verify our modification is there
-        $modifiedContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $modifiedContent = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('This is a test modification', $modifiedContent);
 
         // Run Strauss again
@@ -554,7 +555,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify the file was overwritten (our modification is gone)
-        $newContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $newContent = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringNotContainsString('This is a test modification', $newContent);
         $this->assertStringContainsString('namespace Test\\Copier\\Psr\\Log', $newContent);
     }
@@ -584,12 +585,12 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         // Delete a source file to simulate missing file scenario
-        $sourceFile = $this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php';
+        $sourceFile = $this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LoggerInterface.php';
         $this->assertFileExistsInFileSystem($sourceFile);
         unlink($sourceFile);
         $this->assertFileNotExistsInFileSystem($sourceFile);
@@ -599,14 +600,14 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify vendor-prefixed directory is still created
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
 
         // Verify the missing file is not copied (obviously)
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
 
         // Verify other files in the package are still processed
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
     }
 
     /**
@@ -634,7 +635,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -642,26 +643,26 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify directory structure is preserved
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log');
 
         // Verify files are copied
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
 
         // Verify composer.json is copied (if it exists in source and Strauss copies it)
-        if (file_exists($this->testsWorkingDir . 'vendor/psr/log/composer.json')) {
+        if (file_exists($this->testsWorkingDir . '/vendor/psr/log/composer.json')) {
             // Note: Strauss may or may not copy composer.json files depending on configuration
-            if (file_exists($this->testsWorkingDir . 'vendor-prefixed/psr/log/composer.json')) {
-                $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/composer.json');
+            if (file_exists($this->testsWorkingDir . '/vendor-prefixed/psr/log/composer.json')) {
+                $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/composer.json');
             }
         }
 
         // Verify subdirectory files are copied
-        if (file_exists($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/Test')) {
-            $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/Test');
+        if (file_exists($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/Test')) {
+            $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/Test');
         }
     }
 
@@ -712,7 +713,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonRelative);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonRelative);
 
         exec('composer install');
 
@@ -720,16 +721,16 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify relative path works
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'relative-lib');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'relative-lib/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/relative-lib');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/relative-lib/psr/log/Psr/Log/LoggerInterface.php');
 
         // Clean up for absolute path test
-        if (file_exists($this->testsWorkingDir . 'relative-lib')) {
-            $this->deleteDir($this->testsWorkingDir . 'relative-lib');
+        if (file_exists($this->testsWorkingDir . '/relative-lib')) {
+            $this->deleteDir($this->testsWorkingDir . '/relative-lib');
         }
 
         // Test absolute path - use a simple directory name
-        $absolutePath = $this->testsWorkingDir . 'absolute-lib';
+        $absolutePath = $this->testsWorkingDir . '/absolute-lib';
         $composerJsonAbsolute = <<<'EOD'
 {
   "name": "test/copier-absolute-path",
@@ -745,7 +746,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonAbsolute);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonAbsolute);
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
@@ -785,7 +786,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -793,10 +794,10 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify empty excludes don't prevent copying (all files copied)
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/AbstractLogger.php');
     }
 
     /**
@@ -827,7 +828,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -843,7 +844,7 @@ EOD;
 
         // If it continues, verify basic functionality still works
         if ($exitCode === 0) {
-            $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+            $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
         }
     }
 
@@ -875,7 +876,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -887,9 +888,9 @@ EOD;
         // So "psr\\log\\" (lowercase) would NOT match "Psr\\Log\\" namespace
 
         // Verify case-sensitive behavior - lowercase exclusion should NOT exclude Psr\Log
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
     }
 
     /**
@@ -918,7 +919,7 @@ EOD;
 EOD;
 
         chdir($this->testsWorkingDir);
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -926,9 +927,9 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify files are copied (this tests basic files autoloader functionality)
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
-        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
 
         // Note: psr/log doesn't have 'files' autoloader, but this tests the overall
         // copying functionality which includes files autoloader handling in FileEnumerator.php:87-90

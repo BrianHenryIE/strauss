@@ -33,7 +33,7 @@ class MozartIssue48Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -57,7 +57,7 @@ EOD;
             return $fileList;
         };
 
-        $found = $rsearch($this->testsWorkingDir . 'vendor-prefixed', '~EigenvalueDecomposition\.php~');
+        $found = $rsearch($this->testsWorkingDir . '/vendor-prefixed', '~EigenvalueDecomposition\.php~');
 
         self::assertNotEmpty($found, 'EigenvalueDecomposition.php should have been found in vendor-prefixed directory');
     }

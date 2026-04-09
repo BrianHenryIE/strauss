@@ -79,7 +79,7 @@ class DryRunFeatureTest extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -90,8 +90,8 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor/league/container/src/Container.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/league/container/src/Container.php');
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
@@ -118,7 +118,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -130,8 +130,8 @@ EOD;
 
         $this->runStrauss($output, $params);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor/league/container/src/Container.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/league/container/src/Container.php');
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
@@ -161,7 +161,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -173,7 +173,7 @@ EOD;
 
         $this->assertStringNotContainsString('Would copy', $output);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/league/container/src/Container.php');
     }
 
     /**
@@ -200,7 +200,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -211,7 +211,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/autoload.php');
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
@@ -241,13 +241,13 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
         exec('composer install');
 
-        $expected = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $expected = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
 
         $hashesBefore = $this->getDirectoryMd5s($this->testsWorkingDir);
 
@@ -257,13 +257,13 @@ EOD;
         $this->assertEquals(
             $expected,
             file_get_contents(
-                $this->testsWorkingDir . 'vendor/composer/installed.json'
+                $this->testsWorkingDir . '/vendor/composer/installed.json'
             )
         );
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
 
-        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed');
     }
 }

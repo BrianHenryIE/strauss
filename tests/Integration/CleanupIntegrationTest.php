@@ -32,7 +32,7 @@ class CleanupIntegrationTest extends IntegrationTestCase
             $filesystem = new FileSystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/'))), $this->testsWorkingDir);
             $cleanup = new Cleanup($config, $filesystem, $this->logger);
             $cleanup->rebuildVendorAutoloader();
-            $autoloadRealPath = $this->testsWorkingDir . 'vendor/composer/autoload_real.php';
+            $autoloadRealPath = $this->testsWorkingDir . '/vendor/composer/autoload_real.php';
             $this->assertFileExists($autoloadRealPath);
             $autoloadRealPhp = file_get_contents($autoloadRealPath);
             if ($expectAuthoritative) {
@@ -118,7 +118,7 @@ EOD;
         $exitCode = $this->runStrauss();
         $this->assertSame(0, $exitCode);
 
-        $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/installed.json');
+        $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/installed.json');
         $installedJson = json_decode($installedJsonFile, true);
         $entry = array_reduce($installedJson['packages'], function ($carry, $item) {
             if ($item['name'] === 'symfony/polyfill-php80') {
@@ -132,15 +132,15 @@ EOD;
             $this->assertNull($entry, json_encode($installedJson, JSON_PRETTY_PRINT));
         }
 
-        $autoloadStaticPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/autoload_static.php');
+        $autoloadStaticPhp = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/autoload_static.php');
         $this->assertStringNotContainsString("__DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php'", $autoloadStaticPhp);
 
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir .'vendor/composer/autoload_files.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir .'/vendor/composer/autoload_files.php');
 
-        $autoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
+        $autoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("\$vendorDir . '/symfony/polyfill-php80/bootstrap.php'", $autoloadFilesPhp);
 
-        $newAutoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
+        $newAutoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("/symfony/polyfill-php80/bootstrap.php'", $newAutoloadFilesPhp);
     }
 
@@ -193,11 +193,11 @@ EOD;
             $this->testsWorkingDir . '/vendor/psr/container',
         ), 'Non-excluded package psr/container should be deleted from vendor/');
 
-        $vendorInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $vendorInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
         $vendorInstalledPackageNames = $this->extractPackageNamesFromInstalledJson($vendorInstalledJson);
         $this->assertContains('psr/log', $vendorInstalledPackageNames, 'Excluded package should remain in vendor/composer/installed.json');
 
-        $targetInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $targetInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $targetInstalledPackageNames = $this->extractPackageNamesFromInstalledJson($targetInstalledJson);
         $this->assertNotContains('psr/log', $targetInstalledPackageNames, 'Excluded package should not appear in target installed.json');
         $this->assertContains('psr/container', $targetInstalledPackageNames, 'Non-excluded package should be present in target installed.json');

@@ -54,7 +54,7 @@ class FileCopyScanner
         foreach ($files->getFiles() as $file) {
             $copy = true;
 
-            if ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()) {
+            if ($this->config->isTargetDirectoryVendor()) {
                 $this->logger->debug("The target directory is the same as the vendor directory."); // TODO: surely this should be outside the loop/class.
                 $copy = false;
             }
@@ -84,7 +84,7 @@ class FileCopyScanner
 
             if ($copy) {
                 $target = $file instanceof FileWithDependency
-                    ?  $this->config->getAbsoluteTargetDirectory() . $file->getDependency()->getRelativePath() . $file->getPackageRelativePath()
+                    ?  $this->config->getAbsoluteTargetDirectory() . '/' . $file->getDependency()->getRelativePath() . '/'. $file->getPackageRelativePath()
                     : $file->getSourcePath();
                 $file->setAbsoluteTargetPath(FileSystem::normalizeDirSeparator($target));
             }
@@ -93,11 +93,11 @@ class FileCopyScanner
             $file->setDoDelete($shouldDelete);
 
             // If a file isn't copied, don't unintentionally edit the source file.
-            if (!$file->isDoCopy() && $this->config->getAbsoluteTargetDirectory() !== $this->config->getAbsoluteVendorDirectory()) {
+            if (!$file->isDoCopy() && !$this->config->isTargetDirectoryVendor()) {
                 $file->setDoPrefix(false);
             }
 //            // If the file is marked not to copy, mark the symbol not to be renamed
-//            if (!$copy && $this->config->getAbsoluteTargetDirectory() !== $this->config->getAbsoluteVendorDirectory()) {
+//            if (!$copy && !$this->config->isTargetDirectoryVendor()) {
 //                foreach ($file->getDiscoveredSymbols() as $symbol) {
 //                    // Only make this change if the symbol is only in one file (i.e. namespaces will be in many).
 //                    if (count($symbol->getSourceFiles()) === 1) {

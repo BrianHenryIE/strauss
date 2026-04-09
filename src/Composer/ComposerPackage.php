@@ -144,7 +144,7 @@ class ComposerPackage
         $composerAbsoluteDirectoryPath = realpath(dirname($composerJsonFileAbsolute));
         if (false !== $composerAbsoluteDirectoryPath) {
             $composerAbsoluteDirectoryPath = FileSystem::normalizeDirSeparator($composerAbsoluteDirectoryPath);
-            $this->packageAbsolutePath = $composerAbsoluteDirectoryPath . '/';
+            $this->packageAbsolutePath = $composerAbsoluteDirectoryPath;
         }
         $composerAbsoluteDirectoryPath = $composerAbsoluteDirectoryPath ?: FileSystem::normalizeDirSeparator(dirname($composerJsonFileAbsolute));
 
@@ -161,7 +161,7 @@ class ComposerPackage
         $vendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
         if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
             $this->relativePath = $this->packageName;
-            $this->packageAbsolutePath = FileSystem::normalizeDirSeparator(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) . '/';
+            $this->packageAbsolutePath = FileSystem::normalizeDirSeparator(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
         // If the package is symlinked, the path will be outside the working directory.
         } elseif (0 !== strpos($composerAbsoluteDirectoryPath, $currentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
             $this->relativePath = $output_array[1];
@@ -203,12 +203,16 @@ class ComposerPackage
      */
     public function getRelativePath(): ?string
     {
-        return is_null($this->relativePath) ? null : FileSystem::normalizeDirSeparator($this->relativePath) . '/';
+        return is_null($this->relativePath) ? null : FileSystem::normalizeDirSeparator($this->relativePath);
     }
 
+
+    /**
+     * No leading or tailing slash
+     */
     public function getPackageAbsolutePath(): ?string
     {
-        return $this->packageAbsolutePath;
+        return trim($this->packageAbsolutePath, '\\/');
     }
 
     /**

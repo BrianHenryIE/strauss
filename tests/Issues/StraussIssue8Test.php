@@ -37,17 +37,17 @@ class StraussIssue8Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
         exec('composer install');
 
-        assert(file_exists($this->testsWorkingDir. 'vendor/psr/log/Psr/Log/LogLevel.php'));
+        assert(file_exists($this->testsWorkingDir. '/vendor/psr/log/Psr/Log/LogLevel.php'));
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir. 'vendor/psr/log/Psr/Log/LogLevel.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir. '/vendor/psr/log/Psr/Log/LogLevel.php');
     }
 }

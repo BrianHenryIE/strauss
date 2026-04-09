@@ -191,7 +191,7 @@ class Licenser
         $date = gmdate("d-F-Y", time());
 
         foreach ($modifiedFiles as $relativeFilePath => $package) {
-            $filepath = $this->config->getAbsoluteTargetDirectory() . $relativeFilePath;
+            $filepath = $this->config->getAbsoluteTargetDirectory() . '/'.$relativeFilePath;
 
             if (!$this->filesystem->fileExists($filepath)) {
                 continue;

@@ -22,12 +22,12 @@ class FileSystemIntegrationTest extends IntegrationTestCase
             $this->testsWorkingDir
         );
 
-        $dir = $this->testsWorkingDir . 'dir';
+        $dir = $this->testsWorkingDir . '/dir';
 
         mkdir($dir);
 
         $this->assertTrue($fs->directoryExists($dir), $dir . ' directory should exist after mkdir');
-        $this->assertFalse($fs->directoryExists($this->testsWorkingDir . 'nonexistent'));
+        $this->assertFalse($fs->directoryExists($this->testsWorkingDir . '/nonexistent'));
     }
 
     /**
@@ -42,7 +42,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
             $this->testsWorkingDir
         );
 
-        $dir = $this->testsWorkingDir . 'dir';
+        $dir = $this->testsWorkingDir . '/dir';
 
         mkdir($dir);
 

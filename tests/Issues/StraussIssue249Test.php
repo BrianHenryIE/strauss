@@ -49,11 +49,11 @@ EOD;
 
         $this->assertStringNotContainsString('Package directory unexpectedly DOES NOT exist', $output);
 
-        $vendorPrefixedInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $vendorPrefixedInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $vendorPrefixedPackageNames = $this->extractPackageNamesFromInstalledJson($vendorPrefixedInstalledJson);
         $this->assertNotContains('freemius/wordpress-sdk', $vendorPrefixedPackageNames);
 
-        $vendorInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $vendorInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
         $vendorPackageNames = $this->extractPackageNamesFromInstalledJson($vendorInstalledJson);
         $this->assertContains('freemius/wordpress-sdk', $vendorPackageNames);
     }

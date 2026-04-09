@@ -31,6 +31,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
     protected PathPrefixer $pathPrefixer;
 
+    /** No trailing slash */
     protected string $workingDir;
 
     /**
@@ -317,11 +318,11 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             str_repeat('../', count($fromDirectoryParts))
             . implode('/', $toPathParts);
 
-        if ($this->directoryExists($toAbsolutePath)) {
-            $relativePath .= '/';
-        }
+//        if ($this->directoryExists($toAbsolutePath)) {
+//            $relativePath .= '/';
+//        }
 
-        return $relativePath;
+        return rtrim($relativePath, '\\/');
     }
 
     public function getProjectRelativePath(string $absolutePath): string
@@ -388,7 +389,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
     public function osPathPrefix(string $path): string
     {
-        return $this->pathPrefixer->prefixPath($path);
+        return str_replace('mem:/', 'mem://', $this->pathPrefixer->prefixPath($path));
     }
 
     /**

@@ -8,6 +8,8 @@ interface MarkSymbolsForRenamingConfigInterface
 
     public function getAbsoluteTargetDirectory(): string;
 
+    public function isTargetDirectoryVendor(): bool;
+
     /**
      * @return string[]
      */

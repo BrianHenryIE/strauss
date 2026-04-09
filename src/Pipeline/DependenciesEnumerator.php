@@ -100,7 +100,7 @@ class DependenciesEnumerator
             }
 
             $packageComposerFile = sprintf(
-                '%s%s/composer.json',
+                '%s/%s/composer.json',
                 $this->config->getAbsoluteVendorDirectory(),
                 $requiredPackageName
             );
@@ -125,7 +125,7 @@ class DependenciesEnumerator
                 $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock: ' . $packageComposerFile);
 
                 // TODO: These (.json, .lock) should be read once and reused.
-                $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . Factory::getComposerFile());
+                $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . '/' . Factory::getComposerFile());
                 /** @var ComposerJsonArray $composerJson */
                 $composerJson       = json_decode($composerJsonString, true, 512, JSON_THROW_ON_ERROR);
 
@@ -134,7 +134,7 @@ class DependenciesEnumerator
                     continue;
                 }
 
-                $composerLockPath = $this->config->getProjectDirectory() . Factory::getLockFile(Factory::getComposerFile());
+                $composerLockPath = $this->config->getProjectDirectory() . '/' . Factory::getLockFile(Factory::getComposerFile());
                 $composerLockString     = $this->filesystem->read($composerLockPath);
                 /** @var null|array{packages:array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray}} $composerLockJsonArray */
                 $composerLockJsonArray           = json_decode($composerLockString, true);

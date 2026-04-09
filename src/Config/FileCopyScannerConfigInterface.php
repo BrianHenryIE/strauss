@@ -7,6 +7,8 @@ interface FileCopyScannerConfigInterface
 
     public function getAbsoluteVendorDirectory(): string;
 
+    public function isTargetDirectoryVendor(): bool;
+
     /**
      * @return string[]
      */

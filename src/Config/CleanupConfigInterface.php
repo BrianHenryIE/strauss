@@ -6,6 +6,8 @@ interface CleanupConfigInterface
 {
     public function getAbsoluteVendorDirectory(): string;
 
+    public function isTargetDirectoryVendor(): bool;
+
     public function isDeleteVendorFiles(): bool;
 
     public function isDeleteVendorPackages(): bool;

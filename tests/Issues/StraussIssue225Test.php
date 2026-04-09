@@ -68,18 +68,18 @@ EOD;
 }
 EOD;
 
-        mkdir($this->testsWorkingDir . 'dependency');
-        $this->getFileSystem()->write($this->testsWorkingDir . 'dependency/composer.json', $dependencyComposerJsonString);
-        mkdir($this->testsWorkingDir . 'dependency/src');
-        $psr4AutoloadedFilePath = $this->testsWorkingDir . 'dependency/src/Psr4Autoloaded.php';
+        mkdir($this->testsWorkingDir . '/dependency');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/dependency/composer.json', $dependencyComposerJsonString);
+        mkdir($this->testsWorkingDir . '/dependency/src');
+        $psr4AutoloadedFilePath = $this->testsWorkingDir . '/dependency/src/Psr4Autoloaded.php';
         $this->getFileSystem()->write($psr4AutoloadedFilePath, $dependencyPsr4AutoloadedString);
-        mkdir($this->testsWorkingDir . 'dependency/templates');
-        $notAutoloadedFilePath = $this->testsWorkingDir . 'dependency/templates/notautoloaded.php';
+        mkdir($this->testsWorkingDir . '/dependency/templates');
+        $notAutoloadedFilePath = $this->testsWorkingDir . '/dependency/templates/notautoloaded.php';
         $this->getFileSystem()->write($notAutoloadedFilePath, $dependencyNotAutoloadedString);
 
-        mkdir($this->testsWorkingDir . 'project');
-        $this->getFileSystem()->write($this->testsWorkingDir . 'project/composer.json', $mainComposerJsonString);
-        chdir($this->testsWorkingDir . 'project');
+        mkdir($this->testsWorkingDir . '/project');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/project/composer.json', $mainComposerJsonString);
+        chdir($this->testsWorkingDir . '/project');
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);

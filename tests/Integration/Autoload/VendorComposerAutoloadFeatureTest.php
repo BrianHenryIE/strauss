@@ -31,16 +31,17 @@ class VendorComposerAutoloadFeatureTest extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/autoload.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/autoload.php');
 
         $this->assertStringContainsString('autoload_aliases.php', $composerAutoloadString);
     }
@@ -64,16 +65,17 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
-        exec('composer install --no-dev');
+        exec('composer install --no-dev', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/autoload.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/autoload.php');
 
         $this->assertStringNotContainsString('autoload_aliases.php', $composerAutoloadString);
     }
@@ -96,11 +98,12 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $exitCode = $this->runStrauss($output, '--debug');
         $this->assertEquals(0, $exitCode, $output);
@@ -114,7 +117,7 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/autoload.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/autoload.php');
 
         $this->assertEquals(
             1,
@@ -141,7 +144,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -156,7 +159,7 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/autoload.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/autoload.php');
 
         $this->assertEquals(
             1,
@@ -184,7 +187,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -193,7 +196,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_psr4.php');
 
         $this->assertStringContainsString(
             "'League\\\\Container\\\\",
@@ -225,7 +228,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -235,7 +238,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_psr4.php');
 
         $this->assertStringNotContainsString(
             "'League\\\\Container\\\\",
@@ -267,7 +270,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -277,7 +280,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_psr4.php');
 
         $this->assertStringNotContainsString(
             "'League\\\\Container\\\\",

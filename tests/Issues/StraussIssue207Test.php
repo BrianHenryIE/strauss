@@ -46,7 +46,7 @@ EOD;
         $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/freemius/wordpress-sdk/config.php');
 
         // Do not prefix.
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/freemius/wordpress-sdk/includes/class-freemius.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/freemius/wordpress-sdk/includes/class-freemius.php');
         $this->assertStringContainsString("class Freemius extends Freemius_Abstract", $php_string);
     }
 

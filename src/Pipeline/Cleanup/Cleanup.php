@@ -92,17 +92,17 @@ class Cleanup
             $this->logger
         );
 
-        if ($this->config->getAbsoluteTargetDirectory() !== $this->config->getAbsoluteVendorDirectory()
-        && !$this->config->isDeleteVendorFiles() && !$this->config->isDeleteVendorPackages()
+        if (!$this->config->isTargetDirectoryVendor()
+            && !$this->config->isDeleteVendorFiles()
+            && !$this->config->isDeleteVendorPackages()
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getAbsoluteTargetDirectory() !== $this->config->getAbsoluteVendorDirectory()
-            &&
-            ($this->config->isDeleteVendorFiles() ||$this->config->isDeleteVendorPackages())
+        } elseif (!$this->config->isTargetDirectoryVendor()
+            && ($this->config->isDeleteVendorFiles() || $this->config->isDeleteVendorPackages())
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()) {
+        } elseif ($this->config->isTargetDirectoryVendor()) {
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
         }
     }
@@ -125,7 +125,11 @@ class Cleanup
             return;
         }
 
-        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . 'composer.json');
+        $projectComposerJson = new JsonFile(
+            $this->filesystem->osPathPrefix(
+                $this->config->getProjectDirectory() . '/composer.json'
+            )
+        );
         $projectComposerJsonArray = $projectComposerJson->read();
         $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
         $installationManager = $composer->getInstallationManager();
@@ -137,7 +141,11 @@ class Cleanup
         $generator->setRunScripts(false);
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
-        $installedJson = new JsonFile($this->config->getAbsoluteVendorDirectory() . 'composer/installed.json');
+        $installedJson = new JsonFile(
+            $this->filesystem->osPathPrefix(
+                $this->config->getAbsoluteVendorDirectory() . '/composer/installed.json'
+            )
+        );
         $localRepo = new InstalledFilesystemRepository($installedJson);
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
         /** @var InstalledJsonArray $installedJsonArray */
@@ -230,6 +238,7 @@ class Cleanup
 //                $this->logger->debug('Skipping non-empty directory ' . $dirEntry->path());
 //            }
 //        }
+        $this->logger->debug('Finished Cleanup::deleteEmptyDirectories()');
     }
 
     /**
@@ -274,11 +283,12 @@ class Cleanup
                 $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
 
                 // If it's a symlink, remove the symlink in the directory
-                $symlinkPath =
+                $symlinkPath = $this->filesystem->osPathPrefix(
                     FileSystem::normalizeDirSeparator(rtrim(
-                        $this->config->getAbsoluteVendorDirectory() . $package->getRelativePath(),
+                        $this->config->getAbsoluteVendorDirectory() . '/' . $package->getRelativePath(),
                         '/'
-                    ));
+                    ))
+                );
 
                 if (PHP_OS_FAMILY === 'Windows') {
                     /**
@@ -332,6 +342,7 @@ class Cleanup
 
             $this->logger->info('Deleting ' . $sourceRelativePath);
 
+            // TODO: is this relative or absolute?
             $this->filesystem->delete($file->getSourcePath());
 
             $file->setDidDelete(true);

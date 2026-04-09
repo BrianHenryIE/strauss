@@ -34,7 +34,7 @@ abstract class AbstractRenamespacerCommand extends Command
 {
     use LoggerAwareTrait;
 
-    /** @var string */
+    /** No trailing slash */
     protected string $workingDir;
 
     /** @var FileSystem */
@@ -138,7 +138,7 @@ abstract class AbstractRenamespacerCommand extends Command
      */
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->workingDir = getcwd() . '/';
+        $this->workingDir = getcwd() . '';
 
         if (!isset($this->filesystem)) {
             $localFilesystemAdapter = new LocalFilesystemAdapter(

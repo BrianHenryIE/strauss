@@ -25,13 +25,13 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
     public function test_optimize_autoloader_for_prefixed_autoload_real(string $composerJsonString, bool $expectAuthoritative): void
     {
         try {
-            file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+            file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
             chdir($this->testsWorkingDir);
             exec('composer install', $output, $exitCode);
             $this->assertEquals(0, $exitCode, implode(PHP_EOL, $output));
-            @mkdir($this->testsWorkingDir . 'vendor-prefixed/composer', 0777, true);
-            $sourceComposerDir = $this->testsWorkingDir . 'vendor/composer';
-            $targetComposerDir = $this->testsWorkingDir . 'vendor-prefixed/composer';
+            @mkdir($this->testsWorkingDir . '/vendor-prefixed/composer', 0777, true);
+            $sourceComposerDir = $this->testsWorkingDir . '/vendor/composer';
+            $targetComposerDir = $this->testsWorkingDir . '/vendor-prefixed/composer';
             foreach (scandir($sourceComposerDir) ?: [] as $entry) {
                 if ($entry === '.' || $entry === '..') {
                     continue;
@@ -42,16 +42,16 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
                     copy($sourcePath, $targetPath);
                 }
             }
-            copy($this->testsWorkingDir . 'vendor/autoload.php', $this->testsWorkingDir . 'vendor-prefixed/autoload.php');
-            $composer = Factory::create(new NullIO(), $this->testsWorkingDir . 'composer.json');
+            copy($this->testsWorkingDir . '/vendor/autoload.php', $this->testsWorkingDir . '/vendor-prefixed/autoload.php');
+            $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
             $config = new StraussConfig($composer);
-            $psrLogPackage = ComposerPackage::fromFile($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+            $psrLogPackage = ComposerPackage::fromFile($this->testsWorkingDir . '/vendor/psr/log/composer.json');
             $config->setPackagesToCopy(['psr/log' => $psrLogPackage]);
             $config->setPackagesToPrefix(['psr/log' => $psrLogPackage]);
             $filesystem = new FileSystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/'))), $this->testsWorkingDir);
             $dumpAutoload = new DumpAutoload($config, $filesystem, $this->logger, new Prefixer($config, $filesystem, $this->logger), new FileEnumerator($config, $filesystem, $this->logger));
             $dumpAutoload->generatedPrefixedAutoloader();
-            $autoloadRealPath = $this->testsWorkingDir . 'vendor-prefixed/composer/autoload_real.php';
+            $autoloadRealPath = $this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php';
             $this->assertFileExists($autoloadRealPath);
             $autoloadRealPhpString = file_get_contents($autoloadRealPath);
             if ($expectAuthoritative) {
@@ -119,10 +119,10 @@ EOD;
      */
     public function test_fix_double_loading_of_files_autoloaders(string $composerJsonString, bool $includeRootAutoload): void
     {
-        mkdir($this->testsWorkingDir . 'src');
-        $this->getFileSystem()->write($this->testsWorkingDir . 'src/DumpAutoloadFeatureTest.php', '<?php // whatever');
+        mkdir($this->testsWorkingDir . '/src');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/src/DumpAutoloadFeatureTest.php', '<?php // whatever');
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -132,10 +132,10 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
 
-        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
+        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_files.php');
         $this->assertStringContainsString('DumpAutoloadFeatureTest.php', $vendorAutoloadFilesPhpString);
 
-        $vendorPrefixedAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
+        $vendorPrefixedAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_files.php');
         if ($includeRootAutoload) {
             $this->assertStringContainsString('DumpAutoloadFeatureTest.php', $vendorPrefixedAutoloadFilesPhpString);
         } else {
@@ -145,6 +145,7 @@ EOD;
 
     /**
      * Data provider for test_fix_double_loading_of_files_autoloaders.
+     * @see self::test_fix_double_loading_of_files_autoloaders
      *
      * @return array<string, array{0:string, 1:bool}>
      */
@@ -210,7 +211,7 @@ EOD;
      */
     public function test_option_include_root_autoload(string $composerJsonString, bool $expectRootAutoload): void
     {
-        mkdir($this->testsWorkingDir . 'src');
+        mkdir($this->testsWorkingDir . '/src');
 
         $classContent = <<<'EOD'
 <?php
@@ -220,9 +221,9 @@ namespace BrianHenryIE\Strauss;
 class DumpAutoloadFeatureTest {}
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'src/DumpAutoloadFeatureTest.php', $classContent);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/src/DumpAutoloadFeatureTest.php', $classContent);
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -232,8 +233,8 @@ EOD;
         assert(0 === $exitCode, $output);
 
         $targetString = '\'BrianHenryIE\\\\Strauss\\\\\' => array($baseDir . \'/src\'),';
-        $vendorAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
-        $vendorPrefixedAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_psr4.php');
+        $vendorAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_psr4.php');
+        $vendorPrefixedAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_psr4.php');
 
         if ($expectRootAutoload) {
             $this->assertStringContainsString($targetString, $vendorAutoloadPsr4PhpString);
@@ -379,7 +380,7 @@ EOD;
     }
 }
 EOD;
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 

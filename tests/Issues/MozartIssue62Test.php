@@ -55,7 +55,7 @@ class MozartIssue62Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -64,7 +64,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/aws/aws-sdk-php/src/Aws/S3/S3Client.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Aws/S3/S3Client.php');
 
         self::assertStringContainsString('use Strauss\\Guzzle\\Common\\Collection;', $phpString);
     }

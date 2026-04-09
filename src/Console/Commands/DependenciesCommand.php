@@ -154,8 +154,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
         $this->logger->notice('Loading package...');
 
-        $composerFilePath = $this->filesystem->makeAbsolute($this->workingDir . Factory::getComposerFile());
-        $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . 'composer.json');
+        $composerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/' . Factory::getComposerFile());
+        $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/composer.json');
         if ($composerFilePath !== $defaultComposerFilePath) {
             $this->logger->info('Using: ' . $composerFilePath);
         }
@@ -258,7 +258,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $psr4autoloadKey = $autoloadKey['psr-4'];
             $namespaces = array_keys($psr4autoloadKey);
 
-            $file = new File($package->getPackageAbsolutePath() . 'composer.json', '../composer.json');
+            $file = new File($package->getPackageAbsolutePath() . '/composer.json', '/../composer.json');
 
             foreach ($namespaces as $namespace) {
                 // TODO: log.
@@ -332,7 +332,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     protected function copyFiles(): void
     {
 
-        if ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()) {
+        if ($this->config->isTargetDirectoryVendor()) {
             // Nothing to do.
             return;
         }
@@ -395,7 +395,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
 
         $callSitePaths = array_map(
-            fn($path) => $this->workingDir . $path,
+            fn($path) => $this->workingDir . '/' . $path,
             $relativeCallSitePaths
         );
 
@@ -458,7 +458,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
         if (isset($this->projectComposerPackage->getAutoload()['classmap'])
             && in_array(
-                $this->config->getAbsoluteTargetDirectory(),
+                $this->config->getAbsoluteTargetDirectory() . '/', // TODO: check this.
                 $this->projectComposerPackage->getAutoload()['classmap'],
                 true
             )

@@ -27,7 +27,8 @@ class IntegrationTestCase extends TestCase
 {
     protected string $projectDir;
 
-    protected $testsWorkingDir;
+    /** No trailing slash */
+    protected string $testsWorkingDir;
 
     protected array $envBeforeTest = [];
 
@@ -50,7 +51,7 @@ class IntegrationTestCase extends TestCase
         // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
         // we set breakpoints, we can easily browse the files.
         if ($this->isPhpStormRunning()) {
-            $this->testsWorkingDir = getcwd() . '/teststempdir/';
+            $this->testsWorkingDir = getcwd() . '/teststempdir';
         }
 
         if (file_exists($this->testsWorkingDir)) {

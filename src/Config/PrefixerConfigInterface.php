@@ -8,6 +8,8 @@ interface PrefixerConfigInterface
 
     public function getAbsoluteTargetDirectory(): string;
 
+    public function isTargetDirectoryVendor(): bool;
+
     public function getNamespacePrefix(): ?string;
 
     public function getClassmapPrefix(): ?string;

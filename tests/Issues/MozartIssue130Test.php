@@ -55,7 +55,7 @@ class MozartIssue130Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -64,6 +64,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'strauss/htmlburger/carbon-fields/config.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/strauss/htmlburger/carbon-fields/config.php');
     }
 }

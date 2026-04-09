@@ -41,22 +41,22 @@ class FileEnumeratorIntegrationTest extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . '/composer.json');
 
         // Only one because we haven't run "flat dependency list".
         $dependencies = array_map(function ($element) {
-            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
+            $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
             return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
-        $vendorDir = 'vendor/';
+        $vendorDir = 'vendor';
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
@@ -69,7 +69,7 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $filePath = $this->getFileSystem()->osPathPrefix($this->getFileSystem()->normalize($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php'));
+        $filePath = $this->getFileSystem()->osPathPrefix($this->getFileSystem()->normalize($workingDir . '/vendor/' . 'google/apiclient/src/aliases.php'));
         $this->assertNotNull(
             $files->getFile($filePath),
             'File ' . $filePath . ' should be in $files array'

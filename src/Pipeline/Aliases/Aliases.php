@@ -106,7 +106,7 @@ class Aliases
     protected function getAliasFilepath(): string
     {
         return  sprintf(
-            '%scomposer/autoload_aliases.php',
+            '%s/composer/autoload_aliases.php',
             $this->config->getAbsoluteVendorDirectory()
         );
     }

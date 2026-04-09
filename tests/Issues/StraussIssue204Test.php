@@ -73,7 +73,7 @@ EOD;
         $exitCode = $this->runStrauss($output, '', $env);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString("Saltus\\\\WP\\\\Plugin\\\\InteractiveGlobes\\\\Psr\\\\Log\\\\", $php_string);
     }
 }

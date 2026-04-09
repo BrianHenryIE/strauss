@@ -109,9 +109,10 @@ class AutoloadedFilesEnumerator
                 case 'classmap':
                     $autoloadKeyPaths = array_map(
                         fn(string $path) =>
-                            $this->filesystem->makeAbsolute(
-                                $dependencyPackageAbsolutePath . '/' . ltrim($path, '/')
-                            ),
+                        //                            $this->filesystem->makeAbsolute(
+                                $dependencyPackageAbsolutePath . '/' . ltrim($path, '/'),
+                        //                            )
+                            
                         (array)$value
                     );
                     foreach ($autoloadKeyPaths as $autoloadKeyPath) {
@@ -123,7 +124,7 @@ class AutoloadedFilesEnumerator
                             continue;
                         }
                         $classMapGenerator->scanPaths(
-                            $autoloadKeyPath,
+                            $this->filesystem->osPathPrefix($autoloadKeyPath),
                             $excluded,
                             $autoloadType,
                             $namespace,
@@ -149,7 +150,7 @@ class AutoloadedFilesEnumerator
                                 continue;
                             }
                             $classMapGenerator->scanPaths(
-                                $autoloadKeyPath,
+                                $this->filesystem->osPathPrefix($autoloadKeyPath),
                                 $excluded,
                                 $autoloadType,
                                 $namespace,
