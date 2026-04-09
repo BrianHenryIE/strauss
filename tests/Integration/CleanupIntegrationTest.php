@@ -7,6 +7,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use Composer\Factory;
 use Composer\IO\NullIO;
+use Composer\Util\Platform;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
@@ -125,8 +126,11 @@ EOD;
             }
             return $carry;
         }, null);
-//        $this->assertEmpty($entry['autoload'], json_encode($entry['autoload'], JSON_PRETTY_PRINT));
-        $this->assertNull($entry, json_encode($installedJson, JSON_PRETTY_PRINT));
+        if (Platform::isWindows()) {
+            $this->assertEmpty($entry['autoload'], json_encode($entry['autoload'], JSON_PRETTY_PRINT));
+        } else {
+            $this->assertNull($entry, json_encode($installedJson, JSON_PRETTY_PRINT));
+        }
 
         $autoloadStaticPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/autoload_static.php');
         $this->assertStringNotContainsString("__DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php'", $autoloadStaticPhp);
@@ -146,6 +150,8 @@ EOD;
      */
     public function testExcludedPackagesNotDeletedWhenDeleteVendorPackagesEnabled(): void
     {
+        $this->markTestSkippedOnWindows('symlinks');
+
         $composerJsonString = <<<'EOD'
 {
   "name": "test/exclude-delete-bug",
