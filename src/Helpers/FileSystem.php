@@ -386,6 +386,11 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         return $this->normalizer->normalizePath($path);
     }
 
+    public function osPathPrefix(string $path): string
+    {
+        return $this->pathPrefixer->prefixPath($path);
+    }
+
     /**
      * Normalize a path and ensure it's absolute.
      *
