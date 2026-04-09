@@ -17,6 +17,8 @@ class StraussIssue104Test extends IntegrationTestCase
 {
     public function test_correct_directory_permission()
     {
+        $this->markTestSkippedOnWindows('Expected 0755, Actual 0777');
+
         $composerJsonString = <<<'EOD'
 {
   "name": "strauss/issue104",
