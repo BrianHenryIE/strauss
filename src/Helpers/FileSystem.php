@@ -58,9 +58,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
     protected function getFsRoot(): string
     {
-        return str_contains(PHP_OS, 'WIN')
-            ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->workingDir) ?? 'c:\\')
-            : '/';
+        if (1 === preg_match('/^([a-zA-z]+:[\\\\\/]|\/)/', $this->workingDir, $output_array)) {
+            return strtoupper($output_array[1]);
+        }
+        return '/';
     }
 
     /**
@@ -408,7 +409,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         $normalizedPath = self::normalizeDirSeparator($path);
         $normalizedRoot = self::normalizeDirSeparator($this->getFsRoot());
 
-        if (str_starts_with($normalizedPath, $normalizedRoot)) {
+        if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
             return $path;
         }
 

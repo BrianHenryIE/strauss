@@ -91,12 +91,14 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    'c:\\'
+                ),
                 [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                    ]
             ),
-            __DIR__
+            'c:\\whatever'
         );
 
         $result = $sut->makeAbsolute('C:/Users/dev/project/composer.json');
@@ -113,12 +115,14 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    'd:\brian'
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
             ),
-            __DIR__
+            'd:/'
         );
 
         $result = $sut->makeAbsolute('d:/Work/project/composer.json');
