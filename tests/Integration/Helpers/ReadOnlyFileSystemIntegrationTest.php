@@ -23,7 +23,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $source = $this->testsWorkingDir . 'source.php';
         $this->getFileSystem()->write($source, 'source');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
 
         $target = $this->testsWorkingDir . 'target.php';
 
@@ -44,7 +44,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         assert(!file_exists($source));
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
 
         $sut->write($source, 'source');
 
@@ -61,7 +61,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $source = $this->testsWorkingDir . 'source.php';
         $this->getFileSystem()->write($source, 'source');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
 
         $sut->delete($source);
 
@@ -77,7 +77,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $source = $this->testsWorkingDir . 'source.php';
         $this->getFileSystem()->write($source, 'source');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
         $sut->delete($source);
 
         // when I try to read the file
@@ -97,7 +97,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $aRealFile = FileSystem::normalizeDirSeparator($this->testsWorkingDir . 'file1.php');
         $this->getFileSystem()->write($aRealFile, 'file1');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
         assert(1 === count($sut->listContents($this->testsWorkingDir)->toArray()));
 
         // When it is deleted
@@ -121,7 +121,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $aRealFile = $this->testsWorkingDir . 'file1.php';
         $this->getFileSystem()->write($aRealFile, 'file1');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
         assert(1 === count($sut->listContents($this->testsWorkingDir)->toArray()));
 
         $file2Path = $this->testsWorkingDir . 'file2.php';
@@ -141,7 +141,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $contents = 'source';
         $this->getFileSystem()->write($source, $contents);
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
 
         $destination = $this->testsWorkingDir . 'destination.php';
 
@@ -160,7 +160,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $newDir = $this->testsWorkingDir . 'dir1';
         mkdir($newDir);
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
 
         $this->assertTrue($sut->directoryExists($newDir));
     }
@@ -173,7 +173,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $newDir = $this->testsWorkingDir . 'dir1';
         mkdir($newDir);
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
 
         $sut->deleteDirectory($newDir);
 
@@ -188,7 +188,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     {
         $newDir = $this->testsWorkingDir . 'dir1';
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))));
 
         $sut->createDirectory($newDir);
 
