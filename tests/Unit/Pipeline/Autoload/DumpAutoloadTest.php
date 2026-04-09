@@ -34,8 +34,8 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $config->expects('isDryRun')->times(2)->andReturnFalse();
 //        $config->expects('getProjectDirectory')->times(3)->andReturn('project/');
         $config->expects('getProjectDirectory')->times(4)->andReturn('project/');
-//        $config->expects('getTargetDirectory')->times(2)->andReturn('project/vendor-prefixed/');
-        $config->expects('getTargetDirectory')->times(4)->andReturn('project/vendor-prefixed/');
+//        $config->expects('getAbsoluteTargetDirectory')->times(2)->andReturn('project/vendor-prefixed/');
+        $config->expects('getAbsoluteTargetDirectory')->times(4)->andReturn('project/vendor-prefixed/');
 //        $config->expects('getNamespacePrefix')->once()->andReturn('BrianHenryIE\\Test\\');
         $config->expects('getNamespacePrefix')->times(8)->andReturn('BrianHenryIE\\Test\\');
 
@@ -91,7 +91,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
 
         $config->expects('isDryRun')->times(1)->andReturn(true);
         $config->expects('getVendorDirectory')->times(4)->andReturn('mem://project/vendor');
-        $config->expects('getTargetDirectory')->times(5)->andReturn('mem://project/vendor-prefixed');
+        $config->expects('getAbsoluteTargetDirectory')->times(5)->andReturn('mem://project/vendor-prefixed');
 
         $installedVersions = <<<EOD
 <?php // a core Composer file that is not unique per install.

@@ -6,7 +6,7 @@ interface PrefixerConfigInterface
 {
     public function getVendorDirectory(): string;
 
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
 
     public function getNamespacePrefix(): ?string;
 

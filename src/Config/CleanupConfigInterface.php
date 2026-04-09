@@ -10,7 +10,7 @@ interface CleanupConfigInterface
 
     public function isDeleteVendorPackages(): bool;
 
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
 
     public function isDryRun(): bool;
 

@@ -69,7 +69,7 @@ class Prefixer
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
         foreach ($files as $file) {
-            if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()
+            if ($this->config->getVendorDirectory() !== $this->config->getAbsoluteTargetDirectory()
                 && !$file->isDoCopy()
             ) {
                 continue;
@@ -89,7 +89,7 @@ class Prefixer
                 continue;
             }
 
-            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $file->getAbsoluteTargetPath());
 
             $this->logger->debug("Updating contents of file: {$relativeFilePath}");
 
@@ -122,7 +122,7 @@ class Prefixer
     {
 
         foreach ($absoluteFilePathsArray as $fileAbsolutePath) {
-            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $fileAbsolutePath);
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
 
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
                 $this->logger->debug("is_dir() / nothing to do : {$relativeFilePath}");

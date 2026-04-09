@@ -71,7 +71,7 @@ class MarkSymbolsForRenaming
 //                    $symbol->setDoRename(false);
 //                }
 //            }
-            if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()
+            if ($this->config->getVendorDirectory() !== $this->config->getAbsoluteTargetDirectory()
                 && !$this->isSymbolFoundInFileThatIsCopied($symbol)) {
                 $symbol->setDoRename(false);
             }
@@ -122,7 +122,7 @@ class MarkSymbolsForRenaming
      */
     protected function isSymbolFoundInFileThatIsNotCopied(DiscoveredSymbol $symbol): bool
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+        if ($this->config->getVendorDirectory() === $this->config->getAbsoluteTargetDirectory()) {
             return false;
         }
 
@@ -135,7 +135,7 @@ class MarkSymbolsForRenaming
 
     protected function isSymbolFoundInFileThatIsCopied(DiscoveredSymbol $symbol): bool
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+        if ($this->config->getVendorDirectory() === $this->config->getAbsoluteTargetDirectory()) {
             return false;
         }
 

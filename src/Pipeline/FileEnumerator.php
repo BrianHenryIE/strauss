@@ -136,7 +136,7 @@ class FileEnumerator
                 FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath)
             );
             $vendorRelativePath = str_replace(
-                FileSystem::normalizeDirSeparator($this->config->getTargetDirectory()),
+                FileSystem::normalizeDirSeparator($this->config->getAbsoluteTargetDirectory()),
                 '',
                 $vendorRelativePath
             );

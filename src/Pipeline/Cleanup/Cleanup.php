@@ -46,8 +46,8 @@ class Cleanup
         $this->config = $config;
         $this->logger = $logger;
 
-        $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getTargetDirectory() !== $config->getVendorDirectory();
-        $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getTargetDirectory() !== $config->getVendorDirectory();
+        $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getAbsoluteTargetDirectory() !== $config->getVendorDirectory();
+        $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getAbsoluteTargetDirectory() !== $config->getVendorDirectory();
 
         $this->filesystem = $filesystem;
     }
@@ -92,17 +92,17 @@ class Cleanup
             $this->logger
         );
 
-        if ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
+        if ($this->config->getAbsoluteTargetDirectory() !== $this->config->getVendorDirectory()
         && !$this->config->isDeleteVendorFiles() && !$this->config->isDeleteVendorPackages()
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
+        } elseif ($this->config->getAbsoluteTargetDirectory() !== $this->config->getVendorDirectory()
             &&
             ($this->config->isDeleteVendorFiles() ||$this->config->isDeleteVendorPackages())
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+        } elseif ($this->config->getAbsoluteTargetDirectory() === $this->config->getVendorDirectory()) {
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
         }
     }

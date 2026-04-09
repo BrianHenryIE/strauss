@@ -332,7 +332,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     protected function copyFiles(): void
     {
 
-        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+        if ($this->config->getAbsoluteTargetDirectory() === $this->config->getVendorDirectory()) {
             // Nothing to do.
             return;
         }
@@ -458,7 +458,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
         if (isset($this->projectComposerPackage->getAutoload()['classmap'])
             && in_array(
-                $this->config->getTargetDirectory(),
+                $this->config->getAbsoluteTargetDirectory(),
                 $this->projectComposerPackage->getAutoload()['classmap'],
                 true
             )

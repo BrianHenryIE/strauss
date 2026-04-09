@@ -85,7 +85,7 @@ EOD;
 
         self::assertContains('pimple/pimple', $sut->getPackages());
 
-        self::assertEqualsRN(getcwd() . '/target_directory/', $sut->getTargetDirectory());
+        self::assertEqualsRN(getcwd() . '/target_directory/', $sut->getAbsoluteTargetDirectory());
 
         self::assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
 
@@ -193,7 +193,7 @@ EOD;
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN(getcwd() . '/vendor-prefixed/', $sut->getTargetDirectory());
+        self::assertEqualsRN(getcwd() . '/vendor-prefixed/', $sut->getAbsoluteTargetDirectory());
     }
 
     /**
@@ -611,7 +611,7 @@ EOD;
 
         self::assertContains('pimple/pimple', $sut->getPackages());
 
-        self::assertEqualsRN(getcwd() . '/dep_directory/', $sut->getTargetDirectory());
+        self::assertEqualsRN(getcwd() . '/dep_directory/', $sut->getAbsoluteTargetDirectory());
 
         self::assertEqualsRN("My_Mozart_Config", $sut->getNamespacePrefix());
 

@@ -16,7 +16,7 @@ interface AliasesConfigInterface
      * The directory where Strauss copied the files to.
      * absolute? relative?
      */
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
 
     public function isDryRun(): bool;
 

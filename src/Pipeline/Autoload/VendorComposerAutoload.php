@@ -45,7 +45,7 @@ class VendorComposerAutoload
      */
     public function addVendorPrefixedAutoloadToVendorAutoload(): void
     {
-        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+        if ($this->config->getAbsoluteTargetDirectory() === $this->config->getVendorDirectory()) {
             $this->logger->info("Target dir is source dir, no autoload.php to add.");
             return;
         }
@@ -57,7 +57,7 @@ class VendorComposerAutoload
             return;
         }
 
-        $newAutoloadPhpFilepath = $this->config->getTargetDirectory() . 'autoload.php';
+        $newAutoloadPhpFilepath = $this->config->getAbsoluteTargetDirectory() . 'autoload.php';
 
         if (!$this->fileSystem->fileExists($newAutoloadPhpFilepath)) {
             $this->logger->warning("No new autoload.php found: " . $newAutoloadPhpFilepath);
@@ -249,12 +249,12 @@ class VendorComposerAutoload
      */
     protected function addVendorPrefixedAutoloadToComposerAutoload(string $code): string
     {
-        if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+        if ($this->config->getAbsoluteTargetDirectory() === $this->config->getVendorDirectory()) {
             $this->logger->info('Vendor directory is target directory, no autoloader to add.');
             return $code;
         }
 
-        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->config->getVendorDirectory(), $this->config->getTargetDirectory()) . 'autoload.php';
+        $targetDirAutoload = '/' . $this->fileSystem->getRelativePath($this->config->getVendorDirectory(), $this->config->getAbsoluteTargetDirectory()) . 'autoload.php';
 
         if (false !== strpos($code, $targetDirAutoload)) {
             $this->logger->info('vendor/autoload.php already includes ' . $targetDirAutoload);

@@ -330,7 +330,7 @@ class StraussConfig implements
                         $paths = (array) $entry;
                         foreach ($paths as $path) {
                             // Matches the target directory.
-                            if (trim($path, '\\/') . '/' === $this->getTargetDirectory()) {
+                            if (trim($path, '\\/') . '/' === $this->getAbsoluteTargetDirectory()) {
                                 $this->classmapOutput = false;
                                 break 3;
                             }
@@ -360,7 +360,7 @@ class StraussConfig implements
     /**
      * `target_directory` will always be returned without a leading slash and with a trailing slash.
      */
-    public function getTargetDirectory(): string
+    public function getAbsoluteTargetDirectory(): string
     {
         return FileSystem::normalizeDirSeparator(
             rtrim($this->getProjectDirectory(), '\\/') . '/' . trim($this->targetDirectory, '\\/') . '/'

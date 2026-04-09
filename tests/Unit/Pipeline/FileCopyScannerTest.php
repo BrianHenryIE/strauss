@@ -41,7 +41,7 @@ class FileCopyScannerTest extends TestCase
         $discoveredFiles->add($file);
 
         $config = \Mockery::mock(FileCopyScannerConfigInterface::class);
-        $config->expects('getTargetDirectory')->atLeast()->once()->andReturns('vendor-prefixed');
+        $config->expects('getAbsoluteTargetDirectory')->atLeast()->once()->andReturns('vendor-prefixed');
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturns('vendor');
         $config->expects('getExcludePackagesFromCopy')->andReturns([]);
         $config->expects('isDeleteVendorFiles')->andReturnFalse();

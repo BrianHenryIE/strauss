@@ -12,7 +12,7 @@ interface LicenserConfigInterface
      * The directory where Strauss copied the files to.
      * absolute.
      */
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
 
     /**
      * The directory where the source files are located.

@@ -68,7 +68,7 @@ class InstalledJson
     public function copyInstalledJson(): void
     {
         $source = $this->config->getVendorDirectory() . 'composer/installed.json';
-        $target = $this->config->getTargetDirectory() . 'composer/installed.json';
+        $target = $this->config->getAbsoluteTargetDirectory() . 'composer/installed.json';
 
         $this->logger->info('Copying {sourcePath} to {targetPath}', [
             'sourcePath' => $source,
@@ -85,7 +85,7 @@ class InstalledJson
             'targetPath' => $target
         ]);
 
-        $this->logger->debug($this->filesystem->read($this->config->getTargetDirectory() . 'composer/installed.json'));
+        $this->logger->debug($this->filesystem->read($this->config->getAbsoluteTargetDirectory() . 'composer/installed.json'));
     }
 
     /**
@@ -372,11 +372,11 @@ class InstalledJson
                         /** @var string $relativePath */
                         foreach (array_values((array) $autoload_key[$type]) as $relativePath) {
                             $packageRelativePath = $package['install-path'];
-                            if (1 === preg_match('#.*'.preg_quote($this->filesystem->normalize($this->config->getTargetDirectory()), '#').'/(.*)#', $packageRelativePath, $matches)) {
+                            if (1 === preg_match('#.*'.preg_quote($this->filesystem->normalize($this->config->getAbsoluteTargetDirectory()), '#').'/(.*)#', $packageRelativePath, $matches)) {
                                 $packageRelativePath = $matches[1];
                             }
                             // Convert psr-0 autoloading to classmap autoloading
-                            if ($this->filesystem->directoryExists($this->config->getTargetDirectory() . 'composer/' . $packageRelativePath . $relativePath)) {
+                            if ($this->filesystem->directoryExists($this->config->getAbsoluteTargetDirectory() . 'composer/' . $packageRelativePath . $relativePath)) {
                                 $autoload_key['classmap'][] = $relativePath;
                             }
                         }
@@ -459,7 +459,7 @@ class InstalledJson
      */
     public function cleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
-        $targetDir = $this->config->getTargetDirectory();
+        $targetDir = $this->config->getAbsoluteTargetDirectory();
 
         $installedJsonFile = $this->getJsonFile($targetDir);
 
@@ -476,11 +476,11 @@ class InstalledJson
         $installedJsonArray = $this->updatePackagePaths(
             $installedJsonArray,
             $flatDependencyTree,
-            $this->config->getTargetDirectory(),
+            $this->config->getAbsoluteTargetDirectory(),
             $this->config->getExcludePackagesFromCopy()
         );
 
-        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getTargetDirectory(), $installedJsonFile->getPath());
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getAbsoluteTargetDirectory(), $installedJsonFile->getPath());
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(
             $installedJsonArray,

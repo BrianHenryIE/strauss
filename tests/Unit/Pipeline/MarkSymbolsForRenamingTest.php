@@ -41,7 +41,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getExcludeFilePatternsFromConstantPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeConstantNames')->andReturn([]);
         $config->shouldReceive('getVendorDirectory')->andReturn('/vendor/');
-        $config->shouldReceive('getTargetDirectory')->andReturn('/vendor-prefixed/');
+        $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('/vendor-prefixed/');
 
         $filesystem = Mockery::mock(FileSystem::class);
 
@@ -83,7 +83,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getExcludeFilePatternsFromConstantPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeConstantNames')->andReturn([]);
         $config->shouldReceive('getVendorDirectory')->andReturn('/vendor/');
-        $config->shouldReceive('getTargetDirectory')->andReturn('/vendor-prefixed/');
+        $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('/vendor-prefixed/');
 
         $filesystem = Mockery::mock(FileSystem::class);
 
@@ -124,7 +124,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getExcludeFilePatternsFromConstantPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeConstantNames')->andReturn(['WP_PLUGIN_DIR', 'ABSPATH']);
         $config->shouldReceive('getVendorDirectory')->andReturn('/vendor/');
-        $config->shouldReceive('getTargetDirectory')->andReturn('/vendor/');
+        $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('/vendor/');
 
         $filesystem = Mockery::mock(FileSystem::class);
 

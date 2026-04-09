@@ -134,7 +134,7 @@ class DumpAutoload
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
 
-        $installedJsonFile = new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json');
+        $installedJsonFile = new JsonFile($this->config->getAbsoluteTargetDirectory() . 'composer/installed.json');
         /** @var array{dev?:bool} $installedJson */
         $installedJson = $installedJsonFile->read();
         $localRepo = new InstalledFilesystemRepository($installedJsonFile);
@@ -143,7 +143,7 @@ class DumpAutoload
          * If the target directory is different to the vendor directory, then we do not want to include dev
          * dependencies, but if it is vendor, then unless composer install was run with --no-dev, we do want them.
          */
-        if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()) {
+        if ($this->config->getVendorDirectory() !== $this->config->getAbsoluteTargetDirectory()) {
             $isDevMode = false;
         } else {
             $isDevMode = (bool) ($installedJson['dev'] ?? false);
@@ -196,11 +196,11 @@ class DumpAutoload
      */
     protected function createInstalledVersionsFiles(): void
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+        if ($this->config->getVendorDirectory() === $this->config->getAbsoluteTargetDirectory()) {
             return;
         }
 
-        $this->filesystem->copy($this->config->getVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getTargetDirectory() . 'composer/InstalledVersions.php');
+        $this->filesystem->copy($this->config->getVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getAbsoluteTargetDirectory() . 'composer/InstalledVersions.php');
 
         // This is just `<?php return array(...);`
         $installedPhpString = $this->filesystem->read($this->config->getVendorDirectory() . '/composer/installed.php');
@@ -220,7 +220,7 @@ class DumpAutoload
         // Update `__DIR__` which was evaluated during the `include`/`eval`.
         $newInstalledPhpString = preg_replace('/(\'install_path\' => )(.*)(\/\.\..*)/', "$1__DIR__ . '$3", $newInstalledPhpString) ?? $newInstalledPhpString;
 
-        $this->filesystem->write($this->config->getTargetDirectory() . '/composer/installed.php', $newInstalledPhpString);
+        $this->filesystem->write($this->config->getAbsoluteTargetDirectory() . '/composer/installed.php', $newInstalledPhpString);
     }
 
     /**
@@ -228,14 +228,14 @@ class DumpAutoload
      */
     protected function prefixNewAutoloader(): void
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+        if ($this->config->getVendorDirectory() === $this->config->getAbsoluteTargetDirectory()) {
             return;
         }
 
         $this->logger->debug('Prefixing the new Composer autoloader.');
 
         $projectFiles = $this->fileEnumerator->compileFileListForPaths([
-            $this->config->getTargetDirectory() . 'composer',
+            $this->config->getAbsoluteTargetDirectory() . DIRECTORY_SEPARATOR . 'composer',
         ]);
 
         $phpFiles = array_filter(
@@ -286,7 +286,7 @@ class DumpAutoload
      */
     protected function getSuffix(): ?string
     {
-        return !$this->filesystem->fileExists($this->config->getTargetDirectory() . 'autoload.php')
+        return !$this->filesystem->fileExists($this->config->getAbsoluteTargetDirectory() . 'autoload.php')
             ? bin2hex(random_bytes(16))
             : null;
     }

@@ -24,5 +24,5 @@ interface FileCopyScannerConfigInterface
 
     public function isDeleteVendorFiles(): bool;
 
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
 }
