@@ -64,6 +64,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $string = str_replace("\r\n", "\n", $string);
         $string = preg_replace('/^\s*/m', '', $string);
         $string = preg_replace('/\n\s*\n/', "\n", $string);
+        $string = str_replace("\\n", '', $string);
         $string = implode(PHP_EOL, array_map('trim', explode(PHP_EOL, $string)));
         return trim($string);
     }
