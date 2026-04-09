@@ -93,6 +93,8 @@ jobs:
         uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
         with:
           phpunit-command: vendor/bin/phpunit
+        env:
+          RENAMESPACER_LOG: "debug"
 
       - name: Run tests
         run: vendor/bin/phpunit --order-by=random
