@@ -75,7 +75,7 @@ class Autoload
 
         $this->logger->info('Generating autoload files for ' . $this->config->getAbsoluteTargetDirectory());
 
-        if ($this->config->getVendorDirectory() !== $this->config->getAbsoluteTargetDirectory()) {
+        if ($this->config->getAbsoluteVendorDirectory() !== $this->config->getAbsoluteTargetDirectory()) {
             $installedJson = new InstalledJson(
                 $this->config,
                 $this->filesystem,

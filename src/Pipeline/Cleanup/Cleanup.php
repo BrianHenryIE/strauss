@@ -46,8 +46,8 @@ class Cleanup
         $this->config = $config;
         $this->logger = $logger;
 
-        $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getAbsoluteTargetDirectory() !== $config->getVendorDirectory();
-        $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getAbsoluteTargetDirectory() !== $config->getVendorDirectory();
+        $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getAbsoluteTargetDirectory() !== $config->getAbsoluteVendorDirectory();
+        $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getAbsoluteTargetDirectory() !== $config->getAbsoluteVendorDirectory();
 
         $this->filesystem = $filesystem;
     }
@@ -92,17 +92,17 @@ class Cleanup
             $this->logger
         );
 
-        if ($this->config->getAbsoluteTargetDirectory() !== $this->config->getVendorDirectory()
+        if ($this->config->getAbsoluteTargetDirectory() !== $this->config->getAbsoluteVendorDirectory()
         && !$this->config->isDeleteVendorFiles() && !$this->config->isDeleteVendorPackages()
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getAbsoluteTargetDirectory() !== $this->config->getVendorDirectory()
+        } elseif ($this->config->getAbsoluteTargetDirectory() !== $this->config->getAbsoluteVendorDirectory()
             &&
             ($this->config->isDeleteVendorFiles() ||$this->config->isDeleteVendorPackages())
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getAbsoluteTargetDirectory() === $this->config->getVendorDirectory()) {
+        } elseif ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()) {
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
         }
     }
@@ -137,7 +137,7 @@ class Cleanup
         $generator->setRunScripts(false);
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
-        $installedJson = new JsonFile($this->config->getVendorDirectory() . 'composer/installed.json');
+        $installedJson = new JsonFile($this->config->getAbsoluteVendorDirectory() . 'composer/installed.json');
         $localRepo = new InstalledFilesystemRepository($installedJson);
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
         /** @var InstalledJsonArray $installedJsonArray */
@@ -189,7 +189,7 @@ class Cleanup
         }
         $rootSourceDirectories = array_map(
             function (string $path): string {
-                return $this->config->getVendorDirectory() . $path;
+                return $this->config->getAbsoluteVendorDirectory() . $path;
             },
             array_keys($rootSourceDirectories)
         );
@@ -262,7 +262,7 @@ class Cleanup
 
             // Normal package.
 //            if (!$this->filesystem->isSymlinked($package->getPackageAbsolutePath())) {
-            if ($this->filesystem->isSubDirOf($this->config->getVendorDirectory(), $package->getPackageAbsolutePath())) {
+            if ($this->filesystem->isSubDirOf($this->config->getAbsoluteVendorDirectory(), $package->getPackageAbsolutePath())) {
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
@@ -276,7 +276,7 @@ class Cleanup
                 // If it's a symlink, remove the symlink in the directory
                 $symlinkPath =
                     FileSystem::normalizeDirSeparator(rtrim(
-                        $this->config->getVendorDirectory() . $package->getRelativePath(),
+                        $this->config->getAbsoluteVendorDirectory() . $package->getRelativePath(),
                         '/'
                     ));
 

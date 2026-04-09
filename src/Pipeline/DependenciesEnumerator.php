@@ -101,7 +101,7 @@ class DependenciesEnumerator
 
             $packageComposerFile = sprintf(
                 '%s%s/composer.json',
-                $this->config->getVendorDirectory(),
+                $this->config->getAbsoluteVendorDirectory(),
                 $requiredPackageName
             );
 

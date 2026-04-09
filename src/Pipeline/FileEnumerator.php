@@ -101,11 +101,11 @@ class FileEnumerator
             return;
         }
 
-        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getVendorDirectory());
+        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getAbsoluteVendorDirectory());
 
         if ($dependency) {
             $vendorRelativePath = $this->filesystem->getRelativePath(
-                $this->config->getVendorDirectory(),
+                $this->config->getAbsoluteVendorDirectory(),
                 $sourceAbsoluteFilepath
             );
 
@@ -131,7 +131,7 @@ class FileEnumerator
             $f->setDoDelete($isOutsideProjectDir);
         } else {
             $vendorRelativePath = str_replace(
-                FileSystem::normalizeDirSeparator($this->config->getVendorDirectory()),
+                FileSystem::normalizeDirSeparator($this->config->getAbsoluteVendorDirectory()),
                 '',
                 FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath)
             );
@@ -152,7 +152,7 @@ class FileEnumerator
 
         $relativeFilePath =
             $this->filesystem->getRelativePath(
-                dirname($this->config->getVendorDirectory()),
+                dirname($this->config->getAbsoluteVendorDirectory()),
                 $f->getAbsoluteTargetPath()
             );
         $this->logger->info("Found file " . $relativeFilePath);

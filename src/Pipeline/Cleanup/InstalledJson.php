@@ -67,7 +67,7 @@ class InstalledJson
      */
     public function copyInstalledJson(): void
     {
-        $source = $this->config->getVendorDirectory() . 'composer/installed.json';
+        $source = $this->config->getAbsoluteVendorDirectory() . 'composer/installed.json';
         $target = $this->config->getAbsoluteTargetDirectory() . 'composer/installed.json';
 
         $this->logger->info('Copying {sourcePath} to {targetPath}', [
@@ -520,7 +520,7 @@ class InstalledJson
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
 
-        $vendorDir = $this->config->getVendorDirectory();
+        $vendorDir = $this->config->getAbsoluteVendorDirectory();
 
         $vendorInstalledJsonFile = $this->getJsonFile($vendorDir);
 
@@ -531,14 +531,14 @@ class InstalledJson
          */
         $installedJsonArray = $vendorInstalledJsonFile->read();
 
-        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getVendorDirectory(), $vendorInstalledJsonFile->getPath());
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getAbsoluteVendorDirectory(), $vendorInstalledJsonFile->getPath());
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson($installedJsonArray, $flatDependencyTree, $vendorInstalledJsonFile->getPath());
 
         $installedJsonArray = $this->updatePackagePaths(
             $installedJsonArray,
             $flatDependencyTree,
-            $this->config->getVendorDirectory()
+            $this->config->getAbsoluteVendorDirectory()
         );
 
         // Only relevant when source = target.

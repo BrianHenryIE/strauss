@@ -42,7 +42,7 @@ class AliasesTest extends TestCase
     {
 
         $config = Mockery::mock(AliasesConfigInterface::class);
-        $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
+        $config->expects('getAbsoluteVendorDirectory')->times(1)->andReturn('vendor/');
         $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
 
         $fileSystem = $this->getInMemoryFileSystem();
@@ -93,7 +93,7 @@ EOD;
     {
 
         $config = Mockery::mock(AliasesConfigInterface::class);
-        $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('vendor/');
+        $config->expects('getAbsoluteVendorDirectory')->atLeast()->once()->andReturn('vendor/');
         $config->expects('getNamespacePrefix')->atLeast()->once()->andReturn('Baz\\');
 
         $fileSystem = $this->getInMemoryFileSystem();
@@ -137,7 +137,7 @@ EOD;
     public function test_namespaced_interfaces(): void
     {
         $config = Mockery::mock(AliasesConfigInterface::class);
-        $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
+        $config->expects('getAbsoluteVendorDirectory')->times(1)->andReturn('vendor/');
         $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
 
         $fileSystem = $this->getInMemoryFileSystem();
@@ -187,7 +187,7 @@ EOD;
     {
 
         $config = Mockery::mock(AliasesConfigInterface::class);
-        $config->expects('getVendorDirectory')->times(1)->andReturn('vendor/');
+        $config->expects('getAbsoluteVendorDirectory')->times(1)->andReturn('vendor/');
         $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
 
         $fileSystem = $this->getInMemoryFileSystem();

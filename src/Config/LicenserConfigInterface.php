@@ -19,5 +19,5 @@ interface LicenserConfigInterface
      *
      * absolute.
      */
-    public function getVendorDirectory(): string;
+    public function getAbsoluteVendorDirectory(): string;
 }

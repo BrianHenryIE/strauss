@@ -38,7 +38,7 @@ class AutoloadTest extends TestCase
 
         $config = \Mockery::mock(AutoloadConfigInterface::class);
         $config->expects('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed')->once();
-        $config->expects('getVendorDirectory')->andReturn('vendor')->once();
+        $config->expects('getAbsoluteVendorDirectory')->andReturn('vendor')->once();
         $config->expects('isClassmapOutput')->andReturnTrue()->once();
         $config->expects('isDryRun')->andReturnTrue()->once();
 
@@ -79,7 +79,7 @@ class AutoloadTest extends TestCase
 
         $config = \Mockery::mock(AutoloadConfigInterface::class);
         $config->expects('getAbsoluteTargetDirectory')->andReturn('../vendor-prefixed')->once();
-        $config->expects('getVendorDirectory')->andReturn('../vendor')->once();
+        $config->expects('getAbsoluteVendorDirectory')->andReturn('../vendor')->once();
         $config->expects('isClassmapOutput')->andReturnTrue()->once();
         $config->expects('isDryRun')->andReturnTrue()->once();
 
@@ -118,7 +118,7 @@ class AutoloadTest extends TestCase
 
         $config = \Mockery::mock(AutoloadConfigInterface::class);
         $config->expects('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed')->once();
-        $config->expects('getVendorDirectory')->andReturn('vendor')->once();
+        $config->expects('getAbsoluteVendorDirectory')->andReturn('vendor')->once();
         $config->expects('isClassmapOutput')->andReturnTrue()->once();
         $config->expects('isDryRun')->andReturnTrue()->once();
 

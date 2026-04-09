@@ -332,7 +332,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     protected function copyFiles(): void
     {
 
-        if ($this->config->getAbsoluteTargetDirectory() === $this->config->getVendorDirectory()) {
+        if ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()) {
             // Nothing to do.
             return;
         }

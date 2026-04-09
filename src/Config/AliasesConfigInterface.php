@@ -10,7 +10,7 @@ interface AliasesConfigInterface
      *
      * absolute? relative?
      */
-    public function getVendorDirectory(): string;
+    public function getAbsoluteVendorDirectory(): string;
 
     /**
      * The directory where Strauss copied the files to.

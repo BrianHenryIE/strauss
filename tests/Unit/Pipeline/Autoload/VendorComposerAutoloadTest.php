@@ -75,7 +75,7 @@ EOD;
 
         $config = Mockery::mock(AutoloadConfigInterface::class);
         $config->shouldReceive('isDryRun')->andReturnFalse();
-        $config->shouldReceive('getVendorDirectory')->andReturn('vendor/');
+        $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('vendor/');
         $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed/');
 
         $fileSystem = $this->getInMemoryFileSystem();

@@ -91,7 +91,7 @@ class Licenser
 
         foreach ($this->getDiscoveredLicenseFiles() as $licenseFile) {
             $targetLicenseFile = str_replace(
-                $this->config->getVendorDirectory(),
+                $this->config->getAbsoluteVendorDirectory(),
                 $this->config->getAbsoluteTargetDirectory(),
                 $licenseFile
             );

@@ -5,7 +5,7 @@ namespace BrianHenryIE\Strauss\Config;
 interface FileCopyScannerConfigInterface
 {
 
-    public function getVendorDirectory(): string;
+    public function getAbsoluteVendorDirectory(): string;
 
     /**
      * @return string[]

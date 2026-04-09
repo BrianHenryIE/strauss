@@ -59,7 +59,7 @@ EOD;
         $vendorDir = 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getVendorDirectory')->willReturn($vendorDir);
+        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,

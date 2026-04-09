@@ -51,7 +51,7 @@ class ProjectComposerPackage extends ComposerPackage
     public function getStraussConfig(): StraussConfig
     {
         $config = new StraussConfig($this->composer);
-        $config->setVendorDirectory($this->getVendorDirectory());
+        $config->setVendorDirectory($this->getAbsoluteVendorDirectory());
         return $config;
     }
 
@@ -64,7 +64,7 @@ class ProjectComposerPackage extends ComposerPackage
     /**
      * Relative vendor directory with trailing slash.
      */
-    public function getVendorDirectory(): string
+    public function getAbsoluteVendorDirectory(): string
     {
         return rtrim($this->vendorDirectory, '\\/') . '/';
     }

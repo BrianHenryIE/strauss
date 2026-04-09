@@ -56,7 +56,7 @@ EOD;
         $vendorDir = $this->testsWorkingDir . 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getVendorDirectory')->willReturn($vendorDir);
+        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
         $config->method('getAbsoluteTargetDirectory')->willReturn($targetDir);
 
         $fileEnumerator = new FileEnumerator(
@@ -128,7 +128,7 @@ EOD;
         $vendorDir = $this->testsWorkingDir . 'vendor/';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getVendorDirectory')->willReturn($vendorDir);
+        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
         $config->method('getAbsoluteTargetDirectory')->willReturn($targetDir);
 
         $fileEnumerator = new FileEnumerator(

@@ -388,7 +388,7 @@ class StraussConfig implements
     /**
      * @return string
      */
-    public function getVendorDirectory(): string
+    public function getAbsoluteVendorDirectory(): string
     {
         return $this->getProjectDirectory() . trim($this->vendorDirectory, '\\/') . '/';
     }

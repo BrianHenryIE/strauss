@@ -107,7 +107,7 @@ class Aliases
     {
         return  sprintf(
             '%scomposer/autoload_aliases.php',
-            $this->config->getVendorDirectory()
+            $this->config->getAbsoluteVendorDirectory()
         );
     }
 

@@ -143,7 +143,7 @@ class DumpAutoload
          * If the target directory is different to the vendor directory, then we do not want to include dev
          * dependencies, but if it is vendor, then unless composer install was run with --no-dev, we do want them.
          */
-        if ($this->config->getVendorDirectory() !== $this->config->getAbsoluteTargetDirectory()) {
+        if ($this->config->getAbsoluteVendorDirectory() !== $this->config->getAbsoluteTargetDirectory()) {
             $isDevMode = false;
         } else {
             $isDevMode = (bool) ($installedJson['dev'] ?? false);
@@ -196,14 +196,14 @@ class DumpAutoload
      */
     protected function createInstalledVersionsFiles(): void
     {
-        if ($this->config->getVendorDirectory() === $this->config->getAbsoluteTargetDirectory()) {
+        if ($this->config->getAbsoluteVendorDirectory() === $this->config->getAbsoluteTargetDirectory()) {
             return;
         }
 
-        $this->filesystem->copy($this->config->getVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getAbsoluteTargetDirectory() . 'composer/InstalledVersions.php');
+        $this->filesystem->copy($this->config->getAbsoluteVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getAbsoluteTargetDirectory() . 'composer/InstalledVersions.php');
 
         // This is just `<?php return array(...);`
-        $installedPhpString = $this->filesystem->read($this->config->getVendorDirectory() . '/composer/installed.php');
+        $installedPhpString = $this->filesystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.php');
         $installed = eval(str_replace('<?php', '', $installedPhpString));
 
         $targetPackages = $this->config->getPackagesToCopy();
@@ -228,7 +228,7 @@ class DumpAutoload
      */
     protected function prefixNewAutoloader(): void
     {
-        if ($this->config->getVendorDirectory() === $this->config->getAbsoluteTargetDirectory()) {
+        if ($this->config->getAbsoluteVendorDirectory() === $this->config->getAbsoluteTargetDirectory()) {
             return;
         }
 

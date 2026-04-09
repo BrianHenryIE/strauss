@@ -39,7 +39,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
 //        $config->expects('getNamespacePrefix')->once()->andReturn('BrianHenryIE\\Test\\');
         $config->expects('getNamespacePrefix')->times(8)->andReturn('BrianHenryIE\\Test\\');
 
-        $config->expects('getVendorDirectory')->times(2)->andReturn('project/vendor/');
+        $config->expects('getAbsoluteVendorDirectory')->times(2)->andReturn('project/vendor/');
         $config->expects('getExcludeNamespacesFromCopy')->times(2)->andReturn([]);
         $config->expects('getExcludePackagesFromCopy')->times(2)->andReturn([]);
         $config->expects('getExcludeFilePatternsFromCopy')->times(2)->andReturn([]);
@@ -90,7 +90,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $logger = new NullLogger();
 
         $config->expects('isDryRun')->times(1)->andReturn(true);
-        $config->expects('getVendorDirectory')->times(4)->andReturn('mem://project/vendor');
+        $config->expects('getAbsoluteVendorDirectory')->times(4)->andReturn('mem://project/vendor');
         $config->expects('getAbsoluteTargetDirectory')->times(5)->andReturn('mem://project/vendor-prefixed');
 
         $installedVersions = <<<EOD
