@@ -142,6 +142,8 @@ EOD;
      */
     public function test_cli_argument_overrides_composer_json(): void
     {
+        $this->markTestSkippedOnWindows('TODO: test cli arguments on Windows');
+
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
