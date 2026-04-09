@@ -85,7 +85,9 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/project/vendor-prefixed/strausstest/dependency/src/Psr4Autoloaded.php');
+        $filePath = $this->testsWorkingDir . '/project/vendor-prefixed/strausstest/dependency/src/Psr4Autoloaded.php';
+        $this->assertTrue($this->getFileSystem()->exists($filePath), 'Expected file does not exist at: ' . $filePath);
+        $php_string = $this->getFileSystem()->read($filePath);
         $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\My\\Dependency;', $php_string);
 
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/project/vendor-prefixed/strausstest/dependency/templates/notautoloaded.php');

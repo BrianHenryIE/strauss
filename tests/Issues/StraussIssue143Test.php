@@ -118,7 +118,8 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php'));
+        $filePath = $this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php';
+        $this->assertFalse($this->getFileSystem()->fileExists($filePath), 'File should not exist at: ' . $filePath);
     }
 
     /**

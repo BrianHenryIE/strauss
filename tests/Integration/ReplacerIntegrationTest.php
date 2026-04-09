@@ -255,8 +255,6 @@ EOD;
         }
     },
     "require": {
-        "mpdf/mpdf": "*",
-        "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.3"
     }
 }
@@ -313,11 +311,16 @@ EOD;
 
         exec('composer install');
 
+        /**
+         * `/Users/brianhenry/Sites/strauss/strauss/teststempdir/project/vendor-prefixed/brianhenryie/pdf-helpers/src/MpdfCrop.php`
+         */
+        $expectedTargetFilePath = $this->testsWorkingDir . 'project/vendor-prefixed/brianhenryie/pdf-helpers/src/MpdfCrop.php';
+
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . 'project/vendor-prefixed/brianhenryie/pdf-helpers/src/MpdfCrop.php');
-
-        self::assertStringContainsString('extends Mpdf', $updatedFile);
+        $this->assertTrue($this->getFileSystem()->fileExists($expectedTargetFilePath), 'Expected file does not exist at: ' . $expectedTargetFilePath);
+        $updatedFile = $this->getFileSystem()->read($expectedTargetFilePath);
+        $this->assertStringContainsString('extends Mpdf', $updatedFile);
     }
 }
