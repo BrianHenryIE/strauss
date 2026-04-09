@@ -15,7 +15,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
      */
     public function test_is_dir(): void
     {
-        $fs = new Filesystem(
+        $fs = new FileSystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/'))
             ),
@@ -35,7 +35,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
      */
     public function test_find_all_files_absolute_paths(): void
     {
-        $fs = new Filesystem(
+        $fs = new FileSystem(
             new \League\Flysystem\Filesystem(
                 new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/'))
             ),

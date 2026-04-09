@@ -126,7 +126,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $normalizer = new WhitespacePathNormalizer();
         $normalizer = new StripProtocolPathNormalizer([ 'mem' ], $normalizer);
 
-        $filesystem = new Filesystem(
+        $filesystem = new FileSystem(
             new \League\Flysystem\Filesystem(
                 $inMemoryFilesystem,
                 [
