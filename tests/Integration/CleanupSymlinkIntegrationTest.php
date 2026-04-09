@@ -16,21 +16,20 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
     {
         $this->markTestSkippedOnWindows('symlinks');
 
-        $main_package_dir = $this->testsWorkingDir . 'main-package/';
+        $mainPackageDir = $this->testsWorkingDir . 'main-package/';
         $symlinked_package_dir = $this->testsWorkingDir . 'symlinked-package/';
 
-        mkdir($main_package_dir);
+        mkdir($mainPackageDir);
         mkdir($symlinked_package_dir . 'src/', 0777, true);
 
-        $this->getFileSystem()->write($main_package_dir . 'composer.json', $this->packageComposerFile());
+        $this->getFileSystem()->write($mainPackageDir . 'composer.json', $this->packageComposerFile());
         $this->getFileSystem()->write($symlinked_package_dir . 'composer.json', $this->symlinkedComposerFile());
         $this->getFileSystem()->write($symlinked_package_dir . 'src/File.php', $this->symlinkedPhpFile());
 
-        chdir($main_package_dir);
+        chdir($mainPackageDir);
         exec('composer install');
 
-
-        $relative_symlinked_package_dir = $main_package_dir . 'vendor/strauss-test/symlinked-package';
+        $relative_symlinked_package_dir = $mainPackageDir . 'vendor/strauss-test/symlinked-package';
 
         $relative_symlinked_package_dir = str_replace(['/', '\\'], '/', $relative_symlinked_package_dir);
 
@@ -39,7 +38,15 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($main_package_dir . 'vendor_prefixed/strauss-test/symlinked-package/src/File.php'));
+        $filePathOfSymlinkLink = $mainPackageDir . 'vendor_prefixed/strauss-test/symlinked-package';
+        $this->assertFalse(
+            $this->getFileSystem()->exists($filePathOfSymlinkLink),
+            'Unexpected symlink present at ' . $filePathOfSymlinkLink
+        );
+        $this->assertTrue(
+            $this->getFileSystem()->directoryExists($symlinked_package_dir),
+            'Expected symlink target to exist at ' . $symlinked_package_dir
+        );
 
         $this->assertTrue($this->getFileSystem()->directoryExists($symlinked_package_dir));
         $this->assertFalse($this->getFileSystem()->directoryExists($relative_symlinked_package_dir));
