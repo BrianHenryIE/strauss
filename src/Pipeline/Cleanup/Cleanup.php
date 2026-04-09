@@ -261,6 +261,7 @@ class Cleanup
             }
 
             // Normal package.
+//            if (!$this->filesystem->isSymlinked($package->getPackageAbsolutePath())) {
             if ($this->filesystem->isSubDirOf($this->config->getVendorDirectory(), $package->getPackageAbsolutePath())) {
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 

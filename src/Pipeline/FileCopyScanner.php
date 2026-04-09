@@ -82,11 +82,12 @@ class FileCopyScanner
 
             $file->setDoCopy($copy);
 
-            $target = $copy && $file instanceof FileWithDependency
-                ? $this->config->getTargetDirectory() . $file->getVendorRelativePath()
-                : $file->getSourcePath();
-
-            $file->setAbsoluteTargetPath(FileSystem::normalizeDirSeparator($target));
+            if ($copy) {
+                $target = $file instanceof FileWithDependency
+                    ?  $this->config->getTargetDirectory() . $file->getDependency()->getRelativePath() . $file->getPackageRelativePath()
+                    : $file->getSourcePath();
+                $file->setAbsoluteTargetPath(FileSystem::normalizeDirSeparator($target));
+            }
 
             $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->filesystem->isSymlinked($file->getSourcePath());
             $file->setDoDelete($shouldDelete);
@@ -104,6 +105,8 @@ class FileCopyScanner
 //                    }
 //                }
 //            }
+            // To make step-debugging easier.
+            unset($copy, $target, $shouldDelete);
         };
     }
 

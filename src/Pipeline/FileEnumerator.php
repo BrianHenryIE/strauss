@@ -127,8 +127,6 @@ class FileEnumerator
                     FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath)
                 );
 
-            $f->setAbsoluteTargetPath(FileSystem::normalizeDirSeparator($this->config->getVendorDirectory() . $vendorRelativePath));
-
             $autoloaderType && $f->addAutoloader($autoloaderType);
             $f->setDoDelete($isOutsideProjectDir);
         } else {
