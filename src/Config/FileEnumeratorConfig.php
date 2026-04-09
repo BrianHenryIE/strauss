@@ -9,6 +9,8 @@ interface FileEnumeratorConfig
 
     public function getAbsoluteTargetDirectory(): string;
 
+    public function getRelativeTargetDirectory(): string;
+
     /** @return string[] */
     public function getExcludeNamespacesFromCopy(): array;
 
