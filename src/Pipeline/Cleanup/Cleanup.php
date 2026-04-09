@@ -214,7 +214,7 @@ class Cleanup
 
             foreach ($allFilePaths as $filePath) {
                 if ($this->filesystem->directoryExists($filePath)
-                    && $this->dirIsEmpty($filePath)
+                    && $this->filesystem->isDirectoryEmpty($filePath)
                 ) {
                     $this->logger->debug('Deleting empty directory ' . $filePath);
                     $this->filesystem->deleteDirectory($filePath);
@@ -230,17 +230,6 @@ class Cleanup
 //                $this->logger->debug('Skipping non-empty directory ' . $dirEntry->path());
 //            }
 //        }
-    }
-
-    /**
-     * TODO: Move to FileSystem class.
-     *
-     * @throws FilesystemException
-     */
-    protected function dirIsEmpty(string $dir): bool
-    {
-        // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
-        return empty($this->filesystem->listContents($dir)->toArray());
     }
 
     /**
@@ -304,7 +293,10 @@ class Cleanup
 
                 $package->setDidDelete(true);
             }
-            if ($this->dirIsEmpty(dirname($package->getPackageAbsolutePath()))) {
+            if ($this->filesystem->directoryExists(dirname($package->getPackageAbsolutePath()))
+                &&
+                $this->filesystem->isDirectoryEmpty(dirname($package->getPackageAbsolutePath()))
+            ) {
                 $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));
                 $this->filesystem->deleteDirectory(dirname($package->getPackageAbsolutePath()));
             }

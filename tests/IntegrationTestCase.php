@@ -117,6 +117,17 @@ class IntegrationTestCase extends TestCase
         }
 
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
+
+        /**
+         * Let's try enable passing an environmental variable so we can get better logs in GitHub Actions.
+         *
+         * `RENAMESPACER_LOG=debug vendor/bin/strauss` ~~ `strauss --debug` but only in tests.
+         */
+        $env_log_level = getenv('RENAMESPACER_LOG');
+        if (!empty($env_log_level)) {
+            $argv[] = '--' . strtolower(trim($env_log_level, '-'));
+        }
+
         $inputInterface = new ArgvInput($argv);
 
         $result = $strauss->run($inputInterface, $output);

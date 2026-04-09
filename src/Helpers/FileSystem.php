@@ -10,15 +10,15 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use BrianHenryIE\Strauss\Files\FileBase;
 use Elazar\Flystream\StripProtocolPathNormalizer;
-use League\Flysystem\DirectoryAttributes;
+use Exception;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
+use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 
 class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
@@ -29,19 +29,30 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
     protected PathNormalizer $normalizer;
 
+    protected PathPrefixer $pathPrefixer;
+
     protected string $workingDir;
 
     /**
      * TODO: maybe restrict the constructor to only accept a LocalFilesystemAdapter.
      *
      * TODO: Check are any of these methods unused
+     *
+     * @param FilesystemOperator $flysystem
+     * @param string $workingDir
+     * @param ?string $flysystemRoot In practice we always use the root of the drive which can be inferred from workingDir but that's not strictly required.
      */
-    public function __construct(FilesystemOperator $flysystem, string $workingDir)
+    public function __construct(FilesystemOperator $flysystem, string $workingDir, ?string $flysystemRoot = null)
     {
         $this->flysystem = $flysystem;
         $this->normalizer = new StripProtocolPathNormalizer('mem');
 
         $this->workingDir = $workingDir;
+
+        $this->pathPrefixer = new PathPrefixer(
+            $flysystemRoot ?? (str_contains(PHP_OS, 'WIN') ? preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $workingDir) : '/'),
+            DIRECTORY_SEPARATOR
+        );
     }
 
     /**
@@ -126,7 +137,9 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      */
     public function exists(string $location): bool
     {
-        return $this->fileExists($location) || $this->directoryExists($location);
+        return $this->fileExists($location)
+               || $this->directoryExists($location)
+               || false !== realpath($this->pathPrefixer->prefixPath($this->normalize($location)));
     }
 
     public function fileExists(string $location): bool
@@ -326,16 +339,18 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      * Check does the filepath point to a file outside the working directory.
      * If `realpath()` fails to resolve the path, assume it's a symlink.
      */
-    public function isSymlinkedFile(FileBase $file): bool
+    public function isSymlinked(string $path): bool
     {
-        $realpath = realpath($file->getSourcePath());
-        if ($realpath === false) {
-            return true; // Assume symlink if realpath fails
-        }
-        $realpath = self::normalizeDirSeparator($realpath);
-        $workingDir = self::normalizeDirSeparator($this->workingDir);
+        $path = $this->normalize($path);
+        $osPath = $this->pathPrefixer->prefixPath($path);
 
-        return ! str_starts_with($realpath, $workingDir);
+        $realpath = realpath($osPath);
+        if ($realpath !== $osPath) {
+            return true;
+        }
+        $workingDir = $this->normalize($this->workingDir);
+
+        return ! str_starts_with($path, $workingDir);
     }
 
     /**
@@ -378,5 +393,25 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         }
 
         return $normalized;
+    }
+
+    /**
+     * @throws FilesystemException
+     * @throws Exception
+     */
+    public function isDirectoryEmpty(string $dirPath): bool
+    {
+        if (!empty($this->listContents($dirPath)->toArray())) {
+            return false;
+        }
+
+        $fsPath = $this->pathPrefixer->prefixPath($this->normalize($dirPath) . DIRECTORY_SEPARATOR . '*');
+        $fsList = glob($fsPath);
+
+        if (false === $fsList) {
+            throw new Exception('glob() failed on ' . $fsPath);
+        }
+
+        return empty($fsList);
     }
 }

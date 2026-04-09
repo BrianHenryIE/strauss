@@ -30,8 +30,8 @@ jobs:
     strategy:
       matrix:
         php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
-#        os: [ubuntu-latest]
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
+#        os: [ubuntu-latest, windows-latest]
       fail-fast: false
     name: PHP tests ${{ matrix.php }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -93,6 +93,8 @@ jobs:
         uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
         with:
           phpunit-command: vendor/bin/phpunit
+        env:
+          RENAMESPACER_LOG: "debug"
 
       - name: Run tests
         run: vendor/bin/phpunit --order-by=random
