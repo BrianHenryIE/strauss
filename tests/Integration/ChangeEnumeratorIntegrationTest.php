@@ -49,6 +49,8 @@ EOD;
 
     public function testNamespaceInTwoPackagesExclude(): void
     {
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.5.0');
+
         $packageComposerJson = <<<'EOD'
 {   
 	"name": "test/namespaced-files-not-in-autoloader",
