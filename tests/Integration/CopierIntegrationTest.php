@@ -288,7 +288,7 @@ EOD;
 
         $mover->deleteTargetDirs($packages);
 
-        self::assertDirectoryDoesNotExist($this->testsWorkingDir . $this->config->getDepDirectory() . 'Pimple');
-        self::assertDirectoryDoesNotExist($this->testsWorkingDir . $this->config->getDepDirectory() . 'ezyang');
+        $this->assertFalse($this->getFileSystem()->directoryExists($this->testsWorkingDir . $this->config->getDepDirectory() . 'Pimple'));
+        $this->assertFalse($this->getFileSystem()->directoryExists($this->testsWorkingDir . $this->config->getDepDirectory() . 'ezyang'));
     }
 }
