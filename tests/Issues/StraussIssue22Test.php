@@ -111,6 +111,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/omnipay/common/src/Omnipay.php'));
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/omnipay/common/src/Omnipay.php');
     }
 }

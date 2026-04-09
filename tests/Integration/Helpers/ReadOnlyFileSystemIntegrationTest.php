@@ -32,7 +32,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $sut->write($target, $contents);
 
-        $this->assertFalse($this->getFileSystem()->fileExists($target));
+        $this->assertFileNotExistsInFileSystem($target);
     }
 
     // test writing a source file doesn't really write the file but does makes the changes available within
@@ -108,7 +108,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->assertCount(0, $sut->listContents($this->testsWorkingDir)->toArray());
 
         // And the file should still exist
-        $this->assertTrue($this->getFileSystem()->fileExists($aRealFile));
+        $this->assertFileExistsInFileSystem($aRealFile);
     }
 
     /**
@@ -133,7 +133,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->assertCount(2, $sut->listContents($this->testsWorkingDir)->toArray());
 
         // And the file should not actually exist
-        $this->assertFalse($this->getFileSystem()->fileExists($file2Path));
+        $this->assertFileNotExistsInFileSystem($file2Path);
     }
 
     public function test_copy():void
@@ -150,7 +150,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $this->assertEquals($contents, $sut->read($destination));
 
-        $this->assertFalse($this->getFileSystem()->fileExists($destination));
+        $this->assertFileNotExistsInFileSystem($destination);
     }
 
     /**
@@ -163,7 +163,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/'))));
 
-        $this->assertTrue($sut->directoryExists($newDir));
+        $this->assertTrue($sut->directoryExists($newDir), $newDir . ' should be visible to ReadOnlyFileSystem');
     }
 
     /**
@@ -178,7 +178,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $sut->deleteDirectory($newDir);
 
-        $this->assertTrue($this->getFileSystem()->directoryExists($newDir));
+        $this->assertTrue($this->getFileSystem()->directoryExists($newDir), $newDir . ' should still exist (ReadOnlyFileSystem should not delete directories)');
         $this->assertFalse($sut->directoryExists($newDir));
     }
 
@@ -193,7 +193,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $sut->createDirectory($newDir);
 
-        $this->assertFalse($this->getFileSystem()->directoryExists($newDir));
+        $this->assertDirectoryNotExistsInFileSystem($newDir);
         $this->assertTrue($sut->directoryExists($newDir));
     }
 }

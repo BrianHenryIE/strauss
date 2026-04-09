@@ -84,7 +84,7 @@ EOD;
 
         $copier->prepareTarget();
 
-        $this->assertFalse($this->getFileSystem()->fileExists($targetFile));
+        $this->assertFileNotExistsInFileSystem($targetFile);
     }
 
     public function testsCopy(): void
@@ -151,7 +151,7 @@ EOD;
 
         $copier->copy();
 
-        $this->assertTrue($this->getFileSystem()->fileExists($targetFile));
+        $this->assertFileExistsInFileSystem($targetFile);
     }
 
 
@@ -288,7 +288,7 @@ EOD;
 
         $mover->deleteTargetDirs($packages);
 
-        $this->assertFalse($this->getFileSystem()->directoryExists($this->testsWorkingDir . $this->config->getDepDirectory() . 'Pimple'));
-        $this->assertFalse($this->getFileSystem()->directoryExists($this->testsWorkingDir . $this->config->getDepDirectory() . 'ezyang'));
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . $this->config->getDepDirectory() . 'Pimple');
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . $this->config->getDepDirectory() . 'ezyang');
     }
 }

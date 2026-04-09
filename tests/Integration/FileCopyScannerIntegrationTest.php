@@ -104,8 +104,8 @@ EOD;
 
         $namespaces = $discoveredSymbols->getDiscoveredNamespaces();
 
-        self::assertNotEmpty($classes);
-        self::assertNotEmpty($namespaces);
+        self::assertNotEmpty($classes, 'Discovered classes should not be empty after scanning google/apiclient');
+        self::assertNotEmpty($namespaces, 'Discovered namespaces should not be empty after scanning google/apiclient');
 
         self::assertContains('Google_Task_Composer', $classes);
     }
@@ -154,6 +154,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/wordpress/mcp-adapter/phpunit.xml.dist'));
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/wordpress/mcp-adapter/phpunit.xml.dist');
     }
 }

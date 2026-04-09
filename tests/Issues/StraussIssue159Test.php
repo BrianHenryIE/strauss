@@ -48,6 +48,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/composer/platform_check.php'));
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/composer/platform_check.php');
     }
 }

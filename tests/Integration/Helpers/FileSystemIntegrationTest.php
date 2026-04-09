@@ -26,7 +26,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         mkdir($dir);
 
-        $this->assertTrue($fs->directoryExists($dir));
+        $this->assertTrue($fs->directoryExists($dir), $dir . ' directory should exist after mkdir');
         $this->assertFalse($fs->directoryExists($this->testsWorkingDir . 'nonexistent'));
     }
 

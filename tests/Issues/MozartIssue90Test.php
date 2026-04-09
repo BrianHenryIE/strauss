@@ -53,8 +53,8 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // This test would only fail on Windows?
-        $this->assertFalse($this->getFileSystem()->directoryExists($this->testsWorkingDir .'strauss/iio/libmergepdf/vendor/iio/libmergepdf/tcpdi'));
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir .'strauss/iio/libmergepdf/vendor/iio/libmergepdf/tcpdi');
 
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir .'vendor-prefixed/iio/libmergepdf/tcpdi/tcpdi.php'));
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'vendor-prefixed/iio/libmergepdf/tcpdi/tcpdi.php');
     }
 }

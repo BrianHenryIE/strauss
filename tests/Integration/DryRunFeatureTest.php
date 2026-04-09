@@ -90,8 +90,8 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php'));
-        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php'));
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
@@ -130,8 +130,8 @@ EOD;
 
         $this->runStrauss($output, $params);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor/league/container/src/Container.php'));
-        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php'));
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor/league/container/src/Container.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
@@ -173,7 +173,7 @@ EOD;
 
         $this->assertStringNotContainsString('Would copy', $output);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php'));
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/league/container/src/Container.php');
     }
 
     /**
@@ -211,7 +211,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/autoload.php'));
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
@@ -264,6 +264,6 @@ EOD;
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
 
-        $this->assertFalse($this->getFileSystem()->directoryExists($this->testsWorkingDir . 'vendor-prefixed'));
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed');
     }
 }

@@ -59,6 +59,6 @@ EOD;
 
         $found = $rsearch($this->testsWorkingDir . 'vendor-prefixed', '~EigenvalueDecomposition\.php~');
 
-        self::assertNotEmpty($found);
+        self::assertNotEmpty($found, 'EigenvalueDecomposition.php should have been found in vendor-prefixed directory');
     }
 }

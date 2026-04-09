@@ -79,6 +79,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php'));
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
     }
 }

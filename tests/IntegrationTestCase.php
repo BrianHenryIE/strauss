@@ -10,8 +10,10 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use Exception;
+use League\Flysystem\StorageAttributes;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Finder\Finder;
@@ -253,5 +255,80 @@ class IntegrationTestCase extends TestCase
                 ? $this->markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
                 : $this->markTestSkipped($message);
         }
+    }
+
+    protected function assertFileNotExistsInFileSystem(string $filePath, ?FileSystem $filesystem = null, ?string $message = null): void
+    {
+        $filesystem = $filesystem ?? $this->getFileSystem();
+        $result = $filesystem->fileExists($filePath);
+        $this->assertFalse(
+            $result,
+            $message ?? $filePath . ' should not exist.'
+        );
+    }
+
+    protected function assertFileExistsInFileSystem(string $filePath, ?FileSystem $filesystem = null, ?string $message = null): void
+    {
+        $filesystem = $filesystem ?? $this->getFileSystem();
+
+        $result = $filesystem->fileExists($filePath);
+
+        $append = $result ? '' : $this->getParentDirectoryAssertFailureMessagePart($filePath, $filesystem);
+
+        $this->assertTrue(
+            $result,
+            $message ?? $filePath . ' should exist' . $append
+        );
+    }
+
+    protected function assertDirectoryNotExistsInFileSystem(string $directoryPath, ?FileSystem $filesystem = null, ?string $message = null): void
+    {
+        $filesystem = $filesystem ?? $this->getFileSystem();
+        $result = $filesystem->directoryExists($directoryPath);
+        $this->assertFalse(
+            $result,
+            $message ?? $directoryPath . ' should not exist.'
+        );
+    }
+
+    protected function assertDirectoryExistsInFileSystem(string $directoryPath, ?FileSystem $filesystem = null, ?string $message = null): void
+    {
+        $filesystem = $filesystem ?? $this->getFileSystem();
+
+        $result = $filesystem->directoryExists($directoryPath);
+
+        $append = $result ? '' : $this->getParentDirectoryAssertFailureMessagePart($directoryPath, $filesystem);
+
+        $this->assertTrue(
+            $result,
+            $message ?? $directoryPath . ' should exist' . $append
+        );
+    }
+
+    /**
+     * E.g. ", its parent directory does not exist".
+     * E.g. ", its parent directory contains: file1.php, file2.php, file3.php +6".
+     *
+     * @param string $path
+     * @param FileSystem $filesystem
+     */
+    protected function getParentDirectoryAssertFailureMessagePart(string $path, FileSystem $filesystem): string
+    {
+        $append = '';
+        $parentDir = dirname($path);
+        if (! $filesystem->directoryExists($parentDir)) {
+            $append .= ', its parent directory does not exist';
+        } else {
+            $parentDirList        = $filesystem->listContents($parentDir)->toArray();
+            $parentDirListStrings = array_map(
+                fn(StorageAttributes $dirEntry) => basename($dirEntry->path()) . ( $dirEntry->type() === 'dir' ? '/' : '' ),
+                $parentDirList
+            );
+            $append               .= ', its parent directory contains: ' . implode(', ', array_slice($parentDirListStrings, 0, 3));
+            if (count($parentDirList) > 3) {
+                $append .= ' +' . ( count($parentDirList) - 3 );
+            }
+        }
+        return $append;
     }
 }

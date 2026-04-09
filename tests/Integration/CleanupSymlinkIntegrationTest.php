@@ -60,8 +60,8 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
             'Expected symlink target to exist at ' . $targetPathOfSymlinkLink
         );
 
-        $this->assertTrue($this->getFileSystem()->directoryExists($symlinked_package_dir));
-        $this->assertFalse($this->getFileSystem()->directoryExists($relative_symlinked_package_dir));
+        $this->assertDirectoryExistsInFileSystem($symlinked_package_dir);
+        $this->assertDirectoryNotExistsInFileSystem($relative_symlinked_package_dir);
     }
 
     private function packageComposerFile(): string

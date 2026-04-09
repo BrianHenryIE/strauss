@@ -51,11 +51,11 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php'));
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Strauss\\Issue143\\Psr\\Log;', $phpString);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed/autoload.php'));
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
 
         $installedJsonString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString('"name": "psr/log",', $installedJsonString);
@@ -119,7 +119,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         $filePath = $this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php';
-        $this->assertFalse($this->getFileSystem()->fileExists($filePath), 'File should not exist at: ' . $filePath);
+        $this->assertFileNotExistsInFileSystem($filePath);
     }
 
     /**

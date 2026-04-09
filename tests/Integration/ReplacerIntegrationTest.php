@@ -319,7 +319,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($expectedTargetFilePath), 'Expected file does not exist at: ' . $expectedTargetFilePath);
+        $this->assertFileExistsInFileSystem($expectedTargetFilePath);
         $updatedFile = $this->getFileSystem()->read($expectedTargetFilePath);
         $this->assertStringContainsString('extends Mpdf', $updatedFile);
     }

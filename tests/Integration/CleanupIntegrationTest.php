@@ -135,7 +135,7 @@ EOD;
         $autoloadStaticPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/autoload_static.php');
         $this->assertStringNotContainsString("__DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php'", $autoloadStaticPhp);
 
-        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir .'vendor/composer/autoload_files.php'));
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir .'vendor/composer/autoload_files.php');
 
         $autoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("\$vendorDir . '/symfony/polyfill-php80/bootstrap.php'", $autoloadFilesPhp);
@@ -176,8 +176,8 @@ EOD;
         exec('composer install');
 
         // Pre-condition: both packages exist before Strauss
-        $this->assertTrue($this->getFileSystem()->directoryExists($this->testsWorkingDir . '/vendor/psr/log'));
-        $this->assertTrue($this->getFileSystem()->directoryExists($this->testsWorkingDir . '/vendor/psr/container'));
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/container');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);

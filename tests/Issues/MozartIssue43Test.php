@@ -65,6 +65,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir .'vendor-prefixed/aws/aws-sdk-php/src/AWS/Common/Aws.php'));
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'vendor-prefixed/aws/aws-sdk-php/src/AWS/Common/Aws.php');
     }
 }
