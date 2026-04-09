@@ -18,6 +18,7 @@ class StraussIssue261Test extends IntegrationTestCase
 
     public function test_skip_missing_dir(): void
     {
+        $this->markTestSkippedOnPhpVersionBelow('8.1.0');
 
         $composerJsonString = <<<'EOD'
 {

@@ -50,7 +50,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         $this->workingDir = $workingDir;
 
         $this->pathPrefixer = new PathPrefixer(
-            $flysystemRoot ?? str_contains(PHP_OS, 'WIN') ? preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $workingDir) : '/',
+            $flysystemRoot ?? (str_contains(PHP_OS, 'WIN') ? preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $workingDir) : '/'),
             DIRECTORY_SEPARATOR
         );
     }
@@ -414,6 +414,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
     /**
      * @throws FilesystemException
+     * @throws Exception
      */
     public function isDirectoryEmpty(string $dirPath): bool
     {
