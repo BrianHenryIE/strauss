@@ -124,7 +124,7 @@ class DumpAutoload
         $config->merge($projectComposerConfigMergeArray);
 
         $generator = new ComposerAutoloadGenerator(
-            $this->config->getNamespacePrefix(),
+            $this->config->getNamespacePrefix() ?? $this->config->getProjectDirectory(),
             $composer->getEventDispatcher()
         );
         $isOptimize = $this->isOptimizeAutoloaderEnabled();
@@ -218,7 +218,7 @@ class DumpAutoload
         $newInstalledPhpString = "<?php return $installedArrayString;";
 
         // Update `__DIR__` which was evaluated during the `include`/`eval`.
-        $newInstalledPhpString = preg_replace('/(\'install_path\' => )(.*)(\/\.\..*)/', "$1__DIR__ . '$3", $newInstalledPhpString);
+        $newInstalledPhpString = preg_replace('/(\'install_path\' => )(.*)(\/\.\..*)/', "$1__DIR__ . '$3", $newInstalledPhpString) ?? $newInstalledPhpString;
 
         $this->filesystem->write($this->config->getTargetDirectory() . '/composer/installed.php', $newInstalledPhpString);
     }

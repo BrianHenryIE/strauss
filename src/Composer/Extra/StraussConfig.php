@@ -263,19 +263,20 @@ class StraussConfig implements
         // * Use PSR-0 autoloader key
         // * Use the package name
         if (! isset($this->namespacePrefix)) {
-            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4'])) {
+            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4']) && !empty($composer->getPackage()->getAutoload()['psr-4'])) {
                 $this->setNamespacePrefix(array_key_first($composer->getPackage()->getAutoload()['psr-4']));
-            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0'])) {
+            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0']) && !empty($composer->getPackage()->getAutoload()['psr-0'])) {
                 $this->setNamespacePrefix(array_key_first($composer->getPackage()->getAutoload()['psr-0']));
             } elseif (isset($composer) && '__root__' !== $composer->getPackage()->getName()) {
                 $packageName = $composer->getPackage()->getName();
-                $namespacePrefix = preg_replace('/[^\w\/]+/', '_', $packageName);
+                // Replace all non-word characters with underscores.
+                $namespacePrefix = preg_replace('/[^\w\/]+/', '_', $packageName) ?? $packageName;
                 $namespacePrefix = str_replace('/', '\\', $namespacePrefix) . '\\';
                 $namespacePrefix = preg_replace_callback('/(?<=^|_|\\\\)[a-z]/', function ($match) {
                     return strtoupper($match[0]);
-                }, $namespacePrefix);
+                }, $namespacePrefix) ?? $namespacePrefix;
                 $this->setNamespacePrefix($namespacePrefix);
-            } elseif (isset($this->classmapPrefix)) {
+            } elseif (isset($this->classmapPrefix) && !empty($this->getClassmapPrefix())) {
                 $namespacePrefix = rtrim($this->getClassmapPrefix(), '_');
                 $this->setNamespacePrefix($namespacePrefix);
             }

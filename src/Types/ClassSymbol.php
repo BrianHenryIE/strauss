@@ -64,6 +64,9 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
 
         while (str_starts_with($fqdnOriginalSymbol, $class_prefix) && $class_prefix !== $fqdnOriginalSymbol) {
             $fqdnOriginalSymbol = preg_replace('/^'.preg_quote($class_prefix).'/', '', $fqdnOriginalSymbol);
+            if (is_null($fqdnOriginalSymbol)) {
+                return $this->fqdnOriginalSymbol;
+            }
         }
 
         return $fqdnOriginalSymbol;
