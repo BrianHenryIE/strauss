@@ -14,6 +14,8 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
      */
     public function testEnsureNoRemovalOfSymlinks(): void
     {
+        $this->markTestSkippedOnWindows('symlinks');
+
         $main_package_dir = $this->testsWorkingDir . 'main-package/';
         $symlinked_package_dir = $this->testsWorkingDir . 'symlinked-package/';
 
