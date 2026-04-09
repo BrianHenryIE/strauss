@@ -17,7 +17,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
     {
         $fs = new Filesystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/'))
             ),
             $this->testsWorkingDir
         );
@@ -37,7 +37,7 @@ class FileSystemIntegrationTest extends IntegrationTestCase
     {
         $fs = new Filesystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/'))
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/'))
             ),
             $this->testsWorkingDir
         );

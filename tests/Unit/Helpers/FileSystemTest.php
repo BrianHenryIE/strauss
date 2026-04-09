@@ -23,7 +23,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -40,7 +40,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -68,7 +68,7 @@ class FileSystemTest extends TestCase
         
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -91,7 +91,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -113,7 +113,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -141,7 +141,7 @@ class FileSystemTest extends TestCase
         
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -160,7 +160,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -186,7 +186,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -215,7 +215,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -242,7 +242,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', getcwd()) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
