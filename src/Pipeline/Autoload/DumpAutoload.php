@@ -83,7 +83,7 @@ class DumpAutoload
         }
 
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
-        Config::$defaultConfig['vendor-dir'] = $this->config->getTargetDirectory();
+        Config::$defaultConfig['vendor-dir'] = $this->config->getRelativeTargetDirectory();
 
         $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
 
