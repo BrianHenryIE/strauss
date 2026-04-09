@@ -17,7 +17,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 class FileEnumeratorIntegrationTest extends IntegrationTestCase
 {
 
-    public function testBuildFileList()
+    public function testBuildFileList(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -69,10 +69,10 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $filePath = $this->getFileSystem()->normalize($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php');
+        $filePath = $this->getFileSystem()->osPathPrefix($this->getFileSystem()->normalize($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php'));
         $this->assertNotNull(
             $files->getFile($filePath),
-            'File ' . $filePath . ' not in $files array'
+            'File ' . $filePath . ' should be in $files array'
         );
     }
 
