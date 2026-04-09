@@ -267,6 +267,7 @@ class Cleanup
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
 
                 $package->setDidDelete(true);
+//            } elseif($this->filesystem->isSymlinked($package->getPackageAbsolutePath())) {
             } else {
                 // TODO: log _where_ the symlink is pointing to.
                 $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
@@ -286,9 +287,12 @@ class Cleanup
                      * @see https://www.php.net/manual/en/function.is-link.php#113263
                      * @see https://stackoverflow.com/a/18262809/336146
                      */
-//                    rmdir($symlinkPath);
-                    (new \Composer\Util\Filesystem())->unlink($symlinkPath);
-
+                    try {
+                        (new \Composer\Util\Filesystem())->unlink($symlinkPath);
+                    } catch (\RuntimeException $exception) {
+                        $this->logger->warning('Failed to remove symlink at ' . $symlinkPath);
+                        $this->logger->warning('Please submit a PR to fix Windows symlink support.');
+                    }
                 } else {
                     unlink($symlinkPath);
                 }
