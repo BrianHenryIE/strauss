@@ -197,7 +197,7 @@ class Cleanup
         }
         $rootSourceDirectories = array_map(
             function (string $path): string {
-                return $this->config->getAbsoluteVendorDirectory() . $path;
+                return $this->config->getAbsoluteVendorDirectory() . '/' . $path;
             },
             array_keys($rootSourceDirectories)
         );
