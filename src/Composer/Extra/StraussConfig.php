@@ -376,14 +376,6 @@ class StraussConfig implements
     }
 
     /**
-     * Default 'vendor-prefixed'.
-     */
-    public function getRelativeTargetDirectory(): string
-    {
-        return trim($this->targetDirectory, '\\/');
-    }
-
-    /**
      * @param string $targetDirectory
      */
     public function setTargetDirectory(string $targetDirectory): void
