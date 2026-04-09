@@ -51,9 +51,16 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         $this->workingDir = $workingDir;
 
         $this->pathPrefixer = new PathPrefixer(
-            $flysystemRoot ?? (str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $workingDir) ?? 'c:\\') : '/'),
+            $flysystemRoot ?? $this->getFsRoot(),
             DIRECTORY_SEPARATOR
         );
+    }
+
+    protected function getFsRoot(): string
+    {
+        return str_contains(PHP_OS, 'WIN')
+            ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->workingDir) ?? 'c:\\')
+            : '/';
     }
 
     /**
@@ -387,11 +394,6 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         return $this->normalizer->normalizePath($path);
     }
 
-    public function osPathPrefix(string $path): string
-    {
-        return str_replace('mem:/', 'mem://', $this->pathPrefixer->prefixPath($path));
-    }
-
     /**
      * Normalize a path and ensure it's absolute.
      *
@@ -416,6 +418,15 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         }
 
         return $normalized;
+    }
+
+    public function osPathPrefix(string $path): string
+    {
+        if (str_starts_with($path, $this->getFsRoot())) {
+            return $path;
+        }
+
+        return str_replace('mem:/', 'mem://', $this->pathPrefixer->prefixPath($path));
     }
 
     /**
