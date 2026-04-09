@@ -39,8 +39,8 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
 
         $this->assertTrue($this->getFileSystem()->fileExists($main_package_dir . 'vendor_prefixed/strauss-test/symlinked-package/src/File.php'));
 
-        self::assertDirectoryExists($symlinked_package_dir);
-        self::assertDirectoryDoesNotExist($relative_symlinked_package_dir);
+        $this->assertTrue($this->getFileSystem()->directoryExists($symlinked_package_dir));
+        $this->assertFalse($this->getFileSystem()->directoryExists($relative_symlinked_package_dir));
     }
 
     private function packageComposerFile(): string
