@@ -405,12 +405,14 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      */
     public function makeAbsolute(string $path): string
     {
-        $normalized = $this->normalizer->normalizePath($path);
+        $normalizedPath = self::normalizeDirSeparator($path);
+        $normalizedRoot = self::normalizeDirSeparator($this->getFsRoot());
 
-        // Windows paths start with drive letter (e.g., 'C:/' or 'D:\')
-        if (preg_match('/^[a-zA-Z]:/', $normalized)) {
-            return $normalized;
+        if (str_starts_with($normalizedPath, $normalizedRoot)) {
+            return $path;
         }
+
+        $normalized = $this->normalizer->normalizePath($path);
 
         // Unix paths need leading slash
         if (!str_starts_with($normalized, '/')) {
