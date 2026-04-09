@@ -185,8 +185,6 @@ EOD;
         $this->assertFalse($this->getFileSystem()->directoryExists(
             $this->testsWorkingDir . '/vendor/psr/container',
         ), 'Non-excluded package psr/container should be deleted from vendor/');
-            'Non-excluded package psr/container should be deleted from vendor/'
-        );
 
         $vendorInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
         $vendorInstalledPackageNames = $this->extractPackageNamesFromInstalledJson($vendorInstalledJson);
