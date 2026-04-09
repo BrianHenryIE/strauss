@@ -104,11 +104,20 @@ class DependenciesEnumerator
                 $this->config->getVendorDirectory(),
                 $requiredPackageName
             );
-            $packageComposerFile = str_replace('mem://', '/', $packageComposerFile);
+
+            /**
+             * 1. Remove `mem://`
+             * 2. Add `c:\` or `/`
+             * @see https://github.com/composer/composer/pull/12396
+             */
+            $packageComposerFile = $this->filesystem->normalize($packageComposerFile);
+            $packageComposerFile = $this->filesystem->osPathPrefix($packageComposerFile);
 
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
             if ($this->filesystem->fileExists($packageComposerFile)) {
+                $this->logger->debug('Loading ComposerPackage::fromFile ' . $packageComposerFile);
+
                 $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
             } else {
                 // Some packages download with NO `composer.json`! E.g. woocommerce/action-scheduler.
