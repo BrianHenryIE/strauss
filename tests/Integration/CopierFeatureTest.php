@@ -109,7 +109,11 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify custom target directory is created
-        $this->assertTrue($this->getFileSystem()->directoryExists($this->testsWorkingDir . 'custom-lib'));
+        $expectedDir = $this->testsWorkingDir . 'custom-lib';
+        $this->assertTrue(
+            $this->getFileSystem()->directoryExists($expectedDir),
+            'Missing ' . $expectedDir
+        );
 
         // Verify files are copied to custom directory
         $this->assertTrue($this->getFileSystem()->directoryExists($this->testsWorkingDir . 'custom-lib/psr/log'));
