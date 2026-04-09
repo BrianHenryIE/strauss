@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
+use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
@@ -187,5 +188,12 @@ class TestCase extends \PHPUnit\Framework\TestCase
         }
 
         return $this->testLogger;
+    }
+
+    protected function markTestSkippedOnWindows(string $message = 'Skipped on Windows'): void
+    {
+        if (Platform::isWindows()) {
+            $this->markTestSkipped($message);
+        }
     }
 }
