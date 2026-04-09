@@ -69,7 +69,11 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $this->assertNotNull($files->getFile(FileSystem::normalizeDirSeparator($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php')));
+        $filePath = $this->getFileSystem()->normalize($workingDir . 'vendor/' . 'google/apiclient/src/aliases.php');
+        $this->assertNotNull(
+            $files->getFile($filePath),
+            'File ' . $filePath . ' not in $files array'
+        );
     }
 
     public function test_exclude_from_classmap(): void
