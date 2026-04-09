@@ -303,7 +303,7 @@ class StraussConfig implements
                 $classmapPrefix = str_replace("\\", "_", $classmapPrefix);
                 $this->setClassmapPrefix($classmapPrefix);
             } elseif (isset($this->namespacePrefix)) {
-                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $this->getNamespacePrefix());
+                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $this->getNamespacePrefix()) ?? str_replace('\\', '_', $this->getNamespacePrefix());
                 $classmapPrefix = rtrim($classmapPrefix, '_') . '_';
                 $this->setClassmapPrefix($classmapPrefix);
             }
@@ -433,7 +433,7 @@ class StraussConfig implements
 
     public function getFunctionsPrefix(): ?string
     {
-        if (!isset($this->functionsPrefix)) {
+        if (!isset($this->functionsPrefix) && !is_null($this->getClassmapPrefix())) {
             return strtolower($this->getClassmapPrefix());
         }
         if (empty($this->functionsPrefix)) {

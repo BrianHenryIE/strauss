@@ -299,12 +299,15 @@ class Cleanup
 
                 $package->setDidDelete(true);
             }
-            if ($this->filesystem->directoryExists(dirname($package->getPackageAbsolutePath()))
+            $packageParentDir = dirname($package->getPackageAbsolutePath());
+            if ($packageParentDir
                 &&
-                $this->filesystem->isDirectoryEmpty(dirname($package->getPackageAbsolutePath()))
+                $this->filesystem->directoryExists($packageParentDir)
+                 &&
+                 $this->filesystem->isDirectoryEmpty($packageParentDir)
             ) {
-                $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));
-                $this->filesystem->deleteDirectory(dirname($package->getPackageAbsolutePath()));
+                $this->logger->info('Deleting empty directory ' . $packageParentDir);
+                $this->filesystem->deleteDirectory($packageParentDir);
             }
         }
     }
