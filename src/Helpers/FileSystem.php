@@ -343,13 +343,13 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      */
     public function isSymlinked(string $path): bool
     {
-        $path = $this->normalize($path);
+        $normalizedPath = $this->normalize($path);
 
-        if (!$this->exists($path)) {
-            throw new Exception('Path "'.$path.'" does not exist.');
+        if (!$this->exists($normalizedPath)) {
+            throw new Exception('Path "' . $path . '" "' . $normalizedPath . '" does not exist.');
         }
 
-        $osPath = $this->pathPrefixer->prefixPath($path);
+        $osPath = $this->pathPrefixer->prefixPath($normalizedPath);
 
         if (is_link($osPath)) {
             return true;
@@ -358,7 +358,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         $realpath = realpath($osPath);
 
         if (false === $realpath) {
-            throw new Exception('Path "'.$path.'" does not exist.');
+            throw new Exception('Path "' . $path . '" "' . $normalizedPath . '" "' . $osPath . '" does not exist.');
         }
 
         if ($realpath !== $osPath) {
@@ -367,7 +367,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
         $workingDir = $this->normalize($this->workingDir);
 
-        return ! str_starts_with($path, $workingDir);
+        return ! str_starts_with($normalizedPath, $workingDir);
     }
 
     /**
