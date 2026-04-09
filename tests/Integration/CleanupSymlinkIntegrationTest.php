@@ -37,15 +37,27 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
+        // The symlink should be removed
 
-        $filePathOfSymlinkLink = $mainPackageDir . 'vendor_prefixed/strauss-test/symlinked-package';
-        $this->assertFalse(
-            $this->getFileSystem()->exists($filePathOfSymlinkLink),
-            'Unexpected symlink present at ' . $filePathOfSymlinkLink
-        );
+        // The contents should be copied
+        $copiedPathOfSymlinkContents = $mainPackageDir . 'vendor_prefixed/strauss-test/symlinked-package';
         $this->assertTrue(
-            $this->getFileSystem()->directoryExists($symlinked_package_dir),
-            'Expected symlink target to exist at ' . $symlinked_package_dir
+            $this->getFileSystem()->directoryExists($copiedPathOfSymlinkContents),
+            'Expected copied contents to exist at ' . $copiedPathOfSymlinkContents
+        );
+
+        // The symlink itself should be removed
+        $locationPathOfSymlinkLink = $mainPackageDir . 'vendor/strauss-test/symlinked-package';
+        $this->assertFalse(
+            $this->getFileSystem()->exists($locationPathOfSymlinkLink),
+            'Unexpected symlink present at ' . $locationPathOfSymlinkLink
+        );
+
+        // The symlink target should remain.
+        $targetPathOfSymlinkLink = $mainPackageDir . '../symlinked-package';
+        $this->assertTrue(
+            $this->getFileSystem()->directoryExists($targetPathOfSymlinkLink),
+            'Expected symlink target to exist at ' . $targetPathOfSymlinkLink
         );
 
         $this->assertTrue($this->getFileSystem()->directoryExists($symlinked_package_dir));
