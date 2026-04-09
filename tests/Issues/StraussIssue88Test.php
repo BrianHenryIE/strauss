@@ -28,9 +28,7 @@ class StraussIssue88Test extends IntegrationTestCase
   },
   "config": {
     "audit": {
-      "ignore": {
-        "PKSA-dxyf-6n16-t87m": "We are not running prod"
-      }
+      "block-insecure": false
     }
   },
   "extra": {

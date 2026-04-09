@@ -146,7 +146,7 @@ EOD;
 
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
-        $config->expects('getExcludePackagesFromCopy')->once()->andReturn([]);
+        $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
 //        $config->expects('getTargetDirectory')->times(1)->andReturn('mem://vendor-prefixed/');
 
         $sut = new InstalledJson(
@@ -198,7 +198,7 @@ EOD;
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
         $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed/');
-        $config->expects('getExcludePackagesFromCopy')->once()->andReturn([]);
+        $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
 
         $sut = new InstalledJson(
             $config,
@@ -295,7 +295,7 @@ EOD;
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects('getVendorDirectory')->atLeast()->once()->andReturn('mem://vendor/');
         $config->expects('getTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed/');
-        $config->expects('getExcludePackagesFromCopy')->once()->andReturn([]);
+        $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
 
         $sut = new InstalledJson(
             $config,
@@ -325,5 +325,91 @@ EOD;
 
         $this->assertStringContainsString('"BrianHenryIE\\\\Tests\\\\Psr\\\\Log\\\\": ""', $fileSystem->read('vendor-prefixed/composer/installed.json'));
         $this->assertStringNotContainsString('"Psr\\\\Log\\\\": ""', $fileSystem->read('vendor-prefixed/composer/installed.json'));
+    }
+
+    /**
+     * @covers ::copyInstalledJson
+     * @covers ::cleanTargetDirInstalledJson
+     * @covers ::cleanupVendorInstalledJson
+     */
+    public function test_excluded_package_removed_from_target_installed_json_but_retained_in_vendor_installed_json(): void
+    {
+        $installedJson = <<<'EOD'
+{
+    "packages": [
+        {
+            "name": "psr/log",
+            "version": "1.1.4",
+            "version_normalized": "1.1.4.0",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Log\\": ""
+                }
+            },
+            "install-path": "../psr/log"
+        }
+    ],
+    "dev": false,
+    "dev-package-names": []
+}
+EOD;
+
+        $fileSystem = $this->getInMemoryFileSystem();
+        $fileSystem->createDirectory('vendor/composer');
+        $fileSystem->createDirectory('vendor/psr/log');
+        $fileSystem->write('vendor/psr/log/LoggerInterface.php', '<?php');
+        $fileSystem->write('vendor/composer/installed.json', $installedJson);
+
+        $config = Mockery::mock(CleanupConfigInterface::class);
+        $config->shouldReceive('getVendorDirectory')->andReturn('mem://vendor/');
+        $config->shouldReceive('getTargetDirectory')->andReturn('mem://vendor-prefixed/');
+        $config->shouldReceive('getExcludePackagesFromCopy')->andReturn(['psr/log']);
+
+        $sut = new InstalledJson(
+            $config,
+            $fileSystem,
+            new NullLogger()
+        );
+
+        /** @var ComposerPackage|MockInterface $composerPackageMock */
+        $composerPackageMock = Mockery::mock(ComposerPackage::class);
+        $composerPackageMock->shouldReceive('didCopy')->andReturnFalse();
+        $composerPackageMock->shouldReceive('didDelete')->andReturnFalse();
+
+        /** @var array<string,ComposerPackage> $flatDependencyTree */
+        $flatDependencyTree = ['psr/log' => $composerPackageMock];
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $sut->copyInstalledJson();
+        $sut->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
+        $sut->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
+
+        $vendorInstalledJson = $fileSystem->read('vendor/composer/installed.json');
+        $vendorInstalledPackageNames = $this->extractPackageNamesFromInstalledJson($vendorInstalledJson);
+        $this->assertContains('psr/log', $vendorInstalledPackageNames);
+
+        $targetInstalledJson = $fileSystem->read('vendor-prefixed/composer/installed.json');
+        $targetInstalledPackageNames = $this->extractPackageNamesFromInstalledJson($targetInstalledJson);
+        $this->assertNotContains('psr/log', $targetInstalledPackageNames);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function extractPackageNamesFromInstalledJson(string $installedJson): array
+    {
+        $installedJsonArray = json_decode($installedJson, true);
+
+        $this->assertIsArray($installedJsonArray, 'installed.json should decode to an array');
+        $this->assertArrayHasKey('packages', $installedJsonArray, 'installed.json should contain packages');
+        $this->assertIsArray($installedJsonArray['packages']);
+
+        return array_values(array_filter(array_map(
+            static fn(array $package): ?string => $package['name'] ?? null,
+            $installedJsonArray['packages']
+        )));
     }
 }

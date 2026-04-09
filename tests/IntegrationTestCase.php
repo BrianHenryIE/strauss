@@ -10,12 +10,10 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
-use BrianHenryIE\Strauss\TestCase;
 use Elazar\Flystream\FilesystemRegistry;
 use Exception;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -102,7 +100,16 @@ class IntegrationTestCase extends TestCase
                 $strauss = new DependenciesCommand();
         }
 
-        $this->logger && $strauss->setLogger($this->logger);
+        $strauss->setLogger($this->getLogger());
+
+        // TODO: I don't know what I did to break the previous colorlogger output so this is just a crutch.
+        $output = new class() extends BufferedOutput {
+            protected function doWrite(string $message, bool $newline)
+            {
+                parent::doWrite($message, $newline);
+                echo $message . PHP_EOL;
+            }
+        };
 
         foreach (array_filter(explode(' ', $env)) as $pair) {
             $kv = explode('=', $pair);
@@ -112,11 +119,9 @@ class IntegrationTestCase extends TestCase
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
         $inputInterface = new ArgvInput($argv);
 
-        $bufferedOutput = new BufferedOutput(OutputInterface::VERBOSITY_NORMAL);
+        $result = $strauss->run($inputInterface, $output);
 
-        $result = $strauss->run($inputInterface, $bufferedOutput);
-
-        $allOutput = $bufferedOutput->fetch();
+        $allOutput = $output->fetch();
 
         return $result;
     }

@@ -688,7 +688,7 @@ EOD;
         self::assertEqualsRN($expected, $result);
     }
 
-    public function testClassExtendsNamspacedClassIsPrefixed()
+    public function testClassExtendsNamespacedClassIsPrefixed()
     {
 
         $contents = 'class BarcodeException extends \Mpdf\MpdfException';

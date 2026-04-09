@@ -16,6 +16,7 @@ use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -40,6 +41,7 @@ class StraussConfig implements
     FileSymbolScannerConfigInterface,
     FileEnumeratorConfig,
     FileCopyScannerConfigInterface,
+    OptimizeAutoloaderConfigInterface,
     PrefixerConfigInterface,
     ReplaceConfigInterface
 {
@@ -139,6 +141,13 @@ class StraussConfig implements
     protected array $excludeFromPrefix = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
 
     /**
+     * Exclude constants from prefixing only (same shape as exclude_from_prefix).
+     *
+     * @var array{packages: string[], namespaces: string[], file_patterns: string[], constants: string[]}
+     */
+    protected array $excludeConstants = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array(),'constants'=>array());
+
+    /**
      * An array of autoload keys to replace packages' existing autoload key.
      *
      * e.g. when
@@ -193,6 +202,11 @@ class StraussConfig implements
      * Should the root autoload be included when generating the strauss autoloader?
      */
     protected bool $includeRootAutoload = false;
+
+    /**
+     * Should Composer autoload generation be optimized and classmap authoritative?
+     */
+    protected bool $optimizeAutoloader = true;
 
     /**
      * Read any existing Mozart config.
@@ -568,6 +582,59 @@ class StraussConfig implements
         return $this->excludeFromPrefix['file_patterns'] ?? array();
     }
 
+    /**
+     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>, constants?:array<string>} $excludeConstants
+     */
+    public function setExcludeConstants(array $excludeConstants): void
+    {
+        if (isset($excludeConstants['packages'])) {
+            $this->excludeConstants['packages'] = $excludeConstants['packages'];
+        }
+        if (isset($excludeConstants['namespaces'])) {
+            $this->excludeConstants['namespaces'] = $excludeConstants['namespaces'];
+        }
+        if (isset($excludeConstants['file_patterns'])) {
+            $this->excludeConstants['file_patterns'] = $excludeConstants['file_patterns'];
+        }
+        if (isset($excludeConstants['constants'])) {
+            $this->excludeConstants['constants'] = $excludeConstants['constants'];
+        }
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludePackagesFromConstantPrefixing(): array
+    {
+        return $this->excludeConstants['packages'] ?? [];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeNamespacesFromConstantPrefixing(): array
+    {
+        return array_map(
+            fn(string $ns) => trim($ns, '\\/'),
+            $this->excludeConstants['namespaces'] ?? []
+        );
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFilePatternsFromConstantPrefixing(): array
+    {
+        return $this->excludeConstants['file_patterns'] ?? [];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeConstantNames(): array
+    {
+        return $this->excludeConstants['constants'] ?? [];
+    }
 
     /**
      * @return array{}|array<string, array{files?:array<string>,classmap?:array<string>,"psr-4":array<string|array<string>>}> $overrideAutoload Dictionary of package name: autoload rules.
@@ -766,12 +833,22 @@ class StraussConfig implements
         return $this->includeRootAutoload;
     }
 
+    public function isOptimizeAutoloader(): bool
+    {
+        return $this->optimizeAutoloader;
+    }
+
     /**
      * @param bool $includeRootAutoload Include the project root autoload in the strauss autoloader.
      */
     public function setIncludeRootAutoload(bool $includeRootAutoload): void
     {
         $this->includeRootAutoload = $includeRootAutoload;
+    }
+
+    public function setOptimizeAutoloader(bool $optimizeAutoloader): void
+    {
+        $this->optimizeAutoloader = $optimizeAutoloader;
     }
 
     /**
