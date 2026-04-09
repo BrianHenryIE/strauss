@@ -36,8 +36,12 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      * TODO: maybe restrict the constructor to only accept a LocalFilesystemAdapter.
      *
      * TODO: Check are any of these methods unused
+     *
+     * @param FilesystemOperator $flysystem
+     * @param string $workingDir
+     * @param ?string $flysystemRoot In practice we always use the root of the drive which can be inferred from workingDir but that's not strictly required.
      */
-    public function __construct(FilesystemOperator $flysystem, string $workingDir)
+    public function __construct(FilesystemOperator $flysystem, string $workingDir, ?string $flysystemRoot = null)
     {
         $this->flysystem = $flysystem;
         $this->normalizer = new StripProtocolPathNormalizer('mem');
@@ -45,8 +49,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         $this->workingDir = $workingDir;
 
         $this->pathPrefixer = new PathPrefixer(
-	        $workingDir,
-//            str_contains(PHP_OS, 'WIN') ? preg_replace('/^([a-zA-Z]+:)[\\\/].*/', '$1\\', $workingDir) : '/',
+            $flysystemRoot ?? str_contains(PHP_OS, 'WIN') ? preg_replace('/^([a-zA-Z]+:)[\\\/].*/', '$1\\', $workingDir) : '/',
             DIRECTORY_SEPARATOR
         );
     }
@@ -344,7 +347,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         if ($realpath !== $osPath) {
             return true;
         }
-        $workingDir = self::normalizeDirSeparator($this->workingDir);
+        $workingDir = $this->normalize($this->workingDir);
 
         return ! str_starts_with($path, $workingDir);
     }
