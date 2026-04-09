@@ -40,7 +40,9 @@ class IntegrationTestCase extends TestCase
 
         $this->projectDir = getcwd();
 
-        $this->testsWorkingDir = sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'));
+        $this->testsWorkingDir = FileSystem::normalizeDirSeparator(
+            sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'))
+        );
 
         $this->logger = new ColorLogger();
 

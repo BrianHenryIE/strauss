@@ -422,7 +422,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
     public function osPathPrefix(string $path): string
     {
-        if (str_starts_with($path, $this->getFsRoot())) {
+        $normalizedPath = self::normalizeDirSeparator($path);
+        $normalizedRoot = self::normalizeDirSeparator($this->getFsRoot());
+
+        if (str_starts_with($normalizedPath, $normalizedRoot)) {
             return $path;
         }
 
