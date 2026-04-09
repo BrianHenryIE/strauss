@@ -156,7 +156,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify no vendor-prefixed directory is created
-        $this->assertFalse($this->getFileSystem()->fileExists($this->testsWorkingDir . 'vendor-prefixed'));
+        $this->assertFalse($this->getFileSystem()->directoryExists($this->testsWorkingDir . 'vendor-prefixed'));
 
         // Verify files are modified in place (namespaces prefixed)
         $modifiedContent = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
