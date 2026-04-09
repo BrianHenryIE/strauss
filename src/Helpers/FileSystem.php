@@ -11,6 +11,7 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use Elazar\Flystream\StripProtocolPathNormalizer;
+use Exception;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemException;
@@ -336,17 +337,34 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
 
     /**
      * Check does the filepath point to a file outside the working directory.
-     * If `realpath()` fails to resolve the path, assume it's a symlink.
+     *
+     * @throws FilesystemException
+     * @throws Exception
      */
     public function isSymlinked(string $path): bool
     {
         $path = $this->normalize($path);
+
+        if (!$this->exists($path)) {
+            throw new Exception('Path "'.$path.'" does not exist.');
+        }
+
         $osPath = $this->pathPrefixer->prefixPath($path);
 
+        if (is_link($osPath)) {
+            return true;
+        }
+
         $realpath = realpath($osPath);
+
+        if (false === $realpath) {
+            throw new Exception('Path "'.$path.'" does not exist.');
+        }
+
         if ($realpath !== $osPath) {
             return true;
         }
+
         $workingDir = $this->normalize($this->workingDir);
 
         return ! str_starts_with($path, $workingDir);
@@ -407,7 +425,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         $fsList = glob($fsPath);
 
         if (false === $fsList) {
-            throw new \Exception('glob() failed on ' . $fsPath);
+            throw new Exception('glob() failed on ' . $fsPath);
         }
 
         return empty($fsList);
