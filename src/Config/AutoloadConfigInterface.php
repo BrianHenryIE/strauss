@@ -20,6 +20,8 @@ interface AutoloadConfigInterface
      */
     public function getTargetDirectory(): string;
 
+    public function getRelativeTargetDirectory(): string;
+
     /**
      * The directory containing `composer.json`.
      */
