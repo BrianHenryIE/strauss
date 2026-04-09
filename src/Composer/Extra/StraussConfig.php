@@ -368,11 +368,13 @@ class StraussConfig implements
     }
 
     /**
-     * Default 'vendor-prefixed'.
+     * Default 'vendor-prefixed'. No leading or trailing slash.
      */
     public function getRelativeTargetDirectory(): string
     {
-        return trim($this->targetDirectory, '\\/');
+        return FileSystem::normalizeDirSeparator(
+            trim($this->targetDirectory, '\\/')
+        );
     }
 
     /**
