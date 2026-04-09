@@ -458,8 +458,11 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
         if (isset($this->projectComposerPackage->getAutoload()['classmap'])
             && in_array(
-                $this->config->getAbsoluteTargetDirectory() . '/', // TODO: check this.
-                $this->projectComposerPackage->getAutoload()['classmap'],
+                $this->config->getAbsoluteTargetDirectory(),
+                array_map(
+                    fn(string $entry) => trim($entry, '\\/'),
+                    $this->projectComposerPackage->getAutoload()['classmap']
+                ),
                 true
             )
         ) {
