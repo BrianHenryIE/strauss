@@ -86,13 +86,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected function getNewFileSystem(): Filesystem
     {
         $localFilesystemAdapter = new LocalFilesystemAdapter(
-            '/',
+            FileSystem::getFsRoot(),
             null,
             LOCK_EX,
             LocalFilesystemAdapter::SKIP_LINKS
         );
 
-        $normalizer = new WhitespacePathNormalizer();
+        $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
 
         return new FileSystem(
             new \League\Flysystem\Filesystem(
@@ -100,9 +100,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ],
-                $normalizer
+                Filesystem::makePathNormalizer($workingDir)
             ),
-            isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd()
+            $workingDir
         );
     }
 
