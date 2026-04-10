@@ -64,6 +64,19 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         return '/';
     }
 
+    public static function makePathNormalizer(string $workingDir): PathNormalizer
+    {
+        return new StripProtocolPathNormalizer(
+            [
+                'mem',
+                '/',
+                FileSystem::getFsRoot($workingDir),
+                FileSystem::normalizeDirSeparator(FileSystem::getFsRoot($workingDir)),
+            ],
+            new StripFsRootPathNormalizer()
+        );
+    }
+
     /**
      * Normalize directory separators to forward slashes.
      *
