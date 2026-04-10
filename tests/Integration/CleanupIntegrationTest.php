@@ -29,7 +29,7 @@ class CleanupIntegrationTest extends IntegrationTestCase
             $this->assertEquals(0, $exitCode, implode(PHP_EOL, $output));
             $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
             $config = new StraussConfig($composer);
-            $filesystem = new FileSystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/'))), $this->testsWorkingDir);
+            $filesystem = $this->getFileSystem();
             $cleanup = new Cleanup($config, $filesystem, $this->logger);
             $cleanup->rebuildVendorAutoloader();
             $autoloadRealPath = $this->testsWorkingDir . '/vendor/composer/autoload_real.php';

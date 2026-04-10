@@ -48,7 +48,7 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
             $psrLogPackage = ComposerPackage::fromFile($this->testsWorkingDir . '/vendor/psr/log/composer.json');
             $config->setPackagesToCopy(['psr/log' => $psrLogPackage]);
             $config->setPackagesToPrefix(['psr/log' => $psrLogPackage]);
-            $filesystem = new FileSystem(new \League\Flysystem\Filesystem(new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/'))), $this->testsWorkingDir);
+            $filesystem = $this->getFileSystem();
             $dumpAutoload = new DumpAutoload($config, $filesystem, $this->logger, new Prefixer($config, $filesystem, $this->logger), new FileEnumerator($config, $filesystem, $this->logger));
             $dumpAutoload->generatedPrefixedAutoloader();
             $autoloadRealPath = $this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php';
