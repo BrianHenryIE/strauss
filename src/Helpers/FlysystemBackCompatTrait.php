@@ -16,9 +16,9 @@ trait FlysystemBackCompatTrait
     // directoryExists
     public function directoryExists(string $location): bool
     {
-        $normalizer = new WhitespacePathNormalizer();
-        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
-        $location = $normalizer->normalizePath($location);
+        if (method_exists($this, 'normalizePath')) {
+            $location = $this->normalizePath($location);
+        }
 
         if (method_exists($this->flysystem, 'directoryExists')) {
             return $this->flysystem->directoryExists($location);

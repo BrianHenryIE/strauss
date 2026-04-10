@@ -140,7 +140,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
         // TODO: check if `realpath()` is a bad idea here.
         $fileDirectory = realpath(dirname($absolutePath)) ?: dirname($absolutePath);
 
-        $absolutePath = $this->normalizer->normalizePath($absolutePath);
+        $absolutePath = $this->normalizePath($absolutePath);
 
         // Unsupported symbolic link encountered at location //home
         // \League\Flysystem\SymbolicLinkEncountered
@@ -161,34 +161,34 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     {
         return $this->fileExists($location)
                || $this->directoryExists($location)
-               || false !== realpath($this->pathPrefixer->prefixPath($this->normalize($location)));
+               || false !== realpath($this->pathPrefixer->prefixPath($this->normalizePath($location)));
     }
 
     public function fileExists(string $location): bool
     {
         return $this->flysystem->fileExists(
-            $this->normalizer->normalizePath($location)
+            $this->normalizePath($location)
         );
     }
 
     public function read(string $location): string
     {
         return $this->flysystem->read(
-            $this->normalizer->normalizePath($location)
+            $this->normalizePath($location)
         );
     }
 
     public function readStream(string $location)
     {
         return $this->flysystem->readStream(
-            $this->normalizer->normalizePath($location)
+            $this->normalizePath($location)
         );
     }
 
     public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
     {
         return $this->flysystem->listContents(
-            $this->normalizer->normalizePath($location),
+            $this->normalizePath($location),
             $deep
         );
     }
@@ -196,28 +196,28 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function lastModified(string $path): int
     {
         return $this->flysystem->lastModified(
-            $this->normalizer->normalizePath($path)
+            $this->normalizePath($path)
         );
     }
 
     public function fileSize(string $path): int
     {
         return $this->flysystem->fileSize(
-            $this->normalizer->normalizePath($path)
+            $this->normalizePath($path)
         );
     }
 
     public function mimeType(string $path): string
     {
         return $this->flysystem->mimeType(
-            $this->normalizer->normalizePath($path)
+            $this->normalizePath($path)
         );
     }
 
     public function visibility(string $path): string
     {
         return $this->flysystem->visibility(
-            $this->normalizer->normalizePath($path)
+            $this->normalizePath($path)
         );
     }
 
@@ -228,7 +228,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function write(string $location, string $contents, array $config = []): void
     {
         $this->flysystem->write(
-            $this->normalizer->normalizePath($location),
+            $this->normalizePath($location),
             $contents,
             $config
         );
@@ -241,7 +241,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function writeStream(string $location, $contents, array $config = []): void
     {
         $this->flysystem->writeStream(
-            $this->normalizer->normalizePath($location),
+            $this->normalizePath($location),
             $contents,
             $config
         );
@@ -250,7 +250,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function setVisibility(string $path, string $visibility): void
     {
         $this->flysystem->setVisibility(
-            $this->normalizer->normalizePath($path),
+            $this->normalizePath($path),
             $visibility
         );
     }
@@ -258,14 +258,14 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function delete(string $location): void
     {
         $this->flysystem->delete(
-            $this->normalizer->normalizePath($location)
+            $this->normalizePath($location)
         );
     }
 
     public function deleteDirectory(string $location): void
     {
         $this->flysystem->deleteDirectory(
-            $this->normalizer->normalizePath($location)
+            $this->normalizePath($location)
         );
     }
 
@@ -276,7 +276,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function createDirectory(string $location, array $config = []): void
     {
         $this->flysystem->createDirectory(
-            $this->normalizer->normalizePath($location),
+            $this->normalizePath($location),
             $config
         );
     }
@@ -288,8 +288,8 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function move(string $source, string $destination, array $config = []): void
     {
         $this->flysystem->move(
-            $this->normalizer->normalizePath($source),
-            $this->normalizer->normalizePath($destination),
+            $this->normalizePath($source),
+            $this->normalizePath($destination),
             $config
         );
     }
@@ -301,8 +301,8 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function copy(string $source, string $destination, array $config = []): void
     {
         $this->flysystem->copy(
-            $this->normalizer->normalizePath($source),
-            $this->normalizer->normalizePath($destination),
+            $this->normalizePath($source),
+            $this->normalizePath($destination),
             $config
         );
     }
@@ -318,8 +318,8 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      */
     public function getRelativePath(string $fromAbsoluteDirectory, string $toAbsolutePath): string
     {
-        $fromAbsoluteDirectory = $this->normalizer->normalizePath($fromAbsoluteDirectory);
-        $toAbsolutePath = $this->normalizer->normalizePath($toAbsolutePath);
+        $fromAbsoluteDirectory = $this->normalizePath($fromAbsoluteDirectory);
+        $toAbsolutePath = $this->normalizePath($toAbsolutePath);
 
         $fromDirectoryParts = array_filter(explode('/', $fromAbsoluteDirectory));
         $toPathParts = array_filter(explode('/', $toAbsolutePath));
@@ -398,8 +398,8 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function isSubDirOf(string $dir, string $subDir): bool
     {
         return str_starts_with(
-            $this->normalizer->normalizePath($subDir),
-            $this->normalizer->normalizePath($dir)
+            $this->normalizePath($subDir),
+            $this->normalizePath($dir)
         );
     }
 
@@ -426,7 +426,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             return $path;
         }
 
-        $normalized = $this->normalizer->normalizePath($path);
+        $normalized = $this->normalizePath($path);
 
         // Unix paths need leading slash
         if (!str_starts_with($normalized, '/')) {
