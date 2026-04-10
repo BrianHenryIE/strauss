@@ -110,7 +110,7 @@ class DependenciesEnumerator
              * 2. Add `c:\` or `/`
              * @see https://github.com/composer/composer/pull/12396
              */
-            $packageComposerFile = $this->filesystem->normalize($packageComposerFile);
+            $packageComposerFile = $this->filesystem->normalizePath($packageComposerFile);
             $packageComposerFile = $this->filesystem->osPathPrefix($packageComposerFile);
 
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;

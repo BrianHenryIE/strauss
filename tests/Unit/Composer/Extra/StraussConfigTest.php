@@ -86,7 +86,7 @@ EOD;
         self::assertContains('pimple/pimple', $sut->getPackages());
 
         self::assertEqualsRN(
-            $this->getFileSystem()->normalize(getcwd() . '/target_directory'),
+            $this->getFileSystem()->normalizePath(getcwd() . '/target_directory'),
             $sut->getAbsoluteTargetDirectory()
         );
 
@@ -197,7 +197,7 @@ EOD;
         $sut = new StraussConfig($composer);
 
         self::assertEqualsRN(
-            $this->getFileSystem()->normalize(getcwd() . '/vendor-prefixed'),
+            $this->getFileSystem()->normalizePath(getcwd() . '/vendor-prefixed'),
             $sut->getAbsoluteTargetDirectory()
         );
     }
@@ -618,7 +618,7 @@ EOD;
         self::assertContains('pimple/pimple', $sut->getPackages());
 
         self::assertEqualsRN(
-            $this->getFileSystem()->normalize(getcwd() . '/dep_directory'),
+            $this->getFileSystem()->normalizePath(getcwd() . '/dep_directory'),
             $sut->getAbsoluteTargetDirectory()
         );
 

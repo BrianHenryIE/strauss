@@ -21,7 +21,7 @@ use League\Flysystem\PathNormalizer;
 use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 
-class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
+class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, PathNormalizer
 {
     use FlysystemBackCompatTrait;
 
@@ -365,7 +365,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
      */
     public function isSymlinked(string $path): bool
     {
-        $normalizedPath = $this->normalize($path);
+        $normalizedPath = $this->normalizePath($path);
 
         if (!$this->exists($normalizedPath)) {
             throw new Exception('Path "' . $path . '" "' . $normalizedPath . '" does not exist.');
@@ -387,7 +387,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             return true;
         }
 
-        $workingDir = $this->normalize($this->workingDir);
+        $workingDir = $this->normalizePath($this->workingDir);
 
         return ! str_starts_with($normalizedPath, $workingDir);
     }
@@ -403,7 +403,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
         );
     }
 
-    public function normalize(string $path): string
+    public function normalizePath(string $path): string
     {
         return $this->normalizer->normalizePath($path);
     }
@@ -458,7 +458,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface
             return false;
         }
 
-        $fsPath = $this->pathPrefixer->prefixPath($this->normalize($dirPath) . DIRECTORY_SEPARATOR . '*');
+        $fsPath = $this->pathPrefixer->prefixPath($this->normalizePath($dirPath) . DIRECTORY_SEPARATOR . '*');
         $fsList = glob($fsPath);
 
         if (false === $fsList) {
