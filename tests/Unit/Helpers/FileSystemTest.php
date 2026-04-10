@@ -23,7 +23,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -40,7 +42,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -68,10 +72,12 @@ class FileSystemTest extends TestCase
         
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot($unixWorkingDir)
+                ),
                 [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                    ]
             ),
             $unixWorkingDir
         );
@@ -95,8 +101,8 @@ class FileSystemTest extends TestCase
                     'c:\\'
                 ),
                 [
-                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ]
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ]
             ),
             'c:\\whatever'
         );
@@ -142,10 +148,12 @@ class FileSystemTest extends TestCase
     {
         // Use a Unix-style working directory to test Unix behavior
         $unixWorkingDir = '/home/user/project/';
-        
+
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    '/'
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -164,7 +172,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -190,7 +200,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -219,7 +231,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -246,7 +260,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter((str_contains(PHP_OS, 'WIN') ? (preg_replace('/^([a-zA-Z]+:)[\/].*/', '$1\\', $this->testsWorkingDir) ?? 'c:\\') : '/')),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
