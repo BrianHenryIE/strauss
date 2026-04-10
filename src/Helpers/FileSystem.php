@@ -43,15 +43,19 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      * @param string $workingDir
      * @param ?string $flysystemRoot In practice we always use the root of the drive which can be inferred from workingDir but that's not strictly required.
      */
-    public function __construct(FilesystemOperator $flysystem, string $workingDir, ?string $flysystemRoot = null)
-    {
+    public function __construct(
+        FilesystemOperator $flysystem,
+        string $workingDir,
+        ?string $flysystemRoot = null
+    ) {
         $this->flysystem = $flysystem;
-        $this->normalizer = new StripProtocolPathNormalizer('mem');
+
+        $this->normalizer = self::makePathNormalizer($workingDir);
 
         $this->workingDir = $workingDir;
 
         $this->pathPrefixer = new PathPrefixer(
-            $flysystemRoot ?? $this->getFsRoot(),
+            $flysystemRoot ?? self::getFsRoot($workingDir),
             DIRECTORY_SEPARATOR
         );
     }
