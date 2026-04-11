@@ -2,13 +2,11 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Util\Platform;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * Class CleanupIntegrationTest
