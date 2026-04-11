@@ -428,11 +428,11 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             return $path;
         }
 
-		$prefixed = $this->pathPrefixer->prefixPath($this->normalizePath($path));
+        $prefixed = $this->pathPrefixer->prefixPath($this->normalizePath($path));
 
-		if( $this->flysystem instanceof ReadOnlyFileSystem ) {
-			return str_replace(':/', '://', $prefixed);
-		}
+        if ($this->flysystem instanceof ReadOnlyFileSystem) {
+            return str_replace(':/', '://', $prefixed);
+        }
 
         return $prefixed;
     }
