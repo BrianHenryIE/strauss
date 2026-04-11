@@ -343,10 +343,6 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             str_repeat('../', count($fromDirectoryParts))
             . implode('/', $toPathParts);
 
-//        if ($this->directoryExists($toAbsolutePath)) {
-//            $relativePath .= '/';
-//        }
-
         return rtrim($relativePath, '\\/');
     }
 
@@ -381,13 +377,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             return true;
         }
 
-        $realpath = realpath($osPath);
-
-        if (false === $realpath) {
-            throw new Exception('Path "' . $path . '" "' . $normalizedPath . '" "' . $osPath . '" does not exist.');
-        }
-
-        if ($realpath !== $osPath) {
+        if (realpath($osPath) !== $osPath) {
             return true;
         }
 
