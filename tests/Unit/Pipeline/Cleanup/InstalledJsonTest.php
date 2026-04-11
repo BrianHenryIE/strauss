@@ -147,7 +147,7 @@ EOD;
         $config = Mockery::mock(CleanupConfigInterface::class);
         $config->expects('getAbsoluteVendorDirectory')->atLeast()->once()->andReturn('vendor');
         $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
-//        $config->expects('getAbsoluteTargetDirectory')->times(1)->andReturn('mem://vendor-prefixed');
+        $config->shouldReceive('isDryRun')->andReturnFalse();
 
         $sut = new InstalledJson(
             $config,
@@ -199,6 +199,7 @@ EOD;
         $config->expects('getAbsoluteVendorDirectory')->atLeast()->once()->andReturn('mem://vendor');
         $config->expects('getAbsoluteTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed');
         $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
+        $config->shouldReceive('isDryRun')->andReturnFalse();
 
         $sut = new InstalledJson(
             $config,
@@ -296,6 +297,7 @@ EOD;
         $config->expects('getAbsoluteVendorDirectory')->atLeast()->once()->andReturn('mem://vendor');
         $config->expects('getAbsoluteTargetDirectory')->atLeast()->once()->andReturn('mem://vendor-prefixed');
         $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
+        $config->shouldReceive('isDryRun')->andReturnFalse();
 
         $sut = new InstalledJson(
             $config,
@@ -366,6 +368,7 @@ EOD;
         $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('mem://vendor');
         $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('mem://vendor-prefixed');
         $config->shouldReceive('getExcludePackagesFromCopy')->andReturn(['psr/log']);
+        $config->shouldReceive('isDryRun')->andReturnFalse();
 
         $sut = new InstalledJson(
             $config,
