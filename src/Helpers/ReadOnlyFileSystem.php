@@ -324,7 +324,11 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         }
 
         /** @var FileSystemReader $filesystem */
-        $parentDirectoryContents = $filesystem->listContents(dirname($location), false);
+        $parentDirectoryContents = $filesystem->listContents(
+            $this->pathNormalizer->normalizePath(dirname($location)),
+            false
+        );
+
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
             if ($entry->path() == $location) {
