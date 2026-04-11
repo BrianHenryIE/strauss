@@ -154,7 +154,11 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
         $this->logger->notice('Loading package...');
 
-        $composerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/' . Factory::getComposerFile());
+        $composerFilePath = $this->filesystem->makeAbsolute(
+            $this->filesystem->normalizePath(
+                $this->workingDir . '/' . Factory::getComposerFile()
+            )
+        );
         $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/composer.json');
         if ($composerFilePath !== $defaultComposerFilePath) {
             $this->logger->info('Using: ' . $composerFilePath);
