@@ -423,33 +423,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      */
     public function makeAbsolute(string $path): string
     {
-        $normalizedPath = self::normalizeDirSeparator($path);
-        $normalizedRoot = self::normalizeDirSeparator($this->getFsRoot());
-
-        if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
-            return $path;
-        }
-
-        $normalized = $this->normalizePath($path);
-
-        // Unix paths need leading slash
-        if (!str_starts_with($normalized, '/')) {
-            return '/' . $normalized;
-        }
-
-        return $normalized;
-    }
-
-    public function osPathPrefix(string $path): string
-    {
-        $normalizedPath = self::normalizeDirSeparator($path);
-        $normalizedRoot = self::normalizeDirSeparator($this->getFsRoot());
-
-        if (str_starts_with($normalizedPath, $normalizedRoot)) {
-            return $path;
-        }
-
-        return str_replace('mem:/', 'mem://', $this->pathPrefixer->prefixPath($path));
+        return $this->pathPrefixer->prefixPath($this->normalizePath($path));
     }
 
     /**

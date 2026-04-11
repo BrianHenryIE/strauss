@@ -111,7 +111,7 @@ class DependenciesEnumerator
              * @see https://github.com/composer/composer/pull/12396
              */
             $packageComposerFile = $this->filesystem->normalizePath($packageComposerFile);
-            $packageComposerFile = $this->filesystem->osPathPrefix($packageComposerFile);
+            $packageComposerFile = $this->filesystem->makeAbsolute($packageComposerFile);
 
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 

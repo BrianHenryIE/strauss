@@ -86,7 +86,7 @@ class DumpAutoload
         Config::$defaultConfig['vendor-dir'] = $this->config->getRelativeTargetDirectory();
 
         $projectComposerJson = new JsonFile(
-            $this->filesystem->osPathPrefix(
+            $this->filesystem->makeAbsolute(
                 $this->config->getProjectDirectory() . '/'.Factory::getComposerFile()
             )
         );
@@ -139,7 +139,7 @@ class DumpAutoload
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
 
         $installedJsonFile = new JsonFile(
-            $this->filesystem->osPathPrefix($this->config->getAbsoluteTargetDirectory() . '/composer/installed.json')
+            $this->filesystem->makeAbsolute($this->config->getAbsoluteTargetDirectory() . '/composer/installed.json')
         );
         /** @var array{dev?:bool} $installedJson */
         $installedJson = $installedJsonFile->read();

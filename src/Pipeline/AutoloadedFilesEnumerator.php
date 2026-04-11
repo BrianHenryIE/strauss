@@ -124,7 +124,7 @@ class AutoloadedFilesEnumerator
                             continue;
                         }
                         $classMapGenerator->scanPaths(
-                            $this->filesystem->osPathPrefix($autoloadKeyPath),
+                            $this->filesystem->makeAbsolute($autoloadKeyPath),
                             $excluded,
                             $autoloadType,
                             $namespace,
@@ -150,7 +150,7 @@ class AutoloadedFilesEnumerator
                                 continue;
                             }
                             $classMapGenerator->scanPaths(
-                                $this->filesystem->osPathPrefix($autoloadKeyPath),
+                                $this->filesystem->makeAbsolute($autoloadKeyPath),
                                 $excluded,
                                 $autoloadType,
                                 $namespace,

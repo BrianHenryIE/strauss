@@ -100,7 +100,7 @@ class InstalledJson
         $installedJsonFile = new JsonFile(
             sprintf(
                 '%s/composer/installed.json',
-                $this->filesystem->osPathPrefix($vendorDir)
+                $this->filesystem->makeAbsolute($vendorDir)
             )
         );
         if (!$installedJsonFile->exists()) {

@@ -126,7 +126,7 @@ class Cleanup
         }
 
         $projectComposerJson = new JsonFile(
-            $this->filesystem->osPathPrefix(
+            $this->filesystem->makeAbsolute(
                 $this->config->getProjectDirectory() . '/composer.json'
             )
         );
@@ -142,7 +142,7 @@ class Cleanup
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
         $installedJson = new JsonFile(
-            $this->filesystem->osPathPrefix(
+            $this->filesystem->makeAbsolute(
                 $this->config->getAbsoluteVendorDirectory() . '/composer/installed.json'
             )
         );
@@ -283,7 +283,7 @@ class Cleanup
                 $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
 
                 // If it's a symlink, remove the symlink in the directory
-                $symlinkPath = $this->filesystem->osPathPrefix(
+                $symlinkPath = $this->filesystem->makeAbsolute(
                     FileSystem::normalizeDirSeparator(rtrim(
                         $this->config->getAbsoluteVendorDirectory() . '/' . $package->getRelativePath(),
                         '/'
