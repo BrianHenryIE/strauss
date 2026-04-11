@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\StripProtocolPathNormalizer;
@@ -120,20 +121,26 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
-
         $inMemoryFilesystem = new \BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter();
 
         $normalizer = new WhitespacePathNormalizer();
         $normalizer = new StripProtocolPathNormalizer([ 'mem' ], $normalizer);
 
+        $leagueFilesystem = new \League\Flysystem\Filesystem(
+            $inMemoryFilesystem,
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            $normalizer
+        );
+
+        $readonlyFilesystem = new ReadOnlyFileSystem(
+            $leagueFilesystem,
+            Filesystem::makePathNormalizer(getcwd())
+        );
+
         $filesystem = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                $inMemoryFilesystem,
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ],
-                $normalizer
-            ),
+            $readonlyFilesystem,
             'mem://',
             'mem://'
         );
