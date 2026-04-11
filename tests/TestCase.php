@@ -86,10 +86,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewFileSystem(): Filesystem
     {
-	    $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
+        $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
 
-	    $localFilesystemAdapter = new LocalFilesystemAdapter(
-            FileSystem::getFsRoot($this->testsWorkingDir),
+        $localFilesystemAdapter = new LocalFilesystemAdapter(
+            FileSystem::getFsRoot($workingDir),
             null,
             LOCK_EX,
             LocalFilesystemAdapter::SKIP_LINKS
