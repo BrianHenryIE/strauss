@@ -77,7 +77,15 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
                 FileSystem::getFsRoot($workingDir),
                 FileSystem::normalizeDirSeparator(FileSystem::getFsRoot($workingDir)),
             ],
-            new StripFsRootPathNormalizer()
+            new StripFsRootPathNormalizer(
+                [
+                    FileSystem::getFsRoot($workingDir),
+                    Filesystem::getFsRoot(),
+                    Filesystem::normalizeDirSeparator(FileSystem::getFsRoot()),
+                    'c:\\',
+                    'c:/',
+                ]
+            )
         );
     }
 
@@ -413,7 +421,20 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      */
     public function makeAbsolute(string $path): string
     {
-        return $this->pathPrefixer->prefixPath($this->normalizePath($path));
+        $normalizedPath = self::normalizeDirSeparator($path);
+        $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->workingDir));
+
+        if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
+            return $path;
+        }
+
+		$prefixed = $this->pathPrefixer->prefixPath($this->normalizePath($path));
+
+		if( $this->flysystem instanceof ReadOnlyFileSystem ) {
+			return str_replace(':/', '://', $prefixed);
+		}
+
+        return $prefixed;
     }
 
     /**
