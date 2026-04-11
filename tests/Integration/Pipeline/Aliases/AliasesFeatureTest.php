@@ -124,6 +124,8 @@ EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
+        $this->assertFileExists($this->testsWorkingDir . '/composer.json', 'Flysystem did not write: ' . $this->testsWorkingDir . '/composer.json');
+
         chdir($this->testsWorkingDir);
 
         exec('composer install');
