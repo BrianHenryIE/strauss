@@ -23,7 +23,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $source = $this->testsWorkingDir . '/source.php';
         $this->getFileSystem()->write($source, 'source');
 
-	    $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
         $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter($fsRoot)));
 
         $target = $this->testsWorkingDir . '/target.php';
