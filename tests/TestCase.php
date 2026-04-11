@@ -4,14 +4,14 @@ namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
-use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\WhitespacePathNormalizer;
+use League\Flysystem\Filesystem as FlysystemFileSystem;
 use Mockery;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
@@ -96,7 +96,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
 
         return new FileSystem(
-            new \League\Flysystem\Filesystem(
+            new FlysystemFileSystem(
                 $localFilesystemAdapter,
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
@@ -121,12 +121,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
-        $inMemoryFilesystem = new \BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter();
+        $inMemoryFilesystem = new InMemoryFilesystemAdapter();
 
-        $normalizer = new WhitespacePathNormalizer();
-        $normalizer = new StripProtocolPathNormalizer([ 'mem' ], $normalizer);
+        $normalizer = FileSystem::makePathNormalizer('/');
 
-        $leagueFilesystem = new \League\Flysystem\Filesystem(
+        $leagueFilesystem = new FlysystemFileSystem(
             $inMemoryFilesystem,
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
