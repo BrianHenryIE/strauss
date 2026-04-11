@@ -73,9 +73,6 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
         return new StripProtocolPathNormalizer(
             [
                 'mem',
-                '/',
-                FileSystem::getFsRoot($workingDir),
-                FileSystem::normalizeDirSeparator(FileSystem::getFsRoot($workingDir)),
             ],
             new StripFsRootPathNormalizer(
                 [
@@ -99,9 +96,11 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      *
      * @param string|false|null $path
      */
-    public static function normalizeDirSeparator($path): string
+    public static function normalizeDirSeparator($path, $slashTo = '/'): string
     {
-        return str_replace('\\', '/', $path ?: '');
+        $slashFrom = $slashTo = '/' ? '\\' : '/';
+
+        return str_replace($slashFrom, $slashTo, $path ?: '');
     }
 
     /**
@@ -425,7 +424,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
         $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->workingDir));
 
         if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
-            return $path;
+            return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
         }
 
         $prefixed = $this->pathPrefixer->prefixPath($this->normalizePath($path));
@@ -434,7 +433,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             return str_replace(':/', '://', $prefixed);
         }
 
-        return $prefixed;
+        return self::normalizeDirSeparator($prefixed, DIRECTORY_SEPARATOR);
     }
 
     /**
