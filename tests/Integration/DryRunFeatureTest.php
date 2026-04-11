@@ -4,7 +4,6 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
-use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
@@ -92,6 +91,7 @@ EOD;
 
         $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor/league/container/src/Container.php');
         $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/league/container/src/Container.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
 
         $hashesAfter = $this->getDirectoryMd5s($this->testsWorkingDir);
         $this->assertEqualsDirectoryHashes($hashesBefore, $hashesAfter);
@@ -128,7 +128,8 @@ EOD;
 
         $hashesBefore = $this->getDirectoryMd5s($this->testsWorkingDir);
 
-        $this->runStrauss($output, $params);
+        $exitCode = $this->runStrauss($output, $params);
+        $this->assertEquals(0, $exitCode, $output);
 
         $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor/league/container/src/Container.php');
         $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/league/container/src/Container.php');
@@ -169,7 +170,8 @@ EOD;
 
         $params = '--dry-run=false';
 
-        $this->runStrauss($output, $params);
+        $exitCode = $this->runStrauss($output, $params);
+        $this->assertEquals(0, $exitCode, $output);
 
         $this->assertStringNotContainsString('Would copy', $output);
 
@@ -220,7 +222,7 @@ EOD;
     /**
      * Composer
      *
-     * @see Cleanup\InstalledJson::cleanupVendorInstalledJson()
+     * @see InstalledJson::cleanupVendorInstalledJson()
      */
     public function test_composer_files_not_modified(): void
     {

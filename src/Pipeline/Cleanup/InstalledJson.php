@@ -104,10 +104,12 @@ class InstalledJson
             )
         );
         if (!$installedJsonFile->exists()) {
-            $this->logger->error(
-                'Expected {installedJsonFilePath} does not exist.',
-                ['installedJsonFilePath' => $installedJsonFile->getPath()]
-            );
+            if (!$this->config->isDryRun()) {
+                $this->logger->error(
+                    'Expected {installedJsonFilePath} does not exist.',
+                    [ 'installedJsonFilePath' => $installedJsonFile->getPath() ]
+                );
+            }
             throw new Exception('Expected vendor*/composer/installed.json does not exist.');
         }
 
@@ -468,8 +470,15 @@ class InstalledJson
         $this->logger->debug('InstalledJson::cleanTargetDirInstalledJson()');
 
         $targetDir = $this->config->getAbsoluteTargetDirectory();
-
-        $installedJsonFile = $this->getJsonFile($targetDir);
+        try {
+            $installedJsonFile = $this->getJsonFile($targetDir);
+        } catch (Exception $e) {
+            if ($this->config->isDryRun()) {
+                $installedJsonFile = $this->getJsonFile($this->config->getAbsoluteVendorDirectory());
+            } else {
+                throw $e;
+            }
+        }
 
         /**
          * @var InstalledJsonArray $installedJsonArray
@@ -511,7 +520,9 @@ class InstalledJson
 
         $this->logger->info('Writing installed.json to ' . $targetDir);
 
-        $installedJsonFile->write($installedJsonArray);
+        if (!$this->config->isDryRun()) {
+            $installedJsonFile->write($installedJsonArray);
+        }
 
         $this->logger->info('Installed.json written to ' . $targetDir);
 
@@ -555,7 +566,9 @@ class InstalledJson
         // Only relevant when source = target.
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
-        $vendorInstalledJsonFile->write($installedJsonArray);
+        if (!$this->config->isDryRun()) {
+            $vendorInstalledJsonFile->write($installedJsonArray);
+        }
 
         $this->logger->debug('Finished InstalledJson::cleanupVendorInstalledJson()');
     }
