@@ -34,8 +34,8 @@ class StripFsRootPathNormalizer implements PathNormalizer
         $fsRoots = array_unique(
             $this->fsRoots ??
                   [
-                      Filesystem::getFsRoot(),
-                      Filesystem::normalizeDirSeparator(FileSystem::getFsRoot()),
+                      FileSystem::getFsRoot(),
+                      FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                       'c:\\',
                       'c:/',
                    ]
