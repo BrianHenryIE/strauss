@@ -44,7 +44,15 @@ class StripFsRootPathNormalizer implements PathNormalizer
         $pattern = '^(' . implode(
             '|',
             array_map(
-                fn($str) => str_replace(['\\','\/'], ['\\\\','\\\/'], $str),
+                fn($str) => str_replace(
+                    '\\',
+                    '\\\\',
+                    str_replace(
+                        '\/',
+                        '\\\/',
+                        $str
+                    )
+                ),
                 $fsRoots
             )
         ) . ')';
