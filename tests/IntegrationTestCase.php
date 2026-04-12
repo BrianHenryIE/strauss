@@ -62,7 +62,7 @@ class IntegrationTestCase extends TestCase
 
         @mkdir($this->testsWorkingDir);
 
-	    chdir($this->testsWorkingDir);
+        chdir($this->testsWorkingDir);
 
         if (file_exists($this->projectDir . '/strauss.phar')) {
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
