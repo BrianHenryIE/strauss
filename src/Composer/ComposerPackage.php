@@ -214,7 +214,7 @@ class ComposerPackage
      */
     public function getPackageAbsolutePath(): ?string
     {
-        return trim($this->packageAbsolutePath, '\\/');
+        return !empty($this->packageAbsolutePath) ? trim($this->packageAbsolutePath, '\\/') : null;
     }
 
     /**
