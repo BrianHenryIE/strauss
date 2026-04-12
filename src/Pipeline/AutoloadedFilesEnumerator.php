@@ -108,11 +108,7 @@ class AutoloadedFilesEnumerator
                     break;
                 case 'classmap':
                     $autoloadKeyPaths = array_map(
-                        fn(string $path) =>
-                        //                            $this->filesystem->makeAbsolute(
-                                $dependencyPackageAbsolutePath . '/' . ltrim($path, '/'),
-                        //                            )
-                            
+                        fn(string $path) => $dependencyPackageAbsolutePath . '/' . ltrim($path, '/'),
                         (array)$value
                     );
                     foreach ($autoloadKeyPaths as $autoloadKeyPath) {
