@@ -14,7 +14,7 @@ class ProjectComposerPackage extends ComposerPackage
 {
     protected string $author;
 
-    protected string $r/elativeVendorDirectory;
+    protected string $relativeVendorDirectory;
 
     /**
      * @param string $absolutePathFile
