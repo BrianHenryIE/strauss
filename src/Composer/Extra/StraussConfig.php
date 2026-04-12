@@ -60,7 +60,7 @@ class StraussConfig implements
      *
      * Probably 'vendor/'
      */
-    protected string $vendorDirectory = 'vendor';
+    protected string $relativeVendorDirectory = 'vendor';
 
     /**
      * `namespacePrefix` is the prefix to be given to any namespaces.
@@ -395,15 +395,15 @@ class StraussConfig implements
      */
     public function getAbsoluteVendorDirectory(): string
     {
-        return trim($this->getProjectDirectory() . '/' . $this->vendorDirectory, '\\/');
+        return trim($this->getProjectDirectory() . '/' . $this->relativeVendorDirectory, '\\/');
     }
 
     /**
-     * @param string $vendorDirectory
+     * @param string $relativeVendorDirectory
      */
-    public function setVendorDirectory(string $vendorDirectory): void
+    public function setRelativeVendorDirectory(string $relativeVendorDirectory): void
     {
-        $this->vendorDirectory = $vendorDirectory;
+        $this->relativeVendorDirectory = $relativeVendorDirectory;
     }
 
     /**
