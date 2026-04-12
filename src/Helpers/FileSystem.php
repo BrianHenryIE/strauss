@@ -98,7 +98,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      */
     public static function normalizeDirSeparator($path, $slashTo = '/'): string
     {
-        $slashFrom = $slashTo = '/' ? '\\' : '/';
+        $slashFrom = $slashTo === '/' ? '\\' : '/';
 
         return str_replace($slashFrom, $slashTo, $path ?: '');
     }
