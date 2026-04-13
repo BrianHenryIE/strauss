@@ -205,7 +205,11 @@ class Prefixer
     protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, string $contents): string
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $ast = $parser->parse($contents);
+        try {
+            $ast = $parser->parse($contents);
+        } catch (\PhpParser\Error $e) {
+            return $contents;
+        }
 
         $namespaceSymbols = $symbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
         if (empty($namespaceSymbols)) {
@@ -505,7 +509,11 @@ class Prefixer
 
         $nodeFinder = new NodeFinder();
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $ast = $parser->parse($contents);
+        try {
+            $ast = $parser->parse($contents);
+        } catch (\PhpParser\Error $e) {
+            return $contents;
+        }
 
         $positions = [];
 
@@ -598,7 +606,11 @@ class Prefixer
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
-        $ast = $parser->parse($phpFileContent);
+        try {
+            $ast = $parser->parse($phpFileContent);
+        } catch (\PhpParser\Error $e) {
+            return $phpFileContent;
+        }
 
         $traverser = new NodeTraverser();
         $visitor = new class($discoveredNamespaceSymbols) extends \PhpParser\NodeVisitorAbstract {
