@@ -39,7 +39,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/guzzlehttp/guzzle/src/Client.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/guzzlehttp/guzzle/src/Client.php');
 
         self::assertStringContainsString("class Client implements ClientInterface, \Company\Project\Psr\Http\Client\ClientInterface", $php_string);
     }

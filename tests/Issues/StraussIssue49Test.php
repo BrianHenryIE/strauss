@@ -47,14 +47,14 @@ EOD;
         chdir($this->testsWorkingDir);
 
         exec('git clone https://github.com/BrianHenryIE/bh-wp-logger.git');
-        chdir($this->testsWorkingDir.'bh-wp-logger');
+        chdir($this->testsWorkingDir.'/bh-wp-logger');
 
-        mkdir($this->testsWorkingDir . 'project');
+        mkdir($this->testsWorkingDir . '/project');
 
         // 2. Create the project composer.json in a subdir (one level).
-        $this->getFileSystem()->write($this->testsWorkingDir . 'project/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/project/composer.json', $composerJsonString);
 
-        chdir($this->testsWorkingDir.'project');
+        chdir($this->testsWorkingDir.'/project');
 
         exec('composer install', $composerInstallOutput, $composerInstallExitCode);
         $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));

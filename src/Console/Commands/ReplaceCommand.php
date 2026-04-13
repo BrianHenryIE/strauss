@@ -156,7 +156,7 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         $this->logger->info('Enumerating files...');
         $relativeUpdateCallSites = $config->getUpdateCallSites() ?? [];
         $updateCallSites = array_map(
-            fn($path) => false !== strpos($path, trim($this->workingDir, '/')) ? $path : $this->workingDir . $path,
+            fn($path) => false !== strpos($path, $this->workingDir) ? $path : $this->workingDir . '/'.$path,
             $relativeUpdateCallSites
         );
         $fileEnumerator = new FileEnumerator($config, $this->filesystem, $this->logger);
@@ -218,7 +218,7 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         }
 
         $callSitePaths = array_map(
-            fn($path) => false !== strpos($path, trim($this->workingDir, '/')) ? $path : $this->workingDir . $path,
+            fn($path) => false !== strpos($path, $this->workingDir) ? $path : $this->workingDir . '/'. $path,
             $relativeCallSitePaths
         );
 

@@ -26,7 +26,7 @@ class FileCopyScannerTest extends TestCase
         $regexPattern = "~^([^/]*?/){2}file.php~";
 
         $dependency = Mockery::mock(ComposerPackage::class);
-        $dependency->expects('getPackageAbsolutePath')->andReturn('/path/to/project/vendor/my/package');
+        $dependency->expects('getPackageAbsolutePath')->andReturn('path/to/project/vendor/my/package');
         $dependency->expects('addFile');
         $dependency->expects('getPackageName')->andReturn('my/package');
 //        $dependency->expects('getRelativePath')->andReturn('my/package');
@@ -34,15 +34,14 @@ class FileCopyScannerTest extends TestCase
         $file = new FileWithDependency(
             $dependency,
             $vendorRelativePath,
-            '/path/to/project/vendor/my/package/file.php'
+            'path/to/project/vendor/my/package/file.php'
         );
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
 
         $config = \Mockery::mock(FileCopyScannerConfigInterface::class);
-        $config->expects('getTargetDirectory')->atLeast()->once()->andReturns('vendor-prefixed');
-        $config->expects('getVendorDirectory')->atLeast()->once()->andReturns('vendor');
+        $config->expects('isTargetDirectoryVendor')->atLeast()->once()->andReturnFalse();
         $config->expects('getExcludePackagesFromCopy')->andReturns([]);
         $config->expects('isDeleteVendorFiles')->andReturnFalse();
         $config->expects('getExcludeFilePatternsFromCopy')->andReturns([$regexPattern]);

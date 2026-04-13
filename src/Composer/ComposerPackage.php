@@ -141,29 +141,31 @@ class ComposerPackage
 
         $composerJsonFileAbsolute = $composer->getConfig()->getConfigSource()->getName();
 
-        $composerAbsoluteDirectoryPath = realpath(dirname($composerJsonFileAbsolute));
-        if (false !== $composerAbsoluteDirectoryPath) {
-            $composerAbsoluteDirectoryPath = FileSystem::normalizeDirSeparator($composerAbsoluteDirectoryPath);
-            $this->packageAbsolutePath = $composerAbsoluteDirectoryPath . '/';
+        $pathNormalizer = FileSystem::makePathNormalizer(getcwd());
+        
+        $fsComposerAbsoluteDirectoryPath = realpath(dirname($composerJsonFileAbsolute));
+        if (false !== $fsComposerAbsoluteDirectoryPath) {
+            $fsComposerAbsoluteDirectoryPath = FileSystem::normalizeDirSeparator($fsComposerAbsoluteDirectoryPath);
+            $this->packageAbsolutePath = $fsComposerAbsoluteDirectoryPath;
         }
-        $composerAbsoluteDirectoryPath = $composerAbsoluteDirectoryPath ?: FileSystem::normalizeDirSeparator(dirname($composerJsonFileAbsolute));
+        $fsComposerAbsoluteDirectoryPath = $fsComposerAbsoluteDirectoryPath ?: FileSystem::normalizeDirSeparator(dirname($composerJsonFileAbsolute));
 
-        $currentWorkingDirectory = getcwd();
-        if ($currentWorkingDirectory === false) {
+        $fsCurrentWorkingDirectory = getcwd();
+        if ($fsCurrentWorkingDirectory === false) {
             /**
              * @see Platform::getCwd()
              */
             throw new Exception('Could not determine working directory. Please comment out ~'.__LINE__.' in ' . __FILE__.' and see does it work regardless.');
         }
-        $currentWorkingDirectory = FileSystem::normalizeDirSeparator($currentWorkingDirectory);
+        $fsCurrentWorkingDirectory = FileSystem::normalizeDirSeparator($fsCurrentWorkingDirectory);
 
         /** @var string $vendorAbsoluteDirectoryPath */
         $vendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
         if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
             $this->relativePath = $this->packageName;
-            $this->packageAbsolutePath = FileSystem::normalizeDirSeparator(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) . '/';
+            $this->packageAbsolutePath = $pathNormalizer->normalizePath(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
         // If the package is symlinked, the path will be outside the working directory.
-        } elseif (0 !== strpos($composerAbsoluteDirectoryPath, $currentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
+        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
             $this->relativePath = $output_array[1];
         } elseif (1 === preg_match('/.*[\/\\\\]([^\/\\\\]+[\/\\\\][^\/\\\\]+)[\/\\\\]composer.json/', $composerJsonFileAbsolute, $output_array)) {
         // Not every package gets installed to a folder matching its name (crewlabs/unsplash).
@@ -203,12 +205,16 @@ class ComposerPackage
      */
     public function getRelativePath(): ?string
     {
-        return is_null($this->relativePath) ? null : FileSystem::normalizeDirSeparator($this->relativePath) . '/';
+        return is_null($this->relativePath) ? null : FileSystem::normalizeDirSeparator($this->relativePath);
     }
 
+
+    /**
+     * No leading or tailing slash
+     */
     public function getPackageAbsolutePath(): ?string
     {
-        return $this->packageAbsolutePath;
+        return !empty($this->packageAbsolutePath) ? trim($this->packageAbsolutePath, '\\/') : null;
     }
 
     /**

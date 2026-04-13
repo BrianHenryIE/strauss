@@ -94,7 +94,7 @@ class AutoloadedFilesEnumerator
                             $dependencyPackageAbsolutePath,
                             $filePackageAbsolutePath
                         );
-                        $file = $dependency->getFile($filePackageRelativePath);
+                        $file = $dependency->getFile(FileSystem::normalizeDirSeparator($filePackageRelativePath));
                         if (!$file) {
                             $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
                                 'relativePath' => $filePackageRelativePath,
@@ -108,10 +108,7 @@ class AutoloadedFilesEnumerator
                     break;
                 case 'classmap':
                     $autoloadKeyPaths = array_map(
-                        fn(string $path) =>
-                            $this->filesystem->makeAbsolute(
-                                $dependencyPackageAbsolutePath . '/' . ltrim($path, '/')
-                            ),
+                        fn(string $path) => $dependencyPackageAbsolutePath . '/' . ltrim($path, '/'),
                         (array)$value
                     );
                     foreach ($autoloadKeyPaths as $autoloadKeyPath) {
@@ -123,7 +120,7 @@ class AutoloadedFilesEnumerator
                             continue;
                         }
                         $classMapGenerator->scanPaths(
-                            $autoloadKeyPath,
+                            $this->filesystem->makeAbsolute($autoloadKeyPath),
                             $excluded,
                             $autoloadType,
                             $namespace,
@@ -149,7 +146,7 @@ class AutoloadedFilesEnumerator
                                 continue;
                             }
                             $classMapGenerator->scanPaths(
-                                $autoloadKeyPath,
+                                $this->filesystem->makeAbsolute($autoloadKeyPath),
                                 $excluded,
                                 $autoloadType,
                                 $namespace,

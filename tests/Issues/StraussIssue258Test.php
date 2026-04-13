@@ -45,7 +45,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/wp-media/wp-mixpanel/src/Classes/Mixpanel.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/wp-media/wp-mixpanel/src/Classes/Mixpanel.php');
         $this->assertStringNotContainsString('class Strauss_Issue258_Strauss_Issue258_WPMedia_Mixpanel', $phpString);
         $this->assertStringContainsString('class Strauss_Issue258_WPMedia_Mixpanel', $phpString);
     }

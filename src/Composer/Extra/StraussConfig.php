@@ -19,6 +19,7 @@ use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
 use Exception;
@@ -59,7 +60,7 @@ class StraussConfig implements
      *
      * Probably 'vendor/'
      */
-    protected string $vendorDirectory = 'vendor';
+    protected string $relativeVendorDirectory = 'vendor';
 
     /**
      * `namespacePrefix` is the prefix to be given to any namespaces.
@@ -302,7 +303,7 @@ class StraussConfig implements
                 $classmapPrefix = str_replace("\\", "_", $classmapPrefix);
                 $this->setClassmapPrefix($classmapPrefix);
             } elseif (isset($this->namespacePrefix)) {
-                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $this->getNamespacePrefix());
+                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $this->getNamespacePrefix()) ?? str_replace('\\', '_', $this->getNamespacePrefix());
                 $classmapPrefix = rtrim($classmapPrefix, '_') . '_';
                 $this->setClassmapPrefix($classmapPrefix);
             }
@@ -329,7 +330,7 @@ class StraussConfig implements
                         $paths = (array) $entry;
                         foreach ($paths as $path) {
                             // Matches the target directory.
-                            if (trim($path, '\\/') . '/' === $this->getTargetDirectory()) {
+                            if (trim($path, '\\/') === $this->getAbsoluteTargetDirectory()) {
                                 $this->classmapOutput = false;
                                 break 3;
                             }
@@ -357,21 +358,28 @@ class StraussConfig implements
     }
 
     /**
-     * `target_directory` will always be returned without a leading slash and with a trailing slash.
-     *
-     * @return string
+     * `target_directory` will always be returned without a leading nor trailing slash.
      */
-    public function getTargetDirectory(): string
+    public function getAbsoluteTargetDirectory(): string
     {
-        return $this->getProjectDirectory() . trim($this->targetDirectory, '\\/') . '/';
+        return FileSystem::normalizeDirSeparator(
+            trim($this->getProjectDirectory(), '\\/') . '/' . trim($this->targetDirectory, '\\/')
+        );
+    }
+
+    public function isTargetDirectoryVendor(): bool
+    {
+        return $this->getAbsoluteVendorDirectory() === $this->getAbsoluteTargetDirectory();
     }
 
     /**
-     * Default 'vendor-prefixed'.
+     * Default 'vendor-prefixed'. No leading or trailing slash.
      */
     public function getRelativeTargetDirectory(): string
     {
-        return trim($this->targetDirectory, '\\/');
+        return FileSystem::normalizeDirSeparator(
+            trim($this->targetDirectory, '\\/')
+        );
     }
 
     /**
@@ -383,19 +391,19 @@ class StraussConfig implements
     }
 
     /**
-     * @return string
+     * No leading or trailing slash.
      */
-    public function getVendorDirectory(): string
+    public function getAbsoluteVendorDirectory(): string
     {
-        return $this->getProjectDirectory() . trim($this->vendorDirectory, '\\/') . '/';
+        return trim($this->getProjectDirectory() . '/' . $this->relativeVendorDirectory, '\\/');
     }
 
     /**
-     * @param string $vendorDirectory
+     * @param string $relativeVendorDirectory
      */
-    public function setVendorDirectory(string $vendorDirectory): void
+    public function setRelativeVendorDirectory(string $relativeVendorDirectory): void
     {
-        $this->vendorDirectory = $vendorDirectory;
+        $this->relativeVendorDirectory = $relativeVendorDirectory;
     }
 
     /**
@@ -432,7 +440,7 @@ class StraussConfig implements
 
     public function getFunctionsPrefix(): ?string
     {
-        if (!isset($this->functionsPrefix)) {
+        if (!isset($this->functionsPrefix) && !is_null($this->getClassmapPrefix())) {
             return strtolower($this->getClassmapPrefix());
         }
         if (empty($this->functionsPrefix)) {
@@ -914,10 +922,10 @@ class StraussConfig implements
 
     public function getProjectDirectory(): string
     {
-        $projectDirectory = $this->projectDirectory ?? getcwd() . '/';
+        $projectDirectory = rtrim(FileSystem::normalizeDirSeparator($this->projectDirectory ?? getcwd()), '\\/');
 
         return $this->isDryRun()
-            ? 'mem:/' . $projectDirectory
+            ? 'mem://' . ltrim($projectDirectory, '/')
             : $projectDirectory;
     }
 }

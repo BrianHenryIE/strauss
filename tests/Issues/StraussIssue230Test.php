@@ -39,11 +39,13 @@ EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
+
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/willdurand/geocoder/StatefulGeocoder.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/willdurand/geocoder/StatefulGeocoder.php');
         $this->assertStringNotContainsString("final class StatefulGeocoder implements BrianHenryIE\\Geocoder", $php_string);
         $this->assertStringContainsString("final class StatefulGeocoder implements Geocoder", $php_string);
     }

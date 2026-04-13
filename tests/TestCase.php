@@ -4,12 +4,14 @@ namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
-use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\WhitespacePathNormalizer;
+use League\Flysystem\Filesystem as FlysystemFileSystem;
 use Mockery;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
@@ -29,13 +31,15 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected TestLogger $testLogger;
 
+    protected FileSystem $filesystem;
+
     protected FileSystem $inMemoryFilesystem;
 
     public static function assertEqualsRN($expected, $actual, string $message = ''): void
     {
         if (is_string($expected) && is_string($actual)) {
             $expected = str_replace("\r\n", "\n", $expected);
-            $actual = str_replace("\r\n", "\n", $actual);
+            $actual   = str_replace("\r\n", "\n", $actual);
         }
 
         self::assertEquals($expected, $actual, $message);
@@ -64,39 +68,42 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $string = str_replace("\r\n", "\n", $string);
         $string = preg_replace('/^\s*/m', '', $string);
         $string = preg_replace('/\n\s*\n/', "\n", $string);
+        $string = str_replace("\\n", '', $string);
         $string = implode(PHP_EOL, array_map('trim', explode(PHP_EOL, $string)));
+
         return trim($string);
     }
 
     protected function getFileSystem(): Filesystem
     {
 
-        if (!isset($this->filesystem)) {
+        if (! isset($this->filesystem)) {
             $this->filesystem = $this->getNewFileSystem();
         }
+
         return $this->filesystem;
     }
 
     protected function getNewFileSystem(): Filesystem
     {
+        $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
+
         $localFilesystemAdapter = new LocalFilesystemAdapter(
-            '/',
+            FileSystem::getFsRoot($workingDir),
             null,
             LOCK_EX,
             LocalFilesystemAdapter::SKIP_LINKS
         );
 
-        $normalizer = new WhitespacePathNormalizer();
-
         return new FileSystem(
-            new \League\Flysystem\Filesystem(
+            new FlysystemFileSystem(
                 $localFilesystemAdapter,
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ],
-                $normalizer
+                Filesystem::makePathNormalizer($workingDir)
             ),
-            isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd()
+            $workingDir
         );
     }
 
@@ -105,28 +112,35 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getInMemoryFileSystem(): FileSystem
     {
-        if (!isset($inMemoryFilesystem)) {
+        if (! isset($inMemoryFilesystem)) {
             $this->inMemoryFilesystem = $this->getNewInMemoryFileSystem();
         }
+
         return $this->inMemoryFilesystem;
     }
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
+        $inMemoryFilesystem = new InMemoryFilesystemAdapter();
 
-        $inMemoryFilesystem = new \BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter();
+        $normalizer = FileSystem::makePathNormalizer('/');
 
-        $normalizer = new WhitespacePathNormalizer();
-        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+        $leagueFilesystem = new FlysystemFileSystem(
+            $inMemoryFilesystem,
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            $normalizer
+        );
 
-        $filesystem = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                $inMemoryFilesystem,
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ],
-                $normalizer
-            ),
+        $readonlyFilesystem = new ReadOnlyFileSystem(
+            $leagueFilesystem,
+            Filesystem::makePathNormalizer(getcwd())
+        );
+
+        $filesystem = new FileSystem(
+            $readonlyFilesystem,
+            'mem://',
             'mem://'
         );
 
@@ -162,17 +176,20 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getLogger(): LoggerInterface
     {
-        if (!isset($this->logger)) {
+        if (! isset($this->logger)) {
             $this->logger = $this->getNewLogger();
         }
+
         return $this->logger;
     }
+
     protected function getNewLogger(): LoggerInterface
     {
         $logger = new Logger('logger');
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(new RelativeFilepathLogProcessor($this->getInMemoryFileSystem()));
         $logger->pushHandler(new PsrHandler($this->getTestLogger()));
+
         return $logger;
     }
 
@@ -181,10 +198,17 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getTestLogger(): TestLogger
     {
-        if (!isset($this->testLogger)) {
+        if (! isset($this->testLogger)) {
             $this->testLogger = new ColorLogger();
         }
 
         return $this->testLogger;
+    }
+
+    protected function markTestSkippedOnWindows(string $message = 'Skipped on Windows'): void
+    {
+        if (Platform::isWindows()) {
+            $this->markTestSkipped($message);
+        }
     }
 }
