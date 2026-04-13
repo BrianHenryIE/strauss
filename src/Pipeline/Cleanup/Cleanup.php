@@ -46,8 +46,8 @@ class Cleanup
         $this->config = $config;
         $this->logger = $logger;
 
-        $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getTargetDirectory() !== $config->getVendorDirectory();
-        $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getTargetDirectory() !== $config->getVendorDirectory();
+        $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getAbsoluteTargetDirectory() !== $config->getAbsoluteVendorDirectory();
+        $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getAbsoluteTargetDirectory() !== $config->getAbsoluteVendorDirectory();
 
         $this->filesystem = $filesystem;
     }
@@ -92,17 +92,17 @@ class Cleanup
             $this->logger
         );
 
-        if ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
-        && !$this->config->isDeleteVendorFiles() && !$this->config->isDeleteVendorPackages()
+        if (!$this->config->isTargetDirectoryVendor()
+            && !$this->config->isDeleteVendorFiles()
+            && !$this->config->isDeleteVendorPackages()
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
-            &&
-            ($this->config->isDeleteVendorFiles() ||$this->config->isDeleteVendorPackages())
+        } elseif (!$this->config->isTargetDirectoryVendor()
+            && ($this->config->isDeleteVendorFiles() || $this->config->isDeleteVendorPackages())
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+        } elseif ($this->config->isTargetDirectoryVendor()) {
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
         }
     }
@@ -125,7 +125,11 @@ class Cleanup
             return;
         }
 
-        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . 'composer.json');
+        $projectComposerJson = new JsonFile(
+            $this->filesystem->makeAbsolute(
+                $this->config->getProjectDirectory() . '/composer.json'
+            )
+        );
         $projectComposerJsonArray = $projectComposerJson->read();
         $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
         $installationManager = $composer->getInstallationManager();
@@ -137,7 +141,11 @@ class Cleanup
         $generator->setRunScripts(false);
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
-        $installedJson = new JsonFile($this->config->getVendorDirectory() . 'composer/installed.json');
+        $installedJson = new JsonFile(
+            $this->filesystem->makeAbsolute(
+                $this->config->getAbsoluteVendorDirectory() . '/composer/installed.json'
+            )
+        );
         $localRepo = new InstalledFilesystemRepository($installedJson);
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
         /** @var InstalledJsonArray $installedJsonArray */
@@ -189,7 +197,7 @@ class Cleanup
         }
         $rootSourceDirectories = array_map(
             function (string $path): string {
-                return $this->config->getVendorDirectory() . $path;
+                return $this->config->getAbsoluteVendorDirectory() . '/' . $path;
             },
             array_keys($rootSourceDirectories)
         );
@@ -230,6 +238,7 @@ class Cleanup
 //                $this->logger->debug('Skipping non-empty directory ' . $dirEntry->path());
 //            }
 //        }
+        $this->logger->debug('Finished Cleanup::deleteEmptyDirectories()');
     }
 
     /**
@@ -261,24 +270,27 @@ class Cleanup
             }
 
             // Normal package.
-            if ($this->filesystem->isSubDirOf($this->config->getVendorDirectory(), $package->getPackageAbsolutePath())) {
+//            if (!$this->filesystem->isSymlinked($package->getPackageAbsolutePath())) {
+            if ($this->filesystem->isSubDirOf($this->config->getAbsoluteVendorDirectory(), $package->getPackageAbsolutePath())) {
                 $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
                 $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
 
                 $package->setDidDelete(true);
+//            } elseif($this->filesystem->isSymlinked($package->getPackageAbsolutePath())) {
             } else {
                 // TODO: log _where_ the symlink is pointing to.
                 $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
 
                 // If it's a symlink, remove the symlink in the directory
-                $symlinkPath =
-                    rtrim(
-                        $this->config->getVendorDirectory() . $package->getRelativePath(),
+                $symlinkPath = $this->filesystem->makeAbsolute(
+                    FileSystem::normalizeDirSeparator(rtrim(
+                        $this->config->getAbsoluteVendorDirectory() . '/' . $package->getRelativePath(),
                         '/'
-                    );
+                    ))
+                );
 
-                if (false !== strpos('WIN', PHP_OS)) {
+                if (PHP_OS_FAMILY === 'Windows') {
                     /**
                      * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
                      * "On windows, take care that `is_link()` returns false for Junctions."
@@ -286,19 +298,27 @@ class Cleanup
                      * @see https://www.php.net/manual/en/function.is-link.php#113263
                      * @see https://stackoverflow.com/a/18262809/336146
                      */
-                    rmdir($symlinkPath);
+                    try {
+                        (new \Composer\Util\Filesystem())->unlink($symlinkPath);
+                    } catch (\RuntimeException $exception) {
+                        $this->logger->warning('Failed to remove symlink at ' . $symlinkPath);
+                        $this->logger->warning('Please submit a PR to fix Windows symlink support.');
+                    }
                 } else {
                     unlink($symlinkPath);
                 }
 
                 $package->setDidDelete(true);
             }
-            if ($this->filesystem->directoryExists(dirname($package->getPackageAbsolutePath()))
+            $packageParentDir = dirname($package->getPackageAbsolutePath());
+            if ($packageParentDir
                 &&
-                $this->filesystem->isDirectoryEmpty(dirname($package->getPackageAbsolutePath()))
+                $this->filesystem->directoryExists($packageParentDir)
+                 &&
+                 $this->filesystem->isDirectoryEmpty($packageParentDir)
             ) {
-                $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));
-                $this->filesystem->deleteDirectory(dirname($package->getPackageAbsolutePath()));
+                $this->logger->info('Deleting empty directory ' . $packageParentDir);
+                $this->filesystem->deleteDirectory($packageParentDir);
             }
         }
     }
@@ -322,6 +342,7 @@ class Cleanup
 
             $this->logger->info('Deleting ' . $sourceRelativePath);
 
+            // TODO: is this relative or absolute?
             $this->filesystem->delete($file->getSourcePath());
 
             $file->setDidDelete(true);

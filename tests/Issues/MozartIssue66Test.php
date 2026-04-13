@@ -57,7 +57,7 @@ class MozartIssue66Test extends IntegrationTestCase
 
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -66,6 +66,6 @@ EOD;
         $exitCode = $this->runStrauss($output, '--debug');
         $this->assertEquals(0, $exitCode, $output);
 
-        self::assertFileExists($this->testsWorkingDir . 'strauss/php-di/php-di/src/functions.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/strauss/php-di/php-di/src/functions.php');
     }
 }

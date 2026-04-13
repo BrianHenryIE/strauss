@@ -40,7 +40,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/stripe/stripe-php/lib/Payout.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/stripe/stripe-php/lib/Payout.php');
 
         self::assertStringNotContainsString('@return \Stripe\Collection<\Stripe\Payout> of ApiResources', $php_string);
         self::assertStringContainsString('@return \Strauss\Issue111\Stripe\Collection<\Strauss\Issue111\Stripe\Payout> of ApiResources', $php_string);

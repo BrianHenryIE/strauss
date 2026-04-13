@@ -91,8 +91,8 @@ class Licenser
 
         foreach ($this->getDiscoveredLicenseFiles() as $licenseFile) {
             $targetLicenseFile = str_replace(
-                $this->config->getVendorDirectory(),
-                $this->config->getTargetDirectory(),
+                $this->config->getAbsoluteVendorDirectory(),
+                $this->config->getAbsoluteTargetDirectory(),
                 $licenseFile
             );
 
@@ -191,7 +191,7 @@ class Licenser
         $date = gmdate("d-F-Y", time());
 
         foreach ($modifiedFiles as $relativeFilePath => $package) {
-            $filepath = $this->config->getTargetDirectory() . $relativeFilePath;
+            $filepath = $this->config->getAbsoluteTargetDirectory() . '/'.$relativeFilePath;
 
             if (!$this->filesystem->fileExists($filepath)) {
                 continue;

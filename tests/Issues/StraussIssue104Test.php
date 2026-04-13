@@ -17,6 +17,8 @@ class StraussIssue104Test extends IntegrationTestCase
 {
     public function test_correct_directory_permission()
     {
+        $this->markTestSkippedOnWindows('Expected 0755, Actual 0777');
+
         $composerJsonString = <<<'EOD'
 {
   "name": "strauss/issue104",
@@ -40,11 +42,11 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $result = substr(sprintf('%o', fileperms($this->testsWorkingDir . 'vendor-prefixed')), -4);
+        $result = substr(sprintf('%o', fileperms($this->testsWorkingDir . '/vendor-prefixed')), -4);
 
         self::assertEquals('0755', $result);
 
-        $subfolderResult = substr(sprintf('%o', fileperms($this->testsWorkingDir . 'vendor-prefixed/psr')), -4);
+        $subfolderResult = substr(sprintf('%o', fileperms($this->testsWorkingDir . '/vendor-prefixed/psr')), -4);
 
         self::assertEquals('0755', $subfolderResult);
     }

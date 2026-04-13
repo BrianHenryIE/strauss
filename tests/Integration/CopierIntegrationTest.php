@@ -39,25 +39,25 @@ class CopierIntegrationTest extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . '/composer.json');
 
         $dependencies = array_map(function ($element) {
-            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
+            $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
             return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
-        $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
-        $vendorDir = $this->testsWorkingDir . 'vendor/';
+        $targetDir = $this->testsWorkingDir . '/vendor-prefixed';
+        $vendorDir = $this->testsWorkingDir . '/vendor';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getVendorDirectory')->willReturn($vendorDir);
-        $config->method('getTargetDirectory')->willReturn($targetDir);
+        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
+        $config->method('getAbsoluteTargetDirectory')->willReturn($targetDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,
@@ -72,9 +72,9 @@ EOD;
         $copier = new Copier($files, $config, $this->getFileSystem(), new NullLogger());
 
         $file = 'ContainerAwareTrait.php';
-        $relativePath = 'league/container/src/';
+        $relativePath = '/league/container/src';
         $targetPath = $targetDir . $relativePath;
-        $targetFile = $targetPath . $file;
+        $targetFile = $targetPath . '/' . $file;
 
         mkdir(rtrim($targetPath, '\\/'), 0777, true);
 
@@ -84,7 +84,7 @@ EOD;
 
         $copier->prepareTarget();
 
-        self::assertFileDoesNotExist($targetFile);
+        $this->assertFileNotExistsInFileSystem($targetFile);
     }
 
     public function testsCopy(): void
@@ -111,25 +111,25 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . '/composer.json');
 
         $dependencies = array_map(function ($element) {
-            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
+            $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
             return ComposerPackage::fromFile($composerFile);
         }, $projectComposerPackage->getRequiresNames());
 
-        $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
-        $vendorDir = $this->testsWorkingDir . 'vendor/';
+        $targetDir = $this->testsWorkingDir . '/vendor-prefixed';
+        $vendorDir = $this->testsWorkingDir . '/vendor';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getVendorDirectory')->willReturn($vendorDir);
-        $config->method('getTargetDirectory')->willReturn($targetDir);
+        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
+        $config->method('getAbsoluteTargetDirectory')->willReturn($targetDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,
@@ -143,7 +143,7 @@ EOD;
         $copier = new Copier($files, $config, $this->getFileSystem(), new NullLogger());
 
         $file = 'Client.php';
-        $relativePath = 'google/apiclient/src/';
+        $relativePath = '/google/apiclient/src/';
         $targetPath = $targetDir . $relativePath;
         $targetFile = $targetPath . $file;
 
@@ -151,11 +151,8 @@ EOD;
 
         $copier->copy();
 
-        self::assertFileExists($targetFile);
+        $this->assertFileExistsInFileSystem($targetFile);
     }
-
-
-
 
     /**
      * Set up a common settings object.
@@ -187,7 +184,7 @@ EOD;
         $composer->extra = new stdClass();
         $composer->extra->mozart = $mozartConfig;
 
-        $composerFilepath = $this->testsWorkingDir . 'composer.json';
+        $composerFilepath = $this->testsWorkingDir . '/composer.json';
         $composerJson = json_encode($composer) ;
         $this->getFileSystem()->write($composerFilepath, $composerJson);
 
@@ -275,7 +272,7 @@ EOD;
 
         $packages = array();
         foreach ($this->config->getPackages() as $packageString) {
-            $testDummyComposerDir = $this->testsWorkingDir  . 'vendor/' . $packageString;
+            $testDummyComposerDir = $this->testsWorkingDir  . '/vendor/' . $packageString;
             @mkdir($testDummyComposerDir, 0777, true);
             $testDummyComposerPath = $testDummyComposerDir . '/composer.json';
             $testDummyComposerContents = json_encode(new stdClass());
@@ -288,7 +285,7 @@ EOD;
 
         $mover->deleteTargetDirs($packages);
 
-        $this->assertFalse($this->getFileSystem()->directoryExists($this->testsWorkingDir . $this->config->getDepDirectory() . 'Pimple'));
-        $this->assertFalse($this->getFileSystem()->directoryExists($this->testsWorkingDir . $this->config->getDepDirectory() . 'ezyang'));
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . $this->config->getDepDirectory() . 'Pimple');
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . $this->config->getDepDirectory() . 'ezyang');
     }
 }

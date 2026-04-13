@@ -35,7 +35,7 @@ class FileEnumeratorTest extends TestCase
 
         $dependency = Mockery::mock(ComposerPackage::class);
         $dependency->expects('getPackageName')->andReturn('test/package');
-        $dependency->expects('getPackageAbsolutePath')->andReturn('/path/to/project/vendor/package');
+        $dependency->expects('getPackageAbsolutePath')->andReturn('path/to/project/vendor/package');
 
         /** @var ComposerPackage[] $dependencies */
         $dependencies = [$dependency];

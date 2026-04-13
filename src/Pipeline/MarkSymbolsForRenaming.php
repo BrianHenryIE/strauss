@@ -42,7 +42,7 @@ class MarkSymbolsForRenaming
         $allSymbols = $symbols->getSymbols();
         foreach ($allSymbols as $symbol) {
             // $this->config->getFlatDependencyTree
-
+            // TODO: This is probably incorrect. If a file is conditionally loaded, it still needs its namespace updated.
             if (!$this->fileIsAutoloaded($symbol)) {
 //                $this->logger->debug()
                 $symbol->setDoRename(false);
@@ -71,7 +71,7 @@ class MarkSymbolsForRenaming
 //                    $symbol->setDoRename(false);
 //                }
 //            }
-            if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()
+            if (!$this->config->isTargetDirectoryVendor()
                 && !$this->isSymbolFoundInFileThatIsCopied($symbol)) {
                 $symbol->setDoRename(false);
             }
@@ -122,7 +122,7 @@ class MarkSymbolsForRenaming
      */
     protected function isSymbolFoundInFileThatIsNotCopied(DiscoveredSymbol $symbol): bool
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+        if ($this->config->isTargetDirectoryVendor()) {
             return false;
         }
 
@@ -135,7 +135,7 @@ class MarkSymbolsForRenaming
 
     protected function isSymbolFoundInFileThatIsCopied(DiscoveredSymbol $symbol): bool
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+        if ($this->config->isTargetDirectoryVendor()) {
             return false;
         }
 

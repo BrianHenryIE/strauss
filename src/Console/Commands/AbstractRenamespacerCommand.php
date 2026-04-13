@@ -13,8 +13,6 @@ use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use Composer\InstalledVersions;
 use Elazar\Flystream\FilesystemRegistry;
-use Elazar\Flystream\StripProtocolPathNormalizer;
-use League\Flysystem\WhitespacePathNormalizer;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
@@ -34,12 +32,11 @@ abstract class AbstractRenamespacerCommand extends Command
 {
     use LoggerAwareTrait;
 
-    /** @var string */
+    /** No trailing slash */
     protected string $workingDir;
 
     /** @var FileSystem */
     protected Filesystem $filesystem;
-
     protected ProjectComposerPackage $projectComposerPackage;
 
     protected StraussConfig $config;
@@ -99,14 +96,11 @@ abstract class AbstractRenamespacerCommand extends Command
         }
 
         if ($this->config->isDryRun()) {
-            $normalizer = new WhitespacePathNormalizer();
-            $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
-
             $this->filesystem =
                 new FileSystem(
                     new ReadOnlyFileSystem(
                         $this->filesystem,
-                        $normalizer
+                        Filesystem::makePathNormalizer($this->workingDir)
                     ),
                     $this->workingDir
                 );
@@ -138,11 +132,11 @@ abstract class AbstractRenamespacerCommand extends Command
      */
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->workingDir = getcwd() . '/';
+        $this->workingDir = getcwd() . '';
 
         if (!isset($this->filesystem)) {
             $localFilesystemAdapter = new LocalFilesystemAdapter(
-                '/',
+                FileSystem::getFsRoot($this->workingDir),
                 null,
                 LOCK_EX,
                 LocalFilesystemAdapter::SKIP_LINKS
@@ -153,7 +147,8 @@ abstract class AbstractRenamespacerCommand extends Command
                     $localFilesystemAdapter,
                     [
                         Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ]
+                    ],
+                    Filesystem::makePathNormalizer($this->workingDir)
                 ),
                 $this->workingDir
             );

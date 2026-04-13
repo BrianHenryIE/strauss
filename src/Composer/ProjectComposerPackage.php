@@ -14,7 +14,7 @@ class ProjectComposerPackage extends ComposerPackage
 {
     protected string $author;
 
-    protected string $vendorDirectory;
+    protected string $relativeVendorDirectory;
 
     /**
      * @param string $absolutePathFile
@@ -33,9 +33,9 @@ class ProjectComposerPackage extends ComposerPackage
             $this->author = $authors[0]['name'];
         }
 
-        /** @var string $projectVendorAbsoluteDirectoryPath */
+        /** @var ?string $projectVendorAbsoluteDirectoryPath */
         $projectVendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
-        $this->vendorDirectory = is_string($projectVendorAbsoluteDirectoryPath) && !empty($projectVendorAbsoluteDirectoryPath)
+        $this->relativeVendorDirectory = is_string($projectVendorAbsoluteDirectoryPath) && !empty($projectVendorAbsoluteDirectoryPath)
             ? ltrim(str_replace(
                 FileSystem::normalizeDirSeparator(dirname($absolutePathFile)),
                 '',
@@ -51,7 +51,7 @@ class ProjectComposerPackage extends ComposerPackage
     public function getStraussConfig(): StraussConfig
     {
         $config = new StraussConfig($this->composer);
-        $config->setVendorDirectory($this->getVendorDirectory());
+        $config->setRelativeVendorDirectory($this->getRelativeVendorDirectory());
         return $config;
     }
 
@@ -63,10 +63,12 @@ class ProjectComposerPackage extends ComposerPackage
 
     /**
      * Relative vendor directory with trailing slash.
+     *
+     * No leading or trailing slash
      */
-    public function getVendorDirectory(): string
+    public function getRelativeVendorDirectory(): string
     {
-        return rtrim($this->vendorDirectory, '\\/') . '/';
+        return trim($this->relativeVendorDirectory, '\\/');
     }
 
     /**

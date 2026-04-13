@@ -4,13 +4,15 @@ namespace BrianHenryIE\Strauss\Config;
 
 interface CleanupConfigInterface
 {
-    public function getVendorDirectory(): string;
+    public function getAbsoluteVendorDirectory(): string;
+
+    public function isTargetDirectoryVendor(): bool;
 
     public function isDeleteVendorFiles(): bool;
 
     public function isDeleteVendorPackages(): bool;
 
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
 
     public function isDryRun(): bool;
 

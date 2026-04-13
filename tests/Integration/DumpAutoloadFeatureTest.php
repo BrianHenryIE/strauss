@@ -35,20 +35,22 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        exec('composer dump-autoload');
+        exec('composer dump-autoload', $composerDumpAutoloadOutput, $composerDumpAutoloadExitCode);
+        $this->assertEquals(0, $composerDumpAutoloadExitCode, implode(PHP_EOL, $composerDumpAutoloadOutput));
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
-//        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_files.php');
-        $vendorPrefixedAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/autoload_files.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/composer/autoload_files.php');
+//        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_files.php');
+        $vendorPrefixedAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_files.php');
 
         $this->assertStringContainsString('symfony/polyfill-ctype', $vendorPrefixedAutoloadFilesPhpString);
 //        $this->assertStringNotContainsString('symfony/polyfill-ctype', $vendorAutoloadFilesPhpString);

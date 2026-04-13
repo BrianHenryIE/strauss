@@ -62,7 +62,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/codekaizen/wp-package-auto-updater/src/Value/PackageRoot/PluginPackageRootValue.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/codekaizen/wp-package-auto-updater/src/Value/PackageRoot/PluginPackageRootValue.php');
         $this->assertStringNotContainsString("WEBFX_WORDPRESS_PLUGIN_POKEMON_DEPENDENCIES_WP_PLUGIN_DIR", $phpString);
         $this->assertStringContainsString("return WP_PLUGIN_DIR;", $phpString);
     }
