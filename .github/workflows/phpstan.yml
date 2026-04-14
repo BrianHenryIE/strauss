@@ -46,11 +46,11 @@ jobs:
       - name: Get PhpStan level
         id: phpstan-level
         run: |
-          # After adding the example commands at the top of the phpstan.neon file, which contain the word "level", we 
-          # now have to use `tail`+`head` to skip the first few lines. (I'm sure there's a suitable regex, but this is 
+          # After adding the example commands at the top of the phpstan.neon file, which contain the word "level", we
+          # now have to use `tail`+`head` to skip the first few lines. (I'm sure there's a suitable regex, but this is
           # easy to implement and follow)
           LEVEL=$(tail -n +3 phpstan.neon | head -n 10 | grep level | sed "s/[^0-9]*//")
-          echo "level=$LEVEL" >> "$GITHUB_OUTPUT" 
+          echo "level=$LEVEL" >> "$GITHUB_OUTPUT"
 
       - name: Check success
         if: steps.run-phpstan.outcome == 'success'
