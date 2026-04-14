@@ -26,7 +26,7 @@ class MozartIssue124Test extends IntegrationTestCase
      *
      * Should be: "class Mpdf implements" because its namespace has already been prefixed.
      */
-    public function test_it_does_not_make_classname_replacement_inside_namespaced_file()
+    public function test_it_does_not_make_classname_replacement_inside_namespaced_file(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.0.0');
 
@@ -74,7 +74,7 @@ EOD;
      *
      * @see https://github.com/coenjacobs/mozart/issues/124
      */
-    public function test_it_does_not_prefix_function_argument_types_whose_classname_matches_the_namespace()
+    public function test_it_does_not_prefix_function_argument_types_whose_classname_matches_the_namespace(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.0.0');
 
@@ -119,7 +119,7 @@ EOD;
      *
      *  @see mpdf/mpdf/src/Barcode/BarcodeException.php
      */
-    public function testItDoesPrefixNamespacedExtends()
+    public function testItDoesPrefixNamespacedExtends(): void
     {
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.1.0');
 

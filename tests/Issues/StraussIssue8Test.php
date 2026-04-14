@@ -20,7 +20,7 @@ class StraussIssue8Test extends IntegrationTestCase
      * @see Cleanup::deleteFiles()
      * @see Cleanup::doIsDeleteVendorFiles()
      */
-    public function test_delete_vendor_files()
+    public function test_delete_vendor_files(): void
     {
 
         $composerJsonString = <<<'EOD'

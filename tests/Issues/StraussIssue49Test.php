@@ -16,7 +16,7 @@ class StraussIssue49Test extends IntegrationTestCase
 
     /**
      */
-    public function test_local_symlinked_repositories_fail()
+    public function test_local_symlinked_repositories_fail(): void
     {
         $this->markTestSkippedOnPhpVersionBelow('8.0.0');
 

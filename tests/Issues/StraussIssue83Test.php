@@ -16,7 +16,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 class StraussIssue83Test extends IntegrationTestCase
 {
     // Excludes everything except aws from copy.
-    public function test_issue_83()
+    public function test_issue_83(): void
     {
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 

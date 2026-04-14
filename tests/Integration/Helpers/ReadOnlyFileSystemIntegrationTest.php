@@ -40,7 +40,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
     //
 
-    public function test_file_exists_true()
+    public function test_file_exists_true(): void
     {
         $source = $this->testsWorkingDir . '/source.php';
 
@@ -59,7 +59,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     /**
      * When a file does actually exist, but is deleted in the readonly filesystem, file_exists should return false.
      */
-    public function test_file_exists_false()
+    public function test_file_exists_false(): void
     {
         $source = $this->testsWorkingDir . '/source.php';
         $this->getFileSystem()->write($source, 'source');

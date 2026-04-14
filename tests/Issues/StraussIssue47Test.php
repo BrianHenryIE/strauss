@@ -23,7 +23,7 @@ class StraussIssue47Test extends IntegrationTestCase
     /*
      * The proper failing test.
      */
-    public function test_double_namespace()
+    public function test_double_namespace(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -84,7 +84,7 @@ EOD;
     /*
      * Exclude all other packages, so step debugging has less noise.
      */
-    public function test_double_namespace_dont_copy_dependencies()
+    public function test_double_namespace_dont_copy_dependencies(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -170,7 +170,7 @@ EOD;
     /**
      * Test only one file. This did not fail.
      */
-    public function test_double_namespace_only_file_copied()
+    public function test_double_namespace_only_file_copied(): void
     {
 
         $composerJsonString = <<<'EOD'

@@ -20,7 +20,7 @@ class MozartIssue86Test extends IntegrationTestCase
      *
      * Solved by https://github.com/ziodave
      */
-    public function test_do_not_parse_comments_to_classnames()
+    public function test_do_not_parse_comments_to_classnames(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -70,7 +70,7 @@ EOD;
      *
      * @see https://github.com/afragen/wp-dependency-installer/
      */
-    public function test_do_not_parse_comments_to_classnames_wp_dependency_installer()
+    public function test_do_not_parse_comments_to_classnames_wp_dependency_installer(): void
     {
 
         $composerJsonString = <<<'EOD'

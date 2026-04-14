@@ -31,7 +31,7 @@ use PHPUnit\Framework\MockObject\Exception;
  */
 class PrefixerTest extends TestCase
 {
-    public function testNamespaceReplacer()
+    public function testNamespaceReplacer(): void
     {
 
         $contents = <<<'EOD'
@@ -122,7 +122,7 @@ EOD;
     }
 
 
-    public function testClassnameReplacer()
+    public function testClassnameReplacer(): void
     {
 
         $contents = <<<'EOD'
@@ -164,7 +164,7 @@ EOD;
     /**
      * PHP 7.4 typed parameters were being prefixed.
      */
-    public function testTypeFunctionParameter()
+    public function testTypeFunctionParameter(): void
     {
         $this->markTestIncomplete();
     }
@@ -569,7 +569,7 @@ EOD;
     /**
      * @author BrianHenryIE
      */
-    public function test_it_doesnt_prefix_function_types_that_happen_to_match_the_namespace()
+    public function test_it_doesnt_prefix_function_types_that_happen_to_match_the_namespace(): void
     {
         $namespace = 'Mpdf';
         $prefix = "Mozart";
@@ -585,7 +585,7 @@ EOD;
         self::assertEqualsRN($expected, $result);
     }
 
-    public function testLeadingSlashInString()
+    public function testLeadingSlashInString(): void
     {
         $originalNamespace = "Strauss\\Test";
         $replacement = "Prefix\\Strauss\\Test";
@@ -601,7 +601,7 @@ EOD;
         self::assertEqualsRN($expected, $result);
     }
 
-    public function testDoubleLeadingSlashInString()
+    public function testDoubleLeadingSlashInString(): void
     {
         $originalNamespace = 'Strauss\\Test';
         $replacement = 'Prefix\\Strauss\\Test';
@@ -617,7 +617,7 @@ EOD;
         self::assertEqualsRN($expected, $result);
     }
 
-    public function testItReplacesSlashedNamespaceInFunctionParameter()
+    public function testItReplacesSlashedNamespaceInFunctionParameter(): void
     {
 
         $originalNamespace = "net\\authorize\\api\\contract\\v1";
@@ -635,7 +635,7 @@ EOD;
     }
 
 
-    public function testItReplacesNamespaceInFunctionParameterDefaultArgumentValue()
+    public function testItReplacesNamespaceInFunctionParameterDefaultArgumentValue(): void
     {
 
         $originalNamespace = "net\\authorize\\api\constants";
@@ -653,7 +653,7 @@ EOD;
     }
 
 
-    public function testItReplacesNamespaceConcatenatedStringConst()
+    public function testItReplacesNamespaceConcatenatedStringConst(): void
     {
 
         $originalNamespace = "net\\authorize\\api\\constants";
@@ -674,7 +674,7 @@ EOD;
     /**
      * Another mpdf issue where the class "Mpdf" is in the namespace "Mpdf" and incorrect replacements are being made.
      */
-    public function testClassnameNotConfusedWithNamespace()
+    public function testClassnameNotConfusedWithNamespace(): void
     {
 
         $contents = '$default_font_size = $mmsize * (Mpdf::SCALE);';
@@ -688,7 +688,7 @@ EOD;
         self::assertEqualsRN($expected, $result);
     }
 
-    public function testClassExtendsNamespacedClassIsPrefixed()
+    public function testClassExtendsNamespacedClassIsPrefixed(): void
     {
 
         $contents = 'class BarcodeException extends \Mpdf\MpdfException';
@@ -707,7 +707,7 @@ EOD;
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/11
      */
-    public function testNewNamespacedClassIsPrefixed()
+    public function testNewNamespacedClassIsPrefixed(): void
     {
 
         $contents = '$ioc->register( new \Carbon_Fields\Provider\Container_Condition_Provider() );';
@@ -727,7 +727,7 @@ EOD;
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/11
      */
-    public function testStaticNamespacedClassIsPrefixed()
+    public function testStaticNamespacedClassIsPrefixed(): void
     {
 
         $contents = '@method static \Carbon_Fields\Container\Comment_Meta_Container';
@@ -746,7 +746,7 @@ EOD;
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/11
      */
-    public function testReturnedNamespacedClassIsPrefixed()
+    public function testReturnedNamespacedClassIsPrefixed(): void
     {
 
         $contents = 'return \Carbon_Fields\Carbon_Fields::resolve';
@@ -765,7 +765,7 @@ EOD;
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/11
      */
-    public function testNamespacedStaticIsPrefixed()
+    public function testNamespacedStaticIsPrefixed(): void
     {
 
         $contents = '		\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable()';
@@ -788,7 +788,7 @@ EOD;
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/15
      */
-    public function testDoNotReplaceInStringThatIsNotCode()
+    public function testDoNotReplaceInStringThatIsNotCode(): void
     {
         $originalNamespace = "TrustedLogin";
         $replacement = "Prefix\\TrustedLogin";
@@ -811,7 +811,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/19
      *
      */
-    public function testDoNotReplaceInVariableNames()
+    public function testDoNotReplaceInVariableNames(): void
     {
         $originalClassname = 'object';
         $classnamePrefix = 'Strauss_Issue19_';
@@ -828,7 +828,7 @@ EOD;
         self::assertEqualsRN($expected, $result);
     }
 
-    public function testReplaceConstants()
+    public function testReplaceConstants(): void
     {
 
         $contents = <<<'EOD'
@@ -869,7 +869,7 @@ EOD;
         self::assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
     }
 
-    public function testStaticFunctionCallOfNamespacedClassIsPrefixed()
+    public function testStaticFunctionCallOfNamespacedClassIsPrefixed(): void
     {
 
         $contents = <<<'EOD'
@@ -895,7 +895,7 @@ EOD;
     }
 
 
-    public function testItPrefixesGroupedNamespacedClasses()
+    public function testItPrefixesGroupedNamespacedClasses(): void
     {
 
         $contents = 'use chillerlan\\QRCode\\{QRCode, QRCodeException};';
@@ -913,7 +913,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticSimpleCall()
+    public function testStaticSimpleCall(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -939,7 +939,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticVariableAssignment()
+    public function testStaticVariableAssignment(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -964,7 +964,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticIfConditionSingle()
+    public function testStaticIfConditionSingle(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1005,7 +1005,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticIfConditionMultipleAND()
+    public function testStaticIfConditionMultipleAND(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1045,7 +1045,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticIfConditionMultipleOR()
+    public function testStaticIfConditionMultipleOR(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1085,7 +1085,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticArrayNonAssociativeSingle()
+    public function testStaticArrayNonAssociativeSingle(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1114,7 +1114,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticArrayNonAssociativeMultipleAND()
+    public function testStaticArrayNonAssociativeMultipleAND(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1143,7 +1143,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticArrayNonAssociationMultipleOR()
+    public function testStaticArrayNonAssociationMultipleOR(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1172,7 +1172,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticArrayAssociativeSingle()
+    public function testStaticArrayAssociativeSingle(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1201,7 +1201,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticArrayAssociativeMultipleAND()
+    public function testStaticArrayAssociativeMultipleAND(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1229,7 +1229,7 @@ EOD;
      * @see https://github.com/BrianHenryIE/strauss/issues/25
      * @see https://gist.github.com/adrianstaffen/e1df25cd62c17d3f1a4697db6c449034
      */
-    public function testStaticArrayAssociativeMultipleOR()
+    public function testStaticArrayAssociativeMultipleOR(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1257,7 +1257,7 @@ EOD;
     /**
      * @see https://github.com/BrianHenryIE/strauss/issues/26
      */
-    public function testDoublePrefixBug()
+    public function testDoublePrefixBug(): void
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);

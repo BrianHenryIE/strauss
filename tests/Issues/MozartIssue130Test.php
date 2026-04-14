@@ -23,7 +23,7 @@ class MozartIssue130Test extends IntegrationTestCase
     /**
      * @author BrianHenryIE
      */
-    public function test_config_copied()
+    public function test_config_copied(): void
     {
         $this->markTestSkipped('too slow');
 

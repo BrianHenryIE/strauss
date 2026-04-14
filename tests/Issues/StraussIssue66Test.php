@@ -18,7 +18,7 @@ class StraussIssue66Test extends IntegrationTestCase
 
     /**
      */
-    public function test_wp_graphql_prefix_main_class()
+    public function test_wp_graphql_prefix_main_class(): void
     {
 
         $composerJsonString = <<<'EOD'

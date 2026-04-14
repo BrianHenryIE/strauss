@@ -13,7 +13,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue206Test extends IntegrationTestCase
 {
-    public function test_cleans_installedjson_autoloadfiles_on_vendor_delete_packages()
+    public function test_cleans_installedjson_autoloadfiles_on_vendor_delete_packages(): void
     {
 
         $composerJsonString = <<<'EOD'

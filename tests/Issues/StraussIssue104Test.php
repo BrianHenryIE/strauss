@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue104Test extends IntegrationTestCase
 {
-    public function test_correct_directory_permission()
+    public function test_correct_directory_permission(): void
     {
         $this->markTestSkippedOnWindows('Expected 0755, Actual 0777');
 

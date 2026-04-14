@@ -31,7 +31,7 @@ class MozartIssue62Test extends IntegrationTestCase
     /**
      * Just confirms `use Guzzle\Common\Collection;` is prefixed.
      */
-    public function testGuzzleNamespaceIsPrefixedInS3Client()
+    public function testGuzzleNamespaceIsPrefixedInS3Client(): void
     {
         self::markTestSkipped('Very slow to run.');
 
