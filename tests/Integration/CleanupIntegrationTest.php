@@ -88,7 +88,7 @@ EOD;
     /**
      * When `delete_vendor_packages` is true, the autoloader should be cleaned of files that are not needed.
      */
-    public function testFilesAutoloaderCleaned()
+    public function testFilesAutoloaderCleaned():void
     {
         $composerJsonString = <<<'EOD'
 {

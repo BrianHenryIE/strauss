@@ -28,7 +28,7 @@ class LicenserTest extends TestCase
     /**
      * @covers ::findLicenseFiles
      */
-    public function testFindLicenceFilesPathsAreRelative()
+    public function testFindLicenceFilesPathsAreRelative():void
     {
         $config = $this->createStub(StraussConfig::class);
 
@@ -93,7 +93,7 @@ class LicenserTest extends TestCase
      *
      * @covers ::addChangeDeclarationToPhpString
      */
-    public function testAppendHeaderCommentInformationNoHeader()
+    public function testAppendHeaderCommentInformationNoHeader():void
     {
         $author = 'BrianHenryIE';
 
@@ -143,7 +143,7 @@ EOD;
      *
      * @covers ::addChangeDeclarationToPhpString
      */
-    public function testAppendHeaderCommentNoDate()
+    public function testAppendHeaderCommentNoDate():void
     {
 
         $author = 'BrianHenryIE';
@@ -184,7 +184,7 @@ EOD;
     /**
      * @covers ::addChangeDeclarationToPhpString
      */
-    public function testAppendHeaderCommentNoAuthor()
+    public function testAppendHeaderCommentNoAuthor():void
     {
 
         $author = 'BrianHenryIE';
@@ -282,7 +282,7 @@ EOD;
      *
      * @covers ::addChangeDeclarationToPhpString
      */
-    public function testWithTwoCommentsBeforeFirstCode()
+    public function testWithTwoCommentsBeforeFirstCode():void
     {
 
         $config = $this->createMock(StraussConfig::class);
@@ -351,7 +351,7 @@ EOD;
     /**
      * @covers ::addChangeDeclarationToPhpString
      */
-    public function testUnusualHeaderCommentStyle()
+    public function testUnusualHeaderCommentStyle():void
     {
 
         $config = $this->createMock(StraussConfig::class);
@@ -405,7 +405,7 @@ EOD;
     /**
      * @covers ::addChangeDeclarationToPhpString
      */
-    public function testCommentWithLicenseWord()
+    public function testCommentWithLicenseWord():void
     {
 
         $config = $this->createMock(StraussConfig::class);
@@ -473,7 +473,7 @@ EOD;
      *
      * Seems files loaded are treated different to strings passed.
      */
-    public function testIncorrectlyMatching()
+    public function testIncorrectlyMatching():void
     {
 
         $config = $this->createMock(StraussConfig::class);
@@ -549,7 +549,7 @@ EOD;
     /**
      * The licence was being inserted after every `<?php` in the file.
      */
-    public function testLicenseDetailsOnlyInsertedOncePerFile()
+    public function testLicenseDetailsOnlyInsertedOncePerFile():void
     {
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
