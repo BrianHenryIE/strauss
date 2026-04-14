@@ -25,7 +25,7 @@ use League\Flysystem\WhitespacePathNormalizer;
 use Traversable;
 
 // TODO: When a directory is deleted, all the files in that directory should be marked deleted?
-// OR each parent diectory of a file should be checked it exists before the file is read?
+// OR each parent directory of a file should be checked it exists before the file is read?
 
 class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitInterface
 {
