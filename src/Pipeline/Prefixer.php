@@ -208,6 +208,7 @@ class Prefixer
         try {
             $ast = $parser->parse($contents);
         } catch (\PhpParser\Error $e) {
+            $this->logger->warning("Skipping ::replaceConstFetchNamespaces() in file due to parse error: " . $e->getMessage());
             return $contents;
         }
 
@@ -512,6 +513,7 @@ class Prefixer
         try {
             $ast = $parser->parse($contents);
         } catch (\PhpParser\Error $e) {
+            $this->logger->warning("Skipping ::replaceFunctions() in file due to parse error: " . $e->getMessage());
             return $contents;
         }
 
@@ -609,6 +611,7 @@ class Prefixer
         try {
             $ast = $parser->parse($phpFileContent);
         } catch (\PhpParser\Error $e) {
+            $this->logger->warning("Skipping ::prepareRelativeNamespaces() in file due to parse error: " . $e->getMessage());
             return $phpFileContent;
         }
 
