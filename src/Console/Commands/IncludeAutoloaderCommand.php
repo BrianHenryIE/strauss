@@ -99,6 +99,6 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
 
         $this->config = $this->projectComposerPackage->getStraussConfig();
         $config = new StraussConfig();
-        $config->setProjectDirectory(getcwd());
+        $config->setProjectAbsolutePath(getcwd());
     }
 }

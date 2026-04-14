@@ -363,12 +363,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
             return $this->symlinkProtectFilesystem;
         }
 
-        $localFilesystemLocation = PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
+        $localFilesystemLocation = Filesystem::getFsRoot($this->testsWorkingDir);
 
         $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
 
         $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
-            null,
+            $localFilesystemLocation,
+            Filesystem::makePathNormalizer($this->testsWorkingDir),
             $pathPrefixer,
             $this->getTestLogger()
         );

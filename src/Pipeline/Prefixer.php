@@ -75,8 +75,8 @@ class Prefixer
                 continue;
             }
 
-            if ($this->filesystem->directoryExists($file->getAbsoluteTargetPath())) {
-                $this->logger->debug("is_dir() / nothing to do : {$file->getAbsoluteTargetPath()}");
+            if ($this->filesystem->directoryExists($file->getTargetAbsolutePath())) {
+                $this->logger->debug("is_dir() / nothing to do : {$file->getTargetAbsolutePath()}");
                 continue;
             }
 
@@ -84,26 +84,26 @@ class Prefixer
                 continue;
             }
 
-            if (!$this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
-                $this->logger->warning("Expected file does not exist: {$file->getAbsoluteTargetPath()}");
+            if (!$this->filesystem->fileExists($file->getTargetAbsolutePath())) {
+                $this->logger->warning("Expected file does not exist: {$file->getTargetAbsolutePath()}");
                 continue;
             }
 
-            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $file->getAbsoluteTargetPath());
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $file->getTargetAbsolutePath());
 
             $this->logger->debug("Updating contents of file: {$relativeFilePath}");
 
             /**
              * Throws an exception, but unlikely to happen.
              */
-            $contents = $this->filesystem->read($file->getAbsoluteTargetPath());
+            $contents = $this->filesystem->read($file->getTargetAbsolutePath());
 
             $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
                 // TODO: diff here and debug log.
                 $file->setDidUpdate();
-                $this->filesystem->write($file->getAbsoluteTargetPath(), $updatedContents);
+                $this->filesystem->write($file->getTargetAbsolutePath(), $updatedContents);
                 $this->logger->info("Updated contents of file: {$relativeFilePath}");
             } else {
                 $this->logger->debug("No changes to file: {$relativeFilePath}");

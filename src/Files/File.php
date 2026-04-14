@@ -33,16 +33,20 @@ class File implements FileBase
     /** @var DiscoveredSymbol[] */
     protected array $discoveredSymbols = [];
 
-    protected string $absoluteTargetPath;
+    protected string $targetAbsolutePath;
 
     protected bool $didDelete = false;
 
     protected bool $doPrefix = false;
 
-    public function __construct(string $sourceAbsolutePath, string $vendorRelativePath)
-    {
+    public function __construct(
+        string $sourceAbsolutePath,
+        string $vendorRelativePath,
+        string $targetAbsolutePath
+    ) {
         $this->sourceAbsolutePath = $sourceAbsolutePath;
         $this->vendorRelativePath = $vendorRelativePath;
+        $this->targetAbsolutePath = $targetAbsolutePath;
     }
 
     public function getSourcePath(): string
@@ -147,19 +151,18 @@ class File implements FileBase
         return $this->discoveredSymbols;
     }
 
-    public function setAbsoluteTargetPath(string $absoluteTargetPath): void
+    public function setTargetAbsolutePath(string $targetAbsolutePath): void
     {
-        $this->absoluteTargetPath = $absoluteTargetPath;
+        $this->targetAbsolutePath = $targetAbsolutePath;
     }
 
     /**
      * The target path to (maybe) copy the file to, and the target path to perform replacements in (which may be the
      * original path).
      */
-    public function getAbsoluteTargetPath(): string
+    public function getTargetAbsolutePath(): string
     {
-        // TODO: Maybe this is a mistake and should better be an exception.
-        return isset($this->absoluteTargetPath) ? $this->absoluteTargetPath : $this->sourceAbsolutePath;
+        return $this->targetAbsolutePath;
     }
 
     protected bool $didUpdate = false;

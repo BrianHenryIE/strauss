@@ -28,7 +28,7 @@ class CopierTest extends TestCase
         $filesystem->write($filepath, 'test');
 
         $file = new File($filepath, 'file.php');
-        $file->setAbsoluteTargetPath($targetDir . '/file.php');
+        $file->setTargetAbsolutePath($targetDir . '/file.php');
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
@@ -59,7 +59,7 @@ class CopierTest extends TestCase
         $filesystem->write($filepath, 'test');
 
         $file = new File($filepath, 'file.php');
-        $file->setAbsoluteTargetPath($targetDir . '/file.php');
+        $file->setTargetAbsolutePath($targetDir . '/file.php');
         $file->setDoCopy(false);
 
         $discoveredFiles = new DiscoveredFiles();
@@ -91,7 +91,7 @@ class CopierTest extends TestCase
         $file = Mockery::mock(File::class);
         $file->expects()->isDoCopy()->andReturnTrue();
         $file->expects()->getSourcePath()->andReturn($filepath)->atleast()->Once();
-        $file->expects()->getAbsoluteTargetPath()->andReturn($targetDir . '/file.php');
+        $file->expects()->getTargetAbsolutePath()->andReturn($targetDir . '/file.php');
         $file->expects()->setDoPrefix(false);
 
         $discoveredFiles = new DiscoveredFiles();
@@ -115,7 +115,7 @@ class CopierTest extends TestCase
         $filesystem->createDirectory($sourceDir);
 
         $file = new File($sourceDir, 'file.php');
-        $file->setAbsoluteTargetPath($targetDir);
+        $file->setTargetAbsolutePath($targetDir);
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);

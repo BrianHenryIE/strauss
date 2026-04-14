@@ -141,7 +141,7 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         $this->logger->notice('Loading cli config...');
 
         $config = new StraussConfig();
-        $config->setProjectDirectory(getcwd());
+        $config->setProjectAbsolutePath(getcwd());
 
         /** @var string $inputFrom */
         $inputFrom = $input->getOption('from');

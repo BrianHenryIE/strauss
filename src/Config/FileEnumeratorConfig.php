@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Config;
 interface FileEnumeratorConfig
 {
 
+    public function getProjectAbsolutePath(): string;
     public function getAbsoluteVendorDirectory(): string;
 
     public function getAbsoluteTargetDirectory(): string;

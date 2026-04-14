@@ -127,7 +127,7 @@ class Cleanup
 
         $projectComposerJson = new JsonFile(
             $this->filesystem->makeAbsolute(
-                $this->config->getProjectDirectory() . '/composer.json' // Factory::getComposerFile();
+                $this->config->getProjectAbsolutePath() . '/composer.json' // Factory::getComposerFile();
             )
         );
         $projectComposerJsonArray = $projectComposerJson->read();

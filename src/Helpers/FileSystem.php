@@ -8,11 +8,6 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use BrianHenryIE\Strauss\Files\FileBase;
-use BrianHenryIE\Strauss\Pipeline\Autoload;
-use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
-use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
-use Composer\Factory;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
@@ -25,7 +20,6 @@ use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
-use League\Flysystem\WhitespacePathNormalizer;
 
 class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCompatTraitInterface, PathNormalizer
 //class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, PathNormalizer

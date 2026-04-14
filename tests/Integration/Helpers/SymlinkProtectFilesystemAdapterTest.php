@@ -6,9 +6,6 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
-use BrianHenryIE\Strauss\Helpers\Filesystem;
-use League\Flysystem\Filesystem as FlysystemFilesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter
@@ -28,15 +25,20 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
         // aka /fakedir/file.txt
         symlink($this->testsWorkingDir . '/realdir', $this->testsWorkingDir . '/fakedir');
 
-        $rootFilesystem = new LocalFilesystemAdapter('/');
-
         $sut = new SymlinkProtectFilesystemAdapter(
+            Filesystem::getFsRoot($this->testsWorkingDir),
             null,
             null,
-            $this->getLogger()
+            $this->getTestLogger()
         );
 
-        $this->filesystem = new Filesystem($sut);
+        $this->filesystem = new Filesystem(
+            $sut,
+            [],
+            Filesystem::makePathNormalizer($this->testsWorkingDir),
+            null,
+            $this->testsWorkingDir,
+        );
     }
 
     public function tearDown(): void

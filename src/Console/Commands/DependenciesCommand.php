@@ -7,7 +7,6 @@ use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
@@ -34,13 +33,8 @@ use Elazar\Flystream\ServiceLocator;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
-use Monolog\Handler\PsrHandler;
-use Monolog\Logger;
-use Monolog\Processor\PsrLogMessageProcessor;
-use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
@@ -147,6 +141,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
 
         $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
+            $localFilesystemLocation,
             null,
             $pathPrefixer,
             $this->logger
@@ -424,7 +419,11 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $psr4autoloadKey = $autoloadKey['psr-4'];
             $namespaces = array_keys($psr4autoloadKey);
 
-            $file = new File($package->getPackageAbsolutePath() . '/composer.json', '/../composer.json');
+            $file = new File(
+                $package->getPackageAbsolutePath() . '/composer.json',
+                '/../composer.json',
+                $package->getPackageAbsolutePath() . '/composer.json',
+            );
 
             foreach ($namespaces as $namespace) {
                 // TODO: log.

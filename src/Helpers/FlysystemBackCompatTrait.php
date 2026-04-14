@@ -43,10 +43,13 @@ trait FlysystemBackCompatTrait
         }
 
         // symlinks.
-        if (false !== realpath($this->pathPrefixer->prefixPath($location))
-            && is_dir($this->pathPrefixer->prefixPath($location))) {
-            return true;
+        if (property_exists($this, 'pathPrefixer')) {
+            if (false !== realpath($this->pathPrefixer->prefixPath($location))
+                && is_dir($this->pathPrefixer->prefixPath($location))) {
+                return true;
+            }
         }
+
 
         return false;
     }

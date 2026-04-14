@@ -9,9 +9,9 @@ interface FileBase
 
     public function getSourcePath(): string;
 
-    public function getAbsoluteTargetPath(): string;
+    public function getTargetAbsolutePath(): string;
 
-    public function setAbsoluteTargetPath(string $absoluteTargetPath): void;
+    public function setTargetAbsolutePath(string $absoluteTargetPath): void;
 
     public function getVendorRelativePath(): string;
 

@@ -102,7 +102,7 @@ class FileSymbolScanner
             }
 
             $relativeFilePath = $this->filesystem->getRelativePath(
-                $this->config->getProjectDirectory(),
+                $this->config->getProjectAbsolutePath(),
                 $file->getSourcePath()
             );
 

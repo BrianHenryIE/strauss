@@ -32,7 +32,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             FileEnumeratorConfig::class
         );
         $config->expects('isDryRun')->times(2)->andReturnFalse();
-        $config->expects('getProjectDirectory')->times(2)->andReturn('project');
+        $config->expects('getProjectAbsolutePath')->times(2)->andReturn('project');
         $config->expects('getAbsoluteTargetDirectory')->times(3)->andReturn('project/vendor-prefixed');
         $config->expects('getRelativeTargetDirectory')->times(1)->andReturn('vendor-prefixed');
         $config->expects('isTargetDirectoryVendor')->times(3)->andReturnFalse();

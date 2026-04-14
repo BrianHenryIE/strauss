@@ -94,7 +94,7 @@ class DumpAutoload
         $projectComposerJson = new JsonFile(
             $this->filesystem->makeAbsolute(
                 $this->filesystem->normalizePath(
-                    $this->config->getProjectDirectory() . '/' . Factory::getComposerFile()
+                    $this->config->getProjectAbsolutePath() . '/' . Factory::getComposerFile()
                 )
             )
         );
@@ -131,7 +131,7 @@ class DumpAutoload
         $config = new Config(
             false,
             $this->filesystem->makeAbsolute(
-                $this->config->getProjectDirectory()
+                $this->config->getProjectAbsolutePath()
             )
         );
 
@@ -141,7 +141,7 @@ class DumpAutoload
         $config->merge($projectComposerConfigMergeArray);
 
         $generator = $this->composerAutoloadGeneratorFactory->get(
-            $this->config->getNamespacePrefix() ?? $this->config->getProjectDirectory(),
+            $this->config->getNamespacePrefix() ?? $this->config->getProjectAbsolutePath(),
             $composer->getEventDispatcher()
         );
         $isOptimize = $this->isOptimizeAutoloaderEnabled();
@@ -279,7 +279,7 @@ class DumpAutoload
             $phpFiles
         );
 
-        $sourceFile = new File(__DIR__, __DIR__);
+        $sourceFile = new File(__DIR__, __DIR__, __DIR__);
         $composerAutoloadNamespaceSymbol = new NamespaceSymbol(
             'Composer\\Autoload',
             $sourceFile

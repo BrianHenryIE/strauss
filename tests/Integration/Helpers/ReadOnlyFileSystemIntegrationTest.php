@@ -234,7 +234,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 //        );
         $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
 
-        $filesystem = new FileSystem($sut, '/');
+        $filesystem = new FileSystem($sut, [], null, null, '/');
 
         $this->assertDirectoryExists($newDir, "File was not created on disk");
         $this->assertDirectoryExistsInFileSystem($newDir, $this->getFileSystem(), "League Flysystem cannot see the directory on disk.");

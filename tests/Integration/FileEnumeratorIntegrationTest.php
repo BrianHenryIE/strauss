@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mockery;
 
 /**
  * Class FileEnumeratorIntegrationTest
@@ -54,15 +55,22 @@ EOD;
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
             $package = ComposerPackage::fromFile($composerFile);
-            $package->setProjectVendorDirectory($this->testsWorkingDir . '/vendor/');
+            $package->setProjectVendorDirectory($this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor'));
             return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
-        $vendorDir = 'vendor';
 
-        $config = $this->createStub(StraussConfig::class);
-        $config->method('getAbsoluteVendorDirectory')->willReturn($this->testsWorkingDir . '/' . $vendorDir);
+        $config = Mockery::mock(StraussConfig::class);
+        $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn(
+            $this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor')
+        );
+        $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn(
+            $this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor-prefixed')
+        );
+        $config->shouldReceive('getProjectAbsolutePath')->andReturn(
+            $this->pathNormalizer->normalizePath($this->testsWorkingDir)
+        );
 
         $fileEnumerator = new FileEnumerator(
             $config,
@@ -72,7 +80,7 @@ EOD;
 
         $files = $fileEnumerator->compileFileListForDependencies($dependencies);
 
-        $filePath = $this->getFileSystem()->makeAbsolute($this->getFileSystem()->normalizePath($workingDir . '/vendor/' . 'google/apiclient/src/aliases.php'));
+        $filePath = $this->getFileSystem()->normalizePath($workingDir . '/vendor/google/apiclient/src/aliases.php');
         $this->assertNotNull(
             $files->getFile($filePath),
             'File ' . $filePath . ' should be in $files array'
