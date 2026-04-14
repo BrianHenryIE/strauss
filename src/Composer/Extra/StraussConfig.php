@@ -225,7 +225,7 @@ class StraussConfig implements
             $composerDir = str_ends_with($composerDir, '.json') // TODO: replace with a file exists/dir exists check.
                 ? dirname($composerDir) : $composerDir;
             $normalizer = FileSystem::makePathNormalizer(getcwd());
-            $this->projectDirectory = $normalizer->($composerDir);
+            $this->projectDirectory = $normalizer->normalizePath($composerDir);
         }
 
         $configExtraSettings = null;

@@ -27,13 +27,13 @@ trait FlysystemBackCompatTrait
 //        }
 
         if (property_exists($this, 'filesystem') && method_exists($this->filesystem, 'directoryExists')) {
-            return $this->filesystem->directoryExists($normalizedLocation);
+            return $this->filesystem->directoryExists($location);
         }
 
-        $parentDirectoryContents = $this->listContents(dirname($normalizedLocation), false);
+        $parentDirectoryContents = $this->listContents(dirname($location), false);
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
-            if ($entry->path() == $normalizedLocation) {
+            if ($entry->path() == $location) {
                 return $entry->isDir();
             }
         }

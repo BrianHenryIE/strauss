@@ -93,7 +93,9 @@ class DumpAutoload
 
         $projectComposerJson = new JsonFile(
             $this->filesystem->makeAbsolute(
-                $this->config->getProjectDirectory() . '/'.Factory::getComposerFile()
+                $this->filesystem->normalizePath(
+                    $this->config->getProjectDirectory() . '/' . Factory::getComposerFile()
+                )
             )
         );
 
@@ -128,7 +130,7 @@ class DumpAutoload
          */
         $config = new Config(
             false,
-            $this->filesystem->prefixPath(
+            $this->filesystem->makeAbsolute(
                 $this->config->getProjectDirectory()
             )
         );

@@ -22,13 +22,12 @@ class FileSystemTest extends TestCase
     public function testFileAttributes(): void
     {
         $sut = new FileSystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot()
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
-            )
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot()
+            ),
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
         $result = $sut->getAttributes(__FILE__);
@@ -39,13 +38,12 @@ class FileSystemTest extends TestCase
     public function testIsDirTrue(): void
     {
         $sut = new FileSystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot()
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
-            )
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot()
+            ),
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
         $result = $sut->directoryExists(__DIR__);
@@ -67,13 +65,15 @@ class FileSystemTest extends TestCase
         $unixWorkingDir = '/home/user/project/';
 
         $sut = new FileSystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot($unixWorkingDir)
-                ),
-                [
-                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ]
-            )
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot($unixWorkingDir)
+            ),
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            null,
+            '/'
         );
 
         // Simulate a path that's been through Flysystem's normalizer (no leading slash)
@@ -90,12 +90,15 @@ class FileSystemTest extends TestCase
     public function testMakeAbsolutePreservesWindowsDriveLetter(): void
     {
         $sut = new FileSystem(
-                new LocalFilesystemAdapter(
-                    'c:\\'
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                'c:\\'
+            ),
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            null,
+            'c:\\'
         );
 
         $result = $sut->makeAbsolute('C:/Users/dev/project/composer.json');
@@ -116,14 +119,15 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new LocalFilesystemAdapter(
-                'd:\brian'
+                'd:\\brian'
             ),
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ]
+            ],
+            null,
+            null,
+            'd:\\'
         );
-            ),
-            'd:/'
 
         $result = $sut->makeAbsolute('d:/Work/project/composer.json');
 
@@ -155,7 +159,10 @@ class FileSystemTest extends TestCase
             ),
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ]
+            ],
+            null,
+            null,
+            '/'
         );
 
         // Input has leading slash, but Flysystem normalizer will strip it

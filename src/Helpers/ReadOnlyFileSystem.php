@@ -18,7 +18,6 @@ use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
-use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
@@ -73,14 +72,11 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
      * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function write(string $location, string $contents, array $config = []): void
+    public function write(string $location, string $contents, $config = []): void
     {
         $location = $this->pathNormalizer->normalizePath($location);
 
-        $configObject = $config instanceof Config ? $config : new Config($config);
-        $this->inMemoryFiles->write($location, $contents, $configObject);
-
-        $config = new Config($config);
+        $config = $config instanceof Config ? $config : new Config($config);
         $this->inMemoryFiles->write($location, $contents, $config);
 
         if ($this->deletedFiles->fileExists($location)) {

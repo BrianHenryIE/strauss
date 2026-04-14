@@ -228,11 +228,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
-        $normalizer = FileSystem::makePathNormalizer('/');
+        $normalizer = FileSystem::makePathNormalizer('inmemory://');
 
         $inMemoryFilesystem = new InMemoryFilesystemAdapter();
 
-        $pathPrefixer = new PathPrefixer('mem://', '/');
+        $pathPrefixer = new PathPrefixer('inmemory://', '/');
 
         $filesystem = new Filesystem(
             $inMemoryFilesystem,
@@ -250,7 +250,18 @@ class TestCase extends \PHPUnit\Framework\TestCase
          * @var FilesystemRegistry $registry
          */
         $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-        $registry->register('mem', $filesystem);
+
+        if (method_exists($registry, 'has') && $registry->has('inmemory')) {
+            $registry->unregister('inmemory');
+        } else {
+            try {
+                $registry->get('inmemory');
+                $registry->unregister('inmemory');
+            } catch (Exception $exception) {
+            }
+        }
+
+        $registry->register('inmemory', $filesystem);
 
         return $filesystem;
     }
