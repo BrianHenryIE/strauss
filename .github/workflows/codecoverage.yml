@@ -214,7 +214,7 @@ jobs:
           echo "$OUTPUT" >> coverage-comment.md
 
       - name: Comment on PR
-        uses: mshick/add-pr-comment@v2
+        uses: mshick/add-pr-comment@v3
         if: ${{ matrix.php == env.COVERAGE_PHP_VERSION && github.event_name == 'pull_request' }} # We only need it added once
         with:
           message-id: coverage-report
