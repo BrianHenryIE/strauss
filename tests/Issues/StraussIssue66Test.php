@@ -26,6 +26,11 @@ class StraussIssue66Test extends IntegrationTestCase
   "require": {
     "wp-graphql/wp-graphql": "^1.12"
   },
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
+  },
   "extra": {
     "strauss": {
       "namespace_prefix": "MyProject\\Dependencies\\",
