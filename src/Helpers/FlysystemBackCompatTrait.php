@@ -34,7 +34,12 @@ trait FlysystemBackCompatTrait
             return $this->filesystem->directoryExists($location);
         }
 
-        $parentDirectoryContents = $this->listContents(dirname($location), false);
+        $parentDir = dirname($location);
+        if (method_exists($this, 'normalizePath')) {
+            $parentDir = $this->normalizePath($parentDir);
+        }
+        $parentDir = $parentDir === '.' ? '/' : $parentDir;
+        $parentDirectoryContents = $this->listContents($parentDir, false);
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
             if ($entry->path() == $location) {
@@ -49,7 +54,6 @@ trait FlysystemBackCompatTrait
                 return true;
             }
         }
-
 
         return false;
     }

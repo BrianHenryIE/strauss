@@ -336,6 +336,8 @@ EOD;
      */
     public function test_excluded_package_removed_from_target_installed_json_but_retained_in_vendor_installed_json(): void
     {
+        // TODO: Failing because writing to inmemory://path is setting an empty string.
+
         $installedJson = <<<'EOD'
 {
     "packages": [
@@ -365,8 +367,8 @@ EOD;
         $fileSystem->write('vendor/composer/installed.json', $installedJson);
 
         $config = Mockery::mock(CleanupConfigInterface::class);
-        $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('mem://vendor');
-        $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('mem://vendor-prefixed');
+        $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('vendor');
+        $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed');
         $config->shouldReceive('getExcludePackagesFromCopy')->andReturn(['psr/log']);
         $config->shouldReceive('isDryRun')->andReturnFalse();
 

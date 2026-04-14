@@ -54,6 +54,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function setUp(): void
     {
+        $this->createWorkingDir();
+
         parent::setUp();
 
         /**
@@ -241,7 +243,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             ],
             $normalizer,
             $pathPrefixer,
-            'mem://'
+            'inmemory://'
         );
 
         /**
@@ -273,7 +275,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
         }
 
         if (is_null($filesystem)) {
-            $filesystem = $this->getSymlinkProtectFilesystem();
+            $filesystem = isset($this->testsWorkingDir)
+                ? $this->getSymlinkProtectFilesystem()
+                : $this->getNewInMemoryFileSystem();
         }
 
         $normalizer = new WhitespacePathNormalizer();

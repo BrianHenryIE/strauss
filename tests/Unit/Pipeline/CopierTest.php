@@ -27,7 +27,12 @@ class CopierTest extends TestCase
         $filepath = $sourceDir . '/file.php';
         $filesystem->write($filepath, 'test');
 
-        $file = new File($filepath, 'file.php');
+        $file = new File(
+            $filepath,
+            '
+            file.php',
+            $targetDir . '/file.php'
+        );
         $file->setTargetAbsolutePath($targetDir . '/file.php');
 
         $discoveredFiles = new DiscoveredFiles();
@@ -58,7 +63,11 @@ class CopierTest extends TestCase
         $filepath = $sourceDir . '/file.php';
         $filesystem->write($filepath, 'test');
 
-        $file = new File($filepath, 'file.php');
+        $file = new File(
+            $filepath,
+            'file.php',
+            $targetDir . '/file.php'
+        );
         $file->setTargetAbsolutePath($targetDir . '/file.php');
         $file->setDoCopy(false);
 
@@ -109,20 +118,25 @@ class CopierTest extends TestCase
     {
         $filesystem = $this->getReadOnlyFileSystem();
 
-        $sourceDir = 'mem://source';
-        $targetDir = 'mem://target';
+        $sourceDir = 'source';
+        $targetDir = 'target';
 
         $filesystem->createDirectory($sourceDir);
 
-        $file = new File($sourceDir, 'file.php');
-        $file->setTargetAbsolutePath($targetDir);
+        $file = new File(
+            $sourceDir. '/file.php',
+            'file.php',
+            $targetDir . '/file.php'
+        );
+
+        $filesystem->write($sourceDir . '/file.php', 'test');
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
 
         $config = \Mockery::mock(CopierConfigInterface::class);
 
-        $sut = new Copier($discoveredFiles, $config, $filesystem, $this->getLogger());
+        $sut = new Copier($discoveredFiles, $config, $filesystem, $this->getTestLogger());
         $sut->copy();
 
         $this->assertTrue($filesystem->directoryExists($targetDir));
