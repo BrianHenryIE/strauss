@@ -16,7 +16,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 class StraussIssue34Test extends IntegrationTestCase
 {
 
-    public function test_no_double_prefix_after_second_run():void
+    public function test_no_double_prefix_after_second_run(): void
     {
         $composerJsonString = <<<'EOD'
 {

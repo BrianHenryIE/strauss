@@ -17,7 +17,7 @@ class MozartIssue128Test extends IntegrationTestCase
      * Because the neither package was a sub-package of the other, the replacing was not occurring
      * throughout.
      */
-    public function test_fpdf():void
+    public function test_fpdf(): void
     {
 
         if (version_compare(phpversion(), '7.0', '>')) {

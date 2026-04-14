@@ -13,7 +13,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue154Test extends IntegrationTestCase
 {
-    public function test_relative_namespaces():void
+    public function test_relative_namespaces(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.3');
 
@@ -53,7 +53,7 @@ EOD;
     /**
      * @see https://github.com/BrianHenryIE/strauss/pull/157#issuecomment-2753898094
      */
-    public function test_use():void
+    public function test_use(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.3');
 
@@ -93,7 +93,7 @@ EOD;
     /**
      * @see https://github.com/BrianHenryIE/strauss/pull/157#issuecomment-2757377363
      */
-    public function test_parameter():void
+    public function test_parameter(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.3');
 
@@ -133,7 +133,7 @@ EOD;
     /**
      * @see https://github.com/BrianHenryIE/strauss/pull/157#issuecomment-2757377363
      */
-    public function test_constant():void
+    public function test_constant(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.3');
 

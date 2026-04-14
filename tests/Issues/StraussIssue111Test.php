@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue111Test extends IntegrationTestCase
 {
-    public function test_phpdoc():void
+    public function test_phpdoc(): void
     {
         $composerJsonString = <<<'EOD'
 {

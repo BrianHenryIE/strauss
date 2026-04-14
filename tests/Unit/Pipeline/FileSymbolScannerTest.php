@@ -30,7 +30,7 @@ class FileSymbolScannerTest extends TestCase
     /**
      * @covers ::findInFiles
      */
-    public function testSingleNamespace():void
+    public function testSingleNamespace(): void
     {
 
         $contents = <<<'EOD'
@@ -72,7 +72,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testGlobalNamespace():void
+    public function testGlobalNamespace(): void
     {
 
         $contents = <<<'EOD'
@@ -109,7 +109,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testMultipleNamespace():void
+    public function testMultipleNamespace(): void
     {
 
         $contents = <<<'EOD'
@@ -153,7 +153,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testMultipleNamespaceGlobalFirst():void
+    public function testMultipleNamespaceGlobalFirst(): void
     {
 
         $contents = <<<'EOD'
@@ -263,7 +263,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testMultipleClasses():void
+    public function testMultipleClasses(): void
     {
 
         $contents = <<<'EOD'
@@ -303,7 +303,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_comments_as_classes():void
+    public function test_it_does_not_treat_comments_as_classes(): void
     {
         $contents = "
         // A class as good as any.
@@ -341,7 +341,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_multiline_comments_as_classes():void
+    public function test_it_does_not_treat_multiline_comments_as_classes(): void
     {
         $contents = "
     	 /**
@@ -384,7 +384,7 @@ EOD;
      *
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_multiline_comments_opening_line_as_classes():void
+    public function test_it_does_not_treat_multiline_comments_opening_line_as_classes(): void
     {
         $contents = "
     	 /** A class as good as any; class as.
@@ -423,7 +423,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_multiline_comments_on_one_line_as_classes():void
+    public function test_it_does_not_treat_multiline_comments_on_one_line_as_classes(): void
     {
         $contents = "
     	 /** A class as good as any; class as. */ class Whatever_Trevor {
@@ -461,7 +461,7 @@ EOD;
      *
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_comments_with_semicolons_as_classes():void
+    public function test_it_does_not_treat_comments_with_semicolons_as_classes(): void
     {
         $contents = "
     	// A class as good as any; class as versatile as any.
@@ -498,7 +498,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_parses_classes_after_semicolon():void
+    public function test_it_parses_classes_after_semicolon(): void
     {
 
         $contents = "
@@ -532,7 +532,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_parses_classes_followed_by_comment():void
+    public function test_it_parses_classes_followed_by_comment(): void
     {
 
         $contents = <<<'EOD'
@@ -615,7 +615,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testExcludePackagesFromPrefix():void
+    public function testExcludePackagesFromPrefix(): void
     {
 
         $filesystemReaderMock = Mockery::mock(Filesystem::class);
@@ -652,7 +652,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testExcludeFilePatternsFromPrefix():void
+    public function testExcludeFilePatternsFromPrefix(): void
     {
         $filesystemReaderMock = Mockery::mock(Filesystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn('');
@@ -691,7 +691,7 @@ EOD;
      *
      * @covers ::findInFiles
      */
-    public function testNamespaceReplacementPatterns():void
+    public function testNamespaceReplacementPatterns(): void
     {
         $contents = "
         <?php
@@ -736,7 +736,7 @@ EOD;
      *
      * @covers ::findInFiles
      */
-    public function testPhraseClassObjectIsNotMistaken():void
+    public function testPhraseClassObjectIsNotMistaken(): void
     {
 
         $contents = <<<'EOD'
@@ -790,7 +790,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testDefineConstant():void
+    public function testDefineConstant(): void
     {
 
         $contents = <<<'EOD'

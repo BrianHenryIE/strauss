@@ -19,7 +19,7 @@ class StraussIssue19Test extends IntegrationTestCase
      *
      * @author BrianHenryIE
      */
-    public function testObjectIsNotPrefixed():void
+    public function testObjectIsNotPrefixed(): void
     {
         $this->markTestSkippedOnPhpVersionBelow('8.0');
 

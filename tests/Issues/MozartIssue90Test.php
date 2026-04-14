@@ -20,7 +20,7 @@ class MozartIssue90Test extends IntegrationTestCase
      *
      * Error: "File already exists at path: classmap_directory/tecnickcom/tcpdf/tcpdf.php".
      */
-    public function testLibpdfmergeSucceeds():void
+    public function testLibpdfmergeSucceeds(): void
     {
         $this->markTestSkipped('This fails when php-parser parses. The laptop Im writing on fails with other tests. There is still hope');
 

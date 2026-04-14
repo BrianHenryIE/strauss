@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue109Test extends IntegrationTestCase
 {
-    public function test_absent_cli_argument_parsing_does_not_overwrite_config():void
+    public function test_absent_cli_argument_parsing_does_not_overwrite_config(): void
     {
         $composerJsonString = <<<'EOD'
 {

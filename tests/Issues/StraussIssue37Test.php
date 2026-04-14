@@ -17,7 +17,7 @@ class StraussIssue37Test extends IntegrationTestCase
 
     /**
      */
-    public function test_can_handle_psr_namespace_with_path_array():void
+    public function test_can_handle_psr_namespace_with_path_array(): void
     {
 
         $composerJsonString = <<<'EOD'

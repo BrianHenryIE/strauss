@@ -19,7 +19,7 @@ class ProjectComposerPackageTest extends TestCase
     /**
      * A simple test to check the getters all work.
      */
-    public function testParseJson():void
+    public function testParseJson(): void
     {
 
         $testFile = __DIR__ . '/projectcomposerpackage-test-1.json';
@@ -36,7 +36,7 @@ class ProjectComposerPackageTest extends TestCase
     /**
      * @covers ::getFlatAutoloadKey
      */
-    public function testGetFlatAutoloadKey():void
+    public function testGetFlatAutoloadKey(): void
     {
 
         $testFile = __DIR__ . '/projectcomposerpackage-test-getProjectPhpFiles.json';

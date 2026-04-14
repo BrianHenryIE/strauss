@@ -19,7 +19,7 @@ class StraussIssue14Test extends IntegrationTestCase
      *
      * @author BrianHenryIE
      */
-    public function test_guzzle_http_is_prefixed():void
+    public function test_guzzle_http_is_prefixed(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -53,7 +53,7 @@ EOD;
         self::assertStringContainsString('namespace BrianHenryIE\Strauss\GuzzleHttp\Psr7;', $php_string);
     }
 
-    public function testFilesAutoloaderIsGenerated():void
+    public function testFilesAutoloaderIsGenerated(): void
     {
 
         $composerJsonString = <<<'EOD'

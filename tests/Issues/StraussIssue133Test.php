@@ -20,7 +20,7 @@ class StraussIssue133Test extends IntegrationTestCase
      * $this->getFileSystem()->read(/Users/rah/Documents/Repos/rh-admin-utils/vendor/Repos/rh-admin-utils/keys.dev.pub);:
      * Failed to open stream: No such file or directory
      */
-    public function test_unable_to_read_file():void
+    public function test_unable_to_read_file(): void
     {
         $minimum_php_version = '8.2';
 

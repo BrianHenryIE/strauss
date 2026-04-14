@@ -25,7 +25,7 @@ class FileEnumeratorTest extends TestCase
     /**
      * @covers ::addFile
      */
-    public function test_file_does_not_exist():void
+    public function test_file_does_not_exist(): void
     {
         $config = Mockery::mock(FileEnumeratorConfig::class);
         $filesystem = $this->getReadOnlyFileSystem($this->getSymlinkProtectFilesystem());

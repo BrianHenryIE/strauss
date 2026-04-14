@@ -18,7 +18,7 @@ use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
  */
 class ReplaceCommandIntegrationTest extends IntegrationTestCase
 {
-    public function test_rename_namespace():void
+    public function test_rename_namespace(): void
     {
         $myPluginPhpString = <<<'EOD'
 <?php

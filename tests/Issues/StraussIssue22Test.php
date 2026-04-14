@@ -28,7 +28,7 @@ class StraussIssue22Test extends IntegrationTestCase
      *
      * @see https://docs.php-http.org/en/latest/clients.html
      */
-    public function test_virtual_package():void
+    public function test_virtual_package(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -78,7 +78,7 @@ EOD;
      *
      * @author BrianHenryIE
      */
-    public function test_meta_package():void
+    public function test_meta_package(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 

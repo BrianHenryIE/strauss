@@ -15,7 +15,7 @@ class ComposerPackageTest extends TestCase
     /**
      * A simple test to check the getters all work.
      */
-    public function testParseJson():void
+    public function testParseJson(): void
     {
 
         $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
@@ -32,7 +32,7 @@ class ComposerPackageTest extends TestCase
     /**
      * Test the dependencies' names are returned.
      */
-    public function testGetRequiresNames():void
+    public function testGetRequiresNames(): void
     {
 
         $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
@@ -48,7 +48,7 @@ class ComposerPackageTest extends TestCase
     /**
      * Test PHP and ext- are not returned, since we won't be dealing with them.
      */
-    public function testGetRequiresNamesDoesNotContain():void
+    public function testGetRequiresNamesDoesNotContain(): void
     {
 
         $testFile = __DIR__ . '/composerpackage-test-easypost-php.json';
@@ -65,7 +65,7 @@ class ComposerPackageTest extends TestCase
     /**
      *
      */
-    public function testAutoloadPsr0():void
+    public function testAutoloadPsr0(): void
     {
 
         $testFile = __DIR__ . '/composerpackage-test-easypost-php.json';
@@ -82,7 +82,7 @@ class ComposerPackageTest extends TestCase
     /**
      *
      */
-    public function testAutoloadPsr4():void
+    public function testAutoloadPsr4(): void
     {
 
         $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
@@ -99,7 +99,7 @@ class ComposerPackageTest extends TestCase
     /**
      *
      */
-    public function testAutoloadClassmap():void
+    public function testAutoloadClassmap(): void
     {
 
         $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
@@ -116,7 +116,7 @@ class ComposerPackageTest extends TestCase
     /**
      *
      */
-    public function testAutoloadFiles():void
+    public function testAutoloadFiles(): void
     {
 
         $testFile = __DIR__ . '/composerpackage-test-php-di.json';
@@ -130,7 +130,7 @@ class ComposerPackageTest extends TestCase
         self::assertIsArray($autoload['files']);
     }
 
-    public function testPsr4Array():void
+    public function testPsr4Array(): void
     {
 
         $composerJson = <<<'EOD'
@@ -162,7 +162,7 @@ EOD;
         self::assertContains('lib/', $monologAutoload);
     }
 
-    public function testOverrideAutoload():void
+    public function testOverrideAutoload(): void
     {
         $this->markTestIncomplete();
     }
@@ -170,7 +170,7 @@ EOD;
     /**
      * When composer.json is not where it was specified, what error message (via Exception) should be returned?
      */
-    public function testMissingComposer():void
+    public function testMissingComposer(): void
     {
         $this->markTestIncomplete();
     }

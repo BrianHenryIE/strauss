@@ -16,7 +16,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue119Test extends IntegrationTestCase
 {
-    public function test_incorrectly_prefixing_class():void
+    public function test_incorrectly_prefixing_class(): void
     {
 
         $composerJsonString = <<<'EOD'

@@ -19,7 +19,7 @@ class StraussIssue44Test extends IntegrationTestCase
      *
      * @author BrianHenryIE
      */
-    public function testStaticIsNotPrefixed():void
+    public function testStaticIsNotPrefixed(): void
     {
 
         $composerJsonString = <<<'EOD'

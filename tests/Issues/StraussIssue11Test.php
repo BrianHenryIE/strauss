@@ -24,7 +24,7 @@ class StraussIssue11Test extends IntegrationTestCase
     /**
      * @author BrianHenryIE
      */
-    public function test_migrate_mozart_config():void
+    public function test_migrate_mozart_config(): void
     {
         $this->markTestSkipped('too slow');
 
@@ -76,7 +76,7 @@ EOD;
     /**
      * @author BrianHenryIE
      */
-    public function test_carbon_fields():void
+    public function test_carbon_fields(): void
     {
         $this->markTestSkipped('too slow');
 
@@ -134,7 +134,7 @@ EOD;
     /**
      * @author BrianHenryIE
      */
-    public function test_static_namespace():void
+    public function test_static_namespace(): void
     {
         $this->markTestSkipped('too slow');
 

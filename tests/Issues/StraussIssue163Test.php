@@ -15,7 +15,7 @@ class StraussIssue163Test extends IntegrationTestCase
     /**
      * Fatal error: Uncaught Error: Call to undefined function data_get() in test.php:8
      */
-    public function test_multiple_autoloaders_breaks_autoloading():void
+    public function test_multiple_autoloaders_breaks_autoloading(): void
     {
         $composerJsonString1 = <<<'EOD'
 {

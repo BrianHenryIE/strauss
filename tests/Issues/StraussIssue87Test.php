@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue87Test extends IntegrationTestCase
 {
-    public function test_autoload_classmap():void
+    public function test_autoload_classmap(): void
     {
 
         $composerJsonString = <<<'EOD'

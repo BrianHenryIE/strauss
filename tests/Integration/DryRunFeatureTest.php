@@ -196,7 +196,7 @@ EOD;
      *
      * @see Autoload::generateClassmap()
      */
-    public function testGenerateAutoload():void
+    public function testGenerateAutoload(): void
     {
         $composerJsonString = <<<'EOD'
 {

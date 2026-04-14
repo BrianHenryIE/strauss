@@ -14,7 +14,7 @@ class ApplicationTest extends TestCase
     /**
      * Test the Symfony\Component\Console\Application instance contains the Compose command.
      */
-    public function testInstantiation():void
+    public function testInstantiation(): void
     {
 
         $version = '1.0.0';

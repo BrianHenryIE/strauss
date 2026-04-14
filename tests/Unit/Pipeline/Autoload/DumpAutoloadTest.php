@@ -24,7 +24,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
      * @covers ::generatedPrefixedAutoloader
      * @covers ::generatedMainAutoloader
      */
-    public function testGeneratedPrefixedAutoloader():void
+    public function testGeneratedPrefixedAutoloader(): void
     {
         $config = Mockery::mock(
             AutoloadConfigInterface::class,

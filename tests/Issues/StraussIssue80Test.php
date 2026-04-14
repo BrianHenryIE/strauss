@@ -18,7 +18,7 @@ class StraussIssue80Test extends IntegrationTestCase
 
     /**
      */
-    public function test_issue_80():void
+    public function test_issue_80(): void
     {
 
         $composerJsonString = <<<'EOD'

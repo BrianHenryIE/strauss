@@ -13,7 +13,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue204Test extends IntegrationTestCase
 {
-    public function test_allow_specifying_alternative_composerjson():void
+    public function test_allow_specifying_alternative_composerjson(): void
     {
         if (strpos(PHP_OS_FAMILY, 'Win')) {
             $this->markTestSkipped('Skipped on Windows');

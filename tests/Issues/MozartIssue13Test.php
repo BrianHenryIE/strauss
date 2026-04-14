@@ -22,7 +22,7 @@ class MozartIssue13Test extends IntegrationTestCase
      * "paypal/rest-api-sdk-php"
      *
      */
-    public function testPaypalStringReplacement():void
+    public function testPaypalStringReplacement(): void
     {
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 

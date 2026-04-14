@@ -21,7 +21,7 @@ class MozartIssue97Test extends IntegrationTestCase
      *
      * "The "/Users/BrianHenryIE/Sites/mozart-97/vendor/unsplash/unsplash/src" directory does not exist."
      */
-    public function testCrewlabsUnsplashSucceeds():void
+    public function testCrewlabsUnsplashSucceeds(): void
     {
 
         $composerJsonString = <<<'EOD'
