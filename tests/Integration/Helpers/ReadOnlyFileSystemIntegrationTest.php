@@ -188,13 +188,13 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->getFileSystem()->write($source, $contents);
 
         $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
-//        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
         $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
 
         $destination = $this->testsWorkingDir . '/destination.php';
 
         $config = Mockery::mock(Config::class);
         $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC)->atLeast()->once();
+        $config->expects('get')->with('timestamp')->zeroOrMoreTimes()->andReturnNull();
 
         $sut->copy($source, $destination, $config);
 
