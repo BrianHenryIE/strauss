@@ -2,6 +2,7 @@
 extend-exclude = [
     ".git/",
     "tests/Issues/data/",
+    "/src/Pipeline/FileSymbol/builtinsymbols.php",
 ]
 ignore-hidden = false
 

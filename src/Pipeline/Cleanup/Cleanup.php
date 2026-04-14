@@ -7,6 +7,7 @@ namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
+use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -45,8 +46,8 @@ class Cleanup
         $this->config = $config;
         $this->logger = $logger;
 
-        $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getTargetDirectory() !== $config->getVendorDirectory();
-        $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getTargetDirectory() !== $config->getVendorDirectory();
+        $this->isDeleteVendorFiles = $config->isDeleteVendorFiles() && $config->getAbsoluteTargetDirectory() !== $config->getAbsoluteVendorDirectory();
+        $this->isDeleteVendorPackages = $config->isDeleteVendorPackages() && $config->getAbsoluteTargetDirectory() !== $config->getAbsoluteVendorDirectory();
 
         $this->filesystem = $filesystem;
     }
@@ -91,17 +92,17 @@ class Cleanup
             $this->logger
         );
 
-        if ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
-        && !$this->config->isDeleteVendorFiles() && !$this->config->isDeleteVendorPackages()
+        if (!$this->config->isTargetDirectoryVendor()
+            && !$this->config->isDeleteVendorFiles()
+            && !$this->config->isDeleteVendorPackages()
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getTargetDirectory() !== $this->config->getVendorDirectory()
-            &&
-            ($this->config->isDeleteVendorFiles() ||$this->config->isDeleteVendorPackages())
+        } elseif (!$this->config->isTargetDirectoryVendor()
+            && ($this->config->isDeleteVendorFiles() || $this->config->isDeleteVendorPackages())
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+        } elseif ($this->config->isTargetDirectoryVendor()) {
             $installedJson->cleanupVendorInstalledJson($flatDependencyTree, $discoveredSymbols);
         }
     }
@@ -124,27 +125,27 @@ class Cleanup
             return;
         }
 
-        $projectComposerFilePath = $this->config->getProjectDirectory() . '/' . Factory::getComposerFile();
-        $projectComposerFilePath = $this->filesystem->normalize($projectComposerFilePath);
-        $projectComposerFilePath = $this->filesystem->prefixPath($projectComposerFilePath);
-        $projectComposerJson = new JsonFile($projectComposerFilePath);
+        $projectComposerJson = new JsonFile(
+            $this->filesystem->makeAbsolute(
+                $this->config->getProjectDirectory() . '/composer.json' // Factory::getComposerFile();
+            )
+        );
         $projectComposerJsonArray = $projectComposerJson->read();
         $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
         $config = $composer->getConfig();
         $generator = new AutoloadGenerator($composer->getEventDispatcher());
-
-        $generator->setClassMapAuthoritative(true);
+        $isOptimize = $this->isOptimizeAutoloaderEnabled();
+        $generator->setClassMapAuthoritative($isOptimize);
         $generator->setRunScripts(false);
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
-        $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
-
-        $installedJsonFilePath = $this->config->getVendorDirectory() . 'composer/installed.json';
-        $installedJsonFilePath = $this->filesystem->normalize($installedJsonFilePath);
-        $installedJsonFilePath = $this->filesystem->prefixPath($installedJsonFilePath);
-        $installedJson = new JsonFile($installedJsonFilePath);
+        $installedJson = new JsonFile(
+            $this->filesystem->makeAbsolute(
+                $this->config->getAbsoluteVendorDirectory() . '/composer/installed.json'
+            )
+        );
         $localRepo = new InstalledFilesystemRepository($installedJson);
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
         /** @var InstalledJsonArray $installedJsonArray */
@@ -158,11 +159,21 @@ class Cleanup
             $package,
             $installationManager,
             'composer',
-            $optimize,
+            $isOptimize,
             null,
             $composer->getLocker(),
             $strictAmbiguous
         );
+    }
+
+    /**
+     * Keep backward compatibility with configs implementing only CleanupConfigInterface.
+     */
+    protected function isOptimizeAutoloaderEnabled(): bool
+    {
+        return $this->config instanceof OptimizeAutoloaderConfigInterface
+            ? $this->config->isOptimizeAutoloader()
+            : true;
     }
 
     /**
@@ -187,7 +198,7 @@ class Cleanup
         }
         $rootSourceDirectories = array_map(
             function (string $path): string {
-                return $this->config->getVendorDirectory() . $path;
+                return $this->config->getAbsoluteVendorDirectory() . '/' . $path;
             },
             array_keys($rootSourceDirectories)
         );
@@ -212,7 +223,7 @@ class Cleanup
 
             foreach ($allFilePaths as $filePath) {
                 if ($this->filesystem->directoryExists($filePath)
-                    && $this->filesystem->dirIsEmpty($filePath)
+                    && $this->filesystem->isDirectoryEmpty($filePath)
                 ) {
                     $this->logger->debug('Deleting empty directory ' . $filePath);
                     $this->filesystem->deleteDirectory($filePath);
@@ -228,18 +239,7 @@ class Cleanup
 //                $this->logger->debug('Skipping non-empty directory ' . $dirEntry->path());
 //            }
 //        }
-    }
-
-    /**
-     * TODO: Move to FileSystem class.
-     * TODO: Is this already moved in SymlinkProtectFileSystem branch?
-     *
-     * @throws FilesystemException
-     */
-    protected function dirIsEmpty(string $dir): bool
-    {
-        // TODO BUG this deletes directories with only symlinks inside. How does it behave with hidden files?
-        return empty($this->filesystem->listContents($dir)->toArray());
+        $this->logger->debug('Finished Cleanup::deleteEmptyDirectories()');
     }
 
     /**
@@ -277,15 +277,16 @@ class Cleanup
 
             $package->setDidDelete(true);
 
-            if ($this->filesystem->dirIsEmpty(dirname($package->getPackageAbsolutePath()))) {
-                $this->logger->info('Deleting empty directory ' . dirname($package->getPackageAbsolutePath()));
-                $this->filesystem->deleteDirectory(dirname($package->getPackageAbsolutePath()));
+            $packageParentDir = dirname($package->getPackageAbsolutePath());
+            if ($this->filesystem->isDirectoryEmpty($packageParentDir)) {
+                $this->logger->info('Deleting empty directory ' . $packageParentDir);
+                $this->filesystem->deleteDirectory($packageParentDir);
             }
         }
     }
 
     /**
-     * @param array<string, File> $files
+     * @param FileBase[] $files
      *
      * @throws FilesystemException
      */
@@ -293,17 +294,17 @@ class Cleanup
     {
         $this->logger->info('Deleting original vendor files.');
 
-        /** @var File $file */
-        foreach ($files as $path => $file) {
+        foreach ($files as $file) {
             if (! $file->isDoDelete()) {
                 $this->logger->debug('Skipping/preserving ' . $file->getSourcePath());
                 continue;
             }
 
-            $sourceRelativePath = $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $path);
+            $sourceRelativePath = $file->getSourcePath();
 
             $this->logger->info('Deleting ' . $sourceRelativePath);
 
+            // TODO: is this relative or absolute?
             $this->filesystem->delete($file->getSourcePath());
 
             $file->setDidDelete(true);

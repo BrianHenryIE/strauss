@@ -1090,4 +1090,48 @@ EOD;
 
         self::assertArrayHasKey('twig_cycle', $result->getDiscoveredFunctions());
     }
+
+    /**
+     * Template files with placeholder tokens (e.g. `%g_namespace%`) are not valid PHP.
+     * Strauss should skip them gracefully rather than throwing a fatal error.
+     *
+     * @covers ::findInFiles
+     */
+    public function testTemplateFileWithPlaceholdersIsSkippedGracefully(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace %g_namespace%\AdminMenus;
+
+use %g_use_libs%\AdminMenus\AbstractAdminMenu;
+
+class AdminMenuExample extends AbstractAdminMenu
+{
+}
+EOD;
+
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
+        $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath')->andReturn('/a/path/AdminMenuExample.php');
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $result = $sut->findInFiles($discoveredFiles);
+
+        self::assertEmpty($result->getDiscoveredClasses());
+    }
 }

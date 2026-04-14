@@ -45,11 +45,11 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/wp-graphql/wp-graphql/src/WPGraphQL.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/wp-graphql/wp-graphql/src/WPGraphQL.php');
 
         self::assertStringContainsString('final class Prefix_WPGraphQL', $php_string);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/wp-graphql/wp-graphql/src/Registry/Utils/PostObject.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/wp-graphql/wp-graphql/src/Registry/Utils/PostObject.php');
 
         self::assertStringNotContainsString('use MyProject\Dependencies\WPGraphQL;', $php_string);
 

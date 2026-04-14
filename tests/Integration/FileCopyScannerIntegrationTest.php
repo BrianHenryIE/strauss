@@ -10,8 +10,8 @@ use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
-use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 
@@ -33,7 +33,12 @@ class FileCopyScannerIntegrationTest extends IntegrationTestCase
 {
   "name": "brianhenryie/filescannerintegrationtest",
   "require": {
-    "google/apiclient": "*"
+    "google/apiclient": "v2.16.1"
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
   },
   "extra": {
     "strauss": {
@@ -45,27 +50,27 @@ class FileCopyScannerIntegrationTest extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
         exec('composer install');
 
-        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
+        $projectComposerPackage = new ProjectComposerPackage($this->testsWorkingDir . '/composer.json');
 
         $dependencies = array_map(function ($element) {
-            $composerFile = $this->testsWorkingDir . 'vendor/' . $element . '/composer.json';
+            $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
             $package = ComposerPackage::fromFile($composerFile);
             $package->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
             return $package;
         }, $projectComposerPackage->getRequiresNames());
 
-        $targetDir = $this->testsWorkingDir . 'vendor-prefixed/';
-        $vendorDir = $this->testsWorkingDir . 'vendor/';
+        $targetDir = $this->testsWorkingDir . '/vendor-prefixed';
+        $vendorDir = $this->testsWorkingDir . '/vendor';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getVendorDirectory')->willReturn($vendorDir);
-        $config->method('getTargetDirectory')->willReturn($targetDir);
+        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
+        $config->method('getAbsoluteTargetDirectory')->willReturn($targetDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,
@@ -93,7 +98,6 @@ EOD;
         $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
         $config->method('getPackagesToPrefix')->willReturn(array('google/apiclient'=>''));
 
-//        $fileScanner = new FileSymbolScanner($config, new Filesystem(new LocalFilesystemAdapter('/')));
         $discoveredSymbols = new DiscoveredSymbols();
 
         $fileScanner = new FileSymbolScanner($config, $discoveredSymbols, $this->getFileSystem());
@@ -104,8 +108,8 @@ EOD;
 
         $namespaces = $discoveredSymbols->getDiscoveredNamespaces();
 
-        self::assertNotEmpty($classes);
-        self::assertNotEmpty($namespaces);
+        self::assertNotEmpty($classes, 'Discovered classes should not be empty after scanning google/apiclient');
+        self::assertNotEmpty($namespaces, 'Discovered namespaces should not be empty after scanning google/apiclient');
 
         self::assertContains('Google_Task_Composer', $classes);
     }
@@ -145,7 +149,7 @@ EOD;
     }
 }
 EOD;
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -154,6 +158,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/wordpress/mcp-adapter/phpunit.xml.dist');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/wordpress/mcp-adapter/phpunit.xml.dist');
     }
 }

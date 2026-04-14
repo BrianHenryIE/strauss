@@ -28,9 +28,7 @@ class StraussIssue88Test extends IntegrationTestCase
   },
   "config": {
     "audit": {
-      "ignore": {
-        "PKSA-dxyf-6n16-t87m": "We are not running prod"
-      }
+      "block-insecure": false
     }
   },
   "extra": {
@@ -61,7 +59,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/aws/aws-sdk-php/src/S3/S3Client.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/S3/S3Client.php');
 
         self::assertStringNotContainsString('return (string) \Aws\serialize($command)->getUri();', $php_string);
         self::assertStringContainsString('return (string) \Company\Project\Aws\serialize($command)->getUri();', $php_string);

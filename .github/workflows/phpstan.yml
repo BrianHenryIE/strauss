@@ -26,6 +26,7 @@ jobs:
         with:
           php-version: 7.4
           tools: composer:v2, phive, cs2pr
+          extensions: fileinfo, gd
           coverage: none
 
       - name: Install Phive tools
@@ -65,11 +66,11 @@ jobs:
       - name: Run PHPStan (annotate all errors to max level)
         id: run-phpstan
         run: |
-          vendor/bin/phpstan analyse --memory-limit=-1 -vvv --error-format=checkstyle | cs2pr
+          vendor/bin/phpstan analyse --memory-limit=-1  --level max -vvv --error-format=checkstyle | cs2pr
         continue-on-error: true
 
       - name: Run PHPStan (fail if phpstan.neon level is not met) on PRs
-        run: vendor/bin/phpstan analyse
+        run: vendor/bin/phpstan analyse --memory-limit=-1 -vvv
         # TODO: fail _after_ the badge is updated
         continue-on-error: true
 

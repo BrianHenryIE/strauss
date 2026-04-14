@@ -67,8 +67,10 @@ class InstalledJson
      */
     public function copyInstalledJson(): void
     {
-        $source = $this->config->getVendorDirectory() . 'composer/installed.json';
-        $target = $this->config->getTargetDirectory() . 'composer/installed.json';
+        $this->logger->debug('InstalledJson::copyInstalledJson()');
+
+        $source = $this->config->getAbsoluteVendorDirectory() . '/composer/installed.json';
+        $target = $this->config->getAbsoluteTargetDirectory() . '/composer/installed.json';
 
         $this->logger->info('Copying {sourcePath} to {targetPath}', [
             'sourcePath' => $source,
@@ -85,7 +87,7 @@ class InstalledJson
             'targetPath' => $target
         ]);
 
-        $this->logger->debug($this->filesystem->read($this->config->getTargetDirectory() . 'composer/installed.json'));
+        $this->logger->debug($this->filesystem->read($this->config->getAbsoluteTargetDirectory() . '/composer/installed.json'));
     }
 
     /**
@@ -95,21 +97,20 @@ class InstalledJson
      */
     protected function getJsonFile(string $vendorDir): JsonFile
     {
-        $installedJsonFilePath = $this->filesystem->prefixPath(
+        $installedJsonFile = new JsonFile(
             sprintf(
-                '%scomposer/installed.json',
-                $vendorDir
+                '%s/composer/installed.json',
+                $this->filesystem->makeAbsolute($vendorDir)
             )
         );
-        $installedJsonFile = new JsonFile(
-            $installedJsonFilePath
-        );
         if (!$installedJsonFile->exists()) {
-            $this->logger->error(
-                'Expected {installedJsonFilePath} does not exist.',
-                ['installedJsonFilePath' => $installedJsonFile->getPath()]
-            );
-            throw new Exception('Expected vendor/composer/installed.json does not exist.');
+            if (!$this->config->isDryRun()) {
+                $this->logger->error(
+                    'Expected {installedJsonFilePath} does not exist.',
+                    [ 'installedJsonFilePath' => $installedJsonFile->getPath() ]
+                );
+            }
+            throw new Exception('Expected installed.json does not exist: ' . $installedJsonFile->getPath());
         }
 
         $installedJsonFile->validateSchema(JsonFile::LAX_SCHEMA);
@@ -122,12 +123,18 @@ class InstalledJson
     /**
      * @param InstalledJsonArray $installedJsonArray
      * @param array<string,ComposerPackage> $flatDependencyTree
+     * @param string[] $excludedPackageNames
      * @return InstalledJsonArray
      */
-    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree, string $path): array
+    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree, string $path, array $excludedPackageNames = []): array
     {
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
+            if (in_array($package['name'], $excludedPackageNames, true)) {
+                unset($installedJsonArray['packages'][$key]);
+                continue;
+            }
+
             // Skip packages that were never copied in the first place.
             if (!in_array($package['name'], array_keys($flatDependencyTree))) {
                 $this->logger->debug('Skipping package: ' . $package['name']);
@@ -136,21 +143,20 @@ class InstalledJson
             $this->logger->info('Checking package: ' . $package['name']);
 
             // `composer/` is here because the install-path is relative to the `vendor/composer` directory.
-            $packageDir = $path . 'composer/' . $package['install-path'] . '/';
+            $packageDir = $path . '/composer/' . $package['install-path'];
             if (!$this->filesystem->directoryExists($packageDir)) {
                 $this->logger->debug('Package directory does not exist at : ' . $packageDir);
 
-                $newInstallPath = $this->filesystem->normalize($path . '/composer/' .$package['install-path']);
+                $newInstallPath = $this->filesystem->normalizePath($path . '/composer/' . $package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
-                    // Should `unset($installedJsonArray['packages'][$key])`?
-                    // Is this post `delete_vendor_packages`?
-                    $this->logger->warning('Package directory unexpectedly DOES NOT exist: ' . $newInstallPath);
+                    unset($installedJsonArray['packages'][$key]);
+                    $this->logger->info('Package directory does not exist: ' . $newInstallPath);
                     continue;
                 }
 
                 $newRelativePath = $this->filesystem->getRelativePath(
-                    $path . 'composer/',
+                    $path . '/composer/',
                     $newInstallPath
                 );
 
@@ -169,7 +175,7 @@ class InstalledJson
     protected function pathExistsInPackage(string $vendorDir, array $packageArray, string $relativePath): bool
     {
         return $this->filesystem->exists(
-            $vendorDir . 'composer/' . $packageArray['install-path'] . '/' . $relativePath
+            $vendorDir . '/composer/' . $packageArray['install-path'] . '/' . $relativePath
         );
     }
 
@@ -191,7 +197,7 @@ class InstalledJson
                 continue;
             }
             // delete_vendor_files
-            $path = $vendorDir . 'composer/' . $packageArray['install-path'];
+            $path = $vendorDir . '/composer/' . $packageArray['install-path'];
             $pathExists = $this->filesystem->directoryExists($path);
             // delete_vendor_packages
             if (!$pathExists) {
@@ -351,6 +357,8 @@ class InstalledJson
      */
     protected function updateNamespaces(array $installedJsonArray, DiscoveredSymbols $discoveredSymbols): array
     {
+        $this->logger->debug('InstalledJson::updateNamespaces()');
+
         $discoveredNamespaces = $discoveredSymbols->getNamespaces();
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
@@ -370,11 +378,11 @@ class InstalledJson
                         /** @var string $relativePath */
                         foreach (array_values((array) $autoload_key[$type]) as $relativePath) {
                             $packageRelativePath = $package['install-path'];
-                            if (1 === preg_match('#.*'.preg_quote($this->filesystem->normalize($this->config->getTargetDirectory()), '#').'/(.*)#', $packageRelativePath, $matches)) {
+                            if (1 === preg_match('#.*'.preg_quote($this->config->getAbsoluteTargetDirectory(), '#').'/(.*)#', $packageRelativePath, $matches)) {
                                 $packageRelativePath = $matches[1];
                             }
                             // Convert psr-0 autoloading to classmap autoloading
-                            if ($this->filesystem->directoryExists($this->config->getTargetDirectory() . 'composer/' . $packageRelativePath . $relativePath)) {
+                            if ($this->filesystem->directoryExists($this->config->getAbsoluteTargetDirectory() . '/composer/' . $packageRelativePath . $relativePath)) {
                                 $autoload_key['classmap'][] = $relativePath;
                             }
                         }
@@ -446,6 +454,8 @@ class InstalledJson
             $installedJsonArray['packages'][$key]['autoload'] = array_filter($autoload_key);
         }
 
+        $this->logger->debug('Finished InstalledJson::updateNamespaces()');
+
         return $installedJsonArray;
     }
 
@@ -457,9 +467,18 @@ class InstalledJson
      */
     public function cleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
-        $targetDir = $this->config->getTargetDirectory();
+        $this->logger->debug('InstalledJson::cleanTargetDirInstalledJson()');
 
-        $installedJsonFile = $this->getJsonFile($targetDir);
+        $targetDir = $this->config->getAbsoluteTargetDirectory();
+        try {
+            $installedJsonFile = $this->getJsonFile($targetDir);
+        } catch (Exception $e) {
+            if ($this->config->isDryRun()) {
+                $installedJsonFile = $this->getJsonFile($this->config->getAbsoluteVendorDirectory());
+            } else {
+                throw $e;
+            }
+        }
 
         /**
          * @var InstalledJsonArray $installedJsonArray
@@ -471,9 +490,14 @@ class InstalledJson
             ['installedJsonFilePath' => $installedJsonFile->getPath(), 'installedJsonArray' => json_encode($installedJsonArray)]
         );
 
-        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getTargetDirectory());
+        $installedJsonArray = $this->updatePackagePaths(
+            $installedJsonArray,
+            $flatDependencyTree,
+            $this->config->getAbsoluteTargetDirectory(),
+            $this->config->getExcludePackagesFromCopy()
+        );
 
-        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getTargetDirectory(), $installedJsonFile->getPath());
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getAbsoluteTargetDirectory(), $installedJsonFile->getPath());
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(
             $installedJsonArray,
@@ -496,9 +520,13 @@ class InstalledJson
 
         $this->logger->info('Writing installed.json to ' . $targetDir);
 
-        $installedJsonFile->write($installedJsonArray);
+        if (!$this->config->isDryRun()) {
+            $installedJsonFile->write($installedJsonArray);
+        }
 
         $this->logger->info('Installed.json written to ' . $targetDir);
+
+        $this->logger->debug('Finished InstalledJson::cleanTargetDirInstalledJson()');
     }
 
     /**
@@ -512,8 +540,9 @@ class InstalledJson
      */
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
+        $this->logger->debug('InstalledJson::cleanupVendorInstalledJson()');
 
-        $vendorDir = $this->config->getVendorDirectory();
+        $vendorDir = $this->config->getAbsoluteVendorDirectory();
 
         $vendorInstalledJsonFile = $this->getJsonFile($vendorDir);
 
@@ -524,15 +553,23 @@ class InstalledJson
          */
         $installedJsonArray = $vendorInstalledJsonFile->read();
 
-        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getVendorDirectory(), $vendorInstalledJsonFile->getPath());
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getAbsoluteVendorDirectory(), $vendorInstalledJsonFile->getPath());
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson($installedJsonArray, $flatDependencyTree, $vendorInstalledJsonFile->getPath());
 
-        $installedJsonArray = $this->updatePackagePaths($installedJsonArray, $flatDependencyTree, $this->config->getVendorDirectory());
+        $installedJsonArray = $this->updatePackagePaths(
+            $installedJsonArray,
+            $flatDependencyTree,
+            $this->config->getAbsoluteVendorDirectory()
+        );
 
         // Only relevant when source = target.
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
-        $vendorInstalledJsonFile->write($installedJsonArray);
+        if (!$this->config->isDryRun()) {
+            $vendorInstalledJsonFile->write($installedJsonArray);
+        }
+
+        $this->logger->debug('Finished InstalledJson::cleanupVendorInstalledJson()');
     }
 }

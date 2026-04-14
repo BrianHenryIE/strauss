@@ -1,7 +1,12 @@
 <?php
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
+use Composer\Factory;
+use Composer\IO\NullIO;
+use Composer\Util\Platform;
 
 /**
  * Class CleanupIntegrationTest
@@ -10,6 +15,75 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class CleanupIntegrationTest extends IntegrationTestCase
 {
+    /**
+     * @dataProvider provider_optimize_autoloader_for_vendor_autoload_real
+     */
+    public function test_optimize_autoloader_for_vendor_autoload_real(string $composerJsonString, bool $expectAuthoritative): void
+    {
+        try {
+            chdir($this->testsWorkingDir);
+            file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+            exec('composer install', $output, $exitCode);
+            $this->assertEquals(0, $exitCode, implode(PHP_EOL, $output));
+            $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
+            $config = new StraussConfig($composer);
+            $filesystem = $this->getFileSystem();
+            $cleanup = new Cleanup($config, $filesystem, $this->logger);
+            $cleanup->rebuildVendorAutoloader();
+            $autoloadRealPath = $this->testsWorkingDir . '/vendor/composer/autoload_real.php';
+            $this->assertFileExists($autoloadRealPath);
+            $autoloadRealPhp = file_get_contents($autoloadRealPath);
+            if ($expectAuthoritative) {
+                $this->assertStringContainsString('setClassMapAuthoritative(true)', $autoloadRealPhp);
+            } else {
+                $this->assertStringNotContainsString('setClassMapAuthoritative(true)', $autoloadRealPhp);
+            }
+        } finally {
+            chdir($this->projectDir);
+        }
+    }
+
+    /**
+     * @return array<string, array{0:string, 1:bool}>
+     */
+    public static function provider_optimize_autoloader_for_vendor_autoload_real(): array
+    {
+        $defaultOptimize = <<<'EOD'
+{
+  "name": "brianhenryie/strauss-cleanup-optimize-default",
+  "require": {
+    "psr/log": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "classmap_prefix": "BrianHenryIE_Strauss_",
+      "delete_vendor_packages": true
+    }
+  }
+}
+EOD;
+        $disableOptimize = <<<'EOD'
+{
+  "name": "brianhenryie/strauss-cleanup-optimize-disabled",
+  "require": {
+    "psr/log": "*"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "classmap_prefix": "BrianHenryIE_Strauss_",
+      "delete_vendor_packages": true,
+      "optimize_autoloader": false
+    }
+  }
+}
+EOD;
+        return [
+            'key_omitted_defaults_to_optimized' => [$defaultOptimize, true],
+            'explicit_false_disables_authoritative' => [$disableOptimize, false],
+        ];
+    }
 
     /**
      * When `delete_vendor_packages` is true, the autoloader should be cleaned of files that are not needed.
@@ -37,12 +111,12 @@ EOD;
 
         exec('composer install');
 
-        assert(file_exists($this->testsWorkingDir . '/vendor/symfony/polyfill-php80/bootstrap.php'));
+        $this->assertFileExists($this->testsWorkingDir . '/vendor/symfony/polyfill-php80/bootstrap.php');
 
         $exitCode = $this->runStrauss();
-        assert($exitCode === 0);
+        $this->assertSame(0, $exitCode);
 
-        $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/installed.json');
+        $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/installed.json');
         $installedJson = json_decode($installedJsonFile, true);
         $entry = array_reduce($installedJson['packages'], function ($carry, $item) {
             if ($item['name'] === 'symfony/polyfill-php80') {
@@ -50,17 +124,21 @@ EOD;
             }
             return $carry;
         }, null);
-        $this->assertEmpty($entry['autoload'], json_encode($entry['autoload'], JSON_PRETTY_PRINT));
+        if (Platform::isWindows()) {
+            $this->assertEmpty($entry['autoload'], json_encode($entry['autoload'], JSON_PRETTY_PRINT));
+        } else {
+            $this->assertNull($entry, json_encode($installedJson, JSON_PRETTY_PRINT));
+        }
 
-        $autoloadStaticPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/autoload_static.php');
+        $autoloadStaticPhp = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/autoload_static.php');
         $this->assertStringNotContainsString("__DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php'", $autoloadStaticPhp);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir .'vendor/composer/autoload_files.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir .'/vendor/composer/autoload_files.php');
 
-        $autoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
+        $autoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("\$vendorDir . '/symfony/polyfill-php80/bootstrap.php'", $autoloadFilesPhp);
 
-        $newAutoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
+        $newAutoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("/symfony/polyfill-php80/bootstrap.php'", $newAutoloadFilesPhp);
     }
 
@@ -70,6 +148,8 @@ EOD;
      */
     public function testExcludedPackagesNotDeletedWhenDeleteVendorPackagesEnabled(): void
     {
+        $this->markTestSkippedOnWindows('symlinks');
+
         $composerJsonString = <<<'EOD'
 {
   "name": "test/exclude-delete-bug",
@@ -94,8 +174,8 @@ EOD;
         exec('composer install');
 
         // Pre-condition: both packages exist before Strauss
-        $this->assertDirectoryExists($this->testsWorkingDir . '/vendor/psr/log');
-        $this->assertDirectoryExists($this->testsWorkingDir . '/vendor/psr/container');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log');
+        $this->assertDirectoryExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/container');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
@@ -107,9 +187,34 @@ EOD;
         );
 
         // SANITY CHECK: Non-excluded package should still be deleted
-        $this->assertDirectoryDoesNotExist(
+        $this->assertFalse($this->getFileSystem()->directoryExists(
             $this->testsWorkingDir . '/vendor/psr/container',
-            'Non-excluded package psr/container should be deleted from vendor/'
-        );
+        ), 'Non-excluded package psr/container should be deleted from vendor/');
+
+        $vendorInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
+        $vendorInstalledPackageNames = $this->extractPackageNamesFromInstalledJson($vendorInstalledJson);
+        $this->assertContains('psr/log', $vendorInstalledPackageNames, 'Excluded package should remain in vendor/composer/installed.json');
+
+        $targetInstalledJson = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
+        $targetInstalledPackageNames = $this->extractPackageNamesFromInstalledJson($targetInstalledJson);
+        $this->assertNotContains('psr/log', $targetInstalledPackageNames, 'Excluded package should not appear in target installed.json');
+        $this->assertContains('psr/container', $targetInstalledPackageNames, 'Non-excluded package should be present in target installed.json');
+    }
+
+    /**
+     * @return string[]
+     */
+    private function extractPackageNamesFromInstalledJson(string $installedJson): array
+    {
+        $installedJsonArray = json_decode($installedJson, true);
+
+        $this->assertIsArray($installedJsonArray, 'installed.json should decode to an array');
+        $this->assertArrayHasKey('packages', $installedJsonArray, 'installed.json should contain packages');
+        $this->assertIsArray($installedJsonArray['packages']);
+
+        return array_values(array_filter(array_map(
+            static fn(array $package): ?string => $package['name'] ?? null,
+            $installedJsonArray['packages']
+        )));
     }
 }

@@ -14,6 +14,7 @@ use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
+use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
@@ -57,26 +58,33 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         return $this->delegateFilesystemAdapter;
     }
 
-    public function fileExists(string $path): bool
+    public function fileExists(string $location): bool
     {
-        if ($this->deletedFiles->fileExists($path)) {
+        $location = $this->pathNormalizer->normalizePath($location);
+
+        if ($this->deletedFiles->fileExists($location)) {
             return false;
         }
-        return $this->inMemoryFiles->fileExists($path)
-                || $this->delegateFilesystemAdapter->fileExists($path);
+        return $this->inMemoryFiles->fileExists($location)
+               || $this->delegateFilesystemAdapter->fileExists($location);
     }
 
     /**
      * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function write(string $path, string $contents, $config): void
+    public function write(string $location, string $contents, array $config = []): void
     {
-        $configObject = $config instanceof Config ? $config : new Config($config);
-        $this->inMemoryFiles->write($path, $contents, $configObject);
+        $location = $this->pathNormalizer->normalizePath($location);
 
-        if ($this->deletedFiles->fileExists($path)) {
-            $this->deletedFiles->delete($path);
+        $configObject = $config instanceof Config ? $config : new Config($config);
+        $this->inMemoryFiles->write($location, $contents, $configObject);
+
+        $config = new Config($config);
+        $this->inMemoryFiles->write($location, $contents, $config);
+
+        if ($this->deletedFiles->fileExists($location)) {
+            $this->deletedFiles->delete($location);
         }
     }
 
@@ -88,6 +96,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
      */
     public function writeStream(string $path, $contents, Config $config): void
     {
+        $location = $this->pathNormalizer->normalizePath($location);
+
         $config = new Config($config);
         $this->rewindStream($contents);
         $this->inMemoryFiles->writeStream($path, $contents, $config);
@@ -108,6 +118,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
     public function read(string $path): string
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         if ($this->deletedFiles->fileExists($path)) {
             throw UnableToReadFile::fromLocation($path);
         }
@@ -119,6 +131,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
     public function readStream(string $path)
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         if ($this->deletedFiles->fileExists($path)) {
             throw UnableToReadFile::fromLocation($path);
         }
@@ -130,10 +144,13 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
     public function delete(string $path): void
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         if ($this->fileExists($path)) {
             $file = $this->read($path);
             $this->deletedFiles->write($path, $file, new Config([]));
         }
+
         if ($this->inMemoryFiles->fileExists($path)) {
             $this->inMemoryFiles->delete($path);
         }
@@ -153,6 +170,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
      */
     public function createDirectory(string $path, $config = []): void
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         $this->inMemoryFiles->createDirectory(
             $path,
             $config instanceof Config ? $config : new Config($config)
@@ -163,13 +182,16 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
     public function listContents(string $path, bool $deep): iterable
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
+        /** @var FileAttributes[] $actual */
+//        $actual = $this->filesystem->listContents($path, $deep)->toArray();
 
         $deletedFilesGenerator = $this->deletedFiles->listContents($path, $deep);
         $deletedFilesArray = $deletedFilesGenerator instanceof Traversable
             ? iterator_to_array($deletedFilesGenerator, false)
             : (array) $deletedFilesGenerator;
         $deletedFilePaths = array_map(fn($file) => $file->path(), $deletedFilesArray);
-
 
         $inMemoryFilesGenerator = $this->inMemoryFiles->listContents($path, $deep);
         $inMemoryFilesArray = $inMemoryFilesGenerator instanceof Traversable
@@ -180,7 +202,6 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         $inMemoryFilesArray = array_filter($inMemoryFilesArray, fn($file) => !in_array($file->path(), $deletedFilePaths));
 
         $inMemoryFilePaths = (array) array_map(fn($file) => $file->path(), $inMemoryFilesArray);
-
 
         /** @var FileAttributes[] $parentFilesystemArray */
         $parentFilesystemGenerator = $this->delegateFilesystemAdapter->listContents($path, $deep);
@@ -216,6 +237,9 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
      */
     public function copy(string $source, string $destination, $config = null): void
     {
+        $source = $this->pathNormalizer->normalizePath($source);
+        $destination = $this->pathNormalizer->normalizePath($destination);
+
         $sourceFile = $this->read($source);
 
         $this->inMemoryFiles->write(
@@ -239,6 +263,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
      */
     private function getAttributes(string $path): StorageAttributes
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         $parentDirectoryContents = $this->listContents(dirname($path), false);
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
@@ -251,6 +277,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
     public function lastModified(string $path): FileAttributes
     {
+//        $attributes = $this->getAttributes($this->pathNormalizer->normalizePath($path));
+//        return $attributes->lastModified() ?? 0;
         $storageAttributes = $this->getAttributes($path);
         return new FileAttributes(
             $path,
@@ -263,6 +291,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
     public function fileSize(string $path): FileAttributes
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         $filesize = 0;
 
         if ($this->inMemoryFiles->fileExists($path)) {
@@ -330,6 +360,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
      */
     protected function directoryExistsIn(string $path, FilesystemAdapter $filesystem): bool
     {
+        $path = $this->pathNormalizer->normalizePath($path);
+
         if (method_exists($filesystem, 'directoryExists')) {
             return $filesystem->directoryExists($path);
         }
@@ -337,7 +369,10 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         $parentDirectoryPath = dirname($path);
 
         /** @var FileSystemReader $filesystem */
-        $parentDirectoryContents = $filesystem->listContents($parentDirectoryPath, false);
+        $parentDirectoryContents = $filesystem->listContents(
+            $this->pathNormalizer->normalizePath($parentDirectoryPath),
+            false
+        );
 
         $parent = [];
         /** @var FileAttributes $entry */

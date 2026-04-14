@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -41,7 +42,7 @@ class MarkSymbolsForRenaming
         $allSymbols = $symbols->getSymbols();
         foreach ($allSymbols as $symbol) {
             // $this->config->getFlatDependencyTree
-
+            // TODO: This is probably incorrect. If a file is conditionally loaded, it still needs its namespace updated.
             if (!$this->fileIsAutoloaded($symbol)) {
 //                $this->logger->debug()
                 $symbol->setDoRename(false);
@@ -59,12 +60,18 @@ class MarkSymbolsForRenaming
                 continue;
             }
 
+            // Constant-only exclusion: extra.strauss.exclude_constants
+            if ($symbol instanceof ConstantSymbol && $this->isExcludeConstants($symbol)) {
+                $symbol->setDoRename(false);
+                continue;
+            }
+
 //            if ($this->isSymbolFoundInFileThatIsNotCopied($symbol)) {
 //                if (count($symbol->getSourceFiles())===1) {
 //                    $symbol->setDoRename(false);
 //                }
 //            }
-            if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()
+            if (!$this->config->isTargetDirectoryVendor()
                 && !$this->isSymbolFoundInFileThatIsCopied($symbol)) {
                 $symbol->setDoRename(false);
             }
@@ -115,7 +122,7 @@ class MarkSymbolsForRenaming
      */
     protected function isSymbolFoundInFileThatIsNotCopied(DiscoveredSymbol $symbol): bool
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+        if ($this->config->isTargetDirectoryVendor()) {
             return false;
         }
 
@@ -128,7 +135,7 @@ class MarkSymbolsForRenaming
 
     protected function isSymbolFoundInFileThatIsCopied(DiscoveredSymbol $symbol): bool
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+        if ($this->config->isTargetDirectoryVendor()) {
             return false;
         }
 
@@ -209,6 +216,64 @@ class MarkSymbolsForRenaming
             }
         }
         return false;
+    }
+
+    /**
+     * Config: extra.strauss.exclude_constants – applies only to constants.
+     */
+    protected function isExcludeConstants(ConstantSymbol $symbol): bool
+    {
+        return $this->isExcludeConstantsPackage($symbol->getPackageName())
+            || $this->isExcludeConstantsNamespace($symbol->getNamespace())
+            || $this->isExcludedConstantsFilePattern($symbol->getSourceFiles())
+            || $this->isExcludeConstantName($symbol->getOriginalSymbol());
+    }
+
+    protected function isExcludeConstantsPackage(?string $packageName): bool
+    {
+        if (is_null($packageName)) {
+            return false;
+        }
+        return in_array($packageName, $this->config->getExcludePackagesFromConstantPrefixing(), true);
+    }
+
+    protected function isExcludeConstantsNamespace(?string $namespace): bool
+    {
+        if (empty($namespace)) {
+            return false;
+        }
+        foreach ($this->config->getExcludeNamespacesFromConstantPrefixing() as $excludeNamespace) {
+            if (str_starts_with($namespace, $excludeNamespace)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param array<FileBase> $files
+     */
+    protected function isExcludedConstantsFilePattern(array $files): bool
+    {
+        /** @var File $file */
+        foreach ($files as $file) {
+            $absoluteFilePath = $file->getAbsoluteTargetPath();
+            if (empty($absoluteFilePath)) {
+                continue;
+            }
+            $vendorRelativePath = $file->getVendorRelativePath();
+            foreach ($this->config->getExcludeFilePatternsFromConstantPrefixing() as $excludeFilePattern) {
+                if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    protected function isExcludeConstantName(string $constantName): bool
+    {
+        return in_array($constantName, $this->config->getExcludeConstantNames(), true);
     }
 
     /**

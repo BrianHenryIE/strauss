@@ -40,7 +40,7 @@ class StraussIssue19Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -49,7 +49,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/tecnickcom/tcpdf/include/tcpdf_static.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/tecnickcom/tcpdf/include/tcpdf_static.php');
 
         self::assertStringNotContainsString('* Creates a copy of a class Strauss_Issue19_object', $php_string);
 

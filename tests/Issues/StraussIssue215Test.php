@@ -60,6 +60,6 @@ EOD;
 
         $missingFiles = array_diff($expectedFiles, $copiedFiles);
 
-        $this->assertEmpty($missingFiles);
+        $this->assertEmpty($missingFiles, 'These files were not copied to vendor-prefixed/dompdf/dompdf/: ' . implode(', ', $missingFiles));
     }
 }

@@ -108,14 +108,13 @@ class FileEnumerator
             $isOutsideProjectDir = str_starts_with($dependency->getPackageAbsolutePath(), $this->config->getVendorDirectory());
 
             $vendorRelativePath = $this->filesystem->getRelativePath(
-                $this->config->getVendorDirectory(),
+                $this->config->getAbsoluteVendorDirectory(),
                 $sourceAbsoluteFilepath
             );
 
             /** @var string $dependencyPackageAbsolutePath */
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
             if ($vendorRelativePath === $sourceAbsoluteFilepath) {
-                $vendorRelativePath = $dependency->getVendorSubdir() . str_replace($dependency->getPackageAbsolutePath(), '', $sourceAbsoluteFilepath);
                 $vendorRelativePath = $dependency->getRelativePath() . str_replace(
                     FileSystem::normalizeDirSeparator($dependencyPackageAbsolutePath),
                     '',
@@ -125,27 +124,36 @@ class FileEnumerator
 
             /** @var FileWithDependency $f */
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
-                ?? new FileWithDependency($dependency, $vendorRelativePath, $sourceAbsoluteFilepath);
+                ?? new FileWithDependency(
+                    $dependency,
+                    FileSystem::normalizeDirSeparator($vendorRelativePath),
+                    FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath)
+                );
 
 //            $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);
-            $f->setAbsoluteTargetPath($this->config->getTargetDirectory() . $vendorRelativePath);
+            $f->setAbsoluteTargetPath($this->config->getAbsoluteTargetDirectory() . '/' . $vendorRelativePath);
 
             $autoloaderType && $f->addAutoloader($autoloaderType);
             //         $f->setDoDelete(!$isOutsideProjectDir);
             $f->setDoDelete($isOutsideProjectDir);
         } else {
-            $vendorRelativePath = str_replace($this->config->getVendorDirectory(), '', $sourceAbsoluteFilepath);
-            $vendorRelativePath = str_replace($this->config->getTargetDirectory(), '', $vendorRelativePath);
+            $vendorRelativePath = $this->filesystem->getRelativePath(
+                str_starts_with($sourceAbsoluteFilepath, $this->config->getAbsoluteVendorDirectory()) ? $this->config->getAbsoluteVendorDirectory() : $this->config->getAbsoluteTargetDirectory(),
+                $sourceAbsoluteFilepath,
+            );
 
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
-                 ?? new File($sourceAbsoluteFilepath, $vendorRelativePath);
+                 ?? new File(
+                     FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath),
+                     $vendorRelativePath
+                 );
         }
 
         $this->discoveredFiles->add($f);
 
         $relativeFilePath =
             $this->filesystem->getRelativePath(
-                dirname($this->config->getVendorDirectory()),
+                dirname($this->config->getAbsoluteVendorDirectory()),
                 $f->getAbsoluteTargetPath()
             );
         $this->logger->info("Found file " . $relativeFilePath);

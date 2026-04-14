@@ -85,7 +85,16 @@ EOD;
 
         self::assertContains('pimple/pimple', $sut->getPackages());
 
-        $this->assertEqualsPaths($tmpfname . '/target_directory/', $sut->getTargetDirectory());
+        $this->assertEqualsPaths(
+            $tmpfname . '/target_directory/',
+            $sut->getTargetDirectory()
+        );
+        $this->assertEqualsRN(
+            $this->getFileSystem()->normalizePath(
+                getcwd() . '/target_directory'
+            ),
+            $sut->getAbsoluteTargetDirectory()
+        );
 
         self::assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
 
@@ -193,7 +202,11 @@ EOD;
 
         $sut = new StraussConfig($composer);
 
-        $this->assertEqualsPaths($tmpfname . '/vendor-prefixed/', $sut->getTargetDirectory());
+        $this->assertEqualsPaths($tmpfname . '/vendor-prefixed/', $sut->getAbsoluteTargetDirectory());
+        $this->assertEqualsRN(
+            $this->getFileSystem()->normalizePath(getcwd() . '/vendor-prefixed'),
+            $sut->getAbsoluteTargetDirectory()
+        );
     }
 
     /**
@@ -611,7 +624,11 @@ EOD;
 
         self::assertContains('pimple/pimple', $sut->getPackages());
 
-        $this->assertEqualsPaths($tmpfname . '/dep_directory', $sut->getTargetDirectory());
+        $this->assertEqualsPaths($tmpfname . '/dep_directory', $sut->getAbsoluteTargetDirectory());
+        self::assertEqualsRN(
+            $this->getFileSystem()->normalizePath(getcwd() . '/dep_directory'),
+            $sut->getAbsoluteTargetDirectory()
+        );
 
         self::assertEqualsRN("My_Mozart_Config", $sut->getNamespacePrefix());
 
@@ -1031,5 +1048,50 @@ EOD;
         $this->assertEquals('ST_TEST_', $sut->getConstantsPrefix());
 
         unlink($tmpfname);
+    }
+
+    public function test_optimize_autoloader_default_true(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\"
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerExtraStraussJson);
+            $composer = Factory::create(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertTrue($sut->isOptimizeAutoloader());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
+
+    public function test_optimize_autoloader_false(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "optimize_autoloader": false
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerExtraStraussJson);
+            $composer = Factory::create(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertFalse($sut->isOptimizeAutoloader());
+        } finally {
+            unlink($tmpfname);
+        }
     }
 }

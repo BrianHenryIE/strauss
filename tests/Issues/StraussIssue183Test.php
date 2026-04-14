@@ -29,7 +29,7 @@ class StraussIssue183Test extends IntegrationTestCase
      */
     public function test_bootstrap(string $targetDirectoryJsonLine)
     {
-        $straussAbsoluteDir = getcwd();
+        $straussAbsoluteDir = dirname(__DIR__, 2);
         $composerJsonString = <<<EOD
 {
   "name": "strauss/issue183",

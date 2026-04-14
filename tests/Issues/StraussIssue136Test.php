@@ -71,9 +71,9 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
-        mkdir($this->testsWorkingDir . 'src');
-        $this->getFileSystem()->write($this->testsWorkingDir . 'src/whatever.php', $phpString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        mkdir($this->testsWorkingDir . '/src');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/src/whatever.php', $phpString);
 
         exec('composer install');
 

@@ -59,9 +59,9 @@ class Copier
      */
     public function prepareTarget(): void
     {
-        if (! $this->filesystem->directoryExists($this->config->getTargetDirectory())) {
-            $this->logger->info('Creating directory at ' . $this->config->getTargetDirectory());
-            $this->filesystem->createDirectory($this->config->getTargetDirectory());
+        if (! $this->filesystem->directoryExists($this->config->getAbsoluteTargetDirectory())) {
+            $this->logger->info('Creating directory at ' . $this->config->getAbsoluteTargetDirectory());
+            $this->filesystem->createDirectory($this->config->getAbsoluteTargetDirectory());
         }
 
         foreach ($this->files->getFiles() as $file) {

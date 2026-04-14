@@ -14,9 +14,9 @@ trait FlysystemBackCompatTrait
     // directoryExists
     public function directoryExists(string $location): bool
     {
-
-        $normalizer = $this->getNormalizer();
-        $normalizedLocation = $normalizer->normalizePath($location);
+        if (method_exists($this, 'normalizePath')) {
+            $location = $this->normalizePath($location);
+        }
 
         /**
          * Use `self::class` here to check the parent of the current class, not necessarily the parent of the class

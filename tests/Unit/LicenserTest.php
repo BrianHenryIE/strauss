@@ -35,7 +35,6 @@ class LicenserTest extends TestCase
         $dependencies = array();
 
         $packagePath = __DIR__.'/vendor/developer-name/project-name/';
-
         $dependency = Mockery::mock(ComposerPackage::class);
         $dependency->expects('getPackageName')->andReturn('developer-name/project-name');
         $dependency->expects('getPackageAbsolutePath')->andReturn($packagePath);

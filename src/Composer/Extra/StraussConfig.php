@@ -16,8 +16,10 @@ use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
 use Exception;
@@ -39,6 +41,7 @@ class StraussConfig implements
     FileSymbolScannerConfigInterface,
     FileEnumeratorConfig,
     FileCopyScannerConfigInterface,
+    OptimizeAutoloaderConfigInterface,
     PrefixerConfigInterface,
     ReplaceConfigInterface
 {
@@ -57,7 +60,7 @@ class StraussConfig implements
      *
      * Probably 'vendor/'
      */
-    protected string $vendorDirectory = 'vendor';
+    protected string $relativeVendorDirectory = 'vendor';
 
     /**
      * `namespacePrefix` is the prefix to be given to any namespaces.
@@ -138,6 +141,13 @@ class StraussConfig implements
     protected array $excludeFromPrefix = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
 
     /**
+     * Exclude constants from prefixing only (same shape as exclude_from_prefix).
+     *
+     * @var array{packages: string[], namespaces: string[], file_patterns: string[], constants: string[]}
+     */
+    protected array $excludeConstants = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array(),'constants'=>array());
+
+    /**
      * An array of autoload keys to replace packages' existing autoload key.
      *
      * e.g. when
@@ -188,16 +198,15 @@ class StraussConfig implements
      */
     protected bool $dryRun = false;
 
-    // Hopefully temporary.
-    private function normalizer(string $path): string
-    {
-        return rtrim(substr($path, (PHP_OS_FAMILY === 'Windows' ? 3 : 1)), '\\/') . '/';
-    }
-
     /**
      * Should the root autoload be included when generating the strauss autoloader?
      */
     protected bool $includeRootAutoload = false;
+
+    /**
+     * Should Composer autoload generation be optimized and classmap authoritative?
+     */
+    protected bool $optimizeAutoloader = true;
 
     /**
      * Read any existing Mozart config.
@@ -215,7 +224,8 @@ class StraussConfig implements
             // Composer factory accepts a file or directory.
             $composerDir = str_ends_with($composerDir, '.json') // TODO: replace with a file exists/dir exists check.
                 ? dirname($composerDir) : $composerDir;
-            $this->projectDirectory = $this->normalizer($composerDir);
+            $normalizer = FileSystem::makePathNormalizer(getcwd());
+            $this->projectDirectory = $normalizer->($composerDir);
         }
 
         $configExtraSettings = null;
@@ -262,19 +272,20 @@ class StraussConfig implements
         // * Use PSR-0 autoloader key
         // * Use the package name
         if (! isset($this->namespacePrefix)) {
-            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4'])) {
+            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4']) && !empty($composer->getPackage()->getAutoload()['psr-4'])) {
                 $this->setNamespacePrefix(array_key_first($composer->getPackage()->getAutoload()['psr-4']));
-            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0'])) {
+            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0']) && !empty($composer->getPackage()->getAutoload()['psr-0'])) {
                 $this->setNamespacePrefix(array_key_first($composer->getPackage()->getAutoload()['psr-0']));
             } elseif (isset($composer) && '__root__' !== $composer->getPackage()->getName()) {
                 $packageName = $composer->getPackage()->getName();
-                $namespacePrefix = preg_replace('/[^\w\/]+/', '_', $packageName);
+                // Replace all non-word characters with underscores.
+                $namespacePrefix = preg_replace('/[^\w\/]+/', '_', $packageName) ?? $packageName;
                 $namespacePrefix = str_replace('/', '\\', $namespacePrefix) . '\\';
                 $namespacePrefix = preg_replace_callback('/(?<=^|_|\\\\)[a-z]/', function ($match) {
                     return strtoupper($match[0]);
-                }, $namespacePrefix);
+                }, $namespacePrefix) ?? $namespacePrefix;
                 $this->setNamespacePrefix($namespacePrefix);
-            } elseif (isset($this->classmapPrefix)) {
+            } elseif (isset($this->classmapPrefix) && !empty($this->getClassmapPrefix())) {
                 $namespacePrefix = rtrim($this->getClassmapPrefix(), '_');
                 $this->setNamespacePrefix($namespacePrefix);
             }
@@ -300,7 +311,7 @@ class StraussConfig implements
                 $classmapPrefix = str_replace("\\", "_", $classmapPrefix);
                 $this->setClassmapPrefix($classmapPrefix);
             } elseif (isset($this->namespacePrefix)) {
-                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $this->getNamespacePrefix());
+                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $this->getNamespacePrefix()) ?? str_replace('\\', '_', $this->getNamespacePrefix());
                 $classmapPrefix = rtrim($classmapPrefix, '_') . '_';
                 $this->setClassmapPrefix($classmapPrefix);
             }
@@ -316,6 +327,7 @@ class StraussConfig implements
             }, $composer->getPackage()->getRequires());
         }
 
+        // @deprecated.
         // If the bool flag for classmapOutput wasn't set in the JSON config.
         if (!isset($this->classmapOutput)) {
             $this->classmapOutput = true;
@@ -324,6 +336,19 @@ class StraussConfig implements
                 $autoloadKey = $composer->getPackage()->getAutoload();
                 if (isset($autoloadKey['classmap']) && in_array($this->targetDirectory, $autoloadKey['classmap'], true)) {
                     $this->classmapOutput = false;
+                }
+                foreach ($composer->getPackage()->getAutoload() as $autoload) {
+                    // To see if one of its paths.
+                    foreach ($autoload as $entry) {
+                        $paths = (array) $entry;
+                        foreach ($paths as $path) {
+                            // Matches the target directory.
+                            if (trim($path, '\\/') === $this->getAbsoluteTargetDirectory()) {
+                                $this->classmapOutput = false;
+                                break 3;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -346,13 +371,28 @@ class StraussConfig implements
     }
 
     /**
-     * `target_directory` will always be returned without a leading slash and with a trailing slash.
-     *
-     * @return string
+     * `target_directory` will always be returned without a leading nor trailing slash.
      */
-    public function getTargetDirectory(): string
+    public function getAbsoluteTargetDirectory(): string
     {
-        return $this->getProjectDirectory() . trim($this->targetDirectory, '\\/') . '/';
+        return FileSystem::normalizeDirSeparator(
+            trim($this->getProjectDirectory(), '\\/') . '/' . trim($this->targetDirectory, '\\/')
+        );
+    }
+
+    public function isTargetDirectoryVendor(): bool
+    {
+        return $this->getAbsoluteVendorDirectory() === $this->getAbsoluteTargetDirectory();
+    }
+
+    /**
+     * Default 'vendor-prefixed'. No leading or trailing slash.
+     */
+    public function getRelativeTargetDirectory(): string
+    {
+        return FileSystem::normalizeDirSeparator(
+            trim($this->targetDirectory, '\\/')
+        );
     }
 
     /**
@@ -364,19 +404,19 @@ class StraussConfig implements
     }
 
     /**
-     * @return string
+     * No leading or trailing slash.
      */
-    public function getVendorDirectory(): string
+    public function getAbsoluteVendorDirectory(): string
     {
-        return $this->getProjectDirectory() . trim($this->vendorDirectory, '\\/') . '/';
+        return trim($this->getProjectDirectory() . '/' . $this->relativeVendorDirectory, '\\/');
     }
 
     /**
-     * @param string $vendorDirectory
+     * @param string $relativeVendorDirectory
      */
-    public function setVendorDirectory(string $vendorDirectory): void
+    public function setRelativeVendorDirectory(string $relativeVendorDirectory): void
     {
-        $this->vendorDirectory = $vendorDirectory;
+        $this->relativeVendorDirectory = $relativeVendorDirectory;
     }
 
     /**
@@ -413,7 +453,7 @@ class StraussConfig implements
 
     public function getFunctionsPrefix(): ?string
     {
-        if (!isset($this->functionsPrefix)) {
+        if (!isset($this->functionsPrefix) && !is_null($this->getClassmapPrefix())) {
             return strtolower($this->getClassmapPrefix());
         }
         if (empty($this->functionsPrefix)) {
@@ -571,6 +611,59 @@ class StraussConfig implements
         return $this->excludeFromPrefix['file_patterns'] ?? array();
     }
 
+    /**
+     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>, constants?:array<string>} $excludeConstants
+     */
+    public function setExcludeConstants(array $excludeConstants): void
+    {
+        if (isset($excludeConstants['packages'])) {
+            $this->excludeConstants['packages'] = $excludeConstants['packages'];
+        }
+        if (isset($excludeConstants['namespaces'])) {
+            $this->excludeConstants['namespaces'] = $excludeConstants['namespaces'];
+        }
+        if (isset($excludeConstants['file_patterns'])) {
+            $this->excludeConstants['file_patterns'] = $excludeConstants['file_patterns'];
+        }
+        if (isset($excludeConstants['constants'])) {
+            $this->excludeConstants['constants'] = $excludeConstants['constants'];
+        }
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludePackagesFromConstantPrefixing(): array
+    {
+        return $this->excludeConstants['packages'] ?? [];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeNamespacesFromConstantPrefixing(): array
+    {
+        return array_map(
+            fn(string $ns) => trim($ns, '\\/'),
+            $this->excludeConstants['namespaces'] ?? []
+        );
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFilePatternsFromConstantPrefixing(): array
+    {
+        return $this->excludeConstants['file_patterns'] ?? [];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeConstantNames(): array
+    {
+        return $this->excludeConstants['constants'] ?? [];
+    }
 
     /**
      * @return array{}|array<string, array{files?:array<string>,classmap?:array<string>,"psr-4":array<string|array<string>>}> $overrideAutoload Dictionary of package name: autoload rules.
@@ -769,12 +862,22 @@ class StraussConfig implements
         return $this->includeRootAutoload;
     }
 
+    public function isOptimizeAutoloader(): bool
+    {
+        return $this->optimizeAutoloader;
+    }
+
     /**
      * @param bool $includeRootAutoload Include the project root autoload in the strauss autoloader.
      */
     public function setIncludeRootAutoload(bool $includeRootAutoload): void
     {
         $this->includeRootAutoload = $includeRootAutoload;
+    }
+
+    public function setOptimizeAutoloader(bool $optimizeAutoloader): void
+    {
+        $this->optimizeAutoloader = $optimizeAutoloader;
     }
 
     /**
@@ -836,10 +939,10 @@ class StraussConfig implements
     }
 
     /**
-     * @param string $projectDirectory Normalized path.
+     * @param string $projectDirectory Should be normalized path.
      */
     public function setProjectDirectory(string $projectDirectory): void
     {
-        $this->projectDirectory = $this->normalizer($projectDirectory . '/');
+        $this->projectDirectory = $projectDirectory;
     }
 }

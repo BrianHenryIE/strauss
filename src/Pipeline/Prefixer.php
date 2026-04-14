@@ -69,7 +69,7 @@ class Prefixer
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
         foreach ($files as $file) {
-            if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()
+            if (!$this->config->isTargetDirectoryVendor()
                 && !$file->isDoCopy()
             ) {
                 continue;
@@ -89,7 +89,7 @@ class Prefixer
                 continue;
             }
 
-            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $file->getAbsoluteTargetPath());
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $file->getAbsoluteTargetPath());
 
             $this->logger->debug("Updating contents of file: {$relativeFilePath}");
 
@@ -122,7 +122,7 @@ class Prefixer
     {
 
         foreach ($absoluteFilePathsArray as $fileAbsolutePath) {
-            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getTargetDirectory()), $fileAbsolutePath);
+            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
 
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
                 $this->logger->debug("is_dir() / nothing to do : {$relativeFilePath}");
@@ -162,8 +162,7 @@ class Prefixer
         $classmapPrefix = $this->config->getClassmapPrefix();
 
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
-        $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix());
-//        $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
+        $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
         $classes = $discoveredSymbols->getGlobalClassChanges();
         $functions = $discoveredSymbols->getDiscoveredFunctionChanges();
 
@@ -171,7 +170,7 @@ class Prefixer
 
         if ($classmapPrefix) {
             foreach ($classes as $classSymbol) {
-                $contents = $this->replaceClassname($contents, $classSymbol->getOriginalSymbol(), $classmapPrefix);
+                $contents = $this->replaceClassname($contents, $classSymbol->getOriginalSymbolStripPrefix($classmapPrefix), $classmapPrefix);
             }
         }
 
@@ -206,7 +205,12 @@ class Prefixer
     protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, string $contents): string
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $ast = $parser->parse($contents);
+        try {
+            $ast = $parser->parse($contents);
+        } catch (\PhpParser\Error $e) {
+            $this->logger->warning("Skipping ::replaceConstFetchNamespaces() in file due to parse error: " . $e->getMessage());
+            return $contents;
+        }
 
         $namespaceSymbols = $symbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
         if (empty($namespaceSymbols)) {
@@ -278,7 +282,7 @@ class Prefixer
             |static\s+
             |\"                            # inside a string that does not contain spaces - needs work
             |'                             #   right now its just inside a string that doesnt start with a space
-            |implements\s+
+            |implements\s+\\\\             # when the interface being implemented is namespaced inline
             |extends\s+\\\\                    # when the class being extended is namespaced inline
             |return\s+
             |instanceof\s+                 # when checking the class type of an object in a conditional
@@ -506,7 +510,12 @@ class Prefixer
 
         $nodeFinder = new NodeFinder();
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $ast = $parser->parse($contents);
+        try {
+            $ast = $parser->parse($contents);
+        } catch (\PhpParser\Error $e) {
+            $this->logger->warning("Skipping ::replaceFunctions() in file due to parse error: " . $e->getMessage());
+            return $contents;
+        }
 
         $positions = [];
 
@@ -599,7 +608,12 @@ class Prefixer
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
-        $ast = $parser->parse($phpFileContent);
+        try {
+            $ast = $parser->parse($phpFileContent);
+        } catch (\PhpParser\Error $e) {
+            $this->logger->warning("Skipping ::prepareRelativeNamespaces() in file due to parse error: " . $e->getMessage());
+            return $phpFileContent;
+        }
 
         $traverser = new NodeTraverser();
         $visitor = new class($discoveredNamespaceSymbols) extends \PhpParser\NodeVisitorAbstract {

@@ -14,21 +14,22 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
      */
     public function testEnsureNoRemovalOfSymlinks(): void
     {
-        $main_package_dir = $this->testsWorkingDir . 'main-package/';
-        $symlinked_package_dir = $this->testsWorkingDir . 'symlinked-package/';
+        $this->markTestSkippedOnWindows('symlinks');
 
-        mkdir($main_package_dir);
-        mkdir($symlinked_package_dir . 'src/', 0777, true);
+        $mainPackageDir = $this->testsWorkingDir . '/main-package';
+        $symlinked_package_dir = $this->testsWorkingDir . '/symlinked-package';
 
-        $this->getFileSystem()->write($main_package_dir . 'composer.json', $this->packageComposerFile());
-        $this->getFileSystem()->write($symlinked_package_dir . 'composer.json', $this->symlinkedComposerFile());
-        $this->getFileSystem()->write($symlinked_package_dir . 'src/File.php', $this->symlinkedPhpFile());
+        mkdir($mainPackageDir);
+        mkdir($symlinked_package_dir . '/src', 0777, true);
 
-        chdir($main_package_dir);
+        $this->getFileSystem()->write($mainPackageDir . '/composer.json', $this->packageComposerFile());
+        $this->getFileSystem()->write($symlinked_package_dir . '/composer.json', $this->symlinkedComposerFile());
+        $this->getFileSystem()->write($symlinked_package_dir . '/src/File.php', $this->symlinkedPhpFile());
+
+        chdir($mainPackageDir);
         exec('composer install');
 
-
-        $relative_symlinked_package_dir = $main_package_dir . 'vendor/strauss-test/symlinked-package';
+        $relative_symlinked_package_dir = $mainPackageDir . '/vendor/strauss-test/symlinked-package';
 
         $relative_symlinked_package_dir = str_replace(['/', '\\'], '/', $relative_symlinked_package_dir);
 
@@ -36,11 +37,31 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
+        // The symlink should be removed
 
-        $this->assertFileExists($main_package_dir . 'vendor_prefixed/strauss-test/symlinked-package/src/File.php');
+        // The contents should be copied
+        $copiedPathOfSymlinkContents = $mainPackageDir . '/vendor_prefixed/strauss-test/symlinked-package';
+        $this->assertTrue(
+            $this->getFileSystem()->directoryExists($copiedPathOfSymlinkContents),
+            'Expected copied contents to exist at ' . $copiedPathOfSymlinkContents
+        );
 
-        self::assertDirectoryExists($symlinked_package_dir);
-        self::assertDirectoryDoesNotExist($relative_symlinked_package_dir);
+        // The symlink itself should be removed
+        $locationPathOfSymlinkLink = $mainPackageDir . '/vendor/strauss-test/symlinked-package';
+        $this->assertFalse(
+            $this->getFileSystem()->exists($locationPathOfSymlinkLink),
+            'Unexpected symlink present at ' . $locationPathOfSymlinkLink
+        );
+
+        // The symlink target should remain.
+        $targetPathOfSymlinkLink = $mainPackageDir . '/../symlinked-package';
+        $this->assertTrue(
+            $this->getFileSystem()->directoryExists($targetPathOfSymlinkLink),
+            'Expected symlink target to exist at ' . $targetPathOfSymlinkLink
+        );
+
+        $this->assertDirectoryExistsInFileSystem($symlinked_package_dir);
+        $this->assertDirectoryNotExistsInFileSystem($relative_symlinked_package_dir);
     }
 
     private function packageComposerFile(): string

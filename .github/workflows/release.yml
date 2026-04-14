@@ -24,6 +24,7 @@ jobs:
         with:
           php-version: 7.4
           tools: composer:v2, phive
+          extensions: fileinfo, gd
 
       - name: Install Phive tools
         if: ${{ github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.author_association == 'OWNER' }} # secrets are not available to users without write access

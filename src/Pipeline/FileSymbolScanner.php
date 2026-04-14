@@ -190,7 +190,11 @@ class FileSymbolScanner
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
-        $ast = $parser->parse(trim($contents)) ?? [];
+        try {
+            $ast = $parser->parse(trim($contents)) ?? [];
+        } catch (\PhpParser\Error $e) {
+            return [];
+        }
 
         foreach ($ast as $rootNode) {
             if ($rootNode instanceof Node\Stmt\Namespace_) {

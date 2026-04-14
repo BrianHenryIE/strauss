@@ -4,9 +4,11 @@ namespace BrianHenryIE\Strauss\Config;
 
 interface MarkSymbolsForRenamingConfigInterface
 {
-    public function getVendorDirectory(): string;
+    public function getAbsoluteVendorDirectory(): string;
 
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
+
+    public function isTargetDirectoryVendor(): bool;
 
     /**
      * @return string[]
@@ -37,4 +39,28 @@ interface MarkSymbolsForRenamingConfigInterface
      * @return string[]
      */
     public function getExcludeNamespacesFromCopy(): array;
+
+    /**
+     * Config: extra.strauss.exclude_constants – applied only to constants.
+     *
+     * @return string[]
+     */
+    public function getExcludePackagesFromConstantPrefixing(): array;
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeNamespacesFromConstantPrefixing(): array;
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFilePatternsFromConstantPrefixing(): array;
+
+    /**
+     * Explicit constant names to never prefix (e.g. WP_PLUGIN_DIR, ABSPATH).
+     *
+     * @return string[]
+     */
+    public function getExcludeConstantNames(): array;
 }

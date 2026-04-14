@@ -43,7 +43,7 @@ EOD;
         chdir($this->testsWorkingDir);
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/my-plugin.php', $myPluginPhpString);
-        @mkdir($this->testsWorkingDir . 'includes');
+        @mkdir($this->testsWorkingDir . '/includes');
         $this->getFileSystem()->write($this->testsWorkingDir . '/includes/class-my-plugin.php', $myPluginClassPhpString);
 
         $_SERVER['argv'] = [

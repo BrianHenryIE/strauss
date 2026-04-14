@@ -16,10 +16,10 @@ use Elazar\Flystream\ServiceLocator;
 use Exception;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerInterface;
+use League\Flysystem\StorageAttributes;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -31,6 +31,9 @@ class IntegrationTestCase extends TestCase
 {
     protected string $projectDir;
 
+    /** No trailing slash */
+    protected string $testsWorkingDir;
+
     protected array $envBeforeTest = [];
 
     public function setUp(): void
@@ -41,7 +44,9 @@ class IntegrationTestCase extends TestCase
 
         $this->projectDir = getcwd();
 
-        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
+        $this->testsWorkingDir = FileSystem::normalizeDirSeparator(
+            sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'))
+        );
 
         $this->logger = new ColorLogger();
 
@@ -52,7 +57,7 @@ class IntegrationTestCase extends TestCase
         // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
         // we set breakpoints, we can easily browse the files.
         if ($this->isPhpStormRunning()) {
-            $this->testsWorkingDir = getcwd() . '/teststempdir/';
+            $this->testsWorkingDir = getcwd() . '/teststempdir';
         }
 
         if (file_exists($this->testsWorkingDir)) {
@@ -60,7 +65,9 @@ class IntegrationTestCase extends TestCase
         }
 
         @mkdir($this->testsWorkingDir);
-        $this->createWorkingDir();
+//        $this->createWorkingDir();
+
+        chdir($this->testsWorkingDir);
 
         if (file_exists($this->projectDir . '/strauss.phar')) {
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
@@ -127,19 +134,39 @@ class IntegrationTestCase extends TestCase
                 };
         }
 
+        $strauss->setLogger($this->getLogger());
+
+        // TODO: I don't know what I did to break the previous colorlogger output so this is just a crutch.
+        $output = new class() extends BufferedOutput {
+            protected function doWrite(string $message, bool $newline)
+            {
+                parent::doWrite($message, $newline);
+                echo $message . PHP_EOL;
+            }
+        };
+
         foreach (array_filter(explode(' ', $env)) as $pair) {
             $kv = explode('=', $pair);
             $_ENV[trim($kv[0])] = trim($kv[1]);
         }
 
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
+
+        /**
+         * Let's try enable passing an environmental variable so we can get better logs in GitHub Actions.
+         *
+         * `RENAMESPACER_LOG=debug vendor/bin/strauss` ~~ `strauss --debug` but only in tests.
+         */
+        $env_log_level = getenv('RENAMESPACER_LOG');
+        if (!empty($env_log_level)) {
+            $argv[] = '--' . strtolower(trim($env_log_level, '-'));
+        }
+
         $inputInterface = new ArgvInput($argv);
 
-        $bufferedOutput = new BufferedOutput(OutputInterface::VERBOSITY_NORMAL);
+        $result = $strauss->run($inputInterface, $output);
 
-        $result = $strauss->run($inputInterface, $bufferedOutput);
-
-        $allOutput = $bufferedOutput->fetch();
+        $allOutput = $output->fetch();
 
         return $result;
     }
@@ -261,5 +288,80 @@ class IntegrationTestCase extends TestCase
                 ? $this->markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
                 : $this->markTestSkipped($message);
         }
+    }
+
+    protected function assertFileNotExistsInFileSystem(string $filePath, ?FileSystem $filesystem = null, ?string $message = null): void
+    {
+        $filesystem = $filesystem ?? $this->getFileSystem();
+        $result = $filesystem->fileExists($filePath);
+        $this->assertFalse(
+            $result,
+            $message ?? $filePath . ' should not exist.'
+        );
+    }
+
+    protected function assertFileExistsInFileSystem(string $filePath, ?FileSystem $filesystem = null, ?string $message = null): void
+    {
+        $filesystem = $filesystem ?? $this->getFileSystem();
+
+        $result = $filesystem->fileExists($filePath);
+
+        $append = $result ? '' : $this->getParentDirectoryAssertFailureMessagePart($filePath, $filesystem);
+
+        $this->assertTrue(
+            $result,
+            $message ?? $filePath . ' should exist' . $append
+        );
+    }
+
+    protected function assertDirectoryNotExistsInFileSystem(string $directoryPath, ?FileSystem $filesystem = null, ?string $message = null): void
+    {
+        $filesystem = $filesystem ?? $this->getFileSystem();
+        $result = $filesystem->directoryExists($directoryPath);
+        $this->assertFalse(
+            $result,
+            $message ?? $directoryPath . ' should not exist.'
+        );
+    }
+
+    protected function assertDirectoryExistsInFileSystem(string $directoryPath, ?FileSystem $filesystem = null, ?string $message = null): void
+    {
+        $filesystem = $filesystem ?? $this->getFileSystem();
+
+        $result = $filesystem->directoryExists($directoryPath);
+
+        $append = $result ? '' : $this->getParentDirectoryAssertFailureMessagePart($directoryPath, $filesystem);
+
+        $this->assertTrue(
+            $result,
+            $message ?? $directoryPath . ' should exist' . $append
+        );
+    }
+
+    /**
+     * E.g. ", its parent directory does not exist".
+     * E.g. ", its parent directory contains: file1.php, file2.php, file3.php +6".
+     *
+     * @param string $path
+     * @param FileSystem $filesystem
+     */
+    protected function getParentDirectoryAssertFailureMessagePart(string $path, FileSystem $filesystem): string
+    {
+        $append = '';
+        $parentDir = dirname($path);
+        if (! $filesystem->directoryExists($parentDir)) {
+            $append .= ', its parent directory does not exist';
+        } else {
+            $parentDirList        = $filesystem->listContents($parentDir)->toArray();
+            $parentDirListStrings = array_map(
+                fn(StorageAttributes $dirEntry) => basename($dirEntry->path()) . ( $dirEntry->type() === 'dir' ? '/' : '' ),
+                $parentDirList
+            );
+            $append               .= ', its parent directory contains: ' . implode(', ', array_slice($parentDirListStrings, 0, 3));
+            if (count($parentDirList) > 3) {
+                $append .= ' +' . ( count($parentDirList) - 3 );
+            }
+        }
+        return $append;
     }
 }
