@@ -396,16 +396,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected function getTestLogger(): TestLogger
     {
         if (!isset($this->testLogger)) {
-            $this->testLogger = new class() extends ColorLogger {
-                public function debug($message, array $context = array())
-                {
-                    return; // Mute debug messages in tests.
-                }
-            };
+            $this->testLogger = new ColorLogger();
         }
-//        if (! isset($this->testLogger)) {
-//            $this->testLogger = new ColorLogger();
-//        }
 
         return $this->testLogger;
     }

@@ -136,7 +136,7 @@ class IntegrationTestCase extends TestCase
                 };
         }
 
-        $strauss->setLogger($this->getLogger());
+        $strauss->setLogger($this->getTestLogger());
 
         // TODO: I don't know what I did to break the previous colorlogger output so this is just a crutch.
         $output = new class() extends BufferedOutput {
