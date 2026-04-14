@@ -23,7 +23,7 @@ class MozartIssue48Test extends IntegrationTestCase
      * Mozart was only processing one of the PSR-4 autoload paths, in which case it was not copying (amongst others)
      * `EigenvalueDecomposition.php` at all. Test for its presence.
      */
-    public function testRubixTensorBothPathsPersist()
+    public function testRubixTensorBothPathsPersist():void
     {
 
         $composerJsonString = <<<'EOD'

@@ -16,7 +16,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 class StraussIssue74Test extends IntegrationTestCase
 {
 
-    public function test_prefix_global_function()
+    public function test_prefix_global_function():void
     {
         $this->markTestSkipped('slow');
 

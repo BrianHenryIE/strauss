@@ -22,7 +22,7 @@ class MozartIssue93Test extends IntegrationTestCase
      *
      * @author BrianHenryIE
      */
-    public function test_it_does_not_make_classname_replacement_inside_namespaced_file()
+    public function test_it_does_not_make_classname_replacement_inside_namespaced_file():void
     {
 
         $this->markTestSkipped('Not respecting the pinned commit.');

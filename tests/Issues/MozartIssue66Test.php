@@ -31,7 +31,7 @@ class MozartIssue66Test extends IntegrationTestCase
      *    ]
      * },
      */
-    public function testFilesAutoloaderIsUsed()
+    public function testFilesAutoloaderIsUsed():void
     {
 
         $composerJsonString = <<<'EOD'

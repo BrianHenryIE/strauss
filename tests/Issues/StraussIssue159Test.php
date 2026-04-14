@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue159Test extends IntegrationTestCase
 {
-    public function test_autoloader_does_not_include_platform_check()
+    public function test_autoloader_does_not_include_platform_check():void
     {
         $composerJsonString = <<<'EOD'
 {

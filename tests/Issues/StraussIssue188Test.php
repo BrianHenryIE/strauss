@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue188Test extends IntegrationTestCase
 {
-    public function test_issue_188_implements()
+    public function test_issue_188_implements(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -46,7 +46,7 @@ EOD;
     }
 
 
-    public function test_issue_188_extends()
+    public function test_issue_188_extends(): void
     {
         $composerJsonString = <<<'EOD'
 {

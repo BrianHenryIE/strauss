@@ -16,7 +16,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue143Test extends IntegrationTestCase
 {
-    public function test_composer_in_sibling_dir()
+    public function test_composer_in_sibling_dir():void
     {
 
         $composerJsonString = <<<'EOD'
@@ -82,7 +82,7 @@ EOD;
     /**
      * @see https://github.com/BrianHenryIE/strauss/issues/143#issuecomment-2684239222
      */
-    public function test_composer_in_sibling_dir_delete_packages()
+    public function test_composer_in_sibling_dir_delete_packages():void
     {
 
         $composerJsonString = <<<'EOD'

@@ -93,7 +93,7 @@ EOD;
         $this->assertEquals(0, $return_var);
     }
 
-    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_true()
+    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_true():void
     {
 
         $composerJsonString = <<<'EOD'
@@ -124,7 +124,7 @@ EOD;
         $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 
-    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_flag()
+    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_flag():void
     {
 
         $composerJsonString = <<<'EOD'
@@ -155,7 +155,7 @@ EOD;
         $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 
-    public function test_snake_case_cli_argument_supersedes_configured_option_true_to_false()
+    public function test_snake_case_cli_argument_supersedes_configured_option_true_to_false():void
     {
 
         $composerJsonString = <<<'EOD'
@@ -186,7 +186,7 @@ EOD;
         $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 
-    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_true()
+    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_true():void
     {
 
         $composerJsonString = <<<'EOD'
@@ -216,7 +216,7 @@ EOD;
 
         $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
-    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_flag()
+    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_flag():void
     {
 
         $composerJsonString = <<<'EOD'
@@ -247,7 +247,7 @@ EOD;
         $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 
-    public function test_camel_case_cli_argument_supersedes_configured_option_true_to_false()
+    public function test_camel_case_cli_argument_supersedes_configured_option_true_to_false():void
     {
 
         $composerJsonString = <<<'EOD'

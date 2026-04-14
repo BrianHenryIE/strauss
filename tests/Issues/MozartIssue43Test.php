@@ -24,7 +24,7 @@ class MozartIssue43Test extends IntegrationTestCase
      * League\Flysystem\FileExistsException : File already exists at path:
      * dep_directory/vendor/guzzle/guzzle/src/Guzzle/Cache/Zf1CacheAdapter.php
      */
-    public function testAwsSdkSucceeds()
+    public function testAwsSdkSucceeds():void
     {
         self::markTestSkipped('Very slow to run');
 

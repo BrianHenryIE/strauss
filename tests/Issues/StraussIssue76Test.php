@@ -17,7 +17,7 @@ class StraussIssue76Test extends IntegrationTestCase
 {
     /**
      */
-    public function test_psr4_array()
+    public function test_psr4_array():void
     {
         $this->markTestIncomplete('This is inadequate');
 

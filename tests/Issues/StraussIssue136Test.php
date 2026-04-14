@@ -18,7 +18,7 @@ class StraussIssue136Test extends IntegrationTestCase
     /**
      * `"update_call_sites": true` would update the source files.
      */
-    public function test_does_not_update_source_files_unless_requested()
+    public function test_does_not_update_source_files_unless_requested(): void
     {
         $this->markTestSkippedOnPhpVersionBelow('8.0.0');
 

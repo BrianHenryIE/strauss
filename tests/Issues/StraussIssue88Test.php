@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue88Test extends IntegrationTestCase
 {
-    public function test_returned_casted_function_call()
+    public function test_returned_casted_function_call():void
     {
         // Why is this here? It seemed to work.
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2');
