@@ -93,7 +93,7 @@ jobs:
 
       # This probably needs DEPLOY_KEY set for PRs and private repos
       - name: Commit README badge changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           file_pattern: ".github/phpstan.svg"
           commit_message: "🤖 PhpStan"
