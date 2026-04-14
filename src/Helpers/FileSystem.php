@@ -22,7 +22,6 @@ use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 
 class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCompatTraitInterface, PathNormalizer
-//class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, PathNormalizer
 {
     use FlysystemBackCompatTrait;
 
@@ -49,6 +48,11 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     protected string $workingDir;
 
     /**
+     * Private in parent class.
+     */
+    protected Config $config;
+
+    /**
      * TODO: maybe restrict the constructor to only accept a LocalFilesystemAdapter.
      *
      * TODO: Check are any of these methods unused
@@ -73,17 +77,13 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
         parent::__construct($adapter, $config, $pathNormalizer);
 
+        $this->config = new Config($config);
+
         // Parent is private.
         $this->normalizer = $pathNormalizer;
         $this->pathPrefixer = $pathPrefixer;
         $this->flysystemAdapter = $adapter;
         $this->workingDir = $workingDir;
-
-//        $this->filesystem = new \League\Flysystem\Filesystem(
-//            $adapter,
-//            $config,
-//            $pathNormalizer
-//        );
     }
 
     public static function getFsRoot(?string $path = null): string
@@ -277,7 +277,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->flysystemAdapter->write(
             $this->normalizePath($location),
             $contents,
-            $config instanceof Config ? $config : new Config($config)
+            $this->config->extend($config)
         );
     }
 
@@ -290,7 +290,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->flysystemAdapter->writeStream(
             $this->normalizePath($location),
             $contents,
-            $config instanceof Config ? $config : new Config($config)
+            $this->config->extend($config)
         );
     }
 
@@ -324,7 +324,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     {
         $this->flysystemAdapter->createDirectory(
             $this->normalizePath($location),
-            $config instanceof Config ? $config : new Config($config)
+            $this->config->extend($config)
         );
     }
 
@@ -337,7 +337,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->flysystemAdapter->move(
             $this->normalizePath($source),
             $this->normalizePath($destination),
-            $config instanceof Config ? $config : new Config($config)
+            $this->config->extend($config)
         );
     }
 
@@ -350,7 +350,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->flysystemAdapter->copy(
             $this->normalizePath($source),
             $this->normalizePath($destination),
-            $config instanceof Config ? $config : new Config($config)
+            $this->config->extend($config)
         );
     }
 
