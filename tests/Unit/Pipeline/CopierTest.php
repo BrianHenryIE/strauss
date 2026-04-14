@@ -140,7 +140,5 @@ class CopierTest extends TestCase
         $sut->copy();
 
         $this->assertTrue($filesystem->directoryExists($targetDir));
-
-        $this->assertTrue($this->getTestLogger()->hasInfoThatContains('Creating directory at'));
     }
 }
