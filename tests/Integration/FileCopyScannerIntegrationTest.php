@@ -12,7 +12,6 @@ use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 
 /**
@@ -61,7 +60,7 @@ EOD;
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
             $package = ComposerPackage::fromFile($composerFile);
-            $package->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
+            $package->setProjectVendorDirectory($this->testsWorkingDir . '/vendor/');
             return $package;
         }, $projectComposerPackage->getRequiresNames());
 

@@ -10,15 +10,12 @@ namespace BrianHenryIE\Strauss\Helpers;
 
 use BadMethodCallException;
 use Exception;
-use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
-use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToReadFile;
@@ -87,14 +84,14 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
     /**
      * @see FilesystemAdapter::writeStream()
      * @param resource $contents
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function writeStream(string $path, $contents, Config $config): void
+    public function writeStream(string $path, $contents, $config): void
     {
-        $location = $this->pathNormalizer->normalizePath($location);
+        $path = $this->pathNormalizer->normalizePath($path);
 
-        $config = new Config($config);
+        $config = $config instanceof Config ? $config : new Config($config);
         $this->rewindStream($contents);
         $this->inMemoryFiles->writeStream($path, $contents, $config);
 

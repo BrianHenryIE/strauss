@@ -10,16 +10,18 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
+use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\ServiceLocator;
 use Exception;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerInterface;
 use League\Flysystem\StorageAttributes;
+use SplFileInfo;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -105,7 +107,7 @@ class IntegrationTestCase extends TestCase
                 unset($paramsSplit[0]);
                 break;
             case 'replace':
-                $strauss = new \BrianHenryIE\Strauss\Console\Commands\ReplaceCommand();
+                $strauss = new ReplaceCommand();
                 unset($paramsSplit[0]);
                 break;
             default:
@@ -219,9 +221,9 @@ class IntegrationTestCase extends TestCase
         $finder->in($dir);
         if ($finder->hasResults()) {
 
-            /** @var \SplFileInfo[] $files */
+            /** @var SplFileInfo[] $files */
             $files = iterator_to_array($finder->getIterator());
-            /** @var \SplFileInfo[] $links */
+            /** @var SplFileInfo[] $links */
             $links = array_filter(
                 $files,
                 function ($file) use ($isSymlink) {

@@ -93,9 +93,12 @@ class DependenciesEnumerator
     {
         $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
 
-        $installedJsonPath = sprintf("%scomposer/installed.json", $this->config->getVendorDirectory());
-        $installedJsonPath = $this->filesystem->normalize($installedJsonPath);
-        $installedJsonPath = $this->filesystem->prefixPath($installedJsonPath);
+        $installedJsonPath = $this->filesystem->makeAbsolute(
+            sprintf(
+                "%s/composer/installed.json",
+                $this->config->getAbsoluteVendorDirectory()
+            )
+        );
         $installedJsonTxt = $this->filesystem->read($installedJsonPath);
         $installedJson = json_decode($installedJsonTxt, true);
         $installedJsonPackages = [];
@@ -186,15 +189,15 @@ class DependenciesEnumerator
             if (isset($installedPackage['dist'], $installedPackage['dist']['type']) && $installedPackage['dist']['type'] === 'path') {
                 $path = $installedPackage['dist']['url'];
 
-                $packageRealPath = $this->filesystem->normalize($this->config->getProjectDirectory() . $path);
+                $packageRealPath = $this->filesystem->normalizePath($this->config->getProjectDirectory() . $path);
                 $requiredComposerPackage->setRealpath(
                     $packageRealPath
                 );
             }
             unset($installedPackage);
             $requiredComposerPackage->setProjectVendorDirectory(
-                $this->filesystem->normalize(
-                    $this->config->getVendorDirectory()
+                $this->filesystem->normalizePath(
+                    $this->config->getAbsoluteVendorDirectory()
                 )
             );
 

@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Helpers\Filesystem;
 use League\Flysystem\Filesystem as FlysystemFilesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
@@ -14,7 +15,7 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
  */
 class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
 {
-    protected FlysystemFilesystem $filesystem;
+    protected Filesystem $filesystem;
 
     public function setUp(): void
     {
@@ -35,7 +36,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
             $this->getLogger()
         );
 
-        $this->filesystem = new \League\Flysystem\FileSystem($sut);
+        $this->filesystem = new Filesystem($sut);
     }
 
     public function tearDown(): void
@@ -55,7 +56,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_delete_symlinked_directory(): void
     {
-        $this->filesystem->deleteDirectory($this->testsWorkingDir . 'fakedir');
+        $this->filesystem->deleteDirectory($this->testsWorkingDir . '/fakedir');
 
         $this->assertTrue($this->getTestLogger()->hasNoticeRecords());
 
@@ -69,7 +70,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_delete_directory_in_symlinked_directory(): void
     {
-        $this->filesystem->deleteDirectory($this->testsWorkingDir . 'fakedir/subdir');
+        $this->filesystem->deleteDirectory($this->testsWorkingDir . '/fakedir/subdir');
 
         $this->assertTrue($this->getTestLogger()->hasErrorRecords());
 
@@ -84,7 +85,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_delete_file_in_symlinked_directory(): void
     {
-        $this->filesystem->delete($this->testsWorkingDir . 'fakedir/file.txt');
+        $this->filesystem->delete($this->testsWorkingDir . '/fakedir/file.txt');
 
         $this->assertTrue($this->getTestLogger()->hasErrorRecords());
 
@@ -100,7 +101,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_write_file_in_symlinked_directory(): void
     {
-        $this->filesystem->write($this->testsWorkingDir . 'fakedir/file2.txt', 'test');
+        $this->filesystem->write($this->testsWorkingDir . '/fakedir/file2.txt', 'test');
 
         $this->assertTrue($this->getTestLogger()->hasWarningRecords());
 

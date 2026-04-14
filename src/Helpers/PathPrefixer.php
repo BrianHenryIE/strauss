@@ -18,7 +18,7 @@ class PathPrefixer
     /**
      * @var string
      */
-    private $separator = '/';
+    private string $separator = '/';
 
     public function __construct(string $prefix, string $separator = '/')
     {

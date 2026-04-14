@@ -26,6 +26,10 @@ trait FlysystemBackCompatTrait
 //            return parent::directoryExists($location);
 //        }
 
+        if (property_exists($this, 'flysystemAdapter') && method_exists($this->flysystemAdapter, 'directoryExists')) {
+            return $this->flysystemAdapter->directoryExists($location);
+        }
+
         if (property_exists($this, 'filesystem') && method_exists($this->filesystem, 'directoryExists')) {
             return $this->filesystem->directoryExists($location);
         }
@@ -36,6 +40,12 @@ trait FlysystemBackCompatTrait
             if ($entry->path() == $location) {
                 return $entry->isDir();
             }
+        }
+
+        // symlinks.
+        if (false !== realpath($this->pathPrefixer->prefixPath($location))
+            && is_dir($this->pathPrefixer->prefixPath($location))) {
+            return true;
         }
 
         return false;

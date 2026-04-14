@@ -105,7 +105,7 @@ class FileEnumerator
 //        $isOutsideProjectDir = $this->filesystem->normalize($dependency->getRealPath())
 //                               !== $this->filesystem->normalize($dependency->getPackageAbsolutePath());
 
-            $isOutsideProjectDir = str_starts_with($dependency->getPackageAbsolutePath(), $this->config->getVendorDirectory());
+            $isOutsideProjectDir = str_starts_with($dependency->getPackageAbsolutePath(), $this->config->getAbsoluteVendorDirectory());
 
             $vendorRelativePath = $this->filesystem->getRelativePath(
                 $this->config->getAbsoluteVendorDirectory(),
@@ -126,8 +126,8 @@ class FileEnumerator
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
                 ?? new FileWithDependency(
                     $dependency,
-                    FileSystem::normalizeDirSeparator($vendorRelativePath),
-                    FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath)
+                    $this->filesystem->normalizePath($vendorRelativePath),
+                    $this->filesystem->normalizePath($sourceAbsoluteFilepath)
                 );
 
 //            $f->setAbsoluteTargetPath($this->config->getVendorDirectory() . $vendorRelativePath);

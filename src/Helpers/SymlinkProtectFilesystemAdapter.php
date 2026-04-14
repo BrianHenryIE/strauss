@@ -472,7 +472,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $destinationSymlink = $this->getSymlink($destination);
 
         if (!$sourceSymlink && !$destinationSymlink) {
-            $this->logger->debug("Creating directory at non-symlinked path {$path}", [
+            $this->logger->debug("Creating directory at non-symlinked path {$destination}", [
                 'method' => __METHOD__,
                 'args' => func_get_args()
             ]);

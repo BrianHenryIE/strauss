@@ -99,9 +99,12 @@ abstract class AbstractRenamespacerCommand extends Command
             $this->filesystem =
                 new FileSystem(
                     new ReadOnlyFileSystem(
-                        $this->filesystem,
+                        $this->filesystem->getAdapter(),
                         Filesystem::makePathNormalizer($this->workingDir)
                     ),
+                    [],
+                    null,
+                    null,
                     $this->workingDir
                 );
 
@@ -143,13 +146,12 @@ abstract class AbstractRenamespacerCommand extends Command
             );
 
             $this->filesystem = new FileSystem(
-                new \League\Flysystem\Filesystem(
-                    $localFilesystemAdapter,
-                    [
+                $localFilesystemAdapter,
+                [
                         Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                     ],
-                    Filesystem::makePathNormalizer($this->workingDir)
-                ),
+                Filesystem::makePathNormalizer($this->workingDir),
+                null,
                 $this->workingDir
             );
         }

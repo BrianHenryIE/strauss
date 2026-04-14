@@ -85,13 +85,12 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->flysystemAdapter = $adapter;
         $this->workingDir = $workingDir;
 
-        $this->filesystem = new \League\Flysystem\Filesystem(
-            $adapter,
-            $config,
-            $pathNormalizer
-        );
+//        $this->filesystem = new \League\Flysystem\Filesystem(
+//            $adapter,
+//            $config,
+//            $pathNormalizer
+//        );
     }
-
 
     public static function getFsRoot(?string $path = null): string
     {
@@ -289,7 +288,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
     public function writeStream(string $location, $contents, $config = []): void
@@ -324,7 +323,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
     public function createDirectory(string $location, $config = []): void
@@ -336,7 +335,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
     public function move(string $source, string $destination, $config = []): void
@@ -349,7 +348,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
     public function copy(string $source, string $destination, $config = []): void

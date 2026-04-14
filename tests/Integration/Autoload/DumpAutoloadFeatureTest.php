@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGeneratorFactory;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
@@ -13,6 +14,7 @@ use Composer\Autoload\AutoloadGenerator;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mockery;
 
 /**
  * @see DumpAutoload
@@ -49,7 +51,8 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
             $config->setPackagesToCopy(['psr/log' => $psrLogPackage]);
             $config->setPackagesToPrefix(['psr/log' => $psrLogPackage]);
             $filesystem = $this->getFileSystem();
-            $dumpAutoload = new DumpAutoload($config, $filesystem, $this->logger, new Prefixer($config, $filesystem, $this->logger), new FileEnumerator($config, $filesystem, $this->logger));
+            $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
+            $dumpAutoload = new DumpAutoload($config, $filesystem, $this->logger, new Prefixer($config, $filesystem, $this->logger), new FileEnumerator($config, $filesystem, $this->logger), $composerAutoloadGeneratorFactory);
             $dumpAutoload->generatedPrefixedAutoloader();
             $autoloadRealPath = $this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php';
             $this->assertFileExists($autoloadRealPath);

@@ -74,11 +74,11 @@ class FileCopyScanner
                 $copy = false;
             }
 
-            if ($copy) {
+//            if ($copy) {
 //                $this->logger->debug("Marking file {relativeFilePath} to be copied.", [
 //                    'relativeFilePath' => $this->filesystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $file->getSourcePath()),
 //                ]);
-            }
+//            }
 
             $file->setDoCopy($copy);
 

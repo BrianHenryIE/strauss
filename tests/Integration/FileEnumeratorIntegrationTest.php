@@ -53,16 +53,16 @@ EOD;
         // Only one because we haven't run "flat dependency list".
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
-            $a = ComposerPackage::fromFile($composerFile);
-            $a->setProjectVendorDirectory($this->testsWorkingDir . 'vendor/');
-            return $a;
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->testsWorkingDir . '/vendor/');
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
         $vendorDir = 'vendor';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
+        $config->method('getAbsoluteVendorDirectory')->willReturn($this->testsWorkingDir . '/' . $vendorDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,

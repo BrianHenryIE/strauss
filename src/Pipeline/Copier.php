@@ -50,7 +50,7 @@ class Copier
         $this->logger = $logger;
         $this->filesystem = $filesystem;
     }
-    
+
     /**
      * If the target dir does not exist, create it.
      * If it already exists, delete any files we're about to copy.
@@ -98,6 +98,7 @@ class Copier
             $sourceAbsoluteFilepath = $file->getSourcePath();
             $targetAbsolutePath = $file->getAbsoluteTargetPath();
 
+            // Basically ::isDirectory().
             if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
                 $this->logger->info(
                     'Creating directory at {targetPath}',

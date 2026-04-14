@@ -175,7 +175,6 @@ class ComposerPackage
         if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
             $this->relativePath = $this->packageName;
 //            $this->vendorSubdir = $this->packageName;
-//            $this->packageAbsolutePath = FileSystem::normalizeDirSeparator(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) . '/';
             $this->packageAbsolutePath = $pathNormalizer->normalizePath(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
         // If the package is symlinked, the path will be outside the working directory.
         } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
@@ -222,7 +221,7 @@ class ComposerPackage
     {
         return is_null($this->vendorSubdir)
                ? null
-             : FileSystem::normalizeDirSeparator($this->vendorSubdir) . '/';
+             : FileSystem::normalizeDirSeparator($this->vendorSubdir);
     }
 
     /**
@@ -233,13 +232,14 @@ class ComposerPackage
         return is_null($this->relativePath) ? null : FileSystem::normalizeDirSeparator($this->relativePath);
     }
 
-
     /**
      * No leading or tailing slash
      */
     public function getPackageAbsolutePath(): ?string
     {
-        return !empty($this->packageAbsolutePath) ? trim($this->packageAbsolutePath, '\\/') : null;
+        return !empty($this->packageAbsolutePath)
+            ? trim(str_replace('//', '/', $this->packageAbsolutePath), '\\/')
+            : null;
     }
 
     /**
@@ -344,7 +344,12 @@ class ComposerPackage
 
     public function setProjectVendorDirectory(string $parentProjectVendorDirectory)
     {
-        $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorSubdir . '/';
+        $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorSubdir;
+    }
+
+    public function setPackageAbsolutePath(string $packageAbsolutePath)
+    {
+        $this->packageAbsolutePath = $packageAbsolutePath;
     }
 
     public function setRealpath(string $realpath)

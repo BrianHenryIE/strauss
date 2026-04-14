@@ -219,13 +219,15 @@ class StraussConfig implements
      */
     public function __construct(?Composer $composer = null)
     {
+        $normalizer = FileSystem::makePathNormalizer(getcwd());
         if (isset($composer)) {
             $composerDir = $composer->getConfig()->getConfigSource()->getName();
             // Composer factory accepts a file or directory.
             $composerDir = str_ends_with($composerDir, '.json') // TODO: replace with a file exists/dir exists check.
                 ? dirname($composerDir) : $composerDir;
-            $normalizer = FileSystem::makePathNormalizer(getcwd());
             $this->projectDirectory = $normalizer->normalizePath($composerDir);
+        } else {
+            $this->projectDirectory = $normalizer->normalizePath(getcwd());
         }
 
         $configExtraSettings = null;

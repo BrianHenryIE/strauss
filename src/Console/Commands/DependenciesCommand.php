@@ -29,6 +29,8 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Factory;
 use Composer\InstalledVersions;
+use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\ServiceLocator;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
@@ -213,7 +215,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
          *
          * @var FilesystemRegistry $registry
          */
-        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+        $registry = ServiceLocator::get(FilesystemRegistry::class);
         $registry->register('mem', $this->filesystem);
 
         return $filesystem;
@@ -371,7 +373,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $symlinkedDependencies = array_filter($this->flatDependencyTree, fn ($dependency) => $dependency->getPackageAbsolutePath() !== $dependency->getRealPath());
 
         if (!empty($symlinkedDependencies) &&
-            ($this->config->isDeleteVendorFiles() || ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()))
+            ($this->config->isDeleteVendorFiles() || ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()))
         ) {
             $list = implode(
                 ', ',
