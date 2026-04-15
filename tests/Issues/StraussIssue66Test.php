@@ -15,7 +15,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue66Test extends IntegrationTestCase
 {
-
     /**
      */
     public function test_wp_graphql_prefix_main_class(): void
@@ -35,7 +34,17 @@ class StraussIssue66Test extends IntegrationTestCase
     "strauss": {
       "namespace_prefix": "MyProject\\Dependencies\\",
       "classmap_prefix": "Prefix_",
-      "constant_prefix": "Prefix_"
+      "constant_prefix": "Prefix_",
+      "exclude_from_copy": {
+        "file_patterns": [
+          "#\/tests\/#"
+        ],
+        "packages": [
+          "appsero/client",
+          "ivome/graphql-relay-php",
+          "webonyx/graphql-php"
+        ]
+      }
     }
   }
 }

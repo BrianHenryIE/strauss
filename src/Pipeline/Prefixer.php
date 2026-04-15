@@ -358,115 +358,178 @@ class Prefixer
      * @param string $contents
      * @param string $originalClassname
      * @param string $classnamePrefix
-     *
-     * @throws Exception
      */
     public function replaceClassname(string $contents, string $originalClassname, string $classnamePrefix): string
     {
-        $searchClassname = preg_quote($originalClassname, '/');
-
-        // This could be more specific if we could enumerate all preceding and proceeding words ("new", "("...).
-        $pattern = '
-			/											# Start the pattern
-				(^\s*namespace|\r\n\s*namespace)\s+[a-zA-Z0-9_\x7f-\xff\\\\]+\s*{(.*?)(namespace|\z)
-														# Look for a preceding namespace declaration, up until a
-														# potential second namespace declaration.
-				|										# if found, match that much before continuing the search on
-								    		        	# the remainder of the string.
-                (^\s*namespace|\r\n\s*namespace)\s+[a-zA-Z0-9_\x7f-\xff\\\\]+\s*;(.*) # Skip lines just declaring the namespace.
-                |
-				([^a-zA-Z0-9_\x7f-\xff\$\\\])(' . $searchClassname . ')([^a-zA-Z0-9_\x7f-\xff\\\]) # outside a namespace the class will not be prefixed with a slash
-
-			/xsm'; //                                    # x: ignore whitespace in regex.  s dot matches newline, m: ^ and $ match start and end of line
-
-        $replacingFunction = function ($matches) use ($originalClassname, $classnamePrefix) {
-
-            // If we're inside a namespace other than the global namespace:
-            if (1 === preg_match('/\s*namespace\s+[a-zA-Z0-9_\x7f-\xff\\\\]+[;{\s\n]{1}.*/', $matches[0])) {
-                return $this->replaceGlobalClassInsideNamedNamespace(
-                    $matches[0],
-                    $originalClassname,
-                    $classnamePrefix
-                );
-            } else {
-                $newContents = '';
-                foreach ($matches as $index => $captured) {
-                    if (0 === $index) {
-                        continue;
-                    }
-
-                    if ($captured == $originalClassname) {
-                        $newContents .= $classnamePrefix;
-                    }
-
-                    $newContents .= $captured;
-                }
-                return $newContents;
-            }
-//            return $matches[1] . $matches[2] . $matches[3] . $classnamePrefix . $originalClassname . $matches[5];
-        };
-
-        $result = preg_replace_callback($pattern, $replacingFunction, $contents);
-
-        if (is_null($result)) {
-            throw new Exception('preg_replace_callback returned null');
-        }
-
-        $this->checkPregError();
-
-        return $result;
-    }
-
-    /**
-     * Pass in a string and look for \Classname instances.
-     *
-     * @param string $contents
-     * @param string $originalClassname
-     * @param string $classnamePrefix
-     * @return string
-     */
-    protected function replaceGlobalClassInsideNamedNamespace(
-        string $contents,
-        string $originalClassname,
-        string $classnamePrefix
-    ): string {
         $replacement = $classnamePrefix . $originalClassname;
 
-        // use Prefixed_Class as Class;
-        $usePattern = '/
-			(\s*use\s+)
-			(' . $originalClassname . ')   # Followed by the classname
-			\s*;
-			/x'; //                    # x: ignore whitespace in regex.
+        // Prepend <?php if absent so php-parser treats the content as PHP code rather
+        // than inline HTML. The offset is subtracted from all collected positions below.
+        $phpOpenerLen = 0;
+        $parseContent = $contents;
+        if (stripos(ltrim($contents), '<?') !== 0) {
+            $phpOpenerLen = strlen("<?php\n");
+            $parseContent = "<?php\n" . $contents;
+        }
 
-        $contents = preg_replace_callback(
-            $usePattern,
-            function ($matches) use ($replacement) {
-                return $matches[1] . $replacement . ' as ' . $matches[2] . ';';
-            },
+        // Append enough closing braces to satisfy the parser for partial snippets that
+        // have unclosed class/function/namespace bodies.
+        $open = substr_count($parseContent, '{');
+        $close = substr_count($parseContent, '}');
+        $parseContent .= str_repeat('}', max(0, $open - $close));
+
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $errorHandler = new \PhpParser\ErrorHandler\Collecting();
+        $ast = $parser->parse($parseContent, $errorHandler);
+
+        if ($ast === null) {
+            $this->logger->warning("Skipping ::replaceClassname() in file due to parse failure.");
+            return $contents;
+        }
+
+        $nodeFinder = new NodeFinder();
+        $positions = [];
+
+        // Replace \Classname (fully qualified) references in any namespace context.
+        $fqNames = $nodeFinder->find($ast, function (Node $node) use ($originalClassname) {
+            return $node instanceof Name\FullyQualified
+                && $node->toString() === $originalClassname;
+        });
+        foreach ($fqNames as $name) {
+            $positions[] = [
+                'start' => $name->getStartFilePos(),
+                'end' => $name->getEndFilePos() + 1,
+                'replacement' => '\\' . $replacement,
+            ];
+        }
+
+        // In named namespaces, `use Classname;` must become `use PrefixedClassname as Classname;`
+        // so that unqualified references within the namespace continue to resolve correctly.
+        $namedNamespaces = array_filter(
+            $nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\Namespace_::class),
+            fn($ns) => $ns->name !== null
+        );
+        foreach ($namedNamespaces as $nsStmt) {
+            $useItems = $nodeFinder->findInstanceOf($nsStmt->stmts ?? [], \PhpParser\Node\UseItem::class);
+            foreach ($useItems as $useItem) {
+                if (!($useItem->name instanceof Name\FullyQualified)
+                    && $useItem->name->toString() === $originalClassname
+                ) {
+                    $aliasText = $useItem->alias === null ? ' as ' . $originalClassname : '';
+                    $positions[] = [
+                        'start' => $useItem->name->getStartFilePos(),
+                        'end' => $useItem->name->getEndFilePos() + 1,
+                        'replacement' => $replacement . $aliasText,
+                    ];
+                }
+            }
+        }
+
+        // In global namespace context (either implicit, or explicit `namespace {}`), replace
+        // unqualified class name references and class/interface/trait/enum declarations.
+        $globalStmts = [];
+        foreach ($ast as $node) {
+            if ($node instanceof \PhpParser\Node\Stmt\Namespace_) {
+                if ($node->name === null) {
+                    $globalStmts = array_merge($globalStmts, $node->stmts ?? []);
+                }
+            } else {
+                $globalStmts[] = $node;
+            }
+        }
+
+        $classLike = $nodeFinder->find($globalStmts, function (Node $node) use ($originalClassname) {
+            return ($node instanceof \PhpParser\Node\Stmt\Class_
+                || $node instanceof \PhpParser\Node\Stmt\Interface_
+                || $node instanceof \PhpParser\Node\Stmt\Trait_
+                || $node instanceof \PhpParser\Node\Stmt\Enum_)
+                && isset($node->name)
+                && $node->name instanceof \PhpParser\Node\Identifier
+                && $node->name->name === $originalClassname;
+        });
+        foreach ($classLike as $node) {
+            $positions[] = [
+                'start' => $node->name->getStartFilePos(),
+                'end' => $node->name->getEndFilePos() + 1,
+                'replacement' => $replacement,
+            ];
+        }
+
+        $unqualifiedNames = $nodeFinder->find($globalStmts, function (Node $node) use ($originalClassname) {
+            return $node instanceof Name
+                && !($node instanceof Name\FullyQualified)
+                && $node->toString() === $originalClassname;
+        });
+        foreach ($unqualifiedNames as $name) {
+            $positions[] = [
+                'start' => $name->getStartFilePos(),
+                'end' => $name->getEndFilePos() + 1,
+                'replacement' => $replacement,
+            ];
+        }
+
+        // Handle \Classname references inside doc comment type annotations.
+        $nodesWithDocComments = $nodeFinder->find($ast, function (Node $node) {
+            return $node->getDocComment() !== null;
+        });
+        $searchStr = '\\' . $originalClassname;
+        $searchLen = strlen($searchStr);
+        foreach ($nodesWithDocComments as $node) {
+            $docComment = $node->getDocComment();
+            $commentText = $docComment->getText();
+            $startFilePos = $docComment->getStartFilePos();
+            $offset = 0;
+            while (($pos = strpos($commentText, $searchStr, $offset)) !== false) {
+                $nextPos = $pos + $searchLen;
+                if ($nextPos >= strlen($commentText)
+                    || !preg_match('/[a-zA-Z0-9_\x7f-\xff\\\\]/', $commentText[$nextPos])
+                ) {
+                    $positions[] = [
+                        'start' => $startFilePos + $pos,
+                        'end' => $startFilePos + $nextPos,
+                        'replacement' => '\\' . $replacement,
+                    ];
+                }
+                $offset = $pos + 1;
+            }
+        }
+
+        if (empty($positions)) {
+            return $contents;
+        }
+
+        // Adjust positions to be relative to the original $contents (before any <?php prepend).
+        if ($phpOpenerLen > 0) {
+            $positions = array_values(array_filter(
+                array_map(function ($pos) use ($phpOpenerLen) {
+                    $pos['start'] -= $phpOpenerLen;
+                    $pos['end'] -= $phpOpenerLen;
+                    return $pos;
+                }, $positions),
+                fn($pos) => $pos['start'] >= 0
+            ));
+        }
+
+        usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
+
+        foreach ($positions as $pos) {
+            $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
+        }
+
+        /**
+         * Replace classnames in strings, e.g. `is_a( $recurrence, 'CronExpression' )`.
+         *
+         * `[^a-zA-Z0-9_\x7f-\xff\\\\]+` is anything but classname valid characters.
+         *
+         * TODO: Run this without the classname characters, log everytime a replacement is made across all test cases, add those to the test assertions, ensure this is always correct.
+         */
+        $contents = preg_replace(
+            '/([^a-zA-Z0-9_\x7f-\xff\\\\][\'"])(' . preg_quote($originalClassname, '/') . ')([\'"][^a-zA-Z0-9_\x7f-\xff\\\\])/',
+            '$1' . preg_quote($replacement, '/') . '$3',
             $contents
         );
 
-        $this->checkPregError();
-
-        $bodyPattern =
-            '/([^a-zA-Z0-9_\x7f-\xff]  # Not a class character
-			\\\)                       # Followed by a backslash to indicate global namespace
-			(' . $originalClassname . ')   # Followed by the classname
-			([^\\\;]{1})               # Not a backslash or semicolon which might indicate a namespace
-			/x'; //                    # x: ignore whitespace in regex.
-
-        $result = preg_replace_callback(
-            $bodyPattern,
-            function ($matches) use ($replacement) {
-                return $matches[1] . $replacement . $matches[3];
-            },
-            $contents
-        ) ?? $contents; // TODO: If this happens, it should raise an exception.
-
-        $this->checkPregError();
-
-        return $result;
+        return $contents;
     }
 
     protected function checkPregError(): void
