@@ -192,6 +192,6 @@ jobs:
 
       - name: Commit PHPCBF changes
         if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }} # only commit on pushes to master
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "🤖 PHPCBF"

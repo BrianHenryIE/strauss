@@ -67,7 +67,7 @@ jobs:
           find bin -name 'strauss' -exec sed -i "s/}, '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*');/}, '$CURRENT_RELEASE');/" {} +
 
       - name: Commit updated README.md
-        uses: stefanzweifel/git-auto-commit-action@v4.1.1
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           branch: master
           file_pattern: "bin/strauss"
