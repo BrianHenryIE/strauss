@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 
 class File implements FileBase
 {
@@ -30,8 +31,7 @@ class File implements FileBase
      */
     protected ?bool $doDelete = false;
 
-    /** @var DiscoveredSymbol[] */
-    protected array $discoveredSymbols = [];
+    protected DiscoveredSymbols $discoveredSymbols;
 
     protected string $targetAbsolutePath;
 
@@ -44,6 +44,13 @@ class File implements FileBase
         string $vendorRelativePath,
         string $targetAbsolutePath
     ) {
+        $this->discoveredSymbols = new class() extends DiscoveredSymbols{
+            public function __construct()
+            {
+                // Don't call parent constructor to avoid infinite loop.
+            }
+        };
+
         $this->sourceAbsolutePath = $sourceAbsolutePath;
         $this->vendorRelativePath = $vendorRelativePath;
         $this->targetAbsolutePath = $targetAbsolutePath;
@@ -140,13 +147,13 @@ class File implements FileBase
 
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void
     {
-        $this->discoveredSymbols[$symbol->getOriginalSymbol()] = $symbol;
+        $this->discoveredSymbols->add($symbol);
     }
 
     /**
      * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
      */
-    public function getDiscoveredSymbols(): array
+    public function getDiscoveredSymbols(): DiscoveredSymbols
     {
         return $this->discoveredSymbols;
     }

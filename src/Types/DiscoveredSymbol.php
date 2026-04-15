@@ -7,11 +7,17 @@ namespace BrianHenryIE\Strauss\Types;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\FileBase;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
+use Composer\Package\PackageInterface;
 
 abstract class DiscoveredSymbol
 {
-    /** @var array<FileBase> $sourceFiles */
+    /**
+     * The file(s) where this symbol was defined.
+     *
+     * @var array<FileBase> $sourceFiles
+     */
     protected array $sourceFiles = [];
 
     protected ?string $namespace;
@@ -22,8 +28,6 @@ abstract class DiscoveredSymbol
 
     protected bool $doRename = true;
 
-    protected ?ComposerPackage $package;
-
     /**
      * @param string $fqdnSymbol The classname / namespace etc.
      * @param FileBase $sourceFile The file it was discovered in.
@@ -31,8 +35,7 @@ abstract class DiscoveredSymbol
     public function __construct(
         string $fqdnSymbol,
         FileBase $sourceFile,
-        string $namespace = '\\',
-        ?ComposerPackage $package = null
+        string $namespace = '\\'
     ) {
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 
@@ -40,7 +43,6 @@ abstract class DiscoveredSymbol
         $sourceFile->addDiscoveredSymbol($this);
 
         $this->namespace = $namespace;
-        $this->package = $package;
     }
 
     public function getOriginalSymbol(): string
@@ -96,16 +98,29 @@ abstract class DiscoveredSymbol
         return $this->doRename;
     }
 
-    public function getPackage(): ?ComposerPackage
+    /**
+     * @return ComposerPackage[]
+     */
+    public function getPackages(): array
     {
-        return $this->package;
+        // TODO: `array_unique`.
+        return array_values(array_filter(array_map(
+            function (FileBase $file) {
+                return $file instanceof FileWithDependency
+                    ? $file->getDependency()
+                    : null;
+            },
+            $this->getSourceFiles()
+        )));
     }
 
     public function getPackageName(): ?string
     {
-        if (!$this->package) {
+        $packages = $this->getPackages();
+        if (0 === count($packages)) {
             return null;
         }
-        return $this->package->getPackageName();
+        // TODO: `if count(packages)>1`, warning.
+        return $packages[0]->getPackageName();
     }
 }

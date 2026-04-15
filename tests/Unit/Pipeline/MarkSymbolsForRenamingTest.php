@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
@@ -30,6 +31,8 @@ class MarkSymbolsForRenamingTest extends TestCase
     {
         $package = Mockery::mock(ComposerPackage::class);
         $package->shouldReceive('getPackageName')->andReturn('psr/log');
+        $package->shouldReceive('getPackageAbsolutePath')->andReturn('project/vendor/psr/log');
+        $package->shouldReceive('addFile');
 
         $config = Mockery::mock(MarkSymbolsForRenamingConfigInterface::class);
         $config->shouldReceive('getExcludePackagesFromCopy')->andReturn(['psr/log']);
@@ -48,12 +51,13 @@ class MarkSymbolsForRenamingTest extends TestCase
 
         $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
 
-        $file = new File(
-            'vendor/psr/log/src/LoggerInterface.php',
+        $file = new FileWithDependency(
+            $package,
             'psr/log/src/LoggerInterface.php',
-            'vendor-prefixed/psr/log/src/LoggerInterface.php'
+            'project/vendor/psr/log/src/LoggerInterface.php',
+            'project/vendor-prefixed/psr/log/src/LoggerInterface.php'
         );
-        $symbol = new NamespaceSymbol('Psr\Log', $file, '\\', $package);
+        $symbol = new NamespaceSymbol('Psr\Log', $file, '\\');
 
         self::assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 

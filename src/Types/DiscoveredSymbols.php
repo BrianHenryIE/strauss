@@ -276,4 +276,25 @@ class DiscoveredSymbols
     {
         return $this->types[self::NAMESPACE_SYMBOL][$namespace] ?? null;
     }
+
+    public function getClass(string $class): ?ClassSymbol
+    {
+        return $this->types[self::CLASS_SYMBOL][$class] ?? null;
+    }
+    public function getConst(string $const): ?ConstantSymbol
+    {
+        return $this->types[self::CONST_SYMBOL][$const] ?? null;
+    }
+    public function getFunction(string $function): ?FunctionSymbol
+    {
+        return $this->types[self::FUNCTION_SYMBOL][$function] ?? null;
+    }
+    public function getTrait(string $trait): ?TraitSymbol
+    {
+        return $this->types[self::TRAIT_SYMBOL][$trait] ?? null;
+    }
+    public function getInterface(string $interface): ?InterfaceSymbol
+    {
+        return $this->types[self::INTERFACE_SYMBOL][$interface] ?? null;
+    }
 }

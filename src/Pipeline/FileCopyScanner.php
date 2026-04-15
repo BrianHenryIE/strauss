@@ -124,10 +124,7 @@ class FileCopyScanner
     protected function isNamespaceExcluded(FileBase $file): bool
     {
         /** @var DiscoveredSymbol $symbol */
-        foreach ($file->getDiscoveredSymbols() as $symbol) {
-            if (!($symbol instanceof NamespaceSymbol)) {
-                continue;
-            }
+        foreach ($file->getDiscoveredSymbols()->getNamespaces() as $symbol) {
             foreach ($this->config->getExcludeNamespacesFromCopy() as $namespace) {
                 $namespace = rtrim($namespace, '\\');
                 if (in_array($file->getSourcePath(), array_keys($symbol->getSourceFiles()), true)

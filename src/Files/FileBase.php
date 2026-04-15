@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 
 interface FileBase
 {
@@ -55,5 +56,5 @@ interface FileBase
     /**
      * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
      */
-    public function getDiscoveredSymbols(): array;
+    public function getDiscoveredSymbols(): DiscoveredSymbols;
 }
