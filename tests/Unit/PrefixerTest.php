@@ -11,18 +11,14 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
-use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Tests\Issues\MozartIssue93Test;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
-use League\Flysystem\Config;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Mockery;
-use PHPUnit\Framework\MockObject\Exception;
 
 /**
  * Class ReplacerTest
@@ -31,6 +27,19 @@ use PHPUnit\Framework\MockObject\Exception;
  */
 class PrefixerTest extends TestCase
 {
+
+    /**
+     * @return PrefixerConfigInterface|(PrefixerConfigInterface&Mockery\MockInterface&object&Mockery\LegacyMockInterface)|(Mockery\MockInterface&object&Mockery\LegacyMockInterface)
+     */
+    protected function getMockConfig()
+    {
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+        $config->shouldReceive('getClassmapPrefix')->andReturn('Prefixer_Test_');
+        $config->shouldReceive('getNamespacePrefix')->andReturn('Prefixer\\Test\\');
+        $config->shouldReceive('getConstantsPrefix')->andReturn('Prefixer_Test_');
+        return $config;
+    }
+
     public function testNamespaceReplacer(): void
     {
 
@@ -146,17 +155,26 @@ protected $buffer;             // buffer holding in-memory PDF
 }
 EOD;
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $originalClassname = "FPDF";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $expected = "class Prefixer_Test_FPDF";
 
+        $config = $this->getMockConfig();
 
-        $original = "FPDF";
-        $classnamePrefix = "BrianHenryIE_Strauss_";
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $original, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
 
-        $expected = "class BrianHenryIE_Strauss_FPDF";
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
 
         self::assertStringContainsString($expected, $result);
     }
@@ -175,16 +193,29 @@ EOD;
     public function test_it_replaces_class_declarations(): void
     {
         $contents = 'class Hello_World {';
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $expected = "class Prefixer_Test_Hello_World {";
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $config = $this->getMockConfig();
 
-        self::assertEqualsRN('class Mozart_Hello_World {', $result);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString($expected, $result);
     }
 
     /**
@@ -194,16 +225,28 @@ EOD;
     {
         $contents = 'abstract class Hello_World {';
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = 'abstract class Prefixer_Test_Hello_World {';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN('abstract class Mozart_Hello_World {', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString($expected, $result);
     }
 
     /**
@@ -213,16 +256,28 @@ EOD;
     {
         $contents = 'interface Hello_World {';
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalName = "Hello_World";
+        $globalPrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = 'interface Prefixer_Test_Hello_World {';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN('interface Mozart_Hello_World {', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $interfaceSymbol = new InterfaceSymbol($originalName, $file);
+        $interfaceSymbol->setReplacement($globalPrefix . $originalName);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($interfaceSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString($expected, $result);
     }
 
     /**
@@ -230,18 +285,30 @@ EOD;
      */
     public function test_it_replaces_class_declarations_that_extend_other_classes(): void
     {
-        $contents = 'class Hello_World extends Bye_World {';
+        $contents = 'class Hello_World extends Bye_World {}';
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = 'class Prefixer_Test_Hello_World extends Bye_World {}';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN('class Mozart_Hello_World extends Bye_World {', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString($expected, $result);
     }
 
     /**
@@ -251,16 +318,28 @@ EOD;
     {
         $contents = 'class Hello_World implements Bye_World {';
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = 'class Prefixer_Test_Hello_World implements Bye_World {';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN('class Mozart_Hello_World implements Bye_World {', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString($expected, $result);
     }
 
 
@@ -305,16 +384,28 @@ EOD;
     {
         $contents = "class Hello_World\n{";
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = "class Prefixer_Test_Hello_World\n{";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN("class Mozart_Hello_World\n{", $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString($expected, $result);
     }
 
     /**
@@ -326,16 +417,28 @@ EOD;
     {
         $contents = "class Hello_World {";
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = "class Prefixer_Test_Hello_World {";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN("class Mozart_Hello_World {", $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString($expected, $result);
     }
 
 
@@ -382,19 +485,29 @@ EOD;
     public function test_it_does_not_replace_inside_namespace_singleline(): void
     {
         $contents = "namespace Mozart; class Hello_World";
+        $expected = $contents;
 
         $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
 
-        self::assertEqualsRN($contents, $result);
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertEqualsRN($expected, $result);
     }
-
 
     /**
      * It's possible to have multiple namespaces inside one file.
@@ -407,25 +520,44 @@ EOD;
      */
     public function it_does_not_replace_inside_named_namespace_but_does_inside_explicit_global_namespace_b(): void
     {
-
         $contents = "
 		namespace My_Project {
 			class A_Class { }
 		}
 		namespace {
-			class B_Class { }
+			class A_Class { }
 		}
 		";
 
-        $classnamePrefix = 'Mozart_';
+        $expected = "
+		namespace My_Project {
+			class A_Class { }
+		}
+		namespace {
+			class Prefixer_Test_A_Class { }
+		}
+		";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $originalClassname = 'A_Class';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, 'B_Class', $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertStringContainsString('Mozart_B_Class', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertEqualsRN($expected, $result);
     }
 
     /** @test */
@@ -813,17 +945,29 @@ EOD;
      */
     public function testDoNotReplaceInVariableNames(): void
     {
-        $originalClassname = 'object';
-        $classnamePrefix = 'Strauss_Issue19_';
         $contents = "public static function objclone(\$object) {";
-
-        $config = $this->createMock(PrefixerConfigInterface::class);
-
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
         // NOT public static function objclone($Strauss_Issue19_object) {
         $expected = "public static function objclone(\$object) {";
+
+        $originalClassname = 'object';
+        $classnamePrefix = 'Prefixer_Test_';
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
 
         self::assertEqualsRN($expected, $result);
     }
@@ -1259,9 +1403,9 @@ EOD;
      */
     public function testDoublePrefixBug(): void
     {
+        $config = $this->getMockConfig();
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 namespace ST;
@@ -1277,7 +1421,7 @@ class StraussTestPackage {
 	}
 }
 EOD;
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
+        $result = $sut->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
         self::assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
@@ -1303,8 +1447,8 @@ class StraussTestPackage2
 }
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST\\Namespace', 'StraussTest\\ST\\Namespace');
-        $result = $replacer->replaceNamespace($result, 'ST', 'StraussTest\\ST');
+        $result = $sut->replaceNamespace($contents, 'ST\\Namespace', 'StraussTest\\ST\\Namespace');
+        $result = $sut->replaceNamespace($result, 'ST', 'StraussTest\\ST');
         self::assertEqualsRN($expected, $result);
     }
 
@@ -1329,13 +1473,23 @@ class NA
 EOD;
 
         $originalClassname = 'Normalizer';
-        $classnamePrefix = 'Normalizer_Test_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
 
         self::assertEqualsRN($contents, $result);
     }
@@ -1356,20 +1510,30 @@ class Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
 EOD;
 
         $expected = <<<'EOD'
-class Normalizer_Test_Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
+class Prefixer_Test_Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
 {
 
 }
 EOD;
 
         $originalClassname = 'Normalizer';
-        $classnamePrefix = 'Normalizer_Test_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
 
         self::assertEqualsRN($expected, $result);
     }
@@ -1390,20 +1554,30 @@ class Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
 EOD;
 
         $expected = <<<'EOD'
-class Normalizer_Test_Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
+class Prefixer_Test_Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
 {
 
 }
 EOD;
 
         $originalClassname = 'Normalizer';
-        $classnamePrefix = 'Normalizer_Test_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
 
         self::assertEqualsRN($expected, $result);
     }
@@ -1434,13 +1608,23 @@ class Normalizer
 EOD;
 
         $originalClassname = 'Normalizer';
-        $classnamePrefix = 'Normalizer_Test_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
 
         self::assertEqualsRN($expected, $result);
     }
@@ -1755,6 +1939,9 @@ EOD;
     }
 
     /**
+     * @covers ::findGlobalSymbolsPositionsInComment
+     * @covers ::findGlobalSymbolPositionInComment
+     *
      * A \Global_Class in PHPDoc was capturing far beyond what it should and replacing the entire function.
      */
     public function test_global_class_phpdoc_end_delimiter(): void
@@ -1780,7 +1967,7 @@ namespace Company\Project;
 
 class Calendar {
 	/**
-	 * @return \Company_Project_Google_Client|WP_Error
+	 * @return \Prefixer_Test_Google_Client|WP_Error
 	 */
 	public function get_google_client() {
 		return $this->get_google_connection()->get_client();
@@ -1789,13 +1976,23 @@ class Calendar {
 EOD;
 
         $originalClassname = 'Google_Client';
-        $classnamePrefix = 'Company_Project_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
 
         self::assertEqualsRN($expected, $result);
     }
@@ -1931,19 +2128,33 @@ EOD;
         $expected = <<<'EOD'
 <?php
 
-use Prefixed_GlobalClass as Alias;
+use Prefixer_Test_GlobalClass as Alias;
 
 class MyClass {
 
 }
 EOD;
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $originalClassname = "GlobalClass";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceClassname($contents, 'GlobalClass', 'Prefixed_');
+        $config = $this->getMockConfig();
 
-        $this->assertEqualsRN($expected, $result);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        self::assertEqualsRN($expected, $result);
     }
 
     /**

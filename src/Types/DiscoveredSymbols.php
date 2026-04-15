@@ -76,7 +76,7 @@ class DiscoveredSymbols
     {
         return array_merge(
             array_values($this->getNamespaces()),
-            array_values($this->getGlobalClasses()),
+            array_values($this->getGlobalClassesInterfacesTraits()),
             array_values($this->getConstants()),
             array_values($this->getDiscoveredFunctions()),
         );
@@ -106,11 +106,15 @@ class DiscoveredSymbols
     /**
      * @return array<string, ClassSymbol>
      */
-    public function getGlobalClasses(): array
+    public function getGlobalClassesInterfacesTraits(): array
     {
         return array_filter(
-            $this->types[self::CLASS_SYMBOL],
-            fn($classSymbol) => '\\' === $classSymbol->getNamespace()
+            array_merge(
+                $this->types[self::CLASS_SYMBOL],
+                $this->types[self::TRAIT_SYMBOL],
+                $this->types[self::INTERFACE_SYMBOL],
+            ),
+            fn($symbol) => '\\' === $symbol->getNamespace()
         );
     }
 
@@ -120,7 +124,7 @@ class DiscoveredSymbols
     public function getGlobalClassChanges(): array
     {
         return array_filter(
-            $this->getGlobalClasses(),
+            $this->getGlobalClassesInterfacesTraits(),
             fn($classSymbol) => $classSymbol->isDoRename()
         );
     }
@@ -173,7 +177,7 @@ class DiscoveredSymbols
      */
     public function getDiscoveredClasses(?string $classmapPrefix = ''): array
     {
-        $discoveredClasses = $this->getGlobalClasses();
+        $discoveredClasses = $this->getGlobalClassesInterfacesTraits();
 
         return array_filter(
             array_keys($discoveredClasses),
@@ -266,7 +270,7 @@ class DiscoveredSymbols
     public function getClassmapSymbols(): array
     {
         return array_merge(
-            $this->getGlobalClasses(),
+            $this->getGlobalClassesInterfacesTraits(),
             $this->getDiscoveredInterfaces(),
             $this->getDiscoveredTraits(),
         );
