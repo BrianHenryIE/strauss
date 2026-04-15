@@ -5,7 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Autoload;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
@@ -31,7 +31,7 @@ class VendorComposerAutoloadFeatureTest extends IntegrationTestCase
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -40,7 +40,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/autoload.php');
 
         $this->assertStringContainsString('autoload_aliases.php', $composerAutoloadString);
     }
@@ -64,7 +64,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -73,7 +73,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/autoload.php');
 
         $this->assertStringNotContainsString('autoload_aliases.php', $composerAutoloadString);
     }
@@ -96,7 +96,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -114,7 +114,7 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/autoload.php');
 
         $this->assertEquals(
             1,
@@ -141,7 +141,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -156,7 +156,7 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/autoload.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/autoload.php');
 
         $this->assertEquals(
             1,
@@ -184,7 +184,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -193,7 +193,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
 
         $this->assertStringContainsString(
             "'League\\\\Container\\\\",
@@ -225,7 +225,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -234,7 +234,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
 
         $this->assertStringNotContainsString(
             "'League\\\\Container\\\\",
@@ -266,7 +266,7 @@ EOD;
 }
 EOD;
 
-        file_put_contents($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -275,7 +275,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $composerAutoloadString = file_get_contents($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
+        $composerAutoloadString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
 
         $this->assertStringNotContainsString(
             "'League\\\\Container\\\\",

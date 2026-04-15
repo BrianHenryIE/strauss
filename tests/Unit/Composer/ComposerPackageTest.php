@@ -142,7 +142,7 @@ class ComposerPackageTest extends TestCase
 
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerJson);
+        $this->getFileSystem()->write($tmpfname, $composerJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -241,5 +241,23 @@ EOD;
         $sut->setDidDelete(true);
 
         $this->assertTrue($sut->didDelete());
+    }
+
+    /**
+     * Verify getPackageAbsolutePath() contains no backslashes.
+     *
+     * On Windows: realpath() returns backslashes, fix normalizes them. Test FAILS before fix, PASSES after.
+     * On Linux: realpath() returns forward slashes already. Test PASSES (no regression).
+     *
+     * @covers ::getPackageAbsolutePath
+     */
+    public function testGetPackageAbsolutePathHasNoBackslashes(): void
+    {
+        $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
+        $sut = ComposerPackage::fromFile($testFile);
+
+        $absolutePath = $sut->getPackageAbsolutePath();
+
+        $this->assertStringNotContainsString('\\', $absolutePath ?? '');
     }
 }

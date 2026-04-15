@@ -8,7 +8,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -40,7 +40,7 @@ class StraussIssue215Test extends IntegrationTestCase
     }
 }
 EOD;
-        file_put_contents($this->testsWorkingDir . '/composer.json', $packageComposerJson);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
         exec('composer install');

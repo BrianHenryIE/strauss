@@ -2,7 +2,20 @@
 
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
-interface ReplaceConfigInterface
+use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
+use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\LicenserConfigInterface;
+use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
+
+interface ReplaceConfigInterface extends
+    FileEnumeratorConfig,
+    FileSymbolScannerConfigInterface,
+    AutoloadFilesEnumeratorConfigInterface,
+    ChangeEnumeratorConfigInterface,
+    PrefixerConfigInterface,
+    LicenserConfigInterface
 {
 
     /**
@@ -19,5 +32,8 @@ interface ReplaceConfigInterface
 
     public function isIncludeAuthor(): bool;
 
+    /**
+     * @return string[]|null
+     */
     public function getUpdateCallSites(): ?array;
 }

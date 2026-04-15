@@ -3,7 +3,11 @@ declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
+use BrianHenryIE\ColorLogger\ColorLogger;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
+use Psr\Log\LoggerInterface;
+use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 
@@ -12,6 +16,36 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
  */
 class DependenciesCommandTest extends TestCase
 {
+
+    protected function getSut(
+        ?InputInterface $inputInterfaceMock = null,
+        ?ConsoleOutputInterface $outputInterfaceMock = null,
+        ?FileSystem $fileSystem = null,
+        ?TestLogger $logger = null
+    ):DependenciesCommand {
+
+        return new class(
+                $inputInterfaceMock ?? $this->createMock(InputInterface::class),
+                $outputInterfaceMock ?? $this->createMock(ConsoleOutputInterface::class),
+                $fileSystem ?? $this->getInMemoryFileSystem(),
+                $logger ?? new ColorLogger()
+            ) extends DependenciesCommand {
+            public function __construct(
+                InputInterface $inputInterfaceMock,
+                ConsoleOutputInterface $outputInterfaceMock,
+                FileSystem $filesystem,
+                LoggerInterface $logger
+            ) {
+                $this->logger = $logger;
+                $this->filesystem = $filesystem;
+                $this->workingDir = sys_get_temp_dir();
+
+                parent::__construct();
+
+                $this->execute($inputInterfaceMock, $outputInterfaceMock);
+            }
+        };
+    }
 
     /**
      * When composer.json is absent, instead of failing with:
@@ -32,18 +66,19 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
-        $outputInterfaceMock->expects($this->exactly(1))
-                            ->method('getErrorOutput')
-                            ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
-            public function __construct($inputInterfaceMock, $outputInterfaceMock)
-            {
-                parent::__construct();
+        $logger = new ColorLogger();
 
-                $this->execute($inputInterfaceMock, $outputInterfaceMock);
-            }
-        };
+        $this->getSut(
+            $inputInterfaceMock,
+            $outputInterfaceMock,
+            null,
+            $logger
+        );
+
+        // Composer could not find the config file: /path/to/composer.json
+        // To initialize a project, please create a composer.json file. See https://getcomposer.org/basic-usage
+        $this->assertTrue($logger->hasErrorRecords());
     }
 
     /**
@@ -59,30 +94,28 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ "name": "coenjacobs/mozart", }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(ConsoleOutputInterface::class);
-
 
         $outputInterfaceMock->expects($this->any())
                             ->method('getVerbosity')
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
-        $outputInterfaceMock->expects($this->exactly(1))
-                            ->method('getErrorOutput')
-                            ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
-            public function __construct($inputInterfaceMock, $outputInterfaceMock)
-            {
-                parent::__construct();
+        $logger = new ColorLogger();
 
-                $this->execute($inputInterfaceMock, $outputInterfaceMock);
-            }
-        };
+        $this->getSut(
+            $inputInterfaceMock,
+            $outputInterfaceMock,
+            null,
+            $logger
+        );
+
+        $this->assertTrue($logger->hasErrorRecords());
     }
 
     /**
@@ -99,7 +132,7 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
@@ -110,20 +143,18 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
-        $outputInterfaceMock->expects($this->exactly(1))
-                            ->method('getErrorOutput')
-                            ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
-            public function __construct($inputInterfaceMock, $outputInterfaceMock)
-            {
-                parent::__construct();
+        $logger = new ColorLogger();
 
-                $this->execute($inputInterfaceMock, $outputInterfaceMock);
-            }
-        };
+        $this->getSut(
+            $inputInterfaceMock,
+            $outputInterfaceMock,
+            null,
+            $logger
+        );
+
+        $this->assertTrue($logger->hasErrorRecords());
     }
-
 
     /**
      * When composer.json->extra is not an object, instead of
@@ -138,7 +169,7 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ "name": "coenjacobs/mozart", "extra": [] }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
@@ -150,18 +181,17 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
-        $outputInterfaceMock->expects($this->exactly(1))
-                            ->method('getErrorOutput')
-                            ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
-            public function __construct($inputInterfaceMock, $outputInterfaceMock)
-            {
-                parent::__construct();
+        $logger = new ColorLogger();
 
-                $this->execute($inputInterfaceMock, $outputInterfaceMock);
-            }
-        };
+        $this->getSut(
+            $inputInterfaceMock,
+            $outputInterfaceMock,
+            null,
+            $logger
+        );
+
+        $this->assertTrue($logger->hasErrorRecords());
     }
 
     /**
@@ -177,7 +207,7 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ "name": "coenjacobs/mozart", "extra": { "moozart": {} } }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
@@ -189,18 +219,17 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
-        $outputInterfaceMock->expects($this->exactly(1))
-                            ->method('getErrorOutput')
-                            ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
-            public function __construct($inputInterfaceMock, $outputInterfaceMock)
-            {
-                parent::__construct();
+        $logger = new ColorLogger();
 
-                $this->execute($inputInterfaceMock, $outputInterfaceMock);
-            }
-        };
+        $this->getSut(
+            $inputInterfaceMock,
+            $outputInterfaceMock,
+            null,
+            $logger
+        );
+
+        $this->assertTrue($logger->hasErrorRecords());
     }
 
     /**
@@ -218,7 +247,7 @@ class DependenciesCommandTest extends TestCase
         $badComposerJson = '{ "name": "coenjacobs/mozart", "extra": { "mozart": []  }';
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
-        file_put_contents($tmpfname, $badComposerJson);
+        $this->getFileSystem()->write($tmpfname, $badComposerJson);
         chdir(dirname($tmpfname));
 
         $inputInterfaceMock = $this->createMock(InputInterface::class);
@@ -230,17 +259,16 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
-        $outputInterfaceMock->expects($this->exactly(1))
-                            ->method('getErrorOutput')
-                            ->willReturn($outputInterfaceMock);
 
-        new class( $inputInterfaceMock, $outputInterfaceMock ) extends DependenciesCommand {
-            public function __construct($inputInterfaceMock, $outputInterfaceMock)
-            {
-                parent::__construct();
+        $logger = new ColorLogger();
 
-                $this->execute($inputInterfaceMock, $outputInterfaceMock);
-            }
-        };
+        $this->getSut(
+            $inputInterfaceMock,
+            $outputInterfaceMock,
+            null,
+            $logger
+        );
+
+        $this->assertTrue($logger->hasErrorRecords());
     }
 }

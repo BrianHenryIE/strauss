@@ -8,14 +8,19 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use BadMethodCallException;
+use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
+use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
+use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToReadFile;
 use League\Flysystem\UnableToRetrieveMetadata;
+use League\Flysystem\Visibility;
 use League\Flysystem\WhitespacePathNormalizer;
 use Traversable;
 
@@ -47,9 +52,13 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
                 || $this->filesystem->fileExists($location);
     }
 
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
     public function write(string $location, string $contents, array $config = []): void
     {
-        $config = new \League\Flysystem\Config($config);
+        $config = new Config($config);
         $this->inMemoryFiles->write($location, $contents, $config);
 
         if ($this->deletedFiles->fileExists($location)) {
@@ -57,9 +66,14 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         }
     }
 
+    /**
+     * @param resource $contents
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
     public function writeStream(string $location, $contents, $config = []): void
     {
-        $config = new \League\Flysystem\Config($config);
+        $config = new Config($config);
         $this->rewindStream($contents);
         $this->inMemoryFiles->writeStream($location, $contents, $config);
 
@@ -118,7 +132,10 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         $this->inMemoryFiles->deleteDirectory($location);
     }
 
-
+    /**
+     * @param array{visibility?:string} $config
+     * @throws FilesystemException
+     */
     public function createDirectory(string $location, array $config = []): void
     {
         $this->inMemoryFiles->createDirectory($location, new Config($config));
@@ -152,11 +169,19 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         return new DirectoryListing($good);
     }
 
+    /**
+     * @param array{visibility?:string} $config
+     */
     public function move(string $source, string $destination, array $config = []): void
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        throw new BadMethodCallException('Not yet implemented');
     }
 
+    /**
+     * @param Config|array{visibility?:string}|null $config
+     * @throws FilesystemException
+     * @throws Exception
+     */
     public function copy(string $source, string $destination, $config = null): void
     {
         $sourceFile = $this->read($source);
@@ -169,7 +194,7 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
         $a = $this->inMemoryFiles->read($destination);
         if ($sourceFile !== $a) {
-            throw new \Exception('Copy failed');
+            throw new Exception('Copy failed');
         }
 
         if ($this->deletedFiles->fileExists($destination)) {
@@ -177,6 +202,9 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         }
     }
 
+    /**
+     * @throws FilesystemException
+     */
     private function getAttributes(string $path): StorageAttributes
     {
         $parentDirectoryContents = $this->listContents(dirname($path), false);
@@ -206,7 +234,7 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         }
 
         if ($filesize instanceof FileAttributes) {
-            return $filesize->fileSize();
+            return $filesize->fileSize() ?? 0;
         }
 
         return $filesize;
@@ -214,16 +242,18 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function mimeType(string $path): string
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        throw new BadMethodCallException('Not yet implemented');
     }
 
     public function setVisibility(string $path, string $visibility): void
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        throw new BadMethodCallException('Not yet implemented');
     }
 
     public function visibility(string $path): string
     {
+        $defaultVisibility = Visibility::PUBLIC;
+
         $path = $this->pathNormalizer->normalizePath($path);
 
         if (!$this->fileExists($path) && !$this->directoryExists($path)) {
@@ -235,12 +265,12 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
         }
         if ($this->inMemoryFiles->fileExists($path)) {
             $attributes = $this->inMemoryFiles->visibility($path);
-            return $attributes->visibility();
+            return $attributes->visibility() ?? $defaultVisibility;
         }
         if ($this->filesystem->fileExists($path)) {
             return $this->filesystem->visibility($path);
         }
-        return \League\Flysystem\Visibility::PUBLIC;
+        return $defaultVisibility;
     }
 
     public function directoryExists(string $location): bool
@@ -255,12 +285,20 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
             || $this->directoryExistsIn($location, $this->filesystem);
     }
 
+    /**
+     *
+     * @param string $location
+     * @param object|FilesystemReader $filesystem
+     * @return bool
+     * @throws FilesystemException
+     */
     protected function directoryExistsIn(string $location, $filesystem): bool
     {
         if (method_exists($filesystem, 'directoryExists')) {
             return $filesystem->directoryExists($location);
         }
 
+        /** @var FileSystemReader $filesystem */
         $parentDirectoryContents = $filesystem->listContents(dirname($location), false);
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
@@ -274,6 +312,6 @@ class ReadOnlyFileSystem implements FilesystemOperator, FlysystemBackCompatInter
 
     public function has(string $location): bool
     {
-        throw new \BadMethodCallException('Not yet implemented');
+        throw new BadMethodCallException('Not yet implemented');
     }
 }

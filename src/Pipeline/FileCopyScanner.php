@@ -95,11 +95,15 @@ class FileCopyScanner
             if (!$file->isDoCopy() && $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
                 $file->setDoPrefix(false);
             }
-            if (!$copy && $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
-                foreach ($file->getDiscoveredSymbols() as $symbol) {
-                    $symbol->setDoRename(false);
-                }
-            }
+//            // If the file is marked not to copy, mark the symbol not to be renamed
+//            if (!$copy && $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
+//                foreach ($file->getDiscoveredSymbols() as $symbol) {
+//                    // Only make this change if the symbol is only in one file (i.e. namespaces will be in many).
+//                    if (count($symbol->getSourceFiles()) === 1) {
+//                        $symbol->setDoRename(false);
+//                    }
+//                }
+//            }
         };
     }
 
@@ -115,7 +119,7 @@ class FileCopyScanner
         return false;
     }
 
-    protected function isNamespaceExcluded(File $file): bool
+    protected function isNamespaceExcluded(FileBase $file): bool
     {
         /** @var DiscoveredSymbol $symbol */
         foreach ($file->getDiscoveredSymbols() as $symbol) {
@@ -145,11 +149,23 @@ class FileCopyScanner
     protected function isFilePathExcluded(string $absoluteFilePath): bool
     {
         foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
-            if (1 === preg_match($pattern, $absoluteFilePath)) {
+            $escapedPattern = $this->preparePattern($pattern);
+            if (1 === preg_match($escapedPattern, $absoluteFilePath)) {
                 $this->logger->debug("File {$absoluteFilePath} will not be copied because it matches pattern {$pattern}.");
                 return true;
             }
         }
         return false;
+    }
+
+    private function preparePattern(string $pattern): string
+    {
+        $delimiter = '#';
+
+        if (substr($pattern, 0, 1) !== substr($pattern, - 1, 1)) {
+            $pattern = $delimiter . $pattern . $delimiter;
+        }
+
+        return $pattern;
     }
 }

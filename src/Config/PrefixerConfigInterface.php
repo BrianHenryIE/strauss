@@ -4,6 +4,7 @@ namespace BrianHenryIE\Strauss\Config;
 
 interface PrefixerConfigInterface
 {
+    public function getVendorDirectory(): string;
 
     public function getTargetDirectory(): string;
 

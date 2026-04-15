@@ -5,9 +5,11 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
+use JsonException;
+use League\Flysystem\FilesystemException;
 use PhpParser\Error;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
@@ -17,6 +19,9 @@ use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
+/**
+ * @phpstan-import-type InstalledJsonArray from InstalledJson
+ */
 class VendorComposerAutoload
 {
     use LoggerAwareTrait;
@@ -35,6 +40,9 @@ class VendorComposerAutoload
         $this->setLogger($logger);
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function addVendorPrefixedAutoloadToVendorAutoload(): void
     {
         if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
@@ -72,6 +80,8 @@ class VendorComposerAutoload
     /**
      * Given the PHP code string for `vendor/autoload.php`, add a `require_once autoload_aliases.php`
      * before require autoload_real.php.
+     * @throws FilesystemException
+     * @throws JsonException
      */
     public function addAliasesFileToComposer(): void
     {
@@ -110,6 +120,9 @@ class VendorComposerAutoload
 
     /**
      * Determine is Strauss installed via Composer (otherwise presumably run via phar).
+     *
+     * @throws JsonException
+     * @throws FilesystemException
      */
     protected function isComposerInstalled(): bool
     {
@@ -117,7 +130,13 @@ class VendorComposerAutoload
             return false;
         }
 
-        $installedJsonArray = json_decode($this->fileSystem->read($this->config->getVendorDirectory() . 'composer/installed.json'), true);
+        /** @var InstalledJsonArray $installedJsonArray */
+        $installedJsonArray = json_decode(
+            $this->fileSystem->read($this->config->getVendorDirectory() . 'composer/installed.json'),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
 
         return isset($installedJsonArray['dev-package-names']['brianhenryie/strauss']);
     }
@@ -130,6 +149,7 @@ class VendorComposerAutoload
      *   "dev": true,
      *   "dev-package-names": []
      * }
+     * @throws FilesystemException
      */
     protected function isComposerNoDev(): bool
     {

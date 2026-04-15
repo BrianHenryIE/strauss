@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -39,7 +39,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
@@ -49,7 +49,7 @@ EOD;
         exec('composer dump-autoload', $output, $result_code);
         self::assertEquals(0, $result_code);
 
-        $installed_json_string = file_get_contents($this->testsWorkingDir . '/vendor/composer/installed.json');
+        $installed_json_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
         $installed_json = json_decode($installed_json_string, true);
 
         $autoload = array();

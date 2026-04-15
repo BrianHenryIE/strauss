@@ -4,6 +4,8 @@ namespace BrianHenryIE\Strauss\Config;
 
 interface AutoloadFilesEnumeratorConfigInterface
 {
+    public function getVendorDirectory(): string;
+
     /**
      * @return string[]
      */

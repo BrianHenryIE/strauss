@@ -9,7 +9,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -61,18 +61,18 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         @mkdir($this->testsWorkingDir . 'src');
         $replacementfilePath = $this->testsWorkingDir . '/src/file.php';
-        file_put_contents($replacementfilePath, $replacementfile);
+        $this->getFileSystem()->write($replacementfilePath, $replacementfile);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($replacementfilePath);
+        $php_string = $this->getFileSystem()->read($replacementfilePath);
 
         self::assertStringNotContainsString("use Parsedown as MarkdownParser;", $php_string);
         self::assertStringContainsString("use Prefixed_Parsedown as MarkdownParser;", $php_string);

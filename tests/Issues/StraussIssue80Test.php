@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -38,14 +38,14 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/league/oauth2-linkedin/src/Provider/LinkedInResourceOwner.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/league/oauth2-linkedin/src/Provider/LinkedInResourceOwner.php');
         self::assertStringNotContainsString('class Issue_80_LinkedInResourceOwner extends GenericResourceOwner', $php_string);
         self::assertStringContainsString('namespace Company\Project\League\OAuth2\Client\Provider;', $php_string);
     }
@@ -101,7 +101,7 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
         exec('composer delete-unused-google-apis');
@@ -113,7 +113,7 @@ EOD;
 
         $result = $strauss->run($inputInterfaceMock, $outputInterfaceMock);
 
-        $php_string = file_get_contents($this->testsWorkingDir . 'vendor-prefixed/google/apiclient/src/aliases.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/google/apiclient/src/aliases.php');
         self::assertStringNotContainsString("'Company\\Project\\\Google\\\\Client' => 'Prefix_Google_Client',", $php_string);
         self::assertStringContainsString("'Company\\\\Project\\\\Google\\\\Client' => 'Prefix_Google_Client',", $php_string);
     }

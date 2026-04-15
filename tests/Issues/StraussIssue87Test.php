@@ -7,7 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
-use BrianHenryIE\Strauss\Tests\Integration\Util\IntegrationTestCase;
+use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -40,19 +40,19 @@ EOD;
 
         chdir($this->testsWorkingDir);
 
-        file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         exec('composer install');
         exec('composer dump-autoload --optimize');
 
-        $autoload_classmap_php_string = file_get_contents($this->testsWorkingDir . '/vendor/composer/autoload_classmap.php');
+        $autoload_classmap_php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_classmap.php');
         self::assertStringContainsString("'Psr\\\\Container\\\\ContainerExceptionInterface' => \$vendorDir . '/psr/container/src/ContainerExceptionInterface.php',", $autoload_classmap_php_string);
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
         exec('composer dump-autoload');
 
-        $autoload_classmap_php_string = file_get_contents($this->testsWorkingDir . '/vendor/composer/autoload_classmap.php');
+        $autoload_classmap_php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_classmap.php');
         self::assertStringNotContainsString("'Psr\\\\Container\\\\ContainerExceptionInterface' => \$vendorDir . '/psr/container/src/ContainerExceptionInterface.php',", $autoload_classmap_php_string);
     }
 }

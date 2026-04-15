@@ -1,8 +1,34 @@
 # Change Log
 
-## 0.26.0
+## 0.x.x
 
 * Prefix own classes in phar
+
+## 0.26.5 February 2025
+
+## 0.26.4 January 2025
+
+## 0.26.3 December 2025
+
+* Refactoring
+* PHPStan fixes
+
+## 0.26.2 November 2025
+
+* Fix: namespaces not updated in non-autoloaded files
+
+## 0.26.1 November 2025
+
+* Fix: implicitly nullable warning
+* Refactor: Split `exclude_from_prefixing` code from `AutoloadedFilesEnumerator` to `MarkSymbolsForRenaming` to fix bug
+* Dev: Add scripts `analyze-changes`, `cs-changes-strict`...
+
+## 0.26.0 November 2025
+
+* Add: `include_root_autoload` option
+* Fix: `preg_match(): Delimiter must not be alphanumeric or backslash for exclude regexp patterns`
+* Fix: Mute "File does not exist" for directories (that don't matter)
+* Fix: `vendor-prefixed/composer/autoload_classmap.php` for packages not directly included
 
 ## 0.25.0 November 2025
 

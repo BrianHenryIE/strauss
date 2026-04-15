@@ -16,14 +16,19 @@ namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\AutoloadAliasInterface;
-use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use RuntimeException;
 
+/**
+ * @phpstan-import-type ClassAliasArray from AutoloadAliasInterface
+ * @phpstan-import-type InterfaceAliasArray from AutoloadAliasInterface
+ * @phpstan-import-type TraitAliasArray from AutoloadAliasInterface
+ */
 class Aliases
 {
     use LoggerAwareTrait;
@@ -42,6 +47,12 @@ class Aliases
         $this->setLogger($logger);
     }
 
+    /**
+     * @param array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray> $aliasesArray
+     * @param string|null $autoloadAliasesFunctionsString
+     * @return string
+     * @throws RuntimeException
+     */
     protected function getTemplate(array $aliasesArray, ?string $autoloadAliasesFunctionsString): string
     {
         $namespace = $this->config->getNamespacePrefix();
@@ -55,6 +66,10 @@ class Aliases
 
         $template = file_get_contents(__DIR__ . '/autoload_aliases.template.php');
 
+        if ($template === false) {
+            throw new RuntimeException('Expected file not found at: ' . __DIR__ . '/autoload_aliases.template.php');
+        }
+
         $template = str_replace(
             '// FunctionsAndConstants',
             $globalFunctionsString,
@@ -67,13 +82,11 @@ class Aliases
             $template
         );
 
-        $template = str_replace(
+        return str_replace(
             'private array $autoloadAliases = [];',
             "private array \$autoloadAliases = $autoloadAliases;",
             $template
         );
-
-        return $template;
     }
 
     public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
@@ -118,6 +131,9 @@ class Aliases
         return $modifiedSymbols;
     }
 
+    /**
+     * @param array<string,string> $classmap FQDN classname : absolute file path.
+     */
     protected function registerAutoloader(array $classmap): void
     {
 
@@ -152,12 +168,8 @@ class Aliases
     }
 
     /**
-     * @param ClassSymbol $modifiedSymbols
-     * @param array $sourceDirClassmap
-     * @param array $targetDirClasssmap
-     *
-     * @return array{}
-     * @throws \League\Flysystem\FilesystemException
+     * @return array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray>
+     * @throws FilesystemException
      */
     protected function getAliasesArray(DiscoveredSymbols $symbols): array
     {
@@ -204,7 +216,7 @@ class Aliases
         if (!empty($symbolsByNamespace['\\'])) {
             $globalAliasesPhpString = 'namespace {' . PHP_EOL;
 
-            /** @var FunctionSymbol & ConstantSymbol $symbol */
+            /** @var FunctionSymbol | ConstantSymbol $symbol */
             foreach ($symbolsByNamespace['\\'] as $symbol) {
                 $aliasesPhpString = '';
 

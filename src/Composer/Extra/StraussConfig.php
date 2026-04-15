@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\CopierConfigInterface;
+use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
@@ -20,7 +21,10 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
 use Exception;
+use InvalidArgumentException;
+use JsonMapper\Enums\TextNotation;
 use JsonMapper\JsonMapperFactory;
+use JsonMapper\Middleware\CaseConversion;
 use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -31,6 +35,7 @@ class StraussConfig implements
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     CopierConfigInterface,
+    MarkSymbolsForRenamingConfigInterface,
     FileSymbolScannerConfigInterface,
     FileEnumeratorConfig,
     FileCopyScannerConfigInterface,
@@ -63,7 +68,7 @@ class StraussConfig implements
     protected ?string $namespacePrefix = null;
 
     /**
-     * @var string
+     *
      */
     protected ?string $classmapPrefix = null;
 
@@ -103,7 +108,6 @@ class StraussConfig implements
     protected array $packages = [];
 
     /**
-     *
      * @var array<string,ComposerPackage>
      */
     protected array $packagesToCopy = [];
@@ -171,17 +175,13 @@ class StraussConfig implements
 
     /**
      * Should a modified date be included in the header for modified files?
-     *
-     * @var bool
      */
-    protected $includeModifiedDate = true;
+    protected bool $includeModifiedDate = true;
 
     /**
      * Should the author name be included in the header for modified files?
-     *
-     * @var bool
      */
-    protected $includeAuthor = true;
+    protected bool $includeAuthor = true;
 
     /**
      * Should the changes be printed to console rather than files modified?
@@ -189,11 +189,16 @@ class StraussConfig implements
     protected bool $dryRun = false;
 
     /**
+     * Should the root autoload be included when generating the strauss autoloader?
+     */
+    protected bool $includeRootAutoload = false;
+
+    /**
      * Read any existing Mozart config.
      * Overwrite it with any Strauss config.
      * Provide sensible defaults.
      *
-     * @param Composer $composer
+     * @param ?Composer $composer
      *
      * @throws Exception
      */
@@ -227,14 +232,14 @@ class StraussConfig implements
 
             $rename->addMapping(StraussConfig::class, 'exclude_prefix_packages', 'excludePackagesFromPrefixing');
 
+            $rename->addMapping(StraussConfig::class, 'include_root_autoload', 'includeRootAutoload');
 
             $rename->addMapping(StraussConfig::class, 'function_prefix', 'functionsPrefix');
 
+            $rename->addMapping(StraussConfig::class, 'constant_prefix', 'constantsPrefix');
+
             $mapper->unshift($rename);
-            $mapper->push(new \JsonMapper\Middleware\CaseConversion(
-                \JsonMapper\Enums\TextNotation::UNDERSCORE(),
-                \JsonMapper\Enums\TextNotation::CAMEL_CASE()
-            ));
+            $mapper->push(new CaseConversion(TextNotation::UNDERSCORE(), TextNotation::CAMEL_CASE()));
 
             $mapper->mapObject($configExtraSettings, $this);
         }
@@ -298,7 +303,7 @@ class StraussConfig implements
             }, $composer->getPackage()->getRequires());
         }
 
-        // If the bool flag for classmapOutput wasn't set in the Json config.
+        // If the bool flag for classmapOutput wasn't set in the JSON config.
         if (!isset($this->classmapOutput)) {
             $this->classmapOutput = true;
             // Check each autoloader.
@@ -402,9 +407,6 @@ class StraussConfig implements
         $this->classmapPrefix = $classmapPrefix;
     }
 
-    /**
-     * @return string
-     */
     public function getFunctionsPrefix(): ?string
     {
         if (!isset($this->functionsPrefix)) {
@@ -413,8 +415,10 @@ class StraussConfig implements
         if (empty($this->functionsPrefix)) {
             return null;
         }
-
-        return $this->functionsPrefix;
+        if (is_string($this->functionsPrefix)) {
+            return $this->functionsPrefix;
+        }
+        return null;
     }
 
     /**
@@ -452,18 +456,26 @@ class StraussConfig implements
     }
 
     /**
-     * @param string[]|null $updateCallSites
+     * @param string[]|array{0:bool}|null $updateCallSites
+     * @throws InvalidArgumentException
      */
     public function setUpdateCallSites($updateCallSites): void
     {
         if (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === true) {
             // Setting `null` instructs Strauss to update call sites in the project's autoload key.
             $this->updateCallSites = null;
+            return;
         } elseif (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === false) {
             $this->updateCallSites = array();
-        } else {
-            $this->updateCallSites = $updateCallSites;
+            return;
+        } elseif (is_array($updateCallSites) && isset($updateCallSites[0]) && !is_bool($updateCallSites[0])) {
+            $this->updateCallSites = array_filter(
+                $updateCallSites,
+                'is_string'
+            );
+            return;
         }
+        throw new InvalidArgumentException('Unexpected value for updateCallSites');
     }
 
     /**
@@ -525,7 +537,7 @@ class StraussConfig implements
      */
     public function getExcludePackagesFromPrefixing(): array
     {
-        return $this->excludeFromPrefix['packages'] ?? array();
+        return $this->excludeFromPrefix['packages'] ?? [];
     }
 
     /**
@@ -541,7 +553,10 @@ class StraussConfig implements
      */
     public function getExcludeNamespacesFromPrefixing(): array
     {
-        return $this->excludeFromPrefix['namespaces'] ?? array();
+        return array_map(
+            fn(string $packageName) => trim($packageName, '\\/'),
+            $this->excludeFromPrefix['namespaces'] ?? []
+        );
     }
 
     /**
@@ -628,17 +643,25 @@ class StraussConfig implements
 
     /**
      * @used-by DependenciesCommand::buildDependencyList()
+     *
+     * @param array<string,ComposerPackage> $packagesToCopy
      */
     public function setPackagesToCopy(array $packagesToCopy): void
     {
         $this->packagesToCopy = $packagesToCopy;
     }
 
+    /**
+     * @return array<string,ComposerPackage>
+     */
     public function getPackagesToPrefix(): array
     {
         return $this->packagesToPrefix;
     }
 
+    /**
+     * @param array<string,ComposerPackage> $packagesToPrefix
+     */
     public function setPackagesToPrefix(array $packagesToPrefix): void
     {
         $this->packagesToPrefix = $packagesToPrefix;
@@ -735,6 +758,22 @@ class StraussConfig implements
     }
 
     /**
+     * Should the root autoload be included when generating the strauss autoloader?
+     */
+    public function isIncludeRootAutoload(): bool
+    {
+        return $this->includeRootAutoload;
+    }
+
+    /**
+     * @param bool $includeRootAutoload Include the project root autoload in the strauss autoloader.
+     */
+    public function setIncludeRootAutoload(bool $includeRootAutoload): void
+    {
+        $this->includeRootAutoload = $includeRootAutoload;
+    }
+
+    /**
      * @param InputInterface $input To access the command line options.
      */
     public function updateFromCli(InputInterface $input): void
@@ -751,7 +790,7 @@ class StraussConfig implements
                 $this->updateCallSites = array();
             } elseif ('true' === $updateCallSitesInput) {
                 $this->updateCallSites = null;
-            } elseif (! is_null($updateCallSitesInput)) {
+            } elseif (is_string($updateCallSitesInput)) {
                 $this->updateCallSites = explode(',', $updateCallSitesInput);
             }
         }
@@ -768,9 +807,7 @@ class StraussConfig implements
 
         if ($input->hasOption('dry-run') && $input->getOption('dry-run') !== false) {
             // If we're here, the parameter was passed in the CLI command.
-            $this->dryRun = empty($input->getOption('dry-run'))
-                ? true
-                : filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $this->dryRun = empty($input->getOption('dry-run')) || (bool)filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
     }
 

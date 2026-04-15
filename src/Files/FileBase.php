@@ -13,7 +13,11 @@ interface FileBase
 
     public function setAbsoluteTargetPath(string $absoluteTargetPath): void;
 
+    public function getVendorRelativePath(): string;
+
     public function isPhpFile(): bool;
+
+    public function isAutoloaded(): bool;
 
     public function setDoCopy(bool $doCopy): void;
 
@@ -43,10 +47,12 @@ interface FileBase
 
     public function getDidDelete(): bool;
 
+    public function setDidUpdate(): void;
+
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void;
 
     /**
-     * @return DiscoveredSymbol[]
+     * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
      */
     public function getDiscoveredSymbols(): array;
 }
