@@ -26,7 +26,7 @@ class MozartIssue124Test extends IntegrationTestCase
      *
      * Should be: "class Mpdf implements" because its namespace has already been prefixed.
      */
-    public function test_it_does_not_make_classname_replacement_inside_namespaced_file()
+    public function test_it_does_not_make_classname_replacement_inside_namespaced_file(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.0.0');
 
@@ -45,7 +45,7 @@ class MozartIssue124Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -54,7 +54,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Mpdf.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/mpdf/mpdf/src/Mpdf.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BrianHenryIE\Strauss\Mpdf implements', $mpdf_php);
@@ -74,7 +74,7 @@ EOD;
      *
      * @see https://github.com/coenjacobs/mozart/issues/124
      */
-    public function test_it_does_not_prefix_function_argument_types_whose_classname_matches_the_namespace()
+    public function test_it_does_not_prefix_function_argument_types_whose_classname_matches_the_namespace(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.0.0');
 
@@ -93,7 +93,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -102,7 +102,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Conversion/DecToOther.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/mpdf/mpdf/src/Conversion/DecToOther.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('public function __construct(BrianHenryIE\Strauss\Mpdf $mpdf)', $mpdf_php);
@@ -119,7 +119,7 @@ EOD;
      *
      *  @see mpdf/mpdf/src/Barcode/BarcodeException.php
      */
-    public function testItDoesPrefixNamespacedExtends()
+    public function testItDoesPrefixNamespacedExtends(): void
     {
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.1.0');
 
@@ -138,7 +138,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -147,7 +147,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/mpdf/mpdf/src/Barcode/BarcodeException.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/mpdf/mpdf/src/Barcode/BarcodeException.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BarcodeException extends \Mpdf\MpdfException', $mpdf_php);

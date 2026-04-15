@@ -151,6 +151,7 @@ Strauss potentially requires zero configuration, but likely you'll want to custo
         ],
         "update_call_sites": false,
         "include_root_autoload": false,
+        "optimize_autoloader": true,
         "override_autoload": {
         },
         "exclude_from_copy": {
@@ -167,6 +168,16 @@ Strauss potentially requires zero configuration, but likely you'll want to custo
             "namespaces": [
             ],
             "file_patterns": [
+            ]
+        },
+        "exclude_constants": {
+            "packages": [
+            ],
+            "namespaces": [
+            ],
+            "file_patterns": [
+            ],
+            "constants": [
             ]
         },
         "namespace_replacement_patterns" : {
@@ -193,6 +204,19 @@ The following configuration is default:
 - `include_author` is a `bool` to decide if Strauss should include the author name in the (phpdoc) header written to modified files. Defaults to `true`.
 - `update_call_sites`: `false`. This can be `true`, `false` or an `array` of directories/filepaths. When set to `true` it defaults to the directories and files in the project's `autoload` key. The PHP files and directories' PHP files will be updated where they call the prefixed classes.
 - `include_root_autoload`: `false` is a boolean flag to indicate whether Strauss should include the root autoload section of your project when creating its autoloader. It is false by default. Enabling this option will allow you to require only the Strauss autoloader in your project. Note that conflicts may occur if your project enables this option, requires both the Composer and Strauss autoloaders, and uses `files` autoloading.
+- `optimize_autoloader`: `true` is a boolean flag to indicate whether Strauss should force optimized/classmap-authoritative autoload generation. Set it to `false` to still regenerate autoload files without authoritative mode.
+
+To disable optimized/classmap-authoritative Composer autoload generation:
+
+```json
+{
+  "extra": {
+    "strauss": {
+      "optimize_autoloader": false
+    }
+  }
+}
+```
 
 The remainder is empty:
 
@@ -206,6 +230,11 @@ The remainder is empty:
 - `exclude_from_prefix`
   - [`packages`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L86-L90) array of package names to exclude from prefixing.
   - [`namespaces`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L177-L181) array of exact match namespaces to exclude (i.e. not substring/parent namespaces)
+- `exclude_constants` – same shape as `exclude_from_prefix`, but applies only to constants (e.g. from `define()` or `const`). Use to avoid prefixing runtime constants like `WP_PLUGIN_DIR`, `ABSPATH`.
+  - `packages` array of package names whose constants are not prefixed
+  - `namespaces` array of namespaces (prefix match) whose constants are not prefixed
+  - `file_patterns` array of regex patterns for file paths
+  - `constants` array of constant names to never prefix (e.g. `["WP_PLUGIN_DIR", "ABSPATH"]`)
 - [`namespace_replacement_patterns`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L183-L190) a dictionary to use in `preg_replace` instead of prefixing with `namespace_prefix`.
 
 ## Autoloading

@@ -77,7 +77,7 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor/composer/autoload_aliases.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/autoload_aliases.php');
         $this->assertStringContainsString("'extends' => 'Strauss\\\\Alias\\\\Psr\\\\Log\\\\NullLogger'", $phpString);
 
         exec('composer dump-autoload');
@@ -93,7 +93,7 @@ EOD;
         $this->assertEquals(0, $return_var);
     }
 
-    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_true()
+    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_true(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -121,10 +121,10 @@ EOD;
         $exitCode = $this->runStrauss($output, '--delete_vendor_packages=true');
         assert($exitCode === 0, $output);
 
-        self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 
-    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_flag()
+    public function test_snake_case_cli_argument_supersedes_configured_option_false_to_flag(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -152,10 +152,10 @@ EOD;
         $exitCode = $this->runStrauss($output, '--delete_vendor_packages');
         assert($exitCode === 0, $output);
 
-        self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 
-    public function test_snake_case_cli_argument_supersedes_configured_option_true_to_false()
+    public function test_snake_case_cli_argument_supersedes_configured_option_true_to_false(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -183,10 +183,10 @@ EOD;
         $exitCode = $this->runStrauss($output, '--delete_vendor_packages=false');
         assert($exitCode === 0, $output);
 
-        self::assertFileExists($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 
-    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_true()
+    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_true(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -214,9 +214,9 @@ EOD;
         $exitCode = $this->runStrauss($output, '--deleteVendorPackages=true');
         assert($exitCode === 0, $output);
 
-        self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
-    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_flag()
+    public function test_camel_case_cli_argument_supersedes_configured_option_false_to_flag(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -244,10 +244,10 @@ EOD;
         $exitCode = $this->runStrauss($output, '--deleteVendorPackages');
         assert($exitCode === 0, $output);
 
-        self::assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 
-    public function test_camel_case_cli_argument_supersedes_configured_option_true_to_false()
+    public function test_camel_case_cli_argument_supersedes_configured_option_true_to_false(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -275,6 +275,6 @@ EOD;
         $exitCode = $this->runStrauss($output, '--deleteVendorPackages=false');
         assert($exitCode === 0, $output);
 
-        self::assertFileExists($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 }

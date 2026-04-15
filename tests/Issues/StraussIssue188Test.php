@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue188Test extends IntegrationTestCase
 {
-    public function test_issue_188_implements()
+    public function test_issue_188_implements(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -39,14 +39,14 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/guzzlehttp/guzzle/src/Client.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/guzzlehttp/guzzle/src/Client.php');
 
         $this->assertStringNotContainsString("class Client implements ClientInterface, \\\\Psr\\Http\\Client\\ClientInterface", $php_string);
         $this->assertStringContainsString("class Client implements ClientInterface, \\Company\\PluginFramework\\Psr\\Http\\Client\\ClientInterface", $php_string);
     }
 
 
-    public function test_issue_188_extends()
+    public function test_issue_188_extends(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -80,7 +80,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/mpdf/mpdf/src/Exception/FontException.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/mpdf/mpdf/src/Exception/FontException.php');
 
         $this->assertStringNotContainsString("class FontException extends \\Mpdf\\MpdfException", $php_string);
         $this->assertStringNotContainsString("class FontException extends \\\\Company\\PluginFramework\\Mpdf\\MpdfException", $php_string);

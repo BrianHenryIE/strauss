@@ -17,7 +17,7 @@ class StraussIssue37Test extends IntegrationTestCase
 
     /**
      */
-    public function test_can_handle_psr_namespace_with_path_array()
+    public function test_can_handle_psr_namespace_with_path_array(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -37,7 +37,7 @@ class StraussIssue37Test extends IntegrationTestCase
 
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 

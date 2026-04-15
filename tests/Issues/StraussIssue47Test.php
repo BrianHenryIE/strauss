@@ -23,7 +23,7 @@ class StraussIssue47Test extends IntegrationTestCase
     /*
      * The proper failing test.
      */
-    public function test_double_namespace()
+    public function test_double_namespace(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -66,7 +66,7 @@ class StraussIssue47Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -75,7 +75,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/strauss/dragon-public/framework/src/Form/TextArea.php');
 
         self::assertStringNotContainsString('namespace Dragon\Dependencies\Dragon\Dependencies\Dragon\Form;', $php_string);
         self::assertStringContainsString('namespace Dragon\Dependencies\Dragon\Form;', $php_string);
@@ -84,7 +84,7 @@ EOD;
     /*
      * Exclude all other packages, so step debugging has less noise.
      */
-    public function test_double_namespace_dont_copy_dependencies()
+    public function test_double_namespace_dont_copy_dependencies(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -152,7 +152,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -161,7 +161,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/strauss/dragon-public/framework/src/Form/TextArea.php');
 
         self::assertStringNotContainsString('namespace Dragon\Dependencies\Dragon\Dependencies\Dragon\Form;', $php_string);
         self::assertStringContainsString('namespace Dragon\Dependencies\Dragon\Form;', $php_string);
@@ -170,7 +170,7 @@ EOD;
     /**
      * Test only one file. This did not fail.
      */
-    public function test_double_namespace_only_file_copied()
+    public function test_double_namespace_only_file_copied(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -213,7 +213,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -222,7 +222,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'strauss/dragon-public/framework/src/Form/TextArea.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/strauss/dragon-public/framework/src/Form/TextArea.php');
 
         self::assertStringNotContainsString('namespace Dragon\Dependencies\Dragon\Dependencies\Dragon\Form;', $php_string);
         self::assertStringContainsString('namespace Dragon\Dependencies\Dragon\Form;', $php_string);

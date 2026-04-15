@@ -195,13 +195,24 @@ class DiscoveredSymbols
         );
     }
 
-//  public function getDiscoveredConstantChanges(?string $functionsPrefix = ''): array
-//  {
-//      return array_filter(
-//          $this->getDiscoveredConstants($functionsPrefix),
-//          fn( $discoveredConstant ) => $discoveredConstant->isDoRename()
-//      );
-//  }
+    /**
+     * Constant names that should be prefixed (symbol has isDoRename()).
+     *
+     * @return string[]
+     */
+    public function getDiscoveredConstantChanges(?string $constantsPrefix = ''): array
+    {
+        $constantsToRename = array_filter(
+            $this->getConstants(),
+            fn(ConstantSymbol $symbol) => $symbol->isDoRename()
+        );
+        return array_filter(
+            array_keys($constantsToRename),
+            function (string $replacement) use ($constantsPrefix) {
+                return empty($constantsPrefix) || ! str_starts_with($replacement, $constantsPrefix);
+            }
+        );
+    }
 
     /**
      * @return FunctionSymbol[]

@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
+use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
@@ -81,20 +82,19 @@ class DumpAutoload
             return;
         }
 
-        $relativeTargetDir = $this->filesystem->getRelativePath(
-            $this->config->getProjectDirectory(),
-            $this->config->getTargetDirectory()
-        );
-
         $defaultVendorDirBefore = Config::$defaultConfig['vendor-dir'];
-        Config::$defaultConfig['vendor-dir'] = $relativeTargetDir;
+        Config::$defaultConfig['vendor-dir'] = $this->config->getRelativeTargetDirectory();
 
-        $projectComposerJson = new JsonFile($this->config->getProjectDirectory() . Factory::getComposerFile());
+        $projectComposerJson = new JsonFile(
+            $this->filesystem->makeAbsolute(
+                $this->config->getProjectDirectory() . '/'.Factory::getComposerFile()
+            )
+        );
 
         /** @var ComposerJsonArray $projectComposerJsonArray */
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
-            $projectComposerJsonArray['config']['vendor-dir'] = $relativeTargetDir;
+            $projectComposerJsonArray['config']['vendor-dir'] = $this->config->getRelativeTargetDirectory();
         }
 
         /**
@@ -128,18 +128,19 @@ class DumpAutoload
         $config->merge($projectComposerConfigMergeArray);
 
         $generator = new ComposerAutoloadGenerator(
-            $this->config->getNamespacePrefix(),
+            $this->config->getNamespacePrefix() ?? $this->config->getProjectDirectory(),
             $composer->getEventDispatcher()
         );
-
+        $isOptimize = $this->isOptimizeAutoloaderEnabled();
         $generator->setDryRun($this->config->isDryRun());
-        $generator->setClassMapAuthoritative(true);
+        $generator->setClassMapAuthoritative($isOptimize);
         $generator->setRunScripts(false);
 //        $generator->setApcu($apcu, $apcuPrefix);
 //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
-        $optimize = true; // $input->getOption('optimize') || $config->get('optimize-autoloader');
 
-        $installedJsonFile = new JsonFile($this->config->getTargetDirectory() . 'composer/installed.json');
+        $installedJsonFile = new JsonFile(
+            $this->filesystem->makeAbsolute($this->config->getAbsoluteTargetDirectory() . '/composer/installed.json')
+        );
         /** @var array{dev?:bool} $installedJson */
         $installedJson = $installedJsonFile->read();
         $localRepo = new InstalledFilesystemRepository($installedJsonFile);
@@ -148,7 +149,7 @@ class DumpAutoload
          * If the target directory is different to the vendor directory, then we do not want to include dev
          * dependencies, but if it is vendor, then unless composer install was run with --no-dev, we do want them.
          */
-        if ($this->config->getVendorDirectory() !== $this->config->getTargetDirectory()) {
+        if (!$this->config->isTargetDirectoryVendor()) {
             $isDevMode = false;
         } else {
             $isDevMode = (bool) ($installedJson['dev'] ?? false);
@@ -164,7 +165,7 @@ class DumpAutoload
             $package,
             $installationManager,
             'composer',
-            $optimize,
+            $isOptimize,
             $this->getSuffix(),
             $composer->getLocker(),
             $strictAmbiguous
@@ -180,6 +181,16 @@ class DumpAutoload
     }
 
     /**
+     * Keep backward compatibility with configs implementing only AutoloadConfigInterface.
+     */
+    protected function isOptimizeAutoloaderEnabled(): bool
+    {
+        return $this->config instanceof OptimizeAutoloaderConfigInterface
+            ? $this->config->isOptimizeAutoloader()
+            : true;
+    }
+
+    /**
      * Create `InstalledVersions.php` and `installed.php`.
      *
      * This file is copied in all Composer installations.
@@ -191,14 +202,14 @@ class DumpAutoload
      */
     protected function createInstalledVersionsFiles(): void
     {
-        if ($this->config->getVendorDirectory() === $this->config->getTargetDirectory()) {
+        if ($this->config->isTargetDirectoryVendor()) {
             return;
         }
 
-        $this->filesystem->copy($this->config->getVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getTargetDirectory() . 'composer/InstalledVersions.php');
+        $this->filesystem->copy($this->config->getAbsoluteVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getAbsoluteTargetDirectory() . '/composer/InstalledVersions.php');
 
         // This is just `<?php return array(...);`
-        $installedPhpString = $this->filesystem->read($this->config->getVendorDirectory() . '/composer/installed.php');
+        $installedPhpString = $this->filesystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.php');
         $installed = eval(str_replace('<?php', '', $installedPhpString));
 
         $targetPackages = $this->config->getPackagesToCopy();
@@ -213,9 +224,9 @@ class DumpAutoload
         $newInstalledPhpString = "<?php return $installedArrayString;";
 
         // Update `__DIR__` which was evaluated during the `include`/`eval`.
-        $newInstalledPhpString = preg_replace('/(\'install_path\' => )(.*)(\/\.\..*)/', "$1__DIR__ . '$3", $newInstalledPhpString);
+        $newInstalledPhpString = preg_replace('/(\'install_path\' => )(.*)(\/\.\..*)/', "$1__DIR__ . '$3", $newInstalledPhpString) ?? $newInstalledPhpString;
 
-        $this->filesystem->write($this->config->getTargetDirectory() . '/composer/installed.php', $newInstalledPhpString);
+        $this->filesystem->write($this->config->getAbsoluteTargetDirectory() . '/composer/installed.php', $newInstalledPhpString);
     }
 
     /**
@@ -229,7 +240,7 @@ class DumpAutoload
         $this->logger->debug("Prefixing the{$isNewString} Composer autoloader.");
 
         $projectFiles = $this->fileEnumerator->compileFileListForPaths([
-            $this->config->getTargetDirectory() . 'composer',
+            $this->config->getAbsoluteTargetDirectory() . '/composer',
         ]);
 
         $phpFiles = array_filter(
@@ -280,7 +291,7 @@ class DumpAutoload
      */
     protected function getSuffix(): ?string
     {
-        return !$this->filesystem->fileExists($this->config->getTargetDirectory() . 'autoload.php')
+        return !$this->filesystem->fileExists($this->config->getAbsoluteTargetDirectory() . '/autoload.php')
             ? bin2hex(random_bytes(16))
             : null;
     }

@@ -72,7 +72,7 @@ class FileWithDependency extends File implements HasDependency
 
     public function getPackageRelativePath(): string
     {
-        return $this->packageRelativePath;
+        return trim($this->packageRelativePath, '\\/');
     }
 
     public function isDoDelete(): bool

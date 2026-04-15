@@ -28,7 +28,7 @@ class StraussIssue22Test extends IntegrationTestCase
      *
      * @see https://docs.php-http.org/en/latest/clients.html
      */
-    public function test_virtual_package()
+    public function test_virtual_package(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -51,7 +51,7 @@ class StraussIssue22Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -78,7 +78,7 @@ EOD;
      *
      * @author BrianHenryIE
      */
-    public function test_meta_package()
+    public function test_meta_package(): void
     {
         $this->markTestSkippedOnPhpVersionAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 
@@ -102,7 +102,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -111,6 +111,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        self::assertFileExists($this->testsWorkingDir . 'vendor-prefixed/omnipay/common/src/Omnipay.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/omnipay/common/src/Omnipay.php');
     }
 }

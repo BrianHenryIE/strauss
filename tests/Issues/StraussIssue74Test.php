@@ -16,7 +16,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 class StraussIssue74Test extends IntegrationTestCase
 {
 
-    public function test_prefix_global_function()
+    public function test_prefix_global_function(): void
     {
         $this->markTestSkipped('slow');
 
@@ -44,7 +44,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/illuminate/support/helpers.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/illuminate/support/helpers.php');
 
         $this->assertStringNotContainsString('function append_config(array $array)', $phpString);
         $this->assertStringContainsString('function myprefix_append_config(array $array)', $phpString);
@@ -81,7 +81,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/twig/twig/src/Extension/CoreExtension.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/twig/twig/src/Extension/CoreExtension.php');
 
         $this->assertStringNotContainsString('function twig_cycle(', $phpString);
         $this->assertStringContainsString('function myprefix_twig_cycle(', $phpString);

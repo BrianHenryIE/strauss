@@ -13,8 +13,11 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue204Test extends IntegrationTestCase
 {
-    public function test_allow_specifying_alternative_composerjson()
+    public function test_allow_specifying_alternative_composerjson(): void
     {
+        if (strpos(PHP_OS_FAMILY, 'Win')) {
+            $this->markTestSkipped('Skipped on Windows');
+        }
 
         $composerJsonString = <<<'EOD'
 {
@@ -59,13 +62,18 @@ EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/projectdir/composer.json', $composerJsonString);
         $this->getFileSystem()->write($this->testsWorkingDir . '/projectdir/composer-free.json', $composerFreeJsonString);
 
-        exec('COMPOSER=composer-free.json composer install');
+        // On Windows:
+        //  exec('COMPOSER="composer-free.json" composer install')
+        //     Command "=composer-free.json" is not defined.
+
+        exec('COMPOSER=composer-free.json composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $env = 'COMPOSER=composer-free.json';
         $exitCode = $this->runStrauss($output, '', $env);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString("Saltus\\\\WP\\\\Plugin\\\\InteractiveGlobes\\\\Psr\\\\Log\\\\", $php_string);
     }
 }

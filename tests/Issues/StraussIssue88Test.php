@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue88Test extends IntegrationTestCase
 {
-    public function test_returned_casted_function_call()
+    public function test_returned_casted_function_call(): void
     {
         // Why is this here? It seemed to work.
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2');
@@ -28,9 +28,7 @@ class StraussIssue88Test extends IntegrationTestCase
   },
   "config": {
     "audit": {
-      "ignore": {
-        "PKSA-dxyf-6n16-t87m": "We are not running prod"
-      }
+      "block-insecure": false
     }
   },
   "extra": {
@@ -61,7 +59,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/aws/aws-sdk-php/src/S3/S3Client.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/S3/S3Client.php');
 
         self::assertStringNotContainsString('return (string) \Aws\serialize($command)->getUri();', $php_string);
         self::assertStringContainsString('return (string) \Company\Project\Aws\serialize($command)->getUri();', $php_string);

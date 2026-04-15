@@ -94,7 +94,7 @@ class AutoloadedFilesEnumerator
                             $dependencyPackageAbsolutePath,
                             $filePackageAbsolutePath
                         );
-                        $file = $dependency->getFile($filePackageRelativePath);
+                        $file = $dependency->getFile(FileSystem::normalizeDirSeparator($filePackageRelativePath));
                         if (!$file) {
                             $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
                                 'relativePath' => $filePackageRelativePath,
@@ -108,15 +108,19 @@ class AutoloadedFilesEnumerator
                     break;
                 case 'classmap':
                     $autoloadKeyPaths = array_map(
-                        fn(string $path) =>
-                            $this->filesystem->makeAbsolute(
-                                $dependencyPackageAbsolutePath . $path
-                            ),
+                        fn(string $path) => $dependencyPackageAbsolutePath . '/' . ltrim($path, '/'),
                         (array)$value
                     );
                     foreach ($autoloadKeyPaths as $autoloadKeyPath) {
+                        if (!$this->filesystem->exists($autoloadKeyPath)) {
+                            $this->logger->warning(
+                                "Skipping non-existent autoload path in {packageName}: {path}",
+                                ['packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath]
+                            );
+                            continue;
+                        }
                         $classMapGenerator->scanPaths(
-                            $autoloadKeyPath,
+                            $this->filesystem->makeAbsolute($autoloadKeyPath),
                             $excluded,
                             $autoloadType,
                             $namespace,
@@ -129,13 +133,20 @@ class AutoloadedFilesEnumerator
                 case 'psr-4':
                     foreach ((array)$value as $namespace => $namespaceRelativePaths) {
                         $psrPaths = array_map(
-                            fn(string $path) => $dependencyPackageAbsolutePath . '/' . $path,
+                            fn(string $path) => $dependencyPackageAbsolutePath . '/' . ltrim($path, '/'),
                             (array)$namespaceRelativePaths
                         );
 
                         foreach ($psrPaths as $autoloadKeyPath) {
+                            if (!$this->filesystem->exists($autoloadKeyPath)) {
+                                $this->logger->warning(
+                                    "Skipping non-existent autoload path in {packageName}: {path}",
+                                    ['packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath]
+                                );
+                                continue;
+                            }
                             $classMapGenerator->scanPaths(
-                                $autoloadKeyPath,
+                                $this->filesystem->makeAbsolute($autoloadKeyPath),
                                 $excluded,
                                 $autoloadType,
                                 $namespace,

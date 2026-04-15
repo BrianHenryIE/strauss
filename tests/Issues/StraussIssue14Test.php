@@ -19,7 +19,7 @@ class StraussIssue14Test extends IntegrationTestCase
      *
      * @author BrianHenryIE
      */
-    public function test_guzzle_http_is_prefixed()
+    public function test_guzzle_http_is_prefixed(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -36,7 +36,7 @@ class StraussIssue14Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -45,7 +45,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/guzzlehttp/psr7/src/AppendStream.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/guzzlehttp/psr7/src/AppendStream.php');
 
         // was namespace GuzzleHttp\Psr7;
 
@@ -53,7 +53,7 @@ EOD;
         self::assertStringContainsString('namespace BrianHenryIE\Strauss\GuzzleHttp\Psr7;', $php_string);
     }
 
-    public function testFilesAutoloaderIsGenerated()
+    public function testFilesAutoloaderIsGenerated(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -70,7 +70,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -79,6 +79,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        self::assertFileExists($this->testsWorkingDir .'vendor-prefixed/composer/autoload_files.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_files.php');
     }
 }

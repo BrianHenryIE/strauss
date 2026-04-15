@@ -23,7 +23,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -40,7 +42,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -68,10 +72,12 @@ class FileSystemTest extends TestCase
         
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot($unixWorkingDir)
+                ),
                 [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                    ]
             ),
             $unixWorkingDir
         );
@@ -91,17 +97,23 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    'c:\\'
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
             ),
-            __DIR__
+            'c:\\whatever'
         );
 
         $result = $sut->makeAbsolute('C:/Users/dev/project/composer.json');
 
-        $this->assertSame('C:/Users/dev/project/composer.json', $result);
+        if (DIRECTORY_SEPARATOR === '/') {
+            $this->assertSame('C:/Users/dev/project/composer.json', $result);
+        } else {
+            $this->assertSame('C:\\Users\\dev\\project\\composer.json', $result);
+        }
     }
 
     /**
@@ -113,17 +125,23 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    'd:\brian'
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
             ),
-            __DIR__
+            'd:/'
         );
 
         $result = $sut->makeAbsolute('d:/Work/project/composer.json');
 
-        $this->assertSame('d:/Work/project/composer.json', $result);
+        if (DIRECTORY_SEPARATOR === '/') {
+            $this->assertSame('d:/Work/project/composer.json', $result);
+        } else {
+            $this->assertSame('d:\\Work\\project\\composer.json', $result);
+        }
     }
 
     /**
@@ -136,12 +154,16 @@ class FileSystemTest extends TestCase
      */
     public function testMakeAbsoluteRestoresLeadingSlashAfterNormalization(): void
     {
+        $this->markTestSkippedOnWindows();
+
         // Use a Unix-style working directory to test Unix behavior
         $unixWorkingDir = '/home/user/project/';
-        
+
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    '/'
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -160,7 +182,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -186,7 +210,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -215,7 +241,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]
@@ -242,7 +270,9 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/'),
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
                 [
                     Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                 ]

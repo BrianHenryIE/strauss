@@ -18,7 +18,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 class MozartIssue109Test extends IntegrationTestCase
 {
 
-    public function testTheOutputDoesNotPrefixComments()
+    public function testTheOutputDoesNotPrefixComments(): void
     {
         $this->markTestIncomplete('found nesbot/carbon[1.39.0] but these were not loaded, because they are affected by security advisories.');
 
@@ -53,17 +53,17 @@ class MozartIssue109Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
         exec('composer install');
 
-        assert(file_exists($this->testsWorkingDir .'vendor/nesbot/carbon/src/Carbon/Carbon.php'));
+        assert(file_exists($this->testsWorkingDir .'/vendor/nesbot/carbon/src/Carbon/Carbon.php'));
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/nesbot/carbon/src/Carbon/Carbon.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/nesbot/carbon/src/Carbon/Carbon.php');
 
         self::assertStringNotContainsString('*Mozart\\ This file is part of the Carbon package.Mozart\\', $phpString);
     }

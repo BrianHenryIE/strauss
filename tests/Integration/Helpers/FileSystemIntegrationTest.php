@@ -15,19 +15,14 @@ class FileSystemIntegrationTest extends IntegrationTestCase
      */
     public function test_is_dir(): void
     {
-        $fs = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
-        );
+        $fs = $this->getFileSystem();
 
-        $dir = $this->testsWorkingDir . 'dir';
+        $dir = $this->testsWorkingDir . '/dir';
 
         mkdir($dir);
 
-        $this->assertTrue($fs->directoryExists($dir));
-        $this->assertFalse($fs->directoryExists($this->testsWorkingDir . 'nonexistent'));
+        $this->assertTrue($fs->directoryExists($dir), $dir . ' directory should exist after mkdir');
+        $this->assertFalse($fs->directoryExists($this->testsWorkingDir . '/nonexistent'));
     }
 
     /**
@@ -35,23 +30,18 @@ class FileSystemIntegrationTest extends IntegrationTestCase
      */
     public function test_find_all_files_absolute_paths(): void
     {
-        $fs = new Filesystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter('/')
-            ),
-            $this->testsWorkingDir
-        );
+        $fs = $this->getFileSystem();
 
-        $dir = $this->testsWorkingDir . 'dir';
+        $dir = $this->testsWorkingDir . '/dir';
 
         mkdir($dir);
 
-        $file1 = $dir . '/file1.php';
-        $file2 = $dir . '/file2.php';
+        $file1 = FileSystem::normalizeDirSeparator($dir . '/file1.php', DIRECTORY_SEPARATOR);
+        $file2 = FileSystem::normalizeDirSeparator($dir . '/file2.php', DIRECTORY_SEPARATOR);
 
         mkdir($dir . '/subdir');
 
-        $file3 = $dir . '/subdir/file3.php';
+        $file3 = FileSystem::normalizeDirSeparator($dir . '/subdir/file3.php', DIRECTORY_SEPARATOR);
 
         $this->getFileSystem()->write($file1, 'file1');
         $this->getFileSystem()->write($file2, 'file2');
@@ -59,8 +49,8 @@ class FileSystemIntegrationTest extends IntegrationTestCase
 
         $files = $fs->findAllFilesAbsolutePaths([ $dir ]);
 
-        $this->assertContains($file1, $files);
-        $this->assertContains($file2, $files);
-        $this->assertContains($file3, $files);
+        $this->assertContains($file1, $files, print_r($files, true));
+        $this->assertContains($file2, $files, print_r($files, true));
+        $this->assertContains($file3, $files, print_r($files, true));
     }
 }

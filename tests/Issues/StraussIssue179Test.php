@@ -14,7 +14,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue179Test extends IntegrationTestCase
 {
-    public function test_issue_179()
+    public function test_issue_179(): void
     {
         $this->markTestSkippedOnPhpVersionEqualOrBelow('8.1.0');
 

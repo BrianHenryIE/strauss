@@ -30,7 +30,7 @@ class FileSymbolScannerTest extends TestCase
     /**
      * @covers ::findInFiles
      */
-    public function testSingleNamespace()
+    public function testSingleNamespace(): void
     {
 
         $contents = <<<'EOD'
@@ -72,7 +72,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testGlobalNamespace()
+    public function testGlobalNamespace(): void
     {
 
         $contents = <<<'EOD'
@@ -109,7 +109,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testMultipleNamespace()
+    public function testMultipleNamespace(): void
     {
 
         $contents = <<<'EOD'
@@ -153,7 +153,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testMultipleNamespaceGlobalFirst()
+    public function testMultipleNamespaceGlobalFirst(): void
     {
 
         $contents = <<<'EOD'
@@ -263,7 +263,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testMultipleClasses()
+    public function testMultipleClasses(): void
     {
 
         $contents = <<<'EOD'
@@ -303,7 +303,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_comments_as_classes()
+    public function test_it_does_not_treat_comments_as_classes(): void
     {
         $contents = "
         // A class as good as any.
@@ -341,7 +341,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_multiline_comments_as_classes()
+    public function test_it_does_not_treat_multiline_comments_as_classes(): void
     {
         $contents = "
     	 /**
@@ -384,7 +384,7 @@ EOD;
      *
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_multiline_comments_opening_line_as_classes()
+    public function test_it_does_not_treat_multiline_comments_opening_line_as_classes(): void
     {
         $contents = "
     	 /** A class as good as any; class as.
@@ -423,7 +423,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_multiline_comments_on_one_line_as_classes()
+    public function test_it_does_not_treat_multiline_comments_on_one_line_as_classes(): void
     {
         $contents = "
     	 /** A class as good as any; class as. */ class Whatever_Trevor {
@@ -461,7 +461,7 @@ EOD;
      *
      * @covers ::findInFiles
      */
-    public function test_it_does_not_treat_comments_with_semicolons_as_classes()
+    public function test_it_does_not_treat_comments_with_semicolons_as_classes(): void
     {
         $contents = "
     	// A class as good as any; class as versatile as any.
@@ -498,7 +498,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_parses_classes_after_semicolon()
+    public function test_it_parses_classes_after_semicolon(): void
     {
 
         $contents = "
@@ -532,7 +532,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function test_it_parses_classes_followed_by_comment()
+    public function test_it_parses_classes_followed_by_comment(): void
     {
 
         $contents = <<<'EOD'
@@ -615,7 +615,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testExcludePackagesFromPrefix()
+    public function testExcludePackagesFromPrefix(): void
     {
 
         $filesystemReaderMock = Mockery::mock(Filesystem::class);
@@ -652,7 +652,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testExcludeFilePatternsFromPrefix()
+    public function testExcludeFilePatternsFromPrefix(): void
     {
         $filesystemReaderMock = Mockery::mock(Filesystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn('');
@@ -691,7 +691,7 @@ EOD;
      *
      * @covers ::findInFiles
      */
-    public function testNamespaceReplacementPatterns()
+    public function testNamespaceReplacementPatterns(): void
     {
         $contents = "
         <?php
@@ -736,7 +736,7 @@ EOD;
      *
      * @covers ::findInFiles
      */
-    public function testPhraseClassObjectIsNotMistaken()
+    public function testPhraseClassObjectIsNotMistaken(): void
     {
 
         $contents = <<<'EOD'
@@ -790,7 +790,7 @@ EOD;
     /**
      * @covers ::findInFiles
      */
-    public function testDefineConstant()
+    public function testDefineConstant(): void
     {
 
         $contents = <<<'EOD'
@@ -1089,5 +1089,49 @@ EOD;
         $result = $sut->findInFiles($discoveredFiles);
 
         self::assertArrayHasKey('twig_cycle', $result->getDiscoveredFunctions());
+    }
+
+    /**
+     * Template files with placeholder tokens (e.g. `%g_namespace%`) are not valid PHP.
+     * Strauss should skip them gracefully rather than throwing a fatal error.
+     *
+     * @covers ::findInFiles
+     */
+    public function testTemplateFileWithPlaceholdersIsSkippedGracefully(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace %g_namespace%\AdminMenus;
+
+use %g_use_libs%\AdminMenus\AbstractAdminMenu;
+
+class AdminMenuExample extends AbstractAdminMenu
+{
+}
+EOD;
+
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
+        $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('isPhpFile')->andReturnTrue();
+        $file->shouldReceive('getTargetRelativePath');
+        $file->shouldReceive('getDependency');
+        $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath')->andReturn('/a/path/AdminMenuExample.php');
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $result = $sut->findInFiles($discoveredFiles);
+
+        self::assertEmpty($result->getDiscoveredClasses());
     }
 }

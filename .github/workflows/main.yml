@@ -30,8 +30,8 @@ jobs:
     strategy:
       matrix:
         php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
-#        os: [ubuntu-latest]
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
+#        os: [ubuntu-latest, windows-latest]
       fail-fast: false
     name: PHP tests ${{ matrix.php }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -43,7 +43,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           tools: composer:v2, phive
-          extensions: fileinfo, gd
+          extensions: fileinfo, gd, zip
 
       - name: Install Phive tools
         if: ${{ github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.author_association == 'OWNER' }}
@@ -89,8 +89,15 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
+      - name: Run previously workflows' failed tests first
+        uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
+        with:
+          phpunit-command: vendor/bin/phpunit
+        env:
+          RENAMESPACER_LOG: "debug"
+
       - name: Run tests
-        run: vendor/bin/phpunit --stop-on-failure --order-by=random
+        run: vendor/bin/phpunit --order-by=random
 
       - name: Build phar
         run:

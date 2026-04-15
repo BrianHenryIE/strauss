@@ -43,7 +43,7 @@ class StraussConfigTest extends TestCase
     /**
      * With a full (at time of writing) config, test the getters.
      */
-    public function testGetters()
+    public function testGetters(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -85,7 +85,10 @@ EOD;
 
         self::assertContains('pimple/pimple', $sut->getPackages());
 
-        self::assertEqualsRN(getcwd() . '/target_directory/', $sut->getTargetDirectory());
+        self::assertEqualsRN(
+            $this->getFileSystem()->normalizePath(getcwd() . '/target_directory'),
+            $sut->getAbsoluteTargetDirectory()
+        );
 
         self::assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
 
@@ -101,7 +104,7 @@ EOD;
      *
      * Turns out it just ignores it... good!
      */
-    public function testExtraKey()
+    public function testExtraKey(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -156,7 +159,7 @@ EOD;
      *
      * If no target_dir is specified, used "strauss/"
      */
-    public function testDefaultTargetDir()
+    public function testDefaultTargetDir(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -193,13 +196,16 @@ EOD;
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN(getcwd() . '/vendor-prefixed/', $sut->getTargetDirectory());
+        self::assertEqualsRN(
+            $this->getFileSystem()->normalizePath(getcwd() . '/vendor-prefixed'),
+            $sut->getAbsoluteTargetDirectory()
+        );
     }
 
     /**
      * When the namespace prefix isn't provided, use the PSR-4 autoload key name.
      */
-    public function testDefaultNamespacePrefixFromAutoloaderPsr4()
+    public function testDefaultNamespacePrefixFromAutoloaderPsr4(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -230,7 +236,7 @@ EOD;
     /**
      * When the namespace prefix isn't provided, use the PSR-0 autoload key name.
      */
-    public function testDefaultNamespacePrefixFromAutoloaderPsr0()
+    public function testDefaultNamespacePrefixFromAutoloaderPsr0(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -262,7 +268,7 @@ EOD;
      *
      * brianhenryie/strauss-config-test
      */
-    public function testDefaultNamespacePrefixWithNoAutoloader()
+    public function testDefaultNamespacePrefixWithNoAutoloader(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -287,7 +293,7 @@ EOD;
     /**
      * When the classmap prefix isn't provided, use the PSR-4 autoload key name.
      */
-    public function testDefaultClassmapPrefixFromAutoloaderPsr4()
+    public function testDefaultClassmapPrefixFromAutoloaderPsr4(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -318,7 +324,7 @@ EOD;
     /**
      * When the classmap prefix isn't provided, use the PSR-0 autoload key name.
      */
-    public function testDefaultClassmapPrefixFromAutoloaderPsr0()
+    public function testDefaultClassmapPrefixFromAutoloaderPsr0(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -351,7 +357,7 @@ EOD;
      *
      * brianhenryie/strauss-config-test
      */
-    public function testDefaultClassmapPrefixWithNoAutoloader()
+    public function testDefaultClassmapPrefixWithNoAutoloader(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -376,7 +382,7 @@ EOD;
     /**
      * When Strauss config has packages specified, obviously use them.
      */
-    public function testGetPackagesFromConfig()
+    public function testGetPackagesFromConfig(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -420,7 +426,7 @@ EOD;
     }
 
 
-    public function testGetOldSyntaxExcludePackagesFromPrefixing()
+    public function testGetOldSyntaxExcludePackagesFromPrefixing(): void
     {
         $this->markTestSkipped('Currently needs a reflectable property in the target object');
 
@@ -448,7 +454,7 @@ EOD;
     }
 
 
-    public function testGetExcludePackagesFromPrefixing()
+    public function testGetExcludePackagesFromPrefixing(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -477,7 +483,7 @@ EOD;
     }
 
 
-    public function testGetExcludeFilePatternsFromPrefixingDefault()
+    public function testGetExcludeFilePatternsFromPrefixingDefault(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -502,7 +508,7 @@ EOD;
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/32
      */
-    public function testGetExcludeFilePatternsFromPrefixingDefaultAfterExcludingPackages()
+    public function testGetExcludeFilePatternsFromPrefixingDefaultAfterExcludingPackages(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -532,7 +538,7 @@ EOD;
     /**
      * When Strauss config has no packages specified, use composer.json's require list.
      */
-    public function testGetPackagesNoConfig()
+    public function testGetPackagesNoConfig(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -574,7 +580,7 @@ EOD;
     /**
      * For backwards compatibility, if a Mozart config is present, use it.
      */
-    public function testMapMozartConfig()
+    public function testMapMozartConfig(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -611,7 +617,10 @@ EOD;
 
         self::assertContains('pimple/pimple', $sut->getPackages());
 
-        self::assertEqualsRN(getcwd() . '/dep_directory/', $sut->getTargetDirectory());
+        self::assertEqualsRN(
+            $this->getFileSystem()->normalizePath(getcwd() . '/dep_directory'),
+            $sut->getAbsoluteTargetDirectory()
+        );
 
         self::assertEqualsRN("My_Mozart_Config", $sut->getNamespacePrefix());
 
@@ -633,7 +642,7 @@ EOD;
      *
      * @covers \BrianHenryIE\Strauss\Composer\Extra\StraussConfig::getNamespacePrefix
      */
-    public function testNamespacePrefixHasNoSlash()
+    public function testNamespacePrefixHasNoSlash(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -655,7 +664,7 @@ EOD;
         self::assertEqualsRN("My_Mozart_Config", $sut->getNamespacePrefix());
     }
 
-    public function testIncludeModifiedDateDefaultTrue()
+    public function testIncludeModifiedDateDefaultTrue(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -682,7 +691,7 @@ EOD;
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/35
      */
-    public function testIncludeModifiedDate()
+    public function testIncludeModifiedDate(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -706,7 +715,7 @@ EOD;
     }
 
 
-    public function testIncludeAuthorDefaultTrue()
+    public function testIncludeAuthorDefaultTrue(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -729,7 +738,7 @@ EOD;
     }
 
 
-    public function testIncludeAuthorFalse()
+    public function testIncludeAuthorFalse(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -752,7 +761,7 @@ EOD;
         self::assertFalse($sut->isIncludeAuthor());
     }
 
-    public function testDeleteVendorPackages()
+    public function testDeleteVendorPackages(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -776,7 +785,7 @@ EOD;
     }
 
 
-    public function testUpdateCallSitesConfigTrue()
+    public function testUpdateCallSitesConfigTrue(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -800,7 +809,7 @@ EOD;
         self::assertNull($sut->getUpdateCallSites());
     }
 
-    public function testUpdateCallSitesConfigFalse()
+    public function testUpdateCallSitesConfigFalse(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -826,7 +835,7 @@ EOD;
     }
 
 
-    public function testUpdateCallSitesConfigList()
+    public function testUpdateCallSitesConfigList(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -852,7 +861,7 @@ EOD;
     }
 
 
-    public function testUpdateCallSitesCliTrue()
+    public function testUpdateCallSitesCliTrue(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -880,7 +889,7 @@ EOD;
         self::assertNull($sut->getUpdateCallSites());
     }
 
-    public function testUpdateCallSitesCliFalse()
+    public function testUpdateCallSitesCliFalse(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -909,7 +918,7 @@ EOD;
     }
 
 
-    public function testUpdateCallSitesCliList()
+    public function testUpdateCallSitesCliList(): void
     {
 
         $composerExtraStraussJson = <<<'EOD'
@@ -1031,5 +1040,50 @@ EOD;
         $this->assertEquals('ST_TEST_', $sut->getConstantsPrefix());
 
         unlink($tmpfname);
+    }
+
+    public function test_optimize_autoloader_default_true(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\"
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerExtraStraussJson);
+            $composer = Factory::create(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertTrue($sut->isOptimizeAutoloader());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
+
+    public function test_optimize_autoloader_false(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "optimize_autoloader": false
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerExtraStraussJson);
+            $composer = Factory::create(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertFalse($sut->isOptimizeAutoloader());
+        } finally {
+            unlink($tmpfname);
+        }
     }
 }

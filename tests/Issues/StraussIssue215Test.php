@@ -16,7 +16,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue215Test extends IntegrationTestCase
 {
-    public function test_all_files_are_copied()
+    public function test_all_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
 {   
@@ -60,6 +60,6 @@ EOD;
 
         $missingFiles = array_diff($expectedFiles, $copiedFiles);
 
-        $this->assertEmpty($missingFiles);
+        $this->assertEmpty($missingFiles, 'These files were not copied to vendor-prefixed/dompdf/dompdf/: ' . implode(', ', $missingFiles));
     }
 }

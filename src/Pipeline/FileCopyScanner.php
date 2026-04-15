@@ -54,7 +54,7 @@ class FileCopyScanner
         foreach ($files->getFiles() as $file) {
             $copy = true;
 
-            if ($this->config->getTargetDirectory() === $this->config->getVendorDirectory()) {
+            if ($this->config->isTargetDirectoryVendor()) {
                 $this->logger->debug("The target directory is the same as the vendor directory."); // TODO: surely this should be outside the loop/class.
                 $copy = false;
             }
@@ -70,33 +70,34 @@ class FileCopyScanner
                 $copy = false;
             }
 
-            if ($this->isFilePathExcluded($file->getSourcePath())) {
+            if ($this->isFilePathExcluded($file)) {
                 $copy = false;
             }
 
             if ($copy) {
 //                $this->logger->debug("Marking file {relativeFilePath} to be copied.", [
-//                    'relativeFilePath' => $this->filesystem->getRelativePath($this->config->getVendorDirectory(), $file->getSourcePath()),
+//                    'relativeFilePath' => $this->filesystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $file->getSourcePath()),
 //                ]);
             }
 
             $file->setDoCopy($copy);
 
-            $target = $copy && $file instanceof FileWithDependency
-                ? $this->config->getTargetDirectory() . $file->getVendorRelativePath()
-                : $file->getSourcePath();
+            if ($copy) {
+                $target = $file instanceof FileWithDependency
+                    ?  $this->config->getAbsoluteTargetDirectory() . '/' . $file->getDependency()->getRelativePath() . '/'. $file->getPackageRelativePath()
+                    : $file->getSourcePath();
+                $file->setAbsoluteTargetPath(FileSystem::normalizeDirSeparator($target));
+            }
 
-            $file->setAbsoluteTargetPath($target);
-
-            $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->filesystem->isSymlinkedFile($file);
+            $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->filesystem->isSymlinked($file->getSourcePath());
             $file->setDoDelete($shouldDelete);
 
             // If a file isn't copied, don't unintentionally edit the source file.
-            if (!$file->isDoCopy() && $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
+            if (!$file->isDoCopy() && !$this->config->isTargetDirectoryVendor()) {
                 $file->setDoPrefix(false);
             }
 //            // If the file is marked not to copy, mark the symbol not to be renamed
-//            if (!$copy && $this->config->getTargetDirectory() !== $this->config->getVendorDirectory()) {
+//            if (!$copy && !$this->config->isTargetDirectoryVendor()) {
 //                foreach ($file->getDiscoveredSymbols() as $symbol) {
 //                    // Only make this change if the symbol is only in one file (i.e. namespaces will be in many).
 //                    if (count($symbol->getSourceFiles()) === 1) {
@@ -104,6 +105,8 @@ class FileCopyScanner
 //                    }
 //                }
 //            }
+            // To make step-debugging easier.
+            unset($copy, $target, $shouldDelete);
         };
     }
 
@@ -141,17 +144,20 @@ class FileCopyScanner
     }
 
     /**
-     * Compares the relative path from the vendor dir with `exclude_file_patterns` config.
+     * Compares the vendor relative path with `exclude_file_patterns` config.
      *
-     * @param string $absoluteFilePath
-     * @return bool
+     * I.e. `my/package/src/file.php`.
+     *
+     * @param FileBase $file
      */
-    protected function isFilePathExcluded(string $absoluteFilePath): bool
+    protected function isFilePathExcluded(FileBase $file): bool
     {
+        $path = $file->getVendorRelativePath();
+
         foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
             $escapedPattern = $this->preparePattern($pattern);
-            if (1 === preg_match($escapedPattern, $absoluteFilePath)) {
-                $this->logger->debug("File {$absoluteFilePath} will not be copied because it matches pattern {$pattern}.");
+            if (1 === preg_match($escapedPattern, $path)) {
+                $this->logger->debug("File {$path} will not be copied because it matches pattern {$pattern}.");
                 return true;
             }
         }

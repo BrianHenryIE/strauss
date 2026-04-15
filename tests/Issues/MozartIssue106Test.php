@@ -19,7 +19,7 @@ class MozartIssue106Test extends IntegrationTestCase
      *
      * @see https://github.com/coenjacobs/mozart/issues/106
      */
-    public function test_only_prefix_classmap_classes_once()
+    public function test_only_prefix_classmap_classes_once(): void
     {
         /**
          * @see https://github.com/BrianHenryIE/strauss/commit/1bd20b75a4e6b5c07a428c04e8b9e514034b6b5c
@@ -42,7 +42,7 @@ class MozartIssue106Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -51,7 +51,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BrianHenryIE_Strauss_BrianHenryIE_Strauss_Normalizer extends', $php_string, 'Double prefixing problem still present.');

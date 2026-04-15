@@ -45,7 +45,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $vendorPrefixedInstalledJsonString = $this->getFileSystem()->read($this->testsWorkingDir . 'lib/packages/composer/installed.json');
+        $vendorPrefixedInstalledJsonString = $this->getFileSystem()->read($this->testsWorkingDir . '/lib/packages/composer/installed.json');
 
         $this->assertStringContainsString('"install-path": "../wp-forge/helpers"', $vendorPrefixedInstalledJsonString);
 

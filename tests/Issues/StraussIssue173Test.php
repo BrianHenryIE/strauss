@@ -14,7 +14,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue173Test extends IntegrationTestCase
 {
-    public function test_issue_173()
+    public function test_issue_173(): void
     {
         $this->markTestSkippedOnPhpVersionBelow('8.2.0');
 
@@ -84,13 +84,13 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/psr/log/src/LoggerInterface.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/src/LoggerInterface.php');
         $this->assertStringContainsString("WPSoup\\Vendor\\Psr\\Log\\", $php_string);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/installed.json');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
         $this->assertStringContainsString("WPSoup\\\\Vendor\\\\Psr\\\\Log\\\\", $php_string);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_psr4.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_psr4.php');
         $this->assertStringContainsString("WPSoup\\\\Vendor\\\\Psr\\\\Log\\\\", $php_string);
     }
 }

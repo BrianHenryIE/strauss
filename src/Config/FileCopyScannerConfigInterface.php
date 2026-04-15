@@ -5,7 +5,9 @@ namespace BrianHenryIE\Strauss\Config;
 interface FileCopyScannerConfigInterface
 {
 
-    public function getVendorDirectory(): string;
+    public function getAbsoluteVendorDirectory(): string;
+
+    public function isTargetDirectoryVendor(): bool;
 
     /**
      * @return string[]
@@ -24,5 +26,5 @@ interface FileCopyScannerConfigInterface
 
     public function isDeleteVendorFiles(): bool;
 
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
 }

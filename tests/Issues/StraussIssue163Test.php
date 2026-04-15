@@ -15,7 +15,7 @@ class StraussIssue163Test extends IntegrationTestCase
     /**
      * Fatal error: Uncaught Error: Call to undefined function data_get() in test.php:8
      */
-    public function test_multiple_autoloaders_breaks_autoloading()
+    public function test_multiple_autoloaders_breaks_autoloading(): void
     {
         $composerJsonString1 = <<<'EOD'
 {
@@ -47,22 +47,22 @@ EOD;
 }
 EOD;
 
-        mkdir($this->testsWorkingDir . 'project1');
-        $this->getFileSystem()->write($this->testsWorkingDir . 'project1/composer.json', $composerJsonString1);
-        chdir($this->testsWorkingDir . 'project1');
-        exec('composer install --no-dev;');
+        mkdir($this->testsWorkingDir . '/project1');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/project1/composer.json', $composerJsonString1);
+        chdir($this->testsWorkingDir . '/project1');
+        exec('composer install --no-dev');
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        mkdir($this->testsWorkingDir . 'project2');
-        $this->getFileSystem()->write($this->testsWorkingDir . 'project2/composer.json', $composerJsonString2);
-        chdir($this->testsWorkingDir . 'project2');
-        exec('composer install --no-dev;');
+        mkdir($this->testsWorkingDir . '/project2');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/project2/composer.json', $composerJsonString2);
+        chdir($this->testsWorkingDir . '/project2');
+        exec('composer install --no-dev');
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $project1files = include $this->testsWorkingDir . 'project1/vendor-prefixed/composer/autoload_files.php';
-        $project2files = include $this->testsWorkingDir . 'project2/vendor-prefixed/composer/autoload_files.php';
+        $project1files = include $this->testsWorkingDir . '/project1/vendor-prefixed/composer/autoload_files.php';
+        $project2files = include $this->testsWorkingDir . '/project2/vendor-prefixed/composer/autoload_files.php';
 
         $project1index = null;
         foreach ($project1files as $index => $project1file) {

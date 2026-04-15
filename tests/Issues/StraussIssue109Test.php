@@ -15,11 +15,11 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue109Test extends IntegrationTestCase
 {
-    public function test_absent_cli_argument_parsing_does_not_overwrite_config()
+    public function test_absent_cli_argument_parsing_does_not_overwrite_config(): void
     {
         $composerJsonString = <<<'EOD'
 {
-  "name": "strauss/issue104",
+  "name": "strauss/issue109",
   "require": {
     "psr/log": "1.0.0"
   },
@@ -47,6 +47,6 @@ EOD;
 
         $this->assertEquals(0, $result);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/composer.json');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/composer.json');
     }
 }

@@ -20,7 +20,7 @@ class MozartIssue90Test extends IntegrationTestCase
      *
      * Error: "File already exists at path: classmap_directory/tecnickcom/tcpdf/tcpdf.php".
      */
-    public function testLibpdfmergeSucceeds()
+    public function testLibpdfmergeSucceeds(): void
     {
         $this->markTestSkipped('This fails when php-parser parses. The laptop Im writing on fails with other tests. There is still hope');
 
@@ -43,7 +43,7 @@ class MozartIssue90Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -53,8 +53,8 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // This test would only fail on Windows?
-        self::assertDirectoryDoesNotExist($this->testsWorkingDir .'strauss/iio/libmergepdf/vendor/iio/libmergepdf/tcpdi');
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir .'/strauss/iio/libmergepdf/vendor/iio/libmergepdf/tcpdi');
 
-        self::assertFileExists($this->testsWorkingDir .'vendor-prefixed/iio/libmergepdf/tcpdi/tcpdi.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/iio/libmergepdf/tcpdi/tcpdi.php');
     }
 }

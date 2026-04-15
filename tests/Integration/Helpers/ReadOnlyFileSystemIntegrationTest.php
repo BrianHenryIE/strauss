@@ -4,6 +4,7 @@ namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\FileSystem as FlysystemFileSystem;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem
@@ -20,31 +21,33 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
     public function test_write(): void
     {
-        $source = $this->testsWorkingDir . 'source.php';
+        $source = $this->testsWorkingDir . '/source.php';
         $this->getFileSystem()->write($source, 'source');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
 
-        $target = $this->testsWorkingDir . 'target.php';
+        $target = $this->testsWorkingDir . '/target.php';
 
         $contents = $sut->read($source);
 
         $sut->write($target, $contents);
 
-        $this->assertFileDoesNotExist($target);
+        $this->assertFileNotExistsInFileSystem($target);
     }
 
     // test writing a source file doesn't really write the file but does makes the changes available within
 
     //
 
-    public function test_file_exists_true()
+    public function test_file_exists_true(): void
     {
-        $source = $this->testsWorkingDir . 'source.php';
+        $source = $this->testsWorkingDir . '/source.php';
 
         assert(!file_exists($source));
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
 
         $sut->write($source, 'source');
 
@@ -56,12 +59,13 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     /**
      * When a file does actually exist, but is deleted in the readonly filesystem, file_exists should return false.
      */
-    public function test_file_exists_false()
+    public function test_file_exists_false(): void
     {
-        $source = $this->testsWorkingDir . 'source.php';
+        $source = $this->testsWorkingDir . '/source.php';
         $this->getFileSystem()->write($source, 'source');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
 
         $sut->delete($source);
 
@@ -74,10 +78,12 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     public function test_dry_run_deleted_file_throws_exception_on_read(): void
     {
         // given a file that was deleted in a dry run
-        $source = $this->testsWorkingDir . 'source.php';
+        $source = $this->testsWorkingDir . '/source.php';
         $this->getFileSystem()->write($source, 'source');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
+
         $sut->delete($source);
 
         // when I try to read the file
@@ -94,10 +100,12 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     public function testListContentsDeleteFile(): void
     {
         // Given a real file
-        $aRealFile = $this->testsWorkingDir . 'file1.php';
+        $aRealFile = FileSystem::normalizeDirSeparator($this->testsWorkingDir . '/file1.php');
         $this->getFileSystem()->write($aRealFile, 'file1');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
+
         assert(1 === count($sut->listContents($this->testsWorkingDir)->toArray()));
 
         // When it is deleted
@@ -107,7 +115,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->assertCount(0, $sut->listContents($this->testsWorkingDir)->toArray());
 
         // And the file should still exist
-        $this->assertFileExists($aRealFile);
+        $this->assertFileExistsInFileSystem($aRealFile);
     }
 
     /**
@@ -118,13 +126,15 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
     public function testListContentsAddFile(): void
     {
         // Given a real file
-        $aRealFile = $this->testsWorkingDir . 'file1.php';
+        $aRealFile = $this->testsWorkingDir . '/file1.php';
         $this->getFileSystem()->write($aRealFile, 'file1');
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
+
         assert(1 === count($sut->listContents($this->testsWorkingDir)->toArray()));
 
-        $file2Path = $this->testsWorkingDir . 'file2.php';
+        $file2Path = $this->testsWorkingDir . '/file2.php';
         // And a new file
         $sut->write($file2Path, '<?php whatever ?>');
 
@@ -132,24 +142,25 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->assertCount(2, $sut->listContents($this->testsWorkingDir)->toArray());
 
         // And the file should not actually exist
-        $this->assertFileDoesNotExist($file2Path);
+        $this->assertFileNotExistsInFileSystem($file2Path);
     }
 
     public function test_copy():void
     {
-        $source = $this->testsWorkingDir . 'source.php';
+        $source = $this->testsWorkingDir . '/source.php';
         $contents = 'source';
         $this->getFileSystem()->write($source, $contents);
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
 
-        $destination = $this->testsWorkingDir . 'destination.php';
+        $destination = $this->testsWorkingDir . '/destination.php';
 
         $sut->copy($source, $destination);
 
         $this->assertEquals($contents, $sut->read($destination));
 
-        $this->assertFileDoesNotExist($destination);
+        $this->assertFileNotExistsInFileSystem($destination);
     }
 
     /**
@@ -157,12 +168,13 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
      */
     public function testDirectoryExists(): void
     {
-        $newDir = $this->testsWorkingDir . 'dir1';
+        $newDir = $this->testsWorkingDir . '/dir1';
         mkdir($newDir);
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
 
-        $this->assertTrue($sut->directoryExists($newDir));
+        $this->assertTrue($sut->directoryExists($newDir), $newDir . ' should be visible to ReadOnlyFileSystem');
     }
 
     /**
@@ -170,14 +182,25 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
      */
     public function testDirectoryExistsDelete(): void
     {
-        $newDir = $this->testsWorkingDir . 'dir1';
+        $newDir = $this->testsWorkingDir . '/dir1';
         mkdir($newDir);
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(
+            new FlysystemFileSystem(
+                new LocalFilesystemAdapter($fsRoot)
+            )
+        );
+
+        $filesystem = new FileSystem($sut, '/');
+
+        $this->assertDirectoryExists($newDir, "File was not created on disk");
+        $this->assertDirectoryExistsInFileSystem($newDir, $this->getFileSystem(), "League Flysystem cannot see the directory on disk.");
+        $this->assertDirectoryExistsInFileSystem($newDir, $filesystem, 'The readonly fs cannot see the directory before "deleting" it.');
 
         $sut->deleteDirectory($newDir);
 
-        $this->assertDirectoryExists($newDir);
+        $this->assertTrue($this->getFileSystem()->directoryExists($newDir), $newDir . ' should still exist (ReadOnlyFileSystem should not delete directories)');
         $this->assertFalse($sut->directoryExists($newDir));
     }
 
@@ -186,13 +209,14 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
      */
     public function testDirectoryExistsPhantomDir(): void
     {
-        $newDir = $this->testsWorkingDir . 'dir1';
+        $newDir = $this->testsWorkingDir . '/dir1';
 
-        $sut = new ReadOnlyFileSystem(new \League\Flysystem\FileSystem(new LocalFilesystemAdapter('/')));
+        $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
+        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
 
         $sut->createDirectory($newDir);
 
-        $this->assertDirectoryDoesNotExist($newDir);
+        $this->assertDirectoryNotExistsInFileSystem($newDir);
         $this->assertTrue($sut->directoryExists($newDir));
     }
 }

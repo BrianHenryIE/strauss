@@ -20,12 +20,12 @@ class FileWithDependencyTest extends TestCase
     {
         $dependency = Mockery::mock(ComposerPackage::class)->makePartial();
         $dependency->expects('isDoDelete')->once()->andReturnTrue();
-        $dependency->allows('getPackageAbsolutePath')->andReturn('/absolute/path/to/project/vendor/company/package/');
+        $dependency->allows('getPackageAbsolutePath')->andReturn('absolute/path/to/project/vendor/company/package');
 
         $sut = new FileWithDependency(
             $dependency,
             'company/package/src/path/file.php',
-            '/absolute/path/to/project/vendor/company/package/src/path/file.php'
+            'absolute/path/to/project/vendor/company/package/src/path/file.php'
         );
 
         // Should defer to the package's `isDelete` setting.
@@ -49,7 +49,7 @@ class FileWithDependencyTest extends TestCase
         $dependency = Mockery::mock(ComposerPackage::class)->makePartial();
         $dependency->allows('getPackageAbsolutePath')->andReturnNull();
 
-        $sourceAbsolutePath = '/absolute/path/to/project/vendor/company/package/src/file.php';
+        $sourceAbsolutePath = 'absolute/path/to/project/vendor/company/package/src/file.php';
 
         $sut = new FileWithDependency(
             $dependency,

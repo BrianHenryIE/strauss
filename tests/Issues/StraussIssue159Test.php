@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue159Test extends IntegrationTestCase
 {
-    public function test_autoloader_does_not_include_platform_check()
+    public function test_autoloader_does_not_include_platform_check(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -48,6 +48,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor-prefixed/composer/platform_check.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/composer/platform_check.php');
     }
 }

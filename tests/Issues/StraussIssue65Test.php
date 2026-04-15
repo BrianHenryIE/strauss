@@ -17,7 +17,7 @@ class StraussIssue65Test extends IntegrationTestCase
     /**
      * This passes on 8.4 but fails on 7.4 with an infinite loop in php-parser.
      */
-    public function test_aws_prefixed_functions()
+    public function test_aws_prefixed_functions(): void
     {
         $this->markTestIncomplete('found aws/aws-sdk-php[3.268.17] but these were not loaded, because they are affected by security advisories.');
 
@@ -57,7 +57,7 @@ EOD;
 
         // vendor/aws/aws-sdk-php/src/Endpoint/UseDualstackEndpoint/Configuration.php
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/aws/aws-sdk-php/src/Endpoint/UseDualstackEndpoint/Configuration.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Endpoint/UseDualstackEndpoint/Configuration.php');
 
         self::assertStringNotContainsString('$this->useDualstackEndpoint = Aws\boolean_value($useDualstackEndpoint);', $php_string);
         self::assertStringNotContainsString('$this->useDualstackEndpoint = BrianHenryIE\Issue65\Aws\boolean_value($useDualstackEndpoint);', $php_string);

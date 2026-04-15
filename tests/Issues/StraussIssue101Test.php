@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue101Test extends IntegrationTestCase
 {
-    public function test_does_not_delete_autoload_keys()
+    public function test_does_not_delete_autoload_keys(): void
     {
         $composerJsonString = <<<'EOD'
 {

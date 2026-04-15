@@ -12,13 +12,17 @@ interface AutoloadConfigInterface
      *
      * absolute? relative?
      */
-    public function getVendorDirectory(): string;
+    public function getAbsoluteVendorDirectory(): string;
 
     /**
      * The directory where Strauss copied the files to.
-     * absolute? relative?
+     * absolute.
      */
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
+
+    public function getRelativeTargetDirectory(): string;
+
+    public function isTargetDirectoryVendor(): bool;
 
     /**
      * The directory containing `composer.json`.

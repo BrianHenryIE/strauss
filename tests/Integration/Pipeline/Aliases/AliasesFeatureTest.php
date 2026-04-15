@@ -42,7 +42,7 @@ class AliasesFeatureTest extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -51,7 +51,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $autoloadPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/autoload.php');
+        $autoloadPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/autoload.php');
 
         $this->assertStringContainsString('autoload_aliases.php', $autoloadPhpString);
 
@@ -88,16 +88,17 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
-        exec('composer install');
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
+        $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
 
         $this->assertStringNotContainsString('return \\WP_Forge\\Helpers\\dataGet(...func_get_args());', $autoloadAliasesPhpString);
         $this->assertStringContainsString('return \\BrianHenryIE\\Strauss\\WP_Forge\\Helpers\\dataGet(...func_get_args());', $autoloadAliasesPhpString);
@@ -121,7 +122,12 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        $normalizedPath = $this->getFileSystem()->normalizePath($this->testsWorkingDir . '/composer.json');
+
+        $directoryContents = implode(', ', glob($this->testsWorkingDir));
+        $this->assertFileExists($this->testsWorkingDir . '/composer.json', 'Flysystem did not write: ' . $this->testsWorkingDir . '/composer.json (normalized '.$normalizedPath.'), directory contains: ' . $directoryContents);
 
         chdir($this->testsWorkingDir);
 
@@ -130,7 +136,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
+        $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
 
         $this->assertStringContainsString('function trigger_deprecation(...$args)', $autoloadAliasesPhpString);
         $this->assertStringContainsString('return \\brianhenryie_strauss_trigger_deprecation(...func_get_args());', $autoloadAliasesPhpString);
@@ -154,7 +160,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -163,7 +169,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
+        $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
 
         $this->assertStringNotContainsString('function trigger_deprecation(...$args)', $autoloadAliasesPhpString);
     }
@@ -202,7 +208,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -211,7 +217,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor/composer/autoload_aliases.php');
+        $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
 
         $this->assertStringNotContainsString('BrianHenryIE\\\\Strauss\\\\DeepCopy\\\\BrianHenryIE\\\\Strauss\\\\DeepCopy', $autoloadAliasesPhpString);
     }

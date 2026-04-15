@@ -16,7 +16,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue143Test extends IntegrationTestCase
 {
-    public function test_composer_in_sibling_dir()
+    public function test_composer_in_sibling_dir(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -51,11 +51,11 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Strauss\\Issue143\\Psr\\Log;', $phpString);
 
-        $this->assertFileExists($this->testsWorkingDir . 'vendor-prefixed/autoload.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/autoload.php');
 
         $installedJsonString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $this->assertStringContainsString('"name": "psr/log",', $installedJsonString);
@@ -82,7 +82,7 @@ EOD;
     /**
      * @see https://github.com/BrianHenryIE/strauss/issues/143#issuecomment-2684239222
      */
-    public function test_composer_in_sibling_dir_delete_packages()
+    public function test_composer_in_sibling_dir_delete_packages(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -118,7 +118,8 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . 'vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $filePath = $this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LoggerInterface.php';
+        $this->assertFileNotExistsInFileSystem($filePath);
     }
 
     /**

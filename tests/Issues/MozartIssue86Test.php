@@ -20,7 +20,7 @@ class MozartIssue86Test extends IntegrationTestCase
      *
      * Solved by https://github.com/ziodave
      */
-    public function test_do_not_parse_comments_to_classnames()
+    public function test_do_not_parse_comments_to_classnames(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -46,7 +46,7 @@ class MozartIssue86Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -55,7 +55,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/pear/pear_exception/PEAR/Exception.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/pear/pear_exception/PEAR/Exception.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('foreach (self::$_observers Mozart_as $func) {', $php_string);
@@ -70,7 +70,7 @@ EOD;
      *
      * @see https://github.com/afragen/wp-dependency-installer/
      */
-    public function test_do_not_parse_comments_to_classnames_wp_dependency_installer()
+    public function test_do_not_parse_comments_to_classnames_wp_dependency_installer(): void
     {
 
         $composerJsonString = <<<'EOD'
@@ -88,7 +88,7 @@ EOD;
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -97,7 +97,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'vendor-prefixed/afragen/wp-dependency-installer/wp-dependency-installer.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/afragen/wp-dependency-installer/wp-dependency-installer.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('Path BrianHenryIE_Strauss_to plugin or theme', $php_string, 'Text in comment still prefixed.');

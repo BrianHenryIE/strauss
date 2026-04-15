@@ -4,9 +4,11 @@ namespace BrianHenryIE\Strauss\Config;
 
 interface PrefixerConfigInterface
 {
-    public function getVendorDirectory(): string;
+    public function getAbsoluteVendorDirectory(): string;
 
-    public function getTargetDirectory(): string;
+    public function getAbsoluteTargetDirectory(): string;
+
+    public function isTargetDirectoryVendor(): bool;
 
     public function getNamespacePrefix(): ?string;
 

@@ -22,7 +22,7 @@ class MozartIssue93Test extends IntegrationTestCase
      *
      * @author BrianHenryIE
      */
-    public function test_it_does_not_make_classname_replacement_inside_namespaced_file()
+    public function test_it_does_not_make_classname_replacement_inside_namespaced_file(): void
     {
 
         $this->markTestSkipped('Not respecting the pinned commit.');
@@ -47,7 +47,7 @@ class MozartIssue93Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -56,7 +56,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'strauss/brianhenryie/wp-logger/src/class-logger.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/strauss/brianhenryie/wp-logger/src/class-logger.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BrianHenryIE_Strauss_Logger extends', $php_string);

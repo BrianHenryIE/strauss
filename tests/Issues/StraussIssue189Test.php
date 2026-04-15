@@ -46,7 +46,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $installedJson = $this->getFileSystem()->read($this->testsWorkingDir . 'vendor-prefixed/composer/installed.json');
+        $installedJson = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
         $installedJsonArray = json_decode($installedJson, true);
 
         $psr4AutoloadKey = $installedJsonArray["packages"][0]["autoload"]["psr-4"];

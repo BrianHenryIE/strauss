@@ -17,7 +17,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue108Test extends IntegrationTestCase
 {
-    public function test_a()
+    public function test_a(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -63,7 +63,7 @@ EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
-        @mkdir($this->testsWorkingDir . 'src');
+        @mkdir($this->testsWorkingDir . '/src');
         $replacementfilePath = $this->testsWorkingDir . '/src/file.php';
         $this->getFileSystem()->write($replacementfilePath, $replacementfile);
 

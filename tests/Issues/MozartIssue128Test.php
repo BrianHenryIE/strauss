@@ -17,7 +17,7 @@ class MozartIssue128Test extends IntegrationTestCase
      * Because the neither package was a sub-package of the other, the replacing was not occurring
      * throughout.
      */
-    public function test_fpdf()
+    public function test_fpdf(): void
     {
 
         if (version_compare(phpversion(), '7.0', '>')) {
@@ -42,7 +42,7 @@ class MozartIssue128Test extends IntegrationTestCase
 }
 EOD;
 
-        $this->getFileSystem()->write($this->testsWorkingDir . 'composer.json', $composerJsonString);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
 
@@ -51,7 +51,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'strauss/setasign/fpdi/src/FpdfTpl.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'/strauss/setasign/fpdi/src/FpdfTpl.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class FpdfTpl extends \FPDF', $mpdf_php);
