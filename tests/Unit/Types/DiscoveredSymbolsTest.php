@@ -20,8 +20,11 @@ class DiscoveredSymbolsTest extends TestCase
     {
         $sut = new DiscoveredSymbols();
 
-        $file = Mockery::mock(File::class)->makePartial();
-        $file->expects('getSourcePath')->once()->andReturn('/path/to/file.php');
+        $file = new File(
+            'vendor/path/to/file.php',
+            'path/to/file.php',
+            'vendor-prefixed/path/to/file.php',
+        );
 
         $symbol = new FunctionSymbol('myFunction', $file);
 
@@ -35,11 +38,13 @@ class DiscoveredSymbolsTest extends TestCase
      */
     public function testGetNamespaceSymbol(): void
     {
-
         $sut = new DiscoveredSymbols();
 
-        $file = Mockery::mock(File::class)->makePartial();
-        $file->expects('getSourcePath')->once()->andReturn('/path/to/file.php');
+        $file = new File(
+            'vendor/path/to/file.php',
+            'path/to/file.php',
+            'vendor-prefixed/path/to/file.php',
+        );
 
         $symbol = new NamespaceSymbol('myNamespace', $file);
 
@@ -55,7 +60,6 @@ class DiscoveredSymbolsTest extends TestCase
      */
     public function testGetNamespaceSymbolMissing(): void
     {
-
         $sut = new DiscoveredSymbols();
 
         $result = $sut->getNamespace('myNamespace');
