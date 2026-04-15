@@ -107,7 +107,10 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
-            // TODO: where?!
+            /**
+             * @see \Symfony\Component\Console\Command\Command
+             * @see AbstractRenamespacerCommand
+             */
             parent::execute($input, $output);
 
             $this->updateConfigFromCli($input);
