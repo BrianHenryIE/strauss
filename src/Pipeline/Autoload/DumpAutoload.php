@@ -234,7 +234,7 @@ class DumpAutoload
      */
     protected function prefixNewAutoloader(): void
     {
-        $isNewString = $this->config->getVendorDirectory() === $this->config->getTargetDirectory()
+        $isNewString = $this->config->isTargetDirectoryVendor()
             ? '' : ' new';
 
         $this->logger->debug("Prefixing the{$isNewString} Composer autoloader.");
