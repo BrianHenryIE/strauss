@@ -26,11 +26,10 @@ class AliasesTest extends TestCase
         parent::setUp();
 
         if (!class_exists('Foo\\Bar\\Baz')) {
-            $includeFilePath = sys_get_temp_dir() . '/foo_bar_baz.php';
+            $includeFilePath = 'project/foo_bar_baz.php';
             $includeFile = '<?php namespace Foo\\Bar; class Baz {}';
             $this->getFileSystem()->write($includeFilePath, $includeFile);
-            include $includeFilePath;
-            file_exists($includeFilePath) && unlink($includeFilePath);
+            include $this->getFileSystem()->makeAbsolute($includeFilePath);
         }
     }
 
@@ -70,14 +69,14 @@ class AliasesTest extends TestCase
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-'Foo\\Bar\\Baz' => 
+'Foo\\Bar\\Baz' =>
 	array (
 		'type' => 'class',
 		'classname' => 'Baz',
 		'isabstract' => false,
 		'namespace' => 'Foo\\Bar',
 		'extends' => 'Baz\\Foo\\Bar\\Baz',
-		'implements' => 
+		'implements' =>
 			array (
 			),
 ),
@@ -126,8 +125,8 @@ EOD;
 
         $expected = <<<'EOD'
 if(!function_exists('\\foo')){
-    function foo(...$args) { 
-      return \bar_foo(...func_get_args()); 
+    function foo(...$args) {
+      return \bar_foo(...func_get_args());
     }
 }
 EOD;
@@ -165,12 +164,12 @@ EOD;
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-'Foo\\Bar\\Baz' => 
+'Foo\\Bar\\Baz' =>
 	array (
 		'type' => 'interface',
 		'interfacename' => 'Baz',
 		'namespace' => 'Foo\\Bar',
-		'extends' => 
+		'extends' =>
 		array (
 			0 => 'Baz\\Foo\\Bar\\Baz',
 			),
@@ -224,7 +223,7 @@ EOD;
 namespace Bar {
 	if(!function_exists('\\Bar\\baz')){
 		function baz(...$args) {
-			return \Foo\Bar\baz(...func_get_args()); 
+			return \Foo\Bar\baz(...func_get_args());
 		}
 	}
 	if(!function_exists('\\Bar\\foobar')){

@@ -50,7 +50,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
 //        $config->expects('getExcludeNamespacesFromPrefixing')->times(6)->andReturn([]);
 
         /** @var FileSystem $filesystem */
-        $filesystem = $this->getReadOnlyFileSystem($this->getSymlinkProtectFilesystem());
+        $filesystem = $this->getFileSystem();
         $filesystem->createDirectory('project/vendor-prefixed');
 
         $filesystem->write('project/composer.json', json_encode([
@@ -98,13 +98,13 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             PrefixerConfigInterface::class,
             FileEnumeratorConfig::class
         );
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getFileSystem();
 //      $logger = new ColorLogger();
         $logger = new NullLogger();
 
         $config->expects('isDryRun')->times(1)->andReturn(true);
-        $config->expects('getAbsoluteVendorDirectory')->times(2)->andReturn('inmemory://project/vendor');
-        $config->expects('getAbsoluteTargetDirectory')->times(3)->andReturn('inmemory://project/vendor-prefixed');
+        $config->expects('getAbsoluteVendorDirectory')->times(2)->andReturn('mem://project/vendor');
+        $config->expects('getAbsoluteTargetDirectory')->times(3)->andReturn('mem://project/vendor-prefixed');
         $config->expects('isTargetDirectoryVendor')->times(2)->andReturnFalse();
 
         $installedVersions = <<<EOD

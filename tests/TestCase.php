@@ -1,4 +1,7 @@
 <?php
+/**
+ * "unit" tests should not write to the filesystem.
+ */
 
 namespace BrianHenryIE\Strauss;
 
@@ -8,27 +11,26 @@ use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
-use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\ServiceLocator;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\WhitespacePathNormalizer;
-use League\Flysystem\Filesystem as FlysystemFileSystem;
 use Mockery;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
-use Symfony\Component\Finder\Finder;
+use stdClass;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
-    use CustomAssertionsTrait;
+    use CustomUnitTestAssertionsTrait;
 
     /**
      * The logger used by the objects.
@@ -40,22 +42,17 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected ?TestLogger $testLogger;
 
-    protected FileSystem $filesystem;
+    protected PathNormalizer $pathNormalizer;
+
+    /**
+     * A readonly filesystem for reading test fixtures.
+     */
+    protected FileSystem $fixturesFilesystem;
 
     protected FileSystem $inMemoryFilesystem;
 
-    protected string $testsWorkingDir;
-
-    protected PathNormalizer $pathNormalizer;
-
-    protected FileSystem $symlinkProtectFilesystem;
-
-    protected FileSystem $readOnlyFileSystem;
-
     protected function setUp(): void
     {
-        $this->createWorkingDir();
-
         parent::setUp();
 
         /**
@@ -65,99 +62,26 @@ class TestCase extends \PHPUnit\Framework\TestCase
          * @see \Composer\Util\Filesystem::isStreamWrapperPath()
          */
         if (!in_array('mem', stream_get_wrappers())) {
-            stream_wrapper_register('mem', \stdClass::class);
+            stream_wrapper_register('mem', stdClass::class);
             \Composer\Util\Filesystem::isStreamWrapperPath('mem://');
             stream_wrapper_unregister('mem');
         }
-
-        $this->pathNormalizer = new StripProtocolPathNormalizer(['mem'], new WhitespacePathNormalizer());
     }
 
-
-    public static function assertEqualsRN($expected, $actual, string $message = ''): void
+    protected function tearDown(): void
     {
-        if (is_string($expected) && is_string($actual)) {
-            $expected = str_replace("\r\n", "\n", $expected);
-            $actual   = str_replace("\r\n", "\n", $actual);
+        parent::tearDown();
+
+        if (in_array('mem', stream_get_wrappers())) {
+            /** @var FilesystemRegistry $registry */
+            $registry = ServiceLocator::get(FilesystemRegistry::class);
+            /**
+             * Also runs `stream_wrapper_unregister('mem')`
+             */
+            $registry->unregister('mem');
         }
 
-        self::assertEquals($expected, $actual, $message);
-    }
-
-
-    protected function createWorkingDir(): void
-    {
-        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
-
-        if ('Darwin' === PHP_OS) {
-            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
-        }
-
-        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
-        // we set breakpoints, we can easily browse the files.
-        if ($this->isPhpStormRunning()) {
-            $this->testsWorkingDir = getcwd() . '/teststempdir/';
-        }
-
-        if (file_exists($this->testsWorkingDir)) {
-            $this->deleteDir($this->testsWorkingDir);
-        }
-
-        @mkdir($this->testsWorkingDir);
-    }
-
-    protected function deleteDir($dir)
-    {
-        if (!file_exists($dir)) {
-            return;
-        }
-        $filesystem = new Filesystem(
-            new LocalFilesystemAdapter('/')
-        );
-
-        $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
-        $isSymlink = function ($file) use ($symfonyFilesystem) {
-            return !is_null($symfonyFilesystem->readlink($file));
-        };
-
-        /**
-         * Delete symlinks first.
-         *
-         * @see https://github.com/thephpleague/flysystem/issues/1560
-         */
-        $finder = new Finder();
-        $finder->in($dir);
-        if ($finder->hasResults()) {
-
-            /** @var \SplFileInfo[] $files */
-            $files = iterator_to_array($finder->getIterator());
-            /** @var \SplFileInfo[] $links */
-            $links = array_filter(
-                $files,
-                function ($file) use ($isSymlink) {
-                    return $isSymlink($file->getPath());
-                }
-            );
-
-            // Sort by longest filename first.
-            uasort($links, function ($a, $b) {
-                return strlen($b->getPath()) <=> strlen($a->getPath());
-            });
-
-            foreach ($links as $link) {
-                $linkPath = "{$link->getPath()}/{$link->getFilename()}";
-                unlink($linkPath);
-                if (is_readable($linkPath)) {
-                    rmdir($linkPath);
-                }
-            }
-        }
-
-        if (!is_dir($dir)) {
-            return;
-        }
-
-        $filesystem->deleteDirectory($dir);
+        Mockery::close();
     }
 
     protected static function stripWhitespaceAndBlankLines(string $string): string
@@ -183,38 +107,61 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return false;
     }
 
+    protected function getFixturesFilesystem(): FileSystem
+    {
+        if (!isset($this->fixturesFilesystem)) {
+            $projectFsAdapter = new LocalFilesystemAdapter(
+                FileSystem::getFsRoot(__FILE__)
+            );
+            $readonlyFsAdapter = new ReadOnlyFileSystem(
+                $projectFsAdapter
+            );
+            $this->fixturesFilesystem = new FileSystem(
+                $readonlyFsAdapter,
+                [],
+                FileSystem::makePathNormalizer(__FILE__),
+                new PathPrefixer(FileSystem::getFsRoot(__FILE__), DIRECTORY_SEPARATOR)
+            );
+        }
+        return $this->fixturesFilesystem;
+    }
+
+    /**
+     * This is for unit test to instantiate objects and query changes.
+     * It is not for loading fixtures.
+     */
     protected function getFileSystem(): Filesystem
     {
-
         if (! isset($this->filesystem)) {
-            $this->filesystem = $this->getNewFileSystem();
+            $this->filesystem = $this->getInMemoryFileSystem();
         }
 
         return $this->filesystem;
     }
-
-    protected function getNewFileSystem(): Filesystem
-    {
-        $testsWorkingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
-        $normalizer = FileSystem::makePathNormalizer('/');
-
-        $localFilesystemAdapter = new LocalFilesystemAdapter(
-            FileSystem::getFsRoot($testsWorkingDir),
-            null,
-            LOCK_EX,
-            LocalFilesystemAdapter::SKIP_LINKS
-        );
-
-        return new FileSystem(
-            $localFilesystemAdapter,
-            [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ],
-            $normalizer,
-            null,
-            $testsWorkingDir
-        );
-    }
+//
+//    protected function getNewFileSystem(string $workingDir = '/'): Filesystem
+//    {
+//        $testsWorkingDir = $this->testsWorkingDir ?? getcwd();
+//        $normalizer = FileSystem::makePathNormalizer('/');
+//
+//
+//        $localFilesystemAdapter = new LocalFilesystemAdapter(
+//            FileSystem::getFsRoot($testsWorkingDir),
+//            null,
+//            LOCK_EX,
+//            LocalFilesystemAdapter::SKIP_LINKS
+//        );
+//
+//        return new FileSystem(
+//            $localFilesystemAdapter,
+//            [
+//                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+//            ],
+//            $normalizer,
+//            null,
+//            $testsWorkingDir
+//        );
+//    }
 
     /**
      * Get an in-memory filesystem.
@@ -230,11 +177,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
-        $normalizer = FileSystem::makePathNormalizer('inmemory://');
+        $normalizer = FileSystem::makePathNormalizer('mem://');
 
         $inMemoryFilesystem = new InMemoryFilesystemAdapter();
 
-        $pathPrefixer = new PathPrefixer('inmemory://', '/');
+        $pathPrefixer = new PathPrefixer('mem://', '/');
 
         $filesystem = new Filesystem(
             $inMemoryFilesystem,
@@ -243,7 +190,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             ],
             $normalizer,
             $pathPrefixer,
-            'inmemory://'
+            'mem://'
         );
 
         /**
@@ -251,56 +198,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
          *
          * @var FilesystemRegistry $registry
          */
-        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-
-        if (method_exists($registry, 'has') && $registry->has('inmemory')) {
-            $registry->unregister('inmemory');
-        } else {
-            try {
-                $registry->get('inmemory');
-                $registry->unregister('inmemory');
-            } catch (Exception $exception) {
-            }
-        }
-
-        $registry->register('inmemory', $filesystem);
-
-        return $filesystem;
-    }
-
-    public function getReadOnlyFileSystem(?FileSystem $filesystem = null)
-    {
-        if (isset($this->readOnlyFileSystem)) {
-            return $this->readOnlyFileSystem;
-        }
-
-        if (is_null($filesystem)) {
-            $filesystem = isset($this->testsWorkingDir)
-                ? $this->getSymlinkProtectFilesystem()
-                : $this->getNewInMemoryFileSystem();
-        }
-
-        $normalizer = new WhitespacePathNormalizer();
-        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
-
-        $pathPrefixer = new PathPrefixer('mem://', '/');
-
-        $this->readOnlyFileSystem =
-            new FileSystem(
-                new ReadOnlyFileSystem(
-                    $filesystem->getAdapter(),
-                ),
-                [],
-                $normalizer,
-                $pathPrefixer
-            );
-
-        /**
-         * Register a file stream mem:// to handle file operations by third party libraries.
-         *
-         * @var FilesystemRegistry $registry
-         */
-        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+        $registry = ServiceLocator::get(FilesystemRegistry::class);
 
         if (method_exists($registry, 'has') && $registry->has('mem')) {
             $registry->unregister('mem');
@@ -309,28 +207,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
                 $registry->get('mem');
                 $registry->unregister('mem');
             } catch (Exception $exception) {
+                $e = $exception; // suggesting it was not unregistered. but maybe never existed.
             }
         }
 
-        $registry->register('mem', $this->readOnlyFileSystem);
+        $registry->register('mem', $filesystem);
 
-        return $this->readOnlyFileSystem;
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-        if (in_array('mem', stream_get_wrappers())) {
-            /** @var FilesystemRegistry $registry */
-            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-            /**
-             * Also runs `stream_wrapper_unregister('mem')`
-             */
-            $registry->unregister('mem');
-        }
-
-        Mockery::close();
+        return $filesystem;
     }
 
     /**
@@ -351,43 +234,12 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(
             new RelativeFilepathLogProcessor(
-                $this->getReadOnlyFileSystem(
-                    $this->getSymlinkProtectFilesystem()
-                )
+                $this->getFileSystem()
             )
         );
         $logger->pushHandler(new PsrHandler($this->getTestLogger()));
 
         return $logger;
-    }
-
-    protected function getSymlinkProtectFilesystem(): FileSystem
-    {
-        if (isset($this->symlinkProtectFilesystem)) {
-            return $this->symlinkProtectFilesystem;
-        }
-
-        $localFilesystemLocation = Filesystem::getFsRoot($this->testsWorkingDir);
-
-        $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
-
-        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
-            $localFilesystemLocation,
-            Filesystem::makePathNormalizer($this->testsWorkingDir),
-            $pathPrefixer,
-            $this->getTestLogger()
-        );
-
-        $this->symlinkProtectFilesystem = new Filesystem(
-            $symlinkProtectFilesystemAdapter,
-            [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ],
-            null,
-            $pathPrefixer
-        );
-
-        return $this->symlinkProtectFilesystem;
     }
 
     /**
@@ -400,12 +252,5 @@ class TestCase extends \PHPUnit\Framework\TestCase
         }
 
         return $this->testLogger;
-    }
-
-    protected function markTestSkippedOnWindows(string $message = 'Skipped on Windows'): void
-    {
-        if (Platform::isWindows()) {
-            $this->markTestSkipped($message);
-        }
     }
 }

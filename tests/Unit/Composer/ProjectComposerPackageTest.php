@@ -10,27 +10,21 @@ use BrianHenryIE\Strauss\TestCase;
  */
 class ProjectComposerPackageTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->createWorkingDir();
-    }
-
     /**
      * A simple test to check the getters all work.
      */
     public function testParseJson(): void
     {
+        $this->getFileSystem()->write(
+            'project/composer.json',
+            $this->getFixturesFilesystem()->read(__DIR__ . '/projectcomposerpackage-test-1.json')
+        );
 
-        $testFile = __DIR__ . '/projectcomposerpackage-test-1.json';
-
-        copy($testFile, $this->testsWorkingDir . 'composer.json');
-
-        $composer = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
+        $composer = new ProjectComposerPackage('mem://project/composer.json');
 
         $config = $composer->getStraussConfig();
 
-        self::assertInstanceOf(StraussConfig::class, $config);
+        $this->assertInstanceOf(StraussConfig::class, $config);
     }
 
     /**
@@ -38,17 +32,21 @@ class ProjectComposerPackageTest extends TestCase
      */
     public function testGetFlatAutoloadKey(): void
     {
+        $this->getFileSystem()->write(
+            'project/composer.json',
+            $this->getFixturesFilesystem()->read(
+                __DIR__ . '/projectcomposerpackage-test-getProjectPhpFiles.json'
+            )
+        );
 
-        $testFile = __DIR__ . '/projectcomposerpackage-test-getProjectPhpFiles.json';
-
-        copy($testFile, $this->testsWorkingDir . 'composer.json');
-
-        $composer = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
+        $composer = new ProjectComposerPackage(
+            'mem://project/composer.json'
+        );
 
         $phpFiles = $composer->getFlatAutoloadKey();
 
         $expected = ["src","includes","classes","functions.php"];
 
-        self::assertEqualsRN($expected, $phpFiles);
+        $this->assertEqualsRN($expected, $phpFiles);
     }
 }
