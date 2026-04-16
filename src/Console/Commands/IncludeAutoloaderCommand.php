@@ -90,7 +90,11 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
     {
         $this->logger->notice('Loading package...');
 
-        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . '/' . Factory::getComposerFile());
+        $this->projectComposerPackage = new ProjectComposerPackage(
+            $this->filesystem->makeAbsolute(
+                $this->workingDir . '/' . Factory::getComposerFile()
+            )
+        );
     }
 
     protected function loadConfigFromComposerJson(): void
