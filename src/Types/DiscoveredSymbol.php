@@ -20,11 +20,10 @@ abstract class DiscoveredSymbol
      */
     protected array $sourceFiles = [];
 
-    protected ?NamespaceSymbol $namespace;
+    // E.g. for `My\Ns\Classname` this is just `Classname`.
+    protected string $localOriginalSymbol;
 
-    protected string $fqdnOriginalSymbol;
-
-    protected string $replacement;
+    protected string $localReplacement;
 
     protected bool $doRename = true;
 
@@ -34,23 +33,26 @@ abstract class DiscoveredSymbol
      */
     public function __construct(
         string $fqdnSymbol,
-        FileBase $sourceFile,
-        ?NamespaceSymbol $namespace = null
+        FileBase $sourceFile
     ) {
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 
+        if (!str_contains($fqdnSymbol, '\\')) {
+            $this->localOriginalSymbol = $fqdnSymbol;
+        } else {
+            $this->localOriginalSymbol = array_reverse(explode($fqdnSymbol, '\\'))[0];
+        }
+
         $this->addSourceFile($sourceFile);
         $sourceFile->addDiscoveredSymbol($this);
-
-        if ($this instanceof NamespaceSymbol) {
-            // Always use fqdn.
-            $this->namespace = null;
-        } else {
-            $this->namespace = $namespace ?? NamespaceSymbol::global();
-        }
     }
 
     public function getOriginalSymbol(): string
+    {
+        return $this->fqdnOriginalSymbol;
+    }
+
+    public function getReplacementFqdnName(): string
     {
         return $this->fqdnOriginalSymbol;
     }
@@ -71,23 +73,16 @@ abstract class DiscoveredSymbol
         $this->sourceFiles[$sourceFile->getSourcePath()] = $sourceFile;
     }
 
-    public function getReplacement(): string
+    public function getLocalReplacement(): string
     {
         return $this->isDoRename()
-            ? ($this->replacement ?? $this->fqdnOriginalSymbol)
+            ? ( $this->localReplacement ?? $this->fqdnOriginalSymbol)
             : $this->fqdnOriginalSymbol;
     }
 
-    public function setReplacement(string $replacement): void
+    public function setLocalReplacement(string $localReplacement): void
     {
-        $this->replacement = $replacement;
-    }
-
-    public function getNamespaceName(): ?string
-    {
-        return $this->namespace
-            ? $this->namespace->getOriginalSymbol()
-            : null; // TODO: should this return `\`?
+        $this->localReplacement = $localReplacement;
     }
 
     public function getOriginalLocalName(): string

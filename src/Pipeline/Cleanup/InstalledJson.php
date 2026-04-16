@@ -421,15 +421,15 @@ class InstalledJson
                                 continue;
                             }
 
-                            if ($trimmedOriginalNamespace === trim($namespaceSymbol->getReplacement(), '\\')) {
+                            if ($trimmedOriginalNamespace === trim($namespaceSymbol->getLocalReplacement(), '\\')) {
                                 $this->logger->debug('Namespace is unchanged: ' . $trimmedOriginalNamespace);
                                 continue;
                             }
 
                             // Update the namespace if it has changed.
-                            $this->logger->info('Updating namespace: ' . $trimmedOriginalNamespace . ' => ' . $namespaceSymbol->getReplacement());
+                            $this->logger->info('Updating namespace: ' . $trimmedOriginalNamespace . ' => ' . $namespaceSymbol->getLocalReplacement());
                             /** @phpstan-ignore offsetAccess.notFound */
-                            $autoload_key[$type][str_replace($trimmedOriginalNamespace, $namespaceSymbol->getReplacement(), $originalNamespace)] = $autoload_key[$type][$originalNamespace];
+                            $autoload_key[$type][str_replace($trimmedOriginalNamespace, $namespaceSymbol->getLocalReplacement(), $originalNamespace)] = $autoload_key[$type][$originalNamespace];
                             unset($autoload_key[$type][$originalNamespace]);
                         }
                         break;

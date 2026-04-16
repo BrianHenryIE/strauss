@@ -8,7 +8,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 /**
  * @phpstan-import-type TraitAliasArray from AutoloadAliasInterface
  */
-class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
+class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
 {
     /**
      * @var string[]
@@ -51,7 +51,7 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
             'type' => 'trait',
             'traitname' => $this->getOriginalLocalName(),
             'namespace' => $this->namespace->getOriginalSymbol(),
-            'use' => [$this->getReplacement()],
+            'use' => [$this->getLocalReplacement()],
         );
     }
 }

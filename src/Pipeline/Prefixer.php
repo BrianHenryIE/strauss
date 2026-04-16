@@ -232,7 +232,7 @@ class Prefixer
                 $this->logger->info("Skipping namespace: $originalNamespace");
                 continue;
             }
-            $namespacesChangesStrings[$originalNamespace] = $namespaceSymbol->getReplacement();
+            $namespacesChangesStrings[$originalNamespace] = $namespaceSymbol->getLocalReplacement();
         }
         // This matters... it shouldn't.
         uksort($namespacesChangesStrings, new NamespaceSort(NamespaceSort::SHORTEST));
@@ -283,7 +283,7 @@ class Prefixer
             $namespace = $parts[0] ?? null;
 
             if ($namespace && isset($namespaceSymbols[$namespace])) {
-                $replacementNamespace = $namespaceSymbols[$namespace]->getReplacement();
+                $replacementNamespace = $namespaceSymbols[$namespace]->getLocalReplacement();
                 $parts[0] = $replacementNamespace;
                 $newName = '\\' . implode('\\', $parts);
 
@@ -566,7 +566,7 @@ class Prefixer
                 $positions[] = [
                     'start' => $startFilePos + $pos,
                     'end' => $startFilePos + $nextPos,
-                    'replacement' => '\\' . $globalSymbol->getReplacement(),
+                    'replacement' => '\\' . $globalSymbol->getLocalReplacement(),
                 ];
             }
             $offset = $pos + 1;
@@ -657,12 +657,12 @@ class Prefixer
                 ) {
                     $symbol = $discoveredSymbols->getClass($useItem->name->toString());
                     if ($symbol->isDoRename()) {
-                        $replacementClassname = array_reverse(explode('\\', $symbol->getReplacement()))[0];
+                        $replacementClassname = array_reverse(explode('\\', $symbol->getLocalReplacement()))[0];
                         $useClassname = array_reverse(explode('\\', $useItem->name->toString()))[0];
                         if ($replacementClassname !== $useClassname) {
-                            $replacementString = $symbol->getReplacement() . ' as ' . $useClassname;
+                            $replacementString = $symbol->getLocalReplacement() . ' as ' . $useClassname;
                         } else {
-                             $replacementString = $symbol->getReplacement();
+                             $replacementString = $symbol->getLocalReplacement();
                         }
 
                         $positions[] = [
@@ -761,7 +761,7 @@ class Prefixer
     {
         $globalSymbol = $this->getGlobalSymbolForNode($node, $discoveredSymbols);
         if ($globalSymbol) {
-            return $globalSymbol->getReplacement();
+            return $globalSymbol->getLocalReplacement();
         }
         return $node->toString();
     }
@@ -800,7 +800,7 @@ class Prefixer
     protected function replaceFunctions(string $contents, FunctionSymbol $functionSymbol): string
     {
         $originalFunctionString = $functionSymbol->getOriginalSymbol();
-        $replacementFunctionString = $functionSymbol->getReplacement();
+        $replacementFunctionString = $functionSymbol->getLocalReplacement();
 
         if ($originalFunctionString === $replacementFunctionString) {
             return $contents;

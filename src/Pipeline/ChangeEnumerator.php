@@ -78,7 +78,7 @@ class ChangeEnumerator
                     );
 
                     if ($prefixed !== $symbol->getOriginalSymbol()) {
-                        $symbol->setReplacement($prefixed);
+                        $symbol->setLocalReplacement($prefixed);
                         continue 2;
                     }
                 }
@@ -108,7 +108,7 @@ class ChangeEnumerator
                         continue;
                     }
 
-                    $symbol->setReplacement($this->config->getClassmapPrefix() . $symbol->getOriginalSymbol());
+                    $symbol->setLocalReplacement($this->config->getClassmapPrefix() . $symbol->getOriginalSymbol());
                 }
             }
 
@@ -118,11 +118,11 @@ class ChangeEnumerator
                     $newNamespace = $discoveredNamespaces[$symbol->getNamespaceName()];
                     $replacement = $this->determineNamespaceReplacement(
                         $newNamespace->getOriginalSymbol(),
-                        $newNamespace->getReplacement(),
+                        $newNamespace->getLocalReplacement(),
                         $symbol->getOriginalSymbol()
                     );
 
-                    $symbol->setReplacement($replacement);
+                    $symbol->setLocalReplacement($replacement);
 
                     unset($newNamespace, $replacement);
                 }
@@ -130,7 +130,7 @@ class ChangeEnumerator
             } else {
                 // Global class.
                 $replacement = $classmapPrefix . $symbol->getOriginalSymbol();
-                $symbol->setReplacement($replacement);
+                $symbol->setLocalReplacement($replacement);
             }
         }
 
@@ -146,7 +146,7 @@ class ChangeEnumerator
                 continue;
             }
 
-            $symbol->setReplacement($functionPrefix . $symbol->getOriginalSymbol());
+            $symbol->setLocalReplacement($functionPrefix . $symbol->getOriginalSymbol());
         }
     }
 

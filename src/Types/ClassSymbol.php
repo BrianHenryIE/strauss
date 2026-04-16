@@ -7,7 +7,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 /**
  * @phpstan-import-type ClassAliasArray from AutoloadAliasInterface
  */
-class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
+class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
 {
     protected ?string $extends;
     protected bool $isAbstract;
@@ -68,7 +68,7 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
             'classname' => $this->getOriginalLocalName(),
             'isabstract' => $this->isAbstract,
             'namespace' => $this->namespace->getOriginalSymbol(),
-            'extends' => $this->getReplacement(),
+            'extends' => $this->getLocalReplacement(),
             'implements' => $this->interfaces,
         );
     }

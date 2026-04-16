@@ -284,14 +284,14 @@ class DumpAutoload
             'Composer\\Autoload',
             $sourceFile
         );
-        $composerAutoloadNamespaceSymbol->setReplacement(
+        $composerAutoloadNamespaceSymbol->setLocalReplacement(
             $this->config->getNamespacePrefix() . '\\Composer\\Autoload'
         );
         $composerNamespaceSymbol = new NamespaceSymbol(
             'Composer',
             $sourceFile
         );
-        $composerNamespaceSymbol->setReplacement(
+        $composerNamespaceSymbol->setLocalReplacement(
             $this->config->getNamespacePrefix() . '\\Composer'
         );
 

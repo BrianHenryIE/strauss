@@ -115,14 +115,14 @@ class Aliases
     {
         $modifiedSymbols = new DiscoveredSymbols();
         foreach ($symbols->getAll() as $symbol) {
-            if ($symbol->getOriginalSymbol() !== $symbol->getReplacement()) {
+            if ($symbol->getOriginalSymbol() !== $symbol->getLocalReplacement()) {
                 $modifiedSymbols->add($symbol);
             }
             if ($symbol instanceof FunctionSymbol) {
                 $functionNamespace = $symbols->getNamespaceSymbolByString($symbol->getNamespaceName());
                 $isFunctionHasChangedNamespace = $functionNamespace->isChangedNamespace();
 
-                if ($isFunctionHasChangedNamespace || $symbol->getOriginalSymbol() !== $symbol->getReplacement()
+                if ($isFunctionHasChangedNamespace || $symbol->getOriginalSymbol() !== $symbol->getLocalReplacement()
                 ) {
                     $modifiedSymbols->add($symbol);
                 }
@@ -176,7 +176,7 @@ class Aliases
         $result = [];
 
         foreach ($symbols->getAll() as $originalSymbolFqdn => $symbol) {
-            if ($symbol->getOriginalSymbol() === $symbol->getReplacement()) {
+            if ($symbol->getOriginalSymbol() === $symbol->getLocalReplacement()) {
                 continue;
             }
             if (!($symbol instanceof AutoloadAliasInterface)) {
@@ -221,7 +221,7 @@ class Aliases
                 $aliasesPhpString = '';
 
                 $originalLocalSymbol = $symbol->getOriginalSymbol();
-                $replacementSymbol   = $symbol->getReplacement();
+                $replacementSymbol   = $symbol->getLocalReplacement();
 
                 if ($originalLocalSymbol === $replacementSymbol) {
                     continue;
@@ -286,7 +286,7 @@ class Aliases
 
                 $replacementSymbol = str_replace(
                     $namespaceSymbol->getOriginalSymbol(),
-                    $namespaceSymbol->getReplacement(),
+                    $namespaceSymbol->getLocalReplacement(),
                     $namespacedOriginalSymbol
                 );
 

@@ -8,7 +8,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 /**
  * @phpstan-import-type InterfaceAliasArray from AutoloadAliasInterface
  */
-class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
+class InterfaceSymbol extends NamespacedSymbol implements AutoloadAliasInterface
 {
     /**
      * @var string[]
@@ -51,7 +51,7 @@ class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
             'type' => 'interface',
             'interfacename' => $this->getOriginalLocalName(),
             'namespace' => $this->namespace->getOriginalSymbol(),
-            'extends' => [$this->getReplacement()] + $this->getExtends(),
+            'extends' => [$this->getLocalReplacement()] + $this->getExtends(),
         );
     }
 }

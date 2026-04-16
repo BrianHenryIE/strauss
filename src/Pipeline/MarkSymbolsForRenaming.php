@@ -15,6 +15,7 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -109,8 +110,12 @@ class MarkSymbolsForRenaming
     protected function excludeFromPrefix(DiscoveredSymbol $symbol): bool
     {
         return $this->isExcludeFromPrefixPackage($symbol->getPackageName())
-            || $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName())
-            || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles());
+            || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles())
+            || (
+                $symbol instanceof NamespacedSymbol
+                &&
+                $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName())
+               );
     }
 
     /**
