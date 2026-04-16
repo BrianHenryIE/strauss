@@ -11,8 +11,10 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use Composer\InstalledVersions;
 use Elazar\Flystream\FilesystemRegistry;
+use League\Flysystem\PathPrefixer;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
@@ -22,7 +24,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use League\Flysystem\Config;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
@@ -138,26 +139,35 @@ abstract class AbstractRenamespacerCommand extends Command
      */
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->workingDir = getcwd() . '';
+        $workingDir       = getcwd() . '/';
+        $localFsLocation = FileSystem::getFsRoot($workingDir);
 
-        if (!isset($this->filesystem)) {
-            $localFilesystemAdapter = new LocalFilesystemAdapter(
-                FileSystem::getFsRoot($this->workingDir),
-                null,
-                LOCK_EX,
-                LocalFilesystemAdapter::SKIP_LINKS
-            );
+        $pathNormalizer = Filesystem::makePathNormalizer($localFsLocation);
 
-            $this->filesystem = new FileSystem(
-                $localFilesystemAdapter,
-                [
-                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ],
-                Filesystem::makePathNormalizer($this->workingDir),
-                null,
-                $this->workingDir
-            );
-        }
+        $pathPrefixer = new PathPrefixer(
+            $localFsLocation,
+            DIRECTORY_SEPARATOR
+        );
+
+        // Extends `LocalFilesystemAdapter`.
+        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
+            $localFsLocation,
+            $pathNormalizer,
+            $pathPrefixer,
+            $this->logger
+        );
+
+        $this->filesystem = new FileSystem(
+            $symlinkProtectFilesystemAdapter,
+            [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
+            $pathNormalizer,
+            $pathPrefixer,
+            $localFsLocation
+        );
+
+        $this->workingDir = $this->filesystem->normalizePath($workingDir);
 
         if (method_exists($this, 'setLogger') && !isset($this->logger)) {
             $this->setLogger($this->getConsoleLogger($input, $output));

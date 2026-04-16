@@ -8,7 +8,6 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
-use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -32,7 +31,6 @@ use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\ServiceLocator;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
-use League\Flysystem\Config;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use League\Flysystem\WhitespacePathNormalizer;
 use Psr\Log\LoggerInterface;
@@ -136,26 +134,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             );
         }
 
-        $localFilesystemLocation = PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
-
-        $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
-
-        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
-            $localFilesystemLocation,
-            null,
-            $pathPrefixer,
-            $this->logger
-        );
-
-        $this->filesystem = new Filesystem(
-            $symlinkProtectFilesystemAdapter,
-            [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ],
-            null,
-            $pathPrefixer
-        );
-
         parent::configure();
     }
 
@@ -228,9 +206,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
         $this->setLogger($this->getIOLogger($input, $output));
 
-        $workingDir       = getcwd() . '/';
-        $this->workingDir = $workingDir;
-
         try {
             $this->logger->notice('Starting... '/** version */); // + PHP version
 
@@ -238,6 +213,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->loadConfigFromComposerJson();
             $this->updateConfigFromCli($input);
 
+            // Checks dry-run, replaces filesystem and logger.
             parent::execute($input, $output);
 
             $this->buildDependencyList();
@@ -287,7 +263,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $composerFilePath = $this->filesystem->makeAbsolute(
             $this->filesystem->normalizePath(
-                $this->workingDir . '/' . Factory::getComposerFile()
+                $this->workingDir . '/' .Factory::getComposerFile()
             )
         );
         $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/composer.json');
