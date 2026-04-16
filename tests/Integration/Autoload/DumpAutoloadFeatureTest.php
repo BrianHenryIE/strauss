@@ -53,7 +53,22 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
             $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
             $composerAutoloadGenerator = new ComposerAutoloadGenerator('projectuniquestring', $composer->getEventDispatcher());
             $composerAutoloadGeneratorFactory->expects('get')->once()->andReturn($composerAutoloadGenerator);
-            $dumpAutoload = new DumpAutoload($config, $filesystem, $this->logger, new Prefixer($config, $filesystem, $this->logger), new FileEnumerator($config, $filesystem, $this->logger), $composerAutoloadGeneratorFactory);
+            $dumpAutoload = new DumpAutoload(
+                $config,
+                $filesystem,
+                $this->getLogger(),
+                new Prefixer(
+                    $config,
+                    $filesystem,
+                    $this->getLogger()
+                ),
+                new FileEnumerator(
+                    $config,
+                    $filesystem,
+                    $this->getLogger()
+                ),
+                $composerAutoloadGeneratorFactory
+            );
             $dumpAutoload->generatedPrefixedAutoloader();
             $autoloadRealPath = $this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php';
             $this->assertFileExists($autoloadRealPath);
