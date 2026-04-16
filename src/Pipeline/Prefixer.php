@@ -651,11 +651,19 @@ class Prefixer
                 ) {
                     $symbol = $discoveredSymbols->getClass($useItem->name->toString());
                     if ($symbol->isDoRename()) {
-                        $aliasText = $symbol->getReplacement() . ' as ' . $useItem->name->toString();
+                        if (array_reverse(explode('/', $symbol->getReplacement()))[0]
+                            !==
+                            array_reverse(explode('/', $useItem->name->toString()))[0]
+                        ) {
+                            $replacementString = $symbol->getReplacement() . ' as ' . array_reverse(explode('/', $useItem->name->toString()))[0];
+                        } else {
+                             $replacementString = $symbol->getReplacement();
+                        }
+
                         $positions[] = [
                             'start' => $useItem->name->getStartFilePos(),
                             'end' => $useItem->name->getEndFilePos() + 1,
-                            'replacement' => $aliasText,
+                            'replacement' => $replacementString,
                         ];
                     }
                 }
