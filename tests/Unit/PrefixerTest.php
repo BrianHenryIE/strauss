@@ -192,12 +192,12 @@ EOD;
      */
     public function test_it_replaces_class_declarations(): void
     {
-        $contents = 'class Hello_World {';
+        $contents = 'class Hello_World {}';
 
         $originalClassname = "Hello_World";
         $classnamePrefix = "Prefixer_Test_";
 
-        $expected = "class Prefixer_Test_Hello_World {";
+        $expected = "class Prefixer_Test_Hello_World {}";
 
         $config = $this->getMockConfig();
 
@@ -223,12 +223,12 @@ EOD;
      */
     public function test_it_replaces_abstract_class_declarations(): void
     {
-        $contents = 'abstract class Hello_World {';
+        $contents = 'abstract class Hello_World {}';
 
         $originalClassname = "Hello_World";
         $classnamePrefix = "Prefixer_Test_";
 
-        $expected = 'abstract class Prefixer_Test_Hello_World {';
+        $expected = 'abstract class Prefixer_Test_Hello_World {}';
 
         $config = $this->getMockConfig();
 
@@ -254,12 +254,12 @@ EOD;
      */
     public function test_it_replaces_interface_class_declarations(): void
     {
-        $contents = 'interface Hello_World {';
+        $contents = 'interface Hello_World {}';
 
         $originalName = "Hello_World";
         $globalPrefix = "Prefixer_Test_";
 
-        $expected = 'interface Prefixer_Test_Hello_World {';
+        $expected = 'interface Prefixer_Test_Hello_World {}';
 
         $config = $this->getMockConfig();
 
@@ -316,12 +316,12 @@ EOD;
      */
     public function test_it_replaces_class_declarations_that_implement_interfaces(): void
     {
-        $contents = 'class Hello_World implements Bye_World {';
+        $contents = 'class Hello_World implements Bye_World {}';
 
         $originalClassname = "Hello_World";
         $classnamePrefix = "Prefixer_Test_";
 
-        $expected = 'class Prefixer_Test_Hello_World implements Bye_World {';
+        $expected = 'class Prefixer_Test_Hello_World implements Bye_World {}';
 
         $config = $this->getMockConfig();
 
@@ -382,12 +382,12 @@ EOD;
      */
     public function test_it_replaces_class_declarations_psr2(): void
     {
-        $contents = "class Hello_World\n{";
+        $contents = "class Hello_World\n{}";
 
         $originalClassname = "Hello_World";
         $classnamePrefix = "Prefixer_Test_";
 
-        $expected = "class Prefixer_Test_Hello_World\n{";
+        $expected = "class Prefixer_Test_Hello_World\n{}";
 
         $config = $this->getMockConfig();
 
@@ -415,12 +415,12 @@ EOD;
      */
     public function test_it_replaces_class(): void
     {
-        $contents = "class Hello_World {";
+        $contents = "class Hello_World {}";
 
         $originalClassname = "Hello_World";
         $classnamePrefix = "Prefixer_Test_";
 
-        $expected = "class Prefixer_Test_Hello_World {";
+        $expected = "class Prefixer_Test_Hello_World {}";
 
         $config = $this->getMockConfig();
 
