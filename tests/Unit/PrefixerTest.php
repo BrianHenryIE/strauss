@@ -127,7 +127,7 @@ EOD;
 
         $expected = 'use BrianHenryIE\\Strauss\\Google\\Http\\Batch;';
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
 
@@ -176,7 +176,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -215,7 +215,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -246,7 +246,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -277,7 +277,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -308,7 +308,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -339,7 +339,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
 
@@ -359,7 +359,7 @@ EOD;
 
         $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
 
-        self::assertEqualsRN('class Hello_World implements \Prefix\Strauss\Bye_World {', $result);
+        $this->assertEqualsRN('class Hello_World implements \Prefix\Strauss\Bye_World {', $result);
     }
 
     /**
@@ -373,7 +373,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $replacer->setClassmapPrefix('Mozart_');
         $replacer->replace($contents);
-        self::assertArrayHasKey('Hello_World', $replacer->getReplacedClasses());
+        $this->assertArrayHasKey('Hello_World', $replacer->getReplacedClasses());
     }
 
     /**
@@ -405,7 +405,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -438,7 +438,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
 
@@ -473,7 +473,7 @@ EOD;
 
         $result = $replacer->replaceInString([$originalClassname => $namespaceSymbol], [], [], $contents);
 
-        self::assertEqualsRN($contents, $result);
+        $this->assertEqualsRN($contents, $result);
     }
 
     /**
@@ -506,7 +506,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -557,7 +557,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /** @test */
@@ -574,7 +574,7 @@ EOD;
 
         $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
 
-        self::assertEqualsRN('namespace My\\Mozart\\Prefix\\Test\\Test;', $result);
+        $this->assertEqualsRN('namespace My\\Mozart\\Prefix\\Test\\Test;', $result);
     }
 
 
@@ -591,7 +591,7 @@ EOD;
         $result = $replacer->replaceNamespace($contents, "Test\\Something", "My\\Mozart\\Prefix\\Test\\Something");
         $result = $replacer->replaceNamespace($result, "Test\\Test", "My\\Mozart\\Prefix\\Test\\Test");
 
-        self::assertEqualsRN("namespace My\\Mozart\\Prefix\\Test\\Something;\n\nuse My\\Mozart\\Prefix\\Test\\Test;", $result);
+        $this->assertEqualsRN("namespace My\\Mozart\\Prefix\\Test\\Something;\n\nuse My\\Mozart\\Prefix\\Test\\Test;", $result);
     }
 
     /**
@@ -609,7 +609,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
 
-        self::assertEqualsRN('namespace Test\\Test\\Another;', $result);
+        $this->assertEqualsRN('namespace Test\\Test\\Another;', $result);
     }
 
 
@@ -626,7 +626,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, $namespace, $prefix);
 
-        self::assertEqualsRN('namespace My\\Mozart\\Prefix\\Test\\Another;', $result);
+        $this->assertEqualsRN('namespace My\\Mozart\\Prefix\\Test\\Another;', $result);
     }
 
     /**
@@ -651,8 +651,8 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
 
-        self::assertNotEquals('namespace Dargon\\Dependencies\\Dargon\\Dependencies\\Dragon\\Form;', $result);
-        self::assertEqualsRN('namespace Dargon\\Dependencies\\Dragon\\Form;', $result);
+        $this->assertNotEquals('namespace Dargon\\Dependencies\\Dargon\\Dependencies\\Dragon\\Form;', $result);
+        $this->assertEqualsRN('namespace Dargon\\Dependencies\\Dragon\\Form;', $result);
     }
 
     /**
@@ -673,7 +673,7 @@ EOD;
         $result = $replacer->replaceNamespace($contents, 'Chicken', 'My\\Mozart\\Prefix\\Chicken');
         $result = $replacer->replaceNamespace($result, 'Egg', 'My\\Mozart\\Prefix\\Egg');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -695,7 +695,7 @@ EOD;
 
         $expected = "use MBViews\\Dependencies\\Symfony\\Polyfill\\Mbstring as p;";
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -714,7 +714,7 @@ EOD;
 
         $expected = 'public function getServices( Mpdf $mpdf, LoggerInterface $logger, $config, )';
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testLeadingSlashInString(): void
@@ -730,7 +730,7 @@ EOD;
 
         $expected = '$mentionedClass = "\\Prefix\\Strauss\\Test\\Classname";';
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testDoubleLeadingSlashInString(): void
@@ -746,7 +746,7 @@ EOD;
 
         $expected = '$mentionedClass = "\\\\Prefix\\\\Strauss\\\\Test\\\\Classname";';
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testItReplacesSlashedNamespaceInFunctionParameter(): void
@@ -763,7 +763,7 @@ EOD;
 
         $expected = "public function __construct(\\Prefix\\net\\authorize\\api\\contract\\v1\\AnetApiRequestType \$request, \$responseType)";
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -781,7 +781,7 @@ EOD;
 
         $expected = "public function executeWithApiResponse(\$endPoint = \\Prefix\\net\\authorize\\api\\constants\\ANetEnvironment::CUSTOM)";
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -800,7 +800,7 @@ EOD;
         $expected = "\$this->apiRequest->setClientId(\"sdk-php-\" . \\Prefix\\net\\authorize\\api\\constants\\ANetEnvironment::VERSION);";
 
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -817,7 +817,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Mpdf', 'BrianHenryIE\Strauss\Mpdf');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testClassExtendsNamespacedClassIsPrefixed(): void
@@ -831,7 +831,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Mpdf', 'BrianHenryIE\Strauss\Mpdf');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -850,7 +850,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Carbon_Fields\Provider', 'BrianHenryIE\Strauss\Carbon_Fields\Provider');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -870,7 +870,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Carbon_Fields\Container', 'BrianHenryIE\Strauss\Carbon_Fields\Container');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -889,7 +889,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, 'Carbon_Fields', 'BrianHenryIE\Strauss\Carbon_Fields');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -912,7 +912,7 @@ EOD;
             'BrianHenryIE\\Strauss\\Carbon_Fields'
         );
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -933,7 +933,7 @@ EOD;
 
         $expected = "esc_html__( 'Learn about TrustedLogin', 'trustedlogin' )";
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -969,7 +969,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testReplaceConstants(): void
@@ -1009,8 +1009,8 @@ EOD;
 
         $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
-        self::assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
+        $this->assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
+        $this->assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
     }
 
     public function testStaticFunctionCallOfNamespacedClassIsPrefixed(): void
@@ -1035,7 +1035,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\ST');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1050,7 +1050,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceNamespace($contents, 'chillerlan\\QRCode', 'BrianHenryIE\\Strauss\\chillerlan\\QRCode');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1069,13 +1069,13 @@ EOD;
         $expected = '\StraussTest\ST\StraussTestPackage2::hello();';
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
 
         $contents = '! \ST\StraussTestPackage2::hello();';
         $expected = '! \StraussTest\ST\StraussTestPackage2::hello();';
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1094,13 +1094,13 @@ EOD;
         $expected = '$test1 = \StraussTest\ST\StraussTestPackage2::hello();';
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
 
         $contents = '$test2 = ! \ST\StraussTestPackage2::hello();';
         $expected = '$test2 = ! \StraussTest\ST\StraussTestPackage2::hello();';
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1127,7 +1127,7 @@ if ( \StraussTest\ST\StraussTestPackage2::hello() ) {
 EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
 if ( ! \ST\StraussTestPackage2::hello() ) {
@@ -1141,7 +1141,7 @@ if ( ! \StraussTest\ST\StraussTestPackage2::hello() ) {
 EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1167,7 +1167,7 @@ if ( \StraussTest\ST\StraussTestPackage2::hello() && ! \StraussTest\ST\StraussTe
 }
 EOD;
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
 if ( ! \ST\StraussTestPackage2::hello() && \ST\StraussTestPackage2::hello() ) {
@@ -1181,7 +1181,7 @@ if ( ! \StraussTest\ST\StraussTestPackage2::hello() && \StraussTest\ST\StraussTe
 EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1207,7 +1207,7 @@ if ( \StraussTest\ST\StraussTestPackage2::hello() || ! \StraussTest\ST\StraussTe
 }
 EOD;
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
 if ( ! \ST\StraussTestPackage2::hello() || \ST\StraussTestPackage2::hello() ) {
@@ -1221,7 +1221,7 @@ if ( ! \StraussTest\ST\StraussTestPackage2::hello() || \StraussTest\ST\StraussTe
 EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1250,7 +1250,7 @@ $arr1 = array(
 EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1279,7 +1279,7 @@ $arr2 = array(
 EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1308,7 +1308,7 @@ $arr3 = array(
 EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1337,7 +1337,7 @@ $assoc_arr1 = array(
 EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1365,7 +1365,7 @@ $assoc_arr1 = array(
 );
 EOD;
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1394,7 +1394,7 @@ $assoc_arr1 = array(
 EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1422,7 +1422,7 @@ class StraussTestPackage {
 }
 EOD;
         $result = $sut->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
 namespace ST\Namespace;
@@ -1449,7 +1449,7 @@ EOD;
 
         $result = $sut->replaceNamespace($contents, 'ST\\Namespace', 'StraussTest\\ST\\Namespace');
         $result = $sut->replaceNamespace($result, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1491,7 +1491,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($contents, $result);
+        $this->assertEqualsRN($contents, $result);
     }
 
     /**
@@ -1535,7 +1535,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1579,7 +1579,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1626,7 +1626,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1663,7 +1663,7 @@ EOD;
 
         $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($contents, $result);
+        $this->assertEqualsRN($contents, $result);
     }
 
     /**
@@ -1706,7 +1706,7 @@ EOD;
 
         $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1761,7 +1761,7 @@ EOD;
 
         $result = $replacer->replaceNamespace($contents, 'GuzzleHttp', 'StraussTest\\GuzzleHttp');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1825,7 +1825,7 @@ EOD;
 
         $result = $replacer->replaceNamespace($contents, 'Aws', 'StraussTest\\Aws');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1859,7 +1859,7 @@ EOD;
 
         $result = $replacer->replaceNamespace($contents, 'Chophper', 'StraussTest\\Chophper');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1908,7 +1908,7 @@ EOD;
             $contents
         );
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1935,7 +1935,7 @@ EOD;
 
         $result = $replacer->replaceNamespace($contents, 'League\\OAuth2', 'Company\\Project\\League\\OAuth2');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1994,7 +1994,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -2042,7 +2042,7 @@ EOD;
         $result = $replacer->replaceNamespace($contents, 'Aws\\EndpointDiscovery', 'Company\\Project\\Aws\\EndpointDiscovery');
         $result = $replacer->replaceNamespace($result, 'Aws', 'Company\\Project\\Aws');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -2111,7 +2111,7 @@ EOD;
 
         $result = $replacer->replaceNamespace($contents, 'Aws', 'Company\\Project\\Aws');
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testPrefixesAliasedGlobalClass(): void
@@ -2154,7 +2154,7 @@ EOD;
 
         $result = $sut->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
