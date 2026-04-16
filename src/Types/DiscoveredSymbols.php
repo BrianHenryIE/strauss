@@ -106,15 +106,23 @@ class DiscoveredSymbols
     /**
      * @return array<string, ClassSymbol>
      */
+    public function getClassesInterfacesTraits(): array
+    {
+        return array_merge(
+            $this->types[self::CLASS_SYMBOL],
+            $this->types[self::TRAIT_SYMBOL],
+            $this->types[self::INTERFACE_SYMBOL],
+        );
+    }
+
+    /**
+     * @return array<string, ClassSymbol>
+     */
     public function getGlobalClassesInterfacesTraits(): array
     {
         return array_filter(
-            array_merge(
-                $this->types[self::CLASS_SYMBOL],
-                $this->types[self::TRAIT_SYMBOL],
-                $this->types[self::INTERFACE_SYMBOL],
-            ),
-            fn($symbol) => '\\' === $symbol->getNamespace()
+            $this->getClassesInterfacesTraits(),
+            fn($symbol) => '\\' === $symbol->getNamespaceName()
         );
     }
 
