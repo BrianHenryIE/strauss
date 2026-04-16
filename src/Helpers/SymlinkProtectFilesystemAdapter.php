@@ -63,8 +63,10 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
     /**
      * Converts flysystem relative paths to filesystem absolute paths.
+     *
+     * @var PathPrefixer
      */
-    protected PathPrefixer $pathPrefixer;
+    protected $pathPrefixer;
 
     /**
      * Record of discovered symlink paths
@@ -100,7 +102,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     public function __construct(
         $location,
         ?PathNormalizer $pathNormalizer = null,
-        ?PathPrefixer $pathPrefixer = null,
+        $pathPrefixer = null,
         ?LoggerInterface $logger = null,
         ?VisibilityConverter $visibility = null,
         int $writeFlags = LOCK_EX,
