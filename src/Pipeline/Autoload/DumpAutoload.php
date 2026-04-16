@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
+use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Autoload\AutoloadGenerator;
@@ -295,6 +296,13 @@ class DumpAutoload
             $this->config->getNamespacePrefix() . '\\Composer'
         );
 
+        $classLoaderSymbol = new ClassSymbol(
+            'ClassLoader',
+            $sourceFile,
+            false,
+            $composerAutoloadNamespaceSymbol
+        );
+
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add(
             $composerNamespaceSymbol
@@ -302,6 +310,7 @@ class DumpAutoload
         $discoveredSymbols->add(
             $composerAutoloadNamespaceSymbol
         );
+        $discoveredSymbols->add($classLoaderSymbol);
 
         $this->projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
     }

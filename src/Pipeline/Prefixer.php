@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Helpers\NamespaceSort;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Exception;
 use League\Flysystem\FilesystemException;
@@ -171,7 +172,7 @@ class Prefixer
 
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
         $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
-        $classes = $discoveredSymbols->getGlobalClassChanges();
+        $globalClasses = $discoveredSymbols->getGlobalClassChanges();
         $functions = $discoveredSymbols->getDiscoveredFunctionChanges();
 
         $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
@@ -213,8 +214,10 @@ class Prefixer
                     $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
                 }
             }
+        }
 
-            foreach ($classes as $classSymbol) {
+        foreach ($discoveredSymbols->getClassesInterfacesTraits() as $classSymbol) {
+            if ($classSymbol->isDoRename()) {
                 $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
             }
         }
@@ -569,11 +572,15 @@ class Prefixer
         return $positions;
     }
 
-    protected function replaceSingleClassnameInString(string $contents, DiscoveredSymbol $symbol): string
+    protected function replaceSingleClassnameInString(string $contents, NamespacedSymbol $symbol): string
     {
-
-        $originalSymbolString = $symbol->getOriginalSymbolStripPrefix($this->config->getClassmapPrefix());
-        $replacementSymblString = $symbol->getReplacement();
+        if ($symbol->getNamespaceName() === '\\\\') {
+            $replacementSymbolString = $symbol->getLocalReplacement();
+            $originalSymbolString = $symbol->getOriginalSymbolStripPrefix($this->config->getClassmapPrefix());
+        } else {
+            $originalSymbolString = $symbol->getOriginalFqdnName();
+            $replacementSymbolString = $symbol->getFqdnReplacement();
+        }
 
         /**
          * Replace classnames in strings, e.g. `is_a( $recurrence, 'CronExpression' )`.
@@ -583,8 +590,9 @@ class Prefixer
          * TODO: Run this without the classname characters, log everytime a replacement is made across all test cases, add those to the test assertions, ensure this is always correct.
          */
         $contents = preg_replace(
-            '/([^a-zA-Z0-9_\x7f-\xff\\\\][\'"])(' . preg_quote($originalSymbolString, '/') . ')([\'"][^a-zA-Z0-9_\x7f-\xff\\\\])/',
-            '$1' . preg_quote($replacementSymblString, '/') . '$3',
+            '/([^a-zA-Z0-9_\x7f-\xff\\\\][\'"])(' . str_replace('\\', '\\\\', $originalSymbolString) . ')([\'"][^a-zA-Z0-9_\x7f-\xff\\\\])/',
+            //            '/([\'"])(' . str_replace('\\', '\\\\', $originalSymbolString) . ')([\'"])/',
+            '$1' . str_replace('\\', '\\\\', $replacementSymbolString) . '$3',
             $contents
         );
 

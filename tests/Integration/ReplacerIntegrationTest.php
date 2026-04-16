@@ -250,7 +250,7 @@ EOD;
     "name": "brianhenryie/pdf-helpers",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\PdfHelpers\\": "src"
+            "BrianHenryIE\\\\PdfHelpers\\\\": "src"
         }
     },
     "require": {
@@ -321,5 +321,36 @@ EOD;
         $this->assertFileExistsInFileSystem($expectedTargetFilePath);
         $updatedFile = $this->getFileSystem()->read($expectedTargetFilePath);
         $this->assertStringContainsString('extends Mpdf', $updatedFile);
+    }
+    public function test_replace_namespace_string(): void
+    {
+        $composerJsonString = <<<'JSON'
+{
+    "name": "brianhenryie/test-replace-namespace-string",
+    "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\\\Strauss\\\\"
+    }
+  }
+}
+JSON;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $workingDir = $this->testsWorkingDir;
+        $relativeTargetDir = 'vendor-prefixed/';
+        $absoluteTargetDir = $workingDir . '/' . $relativeTargetDir;
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = $this->getFileSystem()->read($absoluteTargetDir . '/composer/autoload_real.php');
+
+        $this->assertStringNotContainsString("if ('Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
+        $this->assertStringContainsString("if ('BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
     }
 }
