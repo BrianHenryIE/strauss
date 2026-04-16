@@ -310,90 +310,227 @@ class Prefixer
      * @param string $replacement
      *
      * @return string The updated text.
-     * @throws Exception
      */
     public function replaceNamespace(string $contents, string $originalNamespace, string $replacement): string
     {
+        // Normalize: strip any trailing backslashes that callers may pass.
+        $originalNamespace = rtrim($originalNamespace, '\\');
+        $replacement = rtrim($replacement, '\\');
 
-        $searchNamespace = '\\' . rtrim($originalNamespace, '\\') . '\\';
-        $searchNamespace = str_replace('\\\\', '\\', $searchNamespace);
-        $searchNamespace = str_replace('\\', '\\\\{0,2}', $searchNamespace);
+        $phpOpenerLen = 0;
+        $parseContent = $contents;
+        if (stripos(ltrim($contents), '<?') !== 0) {
+            $phpOpenerLen = strlen("<?php\n");
+            $parseContent = "<?php\n" . $contents;
+        }
 
-        $pattern = "
-            /                              # Start the pattern
-            (
-            ^\s*                          # start of the string
-            |\\n\s*                        # start of the line
-            |(<?php\s+namespace|^\s*namespace|[\r\n]+\s*namespace)\s+                  # the namespace keyword
-            |use\s+                        # the use keyword
-            |use\s+function\s+			   # the use function syntax
-            |new\s+
-            |static\s+
-            |\"                            # inside a string that does not contain spaces - needs work
-            |'                             #   right now its just inside a string that doesnt start with a space
-            |implements\s+\\\\             # when the interface being implemented is namespaced inline
-            |extends\s+\\\\                    # when the class being extended is namespaced inline
-            |return\s+
-            |instanceof\s+                 # when checking the class type of an object in a conditional
-            |\(\s*                         # inside a function declaration as the first parameters type
-            |,\s*                          # inside a function declaration as a subsequent parameter type
-            |\.\s*                         # as part of a concatenated string
-            |=\s*                          # as the value being assigned to a variable
-            |\*\s+@\w+\s*                  # In a comments param etc
-            |&\s*                             # a static call as a second parameter of an if statement
-            |\|\s*
-            |!\s*                             # negating the result of a static call
-            |=>\s*                            # as the value in an associative array
-            |\[\s*                         # In a square array
-            |\?\s*                         # In a ternary operator
-            |:\s*                          # In a ternary operator
-            |<                             # In a generic type declaration
-            |\(string\)\s*                 # casting a namespaced class to a string
-            )
-            @?                             # Maybe preceded by the @ symbol for error suppression
-            (?<searchNamespace>
-            {$searchNamespace}             # followed by the namespace to replace
-            )
-            (?!:)                          # Not followed by : which would only be valid after a classname
-            (
-            \s*;                           # followed by a semicolon
-            |\s*{                          # or an opening brace for multiple namespaces per file
-            |\\\\{1,2}[a-zA-Z0-9_\x7f-\xff]{1,}         # or a classname no slashes
-            |\s+as                         # or the keyword as
-            |\"                            # or quotes
-            |'                             # or single quote
-            |:                             # or a colon to access a static
-            |\\\\{
-            |>                             # In a generic type declaration (end)
-            )
-            /Ux";                          // U: Non-greedy matching, x: ignore whitespace in pattern.
-
-        $replacingFunction = function ($matches) use ($originalNamespace, $replacement) {
-            $singleBackslash = '\\';
-            $doubleBackslash = '\\\\';
-
-            if (false !== strpos($matches['0'], $doubleBackslash)) {
-                $originalNamespace = str_replace($singleBackslash, $doubleBackslash, $originalNamespace);
-                $replacement = str_replace($singleBackslash, $doubleBackslash, $replacement);
+        $open = substr_count($parseContent, '{');
+        $close = substr_count($parseContent, '}');
+        if ($close > $open) {
+            // Extra closing braces (e.g. class body close without matching open): strip trailing
+            // } characters until balanced so positions of remaining content are unchanged.
+            while (substr_count($parseContent, '}') > substr_count($parseContent, '{')) {
+                $last = strrpos($parseContent, '}');
+                $parseContent = substr($parseContent, 0, $last) . substr($parseContent, $last + 1);
             }
+            $open = substr_count($parseContent, '{');
+            $close = substr_count($parseContent, '}');
+            $parseContent .= str_repeat('}', max(0, $open - $close));
+        } elseif ($open > $close) {
+            $parseContent .= str_repeat('}', $open - $close);
+        } elseif ($open === 0) {
+            // No braces at all: append {} so class/function declarations without a body parse.
+            $parseContent .= '{}';
+        }
 
-            return str_replace($originalNamespace, $replacement, $matches[0]);
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $errorHandler = new \PhpParser\ErrorHandler\Collecting();
+        $ast = $parser->parse($parseContent, $errorHandler);
+
+        if ($ast === null) {
+            $this->logger->warning("Skipping ::replaceNamespace() in file due to parse failure.");
+            return $contents;
+        }
+
+        $nodeFinder = new NodeFinder();
+        $positions = [];
+        $handled = [];
+
+        // Matches the namespace exactly OR as a prefix (e.g. Ns\Sub).
+        $matchesNs = function (string $nameStr) use ($originalNamespace): bool {
+            return $nameStr === $originalNamespace
+                || str_starts_with($nameStr, $originalNamespace . '\\');
         };
 
-        $result = preg_replace_callback($pattern, $replacingFunction, $contents);
+        // Matches only as a namespace prefix (Ns\Sub) — not a standalone name used as a classname.
+        $matchesNsPrefix = function (string $nameStr) use ($originalNamespace): bool {
+            return str_starts_with($nameStr, $originalNamespace . '\\');
+        };
 
-        $this->checkPregError();
+        $prefixed = function (string $nameStr) use ($originalNamespace, $replacement): string {
+            return $replacement . substr($nameStr, strlen($originalNamespace));
+        };
 
-        // For prefixed functions which do not begin with a backslash, add one.
-        // I'm not certain this is a good idea.
-        // @see https://github.com/BrianHenryIE/strauss/issues/65
-        $functionReplacingPattern = '/\\\\?(' . preg_quote(ltrim($replacement, '\\'), '/') . '\\\\(?:[a-zA-Z0-9_\x7f-\xff]+\\\\)*[a-zA-Z0-9_\x7f-\xff]+\\()/';
+        // A: namespace declarations — keep relative (no leading \)
+        foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\Namespace_::class) as $ns) {
+            if ($ns->name !== null && $matchesNs($ns->name->toString())) {
+                $positions[] = [
+                    'start' => $ns->name->getStartFilePos(),
+                    'end' => $ns->name->getEndFilePos() + 1,
+                    'replacement' => $prefixed($ns->name->toString()),
+                ];
+                $handled[$ns->name->getStartFilePos()] = true;
+            }
+        }
 
-        return preg_replace(
-            $functionReplacingPattern,
-            "\\\\$1",
-            $result
-        );
+        // B: use items and group-use prefixes — keep relative (no leading \)
+        foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\UseItem::class) as $item) {
+            if ($matchesNs($item->name->toString())) {
+                $positions[] = [
+                    'start' => $item->name->getStartFilePos(),
+                    'end' => $item->name->getEndFilePos() + 1,
+                    'replacement' => $prefixed($item->name->toString()),
+                ];
+                $handled[$item->name->getStartFilePos()] = true;
+            }
+        }
+        foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\GroupUse::class) as $groupUse) {
+            if ($groupUse->prefix !== null && $matchesNs($groupUse->prefix->toString())) {
+                $positions[] = [
+                    'start' => $groupUse->prefix->getStartFilePos(),
+                    'end' => $groupUse->prefix->getEndFilePos() + 1,
+                    'replacement' => $prefixed($groupUse->prefix->toString()),
+                ];
+                $handled[$groupUse->prefix->getStartFilePos()] = true;
+            }
+        }
+
+        // C: fully-qualified Name nodes — retain leading \
+        foreach ($nodeFinder->find($ast, function (Node $node) use ($matchesNs) {
+            return $node instanceof Name\FullyQualified && $matchesNs($node->toString());
+        }) as $name) {
+            if (isset($handled[$name->getStartFilePos()])) {
+                continue;
+            }
+            $positions[] = [
+                'start' => $name->getStartFilePos(),
+                'end' => $name->getEndFilePos() + 1,
+                'replacement' => '\\' . $prefixed($name->toString()),
+            ];
+            $handled[$name->getStartFilePos()] = true;
+        }
+
+        // D: relative Name nodes used as namespace prefixes in code — promote to FQ.
+        // Use prefix-only matching (not exact) to avoid touching bare classname references
+        // like type hints (`Mpdf $x`) or implements clauses (`implements Geocoder`).
+        foreach ($nodeFinder->find($ast, function (Node $node) use ($matchesNsPrefix) {
+            return $node instanceof Name
+                && !($node instanceof Name\FullyQualified)
+                && $matchesNsPrefix($node->toString());
+        }) as $name) {
+            if (isset($handled[$name->getStartFilePos()])) {
+                continue;
+            }
+            $positions[] = [
+                'start' => $name->getStartFilePos(),
+                'end' => $name->getEndFilePos() + 1,
+                'replacement' => '\\' . $prefixed($name->toString()),
+            ];
+        }
+
+        // Doc comments: scan for \OriginalNamespace references in @param/@return/etc.
+        // The boundary check allows a following \ (namespace separator) so that
+        // \Ns\Class is matched, while \NsExtra is not.
+        $docSearchStr = '\\' . $originalNamespace;
+        $docSearchLen = strlen($docSearchStr);
+        foreach ($nodeFinder->find($ast, function (Node $node) {
+            return $node->getDocComment() !== null;
+        }) as $node) {
+            $doc = $node->getDocComment();
+            $text = $doc->getText();
+            $offset = 0;
+            while (($pos = strpos($text, $docSearchStr, $offset)) !== false) {
+                $after = $pos + $docSearchLen;
+                if ($after >= strlen($text)
+                    || !preg_match('/[a-zA-Z0-9_\x7f-\xff]/', $text[$after])
+                ) {
+                    $positions[] = [
+                        'start' => $doc->getStartFilePos() + $pos,
+                        'end' => $doc->getStartFilePos() + $after,
+                        'replacement' => '\\' . $replacement,
+                    ];
+                }
+                $offset = $pos + 1;
+            }
+        }
+
+        // Strings: handle namespace references embedded in string literals.
+        //
+        // Three forms a namespace can take in raw source:
+        //   1. Double-backslash encoded (namespace has \): "Ns\\Sub\\Class" → $dblNs = 'Ns\\\\Sub'
+        //   2. FQ single-backslash: "\Ns\Class" → look for \Ns (boundary-aware)
+        //   3. Relative prefix in double-quoted: "Ns\\Class" (no leading \, Ns followed by \\)
+        //
+        // Boundary rule: the match must not be preceded by an identifier char or \.
+        $singleSearchStr = '\\' . $originalNamespace;
+        $singleSearchPattern = '/(?<![a-zA-Z0-9_\x7f-\xff\\\\])' . preg_quote($singleSearchStr, '/') . '/';
+        $singleReplacement = '\\' . $replacement;
+        $hasBackslashInNs = strpos($originalNamespace, '\\') !== false;
+        $dblNs = str_replace('\\', '\\\\', $originalNamespace);
+        $dblRep = str_replace('\\', '\\\\', $replacement);
+        // Pattern for form 3: "Ns\\" where Ns is followed by \\ (namespace separator in dbl-quoted strings).
+        $prefixDblPattern = '/(?<![a-zA-Z0-9_\x7f-\xff\\\\])' . preg_quote($originalNamespace, '/') . '(?=\\\\\\\\)/';
+        foreach ($nodeFinder->find($ast, function (Node $node) {
+            return $node instanceof String_
+                || $node instanceof \PhpParser\Node\Scalar\Encapsed;
+        }) as $str) {
+            $start = $str->getStartFilePos();
+            $end = $str->getEndFilePos() + 1;
+            $slice = substr($parseContent, $start, $end - $start);
+            // Form 1: double-backslash encoded (e.g. "\\Ns\\Sub\\Class").
+            if ($hasBackslashInNs && strpos($slice, $dblNs) !== false) {
+                $positions[] = ['start' => $start, 'end' => $end, 'replacement' => str_replace($dblNs, $dblRep, $slice)];
+                continue;
+            }
+            // Apply form-3 and form-2 patterns to the same slice (they target different text).
+            $newSlice = preg_replace_callback(
+                $prefixDblPattern,
+                function () use ($dblRep) { return $dblRep; },
+                $slice
+            );
+            if ($newSlice === null) {
+                $newSlice = $slice;
+            }
+            $newSlice = preg_replace_callback(
+                $singleSearchPattern,
+                function () use ($singleReplacement) { return $singleReplacement; },
+                $newSlice
+            );
+            if ($newSlice !== null && $newSlice !== $slice) {
+                $positions[] = ['start' => $start, 'end' => $end, 'replacement' => $newSlice];
+            }
+        }
+
+        if (empty($positions)) {
+            return $contents;
+        }
+
+        if ($phpOpenerLen > 0) {
+            $positions = array_values(array_filter(
+                array_map(function ($pos) use ($phpOpenerLen) {
+                    $pos['start'] -= $phpOpenerLen;
+                    $pos['end'] -= $phpOpenerLen;
+                    return $pos;
+                }, $positions),
+                fn($pos) => $pos['start'] >= 0
+            ));
+        }
+
+        usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
+        foreach ($positions as $pos) {
+            $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
+        }
+        return $contents;
     }
 
     protected function findGlobalSymbolsPositionsInComment(Comment $comment, DiscoveredSymbols $globalSymbols): array
