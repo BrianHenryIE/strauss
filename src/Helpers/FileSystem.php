@@ -40,12 +40,13 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     protected $flysystemAdapter;
 
     /**
-     * For calculating project-relative file paths.
+     * For calculating absolute paths outside the flysystem.
+     *
      * No trailing slash.
      *
      * @var false|string
      */
-    protected string $workingDir;
+    protected string $localFsLocation;
 
     /**
      * Private in parent class.
@@ -66,12 +67,12 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         array $config = [],
         ?PathNormalizer $pathNormalizer = null,
         $pathPrefixer = null,
-        ?string $workingDir = null
+        ?string $localFsLocation = null
     ) {
-        $workingDir = $workingDir ?? self::getFsRoot(getcwd());
-        $pathNormalizer = $pathNormalizer ?? self::makePathNormalizer($workingDir);
-        $pathPrefixer = $pathPrefixer ?? new PathPrefixer(
-            $flysystemRoot ?? self::getFsRoot($workingDir),
+        $localFsLocation        = $localFsLocation ?? self::getFsRoot(getcwd());
+        $pathNormalizer         = $pathNormalizer ?? self::makePathNormalizer($localFsLocation);
+        $pathPrefixer           = $pathPrefixer ?? new PathPrefixer(
+            $localFsLocation,
             DIRECTORY_SEPARATOR
         );
 
@@ -80,10 +81,10 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->config = new Config($config);
 
         // Parent is private.
-        $this->normalizer = $pathNormalizer;
-        $this->pathPrefixer = $pathPrefixer;
+        $this->normalizer       = $pathNormalizer;
+        $this->pathPrefixer     = $pathPrefixer;
         $this->flysystemAdapter = $adapter;
-        $this->workingDir = $workingDir;
+        $this->localFsLocation     = $localFsLocation;
     }
 
     public static function getFsRoot(?string $path = null): string
@@ -408,7 +409,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         // What will happen with strings that are not paths?!
 
         return $this->getRelativePath(
-            $this->workingDir,
+            $this->localFsLocation,
             $absolutePath
         );
     }
@@ -438,7 +439,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
             return true;
         }
 
-        $workingDir = $this->normalizePath($this->workingDir);
+        $workingDir = $this->normalizePath($this->localFsLocation);
 
         return ! str_starts_with($normalizedPath, $workingDir);
     }
