@@ -310,7 +310,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     public function setVisibility(string $path, string $visibility): void
     {
-        $this->filesystem->setVisibility(
+        $this->flysystemAdapter->setVisibility(
             $this->normalizer->normalizePath($path),
             $visibility
         );
