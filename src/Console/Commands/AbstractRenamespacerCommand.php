@@ -90,6 +90,46 @@ abstract class AbstractRenamespacerCommand extends Command
         }
     }
 
+    /**
+     * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
+     */
+    protected function initialize(InputInterface $input, OutputInterface $output): void
+    {
+        $workingDir       = getcwd() . '/';
+        $localFsLocation = FileSystem::getFsRoot($workingDir);
+
+        $pathNormalizer = Filesystem::makePathNormalizer($localFsLocation);
+
+        $pathPrefixer = new PathPrefixer(
+            $localFsLocation,
+            DIRECTORY_SEPARATOR
+        );
+
+        // Extends `LocalFilesystemAdapter`.
+        $localFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
+            $localFsLocation,
+            $pathNormalizer,
+            $pathPrefixer,
+            $this->logger
+        );
+
+        $this->filesystem = new FileSystem(
+            $localFilesystemAdapter,
+            [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
+            $pathNormalizer,
+            $pathPrefixer,
+            $localFsLocation
+        );
+
+        $this->workingDir = $this->filesystem->normalizePath($workingDir);
+
+        if (method_exists($this, 'setLogger') && !isset($this->logger)) {
+            $this->setLogger($this->getConsoleLogger($input, $output));
+        }
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!isset($this->config)) {
@@ -97,17 +137,12 @@ abstract class AbstractRenamespacerCommand extends Command
         }
 
         if ($this->config->isDryRun()) {
-            $this->filesystem =
-                new FileSystem(
-                    new ReadOnlyFileSystem(
-                        $this->filesystem->getAdapter(),
-                        Filesystem::makePathNormalizer($this->workingDir)
-                    ),
-                    [],
-                    null,
-                    null,
-                    $this->workingDir
-                );
+            $this->filesystem->setAdapter(
+                new ReadOnlyFileSystem(
+                    $this->filesystem->getAdapter(),
+                    Filesystem::makePathNormalizer($this->workingDir)
+                )
+            );
 
             /** @var FilesystemRegistry $registry */
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
@@ -132,46 +167,6 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->setLogger($logger);
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
-     */
-    protected function initialize(InputInterface $input, OutputInterface $output): void
-    {
-        $workingDir       = getcwd() . '/';
-        $localFsLocation = FileSystem::getFsRoot($workingDir);
-
-        $pathNormalizer = Filesystem::makePathNormalizer($localFsLocation);
-
-        $pathPrefixer = new PathPrefixer(
-            $localFsLocation,
-            DIRECTORY_SEPARATOR
-        );
-
-        // Extends `LocalFilesystemAdapter`.
-        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
-            $localFsLocation,
-            $pathNormalizer,
-            $pathPrefixer,
-            $this->logger
-        );
-
-        $this->filesystem = new FileSystem(
-            $symlinkProtectFilesystemAdapter,
-            [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ],
-            $pathNormalizer,
-            $pathPrefixer,
-            $localFsLocation
-        );
-
-        $this->workingDir = $this->filesystem->normalizePath($workingDir);
-
-        if (method_exists($this, 'setLogger') && !isset($this->logger)) {
-            $this->setLogger($this->getConsoleLogger($input, $output));
-        }
     }
 
     /**

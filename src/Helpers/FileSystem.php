@@ -119,6 +119,11 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         return $this->flysystemAdapter;
     }
 
+    public function setAdapter(FilesystemAdapter $flysystemAdapter): void
+    {
+        $this->flysystemAdapter = $flysystemAdapter;
+    }
+
     /**
      * Normalize directory separators to forward slashes.
      *
