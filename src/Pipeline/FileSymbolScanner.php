@@ -128,7 +128,7 @@ class FileSymbolScanner
         $namespaces = $this->splitByNamespace($contents);
 
         foreach ($namespaces as $namespaceName => $contents) {
-            $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
+            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file);
 
             PhpCodeParser::$classExistsAutoload = false;
             $phpCode = PhpCodeParser::getFromString($contents);
@@ -146,7 +146,7 @@ class FileSymbolScanner
                 $isAbstract = (bool) $class->is_abstract;
                 $extends     = $class->parentClass;
                 $interfaces  = $class->interfaces;
-                $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $namespaceName, $extends, $interfaces);
+                $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $extends, $namespaceSymbol, $interfaces);
             }
 
             /** @var PHPFunction[] $phpFunctions */
@@ -157,7 +157,7 @@ class FileSymbolScanner
                 }
                 $functionSymbol = $this->discoveredSymbols->getFunction($functionName);
                 if (is_null($functionSymbol)) {
-                    $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceName);
+                    $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceSymbol);
                     $this->add($functionSymbol);
                 }
                 $functionSymbol->addSourceFile($file);
@@ -168,7 +168,7 @@ class FileSymbolScanner
             foreach ($phpConstants as $constantName => $constant) {
                 $constantSymbol = $this->discoveredSymbols->getConst($constantName);
                 if (is_null($constantSymbol)) {
-                    $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName);
+                    $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceSymbol);
                     $this->add($constantSymbol);
                 }
                 $constantSymbol->addSourceFile($file);
@@ -178,7 +178,7 @@ class FileSymbolScanner
             foreach ($phpInterfaces as $interfaceName => $interface) {
                 $interfaceSymbol = $this->discoveredSymbols->getInterface($interfaceName);
                 if (is_null($interfaceSymbol)) {
-                    $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceName);
+                    $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceSymbol);
                     $this->add($interfaceSymbol);
                 }
                 $interfaceSymbol->addSourceFile($file);
@@ -188,7 +188,7 @@ class FileSymbolScanner
             foreach ($phpTraits as $traitName => $trait) {
                 $traitSymbol = $this->discoveredSymbols->getTrait($traitName);
                 if (is_null($traitSymbol)) {
-                    $traitSymbol = new TraitSymbol($traitName, $file, $namespaceName);
+                    $traitSymbol = new TraitSymbol($traitName, $file, $namespaceSymbol);
                     $this->add($traitSymbol);
                 }
                 $traitSymbol->addSourceFile($file);
@@ -244,16 +244,16 @@ class FileSymbolScanner
      * @param string $fqdnClassname
      * @param bool $isAbstract
      * @param FileBase $file
-     * @param string $namespaceName
      * @param ?string $extends
+     * @param NamespaceSymbol|null $namespace
      * @param string[] $interfaces
      */
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,
         FileBase $file,
-        string $namespaceName,
         ?string $extends,
+        ?NamespaceSymbol $namespace,
         array $interfaces
     ): void {
         // TODO: This should be included but marked not to prefix.
@@ -263,21 +263,22 @@ class FileSymbolScanner
 
         $classSymbol = $this->discoveredSymbols->getClass($fqdnClassname);
         if (is_null($classSymbol)) {
-            $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespaceName, $extends, $interfaces);
+            $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespace, $extends, $interfaces);
             $this->add($classSymbol);
         }
         $classSymbol->addSourceFile($file);
     }
 
-    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file, ?ComposerPackage $package = null): void
+    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file): NamespaceSymbol
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($fqdnNamespace);
         if (is_null($namespaceObj)) {
-            $namespaceObj = new NamespaceSymbol($fqdnNamespace, $file, '\\', $package);
+            $namespaceObj = new NamespaceSymbol($fqdnNamespace, $file);
             $this->add($namespaceObj);
         }
         $namespaceObj->addSourceFile($file);
         $file->addDiscoveredSymbol($namespaceObj);
+        return $namespaceObj;
     }
 
     /**

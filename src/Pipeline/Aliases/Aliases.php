@@ -119,7 +119,7 @@ class Aliases
                 $modifiedSymbols->add($symbol);
             }
             if ($symbol instanceof FunctionSymbol) {
-                $functionNamespace = $symbols->getNamespaceSymbolByString($symbol->getNamespace());
+                $functionNamespace = $symbols->getNamespaceSymbolByString($symbol->getNamespaceName());
                 $isFunctionHasChangedNamespace = $functionNamespace->isChangedNamespace();
 
                 if ($isFunctionHasChangedNamespace || $symbol->getOriginalSymbol() !== $symbol->getReplacement()
@@ -197,10 +197,10 @@ class Aliases
         $symbolsByNamespace = ['\\' => []];
         foreach ($modifiedSymbols as $symbol) {
             if ($symbol instanceof FunctionSymbol) {
-                if (!isset($symbolsByNamespace[$symbol->getNamespace()])) {
-                    $symbolsByNamespace[$symbol->getNamespace()] = [];
+                if (!isset($symbolsByNamespace[$symbol->getNamespaceName()])) {
+                    $symbolsByNamespace[$symbol->getNamespaceName()] = [];
                 }
-                $symbolsByNamespace[$symbol->getNamespace()][] = $symbol;
+                $symbolsByNamespace[$symbol->getNamespaceName()][] = $symbol;
             }
             /**
              * "define() will define constants exactly as specified.  So, if you want to define a constant in a
@@ -242,8 +242,8 @@ class Aliases
                         // Does it matter since all references to use the constant should have been updated to the new name anyway.
                         // TODO: global `const`.
                         $aliasesPhpString = <<<EOD
-        if(!defined('$originalLocalSymbol') && defined('$replacementSymbol')) { 
-            define('$originalLocalSymbol', $replacementSymbol); 
+        if(!defined('$originalLocalSymbol') && defined('$replacementSymbol')) {
+            define('$originalLocalSymbol', $replacementSymbol);
         }
         EOD;
                         break;
@@ -271,7 +271,7 @@ class Aliases
             foreach ($symbols as $symbol) {
                 $originalLocalSymbol = $symbol->getOriginalLocalName();
 
-                $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespace());
+                $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespaceName());
 
                 if (!($symbol instanceof FunctionSymbol
                    &&
@@ -281,8 +281,8 @@ class Aliases
                     continue;
                 }
 
-                $unNamespacedOriginalSymbol = trim(str_replace($symbol->getNamespace(), '', $originalLocalSymbol), '\\');
-                $namespacedOriginalSymbol = $symbol->getNamespace() . '\\' . $unNamespacedOriginalSymbol;
+                $unNamespacedOriginalSymbol = trim(str_replace($symbol->getNamespaceName(), '', $originalLocalSymbol), '\\');
+                $namespacedOriginalSymbol = $symbol->getNamespaceName() . '\\' . $unNamespacedOriginalSymbol;
 
                 $replacementSymbol = str_replace(
                     $namespaceSymbol->getOriginalSymbol(),

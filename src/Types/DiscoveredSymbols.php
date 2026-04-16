@@ -35,7 +35,7 @@ class DiscoveredSymbols
     {
         // TODO: Should this have the root package?
         // A namespace doesn't have a single file.
-        $this->types[self::NAMESPACE_SYMBOL]['\\'] = new NamespaceSymbol('\\', new File('', '', ''));
+        $this->types[self::NAMESPACE_SYMBOL]['\\'] = NamespaceSymbol::global();
     }
 
     /**

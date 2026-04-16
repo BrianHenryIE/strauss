@@ -20,7 +20,7 @@ abstract class DiscoveredSymbol
      */
     protected array $sourceFiles = [];
 
-    protected ?string $namespace;
+    protected ?NamespaceSymbol $namespace;
 
     protected string $fqdnOriginalSymbol;
 
@@ -35,14 +35,19 @@ abstract class DiscoveredSymbol
     public function __construct(
         string $fqdnSymbol,
         FileBase $sourceFile,
-        string $namespace = '\\'
+        ?NamespaceSymbol $namespace = null
     ) {
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 
         $this->addSourceFile($sourceFile);
         $sourceFile->addDiscoveredSymbol($this);
 
-        $this->namespace = $namespace;
+        if ($this instanceof NamespaceSymbol) {
+            // Always use fqdn.
+            $this->namespace = null;
+        } else {
+            $this->namespace = $namespace ?? NamespaceSymbol::global();
+        }
     }
 
     public function getOriginalSymbol(): string
@@ -78,9 +83,11 @@ abstract class DiscoveredSymbol
         $this->replacement = $replacement;
     }
 
-    public function getNamespace(): ?string
+    public function getNamespaceName(): ?string
     {
-        return $this->namespace;
+        return $this->namespace
+            ? $this->namespace->getOriginalSymbol()
+            : null; // TODO: should this return `\`?
     }
 
     public function getOriginalLocalName(): string

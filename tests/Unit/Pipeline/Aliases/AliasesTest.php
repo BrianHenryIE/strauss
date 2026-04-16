@@ -54,13 +54,18 @@ class AliasesTest extends TestCase
 
         $symbols = new DiscoveredSymbols();
         $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->times(1)->andReturn('vendor/foo/bar/baz.php');
-        $file->expects('addDiscoveredSymbol')->once();
+        $file->expects('getSourcePath')->times(2)->andReturn('vendor/foo/bar/baz.php');
+        $file->expects('addDiscoveredSymbol')->times(2);
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; class Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; class Baz {}');
 
-        $classSymbol = new ClassSymbol('Foo\\Bar\\Baz', $file, false, 'Foo\\Bar');
+        $namespaceSymbol = new NamespaceSymbol(
+            'Foo\\Bar',
+            $file
+        );
+
+        $classSymbol = new ClassSymbol('Foo\\Bar\\Baz', $file, false, $namespaceSymbol);
         $classSymbol->setReplacement('Baz\\Foo\\Bar\\Baz');
         $symbols->add($classSymbol);
 
@@ -116,7 +121,7 @@ EOD;
         $functionSymbol->setReplacement('bar_foo');
         $symbols->add($functionSymbol);
 
-        $namespaceSymbol = new NamespaceSymbol('Foo\\Bar', $file, '\\');
+        $namespaceSymbol = new NamespaceSymbol('Foo\\Bar', $file);
         $symbols->add($namespaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -149,13 +154,18 @@ EOD;
 
         $symbols = new DiscoveredSymbols();
         $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->times(1)->andReturn('vendor/foo/bar/baz.php');
-        $file->expects('addDiscoveredSymbol')->once();
+        $file->expects('getSourcePath')->times(2)->andReturn('vendor/foo/bar/baz.php');
+        $file->expects('addDiscoveredSymbol')->times(2);
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; interface Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; interface Baz {}');
 
-        $interfaceSymbol = new InterfaceSymbol('Foo\\Bar\\Baz', $file, 'Foo\\Bar');
+        $namespaceSymbol = new NamespaceSymbol(
+            'Foo\\Bar',
+            $file
+        );
+
+        $interfaceSymbol = new InterfaceSymbol('Foo\\Bar\\Baz', $file, $namespaceSymbol);
         $interfaceSymbol->setReplacement('Baz\\Foo\\Bar\\Baz');
         $symbols->add($interfaceSymbol);
 
@@ -205,13 +215,18 @@ EOD;
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Bar; function baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Foo\\Bar; function baz {}');
 
-        $functionSymbol = new FunctionSymbol('baz', $file, 'Bar');
+        $namespaceSymbol = new NamespaceSymbol(
+            'Bar',
+            $file
+        );
+
+        $functionSymbol = new FunctionSymbol('baz', $file, $namespaceSymbol);
         $symbols->add($functionSymbol);
 
-        $functionSymbol = new FunctionSymbol('foobar', $file, 'Bar');
+        $functionSymbol = new FunctionSymbol('foobar', $file, $namespaceSymbol);
         $symbols->add($functionSymbol);
 
-        $namespaceSymbol = new NamespaceSymbol('Bar', $file, '\\');
+        $namespaceSymbol = new NamespaceSymbol('Bar', $file);
         $namespaceSymbol->setReplacement('Foo\\Bar');
         $symbols->add($namespaceSymbol);
 

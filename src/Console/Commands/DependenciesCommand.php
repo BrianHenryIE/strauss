@@ -405,9 +405,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
                 // TODO: log.
                 $symbol = new NamespaceSymbol(
                     trim($namespace, '\\'),
-                    $file,
-                    '\\',
-                    $package
+                    $file
                 );
                 // TODO: respect all config options.
 //              $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));

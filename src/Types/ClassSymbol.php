@@ -29,7 +29,7 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         string $fqdnClassname,
         FileBase $sourceFile,
         bool $isAbstract = false,
-        string $namespace = '\\',
+        ?NamespaceSymbol $namespace = null,
         ?string $extends = null,
         array $interfaces = []
     ) {
@@ -67,7 +67,7 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
             'type' => 'class',
             'classname' => $this->getOriginalLocalName(),
             'isabstract' => $this->isAbstract,
-            'namespace' => $this->namespace,
+            'namespace' => $this->namespace->getOriginalSymbol(),
             'extends' => $this->getReplacement(),
             'implements' => $this->interfaces,
         );

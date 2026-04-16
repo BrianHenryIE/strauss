@@ -25,11 +25,11 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
     public function __construct(
         string $fqdnClassname,
         FileBase $sourceFile,
-        ?string $namespace = null,
+        ?NamespaceSymbol $namespace = null,
         ?ComposerPackage $composerPackage = null,
         ?array $uses = null
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace ?? '\\', $composerPackage);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace);
 
         $this->uses = (array) $uses;
     }
@@ -50,7 +50,7 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return array (
             'type' => 'trait',
             'traitname' => $this->getOriginalLocalName(),
-            'namespace' => $this->namespace,
+            'namespace' => $this->namespace->getOriginalSymbol(),
             'use' => [$this->getReplacement()],
         );
     }

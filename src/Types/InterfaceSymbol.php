@@ -25,11 +25,11 @@ class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
     public function __construct(
         string $fqdnClassname,
         FileBase $sourceFile,
-        ?string $namespace = null,
+        ?NamespaceSymbol $namespace = null,
         ?ComposerPackage $package = null,
         array $extends = []
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace ?? '\\', $package);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace);
 
         $this->extends = $extends;
     }
@@ -50,7 +50,7 @@ class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return array (
             'type' => 'interface',
             'interfacename' => $this->getOriginalLocalName(),
-            'namespace' => $this->namespace,
+            'namespace' => $this->namespace->getOriginalSymbol(),
             'extends' => [$this->getReplacement()] + $this->getExtends(),
         );
     }

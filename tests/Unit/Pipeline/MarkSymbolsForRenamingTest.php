@@ -57,7 +57,7 @@ class MarkSymbolsForRenamingTest extends TestCase
             'project/vendor/psr/log/src/LoggerInterface.php',
             'project/vendor-prefixed/psr/log/src/LoggerInterface.php'
         );
-        $symbol = new NamespaceSymbol('Psr\Log', $file, '\\');
+        $symbol = new NamespaceSymbol('Psr\Log', $file);
 
         $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
@@ -104,7 +104,7 @@ class MarkSymbolsForRenamingTest extends TestCase
             'monolog/monolog/src/Logger.php',
             'vendor-prefixed/monolog/monolog/src/Logger.php'
         );
-        $symbol = new NamespaceSymbol('Monolog', $file, '\\', $package);
+        $symbol = new NamespaceSymbol('Monolog', $file);
 
         $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
@@ -152,7 +152,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         );
         $file->setIsAutoloaded(true);
 
-        $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file, '\\', $package);
+        $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file);
 
         $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 

@@ -109,7 +109,7 @@ class MarkSymbolsForRenaming
     protected function excludeFromPrefix(DiscoveredSymbol $symbol): bool
     {
         return $this->isExcludeFromPrefixPackage($symbol->getPackageName())
-            || $this->isExcludeFromPrefixNamespace($symbol->getNamespace())
+            || $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName())
             || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles());
     }
 
@@ -224,7 +224,7 @@ class MarkSymbolsForRenaming
     protected function isExcludeConstants(ConstantSymbol $symbol): bool
     {
         return $this->isExcludeConstantsPackage($symbol->getPackageName())
-            || $this->isExcludeConstantsNamespace($symbol->getNamespace())
+            || $this->isExcludeConstantsNamespace($symbol->getNamespaceName())
             || $this->isExcludedConstantsFilePattern($symbol->getSourceFiles())
             || $this->isExcludeConstantName($symbol->getOriginalSymbol());
     }
