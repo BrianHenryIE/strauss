@@ -22,7 +22,11 @@ class ProjectComposerPackage extends ComposerPackage
      */
     public function __construct(string $absolutePathFile, ?array $overrideAutoload = null)
     {
-        $composer = Factory::create(new NullIO(), $absolutePathFile, true);
+        $composer = Factory::create(
+            new NullIO(),
+            $absolutePathFile,
+            true
+        );
 
         parent::__construct($composer, $overrideAutoload);
 
