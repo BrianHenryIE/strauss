@@ -472,8 +472,20 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      */
     public function makeAbsolute(string $path): string
     {
+        $fsRoot = self::getFsRoot($this->localFsLocation);
+
+        // If this is already prefixed with the drive(fs) root.
+        if (stripos($path, $fsRoot) === 0 || stripos($path, self::normalizeDirSeparator($fsRoot)) === 0) {
+            return $path;
+        }
+
         $normalizedPath = $this->normalizePath($path);
-        $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->workingDir));
+
+        if (strtolower(self::getFsRoot($this->localFsLocation)) === strtolower(self::getFsRoot($normalizedPath))) {
+            return $path;
+        }
+
+        $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->localFsLocation));
 
         if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
             return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
