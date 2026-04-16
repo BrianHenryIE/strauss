@@ -66,7 +66,7 @@ class AliasesTest extends TestCase
         );
 
         $classSymbol = new ClassSymbol('Foo\\Bar\\Baz', $file, false, $namespaceSymbol);
-        $classSymbol->setReplacement('Baz\\Foo\\Bar\\Baz');
+        $classSymbol->setLocalReplacement('Baz\\Foo\\Bar\\Baz');
         $symbols->add($classSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -118,7 +118,7 @@ EOD;
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; class Baz {}');
 
         $functionSymbol = new FunctionSymbol('foo', $file);
-        $functionSymbol->setReplacement('bar_foo');
+        $functionSymbol->setLocalReplacement('bar_foo');
         $symbols->add($functionSymbol);
 
         $namespaceSymbol = new NamespaceSymbol('Foo\\Bar', $file);
@@ -166,7 +166,7 @@ EOD;
         );
 
         $interfaceSymbol = new InterfaceSymbol('Foo\\Bar\\Baz', $file, $namespaceSymbol);
-        $interfaceSymbol->setReplacement('Baz\\Foo\\Bar\\Baz');
+        $interfaceSymbol->setLocalReplacement('Baz\\Foo\\Bar\\Baz');
         $symbols->add($interfaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -227,7 +227,7 @@ EOD;
         $symbols->add($functionSymbol);
 
         $namespaceSymbol = new NamespaceSymbol('Bar', $file);
-        $namespaceSymbol->setReplacement('Foo\\Bar');
+        $namespaceSymbol->setLocalReplacement('Foo\\Bar');
         $symbols->add($namespaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);

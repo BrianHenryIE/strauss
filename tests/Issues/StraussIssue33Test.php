@@ -89,7 +89,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);

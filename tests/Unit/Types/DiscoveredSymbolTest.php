@@ -52,8 +52,8 @@ class DiscoveredSymbolTest extends TestCase
     }
 
     /**
-     * @covers ::setReplacement
-     * @covers ::getReplacement
+     * @covers ::setLocalReplacement
+     * @covers ::getLocalReplacement
      */
     public function testReplacement(): void
     {
@@ -64,8 +64,8 @@ class DiscoveredSymbolTest extends TestCase
 
         $sut = new ClassSymbol('MyClass', $fileMock);
 
-        $sut->setReplacement('MyClassRenamed');
+        $sut->setLocalReplacement('MyClassRenamed');
 
-        $this->assertEquals('MyClassRenamed', $sut->getReplacement());
+        $this->assertEquals('MyClassRenamed', $sut->getLocalReplacement());
     }
 }

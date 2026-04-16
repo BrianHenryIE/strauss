@@ -169,7 +169,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -208,7 +208,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -239,7 +239,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -270,7 +270,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $interfaceSymbol = new InterfaceSymbol($originalName, $file);
-        $interfaceSymbol->setReplacement($globalPrefix . $originalName);
+        $interfaceSymbol->setLocalReplacement($globalPrefix . $originalName);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($interfaceSymbol);
@@ -301,7 +301,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -332,7 +332,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -398,7 +398,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -431,7 +431,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -499,7 +499,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -550,7 +550,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -962,7 +962,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -1484,7 +1484,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -1528,7 +1528,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -1572,7 +1572,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -1619,7 +1619,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -1656,7 +1656,7 @@ EOD;
 
         $discoveredSymbols = new DiscoveredSymbols();
         $classSymbol = new ClassSymbol('Normalizer', $file);
-        $classSymbol->setReplacement('Normalizer_Test_Normalizer');
+        $classSymbol->setLocalReplacement('Normalizer_Test_Normalizer');
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -1896,11 +1896,11 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
 
         $namespaceSymbol = new NamespaceSymbol('WPGraphQL\Registry\Utils', $file);
-        $namespaceSymbol->setReplacement('StraussTest\WPGraphQL\Registry\Utils');
+        $namespaceSymbol->setLocalReplacement('StraussTest\WPGraphQL\Registry\Utils');
         $discoveredSymbols->add($namespaceSymbol);
 
         $classSymbol = new ClassSymbol('WPGraphQL', $file);
-        $classSymbol->setReplacement('StraussTest_WPGraphQL');
+        $classSymbol->setLocalReplacement('StraussTest_WPGraphQL');
         $discoveredSymbols->add($classSymbol);
 
         $result = $replacer->replaceInString(
@@ -1987,7 +1987,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -2147,7 +2147,7 @@ EOD;
         $file->shouldReceive('addDiscoveredSymbol');
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
-        $classSymbol->setReplacement($classnamePrefix . $originalClassname);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
@@ -2226,7 +2226,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $symbol = new FunctionSymbol('append_config', $fileMock);
-        $symbol->setReplacement('myprefix_append_config');
+        $symbol->setLocalReplacement('myprefix_append_config');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($symbol);
@@ -2408,7 +2408,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
         $namespaceSymbol = new NamespaceSymbol('GuzzleHttp', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\GuzzleHttp');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\GuzzleHttp');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2464,7 +2464,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2528,7 +2528,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2583,7 +2583,7 @@ EOD;
           ->willReturn(true);
 
         $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2640,7 +2640,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2711,7 +2711,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2773,7 +2773,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2859,7 +2859,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2926,7 +2926,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $namespaceSymbol = new NamespaceSymbol('FontLib\\Table', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\FontLib\\Table');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\FontLib\\Table');
         $symbols->add($namespaceSymbol);
 
         $fileMock = $this->createMock(File::class);
@@ -2934,7 +2934,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $namespaceSymbol = new NamespaceSymbol('Dompdf', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Dompdf');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Dompdf');
         $symbols->add($namespaceSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -3001,7 +3001,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $symbol = new FunctionSymbol('my_function', $fileMock);
-        $symbol->setReplacement('myprefix_my_function');
+        $symbol->setLocalReplacement('myprefix_my_function');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($symbol);
@@ -3057,7 +3057,7 @@ EOD;
         $symbols = new DiscoveredSymbols();
 
         $symbol = new NamespaceSymbol('Carbon_Fields', $file);
-        $symbol->setReplacement('Prefix\\Strauss\\Carbon_Fields');
+        $symbol->setLocalReplacement('Prefix\\Strauss\\Carbon_Fields');
         $symbols->add($symbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -3134,7 +3134,7 @@ EOD;
         $symbols = new DiscoveredSymbols();
 
         $symbol = new NamespaceSymbol('Geocoder', $file);
-        $symbol->setReplacement('CommonsBooking\\Geocoder');
+        $symbol->setLocalReplacement('CommonsBooking\\Geocoder');
         $symbols->add($symbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
