@@ -59,14 +59,14 @@ class MarkSymbolsForRenamingTest extends TestCase
         );
         $symbol = new NamespaceSymbol('Psr\Log', $file, '\\');
 
-        self::assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
+        $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($symbol);
 
         $sut->scanSymbols($discoveredSymbols);
 
-        self::assertFalse($symbol->isDoRename(), 'Symbol from excluded package should have doRename=false');
+        $this->assertFalse($symbol->isDoRename(), 'Symbol from excluded package should have doRename=false');
     }
 
     /**
@@ -106,14 +106,14 @@ class MarkSymbolsForRenamingTest extends TestCase
         );
         $symbol = new NamespaceSymbol('Monolog', $file, '\\', $package);
 
-        self::assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
+        $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($symbol);
 
         $sut->scanSymbols($discoveredSymbols);
 
-        self::assertTrue($symbol->isDoRename(), 'Symbol from non-excluded package should remain doRename=true');
+        $this->assertTrue($symbol->isDoRename(), 'Symbol from non-excluded package should remain doRename=true');
     }
 
     /**
@@ -154,13 +154,13 @@ class MarkSymbolsForRenamingTest extends TestCase
 
         $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file, '\\', $package);
 
-        self::assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
+        $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($symbol);
 
         $sut->scanSymbols($discoveredSymbols);
 
-        self::assertFalse($symbol->isDoRename(), 'Constant in exclude_constants.constants should have doRename=false');
+        $this->assertFalse($symbol->isDoRename(), 'Constant in exclude_constants.constants should have doRename=false');
     }
 }
