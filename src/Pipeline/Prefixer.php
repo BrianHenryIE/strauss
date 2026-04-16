@@ -186,12 +186,6 @@ class Prefixer
                 $parseContent = "<?php\n" . $contents;
             }
 
-            // Append enough closing braces to satisfy the parser for partial snippets that
-            // have unclosed class/function/namespace bodies.
-            $open = substr_count($parseContent, '{');
-            $close = substr_count($parseContent, '}');
-            $parseContent .= str_repeat('}', max(0, $open - $close));
-
             $parser = (new ParserFactory())->createForNewestSupportedVersion();
             $errorHandler = new \PhpParser\ErrorHandler\Collecting();
             $ast = $parser->parse($parseContent, $errorHandler);
