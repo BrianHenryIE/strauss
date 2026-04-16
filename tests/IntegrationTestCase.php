@@ -12,12 +12,20 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\ServiceLocator;
 use Exception;
+use League\Flysystem\Config;
+use League\Flysystem\FilesystemAdapter;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerInterface;
 use League\Flysystem\StorageAttributes;
 use SplFileInfo;
+use Symfony\Component\Console\Exception\ExceptionInterface;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -31,12 +39,18 @@ use Symfony\Component\Finder\Finder;
  */
 class IntegrationTestCase extends TestCase
 {
+    use CustomIntegrationTestAssertionsTrait;
+
     protected string $projectDir;
 
     /** No trailing slash */
     protected string $testsWorkingDir;
 
     protected array $envBeforeTest = [];
+
+    protected FileSystem $symlinkProtectFilesystem;
+
+    protected FileSystem $readOnlyFileSystem;
 
     public function setUp(): void
     {
@@ -49,8 +63,6 @@ class IntegrationTestCase extends TestCase
         $this->testsWorkingDir = FileSystem::normalizeDirSeparator(
             sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'))
         );
-
-        $this->logger = new ColorLogger();
 
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
@@ -71,6 +83,8 @@ class IntegrationTestCase extends TestCase
 
         chdir($this->testsWorkingDir);
 
+        $this->pathNormalizer = Filesystem::makePathNormalizer($this->testsWorkingDir);
+
         if (file_exists($this->projectDir . '/strauss.phar')) {
             echo PHP_EOL . 'strauss.phar found' . PHP_EOL;
             ob_flush();
@@ -89,6 +103,9 @@ class IntegrationTestCase extends TestCase
         return false;
     }
 
+    /**
+     * @throws ExceptionInterface
+     */
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
@@ -200,6 +217,9 @@ class IntegrationTestCase extends TestCase
         }
     }
 
+    /**
+     * @throws FilesystemException
+     */
     protected function deleteDir($dir)
     {
         if (!file_exists($dir)) {
@@ -223,7 +243,6 @@ class IntegrationTestCase extends TestCase
 
             /** @var SplFileInfo[] $files */
             $files = iterator_to_array($finder->getIterator());
-            /** @var SplFileInfo[] $links */
             $links = array_filter(
                 $files,
                 function ($file) use ($isSymlink) {
@@ -278,7 +297,7 @@ class IntegrationTestCase extends TestCase
      */
     public function markTestSkippedOnPhpVersion(string $php_version, string $operator, string $message = '')
     {
-        exec('php -v', $output, $return_var);
+        exec('php -v', $output);
         preg_match('/PHP\s([\d\\\.]*)/', $output[0], $php_version_capture);
         $system_php_version = $php_version_capture[1];
 
@@ -292,60 +311,14 @@ class IntegrationTestCase extends TestCase
         }
     }
 
-    protected function assertFileNotExistsInFileSystem(string $filePath, ?FileSystem $filesystem = null, ?string $message = null): void
-    {
-        $filesystem = $filesystem ?? $this->getFileSystem();
-        $result = $filesystem->fileExists($filePath);
-        $this->assertFalse(
-            $result,
-            $message ?? $filePath . ' should not exist.'
-        );
-    }
-
-    protected function assertFileExistsInFileSystem(string $filePath, ?FileSystem $filesystem = null, ?string $message = null): void
-    {
-        $filesystem = $filesystem ?? $this->getFileSystem();
-
-        $result = $filesystem->fileExists($filePath);
-
-        $append = $result ? '' : $this->getParentDirectoryAssertFailureMessagePart($filePath, $filesystem);
-
-        $this->assertTrue(
-            $result,
-            $message ?? $filePath . ' should exist' . $append
-        );
-    }
-
-    protected function assertDirectoryNotExistsInFileSystem(string $directoryPath, ?FileSystem $filesystem = null, ?string $message = null): void
-    {
-        $filesystem = $filesystem ?? $this->getFileSystem();
-        $result = $filesystem->directoryExists($directoryPath);
-        $this->assertFalse(
-            $result,
-            $message ?? $directoryPath . ' should not exist.'
-        );
-    }
-
-    protected function assertDirectoryExistsInFileSystem(string $directoryPath, ?FileSystem $filesystem = null, ?string $message = null): void
-    {
-        $filesystem = $filesystem ?? $this->getFileSystem();
-
-        $result = $filesystem->directoryExists($directoryPath);
-
-        $append = $result ? '' : $this->getParentDirectoryAssertFailureMessagePart($directoryPath, $filesystem);
-
-        $this->assertTrue(
-            $result,
-            $message ?? $directoryPath . ' should exist' . $append
-        );
-    }
-
     /**
      * E.g. ", its parent directory does not exist".
      * E.g. ", its parent directory contains: file1.php, file2.php, file3.php +6".
      *
      * @param string $path
      * @param FileSystem $filesystem
+     *
+     * @throws FilesystemException
      */
     protected function getParentDirectoryAssertFailureMessagePart(string $path, FileSystem $filesystem): string
     {
@@ -365,5 +338,127 @@ class IntegrationTestCase extends TestCase
             }
         }
         return $append;
+    }
+
+    protected function createWorkingDir(): void
+    {
+        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
+
+        if ('Darwin' === PHP_OS) {
+            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
+        }
+
+        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
+        // we set breakpoints, we can easily browse the files.
+        if ($this->isPhpStormRunning()) {
+            $this->testsWorkingDir = getcwd() . '/teststempdir/';
+        }
+
+        if (file_exists($this->testsWorkingDir)) {
+            $this->deleteDir($this->testsWorkingDir);
+        }
+
+        @mkdir($this->testsWorkingDir);
+    }
+
+    protected FileSystem $localFileSystem;
+
+    /**
+     * Integration tests' FileSystem use LocalFilesystemAdapter.
+     * It is for the /tmp/ working directory, not the project directory.
+     */
+    protected function getFileSystem(): Filesystem
+    {
+        if (! isset($this->localFileSystem)) {
+            $localFileSystemAdapter = new LocalfilesystemAdapter(
+                FileSystem::getFsRoot($this->testsWorkingDir)
+            );
+            $this->localFileSystem = new Filesystem(
+                $localFileSystemAdapter,
+                [],
+                Filesystem::makePathNormalizer($this->testsWorkingDir),
+                new PathPrefixer($this->testsWorkingDir, DIRECTORY_SEPARATOR),
+                FileSystem::getFsRoot($this->testsWorkingDir)
+            );
+        }
+        return $this->localFileSystem;
+    }
+
+    protected function getSymlinkProtectFilesystem(): FileSystem
+    {
+        if (isset($this->symlinkProtectFilesystem)) {
+            return $this->symlinkProtectFilesystem;
+        }
+
+        $localFilesystemLocation = Filesystem::getFsRoot($this->testsWorkingDir);
+
+        $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
+
+        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
+            $localFilesystemLocation,
+            Filesystem::makePathNormalizer($this->testsWorkingDir),
+            $pathPrefixer,
+            $this->getTestLogger()
+        );
+
+        $this->symlinkProtectFilesystem = new Filesystem(
+            $symlinkProtectFilesystemAdapter,
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            $pathPrefixer
+        );
+
+        return $this->symlinkProtectFilesystem;
+    }
+
+
+    public function getReadOnlyFileSystem(?FilesystemAdapter $protectedFilesystemAdapter = null)
+    {
+        if (isset($this->readOnlyFileSystem)) {
+            return $this->readOnlyFileSystem;
+        }
+
+        if (is_null($protectedFilesystemAdapter)) {
+            $protectedFilesystemAdapter = isset($this->testsWorkingDir)
+                ? $this->getSymlinkProtectFilesystem()
+                : $this->getNewInMemoryFileSystem();
+        }
+
+        $normalizer = FileSystem::makePathNormalizer($this->testsWorkingDir);
+
+        $pathPrefixer = new PathPrefixer('mem://', '/');
+
+        $this->readOnlyFileSystem =
+            new FileSystem(
+                new ReadOnlyFileSystem(
+                    $protectedFilesystemAdapter
+                ),
+                [],
+                $normalizer,
+                $pathPrefixer
+            );
+
+        /**
+         * Register a file stream mem:// to handle file operations by third party libraries.
+         *
+         * @var FilesystemRegistry $registry
+         */
+        $registry = ServiceLocator::get(FilesystemRegistry::class);
+
+        if (method_exists($registry, 'has') && $registry->has('mem')) {
+            $registry->unregister('mem');
+        } else {
+            try {
+                $registry->get('mem');
+                $registry->unregister('mem');
+            } catch (Exception $exception) {
+            }
+        }
+
+        $registry->register('mem', $this->readOnlyFileSystem);
+
+        return $this->readOnlyFileSystem;
     }
 }
