@@ -103,7 +103,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
             ],
             new StripFsRootPathNormalizer(
                 [
-                    FileSystem::getFsRoot($workingDir),
+                    str_replace('\\', '/', FileSystem::getFsRoot($workingDir)),
+                    str_replace('/', '\\', FileSystem::getFsRoot($workingDir)),
                     Filesystem::getFsRoot(),
                     Filesystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                     'c:\\',
