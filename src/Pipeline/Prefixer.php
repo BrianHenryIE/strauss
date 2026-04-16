@@ -657,11 +657,10 @@ class Prefixer
                 ) {
                     $symbol = $discoveredSymbols->getClass($useItem->name->toString());
                     if ($symbol->isDoRename()) {
-                        if (array_reverse(explode('/', $symbol->getReplacement()))[0]
-                            !==
-                            array_reverse(explode('/', $useItem->name->toString()))[0]
-                        ) {
-                            $replacementString = $symbol->getReplacement() . ' as ' . array_reverse(explode('/', $useItem->name->toString()))[0];
+                        $replacementClassname = array_reverse(explode('\\', $symbol->getReplacement()))[0];
+                        $useClassname = array_reverse(explode('\\', $useItem->name->toString()))[0];
+                        if ($replacementClassname !== $useClassname) {
+                            $replacementString = $symbol->getReplacement() . ' as ' . $useClassname;
                         } else {
                              $replacementString = $symbol->getReplacement();
                         }
