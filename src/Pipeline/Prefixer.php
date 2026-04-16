@@ -140,7 +140,9 @@ class Prefixer
                 continue;
             }
 
-            $this->logger->debug("Updating contents of file: {$relativeFilePath}");
+            $this->logger->debug("Updating contents of file: {fileAbsolutePath}", [
+                'fileAbsolutePath' => $fileAbsolutePath,
+            ]);
 
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
@@ -495,7 +497,9 @@ class Prefixer
             // Apply form-3 and form-2 patterns to the same slice (they target different text).
             $newSlice = preg_replace_callback(
                 $prefixDblPattern,
-                function () use ($dblRep) { return $dblRep; },
+                function () use ($dblRep) {
+                    return $dblRep;
+                },
                 $slice
             );
             if ($newSlice === null) {
@@ -503,7 +507,9 @@ class Prefixer
             }
             $newSlice = preg_replace_callback(
                 $singleSearchPattern,
-                function () use ($singleReplacement) { return $singleReplacement; },
+                function () use ($singleReplacement) {
+                    return $singleReplacement;
+                },
                 $newSlice
             );
             if ($newSlice !== null && $newSlice !== $slice) {
