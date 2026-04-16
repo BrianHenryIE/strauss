@@ -59,7 +59,7 @@ class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter implemen
         parent::copy($source, $destination, $config);
     }
 
-    public function write(string $path, string $contents, Config $config): void
+    public function write(string $path, $contents, Config $config): void
     {
         // Make sure there is a directory for the file to be written to.
         if (false === strpos($path, '______DUMMY_FILE_FOR_FORCED_LISTING_IN_FLYSYSTEM_TEST')) {

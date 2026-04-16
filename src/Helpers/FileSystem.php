@@ -272,7 +272,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      * @param array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function write(string $location, string $contents, array $config = []): void
+    public function write(string $location, $contents, array $config = []): void
     {
         $this->flysystemAdapter->write(
             $this->normalizePath($location),
@@ -287,12 +287,25 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      */
     public function writeStream(string $location, $contents, $config = []): void
     {
+        $this->rewindStream($contents);
         $this->flysystemAdapter->writeStream(
             $this->normalizePath($location),
             $contents,
             $this->config->extend($config)
         );
+//        fclose($contents);
     }
+
+    /**
+     * @param resource $resource
+     */
+    private function rewindStream($resource): void
+    {
+        if (ftell($resource) !== 0 && stream_get_meta_data($resource)['seekable']) {
+            rewind($resource);
+        }
+    }
+
 
     public function setVisibility(string $path, string $visibility): void
     {
