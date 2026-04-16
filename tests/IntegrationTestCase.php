@@ -370,15 +370,19 @@ class IntegrationTestCase extends TestCase
     protected function getFileSystem(): Filesystem
     {
         if (! isset($this->localFileSystem)) {
+            $localFsLocation = FileSystem::getFsRoot($this->testsWorkingDir);
+            $pathNormalizer  = Filesystem::makePathNormalizer($this->testsWorkingDir);
+            $pathPrefixer    = new PathPrefixer($localFsLocation, DIRECTORY_SEPARATOR);
+
             $localFileSystemAdapter = new LocalfilesystemAdapter(
-                FileSystem::getFsRoot($this->testsWorkingDir)
+                $localFsLocation
             );
             $this->localFileSystem = new Filesystem(
                 $localFileSystemAdapter,
                 [],
-                Filesystem::makePathNormalizer($this->testsWorkingDir),
-                new PathPrefixer($this->testsWorkingDir, DIRECTORY_SEPARATOR),
-                FileSystem::getFsRoot($this->testsWorkingDir)
+                $pathNormalizer,
+                $pathPrefixer,
+                $localFsLocation
             );
         }
         return $this->localFileSystem;
