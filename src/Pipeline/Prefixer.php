@@ -149,7 +149,7 @@ class Prefixer
                 continue;
             }
 
-            $this->logger->debug("Updating contents of file: {fileAbsolutePath}", [
+            $this->logger->debug("Updating contents of file (project): {fileAbsolutePath}", [
                 'fileAbsolutePath' => $fileAbsolutePath,
             ]);
 
