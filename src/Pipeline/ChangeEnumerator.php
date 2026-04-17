@@ -101,7 +101,7 @@ class ChangeEnumerator
                 continue;
             }
 
-            if ($symbol->getNamespaceName()->isGlobal()) {
+            if ($symbol->getNamespace()->isGlobal()) {
                 if ($symbol instanceof ClassSymbol) {
                     // Don't double-prefix classnames.
                     if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
