@@ -1920,6 +1920,7 @@ EOD;
      */
     public function test_prefix_no_newline_after_opening_php_replace_namespace(): void
     {
+        $filesystem = $this->getInMemoryFileSystem();
 
         $contents = <<<'EOD'
 <?php namespace League\OAuth2\Client\Provider;
@@ -1935,9 +1936,29 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $replacer = new Prefixer($config, $filesystem);
 
-        $result = $replacer->replaceNamespace($contents, 'League\\OAuth2', 'Company\\Project\\League\\OAuth2');
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $providerNamespaceSymbol =new NamespaceSymbol('League\\OAuth2\\Client\\Provider');
+        $providerNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Provider');
+        $discoveredSymbols->add($providerNamespaceSymbol);
+
+        $accessorNamespaceSymbol = new NamespaceSymbol('League\\OAuth2\\Client\\Tool\\ArrayAccessorTrait');
+        $accessorNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Tool\\ArrayAccessorTrait');
+        $discoveredSymbols->add($accessorNamespaceSymbol);
+
+        $file = new File(
+            'project/vendor/league/oauth2/provideruse.php',
+            'league/oauth2/provideruse.php',
+            'project/vendor-prefixed/league/oauth2/provideruse.php'
+        );
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $this->assertEqualsRN($expected, $result);
     }
@@ -2332,7 +2353,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2471,7 +2492,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2535,7 +2556,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2647,7 +2668,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2718,7 +2739,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2780,7 +2801,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2866,7 +2887,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
@@ -2933,7 +2954,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('FontLib\\Table', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('FontLib\\Table', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\FontLib\\Table');
         $symbols->add($namespaceSymbol);
 
@@ -2941,7 +2962,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Dompdf', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('Dompdf', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Dompdf');
         $symbols->add($namespaceSymbol);
 
