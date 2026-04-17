@@ -600,8 +600,9 @@ class Prefixer
          */
         $contents = preg_replace(
             '/([^a-zA-Z0-9_\x7f-\xff\\\\][\'"])(' . str_replace('\\', '\\\\', $originalSymbolString) . ')([\'"][^a-zA-Z0-9_\x7f-\xff\\\\])/',
-            //            '/([\'"])(' . str_replace('\\', '\\\\', $originalSymbolString) . ')([\'"])/',
-            '$1' . str_replace('\\', '\\\\', $replacementSymbolString) . '$3',
+            //    '/([\'"])(' . str_replace('\\', '\\\\', $originalSymbolString) . ')([\'"])/',
+            //    '$1' . str_replace('\\', '\\\\', $replacementSymbolString) . '$3',
+            '$1' . $replacementSymbolString . '$3',
             $contents
         );
 
