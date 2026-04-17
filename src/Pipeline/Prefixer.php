@@ -574,7 +574,7 @@ class Prefixer
 
     protected function replaceSingleClassnameInString(string $contents, NamespacedSymbol $symbol): string
     {
-        if ($symbol->getNamespaceName() === '\\\\') {
+        if ($symbol->getNamespaceName() === '\\') {
             $replacementSymbolString = $symbol->getLocalReplacement();
             $originalSymbolString = $symbol->getOriginalSymbolStripPrefix($this->config->getClassmapPrefix());
         } else {
