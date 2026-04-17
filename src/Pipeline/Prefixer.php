@@ -79,7 +79,9 @@ class Prefixer
             }
 
             if ($this->filesystem->directoryExists($file->getTargetAbsolutePath())) {
-                $this->logger->debug("is_dir() / nothing to do : {$file->getTargetAbsolutePath()}");
+                $this->logger->debug("is_dir() / nothing to do : {targetAbsolutePath}", [
+                    'targetAbsolutePath' => $file->getTargetAbsolutePath()
+                ]);
                 continue;
             }
 
@@ -88,7 +90,9 @@ class Prefixer
             }
 
             if (!$this->filesystem->fileExists($file->getTargetAbsolutePath())) {
-                $this->logger->warning("Expected file does not exist: {$file->getTargetAbsolutePath()}");
+                $this->logger->warning("Expected file does not exist: {targetAbsolutePath}", [
+                    'targetAbsolutePath' => $file->getTargetAbsolutePath()
+                ]);
                 continue;
             }
 
@@ -132,12 +136,16 @@ class Prefixer
             $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
 
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
-                $this->logger->debug("is_dir() / nothing to do : {$relativeFilePath}");
+                $this->logger->debug("is_dir() / nothing to do : {relativeFilePath}", [
+                    'relativeFilePath' => $relativeFilePath
+                ]);
                 continue;
             }
 
             if (!$this->filesystem->fileExists($fileAbsolutePath)) {
-                $this->logger->warning("Expected file does not exist: {$relativeFilePath}");
+                $this->logger->warning("Expected file does not exist: {relativeFilePath}", [
+                    'relativeFilePath' => $relativeFilePath
+                ]);
                 continue;
             }
 

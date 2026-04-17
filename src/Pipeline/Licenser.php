@@ -208,7 +208,9 @@ class Licenser
             );
 
             if ($updatedContents !== $contents) {
-                $this->logger->info("Adding change declaration to {$filepath}");
+                $this->logger->info("Adding change declaration to {filepath}", [
+                    'filepath' => $filepath
+                ]);
                 $this->filesystem->write($filepath, $updatedContents);
             }
         }

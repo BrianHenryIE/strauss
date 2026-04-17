@@ -61,7 +61,9 @@ class FileCopyScanner
             if ($file instanceof FileWithDependency) {
                 if ($this->isPackageExcluded($file->getDependency())) {
                     $copy = false;
-                    $this->logger->debug("File {$file->getSourcePath()} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.");
+                    $this->logger->debug("File {sourcePath} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.", [
+                        'sourcePath' => $file->getSourcePath(),
+                    ]);
                 }
             }
 
@@ -131,7 +133,9 @@ class FileCopyScanner
                     // TODO: case insensitive check. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
                     && str_starts_with($symbol->getOriginalSymbol(), $namespace)
                 ) {
-                    $this->logger->debug("File {$file->getSourcePath()} will not be copied because namespace {$namespace} is excluded from copy.");
+                    $this->logger->debug("File {sourcePath} will not be copied because namespace {$namespace} is excluded from copy.", [
+                        'sourcePath' => $file->getSourcePath(),
+                    ]);
                     return true;
                 }
             }
@@ -153,7 +157,9 @@ class FileCopyScanner
         foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
             $escapedPattern = $this->preparePattern($pattern);
             if (1 === preg_match($escapedPattern, $path)) {
-                $this->logger->debug("File {$path} will not be copied because it matches pattern {$pattern}.");
+                $this->logger->debug("File {path} will not be copied because it matches pattern {$pattern}.", [
+                    'path' => $path
+                ]);
                 return true;
             }
         }
