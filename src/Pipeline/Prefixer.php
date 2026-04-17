@@ -659,12 +659,12 @@ class Prefixer
                 ) {
                     $symbol = $discoveredSymbols->getClass($useItem->name->toString());
                     if ($symbol->isDoRename()) {
-                        $replacementClassname = array_reverse(explode('\\', $symbol->getLocalReplacement()))[0];
+                        $replacementClassname = $symbol->getLocalReplacement();
                         $useClassname = array_reverse(explode('\\', $useItem->name->toString()))[0];
-                        if ($replacementClassname !== $useClassname) {
-                            $replacementString = $symbol->getLocalReplacement() . ' as ' . $useClassname;
-                        } else {
-                             $replacementString = $symbol->getLocalReplacement();
+
+                        $replacementString = $symbol->getLocalReplacement();
+                        if ($replacementClassname !== $useClassname && !$useItem->getAlias()) {
+                            $replacementString .= ' as ' . $useClassname;
                         }
 
                         $positions[] = [
