@@ -122,7 +122,7 @@ class DiscoveredSymbols
     {
         return array_filter(
             $this->getClassesInterfacesTraits(),
-            fn($symbol) => '\\' === $symbol->getNamespaceName()
+            fn($symbol) => $symbol->getNamespace()->isGlobal()
         );
     }
 

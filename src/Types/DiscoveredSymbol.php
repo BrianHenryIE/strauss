@@ -37,6 +37,7 @@ abstract class DiscoveredSymbol
     ) {
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 
+        // TODO: Add `::isGlobal()` to `NamespacedSymbol`.
         if (!str_contains($fqdnSymbol, '\\')) {
             $this->localOriginalSymbol = $fqdnSymbol;
         } else {
