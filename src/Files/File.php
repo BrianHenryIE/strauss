@@ -44,12 +44,7 @@ class File implements FileBase
         string $vendorRelativePath,
         string $targetAbsolutePath
     ) {
-        $this->discoveredSymbols = new class() extends DiscoveredSymbols{
-            public function __construct()
-            {
-                // Don't call parent constructor to avoid infinite loop.
-            }
-        };
+        $this->discoveredSymbols = new DiscoveredSymbols();
 
         $this->sourceAbsolutePath = $sourceAbsolutePath;
         $this->vendorRelativePath = $vendorRelativePath;
