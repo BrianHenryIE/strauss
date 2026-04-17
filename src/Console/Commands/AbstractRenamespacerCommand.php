@@ -18,6 +18,7 @@ use League\Flysystem\PathPrefixer;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
+use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Command\Command;
@@ -30,7 +31,7 @@ use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 
-abstract class AbstractRenamespacerCommand extends Command
+abstract class AbstractRenamespacerCommand extends Command implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
