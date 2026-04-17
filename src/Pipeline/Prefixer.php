@@ -678,7 +678,7 @@ class Prefixer
                         $useClassname = array_reverse(explode('\\', $useItem->name->toString()))[0];
 
                         $replacementString = $symbol->getLocalReplacement();
-                        if ($replacementClassname !== $useClassname && !$useItem->getAlias()) {
+                        if ($replacementClassname !== $useClassname && !$useItem->alias) {
                             $replacementString .= ' as ' . $useClassname;
                         }
 
