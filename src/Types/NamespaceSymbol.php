@@ -12,6 +12,7 @@ class NamespaceSymbol extends DiscoveredSymbol
     {
         if (!isset(self::$instance)) {
             self::$instance = new NamespaceSymbol('\\');
+            self::$instance->setDoRename(false);
         }
         return self::$instance;
     }
