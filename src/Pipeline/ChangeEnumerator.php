@@ -101,7 +101,7 @@ class ChangeEnumerator
                 continue;
             }
 
-            if ($symbol->getNamespaceName() === '\\') {
+            if ($symbol->getNamespaceName()->isGlobal()) {
                 if ($symbol instanceof ClassSymbol) {
                     // Don't double-prefix classnames.
                     if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
@@ -113,7 +113,7 @@ class ChangeEnumerator
             }
 
             // If we're a namespaced class, apply the fqdnchange.
-            if ($symbol->getNamespaceName() !== '\\') {
+            if (!$symbol->getNamespace()->isGlobal()) {
                 if (isset($discoveredNamespaces[$symbol->getNamespaceName()])) {
                     $newNamespace = $discoveredNamespaces[$symbol->getNamespaceName()];
                     $replacement = $this->determineNamespaceReplacement(
@@ -138,7 +138,7 @@ class ChangeEnumerator
 
         foreach ($functionsSymbols as $symbol) {
             // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
-            if ($symbol->getNamespaceName() !== '\\') {
+            if (!$symbol->getNamespace()->isGlobal()) {
                 continue;
             }
             $functionPrefix = $this->config->getFunctionsPrefix();

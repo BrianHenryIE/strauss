@@ -19,7 +19,7 @@ class StraussIssue114Test extends IntegrationTestCase
     {
         $argvFilterIndex = array_search('--filter', $GLOBALS['argv']);
         $phpunitFilter = $GLOBALS['argv'][$argvFilterIndex + 1];
-        if(!str_contains($phpunitFilter, __FUNCTION__)) {
+        if (!str_contains($phpunitFilter, __FUNCTION__)) {
             $this->markTestSkipped('slow');
         }
 

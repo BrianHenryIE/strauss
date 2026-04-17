@@ -635,7 +635,7 @@ EOD;
         $file->shouldReceive('getSourcePath')->andReturn('/a/path');
 
         $file->shouldReceive('addDiscoveredSymbol')
-             ->withArgs(fn($v) => $v instanceof NamespaceSymbol && $v->getOriginalSymbol() === '\\')
+             ->withArgs(fn($v) => $v instanceof NamespaceSymbol && $v->isGlobal())
              ->once();
 
         $files = Mockery::mock(DiscoveredFiles::class)->makePartial();
@@ -672,7 +672,7 @@ EOD;
         $file->shouldReceive('getSourcePath')->andReturn('/a/path');
 
         $file->shouldReceive('addDiscoveredSymbol')
-             ->withArgs(fn($v) => $v instanceof NamespaceSymbol && $v->getOriginalSymbol() === '\\')
+             ->withArgs(fn($v) => $v instanceof NamespaceSymbol && $v->isGlobal())
              ->once();
 
         $files = Mockery::mock(DiscoveredFiles::class)->makePartial();

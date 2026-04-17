@@ -19,6 +19,11 @@ class NamespaceSymbol extends DiscoveredSymbol
         return self::$instance;
     }
 
+    public function isGlobal(): bool
+    {
+        return $this->fqdnOriginalSymbol === '\\';
+    }
+
     public function isChangedNamespace(): bool
     {
         return $this->getLocalReplacement() !== $this->getOriginalSymbol();

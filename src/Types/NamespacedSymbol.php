@@ -1,4 +1,10 @@
 <?php
+/**
+ * This is used so NamespaceSymbol doesn't have a namespace property itself.
+ * Objects/classes inheriting from this could just be in the global namespace.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Types;
 
@@ -33,6 +39,10 @@ class NamespacedSymbol extends DiscoveredSymbol
             : $this->fqdnOriginalSymbol;
     }
 
+    public function getNamespace(): NamespaceSymbol
+    {
+        return $this->namespace;
+    }
 
     public function getNamespaceName(): ?string
     {
