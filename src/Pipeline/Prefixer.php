@@ -338,25 +338,6 @@ class Prefixer
             $parseContent = "<?php\n" . $contents;
         }
 
-//        $open = substr_count($parseContent, '{');
-//        $close = substr_count($parseContent, '}');
-//        if ($close > $open) {
-//            // Extra closing braces (e.g. class body close without matching open): strip trailing
-//            // } characters until balanced so positions of remaining content are unchanged.
-//            while (substr_count($parseContent, '}') > substr_count($parseContent, '{')) {
-//                $last = strrpos($parseContent, '}');
-//                $parseContent = substr($parseContent, 0, $last) . substr($parseContent, $last + 1);
-//            }
-//            $open = substr_count($parseContent, '{');
-//            $close = substr_count($parseContent, '}');
-//            $parseContent .= str_repeat('}', max(0, $open - $close));
-//        } elseif ($open > $close) {
-//            $parseContent .= str_repeat('}', $open - $close);
-//        } elseif ($open === 0) {
-//            // No braces at all: append {} so class/function declarations without a body parse.
-//            $parseContent .= '{}';
-//        }
-
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
         $errorHandler = new \PhpParser\ErrorHandler\Collecting();
         $ast = $parser->parse($parseContent, $errorHandler);
