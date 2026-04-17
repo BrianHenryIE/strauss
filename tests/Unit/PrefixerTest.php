@@ -348,7 +348,7 @@ EOD;
      */
     public function testItReplacesNamespacesInInterface(): void
     {
-        $contents = 'class Hello_World implements \Strauss\Bye_World {';
+        $contents = 'class Hello_World implements \Strauss\Bye_World {}';
 
         $originalNamespace = 'Strauss';
         $replacement = 'Prefix\Strauss';
@@ -359,7 +359,7 @@ EOD;
 
         $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
 
-        $this->assertEqualsRN('class Hello_World implements \Prefix\Strauss\Bye_World {', $result);
+        $this->assertEqualsRN('class Hello_World implements \Prefix\Strauss\Bye_World {}', $result);
     }
 
     /**
@@ -823,8 +823,8 @@ EOD;
     public function testClassExtendsNamespacedClassIsPrefixed(): void
     {
 
-        $contents = 'class BarcodeException extends \Mpdf\MpdfException';
-        $expected = 'class BarcodeException extends \BrianHenryIE\Strauss\Mpdf\MpdfException';
+        $contents = 'class BarcodeException extends \Mpdf\MpdfException {}';
+        $expected = 'class BarcodeException extends \BrianHenryIE\Strauss\Mpdf\MpdfException {}';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -1791,8 +1791,10 @@ class Configuration implements ConfigurationInterface
         if ($this->useDualstackEndpoint == true
             && (strpos($region, "iso-") !== false || strpos($region, "-iso") !== false)
         ) {
-            throw new ConfigurationException("Dual-stack is not supported in ISO regions");        }
+            throw new ConfigurationException("Dual-stack is not supported in ISO regions");
+        }
     }
+}
 EOD;
 
         $expected = <<<'EOD'
@@ -1815,8 +1817,10 @@ class Configuration implements ConfigurationInterface
         if ($this->useDualstackEndpoint == true
             && (strpos($region, "iso-") !== false || strpos($region, "-iso") !== false)
         ) {
-            throw new ConfigurationException("Dual-stack is not supported in ISO regions");        }
+            throw new ConfigurationException("Dual-stack is not supported in ISO regions");
+        }
     }
+}
 EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -2008,6 +2012,7 @@ EOD;
 namespace Aws;
 
 class ClientResolver
+{
 	public static function _apply_user_agent($inputUserAgent, array &$args, HandlerList $list)
     {
             if (($args['endpoint_discovery'] instanceof \Aws\EndpointDiscovery\Configuration
@@ -2024,6 +2029,7 @@ EOD;
 namespace Company\Project\Aws;
 
 class ClientResolver
+{
 	public static function _apply_user_agent($inputUserAgent, array &$args, HandlerList $list)
     {
             if (($args['endpoint_discovery'] instanceof \Company\Project\Aws\EndpointDiscovery\Configuration
@@ -2056,6 +2062,7 @@ EOD;
 namespace Aws;
 
 class ConfigurationResolver
+{
 	public static function ini(
         $key,
         $expectedType,
@@ -2083,6 +2090,7 @@ EOD;
 namespace Company\Project\Aws;
 
 class ConfigurationResolver
+{
 	public static function ini(
         $key,
         $expectedType,
