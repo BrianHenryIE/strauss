@@ -105,7 +105,7 @@ class Prefixer
              */
             $contents = $this->filesystem->read($file->getTargetAbsolutePath());
 
-            $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
+            $updatedContents = $this->replaceInString($discoveredSymbols, $contents, $file->getTargetAbsolutePath());
 
             if ($updatedContents !== $contents) {
                 // TODO: diff here and debug log.
@@ -156,7 +156,7 @@ class Prefixer
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
 
-            $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
+            $updatedContents = $this->replaceInString($discoveredSymbols, $contents, $fileAbsolutePath);
 
             if ($updatedContents !== $contents) {
                 $this->changedFiles[$fileAbsolutePath] = null;
@@ -174,7 +174,7 @@ class Prefixer
      *
      * @throws Exception
      */
-    public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents): string
+    public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents, ?string $fileAbsolutePath = null): string
     {
         $globalPrefix = $this->config->getClassmapPrefix();
 
@@ -197,11 +197,18 @@ class Prefixer
 
             $parser = (new ParserFactory())->createForNewestSupportedVersion();
             $errorHandler = new \PhpParser\ErrorHandler\Collecting();
-            $ast = $parser->parse($parseContent, $errorHandler);
+            $ast = null;
+            try {
+                $ast = $parser->parse($parseContent);
+//                $ast = $parser->parse($parseContent, $errorHandler);
+            } catch (\Exception $e) {
+                // This happens in template files, E.g `x.blade.php`.
+                $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: " . $e->getMessage(), [
+                    'filePath' => $fileAbsolutePath ?? 'file',
+                ]);
+            }
 
-            if ($ast === null) {
-                $this->logger->warning("Skipping ::replaceClassname() in file due to parse failure.");
-            } else {
+            if (!is_null($ast)) {
                 $positions = $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols);
 
                 // Adjust positions to be relative to the original $contents (before any <?php prepend).
