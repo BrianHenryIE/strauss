@@ -1,13 +1,12 @@
 <?php
 /**
- * Creates a deletes a temp directory for tests.
+ * Creates and deletes a temp directory for tests.
  *
  * Could just system temp directory, but this is useful for setting breakpoints and seeing what has happened.
  */
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
@@ -22,14 +21,11 @@ use League\Flysystem\Config;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Psr\Log\LoggerInterface;
 use League\Flysystem\StorageAttributes;
 use SplFileInfo;
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use Symfony\Component\Console\Input\ArgvInput;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -71,7 +67,7 @@ class IntegrationTestCase extends TestCase
         // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
         // we set breakpoints, we can easily browse the files.
         if ($this->isPhpStormRunning()) {
-            $this->testsWorkingDir = getcwd() . '/teststempdir';
+            $this->testsWorkingDir = getcwd() . '/teststempdir/' . substr(uniqid(), 4);
         }
 
         if (file_exists($this->testsWorkingDir)) {
@@ -79,7 +75,6 @@ class IntegrationTestCase extends TestCase
         }
 
         @mkdir($this->testsWorkingDir);
-//        $this->createWorkingDir();
 
         chdir($this->testsWorkingDir);
 
@@ -137,6 +132,9 @@ class IntegrationTestCase extends TestCase
                         IntegrationTestCase $integrationTestCase,
                         ?string $name = null
                     ) {
+                        // PHP Fatal error:  Type of BrianHenryIE\Strauss\Console\Commands\DependenciesCommand@anonymous::$logger
+                        // must be ?Psr\Log\LoggerInterface (as in class BrianHenryIE\Strauss\Console\Commands\AbstractRenamespacerCommand)
+                        // in /home/runner/work/strauss/strauss/tests/IntegrationTestCase.php on line 131
                         $this->logger = $integrationTestCase->getTestLogger();
                         $this->integrationTestCase = $integrationTestCase;
                         parent::__construct($name);
@@ -203,6 +201,7 @@ class IntegrationTestCase extends TestCase
             // Not ideal, but not important enough to fail hard.
         }
 
+        // Hmmm... `mem` also needs to be unique to the tests run.
         /** @var FilesystemRegistry $registry */
         try {
             $registry = ServiceLocator::get(FilesystemRegistry::class);
@@ -332,27 +331,6 @@ class IntegrationTestCase extends TestCase
             }
         }
         return $append;
-    }
-
-    protected function createWorkingDir(): void
-    {
-        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
-
-        if ('Darwin' === PHP_OS) {
-            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
-        }
-
-        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
-        // we set breakpoints, we can easily browse the files.
-        if ($this->isPhpStormRunning()) {
-            $this->testsWorkingDir = getcwd() . '/teststempdir/';
-        }
-
-        if (file_exists($this->testsWorkingDir)) {
-            $this->deleteDir($this->testsWorkingDir);
-        }
-
-        @mkdir($this->testsWorkingDir);
     }
 
     protected FileSystem $localFileSystem;
