@@ -69,16 +69,19 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::tearDown();
 
+        Mockery::close();
+
         if (in_array('mem', stream_get_wrappers())) {
             /** @var FilesystemRegistry $registry */
             $registry = ServiceLocator::get(FilesystemRegistry::class);
-            /**
-             * Also runs `stream_wrapper_unregister('mem')`
-             */
-            $registry->unregister('mem');
+            try {
+                /**
+                 * Also runs `stream_wrapper_unregister('mem')`
+                 */
+                $registry->unregister('mem');
+            } catch (Exception $e) {
+            }
         }
-
-        Mockery::close();
     }
 
     protected static function stripWhitespaceAndBlankLines(string $string): string
