@@ -23,17 +23,19 @@ abstract class DiscoveredSymbol
     // E.g. for `My\Ns\Classname` this is just `Classname`.
     protected string $localOriginalSymbol;
 
+    protected string $fqdnOriginalSymbol;
+
     protected string $localReplacement;
 
     protected bool $doRename = true;
 
     /**
      * @param string $fqdnSymbol The classname / namespace etc.
-     * @param FileBase $sourceFile The file it was discovered in.
+     * @param ?FileBase $sourceFile The file it was discovered in. Unneeded for global namespace and some (Composer) predictable files.
      */
     public function __construct(
         string $fqdnSymbol,
-        FileBase $sourceFile
+        ?FileBase $sourceFile = null
     ) {
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 
@@ -44,8 +46,10 @@ abstract class DiscoveredSymbol
             $this->localOriginalSymbol = array_reverse(explode($fqdnSymbol, '\\'))[0];
         }
 
-        $this->addSourceFile($sourceFile);
-        $sourceFile->addDiscoveredSymbol($this);
+        if ($sourceFile) {
+            $this->addSourceFile($sourceFile);
+            $sourceFile->addDiscoveredSymbol($this);
+        }
     }
 
     public function getOriginalSymbol(): string

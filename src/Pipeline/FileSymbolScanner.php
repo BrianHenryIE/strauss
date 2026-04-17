@@ -115,15 +115,14 @@ class FileSymbolScanner
             $this->logger->info("Scanning file:::" . $relativeFilePath);
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
-                $file,
-                $file instanceof FileWithDependency ? $file->getDependency() : null
+                $file
             );
         }
 
         return $this->discoveredSymbols;
     }
 
-    protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
+    protected function find(string $contents, ?FileBase $file = null): void
     {
         $namespaces = $this->splitByNamespace($contents);
 
@@ -269,7 +268,7 @@ class FileSymbolScanner
         $classSymbol->addSourceFile($file);
     }
 
-    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file): NamespaceSymbol
+    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, ?FileBase $file = null): NamespaceSymbol
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($fqdnNamespace);
         if (is_null($namespaceObj)) {

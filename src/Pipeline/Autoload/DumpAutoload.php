@@ -281,17 +281,13 @@ class DumpAutoload
         );
 
         $sourceFile = new File(__DIR__, __DIR__, __DIR__);
-        $composerAutoloadNamespaceSymbol = new NamespaceSymbol(
-            'Composer\\Autoload',
-            $sourceFile
-        );
+
+        $composerAutoloadNamespaceSymbol = new NamespaceSymbol('Composer\\Autoload');
         $composerAutoloadNamespaceSymbol->setLocalReplacement(
             $this->config->getNamespacePrefix() . '\\Composer\\Autoload'
         );
-        $composerNamespaceSymbol = new NamespaceSymbol(
-            'Composer',
-            $sourceFile
-        );
+
+        $composerNamespaceSymbol = new NamespaceSymbol('Composer');
         $composerNamespaceSymbol->setLocalReplacement(
             $this->config->getNamespacePrefix() . '\\Composer'
         );
