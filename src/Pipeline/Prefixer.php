@@ -237,6 +237,13 @@ class Prefixer
             }
         }
 
+        // TODO: filter to only namespaces of more than a single depth.
+        foreach ($discoveredSymbols->getNamespaces() as $classSymbol) {
+            if ($classSymbol->isDoRename()) {
+                $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
+            }
+        }
+
         // TODO: Move this out of the loop.
         $namespacesChangesStrings = [];
         foreach ($namespacesChanges as $originalNamespace => $namespaceSymbol) {
@@ -568,11 +575,17 @@ class Prefixer
         return $positions;
     }
 
-    protected function replaceSingleClassnameInString(string $contents, NamespacedSymbol $symbol): string
+    protected function replaceSingleClassnameInString(string $contents, DiscoveredSymbol $symbol): string
     {
-        if ($symbol->getNamespaceName()->isGlobal()) {
+        if ($symbol instanceof NamespacedSymbol && $symbol->getNamespace()->isGlobal()) {
             $replacementSymbolString = $symbol->getLocalReplacement();
-            $originalSymbolString = $symbol->getOriginalSymbolStripPrefix($this->config->getClassmapPrefix());
+            $originalSymbolString    = $symbol->getOriginalSymbolStripPrefix($this->config->getClassmapPrefix());
+        } elseif ($symbol instanceof NamespaceSymbol) {
+            if ($symbol->isGlobal()) {
+                return $contents;
+            }
+            $originalSymbolString = $symbol->getOriginalSymbol();
+            $replacementSymbolString = $symbol->getReplacementFqdnName();
         } else {
             $originalSymbolString = $symbol->getOriginalFqdnName();
             $replacementSymbolString = $symbol->getFqdnReplacement();
