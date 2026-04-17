@@ -137,35 +137,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         parent::configure();
     }
 
-    /**
-     * @param InputInterface $input The command line input to check for `--debug`, `--silent` etc.
-     * @param OutputInterface $output The Symfony object that actually prints the messages.
-     */
-    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
-    {
-        $isDryRun = isset($this->config) && $this->config->isDryRun();
-
-        // Who would want to dry-run without output?
-        if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
-            return new NullLogger();
-        }
-
-        $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
-
-        if ($input->hasOption('info') && $input->getOption('info') !== false) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        if ($isDryRun || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-            $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        return isset($this->logger) && $this->logger instanceof TestLogger
-            ? $this->logger
-            : new ConsoleLogger($output, $logLevel);
-    }
-
     protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
     {
         $normalizer = new WhitespacePathNormalizer();
@@ -204,7 +175,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->setLogger($this->getIOLogger($input, $output));
+//        $this->setLogger($this->getIOLogger($input, $output));
 
         try {
             $this->logger->notice('Starting... '/** version */); // + PHP version

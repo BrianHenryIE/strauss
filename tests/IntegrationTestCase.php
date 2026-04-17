@@ -129,31 +129,25 @@ class IntegrationTestCase extends TestCase
                 break;
             default:
                 $strauss = new class($this) extends DependenciesCommand {
+
+                    protected $logger;
                     protected IntegrationTestCase $integrationTestCase;
 
                     public function __construct(
                         IntegrationTestCase $integrationTestCase,
                         ?string $name = null
                     ) {
+                        $this->logger = $integrationTestCase->getTestLogger();
                         $this->integrationTestCase = $integrationTestCase;
                         parent::__construct($name);
                     }
 
-                    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
-                    {
-                        return method_exists($this->integrationTestCase, 'getIOLogger')
-                            ? $this->integrationTestCase->getIOLogger($input, $output)
-                            : $this->integrationTestCase->getLogger();
-                    }
-
                     protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
                     {
-                        return $this->integrationTestCase->getReadOnlyFileSystem($filesystem);
+                        return $this->integrationTestCase->getReadOnlyFileSystem($filesystem->getAdapter());
                     }
                 };
         }
-
-        $strauss->setLogger($this->getTestLogger());
 
         // TODO: I don't know what I did to break the previous colorlogger output so this is just a crutch.
         $output = new class() extends BufferedOutput {

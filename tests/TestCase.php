@@ -242,7 +242,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Use this method to retrieve the test logger for assertions.
      */
-    protected function getTestLogger(): TestLogger
+    public function getTestLogger(): TestLogger
     {
         if (!isset($this->testLogger)) {
             $this->testLogger = new ColorLogger();
