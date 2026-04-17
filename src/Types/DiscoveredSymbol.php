@@ -25,7 +25,7 @@ abstract class DiscoveredSymbol
 
     protected string $fqdnOriginalSymbol;
 
-    protected string $localReplacement;
+    protected ?string $localReplacement = null;
 
     protected bool $doRename = true;
 
@@ -57,9 +57,12 @@ abstract class DiscoveredSymbol
         return $this->fqdnOriginalSymbol;
     }
 
+    /**
+     * Defaults to the original until otherwise set.
+     */
     public function getReplacementFqdnName(): string
     {
-        return $this->fqdnOriginalSymbol;
+        return $this->localReplacement ?? $this->fqdnOriginalSymbol;
     }
 
     /**
