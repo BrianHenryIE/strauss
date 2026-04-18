@@ -51,7 +51,7 @@ class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
             'type' => 'trait',
             'traitname' => $this->getOriginalLocalName(),
             'namespace' => $this->namespace->getOriginalSymbol(),
-            'use' => [$this->getLocalReplacement()],
+            'use' => [$this->getReplacementFqdnName()],
         );
     }
 }

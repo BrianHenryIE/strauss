@@ -50,4 +50,15 @@ class NamespacedSymbol extends DiscoveredSymbol
             ? $this->namespace->getOriginalSymbol()
             : null; // TODO: should this return `\`?
     }
+
+    /**
+     * Defaults to the original until otherwise set.
+     */
+    public function getReplacementFqdnName(): string
+    {
+        if (!$this->namespace->isGlobal()) {
+            return $this->namespace->getReplacementFqdnName() . '\\' . ($this->localReplacement ?? $this->localOriginalSymbol);
+        }
+        return  $this->localReplacement ?? $this->localOriginalSymbol;
+    }
 }

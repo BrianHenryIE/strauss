@@ -68,7 +68,7 @@ class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
             'classname' => $this->getOriginalLocalName(),
             'isabstract' => $this->isAbstract,
             'namespace' => $this->namespace->getOriginalSymbol(),
-            'extends' => $this->getLocalReplacement(),
+            'extends' => $this->getReplacementFqdnName(),
             'implements' => $this->interfaces,
         );
     }
