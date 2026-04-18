@@ -147,4 +147,9 @@ abstract class DiscoveredSymbol
 
         return $fqdnOriginalSymbol;
     }
+
+    public function __toString(): string
+    {
+        return $this->getOriginalSymbol();
+    }
 }

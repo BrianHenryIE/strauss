@@ -114,7 +114,7 @@ class Aliases
     protected function getModifiedSymbols(DiscoveredSymbols $symbols): DiscoveredSymbols
     {
         $modifiedSymbols = new DiscoveredSymbols();
-        foreach ($symbols->getAll() as $symbol) {
+        foreach ($symbols->toArray() as $symbol) {
             if ($symbol->getOriginalSymbol() !== $symbol->getLocalReplacement()) {
                 $modifiedSymbols->add($symbol);
             }
@@ -175,7 +175,7 @@ class Aliases
     {
         $result = [];
 
-        foreach ($symbols->getAll() as $originalSymbolFqdn => $symbol) {
+        foreach ($symbols->toArray() as $originalSymbolFqdn => $symbol) {
             if ($symbol->getOriginalSymbol() === $symbol->getLocalReplacement()) {
                 continue;
             }

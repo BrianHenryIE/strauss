@@ -90,9 +90,9 @@ class ChangeEnumerator
 
 
         $classesTraitsInterfaces = array_merge(
-            $discoveredSymbols->getDiscoveredTraits(),
-            $discoveredSymbols->getDiscoveredInterfaces(),
-            $discoveredSymbols->getAllClasses()
+            $discoveredSymbols->getDiscoveredTraits()->toArray(),
+            $discoveredSymbols->getDiscoveredInterfaces()->toArray(),
+            $discoveredSymbols->getAllClasses()->toArray()
         );
 
         foreach ($classesTraitsInterfaces as $symbol) {

@@ -78,7 +78,7 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getDiscoveredNamespaces());
+        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getDiscoveredNamespaces()->toArray());
 //        $this->assertContains('Prefix\MyNamespace', $sut->getDiscoveredNamespaces());
 
         $this->assertNotContains('MyClass', $discoveredSymbols->getDiscoveredClasses());
@@ -114,7 +114,7 @@ EOD;
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
-        $this->assertContains('MyClass', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -151,9 +151,9 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getDiscoveredNamespaces());
+        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getDiscoveredNamespaces()->toArray());
 
-        $this->assertContains('MyClass', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -191,10 +191,10 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getDiscoveredNamespaces());
+        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getDiscoveredNamespaces()->toArray());
 
-        $this->assertContains('MyClass', $discoveredSymbols->getDiscoveredClasses());
-        $this->assertNotContains('MyOtherClass', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayNotHasKey('MyOtherClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -253,7 +253,7 @@ EOD;
             self::fail('Should not throw an exception');
         }
 
-        $this->assertEmpty($discoveredSymbols->getDiscoveredNamespaces());
+        $this->assertEmpty($discoveredSymbols->getDiscoveredNamespaces()->toArray());
     }
 
     /**
@@ -287,8 +287,8 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertContains('MyClass', $discoveredSymbols->getDiscoveredClasses());
-        $this->assertContains('MyOtherClass', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayNotHasKey('MyOtherClass', $discoveredSymbols->getDiscoveredClasses());
     }
 
     /**
@@ -320,8 +320,8 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
-        $this->assertContains('Whatever', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('Whatever', $discoveredSymbols->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -354,8 +354,8 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
-        $this->assertContains('Whatever', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('Whatever', $discoveredSymbols->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -392,8 +392,8 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
-        $this->assertContains('Whatever', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('Whatever', $discoveredSymbols->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -423,8 +423,8 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
-        $this->assertContains('Whatever_Trevor', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('Whatever_Trevor', $discoveredSymbols->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -457,8 +457,8 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertNotContains('as', $discoveredSymbols->getDiscoveredClasses());
-        $this->assertContains('Whatever_Ever', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('Whatever_Ever', $discoveredSymbols->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -487,7 +487,7 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertContains('Pear', $result->getDiscoveredClasses());
+        $this->assertArrayHasKey('Pear', $result->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -521,7 +521,7 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertContains('WP_Dependency_Installer', $result->getDiscoveredClasses());
+        $this->assertArrayHasKey('WP_Dependency_Installer', $result->getDiscoveredClasses()->toArray());
     }
 
 
@@ -597,7 +597,7 @@ EOD;
         $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
         $result = $sut->findInFiles($files);
 
-        $this->assertEmpty($result->getDiscoveredNamespaces());
+        $this->assertEmpty($result->getDiscoveredNamespaces()->toArray());
     }
 
     /**
@@ -631,7 +631,7 @@ EOD;
         $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
         $result = $sut->findInFiles($files);
 
-        $this->assertEmpty($result->getDiscoveredNamespaces());
+        $this->assertEmpty($result->getDiscoveredNamespaces()->toArray());
     }
 
     /**
@@ -669,7 +669,7 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('BrianHenryIE\PdfHelpers', $result->getDiscoveredNamespaces());
+        $this->assertArrayHasKey('BrianHenryIE\PdfHelpers', $result->getDiscoveredNamespaces()->toArray());
 //        $this->assertContains('BrianHenryIE\Prefix\PdfHelpers', $fileScanner->getDiscoveredNamespaces());
 //        $this->assertNotContains('BrianHenryIE\Prefix\BrianHenryIE\PdfHelpers', $fileScanner->getDiscoveredNamespaces());
     }
@@ -766,10 +766,10 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $constants = $result->getDiscoveredConstants();
+        $constants = $result->getDiscoveredConstants()->toArray();
 
-        $this->assertContains('FPDF_VERSION', $constants);
-        $this->assertContains('ANOTHER_CONSTANT', $constants);
+        $this->assertArrayHasKey('FPDF_VERSION', $constants);
+        $this->assertArrayHasKey('ANOTHER_CONSTANT', $constants);
     }
 
     /**
@@ -813,8 +813,8 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayNotHasKey('WPGraphQL', $result->getDiscoveredNamespaces());
-        $this->assertContains('WPGraphQL', $result->getDiscoveredClasses());
+        $this->assertArrayNotHasKey('WPGraphQL', $result->getDiscoveredNamespaces()->toArray());
+        $this->assertArrayHasKey('WPGraphQL', $result->getDiscoveredClasses()->toArray());
     }
 
     /**
@@ -858,9 +858,9 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('topFunction', $result->getDiscoveredFunctions());
-        $this->assertArrayNotHasKey('aMethod', $result->getDiscoveredFunctions());
-        $this->assertArrayHasKey('lowerFunction', $result->getDiscoveredFunctions());
+        $this->assertArrayHasKey('topFunction', $result->getDiscoveredFunctions()->toArray());
+        $this->assertArrayNotHasKey('aMethod', $result->getDiscoveredFunctions()->toArray());
+        $this->assertArrayHasKey('lowerFunction', $result->getDiscoveredFunctions()->toArray());
     }
 
     /**
@@ -903,7 +903,7 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('collect', $result->getDiscoveredFunctions());
+        $this->assertArrayHasKey('collect', $result->getDiscoveredFunctions()->toArray());
     }
 
     /**
@@ -945,9 +945,9 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayNotHasKey('str_starts_with', $result->getDiscoveredFunctions());
-        $this->assertArrayNotHasKey('mb_convert_case', $result->getDiscoveredFunctions());
-        $this->assertArrayHasKey('lowerFunction', $result->getDiscoveredFunctions());
+        $this->assertArrayNotHasKey('str_starts_with', $result->getDiscoveredFunctions()->toArray());
+        $this->assertArrayNotHasKey('mb_convert_case', $result->getDiscoveredFunctions()->toArray());
+        $this->assertArrayHasKey('lowerFunction', $result->getDiscoveredFunctions()->toArray());
     }
 
     /**
@@ -996,7 +996,7 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('twig_cycle', $result->getDiscoveredFunctions());
+        $this->assertArrayHasKey('twig_cycle', $result->getDiscoveredFunctions()->toArray());
     }
 
     /**
@@ -1035,6 +1035,6 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertEmpty($result->getDiscoveredClasses());
+        $this->assertEmpty($result->getDiscoveredClasses()->toArray());
     }
 }

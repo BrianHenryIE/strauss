@@ -359,7 +359,7 @@ class InstalledJson
     {
         $this->logger->debug('InstalledJson::updateNamespaces()');
 
-        $discoveredNamespaces = $discoveredSymbols->getNamespaces();
+        $discoveredNamespaces = $discoveredSymbols->getNamespaces()->toArray();
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
             if (!isset($package['autoload'])) {

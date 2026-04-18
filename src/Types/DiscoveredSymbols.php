@@ -5,10 +5,12 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
-use BrianHenryIE\Strauss\Files\File;
+use ArrayAccess;
+use ArrayIterator;
 use InvalidArgumentException;
+use IteratorAggregate;
 
-class DiscoveredSymbols
+class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
 {
     private const CLASS_SYMBOL = 'CLASS';
     private const CONST_SYMBOL = 'CONST';
@@ -31,9 +33,17 @@ class DiscoveredSymbols
         self::INTERFACE_SYMBOL => [],
     ];
 
-    public function __construct()
+    /**
+     * @param DiscoveredSymbol[] $symbols
+     */
+    public function __construct(array $symbols = [])
     {
-        $this->types[self::NAMESPACE_SYMBOL]['\\'] = NamespaceSymbol::global();
+        if (empty($symbols)) {
+            $this->types[self::NAMESPACE_SYMBOL]['\\'] = NamespaceSymbol::global();
+        }
+        foreach ($symbols as $symbol) {
+            $this->add($symbol);
+        }
     }
 
     /**
@@ -70,30 +80,32 @@ class DiscoveredSymbols
     /**
      * @return DiscoveredSymbol[]
      */
-    public function getSymbols(): array
+    public function getSymbols(): DiscoveredSymbols
     {
-        return array_merge(
-            array_values($this->getNamespaces()),
-            array_values($this->getGlobalClassesInterfacesTraits()),
-            array_values($this->getConstants()),
-            array_values($this->getDiscoveredFunctions()),
+        return new DiscoveredSymbols(
+            array_merge(
+                array_values($this->getNamespaces()->toArray()),
+                array_values($this->getGlobalClassesInterfacesTraits()->toArray()),
+                array_values($this->getConstants()->toArray()),
+                array_values($this->getDiscoveredFunctions()->toArray()),
+            )
         );
     }
 
     /**
      * @return array<string, ConstantSymbol>
      */
-    public function getConstants(): array
+    public function getConstants(): DiscoveredSymbols
     {
-        return $this->types[self::CONST_SYMBOL];
+        return new DiscoveredSymbols($this->types[self::CONST_SYMBOL]);
     }
 
     /**
      * @return array<string, NamespaceSymbol>
      */
-    public function getNamespaces(): array
+    public function getNamespaces(): DiscoveredSymbols
     {
-        return $this->types[self::NAMESPACE_SYMBOL];
+        return new DiscoveredSymbols($this->types[self::NAMESPACE_SYMBOL]);
     }
 
     public function getNamespace(string $namespace): ?NamespaceSymbol
@@ -104,43 +116,49 @@ class DiscoveredSymbols
     /**
      * @return array<string, ClassSymbol>
      */
-    public function getClassesInterfacesTraits(): array
+    public function getClassesInterfacesTraits(): DiscoveredSymbols
     {
-        return array_merge(
-            $this->types[self::CLASS_SYMBOL],
-            $this->types[self::TRAIT_SYMBOL],
-            $this->types[self::INTERFACE_SYMBOL],
+        return new DiscoveredSymbols(
+            array_merge(
+                $this->types[self::CLASS_SYMBOL],
+                $this->types[self::TRAIT_SYMBOL],
+                $this->types[self::INTERFACE_SYMBOL],
+            )
         );
     }
 
     /**
      * @return array<string, ClassSymbol>
      */
-    public function getGlobalClassesInterfacesTraits(): array
+    public function getGlobalClassesInterfacesTraits(): DiscoveredSymbols
     {
-        return array_filter(
-            $this->getClassesInterfacesTraits(),
-            fn($symbol) => $symbol->getNamespace()->isGlobal()
+        return new DiscoveredSymbols(
+            array_filter(
+                $this->getClassesInterfacesTraits()->toArray(),
+                fn($symbol) => ($symbol instanceof NamespacedSymbol) && $symbol->getNamespace()->isGlobal()
+            )
         );
     }
 
     /**
      * @return array<string, ClassSymbol>
      */
-    public function getGlobalClassChanges(): array
+    public function getGlobalClassChanges(): DiscoveredSymbols
     {
-        return array_filter(
-            $this->getGlobalClassesInterfacesTraits(),
-            fn($classSymbol) => $classSymbol->isDoRename()
+        return new DiscoveredSymbols(
+            array_filter(
+                $this->getGlobalClassesInterfacesTraits()->toArray(),
+                fn($classSymbol) => $classSymbol->isDoRename()
+            )
         );
     }
 
     /**
      * @return array<string, ClassSymbol>
      */
-    public function getAllClasses(): array
+    public function getAllClasses(): DiscoveredSymbols
     {
-        return $this->types[self::CLASS_SYMBOL];
+        return new DiscoveredSymbols($this->types[self::CLASS_SYMBOL]);
     }
 
     /**
@@ -148,7 +166,7 @@ class DiscoveredSymbols
      *
      * @return array<string, NamespaceSymbol>
      */
-    public function getDiscoveredNamespaces(?string $namespacePrefix = ''): array
+    public function getDiscoveredNamespaces(?string $namespacePrefix = ''): DiscoveredSymbols
     {
         $discoveredNamespaceReplacements = [];
 
@@ -162,47 +180,54 @@ class DiscoveredSymbols
             return strlen($a) <=> strlen($b);
         });
 
+        // TODO: should this stay, since it should have a list of relevant files in it.
         unset($discoveredNamespaceReplacements['\\']);
 
-        return $discoveredNamespaceReplacements;
+        return new DiscoveredSymbols($discoveredNamespaceReplacements);
     }
 
     /**
      * @return array<string, NamespaceSymbol>
      */
-    public function getDiscoveredNamespaceChanges(?string $namespacePrefix = ''): array
+    public function getDiscoveredNamespaceChanges(?string $namespacePrefix = ''): DiscoveredSymbols
     {
-        return array_filter(
-            $this->getdiscoveredNamespaces($namespacePrefix),
-            fn($namespaceSymbol) => $namespaceSymbol->isDoRename()
+        return new DiscoveredSymbols(
+            array_filter(
+                $this->getdiscoveredNamespaces($namespacePrefix)->toArray(),
+                fn($namespaceSymbol) => $namespaceSymbol->isDoRename()
+            )
         );
     }
 
     /**
      * @return string[]
      */
-    public function getDiscoveredClasses(?string $classmapPrefix = ''): array
+    public function getDiscoveredClasses(?string $classmapPrefix = ''): DiscoveredSymbols
     {
-        $discoveredClasses = $this->getGlobalClassesInterfacesTraits();
+        $discoveredClasses = $this->getGlobalClassesInterfacesTraits()->toArray();
 
-        return array_filter(
-            array_keys($discoveredClasses),
-            function (string $replacement) use ($classmapPrefix) {
-                return empty($classmapPrefix) || ! str_starts_with($replacement, $classmapPrefix);
-            }
+        return new DiscoveredSymbols(
+            array_filter(
+                $discoveredClasses,
+                function ($replacement) use ($classmapPrefix) {
+                    return empty($classmapPrefix) || ! str_starts_with($replacement->getLocalReplacement(), $classmapPrefix);
+                }
+            )
         );
     }
 
     /**
      * @return string[]
      */
-    public function getDiscoveredConstants(?string $constantsPrefix = ''): array
+    public function getDiscoveredConstants(?string $constantsPrefix = ''): DiscoveredSymbols
     {
-        return array_filter(
-            array_keys($this->getConstants()),
-            function (string $replacement) use ($constantsPrefix) {
-                return empty($constantsPrefix) || ! str_starts_with($replacement, $constantsPrefix);
-            }
+        return new DiscoveredSymbols(
+            array_filter(
+                $this->getConstants()->toArray(),
+                function (ConstantSymbol $replacement) use ($constantsPrefix) {
+                    return empty($constantsPrefix) || ! str_starts_with($replacement->getOriginalSymbol(), $constantsPrefix);
+                }
+            )
         );
     }
 
@@ -211,61 +236,58 @@ class DiscoveredSymbols
      *
      * @return string[]
      */
-    public function getDiscoveredConstantChanges(?string $constantsPrefix = ''): array
+    public function getDiscoveredConstantChanges(?string $constantsPrefix = ''): DiscoveredSymbols
     {
+        /** @var ConstantSymbol[] $constantsToRename */
         $constantsToRename = array_filter(
-            $this->getConstants(),
-            fn(ConstantSymbol $symbol) => $symbol->isDoRename()
+            $this->getConstants()->toArray(),
+            fn(DiscoveredSymbol $symbol): bool => ($symbol instanceof ConstantSymbol) && $symbol->isDoRename()
         );
-        return array_filter(
-            array_keys($constantsToRename),
-            function (string $replacement) use ($constantsPrefix) {
-                return empty($constantsPrefix) || ! str_starts_with($replacement, $constantsPrefix);
-            }
+        return new DiscoveredSymbols(
+            array_filter(
+                $constantsToRename,
+                function (ConstantSymbol $replacement) use ($constantsPrefix) {
+                    return empty($constantsPrefix) || ! str_starts_with($replacement->getLocalReplacement(), $constantsPrefix);
+                }
+            )
         );
     }
 
     /**
      * @return FunctionSymbol[]
      */
-    public function getDiscoveredFunctions(): array
+    public function getDiscoveredFunctions(): DiscoveredSymbols
     {
-        return $this->types[self::FUNCTION_SYMBOL];
+        return new DiscoveredSymbols($this->types[self::FUNCTION_SYMBOL]);
     }
 
     /**
      * @return FunctionSymbol[]
      */
-    public function getDiscoveredFunctionChanges(): array
+    public function getDiscoveredFunctionChanges(): DiscoveredSymbols
     {
-        return array_filter(
-            $this->getDiscoveredFunctions(),
-            fn($discoveredFunction) => $discoveredFunction->isDoRename()
+        return new DiscoveredSymbols(
+            array_filter(
+                $this->getDiscoveredFunctions()->toArray(),
+                fn(DiscoveredSymbol $discoveredFunction) => ($discoveredFunction instanceof FunctionSymbol) && $discoveredFunction->isDoRename()
+            )
         );
-    }
-
-    /**
-     * @return array<string,DiscoveredSymbol>
-     */
-    public function getAll(): array
-    {
-        return array_merge(...array_values($this->types));
     }
 
     /**
      * @return array<string,TraitSymbol>
      */
-    public function getDiscoveredTraits(): array
+    public function getDiscoveredTraits(): DiscoveredSymbols
     {
-        return (array) $this->types[self::TRAIT_SYMBOL];
+        return new DiscoveredSymbols($this->types[self::TRAIT_SYMBOL]);
     }
 
     /**
      * @return array<string,InterfaceSymbol>
      */
-    public function getDiscoveredInterfaces(): array
+    public function getDiscoveredInterfaces(): DiscoveredSymbols
     {
-        return (array) $this->types[self::INTERFACE_SYMBOL];
+        return new DiscoveredSymbols($this->types[self::INTERFACE_SYMBOL]);
     }
 
     /**
@@ -273,12 +295,14 @@ class DiscoveredSymbols
      *
      * @return array<DiscoveredSymbol>
      */
-    public function getClassmapSymbols(): array
+    public function getClassmapSymbols(): DiscoveredSymbols
     {
-        return array_merge(
-            $this->getGlobalClassesInterfacesTraits(),
-            $this->getDiscoveredInterfaces(),
-            $this->getDiscoveredTraits(),
+        return new DiscoveredSymbols(
+            array_merge(
+                $this->getGlobalClassesInterfacesTraits(),
+                $this->getDiscoveredInterfaces(),
+                $this->getDiscoveredTraits(),
+            )
         );
     }
 
@@ -308,7 +332,39 @@ class DiscoveredSymbols
         return $this->types[self::INTERFACE_SYMBOL][$interface] ?? null;
     }
 
-    public function toArray(): array {
+    public function toArray(): array
+    {
+        unset($this->types[self::NAMESPACE_SYMBOL]['\\']);
         return array_merge(...array_values($this->types));
+    }
+
+    public function __serialize(): array
+    {
+        return $this->toArray();
+    }
+
+    public function getIterator()
+    {
+        return new ArrayIterator($this->toArray());
+    }
+
+    public function offsetExists($offset)
+    {
+        return in_array($offset, $this->toArray(), true);
+    }
+
+    public function offsetGet($offset)
+    {
+        return $this->toArray()[$offset] ?? null;
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        throw new \BadMethodCallException();
+    }
+
+    public function offsetUnset($offset)
+    {
+        throw new \BadMethodCallException();
     }
 }
