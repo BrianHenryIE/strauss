@@ -181,12 +181,9 @@ class Prefixer
      */
     public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents, ?string $fileAbsolutePath = null): string
     {
-        $globalPrefix = $this->config->getClassmapPrefix();
-
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
         $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
-        $globalClasses = $discoveredSymbols->getGlobalClassChanges();
-        $functions = $discoveredSymbols->getDiscoveredFunctionChanges()->getDiscoveredFunctions();
+        $functions = $discoveredSymbols->getDiscoveredFunctionChanges();
 
         // This is maybe deprecated since regex has been replaced by php-parser.
         $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges->toArray());
@@ -219,7 +216,7 @@ class Prefixer
         if (!is_null($ast)) {
             $positions = array_merge(
                 $positions,
-                $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraits()),
+                $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraitsToRename()),
                 $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
             );
         }
@@ -515,7 +512,7 @@ class Prefixer
     protected function findGlobalSymbolsPositionsInComment(Comment $comment, DiscoveredSymbols $globalSymbols): array
     {
         $positions = [];
-        foreach ($globalSymbols->getGlobalClassesInterfacesTraits() as $discoveredSymbol) {
+        foreach ($globalSymbols->getGlobalClassesInterfacesTraitsToRename() as $discoveredSymbol) {
             $positions = array_merge($positions, $this->findGlobalSymbolPositionInComment($comment, $discoveredSymbol));
         }
         return $positions;
@@ -633,10 +630,9 @@ class Prefixer
      * @param string $originalClassname
      * @param string $classnamePrefix
      */
-    public function findGlobalSymbolsPositionsInAst(array $ast, DiscoveredSymbols $discoveredSymbols): array
+    public function findGlobalSymbolsPositionsInAst(array $ast, DiscoveredSymbols $globalClassesInterfacesTraitsToRename): array
     {
-        $globalClassesInterfacesTraits = $discoveredSymbols->getGlobalClassesInterfacesTraits();
-        if (empty($globalClassesInterfacesTraits)) {
+        if (empty($globalClassesInterfacesTraitsToRename)) {
             return [];
         }
 
@@ -644,26 +640,26 @@ class Prefixer
         $positions = [];
 
         // Replace \Classname (fully qualified) references in any namespace context.
-        $fqNodes = $nodeFinder->find($ast, function (Node $node) use ($discoveredSymbols, &$positions) {
+        $fqNodes = $nodeFinder->find($ast, function (Node $node) use ($globalClassesInterfacesTraitsToRename, &$positions) {
             if ($node->getAttribute('comments')) {
                 /** @var \PhpParser\Comment\Doc $comment */
                 $comment = $node->getAttribute('comments')[0];
                 $positions = array_merge(
                     $positions,
-                    $this->findGlobalSymbolsPositionsInComment($comment, $discoveredSymbols)
+                    $this->findGlobalSymbolsPositionsInComment($comment, $globalClassesInterfacesTraitsToRename)
                 );
             }
             if (!( $node instanceof Name\FullyQualified )) {
                 return false;
             }
-            return $this->hasGlobalSymbolForNode($node, $discoveredSymbols);
+            return $this->hasGlobalSymbolForNode($node, $globalClassesInterfacesTraitsToRename);
         });
 
         foreach ($fqNodes as $node) {
             $positions[] = [
                 'start' => $node->getStartFilePos(),
                 'end' => $node->getEndFilePos() + 1,
-                'replacement' => '\\' . $this->getReplacementStringForNode($node, $discoveredSymbols),
+                'replacement' => '\\' . $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename),
             ];
         }
 
@@ -677,9 +673,9 @@ class Prefixer
             $useItems = $nodeFinder->findInstanceOf($nsStmt->stmts ?? [], \PhpParser\Node\UseItem::class);
             foreach ($useItems as $useItem) {
                 if (!($useItem->name instanceof Name\FullyQualified)
-                     && $discoveredSymbols->getClass($useItem->name->toString())
+                     && $globalClassesInterfacesTraitsToRename->getClass($useItem->name->toString())
                 ) {
-                    $symbol = $discoveredSymbols->getClass($useItem->name->toString());
+                    $symbol = $globalClassesInterfacesTraitsToRename->getClass($useItem->name->toString());
                     if ($symbol->isDoRename()) {
                         $replacementClassname = $symbol->getLocalReplacement();
                         $useClassname = array_reverse(explode('\\', $useItem->name->toString()))[0];
@@ -712,7 +708,7 @@ class Prefixer
             }
         }
 
-        $classLike = $nodeFinder->find($globalStmts, function (Node $node) use ($discoveredSymbols) {
+        $classLike = $nodeFinder->find($globalStmts, function (Node $node) use ($globalClassesInterfacesTraitsToRename) {
             return ($node instanceof \PhpParser\Node\Stmt\Class_
                 || $node instanceof \PhpParser\Node\Stmt\Interface_
                 || $node instanceof \PhpParser\Node\Stmt\Trait_
@@ -720,29 +716,29 @@ class Prefixer
                 && isset($node->name)
                 && $node->name instanceof \PhpParser\Node\Identifier
                 && (
-                       $discoveredSymbols->getClass($node->name->name)
-                       || $discoveredSymbols->getInterface($node->name->name)
-                       || $discoveredSymbols->getTrait($node->name->name)
+                       $globalClassesInterfacesTraitsToRename->getClass($node->name->name)
+                       || $globalClassesInterfacesTraitsToRename->getInterface($node->name->name)
+                       || $globalClassesInterfacesTraitsToRename->getTrait($node->name->name)
                    );
         });
         foreach ($classLike as $node) {
             $positions[] = [
                 'start' => $node->name->getStartFilePos(),
                 'end' => $node->name->getEndFilePos() + 1,
-                'replacement' => $this->getReplacementStringForNode($node, $discoveredSymbols),
+                'replacement' => $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename),
             ];
         }
 
-        $unqualifiedNameNodes = $nodeFinder->find($globalStmts, function (Node $node) use ($discoveredSymbols) {
+        $unqualifiedNameNodes = $nodeFinder->find($globalStmts, function (Node $node) use ($globalClassesInterfacesTraitsToRename) {
             return $node instanceof Name
                 && !($node instanceof Name\FullyQualified)
-                   && $this->hasGlobalSymbolForNode($node, $discoveredSymbols);
+                   && $this->hasGlobalSymbolForNode($node, $globalClassesInterfacesTraitsToRename);
         });
         foreach ($unqualifiedNameNodes as $node) {
             $positions[] = [
                 'start' => $node->getStartFilePos(),
                 'end' => $node->getEndFilePos() + 1,
-                'replacement' => $this->getReplacementStringForNode($node, $discoveredSymbols)
+                'replacement' => $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename)
             ];
         }
 

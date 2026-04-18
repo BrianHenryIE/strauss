@@ -143,7 +143,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
     /**
      * @return array<string, ClassSymbol>
      */
-    public function getGlobalClassChanges(): DiscoveredSymbols
+    public function getGlobalClassesInterfacesTraitsToRename(): DiscoveredSymbols
     {
         return new DiscoveredSymbols(
             array_filter(
