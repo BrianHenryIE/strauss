@@ -176,7 +176,7 @@ class Aliases
         $result = [];
 
         foreach ($symbols->toArray() as $originalSymbolFqdn => $symbol) {
-            if ($symbol->getOriginalSymbol() === $symbol->getLocalReplacement()) {
+            if (!$symbol->isDoRename()) {
                 continue;
             }
             if (!($symbol instanceof AutoloadAliasInterface)) {
