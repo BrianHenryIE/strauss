@@ -40,10 +40,10 @@ abstract class DiscoveredSymbol
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 
         // TODO: Add `::isGlobal()` to `NamespacedSymbol`.
-        if (!str_contains($fqdnSymbol, '\\')) {
+        if (!str_contains($fqdnSymbol, '\\') || ($this instanceof NamespaceSymbol)) {
             $this->localOriginalSymbol = $fqdnSymbol;
         } else {
-            $this->localOriginalSymbol = array_reverse(explode($fqdnSymbol, '\\'))[0];
+            $this->localOriginalSymbol = array_reverse(explode('\\', $fqdnSymbol))[0];
         }
 
         if ($sourceFile) {
@@ -83,9 +83,7 @@ abstract class DiscoveredSymbol
 
     public function getLocalReplacement(): string
     {
-        return $this->isDoRename()
-            ? ( $this->localReplacement ?? $this->fqdnOriginalSymbol)
-            : $this->fqdnOriginalSymbol;
+        return $this->localReplacement ?? $this->localOriginalSymbol;
     }
 
     public function setLocalReplacement(string $localReplacement): void
