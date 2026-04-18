@@ -110,7 +110,7 @@ EOD;
         self::assertNotEmpty($classes, 'Discovered classes should not be empty after scanning google/apiclient');
         self::assertNotEmpty($namespaces, 'Discovered namespaces should not be empty after scanning google/apiclient');
 
-        self::assertContains('Google_Task_Composer', $classes);
+        self::assertArrayHasKey('Google_Task_Composer', $classes->toArray());
     }
 
     /**
