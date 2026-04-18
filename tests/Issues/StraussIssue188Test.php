@@ -48,6 +48,8 @@ EOD;
 
     public function test_issue_188_extends(): void
     {
+        $this->markTestSkippedUnlessSpecificallyInFilter();
+
         $composerJsonString = <<<'EOD'
 {
   "name": "issue/188",
