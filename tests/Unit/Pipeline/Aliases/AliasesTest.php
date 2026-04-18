@@ -64,9 +64,9 @@ class AliasesTest extends TestCase
             'Foo\\Bar',
             $file
         );
+        $namespaceSymbol->setLocalReplacement('Baz\\Foo\\Bar');
 
         $classSymbol = new ClassSymbol('Foo\\Bar\\Baz', $file, false, $namespaceSymbol);
-        $classSymbol->setLocalReplacement('Baz\\Foo\\Bar\\Baz');
         $symbols->add($classSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -164,9 +164,10 @@ EOD;
             'Foo\\Bar',
             $file
         );
+        $namespaceSymbol->setLocalReplacement('Baz\\Foo\\Bar');
 
         $interfaceSymbol = new InterfaceSymbol('Foo\\Bar\\Baz', $file, $namespaceSymbol);
-        $interfaceSymbol->setLocalReplacement('Baz\\Foo\\Bar\\Baz');
+
         $symbols->add($interfaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
