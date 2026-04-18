@@ -2,13 +2,8 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
-use Elazar\Flystream\FilesystemRegistry;
-use League\Flysystem\Config;
-use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use Psr\Log\Test\TestLogger;
 
 /**
