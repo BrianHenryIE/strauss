@@ -17,11 +17,7 @@ class StraussIssue114Test extends IntegrationTestCase
 {
     public function test_muted_errors(): void
     {
-        $argvFilterIndex = array_search('--filter', $GLOBALS['argv']);
-        $phpunitFilter = $GLOBALS['argv'][$argvFilterIndex + 1];
-        if (!str_contains($phpunitFilter, __FUNCTION__)) {
-            $this->markTestSkipped('slow');
-        }
+        $this->markTestSkippedUnlessSpecificallyInFilter();
 
         $composerJsonString = <<<'EOD'
 {

@@ -28,6 +28,7 @@ use stdClass;
 class TestCase extends \PHPUnit\Framework\TestCase
 {
     use CustomUnitTestAssertionsTrait;
+    use MarkTestsSkippedTrait;
 
     /**
      * The logger used by the objects.

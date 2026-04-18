@@ -7,13 +7,6 @@ use Composer\Util\Platform;
 
 trait CustomUnitTestAssertionsTrait
 {
-    protected function markTestSkippedOnWindows(string $message = 'Skipped on Windows'): void
-    {
-        if (Platform::isWindows()) {
-            $this->markTestSkipped($message);
-        }
-    }
-
     public static function assertEqualsRN($expected, $actual, string $message = ''): void
     {
         if (is_string($expected) && is_string($actual)) {
