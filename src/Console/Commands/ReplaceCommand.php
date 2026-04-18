@@ -22,7 +22,6 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -30,8 +29,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ReplaceCommand extends AbstractRenamespacerCommand
 {
-    use LoggerAwareTrait;
-
     /** @var Prefixer */
     protected Prefixer $replacer;
 
