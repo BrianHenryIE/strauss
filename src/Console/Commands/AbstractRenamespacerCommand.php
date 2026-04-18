@@ -33,7 +33,10 @@ use Symfony\Component\Console\Logger\ConsoleLogger;
 
 abstract class AbstractRenamespacerCommand extends Command implements LoggerAwareInterface
 {
-    use LoggerAwareTrait;
+    /**
+     * @var LoggerInterface&Logger
+     */
+    protected $logger;
 
     /** No trailing slash */
     protected string $workingDir;
@@ -43,8 +46,6 @@ abstract class AbstractRenamespacerCommand extends Command implements LoggerAwar
     protected ProjectComposerPackage $projectComposerPackage;
 
     protected StraussConfig $config;
-
-    protected \Monolog\Logger $monolog;
 
     /**
      * Set name and description, call parent class to add dry-run, verbosity options.
@@ -100,6 +101,7 @@ abstract class AbstractRenamespacerCommand extends Command implements LoggerAwar
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $logger = new Logger('logger');
+        $this->logger = $logger;
 
         $workingDir       = getcwd() . '/';
         $localFsLocation = FileSystem::getFsRoot($workingDir);
@@ -131,14 +133,20 @@ abstract class AbstractRenamespacerCommand extends Command implements LoggerAwar
 
         $this->workingDir = $this->filesystem->normalizePath($workingDir);
 
+        $this->configureLogger($logger, $input, $output);
+    }
+
+    protected function configureLogger(Logger $logger, InputInterface $input, OutputInterface $output): void
+    {
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
         $logger->pushProcessor(new PadColonColumnsLogProcessor());
-        if (isset($this->logger) && !($this->logger instanceof ConsoleLogger)) {
-            $logger->pushHandler(new PsrHandler($this->logger));
-        }
         $logger->pushHandler(new PsrHandler($this->getConsoleLogger($input, $output)));
-        $this->setLogger($logger);
+    }
+
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger->pushHandler(new PsrHandler($logger));
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -165,6 +173,9 @@ abstract class AbstractRenamespacerCommand extends Command implements LoggerAwar
             } catch (\Exception $e) {
                 $registry->register('mem', $this->filesystem);
             }
+
+            $this->logger->reset();
+            $this->configureLogger($this->logger, $input, $output);
         }
 
         return Command::SUCCESS;
@@ -176,7 +187,7 @@ abstract class AbstractRenamespacerCommand extends Command implements LoggerAwar
     protected function getConsoleLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         // If a subclass has a config and it is a dry-run, increase verbosity
-        $isDryRun = property_exists($this, 'config') && isset($this->config) && method_exists($this->config, 'isDryRun') && $this->config->isDryRun();
+        $isDryRun = isset($this->config) && $this->config->isDryRun();
 
         // Who would want to dry-run without output?
         if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
@@ -195,35 +206,6 @@ abstract class AbstractRenamespacerCommand extends Command implements LoggerAwar
         }
 
         return new ConsoleLogger($output, $logLevel);
-    }
-
-    /**
-     * @param InputInterface $input The command line input to check for `--debug`, `--silent` etc.
-     * @param OutputInterface $output The Symfony object that actually prints the messages.
-     */
-    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
-    {
-        $isDryRun = isset($this->config) && $this->config->isDryRun();
-
-        // Who would want to dry-run without output?
-        if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
-            return new NullLogger();
-        }
-
-        $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
-
-        if ($input->hasOption('info') && $input->getOption('info') !== false) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        if ($isDryRun || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-            $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        return isset($this->logger) && $this->logger instanceof TestLogger
-            ? $this->logger
-            : new ConsoleLogger($output, $logLevel);
     }
 
     protected function createConfig(InputInterface $input): StraussConfig

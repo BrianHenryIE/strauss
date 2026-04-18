@@ -25,7 +25,9 @@ use League\Flysystem\StorageAttributes;
 use SplFileInfo;
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -124,20 +126,20 @@ class IntegrationTestCase extends TestCase
                 break;
             default:
                 $strauss = new class($this) extends DependenciesCommand {
-
-                    protected $logger;
                     protected IntegrationTestCase $integrationTestCase;
 
                     public function __construct(
                         IntegrationTestCase $integrationTestCase,
                         ?string $name = null
                     ) {
-                        // PHP Fatal error:  Type of BrianHenryIE\Strauss\Console\Commands\DependenciesCommand@anonymous::$logger
-                        // must be ?Psr\Log\LoggerInterface (as in class BrianHenryIE\Strauss\Console\Commands\AbstractRenamespacerCommand)
-                        // in /home/runner/work/strauss/strauss/tests/IntegrationTestCase.php on line 131
-                        $this->logger = $integrationTestCase->getTestLogger();
                         $this->integrationTestCase = $integrationTestCase;
                         parent::__construct($name);
+                    }
+
+                    protected function initialize(InputInterface $input, OutputInterface $output): void
+                    {
+                        parent::initialize($input, $output);
+                        $this->setLogger($this->integrationTestCase->getTestLogger());
                     }
 
                     protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
