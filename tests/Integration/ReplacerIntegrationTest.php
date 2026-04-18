@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Prefixer;
 
 /**
  * @see \BrianHenryIE\Strauss\Console\Commands\ReplaceCommand
@@ -322,6 +323,10 @@ EOD;
         $updatedFile = $this->getFileSystem()->read($expectedTargetFilePath);
         $this->assertStringContainsString('extends Mpdf', $updatedFile);
     }
+
+    /**
+     * @see Prefixer::replaceSingleClassnameInString()
+     */
     public function test_replace_namespace_string(): void
     {
         $composerJsonString = <<<'JSON'
@@ -329,7 +334,7 @@ EOD;
     "name": "brianhenryie/test-replace-namespace-string",
     "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\\\Strauss\\\\"
+      "namespace_prefix": "BrianHenryIE\\Strauss\\"
     }
   }
 }
