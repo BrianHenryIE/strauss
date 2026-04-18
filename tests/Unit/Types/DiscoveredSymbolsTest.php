@@ -66,4 +66,24 @@ class DiscoveredSymbolsTest extends TestCase
 
         $this->assertNull($result);
     }
+
+    /**
+     * @covers ::toArray
+     */
+    public function testToArray(): void
+    {
+        $sut = new DiscoveredSymbols();
+
+        $file = new File(
+            'vendor/path/to/file.php',
+            'path/to/file.php',
+            'vendor-prefixed/path/to/file.php',
+        );
+
+        $sut->add(new NamespaceSymbol('myNamespace'));
+        $sut->add(new ClassSymbol('myClass', $file));
+
+        // The two added plus global namespace.
+        $this->assertCount(3, $sut->toArray());
+    }
 }

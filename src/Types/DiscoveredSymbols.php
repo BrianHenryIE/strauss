@@ -307,4 +307,8 @@ class DiscoveredSymbols
     {
         return $this->types[self::INTERFACE_SYMBOL][$interface] ?? null;
     }
+
+    public function toArray(): array {
+        return array_merge(...array_values($this->types));
+    }
 }
