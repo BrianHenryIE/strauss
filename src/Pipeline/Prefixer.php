@@ -298,7 +298,7 @@ class Prefixer
 
     protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, array $ast): array
     {
-        $namespaceSymbols = $symbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
+        $namespaceSymbols = $symbols->getDiscoveredNamespaces();
         $namespaceSymbolsArray = $namespaceSymbols->toArray();
         if (empty($namespaceSymbolsArray)) {
             return [];

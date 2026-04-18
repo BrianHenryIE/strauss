@@ -166,7 +166,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
      *
      * @return array<string, NamespaceSymbol>
      */
-    public function getDiscoveredNamespaces(?string $namespacePrefix = ''): DiscoveredSymbols
+    public function getDiscoveredNamespaces(): DiscoveredSymbols
     {
         $discoveredNamespaceReplacements = [];
 
@@ -193,7 +193,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
     {
         return new DiscoveredSymbols(
             array_filter(
-                $this->getdiscoveredNamespaces($namespacePrefix)->toArray(),
+                $this->getdiscoveredNamespaces()->toArray(),
                 fn($namespaceSymbol) => $namespaceSymbol->isDoRename()
             )
         );
