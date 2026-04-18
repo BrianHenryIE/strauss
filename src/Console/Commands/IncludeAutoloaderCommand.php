@@ -20,15 +20,12 @@ use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use Composer\Factory;
 use Exception;
-use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
 {
-    use LoggerAwareTrait;
-
     /**
      * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
      *
