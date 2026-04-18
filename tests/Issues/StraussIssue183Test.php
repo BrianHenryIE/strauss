@@ -78,7 +78,7 @@ EOD;
 
     public function test_allow_url_include(): void
     {
-        $composerJsonString = <<<EOD
+        $composerJsonString = <<<'EOD'
 {
   "name": "strauss/issue183",
   "require": {
@@ -86,7 +86,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "Strauss\\\\Issue183\\\\",
+      "namespace_prefix": "Strauss\\Issue183\\",
       "delete_vendor_packages": true
     }
   }
