@@ -74,7 +74,7 @@ class IntegrationTestCase extends TestCase
             $this->deleteDir($this->testsWorkingDir);
         }
 
-        @mkdir($this->testsWorkingDir);
+        @mkdir($this->testsWorkingDir, 0777, true);
 
         chdir($this->testsWorkingDir);
 
