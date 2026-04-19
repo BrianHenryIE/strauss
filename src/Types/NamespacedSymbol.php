@@ -64,6 +64,8 @@ class NamespacedSymbol extends DiscoveredSymbol
 
     public function isDoRename(): bool
     {
-        return parent::isDoRename() && $this->namespace->isDoRename();
+        return parent::isDoRename()
+               && // If it has a non-global namespace, ensure that should be renamed.
+               ($this->namespace->isGlobal() || $this->namespace->isDoRename());
     }
 }
