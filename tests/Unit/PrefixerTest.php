@@ -1461,7 +1461,7 @@ define('FPDF_VERSION', '1.83');
 define('ANOTHER_CONSTANT', '1.83');
 
 class FPDF
-{
+{}
 EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
