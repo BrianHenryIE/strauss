@@ -211,36 +211,28 @@ class Prefixer
             $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: " . $e->getMessage(), [
                 'filePath' => $fileAbsolutePath ?? 'file',
             ]);
+            return $contents;
         }
 
-        if (!is_null($ast)) {
+        if (is_null($ast)) {
+            return $contents;
+        }
+
+        $positions = array_merge(
+            $positions,
+            $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraitsToRename()),
+            $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
+        );
+
+        $namespaceChanges = $discoveredSymbols->getNamespaces()->getToRename();
+        foreach ($namespaceChanges as $namespaceChange ) {
+            $originalNamespace = $namespaceChange->getOriginalSymbol();
+            $replacementNamespace = $namespaceChange->getReplacementFqdnName();
             $positions = array_merge(
-                $positions,
-                $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraitsToRename()),
-                $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
+                $this->replaceNamespace($ast, $originalNamespace, $replacementNamespace),
+                $positions
             );
         }
-
-        $namespacesChangesStrings = [];
-        foreach ($namespacesChanges as $originalNamespace => $namespaceSymbol) {
-            if (in_array($originalNamespace, $this->config->getExcludeNamespacesFromPrefixing())) {
-                $this->logger->info("Skipping namespace: $originalNamespace");
-                continue;
-            }
-            $namespacesChangesStrings[$originalNamespace] = $namespaceSymbol->getLocalReplacement();
-        }
-        // This matters... it shouldn't.
-        uksort($namespacesChangesStrings, new NamespaceSort(NamespaceSort::SHORTEST));
-        if (!is_null($ast)) {
-            foreach ($namespacesChangesStrings as $originalNamespace => $replacementNamespace) {
-                $positions = array_merge(
-                    $this->replaceNamespace($ast, $originalNamespace, $replacementNamespace),
-                    $positions
-                );
-            }
-        }
-
-
 
         // Adjust positions to be relative to the original $contents (before any <?php prepend).
         if ($phpOpenerLen > 0) {
@@ -268,14 +260,18 @@ class Prefixer
             $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
         }
 
+        // TODO: Use AST.
+        foreach ($functions as $functionSymbol) {
+            $contents = $this->replaceFunctions($contents, $functionSymbol);
+        }
 
+        // TODO: Use AST.
         if (!is_null($this->config->getConstantsPrefix())) {
             $contents = $this->replaceConstants($contents, $constants, $this->config->getConstantsPrefix());
         }
 
-        foreach ($functions as $functionSymbol) {
-            $contents = $this->replaceFunctions($contents, $functionSymbol);
-        }
+        // The following are for replacing symbols inside strings.
+        // TODO: When functions and constants are implemented via AST, their respective string replacement part will need to be added here.
 
         // TODO: filter to only namespaces of more than a single depth.
         foreach ($discoveredSymbols->getNamespaces() as $classSymbol) {
