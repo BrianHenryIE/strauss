@@ -187,19 +187,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
     }
 
     /**
-     * @return array<string, NamespaceSymbol>
-     */
-    public function getDiscoveredNamespaceChanges(?string $namespacePrefix = ''): DiscoveredSymbols
-    {
-        return new DiscoveredSymbols(
-            array_filter(
-                $this->getdiscoveredNamespaces()->toArray(),
-                fn($namespaceSymbol) => $namespaceSymbol->isDoRename()
-            )
-        );
-    }
-
-    /**
      * @return string[]
      */
     public function getDiscoveredClasses(?string $classmapPrefix = ''): DiscoveredSymbols
@@ -306,11 +293,14 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
         );
     }
 
-    public function getToRename(): DiscoveredSymbols {
+    public function getToRename(): DiscoveredSymbols
+    {
         return new DiscoveredSymbols(
             array_filter(
                 $this->toArray(),
-                fn(DiscoveredSymbol $symbol) => $symbol->isDoRename()
+                fn(DiscoveredSymbol $symbol) =>
+                    ($symbol instanceof NamespacedSymbol && !$symbol->getNamespace()->isGlobal() && $symbol->getNamespace()->isDoRename())
+                    || ($symbol->isDoRename() && $symbol->getOriginalSymbol() !== $symbol->getReplacementFqdnName())
             )
         );
     }
