@@ -219,7 +219,7 @@ class Prefixer
         $positions = array_merge(
             $positions,
             $this->replaceNamespaces($ast, $discoveredSymbols->getNamespaces()->getToRename()),
-            $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraitsToRename()),
+            $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraits()->getToRename()),
             $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
         );
 
