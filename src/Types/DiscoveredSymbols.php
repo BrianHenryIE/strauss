@@ -306,6 +306,15 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
         );
     }
 
+    public function getToRename(): DiscoveredSymbols {
+        return new DiscoveredSymbols(
+            array_filter(
+                $this->toArray(),
+                fn(DiscoveredSymbol $symbol) => $symbol->isDoRename()
+            )
+        );
+    }
+
     public function getNamespaceSymbolByString(string $namespace): ?NamespaceSymbol
     {
         return $this->types[self::NAMESPACE_SYMBOL][$namespace] ?? null;
@@ -332,6 +341,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
         return $this->types[self::INTERFACE_SYMBOL][$interface] ?? null;
     }
 
+    /**
+     * @return array<DiscoveredSymbol>
+     */
     public function toArray(): array
     {
         unset($this->types[self::NAMESPACE_SYMBOL]['\\']);
