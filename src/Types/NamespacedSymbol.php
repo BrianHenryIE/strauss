@@ -61,4 +61,9 @@ class NamespacedSymbol extends DiscoveredSymbol
         }
         return  $this->localReplacement ?? $this->localOriginalSymbol;
     }
+
+    public function isDoRename(): bool
+    {
+        return parent::isDoRename() && $this->namespace->isDoRename();
+    }
 }
