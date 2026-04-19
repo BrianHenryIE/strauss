@@ -700,7 +700,7 @@ EOD;
      * Since sometimes the namespace we're prefixing will already have a leading backslash, sometimes
      * the namespace_prefix will want its slash at the beginning, sometimes at the end.
      *
-     * @see Prefixer::replaceNamespace()
+     * @see Prefixer::replaceNamespaces()
      *
      * @covers \BrianHenryIE\Strauss\Composer\Extra\StraussConfig::getNamespacePrefix
      */

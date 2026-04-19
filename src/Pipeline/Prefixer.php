@@ -6,7 +6,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\NamespaceSort;
+use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
@@ -22,9 +22,7 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
-use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Function_;
-use PhpParser\NodeAbstract;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
@@ -181,12 +179,12 @@ class Prefixer
      */
     public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents, ?string $fileAbsolutePath = null): string
     {
-        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
-        $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
-        $functions = $discoveredSymbols->getDiscoveredFunctionChanges();
+        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces()->getToRename();
+        $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix())->getToRename();
+        $functions = $discoveredSymbols->getDiscoveredFunctions()->getToRename();
 
         // This is maybe deprecated since regex has been replaced by php-parser.
-        $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges->toArray());
+        $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
 
         // Prepend <?php if absent so php-parser treats the content as PHP code rather
         // than inline HTML. The offset is subtracted from all collected positions below.
@@ -220,19 +218,10 @@ class Prefixer
 
         $positions = array_merge(
             $positions,
+            $this->replaceNamespaces($ast, $discoveredSymbols->getNamespaces()->getToRename()),
             $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraitsToRename()),
             $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
         );
-
-        $namespaceChanges = $discoveredSymbols->getNamespaces()->getToRename();
-        foreach ($namespaceChanges as $namespaceChange ) {
-            $originalNamespace = $namespaceChange->getOriginalSymbol();
-            $replacementNamespace = $namespaceChange->getReplacementFqdnName();
-            $positions = array_merge(
-                $this->replaceNamespace($ast, $originalNamespace, $replacementNamespace),
-                $positions
-            );
-        }
 
         // Adjust positions to be relative to the original $contents (before any <?php prepend).
         if ($phpOpenerLen > 0) {
@@ -274,16 +263,13 @@ class Prefixer
         // TODO: When functions and constants are implemented via AST, their respective string replacement part will need to be added here.
 
         // TODO: filter to only namespaces of more than a single depth.
-        foreach ($discoveredSymbols->getNamespaces() as $classSymbol) {
-            if ($classSymbol->isDoRename()) {
-                $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
-            }
+        foreach ($discoveredSymbols->getNamespaces()->getToRename() as $namespaceSymbol) {
+            $contents = $this->replaceSingleClassnameInString($contents, $namespaceSymbol);
         }
 
-        foreach ($discoveredSymbols->getClassesInterfacesTraits() as $classSymbol) {
-            if ($classSymbol->isDoRename()) {
-                $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
-            }
+        /** @var ClassSymbol $classSymbol */
+        foreach ($discoveredSymbols->getClassesInterfacesTraits()->getToRename() as $classSymbol) {
+            $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
         }
 
         return $contents;
@@ -327,44 +313,53 @@ class Prefixer
         return $positions;
     }
 
-    /**
-     * TODO: Test against traits.
-     *
-     * @param string $originalNamespace
-     * @param string $replacement
-     */
-    public function replaceNamespace(array $ast, string $originalNamespace, string $replacement): array
+    protected function replaceNamespaces(array $ast, DiscoveredSymbols $namespaceChanges): array
     {
-        // Normalize: strip any trailing backslashes that callers may pass.
-        $originalNamespace = rtrim($originalNamespace, '\\');
-        $replacement = rtrim($replacement, '\\');
+        if (empty($namespaceChanges->toArray())) {
+            return [];
+        }
+
+        $nsMap = [];
+        foreach ($namespaceChanges as $change) {
+            $original = rtrim($change->getOriginalSymbol(), '\\');
+            $replacement = rtrim($change->getReplacementFqdnName(), '\\');
+            $nsMap[$original] = $replacement;
+        }
+        uksort($nsMap, fn($a, $b) => strlen($b) - strlen($a));
 
         $nodeFinder = new NodeFinder();
         $positions = [];
         $handled = [];
 
-        // Matches the namespace exactly OR as a prefix (e.g. Ns\Sub).
-        $matchesNs = function (string $nameStr) use ($originalNamespace): bool {
-            return $nameStr === $originalNamespace
-                || str_starts_with($nameStr, $originalNamespace . '\\');
+        $findMatch = function (string $nameStr) use ($nsMap): ?array {
+            foreach ($nsMap as $original => $replacement) {
+                if ($nameStr === $original || str_starts_with($nameStr, $original . '\\')) {
+                    return ['original' => $original, 'replacement' => $replacement];
+                }
+            }
+            return null;
         };
 
-        // Matches only as a namespace prefix (Ns\Sub) — not a standalone name used as a classname.
-        $matchesNsPrefix = function (string $nameStr) use ($originalNamespace): bool {
-            return str_starts_with($nameStr, $originalNamespace . '\\');
+        $findPrefixMatch = function (string $nameStr) use ($nsMap): ?array {
+            foreach ($nsMap as $original => $replacement) {
+                if (str_starts_with($nameStr, $original . '\\')) {
+                    return ['original' => $original, 'replacement' => $replacement];
+                }
+            }
+            return null;
         };
 
-        $prefixed = function (string $nameStr) use ($originalNamespace, $replacement): string {
-            return $replacement . substr($nameStr, strlen($originalNamespace));
+        $prefixed = function (string $nameStr, string $original, string $replacement): string {
+            return $replacement . substr($nameStr, strlen($original));
         };
 
         // A: namespace declarations — keep relative (no leading \)
         foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\Namespace_::class) as $ns) {
-            if ($ns->name !== null && $matchesNs($ns->name->toString())) {
+            if ($ns->name !== null && ($match = $findMatch($ns->name->toString()))) {
                 $positions[] = [
                     'start' => $ns->name->getStartFilePos(),
                     'end' => $ns->name->getEndFilePos() + 1,
-                    'replacement' => $prefixed($ns->name->toString()),
+                    'replacement' => $prefixed($ns->name->toString(), $match['original'], $match['replacement']),
                 ];
                 $handled[$ns->name->getStartFilePos()] = true;
             }
@@ -372,135 +367,84 @@ class Prefixer
 
         // B: use items and group-use prefixes — keep relative (no leading \)
         foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\UseItem::class) as $item) {
-            if ($matchesNs($item->name->toString())) {
+            if ($match = $findMatch($item->name->toString())) {
                 $positions[] = [
                     'start' => $item->name->getStartFilePos(),
                     'end' => $item->name->getEndFilePos() + 1,
-                    'replacement' => $prefixed($item->name->toString()),
+                    'replacement' => $prefixed($item->name->toString(), $match['original'], $match['replacement']),
                 ];
                 $handled[$item->name->getStartFilePos()] = true;
             }
         }
         foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\GroupUse::class) as $groupUse) {
-            if ($groupUse->prefix !== null && $matchesNs($groupUse->prefix->toString())) {
+            if ($groupUse->prefix !== null && ($match = $findMatch($groupUse->prefix->toString()))) {
                 $positions[] = [
                     'start' => $groupUse->prefix->getStartFilePos(),
                     'end' => $groupUse->prefix->getEndFilePos() + 1,
-                    'replacement' => $prefixed($groupUse->prefix->toString()),
+                    'replacement' => $prefixed($groupUse->prefix->toString(), $match['original'], $match['replacement']),
                 ];
                 $handled[$groupUse->prefix->getStartFilePos()] = true;
             }
         }
 
         // C: fully-qualified Name nodes — retain leading \
-        foreach ($nodeFinder->find($ast, function (Node $node) use ($matchesNs) {
-            return $node instanceof Name\FullyQualified && $matchesNs($node->toString());
+        foreach ($nodeFinder->find($ast, function (Node $node) use ($findMatch) {
+            return $node instanceof Name\FullyQualified && $findMatch($node->toString()) !== null;
         }) as $name) {
             if (isset($handled[$name->getStartFilePos()])) {
                 continue;
             }
+            $match = $findMatch($name->toString());
             $positions[] = [
                 'start' => $name->getStartFilePos(),
                 'end' => $name->getEndFilePos() + 1,
-                'replacement' => '\\' . $prefixed($name->toString()),
+                'replacement' => '\\' . $prefixed($name->toString(), $match['original'], $match['replacement']),
             ];
             $handled[$name->getStartFilePos()] = true;
         }
 
         // D: relative Name nodes used as namespace prefixes in code — promote to FQ.
-        // Use prefix-only matching (not exact) to avoid touching bare classname references
-        // like type hints (`Mpdf $x`) or implements clauses (`implements Geocoder`).
-        foreach ($nodeFinder->find($ast, function (Node $node) use ($matchesNsPrefix) {
+        foreach ($nodeFinder->find($ast, function (Node $node) use ($findPrefixMatch) {
             return $node instanceof Name
                 && !($node instanceof Name\FullyQualified)
-                && $matchesNsPrefix($node->toString());
+                && $findPrefixMatch($node->toString()) !== null;
         }) as $name) {
             if (isset($handled[$name->getStartFilePos()])) {
                 continue;
             }
+            $match = $findPrefixMatch($name->toString());
             $positions[] = [
                 'start' => $name->getStartFilePos(),
                 'end' => $name->getEndFilePos() + 1,
-                'replacement' => '\\' . $prefixed($name->toString()),
+                'replacement' => '\\' . $prefixed($name->toString(), $match['original'], $match['replacement']),
             ];
         }
 
         // Doc comments: scan for \OriginalNamespace references in @param/@return/etc.
-        // The boundary check allows a following \ (namespace separator) so that
-        // \Ns\Class is matched, while \NsExtra is not.
-        $docSearchStr = '\\' . $originalNamespace;
-        $docSearchLen = strlen($docSearchStr);
         foreach ($nodeFinder->find($ast, function (Node $node) {
             return $node->getDocComment() !== null;
         }) as $node) {
             $doc = $node->getDocComment();
             $text = $doc->getText();
-            $offset = 0;
-            while (($pos = strpos($text, $docSearchStr, $offset)) !== false) {
-                $after = $pos + $docSearchLen;
-                if ($after >= strlen($text)
-                    || !preg_match('/[a-zA-Z0-9_\x7f-\xff]/', $text[$after])
-                ) {
-                    $positions[] = [
-                        'start' => $doc->getStartFilePos() + $pos,
-                        'end' => $doc->getStartFilePos() + $after,
-                        'replacement' => '\\' . $replacement,
-                    ];
+            foreach ($nsMap as $original => $replacement) {
+                $docSearchStr = '\\' . $original;
+                $docSearchLen = strlen($docSearchStr);
+                $offset = 0;
+                while (($pos = strpos($text, $docSearchStr, $offset)) !== false) {
+                    $after = $pos + $docSearchLen;
+                    if ($after >= strlen($text)
+                        || !preg_match('/[a-zA-Z0-9_\x7f-\xff]/', $text[$after])
+                    ) {
+                        $positions[] = [
+                            'start' => $doc->getStartFilePos() + $pos,
+                            'end' => $doc->getStartFilePos() + $after,
+                            'replacement' => '\\' . $replacement,
+                        ];
+                    }
+                    $offset = $pos + 1;
                 }
-                $offset = $pos + 1;
             }
         }
-
-        // Strings: handle namespace references embedded in string literals.
-        //
-        // Three forms a namespace can take in raw source:
-        //   1. Double-backslash encoded (namespace has \): "Ns\\Sub\\Class" → $dblNs = 'Ns\\\\Sub'
-        //   2. FQ single-backslash: "\Ns\Class" → look for \Ns (boundary-aware)
-        //   3. Relative prefix in double-quoted: "Ns\\Class" (no leading \, Ns followed by \\)
-        //
-        // Boundary rule: the match must not be preceded by an identifier char or \.
-//        $singleSearchStr = '\\' . $originalNamespace;
-//        $singleSearchPattern = '/(?<![a-zA-Z0-9_\x7f-\xff\\\\])' . preg_quote($singleSearchStr, '/') . '/';
-//        $singleReplacement = '\\' . $replacement;
-//        $hasBackslashInNs = strpos($originalNamespace, '\\') !== false;
-//        $dblNs = str_replace('\\', '\\\\', $originalNamespace);
-//        $dblRep = str_replace('\\', '\\\\', $replacement);
-//        // Pattern for form 3: "Ns\\" where Ns is followed by \\ (namespace separator in dbl-quoted strings).
-//        $prefixDblPattern = '/(?<![a-zA-Z0-9_\x7f-\xff\\\\])' . preg_quote($originalNamespace, '/') . '(?=\\\\\\\\)/';
-//        foreach ($nodeFinder->find($ast, function (Node $node) {
-//            return $node instanceof String_
-//                || $node instanceof \PhpParser\Node\Scalar\Encapsed;
-//        }) as $str) {
-//            $start = $str->getStartFilePos();
-//            $end = $str->getEndFilePos() + 1;
-//            $slice = substr($parseContent, $start, $end - $start);
-//            // Form 1: double-backslash encoded (e.g. "\\Ns\\Sub\\Class").
-//            if ($hasBackslashInNs && strpos($slice, $dblNs) !== false) {
-//                $positions[] = ['start' => $start, 'end' => $end, 'replacement' => str_replace($dblNs, $dblRep, $slice)];
-//                continue;
-//            }
-//            // Apply form-3 and form-2 patterns to the same slice (they target different text).
-//            $newSlice = preg_replace_callback(
-//                $prefixDblPattern,
-//                function () use ($dblRep) {
-//                    return $dblRep;
-//                },
-//                $slice
-//            );
-//            if ($newSlice === null) {
-//                $newSlice = $slice;
-//            }
-//            $newSlice = preg_replace_callback(
-//                $singleSearchPattern,
-//                function () use ($singleReplacement) {
-//                    return $singleReplacement;
-//                },
-//                $newSlice
-//            );
-//            if ($newSlice !== null && $newSlice !== $slice) {
-//                $positions[] = ['start' => $start, 'end' => $end, 'replacement' => $newSlice];
-//            }
-//        }
 
         return $positions;
     }
@@ -916,10 +860,12 @@ class Prefixer
      * @see https://github.com/nette/latte/blob/0ac0843a459790d471821f6a82f5d13db831a0d3/src/Latte/Loaders/FileLoader.php#L20
      *
      * @param string $phpFileContent
-     * @param NamespaceSymbol[] $discoveredNamespaceSymbols
+     * @param DiscoveredSymbols $discoveredNamespaceSymbols
      */
-    protected function prepareRelativeNamespaces(string $phpFileContent, array $discoveredNamespaceSymbols): string
+    protected function prepareRelativeNamespaces(string $phpFileContent, DiscoveredSymbols $discoveredNamespaceSymbols): string
     {
+        $discoveredNamespaceSymbolsArray = $discoveredNamespaceSymbols->toArray();
+
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
         try {
@@ -930,7 +876,7 @@ class Prefixer
         }
 
         $traverser = new NodeTraverser();
-        $visitor = new class($discoveredNamespaceSymbols) extends \PhpParser\NodeVisitorAbstract {
+        $visitor = new class($discoveredNamespaceSymbolsArray) extends \PhpParser\NodeVisitorAbstract {
 
             public int $countChanges = 0;
             /** @var string[] */
