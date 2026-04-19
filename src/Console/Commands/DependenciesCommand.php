@@ -373,8 +373,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
                     trim($namespace, '\\'),
                     $file
                 );
-                // TODO: respect all config options.
-//              $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
                 $this->discoveredSymbols->add($symbol);
             }
         }
