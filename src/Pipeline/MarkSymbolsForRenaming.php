@@ -111,11 +111,8 @@ class MarkSymbolsForRenaming
     {
         return $this->isExcludeFromPrefixPackage($symbol->getPackageName())
             || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles())
-            || (
-                $symbol instanceof NamespacedSymbol
-                &&
-                $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName())
-               );
+            || ( $symbol instanceof NamespacedSymbol && $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName()))
+            || ( $symbol instanceof NamespaceSymbol && $this->isExcludeFromPrefixNamespace($symbol->getOriginalSymbol()));
     }
 
     /**
