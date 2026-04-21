@@ -488,6 +488,7 @@ class Prefixer
     protected function replaceSingleClassnameInString(string $contents, DiscoveredSymbol $symbol): string
     {
         $alsoSearchForVariableClassname = false;
+        $alsoSearchForStaticProperty = false;
 
         if ($symbol instanceof NamespacedSymbol && $symbol->getNamespace()->isGlobal()) {
             $replacementSymbolString = $symbol->getLocalReplacement();
@@ -504,6 +505,7 @@ class Prefixer
         } else {
             $originalSymbolString = $symbol->getOriginalFqdnName();
             $replacementSymbolString = $symbol->getFqdnReplacement();
+            $alsoSearchForStaticProperty = true;
         }
 
         /**
@@ -524,6 +526,7 @@ class Prefixer
                         ')(
                         '
                       . ( $alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
+                      ( $alsoSearchForStaticProperty ? '(:{2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
                       '
                             [\'"]
                             [^a-zA-Z0-9_\x7f-\xff\\\\]
