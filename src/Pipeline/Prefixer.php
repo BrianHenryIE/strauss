@@ -184,7 +184,7 @@ class Prefixer
         $functions = $discoveredSymbols->getDiscoveredFunctions()->getToRename();
 
         // This is maybe deprecated since regex has been replaced by php-parser.
-        $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
+        $contents = $this->prepareRelativeNamespaces($contents, $discoveredSymbols->getDiscoveredNamespaces());
 
         // Prepend <?php if absent so php-parser treats the content as PHP code rather
         // than inline HTML. The offset is subtracted from all collected positions below.
@@ -977,6 +977,12 @@ class Prefixer
                 }
 
                 if ($node instanceof ClassConstFetch
+                    && $node->class instanceof Name
+                    && !($node->class instanceof \PhpParser\Node\Name\FullyQualified)) {
+                    $nameNodes[] = $node->class;
+                }
+
+                if ($node instanceof Node\Expr\New_
                     && $node->class instanceof Name
                     && !($node->class instanceof \PhpParser\Node\Name\FullyQualified)) {
                     $nameNodes[] = $node->class;
