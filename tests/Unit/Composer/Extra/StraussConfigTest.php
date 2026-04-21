@@ -49,6 +49,7 @@ class StraussConfigTest extends TestCase
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -114,6 +115,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -173,6 +175,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -222,6 +225,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -256,6 +260,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -293,6 +298,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   }
@@ -322,6 +328,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -357,6 +364,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -394,6 +402,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   }
@@ -423,6 +432,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -473,6 +483,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "extra": {
     "strauss": {
       "exclude_prefix_packages": [
@@ -500,6 +511,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "extra": {
     "strauss": {
         "exclude_from_prefix": {
@@ -533,7 +545,8 @@ EOD;
 
         $composerJson = <<<'EOD'
 {
-  "name": "brianhenryie/strauss-config-test"
+  "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0"
 }
 
 EOD;
@@ -564,7 +577,8 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
-    "extra": {
+  "version": "1.0.0",
+  "extra": {
     "strauss": {
         "exclude_from_prefix": {
             "packages": ["yahnis-elsts/plugin-update-checker","erusev/parsedown"]
@@ -599,6 +613,7 @@ EOD;
         $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },

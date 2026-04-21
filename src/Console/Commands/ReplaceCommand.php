@@ -86,11 +86,6 @@ class ReplaceCommand extends AbstractRenamespacerCommand
             getcwd()
         );
 
-        // TODO: permissions?
-        $this->filesystem = new Filesystem(
-            new LocalFilesystemAdapter('/')
-        );
-
         parent::configure();
     }
 

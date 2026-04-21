@@ -23,7 +23,7 @@ class StraussIssue66Test extends IntegrationTestCase
         $composerJsonString = <<<'EOD'
 {
   "require": {
-    "wp-graphql/wp-graphql": "^1.12"
+    "wp-graphql/wp-graphql": "1.12"
   },
   "config": {
     "audit": {

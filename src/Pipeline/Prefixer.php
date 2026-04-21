@@ -240,10 +240,10 @@ class Prefixer
         usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
 
         $removeDuplicatePositions = [];
-        foreach ($positions as $postition) {
-//            if(isset($removeDuplicatePositions[$postition['start']])){
+        foreach ($positions as $position) {
+//            if(isset($removeDuplicatePositions[$position['start']])){
 //            }
-            $removeDuplicatePositions[$postition['start']] = $postition;
+            $removeDuplicatePositions[$position['start']] = $position;
         }
         $positions = $removeDuplicatePositions;
 
@@ -487,9 +487,19 @@ class Prefixer
         return $positions;
     }
 
+    /**
+     * TODO: filter the changes in a file to something like `$symbol->getPackages()[0]->getFlatDependencyTree()`.
+     * The file should not be using symbols that are not defined in their required dependencies.
+     *
+     * @param string $contents
+     * @param DiscoveredSymbol $symbol
+     *
+     * @return string
+     */
     protected function replaceSingleClassnameInString(string $contents, DiscoveredSymbol $symbol): string
     {
         $alsoSearchForVariableClassname = false;
+        $alsoSearchForStaticProperty = false;
 
         if ($symbol instanceof NamespacedSymbol && $symbol->getNamespace()->isGlobal()) {
             $replacementSymbolString = $symbol->getLocalReplacement();
@@ -506,6 +516,7 @@ class Prefixer
         } else {
             $originalSymbolString = $symbol->getOriginalFqdnName();
             $replacementSymbolString = $symbol->getFqdnReplacement();
+            $alsoSearchForStaticProperty = true;
         }
 
         /**
@@ -526,6 +537,7 @@ class Prefixer
                         ')(
                         '
                       . ( $alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
+                      ( $alsoSearchForStaticProperty ? '(:{2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
                       '
                             [\'"]
                             [^a-zA-Z0-9_\x7f-\xff\\\\]
@@ -584,12 +596,14 @@ class Prefixer
         // Replace \Classname (fully qualified) references in any namespace context.
         $fqNodes = $nodeFinder->find($ast, function (Node $node) use ($globalClassesInterfacesTraitsToRename, &$positions) {
             if ($node->getAttribute('comments')) {
+                // TODO. This is recording comments repeatedly. Duplicates are later removed, but it'd be better to just not add them.
                 /** @var \PhpParser\Comment\Doc $comment */
-                $comment = $node->getAttribute('comments')[0];
-                $positions = array_merge(
-                    $positions,
-                    $this->findGlobalSymbolsPositionsInComment($comment, $globalClassesInterfacesTraitsToRename)
-                );
+                foreach ($node->getAttribute('comments') as $comment) {
+                    $positions = array_merge(
+                        $positions,
+                        $this->findGlobalSymbolsPositionsInComment($comment, $globalClassesInterfacesTraitsToRename)
+                    );
+                }
             }
             if (!( $node instanceof Name\FullyQualified )) {
                 return false;
