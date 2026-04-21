@@ -238,10 +238,10 @@ class Prefixer
         usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
 
         $removeDuplicatePositions = [];
-        foreach ($positions as $postition) {
-//            if(isset($removeDuplicatePositions[$postition['start']])){
+        foreach ($positions as $position) {
+//            if(isset($removeDuplicatePositions[$position['start']])){
 //            }
-            $removeDuplicatePositions[$postition['start']] = $postition;
+            $removeDuplicatePositions[$position['start']] = $position;
         }
         $positions = $removeDuplicatePositions;
 
