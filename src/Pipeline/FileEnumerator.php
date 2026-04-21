@@ -21,7 +21,7 @@ class FileEnumerator
 
     protected FileEnumeratorConfig $config;
 
-    protected Filesystem $filesystem;
+    protected FileSystem $filesystem;
 
     protected DiscoveredFiles $discoveredFiles;
 

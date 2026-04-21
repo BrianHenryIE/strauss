@@ -31,7 +31,7 @@ class Cleanup
 {
     use LoggerAwareTrait;
 
-    protected Filesystem $filesystem;
+    protected FileSystem $filesystem;
 
     protected bool $isDeleteVendorFiles;
     protected bool $isDeleteVendorPackages;
@@ -40,7 +40,7 @@ class Cleanup
 
     public function __construct(
         CleanupConfigInterface $config,
-        Filesystem $filesystem,
+        FileSystem $filesystem,
         LoggerInterface $logger
     ) {
         $this->config = $config;

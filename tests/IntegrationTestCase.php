@@ -315,7 +315,7 @@ class IntegrationTestCase extends TestCase
             $localFileSystemAdapter = new LocalfilesystemAdapter(
                 $localFsLocation
             );
-            $this->localFileSystem = new Filesystem(
+            $this->localFileSystem = new FileSystem(
                 $localFileSystemAdapter,
                 [],
                 $pathNormalizer,
@@ -333,18 +333,18 @@ class IntegrationTestCase extends TestCase
             return $this->symlinkProtectFilesystem;
         }
 
-        $localFilesystemLocation = Filesystem::getFsRoot($this->testsWorkingDir);
+        $localFilesystemLocation = FileSystem::getFsRoot($this->testsWorkingDir);
 
         $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
 
         $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
             $localFilesystemLocation,
-            Filesystem::makePathNormalizer($this->testsWorkingDir),
+            FileSystem::makePathNormalizer($this->testsWorkingDir),
             $pathPrefixer,
             $this->getTestLogger()
         );
 
-        $this->symlinkProtectFilesystem = new Filesystem(
+        $this->symlinkProtectFileSystem = new FileSystem(
             $symlinkProtectFilesystemAdapter,
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',

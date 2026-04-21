@@ -12,7 +12,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
 {
-    protected Filesystem $filesystem;
+    protected FileSystem $filesystem;
 
     public function setUp(): void
     {
@@ -26,16 +26,16 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
         symlink($this->testsWorkingDir . '/realdir', $this->testsWorkingDir . '/fakedir');
 
         $sut = new SymlinkProtectFilesystemAdapter(
-            Filesystem::getFsRoot($this->testsWorkingDir),
+            FileSystem::getFsRoot($this->testsWorkingDir),
             null,
             null,
             $this->getTestLogger()
         );
 
-        $this->filesystem = new Filesystem(
+        $this->filesystem = new FileSystem(
             $sut,
             [],
-            Filesystem::makePathNormalizer($this->testsWorkingDir),
+            FileSystem::makePathNormalizer($this->testsWorkingDir),
             null,
             $this->testsWorkingDir,
         );

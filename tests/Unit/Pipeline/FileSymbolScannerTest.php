@@ -471,7 +471,7 @@ EOD;
 	    \$myvar = 123; class Pear { };
 	    ";
 
-        $filesystemReaderMock = Mockery::mock(Filesystem::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
         $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
@@ -571,7 +571,7 @@ EOD;
     public function testExcludePackagesFromPrefix(): void
     {
 
-        $filesystemReaderMock = Mockery::mock(Filesystem::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn('');
         $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
@@ -605,7 +605,7 @@ EOD;
      */
     public function testExcludeFilePatternsFromPrefix(): void
     {
-        $filesystemReaderMock = Mockery::mock(Filesystem::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn('');
         $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
@@ -706,7 +706,7 @@ class TCPDF_STATIC
 }
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(Filesystem::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
         $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 
@@ -750,7 +750,7 @@ class FPDF
 {}
 EOD;
 
-        $filesystemReaderMock = Mockery::mock(Filesystem::class);
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
         $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
 

@@ -131,7 +131,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      * This is for unit test to instantiate objects and query changes.
      * It is not for loading fixtures.
      */
-    protected function getFileSystem(): Filesystem
+    protected function getFileSystem(): FileSystem
     {
         if (! isset($this->filesystem)) {
             $this->filesystem = $this->getInMemoryFileSystem();
@@ -140,7 +140,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $this->filesystem;
     }
 //
-//    protected function getNewFileSystem(string $workingDir = '/'): Filesystem
+//    protected function getNewFileSystem(string $workingDir = '/'): FileSystem
 //    {
 //        $testsWorkingDir = $this->testsWorkingDir ?? getcwd();
 //        $normalizer = FileSystem::makePathNormalizer('/');
@@ -184,7 +184,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         $pathPrefixer = new PathPrefixer('mem://', '/');
 
-        $filesystem = new Filesystem(
+        $filesystem = new FileSystem(
             $inMemoryFilesystem,
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
