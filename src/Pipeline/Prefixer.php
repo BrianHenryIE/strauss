@@ -485,6 +485,15 @@ class Prefixer
         return $positions;
     }
 
+    /**
+     * TODO: filter the changes in a file to something like `$symbol->getPackages()[0]->getFlatDependencyTree()`.
+     * The file should not be using symbols that are not defined in their required dependencies.
+     *
+     * @param string $contents
+     * @param DiscoveredSymbol $symbol
+     *
+     * @return string
+     */
     protected function replaceSingleClassnameInString(string $contents, DiscoveredSymbol $symbol): string
     {
         $alsoSearchForVariableClassname = false;
