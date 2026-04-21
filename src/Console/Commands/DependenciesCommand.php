@@ -132,34 +132,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         parent::configure();
     }
 
-    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
-    {
-        $normalizer = new WhitespacePathNormalizer();
-        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
-
-        $pathPrefixer = new PathPrefixer('mem://', '/');
-
-        $this->filesystem =
-            new FileSystem(
-                new ReadOnlyFileSystem(
-                    $this->filesystem->getAdapter(),
-                ),
-                [],
-                $normalizer,
-                $pathPrefixer
-            );
-
-        /**
-         * Register a file stream mem:// to handle file operations by third party libraries.
-         *
-         * @var FilesystemRegistry $registry
-         */
-        $registry = ServiceLocator::get(FilesystemRegistry::class);
-        $registry->register('mem', $this->filesystem);
-
-        return $filesystem;
-    }
-
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
