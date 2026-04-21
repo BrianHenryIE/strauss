@@ -209,6 +209,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             // After files have been deleted, we may need aliases.
             $this->generateAliasesFile();
 
+            $this->prefixComposerAutoloadFiles();
+
             $this->logger->notice('Done');
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
@@ -625,8 +627,14 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $vendorComposerAutoload->addVendorPrefixedAutoloadToVendorAutoload();
     }
 
+    protected function prefixComposerAutoloadFiles() : void
+    {
+
+        $this->replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
+    }
+
     /**
-     * 7.
+     *
      * Delete source files if desired.
      * Delete empty directories in destination.
      */

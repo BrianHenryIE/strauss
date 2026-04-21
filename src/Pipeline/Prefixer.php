@@ -4,6 +4,8 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
@@ -1077,5 +1079,76 @@ class Prefixer
         return $visitor->countChanges == 0
             ? $phpFileContent
             : (new Standard())->prettyPrintFile($modifiedStmts);
+    }
+
+    public function prefixComposerAutoloadFiles(string $absoluteDirectory): void
+    {
+        $this->logger->debug("Prefixing the Composer autoload files in {path}.", [
+            'path' => $absoluteDirectory,
+        ]);
+
+        $composerFilePaths = [
+            'InstalledVersions.php',
+            'autoload_classmap.php',
+            'autoload_files.php',
+            'autoload_namespaces.php',
+            'autoload_psr4.php',
+            'autoload_real.php',
+            'autoload_static.php',
+            'ClassLoader.php',
+            'installed.json',
+            'installed.php',
+            'platform_check.php',
+        ];
+
+        $composerFiles = [];
+
+        $discoveredFiles = new DiscoveredFiles();
+
+        foreach ($composerFilePaths as $filePath) {
+            $file = new File(
+                $absoluteDirectory . '/composer/' . $filePath,
+                $filePath,
+                $absoluteDirectory . '/composer/' . $filePath,
+            );
+            $discoveredFiles->add($file);
+            $composerFiles[$filePath] = $file;
+        }
+
+        $composerAutoloadNamespaceSymbol = new NamespaceSymbol('Composer\\Autoload');
+        $composerAutoloadNamespaceSymbol->setLocalReplacement(
+            $this->config->getNamespacePrefix() . '\\Composer\\Autoload'
+        );
+
+        $composerNamespaceSymbol = new NamespaceSymbol('Composer');
+        $composerNamespaceSymbol->setLocalReplacement(
+            $this->config->getNamespacePrefix() . '\\Composer'
+        );
+
+        $classLoaderSymbol = new ClassSymbol(
+            'Composer\\Autoload\\ClassLoader',
+            $composerFiles['ClassLoader.php'],
+            false,
+            $composerAutoloadNamespaceSymbol
+        );
+
+        $installedVersions = new ClassSymbol(
+            'Composer\\InstalledVersions',
+            $composerFiles['installed.php'],
+            false,
+            $composerNamespaceSymbol
+        );
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add(
+            $composerNamespaceSymbol
+        );
+        $discoveredSymbols->add(
+            $composerAutoloadNamespaceSymbol
+        );
+        $discoveredSymbols->add($classLoaderSymbol);
+        $discoveredSymbols->add($installedVersions);
+
+        $this->replaceInFiles($discoveredSymbols, $discoveredFiles->getFiles());
     }
 }

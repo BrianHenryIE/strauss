@@ -85,7 +85,13 @@ class StraussIssue146Test extends IntegrationTestCase
         $composerJsonArray['extra']['strauss'] = [
             "update_call_sites" => true,
         ];
-        file_put_contents($this->testsWorkingDir . '/composer.json', json_encode($composerJsonArray));
+//        $composerJsonArray['require'] = [
+//            "composer-runtime-api" => "^2.0",
+//            "composer/composer" => "*",
+//        ];
+        $composerJsonArray['extra']['strauss']['target_directory'] = "vendor";
+//        $composerJsonArray['extra']['strauss']['target_directory'] = "vendor-prefixed";
+        file_put_contents($this->testsWorkingDir . '/composer.json', json_encode($composerJsonArray, JSON_PRETTY_PRINT));
 
         exec('composer install --no-dev --no-scripts');
 
@@ -98,18 +104,20 @@ class StraussIssue146Test extends IntegrationTestCase
         // vendor/composer/autoload_real.php
         // self::$loader = $loader = new \Composer\Autoload\ClassLoader(\dirname(__DIR__));
         $autoloadRealPhpString = file_get_contents($this->testsWorkingDir .'/vendor/composer/autoload_real.php');
+//        $autoloadRealPhpString = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_real.php');
         // Confirm problem is gone.
-        self::assertStringNotContainsString('new \\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString);
+        $this->assertStringNotContainsString('new \\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString);
         // Confirm solution is correct.
-        self::assertStringContainsString('new \\BrianHenryIE\\Strauss\\Vendor\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
+        $this->assertStringContainsString('new \\BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
 
         // vendor/composer/composer/src/Composer/Factory.php
         // public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\Strauss\Vendor\Composer
-        $php_string = file_get_contents($this->testsWorkingDir .'/vendor/composer/composer/src/Composer/Factory.php');
+        $php_string = file_get_contents($this->testsWorkingDir .         '/vendor/composer/composer/src/Composer/Factory.php');
+//        $php_string = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/composer/src/Composer/Factory.php');
         // Confirm problem is gone.
-        self::assertStringNotContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\\Strauss\\Vendor\\Composer', $php_string);
+        $this->assertStringNotContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\\Strauss\\Vendor\\Composer', $php_string);
         // Confirm solution is correct.
-        self::assertStringContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer', $php_string);
+        $this->assertStringContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer', $php_string);
     }
 
     public function test_prefix_own_classes_for_test(): void
