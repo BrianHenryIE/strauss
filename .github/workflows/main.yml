@@ -36,7 +36,7 @@ jobs:
     name: PHP tests ${{ matrix.php }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
@@ -72,7 +72,7 @@ jobs:
         run:
           ./scripts/createphar.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
         id: artifact-upload-step
         with:
@@ -80,7 +80,7 @@ jobs:
           path: strauss.phar
 
       - name: Add phar to PR comment
-        uses: mshick/add-pr-comment@v2
+        uses: mshick/add-pr-comment@v3
         if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
         with:
           message-id: strauss-phar
@@ -95,7 +95,7 @@ jobs:
     name: Spelling
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Search for misspellings
         uses: crate-ci/typos@master
@@ -105,7 +105,7 @@ jobs:
     name: Lint project files
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
@@ -130,6 +130,6 @@ jobs:
 
       - name: Commit PHPCBF changes
         if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }} # only commit on pushes to master
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "🤖 PHPCBF"

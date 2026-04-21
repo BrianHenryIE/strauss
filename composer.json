@@ -61,7 +61,7 @@
         "php": "^7.4|^8.0",
         "brianhenryie/color-logger": "*",
         "brianhenryie/php-codecoverage-markdown": "^0.1.0",
-        "clue/phar-composer": "^1.2",
+        "clue/phar-composer": "^1.4",
         "jaschilz/php-coverage-badger": "^2.0",
         "mockery/mockery": "^1.6",
         "phpstan/extension-installer": "^1.4",
