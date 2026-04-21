@@ -486,6 +486,9 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
     }
 
+    /**
+     * Update a project's /src/* files where they call the newly renamed /vendor/* classes etc.
+     */
     protected function performReplacementsInProjectFiles(): void
     {
         // TODO: this doesn't do tests?!
