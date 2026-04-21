@@ -129,7 +129,9 @@ class DependenciesEnumerator
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
             if ($this->filesystem->fileExists($packageComposerFile)) {
-                $this->logger->debug('Loading ComposerPackage::fromFile ' . $packageComposerFile);
+                $this->logger->debug('Loading ComposerPackage::fromFile {packageComposerFilePath}', [
+                    'packageComposerFilePath' => $packageComposerFile,
+                ]);
 
                 $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
             } else {

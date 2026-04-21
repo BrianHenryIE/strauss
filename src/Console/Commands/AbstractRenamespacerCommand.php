@@ -125,7 +125,8 @@ abstract class AbstractRenamespacerCommand extends Command
                 ],
             $pathNormalizer,
             $pathPrefixer,
-            $localFsLocation
+            $localFsLocation,
+            $workingDir,
         );
 
         $this->workingDir = $this->filesystem->normalizePath($workingDir);

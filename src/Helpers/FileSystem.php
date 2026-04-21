@@ -49,6 +49,11 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     protected string $localFsLocation;
 
     /**
+     * For printing relative paths.
+     */
+    protected string $workingDir;
+
+    /**
      * Private in parent class.
      */
     protected Config $config;
@@ -67,7 +72,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         array $config = [],
         ?PathNormalizer $pathNormalizer = null,
         $pathPrefixer = null,
-        ?string $localFsLocation = null
+        ?string $localFsLocation = null,
+        ?string $workingDir = null
     ) {
         $localFsLocation        = $localFsLocation ?? self::getFsRoot(getcwd());
         $pathNormalizer         = $pathNormalizer ?? self::makePathNormalizer($localFsLocation);
@@ -84,7 +90,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->normalizer       = $pathNormalizer;
         $this->pathPrefixer     = $pathPrefixer;
         $this->flysystemAdapter = $adapter;
-        $this->localFsLocation     = $localFsLocation;
+        $this->localFsLocation  = $localFsLocation;
+        $this->workingDir       = $pathNormalizer->normalizePath($workingDir ?? $localFsLocation);
     }
 
     public static function getFsRoot(?string $path = null): ?string
@@ -415,7 +422,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         // What will happen with strings that are not paths?!
 
         return $this->getRelativePath(
-            $this->localFsLocation,
+            $this->workingDir,
             $absolutePath
         );
     }

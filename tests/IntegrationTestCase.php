@@ -320,7 +320,8 @@ class IntegrationTestCase extends TestCase
                 [],
                 $pathNormalizer,
                 $pathPrefixer,
-                $localFsLocation
+                $localFsLocation,
+                $this->testsWorkingDir
             );
         }
         return $this->localFileSystem;
