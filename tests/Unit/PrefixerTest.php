@@ -4205,21 +4205,29 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $file = $this->createMock(File::class);
-        $file->expects($this->any())->method('addDiscoveredSymbol');
-        $file->expects($this->any())->method('getSourcePath');
-        $file->expects($this->any())
-             ->method('isDoPrefix')
-             ->willReturn(true);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
 
-        $symbols = new DiscoveredSymbols();
+        $discoveredSymbols = new DiscoveredSymbols();
 
-        $symbol = new NamespaceSymbol('Composer', $file);
-        $symbol->setReplacement('BrianHenryIE\\Strauss\\Vendor\\Composer');
-        $symbols->add($symbol);
+        $namespaceSymbol = new NamespaceSymbol('Composer', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\Vendor\\Composer');
+        $discoveredSymbols->add($namespaceSymbol);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceInString($symbols, $contents);
+        $classSymbol = new ClassSymbol('Composer\\Factory', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $this->assertEqualsRN($expected, $result);
     }
