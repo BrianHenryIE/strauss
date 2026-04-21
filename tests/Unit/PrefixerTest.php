@@ -19,9 +19,7 @@ use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
-use PhpParser\Node\Name;
 use PhpParser\ParserFactory;
-use PhpParser\PrettyPrinter\Standard;
 
 /**
  * Class ReplacerTest
@@ -1475,7 +1473,9 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
         $constants = array('FPDF_VERSION', 'ANOTHER_CONSTANT');
         foreach ($constants as $constant) {
-            $discoveredSymbols->add(new ConstantSymbol($constant, $file));
+            $constantSymbol = new ConstantSymbol($constant, $file);
+            $constantSymbol->setLocalReplacement('BHMP_'.$constant);
+            $discoveredSymbols->add($constantSymbol);
         }
 
         $result = $replacer->replaceInString($discoveredSymbols, $contents);
