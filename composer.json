@@ -89,7 +89,8 @@
     "extra": {
       "strauss": {
           "namespace_prefix": "BrianHenryIE\\Strauss\\Vendor\\",
-          "target_directory": "vendor"
+          "target_directory": "vendor",
+          "updateCallSites": true
       }
     },
     "scripts": {
