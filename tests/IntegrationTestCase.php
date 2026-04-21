@@ -10,12 +10,18 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
+use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\ServiceLocator;
 use Exception;
+use Psr\Log\LoggerInterface;
 use League\Flysystem\StorageAttributes;
+use SplFileInfo;
 use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -61,6 +67,7 @@ class IntegrationTestCase extends TestCase
         }
 
         @mkdir($this->testsWorkingDir);
+//        $this->createWorkingDir();
 
         chdir($this->testsWorkingDir);
 
@@ -86,7 +93,7 @@ class IntegrationTestCase extends TestCase
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             // TODO add xdebug to the command
-            exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+            exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params .' 2>&1', $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
             return $return_var;
@@ -100,14 +107,36 @@ class IntegrationTestCase extends TestCase
                 unset($paramsSplit[0]);
                 break;
             case 'replace':
-                $strauss = new \BrianHenryIE\Strauss\Console\Commands\ReplaceCommand();
+                $strauss = new ReplaceCommand();
                 unset($paramsSplit[0]);
                 break;
             default:
-                $strauss = new DependenciesCommand();
+                $strauss = new class($this) extends DependenciesCommand {
+                    protected IntegrationTestCase $integrationTestCase;
+
+                    public function __construct(
+                        IntegrationTestCase $integrationTestCase,
+                        ?string $name = null
+                    ) {
+                        $this->integrationTestCase = $integrationTestCase;
+                        parent::__construct($name);
+                    }
+
+                    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+                    {
+                        return method_exists($this->integrationTestCase, 'getIOLogger')
+                            ? $this->integrationTestCase->getIOLogger($input, $output)
+                            : $this->integrationTestCase->getLogger();
+                    }
+
+                    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
+                    {
+                        return $this->integrationTestCase->getReadOnlyFileSystem($filesystem);
+                    }
+                };
         }
 
-        $strauss->setLogger($this->getLogger());
+        $strauss->setLogger($this->getTestLogger());
 
         // TODO: I don't know what I did to break the previous colorlogger output so this is just a crutch.
         $output = new class() extends BufferedOutput {
@@ -165,7 +194,7 @@ class IntegrationTestCase extends TestCase
 
         /** @var FilesystemRegistry $registry */
         try {
-            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+            $registry = ServiceLocator::get(FilesystemRegistry::class);
             $registry->unregister('mem');
         } catch (Exception $e) {
         }
@@ -192,9 +221,9 @@ class IntegrationTestCase extends TestCase
         $finder->in($dir);
         if ($finder->hasResults()) {
 
-            /** @var \SplFileInfo[] $files */
+            /** @var SplFileInfo[] $files */
             $files = iterator_to_array($finder->getIterator());
-            /** @var \SplFileInfo[] $links */
+            /** @var SplFileInfo[] $links */
             $links = array_filter(
                 $files,
                 function ($file) use ($isSymlink) {
@@ -243,6 +272,7 @@ class IntegrationTestCase extends TestCase
     {
         $this->markTestSkippedOnPhpVersion($php_version, '>=', $message);
     }
+
     /**
      * Checks both the PHP version the tests are running under and the system PHP version.
      */

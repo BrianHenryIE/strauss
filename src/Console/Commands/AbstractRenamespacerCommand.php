@@ -99,9 +99,12 @@ abstract class AbstractRenamespacerCommand extends Command
             $this->filesystem =
                 new FileSystem(
                     new ReadOnlyFileSystem(
-                        $this->filesystem,
+                        $this->filesystem->getAdapter(),
                         Filesystem::makePathNormalizer($this->workingDir)
                     ),
+                    [],
+                    null,
+                    null,
                     $this->workingDir
                 );
 
@@ -121,7 +124,10 @@ abstract class AbstractRenamespacerCommand extends Command
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
         $logger->pushProcessor(new PadColonColumnsLogProcessor());
-        $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
+        if (isset($this->logger) && !($this->logger instanceof ConsoleLogger)) {
+            $logger->pushHandler(new PsrHandler($this->logger));
+        }
+        $logger->pushHandler(new PsrHandler($this->getConsoleLogger($input, $output)));
         $this->setLogger($logger);
 
         return Command::SUCCESS;
@@ -143,26 +149,25 @@ abstract class AbstractRenamespacerCommand extends Command
             );
 
             $this->filesystem = new FileSystem(
-                new \League\Flysystem\Filesystem(
-                    $localFilesystemAdapter,
-                    [
+                $localFilesystemAdapter,
+                [
                         Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                     ],
-                    Filesystem::makePathNormalizer($this->workingDir)
-                ),
+                Filesystem::makePathNormalizer($this->workingDir),
+                null,
                 $this->workingDir
             );
         }
 
-        if (method_exists($this, 'setLogger')) {
-            $this->setLogger($this->getLogger($input, $output));
+        if (method_exists($this, 'setLogger') && !isset($this->logger)) {
+            $this->setLogger($this->getConsoleLogger($input, $output));
         }
     }
 
     /**
      * Build a logger honoring optional --info/--debug/--silent flags if present.
      */
-    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+    protected function getConsoleLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         // If a subclass has a config and it is a dry-run, increase verbosity
         $isDryRun = property_exists($this, 'config') && isset($this->config) && method_exists($this->config, 'isDryRun') && $this->config->isDryRun();

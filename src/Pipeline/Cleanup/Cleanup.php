@@ -127,7 +127,7 @@ class Cleanup
 
         $projectComposerJson = new JsonFile(
             $this->filesystem->makeAbsolute(
-                $this->config->getProjectDirectory() . '/composer.json'
+                $this->config->getProjectAbsolutePath() . '/composer.json' // Factory::getComposerFile();
             )
         );
         $projectComposerJsonArray = $projectComposerJson->read();
@@ -151,6 +151,7 @@ class Cleanup
         /** @var InstalledJsonArray $installedJsonArray */
         $installedJsonArray = $installedJson->read();
         $generator->setDevMode($installedJsonArray['dev'] ?? false);
+
         // This will output the autoload_static.php etc. files to `vendor/composer`.
         $generator->dump(
             $config,
@@ -270,53 +271,14 @@ class Cleanup
             }
 
             // Normal package.
-//            if (!$this->filesystem->isSymlinked($package->getPackageAbsolutePath())) {
-            if ($this->filesystem->isSubDirOf($this->config->getAbsoluteVendorDirectory(), $package->getPackageAbsolutePath())) {
-                $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
+            $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
-                $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
+            $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
 
-                $package->setDidDelete(true);
-//            } elseif($this->filesystem->isSymlinked($package->getPackageAbsolutePath())) {
-            } else {
-                // TODO: log _where_ the symlink is pointing to.
-                $this->logger->info('Deleting symlink at ' . $package->getRelativePath());
+            $package->setDidDelete(true);
 
-                // If it's a symlink, remove the symlink in the directory
-                $symlinkPath = $this->filesystem->makeAbsolute(
-                    FileSystem::normalizeDirSeparator(rtrim(
-                        $this->config->getAbsoluteVendorDirectory() . '/' . $package->getRelativePath(),
-                        '/'
-                    ))
-                );
-
-                if (PHP_OS_FAMILY === 'Windows') {
-                    /**
-                     * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
-                     * "On windows, take care that `is_link()` returns false for Junctions."
-                     *
-                     * @see https://www.php.net/manual/en/function.is-link.php#113263
-                     * @see https://stackoverflow.com/a/18262809/336146
-                     */
-                    try {
-                        (new \Composer\Util\Filesystem())->unlink($symlinkPath);
-                    } catch (\RuntimeException $exception) {
-                        $this->logger->warning('Failed to remove symlink at ' . $symlinkPath);
-                        $this->logger->warning('Please submit a PR to fix Windows symlink support.');
-                    }
-                } else {
-                    unlink($symlinkPath);
-                }
-
-                $package->setDidDelete(true);
-            }
             $packageParentDir = dirname($package->getPackageAbsolutePath());
-            if ($packageParentDir
-                &&
-                $this->filesystem->directoryExists($packageParentDir)
-                 &&
-                 $this->filesystem->isDirectoryEmpty($packageParentDir)
-            ) {
+            if ($this->filesystem->isDirectoryEmpty($packageParentDir)) {
                 $this->logger->info('Deleting empty directory ' . $packageParentDir);
                 $this->filesystem->deleteDirectory($packageParentDir);
             }

@@ -51,7 +51,7 @@ class Whatever {
 
 	public function execute(): void {
 		$var = new \Symfony\Component\VarDumper\VarDumper();
-	} 
+	}
 }
 EOD;
 
@@ -64,7 +64,7 @@ class Whatever {
 
 	public function execute(): void {
 		$var = new \Symfony\Component\VarDumper\VarDumper();
-	} 
+	}
 }
 EOD;
 

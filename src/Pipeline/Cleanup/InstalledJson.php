@@ -147,7 +147,7 @@ class InstalledJson
             if (!$this->filesystem->directoryExists($packageDir)) {
                 $this->logger->debug('Package directory does not exist at : ' . $packageDir);
 
-                $newInstallPath = $path . '/'.str_replace('../', '', $package['install-path']);
+                $newInstallPath = $this->filesystem->normalizePath($path . '/composer/' . $package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
                     unset($installedJsonArray['packages'][$key]);

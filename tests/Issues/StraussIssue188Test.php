@@ -26,7 +26,7 @@ class StraussIssue188Test extends IntegrationTestCase
   "extra": {
     "strauss": {
       "namespace_prefix": "Company\\PluginFramework\\"
-    }   
+    }
   }
 }
 EOD;
@@ -67,7 +67,7 @@ EOD;
         }
       },
       "namespace_prefix": "Company\\PluginFramework\\"
-    }   
+    }
   }
 }
 EOD;
