@@ -64,15 +64,17 @@ class AutoloadedFilesEnumerator
             return 'exclude-from-classmap' !== $type;
         }, ARRAY_FILTER_USE_KEY);
 
-        $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
+        $dependencyPackageAbsolutePath = $this->filesystem->makeAbsolute($dependency->getPackageAbsolutePath());
+        $fsDependencyPackageAbsolutePath = $this->filesystem->makeAbsolute($dependencyPackageAbsolutePath);
 
         $classMapGenerator = new ClassMapGenerator();
 
         $excluded = null;
         $autoloadType = 'classmap';
 
+        // Used in Composer `ClassMapGenerator::scanPaths()`.
         $excludedDirs = array_map(
-            fn(string $path) => $dependencyPackageAbsolutePath . '/' . $path,
+            fn(string $path) => $fsDependencyPackageAbsolutePath . '/' . $path,
             $excludeFromClassmap
         );
 
@@ -156,7 +158,7 @@ class AutoloadedFilesEnumerator
                     }
                     break;
                 default:
-                    $this->logger->info('Unexpected autoloader type');
+                    $this->logger->warning('Unexpected autoloader type');
                     // TODO: include everything;
                     break;
             }

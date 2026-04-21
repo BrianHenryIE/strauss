@@ -147,7 +147,7 @@ class InstalledJson
             if (!$this->filesystem->directoryExists($packageDir)) {
                 $this->logger->debug('Package directory does not exist at : ' . $packageDir);
 
-                $newInstallPath = $path . '/'.str_replace('../', '', $package['install-path']);
+                $newInstallPath = $this->filesystem->normalizePath($path . '/composer/' . $package['install-path']);
 
                 if (!$this->filesystem->directoryExists($newInstallPath)) {
                     unset($installedJsonArray['packages'][$key]);
@@ -359,7 +359,7 @@ class InstalledJson
     {
         $this->logger->debug('InstalledJson::updateNamespaces()');
 
-        $discoveredNamespaces = $discoveredSymbols->getNamespaces();
+        $discoveredNamespaces = $discoveredSymbols->getNamespaces()->toArray();
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
             if (!isset($package['autoload'])) {
@@ -421,15 +421,15 @@ class InstalledJson
                                 continue;
                             }
 
-                            if ($trimmedOriginalNamespace === trim($namespaceSymbol->getReplacement(), '\\')) {
+                            if ($trimmedOriginalNamespace === trim($namespaceSymbol->getLocalReplacement(), '\\')) {
                                 $this->logger->debug('Namespace is unchanged: ' . $trimmedOriginalNamespace);
                                 continue;
                             }
 
                             // Update the namespace if it has changed.
-                            $this->logger->info('Updating namespace: ' . $trimmedOriginalNamespace . ' => ' . $namespaceSymbol->getReplacement());
+                            $this->logger->info('Updating namespace: ' . $trimmedOriginalNamespace . ' => ' . $namespaceSymbol->getLocalReplacement());
                             /** @phpstan-ignore offsetAccess.notFound */
-                            $autoload_key[$type][str_replace($trimmedOriginalNamespace, $namespaceSymbol->getReplacement(), $originalNamespace)] = $autoload_key[$type][$originalNamespace];
+                            $autoload_key[$type][str_replace($trimmedOriginalNamespace, $namespaceSymbol->getLocalReplacement(), $originalNamespace)] = $autoload_key[$type][$originalNamespace];
                             unset($autoload_key[$type][$originalNamespace]);
                         }
                         break;
@@ -460,6 +460,8 @@ class InstalledJson
     }
 
     /**
+     * TODO: This runs twice but should only run once.
+     *
      * @param array<string,ComposerPackage> $flatDependencyTree
      * @param DiscoveredSymbols $discoveredSymbols
      * @throws Exception

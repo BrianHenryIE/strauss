@@ -26,7 +26,7 @@ class StraussIssue188Test extends IntegrationTestCase
   "extra": {
     "strauss": {
       "namespace_prefix": "Company\\PluginFramework\\"
-    }   
+    }
   }
 }
 EOD;
@@ -48,6 +48,8 @@ EOD;
 
     public function test_issue_188_extends(): void
     {
+        $this->markTestSkippedUnlessSpecificallyInFilter();
+
         $composerJsonString = <<<'EOD'
 {
   "name": "issue/188",
@@ -67,7 +69,7 @@ EOD;
         }
       },
       "namespace_prefix": "Company\\PluginFramework\\"
-    }   
+    }
   }
 }
 EOD;

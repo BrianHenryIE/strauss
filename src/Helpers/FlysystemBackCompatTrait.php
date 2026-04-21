@@ -2,9 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\FileAttributes;
-use League\Flysystem\WhitespacePathNormalizer;
 
 /**
  * @see FlysystemBackCompatInterface
@@ -20,15 +18,40 @@ trait FlysystemBackCompatTrait
             $location = $this->normalizePath($location);
         }
 
-        if (method_exists($this->flysystem, 'directoryExists')) {
-            return $this->flysystem->directoryExists($location);
+        /**
+         * Use `self::class` here to check the parent of the current class, not necessarily the parent of the class
+         * which was called.
+         */
+//        if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'directoryExists')) {
+//            return parent::directoryExists($location);
+//        }
+
+        if (property_exists($this, 'flysystemAdapter') && method_exists($this->flysystemAdapter, 'directoryExists')) {
+            return $this->flysystemAdapter->directoryExists($location);
         }
 
-        $parentDirectoryContents = $this->listContents(dirname($location));
+        if (property_exists($this, 'filesystem') && method_exists($this->filesystem, 'directoryExists')) {
+            return $this->filesystem->directoryExists($location);
+        }
+
+        $parentDir = dirname($location);
+        if (method_exists($this, 'normalizePath')) {
+            $parentDir = $this->normalizePath($parentDir);
+        }
+        $parentDir = $parentDir === '.' ? '/' : $parentDir;
+        $parentDirectoryContents = $this->listContents($parentDir, false);
         /** @var FileAttributes $entry */
         foreach ($parentDirectoryContents as $entry) {
             if ($entry->path() == $location) {
                 return $entry->isDir();
+            }
+        }
+
+        // symlinks.
+        if (property_exists($this, 'pathPrefixer')) {
+            if (false !== realpath($this->pathPrefixer->prefixPath($location))
+                && is_dir($this->pathPrefixer->prefixPath($location))) {
+                return true;
             }
         }
 
@@ -39,8 +62,8 @@ trait FlysystemBackCompatTrait
     // has
     public function has(string $location): bool
     {
-        if (method_exists($this->flysystem, 'has')) {
-            return $this->flysystem->has($location);
+        if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'has')) {
+            return parent::has($location);
         }
         return $this->fileExists($location) || $this->directoryExists($location);
     }

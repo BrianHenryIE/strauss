@@ -9,7 +9,9 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
@@ -19,7 +21,7 @@ use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
-use Psr\Log\LoggerAwareTrait;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -27,8 +29,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ReplaceCommand extends AbstractRenamespacerCommand
 {
-    use LoggerAwareTrait;
-
     /** @var Prefixer */
     protected Prefixer $replacer;
 
@@ -99,7 +99,10 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
-            // TODO: where?!
+            /**
+             * @see \Symfony\Component\Console\Command\Command
+             * @see AbstractRenamespacerCommand
+             */
             parent::execute($input, $output);
 
             $this->updateConfigFromCli($input);
@@ -131,6 +134,9 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     protected function updateConfigFromCli(InputInterface $input): void
     {
         $this->logger->notice('Loading cli config...');
+
+        $config = new StraussConfig();
+        $config->setProjectAbsolutePath(getcwd());
 
         /** @var string $inputFrom */
         $inputFrom = $input->getOption('from');

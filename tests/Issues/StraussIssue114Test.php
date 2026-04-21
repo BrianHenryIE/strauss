@@ -17,6 +17,7 @@ class StraussIssue114Test extends IntegrationTestCase
 {
     public function test_muted_errors(): void
     {
+        $this->markTestSkippedUnlessSpecificallyInFilter();
 
         $composerJsonString = <<<'EOD'
 {

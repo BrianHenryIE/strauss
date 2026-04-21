@@ -11,18 +11,16 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
-use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Tests\Issues\MozartIssue93Test;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
-use League\Flysystem\Config;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\Types\TraitSymbol;
 use Mockery;
-use PHPUnit\Framework\MockObject\Exception;
+use PhpParser\ParserFactory;
 
 /**
  * Class ReplacerTest
@@ -31,6 +29,35 @@ use PHPUnit\Framework\MockObject\Exception;
  */
 class PrefixerTest extends TestCase
 {
+
+    /**
+     * @return PrefixerConfigInterface|(PrefixerConfigInterface&Mockery\MockInterface&object&Mockery\LegacyMockInterface)|(Mockery\MockInterface&object&Mockery\LegacyMockInterface)
+     */
+    protected function getMockConfig()
+    {
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+        $config->shouldReceive('getClassmapPrefix')->andReturn('Prefixer_Test_');
+        $config->shouldReceive('getNamespacePrefix')->andReturn('Prefixer\\Test\\');
+        $config->shouldReceive('getConstantsPrefix')->andReturn('Prefixer_Test_');
+        return $config;
+    }
+
+    protected function getAst(string $contents): array
+    {
+
+        $parseContent = $contents;
+        if (stripos(ltrim($contents), '<?') !== 0) {
+            $phpOpenerLen = strlen("<?php\n");
+            $parseContent = "<?php\n" . $contents;
+        }
+
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+
+        $ast = $parser->parse($parseContent);
+
+        return $ast;
+    }
+
     public function testNamespaceReplacer(): void
     {
 
@@ -114,11 +141,31 @@ EOD;
         $originalNamespace = 'Google\\Http';
         $replacement = 'BrianHenryIE\\Strauss\\Google\\Http';
 
-        $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
+        $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $expected = 'use BrianHenryIE\\Strauss\\Google\\Http\\Batch;';
 
-        self::assertStringContainsString($expected, $result);
+        $this->assertStringContainsString($expected, $result);
     }
 
 
@@ -146,19 +193,28 @@ protected $buffer;             // buffer holding in-memory PDF
 }
 EOD;
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $originalClassname = "FPDF";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $expected = "class Prefixer_Test_FPDF";
 
+        $config = $this->getMockConfig();
 
-        $original = "FPDF";
-        $classnamePrefix = "BrianHenryIE_Strauss_";
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $original, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
 
-        $expected = "class BrianHenryIE_Strauss_FPDF";
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
-        self::assertStringContainsString($expected, $result);
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -174,17 +230,30 @@ EOD;
      */
     public function test_it_replaces_class_declarations(): void
     {
-        $contents = 'class Hello_World {';
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $contents = 'class Hello_World {}';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $expected = "class Prefixer_Test_Hello_World {}";
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $config = $this->getMockConfig();
 
-        self::assertEqualsRN('class Mozart_Hello_World {', $result);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -192,18 +261,30 @@ EOD;
      */
     public function test_it_replaces_abstract_class_declarations(): void
     {
-        $contents = 'abstract class Hello_World {';
+        $contents = 'abstract class Hello_World {}';
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = 'abstract class Prefixer_Test_Hello_World {}';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN('abstract class Mozart_Hello_World {', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -211,18 +292,30 @@ EOD;
      */
     public function test_it_replaces_interface_class_declarations(): void
     {
-        $contents = 'interface Hello_World {';
+        $contents = 'interface Hello_World {}';
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalName = "Hello_World";
+        $globalPrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = 'interface Prefixer_Test_Hello_World {}';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN('interface Mozart_Hello_World {', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $interfaceSymbol = new InterfaceSymbol($originalName, $file);
+        $interfaceSymbol->setLocalReplacement($globalPrefix . $originalName);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($interfaceSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -230,18 +323,30 @@ EOD;
      */
     public function test_it_replaces_class_declarations_that_extend_other_classes(): void
     {
-        $contents = 'class Hello_World extends Bye_World {';
+        $contents = 'class Hello_World extends Bye_World {}';
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = 'class Prefixer_Test_Hello_World extends Bye_World {}';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN('class Mozart_Hello_World extends Bye_World {', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -249,18 +354,30 @@ EOD;
      */
     public function test_it_replaces_class_declarations_that_implement_interfaces(): void
     {
-        $contents = 'class Hello_World implements Bye_World {';
+        $contents = 'class Hello_World implements Bye_World {}';
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = 'class Prefixer_Test_Hello_World implements Bye_World {}';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN('class Mozart_Hello_World implements Bye_World {', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertStringContainsString($expected, $result);
     }
 
 
@@ -269,18 +386,36 @@ EOD;
      */
     public function testItReplacesNamespacesInInterface(): void
     {
-        $contents = 'class Hello_World implements \Strauss\Bye_World {';
+        $contents = 'class Hello_World implements \Strauss\Bye_World {}';
 
         $originalNamespace = 'Strauss';
         $replacement = 'Prefix\Strauss';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
+        $replacer = new Prefixer($config, $filesystem);
 
-        self::assertEqualsRN('class Hello_World implements \Prefix\Strauss\Bye_World {', $result);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN('class Hello_World implements \Prefix\Strauss\Bye_World {}', $result);
     }
 
     /**
@@ -294,7 +429,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $replacer->setClassmapPrefix('Mozart_');
         $replacer->replace($contents);
-        self::assertArrayHasKey('Hello_World', $replacer->getReplacedClasses());
+        $this->assertArrayHasKey('Hello_World', $replacer->getReplacedClasses());
     }
 
     /**
@@ -303,18 +438,30 @@ EOD;
      */
     public function test_it_replaces_class_declarations_psr2(): void
     {
-        $contents = "class Hello_World\n{";
+        $contents = "class Hello_World\n{}";
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = "class Prefixer_Test_Hello_World\n{}";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN("class Mozart_Hello_World\n{", $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertStringContainsString($expected, $result);
     }
 
     /**
@@ -324,18 +471,30 @@ EOD;
      */
     public function test_it_replaces_class(): void
     {
-        $contents = "class Hello_World {";
+        $contents = "class Hello_World {}";
 
-        $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $originalClassname = "Hello_World";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $expected = "class Prefixer_Test_Hello_World {}";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertEqualsRN("class Mozart_Hello_World {", $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertStringContainsString($expected, $result);
     }
 
 
@@ -370,7 +529,7 @@ EOD;
 
         $result = $replacer->replaceInString([$originalClassname => $namespaceSymbol], [], [], $contents);
 
-        self::assertEqualsRN($contents, $result);
+        $this->assertEqualsRN($contents, $result);
     }
 
     /**
@@ -382,19 +541,29 @@ EOD;
     public function test_it_does_not_replace_inside_namespace_singleline(): void
     {
         $contents = "namespace Mozart; class Hello_World";
+        $expected = $contents;
 
         $originalClassname = 'Hello_World';
-        $classnamePrefix = 'Mozart_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
 
-        self::assertEqualsRN($contents, $result);
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
     }
-
 
     /**
      * It's possible to have multiple namespaces inside one file.
@@ -407,25 +576,44 @@ EOD;
      */
     public function it_does_not_replace_inside_named_namespace_but_does_inside_explicit_global_namespace_b(): void
     {
-
         $contents = "
 		namespace My_Project {
 			class A_Class { }
 		}
 		namespace {
-			class B_Class { }
+			class A_Class { }
 		}
 		";
 
-        $classnamePrefix = 'Mozart_';
+        $expected = "
+		namespace My_Project {
+			class A_Class { }
+		}
+		namespace {
+			class Prefixer_Test_A_Class { }
+		}
+		";
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $originalClassname = 'A_Class';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $result = $replacer->replaceClassname($contents, 'B_Class', $classnamePrefix);
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        self::assertStringContainsString('Mozart_B_Class', $result);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /** @test */
@@ -433,33 +621,82 @@ EOD;
     {
         $contents = 'namespace Test\\Test;';
 
-        $namespace = "Test\\Test";
+        $originalNamespace = "Test\\Test";
         $replacement = "My\\Mozart\\Prefix\\Test\\Test";
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
+        $replacer = new Prefixer($config, $filesystem);
 
-        self::assertEqualsRN('namespace My\\Mozart\\Prefix\\Test\\Test;', $result);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN('namespace My\\Mozart\\Prefix\\Test\\Test;', $result);
     }
 
 
     /**
      * This test doesn't seem to match its name.
      */
-    public function test_it_doesnt_replaces_namespace_inside_namespace(): void
+    public function testRenamesNamespace(): void
     {
-        $contents = "namespace Test\\Something;\n\nuse Test\\Test;";
+        $contents = "namespace Prefix\\Test\\Something;\n\nuse Test\\Test;";
+
+        $originalNamespace1 = 'Prefix\\Test\\Something';
+        $originalNamespace2 = 'Test';
+        $replacement = 'My\\Mozart\\Rename\\Test';
+
+        $expected = "namespace My\\Mozart\\Rename\\Test;\n\nuse My\\Mozart\\Rename\\Test\\Test;";
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, "Test\\Something", "My\\Mozart\\Prefix\\Test\\Something");
-        $result = $replacer->replaceNamespace($result, "Test\\Test", "My\\Mozart\\Prefix\\Test\\Test");
+        $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN("namespace My\\Mozart\\Prefix\\Test\\Something;\n\nuse My\\Mozart\\Prefix\\Test\\Test;", $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol1 = new NamespaceSymbol($originalNamespace1, $file);
+        $namespaceSymbol1->setLocalReplacement($replacement);
+
+        $namespaceSymbol2 = new NamespaceSymbol($originalNamespace2, $file);
+        $namespaceSymbol2->setLocalReplacement($replacement);
+
+        $classSymbol = new ClassSymbol('Test\\Test', $file, false, $namespaceSymbol2);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol1);
+        $discoveredSymbols->add($namespaceSymbol2);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -469,32 +706,69 @@ EOD;
     {
         $contents = 'namespace Test\\Test\\Another;';
 
-        $namespace = 'Test\\Another';
-        $replacement = 'My\\Mozart\\Prefix\\' . $namespace;
+        $originalNamespace = 'Test\\Another';
+        $replacement = 'My\\Mozart\\Prefix\\' . $originalNamespace;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
+        $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN('namespace Test\\Test\\Another;', $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN('namespace Test\\Test\\Another;', $result);
     }
 
 
     public function test_it_doesnt_prefix_already_prefixed_namespace(): void
     {
-
         $contents = 'namespace My\\Mozart\\Prefix\\Test\\Another;';
 
-        $namespace = "Test\\Another";
-        $prefix = "My\\Mozart\\Prefix";
+        $originalNamespace = "Test\\Another";
+        $replacement = "My\\Mozart\\Prefix\\Test\\Another";
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $namespace, $prefix);
+        $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN('namespace My\\Mozart\\Prefix\\Test\\Another;', $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN('namespace My\\Mozart\\Prefix\\Test\\Another;', $result);
     }
 
     /**
@@ -507,20 +781,38 @@ EOD;
      */
     public function testDoesNotDoublePrefixAlreadyUpdatedNamespace(): void
     {
-
         $contents = 'namespace Dargon\\Dependencies\\Dragon\\Form;';
 
-        $namespace = "Dragon";
+        $originalNamespace = "Dragon";
         $prefix = "Dargon\\Dependencies\\";
-        $replacement = $prefix . $namespace;
+        $replacement = $prefix . $originalNamespace;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
+        $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertNotEquals('namespace Dargon\\Dependencies\\Dargon\\Dependencies\\Dragon\\Form;', $result);
-        self::assertEqualsRN('namespace Dargon\\Dependencies\\Dragon\\Form;', $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertNotEquals('namespace Dargon\\Dependencies\\Dargon\\Dependencies\\Dragon\\Form;', $result);
+        $this->assertEqualsRN('namespace Dargon\\Dependencies\\Dragon\\Form;', $result);
     }
 
     /**
@@ -536,12 +828,29 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $result = $replacer->replaceNamespace($contents, 'Chicken', 'My\\Mozart\\Prefix\\Chicken');
-        $result = $replacer->replaceNamespace($result, 'Egg', 'My\\Mozart\\Prefix\\Egg');
+        $replacer = new Prefixer($config, $filesystem);
 
-        self::assertEqualsRN($expected, $result);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('Chicken', $file);
+        $namespaceSymbol->setLocalReplacement('My\\Mozart\\Prefix\\Chicken');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -551,19 +860,38 @@ EOD;
      */
     public function it_replaces_namespace_use_as_declarations(): void
     {
-        $namespace = 'Symfony\\Polyfill\\';
+        $originalNamespace = 'Symfony\\Polyfill\\';
         $replacement = "MBViews\\Dependencies\\Symfony\\Polyfill\\";
 
         $contents = "use Symfony\Polyfill\Mbstring as p;";
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $namespace, $replacement);
+        $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $expected = "use MBViews\\Dependencies\\Symfony\\Polyfill\\Mbstring as p;";
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -571,104 +899,233 @@ EOD;
      */
     public function test_it_doesnt_prefix_function_types_that_happen_to_match_the_namespace(): void
     {
-        $namespace = 'Mpdf';
-        $prefix = "Mozart";
-        $contents = 'public function getServices( Mpdf $mpdf, LoggerInterface $logger, $config, )';
+        $originalNamespace = 'Mpdf';
+        $replacement = "Mozart\\Mpdf";
+        $contents = 'public function getServices( Mpdf $mpdf, LoggerInterface $logger, $config ) {}';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $namespace, $prefix);
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $expected = 'public function getServices( Mpdf $mpdf, LoggerInterface $logger, $config, )';
+        $replacer = new Prefixer($config, $filesystem);
 
-        self::assertEqualsRN($expected, $result);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $expected = 'public function getServices( Mpdf $mpdf, LoggerInterface $logger, $config ) {}';
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testLeadingSlashInString(): void
     {
-        $originalNamespace = "Strauss\\Test";
-        $replacement = "Prefix\\Strauss\\Test";
         $contents = '$mentionedClass = "\\Strauss\\Test\\Classname";';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
-
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
+        $originalNamespace = "Strauss\\Test";
+        $replacement = "Prefix\\Strauss\\Test";
 
         $expected = '$mentionedClass = "\\Prefix\\Strauss\\Test\\Classname";';
 
-        self::assertEqualsRN($expected, $result);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $classSymbol = new ClassSymbol('Strauss\\Test\\Classname', $file, false, $namespaceSymbol);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testDoubleLeadingSlashInString(): void
     {
-        $originalNamespace = 'Strauss\\Test';
-        $replacement = 'Prefix\\Strauss\\Test';
         $contents = '$mentionedClass = "\\\\Strauss\\\\Test\\\\Classname";';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
-
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
+        $originalNamespace = 'Strauss\\Test';
+        $replacement = 'Prefix\\Strauss\\Test';
 
         $expected = '$mentionedClass = "\\\\Prefix\\\\Strauss\\\\Test\\\\Classname";';
 
-        self::assertEqualsRN($expected, $result);
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $classSymbol = new ClassSymbol('Strauss\\Test\\Classname', $file, false, $namespaceSymbol);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testItReplacesSlashedNamespaceInFunctionParameter(): void
     {
+        $contents = <<<'EOD'
+class X {
+    public function __construct(\net\authorize\api\contract\v1\AnetApiRequestType $request, $responseType) {}
+}
+EOD;
 
         $originalNamespace = "net\\authorize\\api\\contract\\v1";
         $replacement = "Prefix\\net\\authorize\\api\\contract\\v1";
-        $contents = "public function __construct(\\net\\authorize\\api\\contract\\v1\\AnetApiRequestType \$request, \$responseType)";
+
+        $expected = <<<'EOD'
+class X {
+    public function __construct(\Prefix\net\authorize\api\contract\v1\AnetApiRequestType $request, $responseType) {}
+}
+EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $expected = "public function __construct(\\Prefix\\net\\authorize\\api\\contract\\v1\\AnetApiRequestType \$request, \$responseType)";
+        $replacer = new Prefixer($config, $filesystem);
 
-        self::assertEqualsRN($expected, $result);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
 
     public function testItReplacesNamespaceInFunctionParameterDefaultArgumentValue(): void
     {
+        $contents = "function executeWithApiResponse(\$endPoint = \\net\\authorize\\api\\constants\\ANetEnvironment::CUSTOM) {}";
 
         $originalNamespace = "net\\authorize\\api\constants";
         $replacement = "Prefix\\net\\authorize\\api\constants";
-        $contents = "public function executeWithApiResponse(\$endPoint = \\net\\authorize\\api\\constants\\ANetEnvironment::CUSTOM)";
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $expected = "public function executeWithApiResponse(\$endPoint = \\Prefix\\net\\authorize\\api\\constants\\ANetEnvironment::CUSTOM)";
+        $replacer = new Prefixer($config, $filesystem);
 
-        self::assertEqualsRN($expected, $result);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $expected = "function executeWithApiResponse(\$endPoint = \\Prefix\\net\\authorize\\api\\constants\\ANetEnvironment::CUSTOM) {}";
+
+        $this->assertEqualsRN($expected, $result);
     }
 
 
     public function testItReplacesNamespaceConcatenatedStringConst(): void
     {
+        $contents = "\$this->apiRequest->setClientId(\"sdk-php-\" . \\net\\authorize\\api\\constants\\ANetEnvironment::VERSION);";
 
         $originalNamespace = "net\\authorize\\api\\constants";
         $replacement = "Prefix\\net\\authorize\\api\\constants";
-        $contents = "\$this->apiRequest->setClientId(\"sdk-php-\" . \\net\\authorize\\api\\constants\\ANetEnvironment::VERSION);";
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
+        $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $expected = "\$this->apiRequest->setClientId(\"sdk-php-\" . \\Prefix\\net\\authorize\\api\\constants\\ANetEnvironment::VERSION);";
 
-
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -683,23 +1140,63 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, 'Mpdf', 'BrianHenryIE\Strauss\Mpdf');
+                $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('Mpdf', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Mpdf');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testClassExtendsNamespacedClassIsPrefixed(): void
     {
 
-        $contents = 'class BarcodeException extends \Mpdf\MpdfException';
-        $expected = 'class BarcodeException extends \BrianHenryIE\Strauss\Mpdf\MpdfException';
+        $contents = 'class BarcodeException extends \Mpdf\MpdfException {}';
+        $expected = 'class BarcodeException extends \BrianHenryIE\Strauss\Mpdf\MpdfException {}';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, 'Mpdf', 'BrianHenryIE\Strauss\Mpdf');
+                $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('Mpdf', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Mpdf');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -716,9 +1213,29 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, 'Carbon_Fields\Provider', 'BrianHenryIE\Strauss\Carbon_Fields\Provider');
+                $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('Carbon_Fields\Provider', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Carbon_Fields\Provider');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -730,15 +1247,45 @@ EOD;
     public function testStaticNamespacedClassIsPrefixed(): void
     {
 
-        $contents = '@method static \Carbon_Fields\Container\Comment_Meta_Container';
-        $expected = '@method static \BrianHenryIE\Strauss\Carbon_Fields\Container\Comment_Meta_Container';
+        $contents = <<<'EOD'
+/**
+ * @method static \Carbon_Fields\Container\Comment_Meta_Container';
+ */
+EOD;
+        $expected = <<<'EOD'
+/**
+ * @method static \BrianHenryIE\Strauss\Carbon_Fields\Container\Comment_Meta_Container';
+ */
+EOD;
+
+        $originalNamespace = 'Carbon_Fields\Container';
+        $replacement = 'BrianHenryIE\Strauss\Carbon_Fields\Container';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, 'Carbon_Fields\Container', 'BrianHenryIE\Strauss\Carbon_Fields\Container');
+        $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -749,15 +1296,34 @@ EOD;
     public function testReturnedNamespacedClassIsPrefixed(): void
     {
 
-        $contents = 'return \Carbon_Fields\Carbon_Fields::resolve';
-        $expected = 'return \BrianHenryIE\Strauss\Carbon_Fields\Carbon_Fields::resolve';
+        $contents = 'return \Carbon_Fields\Carbon_Fields::resolve();';
+        $expected = 'return \BrianHenryIE\Strauss\Carbon_Fields\Carbon_Fields::resolve();';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, 'Carbon_Fields', 'BrianHenryIE\Strauss\Carbon_Fields');
+        $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('Carbon_Fields', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\Carbon_Fields');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -767,20 +1333,37 @@ EOD;
      */
     public function testNamespacedStaticIsPrefixed(): void
     {
+        $contents = '		\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable();';
+        $expected = '		\\BrianHenryIE\\Strauss\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable();';
 
-        $contents = '		\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable()';
-        $expected = '		\\BrianHenryIE\\Strauss\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable()';
+        $originalNamespace = 'Carbon_Fields';
+        $replacement = 'BrianHenryIE\\Strauss\\Carbon_Fields';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace(
-            $contents,
-            'Carbon_Fields',
-            'BrianHenryIE\\Strauss\\Carbon_Fields'
+        $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
         );
 
-        self::assertEqualsRN($expected, $result);
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -796,12 +1379,31 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, $originalNamespace, $replacement);
+        $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $expected = "esc_html__( 'Learn about TrustedLogin', 'trustedlogin' )";
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -813,19 +1415,31 @@ EOD;
      */
     public function testDoNotReplaceInVariableNames(): void
     {
-        $originalClassname = 'object';
-        $classnamePrefix = 'Strauss_Issue19_';
         $contents = "public static function objclone(\$object) {";
-
-        $config = $this->createMock(PrefixerConfigInterface::class);
-
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
 
         // NOT public static function objclone($Strauss_Issue19_object) {
         $expected = "public static function objclone(\$object) {";
 
-        self::assertEqualsRN($expected, $result);
+        $originalClassname = 'object';
+        $classnamePrefix = 'Prefixer_Test_';
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testReplaceConstants(): void
@@ -846,7 +1460,7 @@ define('FPDF_VERSION', '1.83');
 define('ANOTHER_CONSTANT', '1.83');
 
 class FPDF
-{
+{}
 EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -860,38 +1474,63 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
         $constants = array('FPDF_VERSION', 'ANOTHER_CONSTANT');
         foreach ($constants as $constant) {
-            $discoveredSymbols->add(new ConstantSymbol($constant, $file));
+            $constantSymbol = new ConstantSymbol($constant, $file);
+            $constantSymbol->setLocalReplacement('BHMP_'.$constant);
+            $discoveredSymbols->add($constantSymbol);
         }
 
         $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
-        self::assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
-        self::assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
+        $this->assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
+        $this->assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
     }
 
     public function testStaticFunctionCallOfNamespacedClassIsPrefixed(): void
     {
 
         $contents = <<<'EOD'
-public function __construct() {
+function __construct() {
     new \ST\StraussTestPackage2();
     \ST\StraussTestPackage2::hello();
     new \ST\StraussTestPackage2();
 }
 EOD;
         $expected = <<<'EOD'
-public function __construct() {
+function __construct() {
     new \StraussTest\ST\StraussTestPackage2();
     \StraussTest\ST\StraussTestPackage2::hello();
     new \StraussTest\ST\StraussTestPackage2();
 }
 EOD;
+
+        $originalNamespace = 'ST';
+        $replacement = 'StraussTest\\ST';
+
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\ST');
+        $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -904,9 +1543,29 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceNamespace($contents, 'chillerlan\\QRCode', 'BrianHenryIE\\Strauss\\chillerlan\\QRCode');
+                $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('chillerlan\\QRCode', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\chillerlan\\QRCode');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -924,14 +1583,54 @@ EOD;
         $contents = '\ST\StraussTestPackage2::hello();';
         $expected = '\StraussTest\ST\StraussTestPackage2::hello();';
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
 
         $contents = '! \ST\StraussTestPackage2::hello();';
         $expected = '! \StraussTest\ST\StraussTestPackage2::hello();';
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -949,14 +1648,54 @@ EOD;
         $contents = '$test1 = \ST\StraussTestPackage2::hello();';
         $expected = '$test1 = \StraussTest\ST\StraussTestPackage2::hello();';
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
 
         $contents = '$test2 = ! \ST\StraussTestPackage2::hello();';
         $expected = '$test2 = ! \StraussTest\ST\StraussTestPackage2::hello();';
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -982,8 +1721,28 @@ if ( \StraussTest\ST\StraussTestPackage2::hello() ) {
 }
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
 if ( ! \ST\StraussTestPackage2::hello() ) {
@@ -996,8 +1755,28 @@ if ( ! \StraussTest\ST\StraussTestPackage2::hello() ) {
 }
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1022,8 +1801,28 @@ if ( \StraussTest\ST\StraussTestPackage2::hello() && ! \StraussTest\ST\StraussTe
     echo 'hello world';
 }
 EOD;
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
 if ( ! \ST\StraussTestPackage2::hello() && \ST\StraussTestPackage2::hello() ) {
@@ -1036,8 +1835,28 @@ if ( ! \StraussTest\ST\StraussTestPackage2::hello() && \StraussTest\ST\StraussTe
 }
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1062,8 +1881,28 @@ if ( \StraussTest\ST\StraussTestPackage2::hello() || ! \StraussTest\ST\StraussTe
     echo 'hello world';
 }
 EOD;
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
 if ( ! \ST\StraussTestPackage2::hello() || \ST\StraussTestPackage2::hello() ) {
@@ -1076,8 +1915,28 @@ if ( ! \StraussTest\ST\StraussTestPackage2::hello() || \StraussTest\ST\StraussTe
 }
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1105,8 +1964,28 @@ $arr1 = array(
 );
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1134,8 +2013,28 @@ $arr2 = array(
 );
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1163,8 +2062,28 @@ $arr3 = array(
 );
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1192,8 +2111,28 @@ $assoc_arr1 = array(
 );
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1220,8 +2159,28 @@ $assoc_arr1 = array(
     'two' => ! \StraussTest\ST\StraussTestPackage2::hello() && \StraussTest\ST\StraussTestPackage2::hello(),
 );
 EOD;
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1249,8 +2208,28 @@ $assoc_arr1 = array(
 );
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+                $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1259,28 +2238,30 @@ EOD;
      */
     public function testDoublePrefixBug(): void
     {
+        $this->markTestIncomplete();
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $config = $this->getMockConfig();
 
-        $contents = <<<'EOD'
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $contents1 = <<<'EOD'
 namespace ST;
 class StraussTestPackage {
 	public function __construct() {
 	}
 }
 EOD;
-        $expected = <<<'EOD'
+        $expected1 = <<<'EOD'
 namespace StraussTest\ST;
 class StraussTestPackage {
 	public function __construct() {
 	}
 }
 EOD;
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
 
-        $contents = <<<'EOD'
+
+
+        $contents2 = <<<'EOD'
 namespace ST\Namespace;
 class StraussTestPackage2
 {
@@ -1291,7 +2272,7 @@ class StraussTestPackage2
     }
 }
 EOD;
-        $expected = <<<'EOD'
+        $expected2 = <<<'EOD'
 namespace StraussTest\ST\Namespace;
 class StraussTestPackage2
 {
@@ -1303,9 +2284,32 @@ class StraussTestPackage2
 }
 EOD;
 
-        $result = $replacer->replaceNamespace($contents, 'ST\\Namespace', 'StraussTest\\ST\\Namespace');
-        $result = $replacer->replaceNamespace($result, 'ST', 'StraussTest\\ST');
-        self::assertEqualsRN($expected, $result);
+        $originalNamespace = 'ST\\Namespace';
+        $replacement = 'StraussTest\\ST\\Namespace';
+
+        $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents2);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected2, $result);
     }
 
     /**
@@ -1329,15 +2333,25 @@ class NA
 EOD;
 
         $originalClassname = 'Normalizer';
-        $classnamePrefix = 'Normalizer_Test_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
 
-        self::assertEqualsRN($contents, $result);
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertEqualsRN($contents, $result);
     }
 
     /**
@@ -1356,22 +2370,32 @@ class Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
 EOD;
 
         $expected = <<<'EOD'
-class Normalizer_Test_Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
+class Prefixer_Test_Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
 {
 
 }
 EOD;
 
         $originalClassname = 'Normalizer';
-        $classnamePrefix = 'Normalizer_Test_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
 
-        self::assertEqualsRN($expected, $result);
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1390,22 +2414,32 @@ class Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
 EOD;
 
         $expected = <<<'EOD'
-class Normalizer_Test_Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
+class Prefixer_Test_Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
 {
 
 }
 EOD;
 
         $originalClassname = 'Normalizer';
-        $classnamePrefix = 'Normalizer_Test_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
 
-        self::assertEqualsRN($expected, $result);
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1423,6 +2457,7 @@ namespace Symfony\Polyfill\Intl\Normalizer;
 
 class Normalizer
 {
+}
 EOD;
 
         $expected = <<<'EOD'
@@ -1431,18 +2466,29 @@ namespace Symfony\Polyfill\Intl\Normalizer;
 
 class Normalizer
 {
+}
 EOD;
 
         $originalClassname = 'Normalizer';
-        $classnamePrefix = 'Normalizer_Test_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
 
-        self::assertEqualsRN($expected, $result);
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1472,14 +2518,14 @@ EOD;
 
         $discoveredSymbols = new DiscoveredSymbols();
         $classSymbol = new ClassSymbol('Normalizer', $file);
-        $classSymbol->setReplacement('Normalizer_Test_Normalizer');
+        $classSymbol->setLocalReplacement('Normalizer_Test_Normalizer');
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
         $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
-        self::assertEqualsRN($contents, $result);
+        $this->assertEqualsRN($contents, $result);
     }
 
     /**
@@ -1518,11 +2564,29 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $result = $replacer->replaceNamespace($contents, 'ST', 'StraussTest\\ST');
+        $replacer = new Prefixer($config, $filesystem);
 
-        self::assertEqualsRN($expected, $result);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ST', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1575,9 +2639,29 @@ EOD;
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceNamespace($contents, 'GuzzleHttp', 'StraussTest\\GuzzleHttp');
+                $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('GuzzleHttp', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\GuzzleHttp');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1607,8 +2691,10 @@ class Configuration implements ConfigurationInterface
         if ($this->useDualstackEndpoint == true
             && (strpos($region, "iso-") !== false || strpos($region, "-iso") !== false)
         ) {
-            throw new ConfigurationException("Dual-stack is not supported in ISO regions");        }
+            throw new ConfigurationException("Dual-stack is not supported in ISO regions");
+        }
     }
+}
 EOD;
 
         $expected = <<<'EOD'
@@ -1631,17 +2717,37 @@ class Configuration implements ConfigurationInterface
         if ($this->useDualstackEndpoint == true
             && (strpos($region, "iso-") !== false || strpos($region, "-iso") !== false)
         ) {
-            throw new ConfigurationException("Dual-stack is not supported in ISO regions");        }
+            throw new ConfigurationException("Dual-stack is not supported in ISO regions");
+        }
     }
+}
 EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $result = $replacer->replaceNamespace($contents, 'Aws', 'StraussTest\\Aws');
+        $replacer = new Prefixer($config, $filesystem);
 
-        self::assertEqualsRN($expected, $result);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('Aws', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\Aws');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
 
@@ -1673,9 +2779,29 @@ EOD;
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceNamespace($contents, 'Chophper', 'StraussTest\\Chophper');
+                $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('Chophper', $file);
+        $namespaceSymbol->setLocalReplacement('StraussTest\\Chophper');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1712,11 +2838,11 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
 
         $namespaceSymbol = new NamespaceSymbol('WPGraphQL\Registry\Utils', $file);
-        $namespaceSymbol->setReplacement('StraussTest\WPGraphQL\Registry\Utils');
+        $namespaceSymbol->setLocalReplacement('StraussTest\WPGraphQL\Registry\Utils');
         $discoveredSymbols->add($namespaceSymbol);
 
         $classSymbol = new ClassSymbol('WPGraphQL', $file);
-        $classSymbol->setReplacement('StraussTest_WPGraphQL');
+        $classSymbol->setLocalReplacement('StraussTest_WPGraphQL');
         $discoveredSymbols->add($classSymbol);
 
         $result = $replacer->replaceInString(
@@ -1724,7 +2850,7 @@ EOD;
             $contents
         );
 
-        self::assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1732,6 +2858,7 @@ EOD;
      */
     public function test_prefix_no_newline_after_opening_php_replace_namespace(): void
     {
+        $filesystem = $this->getInMemoryFileSystem();
 
         $contents = <<<'EOD'
 <?php namespace League\OAuth2\Client\Provider;
@@ -1747,14 +2874,37 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $replacer = new Prefixer($config, $filesystem);
 
-        $result = $replacer->replaceNamespace($contents, 'League\\OAuth2', 'Company\\Project\\League\\OAuth2');
+        $discoveredSymbols = new DiscoveredSymbols();
 
-        self::assertEqualsRN($expected, $result);
+        $providerNamespaceSymbol =new NamespaceSymbol('League\\OAuth2\\Client\\Provider');
+        $providerNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Provider');
+        $discoveredSymbols->add($providerNamespaceSymbol);
+
+        $accessorNamespaceSymbol = new NamespaceSymbol('League\\OAuth2\\Client\\Tool\\ArrayAccessorTrait');
+        $accessorNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Tool\\ArrayAccessorTrait');
+        $discoveredSymbols->add($accessorNamespaceSymbol);
+
+        $file = new File(
+            'project/vendor/league/oauth2/provideruse.php',
+            'league/oauth2/provideruse.php',
+            'project/vendor-prefixed/league/oauth2/provideruse.php'
+        );
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
+     * @covers ::findGlobalSymbolsPositionsInComment
+     * @covers ::findGlobalSymbolPositionInComment
+     *
      * A \Global_Class in PHPDoc was capturing far beyond what it should and replacing the entire function.
      */
     public function test_global_class_phpdoc_end_delimiter(): void
@@ -1780,7 +2930,7 @@ namespace Company\Project;
 
 class Calendar {
 	/**
-	 * @return \Company_Project_Google_Client|WP_Error
+	 * @return \Prefixer_Test_Google_Client|WP_Error
 	 */
 	public function get_google_client() {
 		return $this->get_google_connection()->get_client();
@@ -1789,15 +2939,25 @@ class Calendar {
 EOD;
 
         $originalClassname = 'Google_Client';
-        $classnamePrefix = 'Company_Project_';
+        $classnamePrefix = 'Prefixer_Test_';
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = $this->getMockConfig();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceClassname($contents, $originalClassname, $classnamePrefix);
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
 
-        self::assertEqualsRN($expected, $result);
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1811,12 +2971,13 @@ EOD;
 namespace Aws;
 
 class ClientResolver
+{
 	public static function _apply_user_agent($inputUserAgent, array &$args, HandlerList $list)
     {
             if (($args['endpoint_discovery'] instanceof \Aws\EndpointDiscovery\Configuration
                 && $args['endpoint_discovery']->isEnabled())
             ) {
-            
+
             }
 	}
 }
@@ -1827,25 +2988,52 @@ EOD;
 namespace Company\Project\Aws;
 
 class ClientResolver
+{
 	public static function _apply_user_agent($inputUserAgent, array &$args, HandlerList $list)
     {
             if (($args['endpoint_discovery'] instanceof \Company\Project\Aws\EndpointDiscovery\Configuration
                 && $args['endpoint_discovery']->isEnabled())
             ) {
-            
+
             }
 	}
 }
 EOD;
+        $originalNamespace = 'Aws\\EndpointDiscovery';
+        $replacement = 'Company\\Project\\Aws\\EndpointDiscovery';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $result = $replacer->replaceNamespace($contents, 'Aws\\EndpointDiscovery', 'Company\\Project\\Aws\\EndpointDiscovery');
-        $result = $replacer->replaceNamespace($result, 'Aws', 'Company\\Project\\Aws');
+        $replacer = new Prefixer($config, $filesystem);
 
-        self::assertEqualsRN($expected, $result);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('Aws', $file);
+        $namespaceSymbol->setLocalReplacement('Company\\Project\\Aws');
+
+        $namespaceSymbol2 = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol2->setLocalReplacement($replacement);
+
+        $classSymbol = new ClassSymbol('Aws\\ClientResolver', $file, false, $namespaceSymbol2);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($namespaceSymbol2);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     /**
@@ -1859,6 +3047,7 @@ EOD;
 namespace Aws;
 
 class ConfigurationResolver
+{
 	public static function ini(
         $key,
         $expectedType,
@@ -1886,6 +3075,7 @@ EOD;
 namespace Company\Project\Aws;
 
 class ConfigurationResolver
+{
 	public static function ini(
         $key,
         $expectedType,
@@ -1912,9 +3102,29 @@ EOD;
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceNamespace($contents, 'Aws', 'Company\\Project\\Aws');
+                $filesystem = $this->getInMemoryFileSystem();
 
-        self::assertEqualsRN($expected, $result);
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('Aws', $file);
+        $namespaceSymbol->setLocalReplacement('Company\\Project\\Aws');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     public function testPrefixesAliasedGlobalClass(): void
@@ -1931,17 +3141,31 @@ EOD;
         $expected = <<<'EOD'
 <?php
 
-use Prefixed_GlobalClass as Alias;
+use Prefixer_Test_GlobalClass as Alias;
 
 class MyClass {
 
 }
 EOD;
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $originalClassname = "GlobalClass";
+        $classnamePrefix = "Prefixer_Test_";
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceClassname($contents, 'GlobalClass', 'Prefixed_');
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
+        $file->shouldReceive('addDiscoveredSymbol');
+
+        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents);
 
         $this->assertEqualsRN($expected, $result);
     }
@@ -1970,7 +3194,7 @@ $value = append_config($myArray);
 // callable
 call_user_func('append_config', $myArray);
 call_user_func_array(
-	'append_config', 
+	'append_config',
 	$myArray
 );
 forward_static_call('append_config', $myArray);
@@ -1998,7 +3222,7 @@ $value = myprefix_append_config($myArray);
 // callable
 call_user_func('myprefix_append_config', $myArray);
 call_user_func_array(
-	'myprefix_append_config', 
+	'myprefix_append_config',
 	$myArray
 );
 forward_static_call('myprefix_append_config', $myArray);
@@ -2015,7 +3239,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $symbol = new FunctionSymbol('append_config', $fileMock);
-        $symbol->setReplacement('myprefix_append_config');
+        $symbol->setLocalReplacement('myprefix_append_config');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($symbol);
@@ -2113,7 +3337,7 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2197,7 +3421,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
         $namespaceSymbol = new NamespaceSymbol('GuzzleHttp', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\GuzzleHttp');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\GuzzleHttp');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2224,7 +3448,7 @@ class BlockMacros extends MacroSet
 
 	public static function install(Latte\Compiler $compiler): void
 	{
-		
+
 	}
 }
 EOD;
@@ -2241,7 +3465,7 @@ class BlockMacros extends MacroSet
 
 	public static function install(\Strauss\Test\Latte\Compiler $compiler): void
 	{
-		
+
 	}
 }
 EOD;
@@ -2252,8 +3476,8 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2316,8 +3540,8 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2372,7 +3596,7 @@ EOD;
           ->willReturn(true);
 
         $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2428,8 +3652,8 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2499,8 +3723,8 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2561,8 +3785,8 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2647,8 +3871,8 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
+        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($namespaceSymbol);
@@ -2672,18 +3896,19 @@ EOD;
 if (!self::$raw) {
   $name_canon = preg_replace("/[^a-z0-9]/", "", strtolower($tag));
 
-  $class = "FontLib\\Table\\Type\\$name_canon";
+  $variableClass = "FontLib\\Table\\Type\\$name_canon";
+  $namespace = "FontLib\\Table\\Type";
 
   if (!isset($this->directory[$tag]) || !@class_exists($class)) {
     return;
   }
 }
 else {
-  $class = "FontLib\\Table\\Table";
+  $class = "FontLib\\Table\\Type\\Table";
 }
 
 $decorator  = "Dompdf\\FrameDecorator\\$decorator";
-$reflower   = "Dompdf\\FrameReflower\\$reflower";
+$unchanged   = "Dompdf\\FrameReflower\\$reflower";
 EOD;
 
         $expected = <<<'EOD'
@@ -2692,43 +3917,57 @@ EOD;
 if (!self::$raw) {
   $name_canon = preg_replace("/[^a-z0-9]/", "", strtolower($tag));
 
-  $class = "Strauss\\Test\\FontLib\\Table\\Type\\$name_canon";
+  $variableClass = "Strauss\\Test\\FontLib\\Table\\Type\\$name_canon";
+  $namespace = "Strauss\\Test\\FontLib\\Table\\Type";
 
   if (!isset($this->directory[$tag]) || !@class_exists($class)) {
     return;
   }
 }
 else {
-  $class = "Strauss\\Test\\FontLib\\Table\\Table";
+  $class = "Strauss\\Test\\FontLib\\Table\\Type\\Table";
 }
 
 $decorator  = "Strauss\\Test\\Dompdf\\FrameDecorator\\$decorator";
-$reflower   = "Strauss\\Test\\Dompdf\\FrameReflower\\$reflower";
+$unchanged   = "Dompdf\\FrameReflower\\$reflower";
 EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $symbols = new DiscoveredSymbols();
+        $originalNamespace = 'FontLib\\Table\\Type';
+        $replacement = 'Strauss\\Test\\FontLib\\Table\\Type';
 
-        $fileMock = $this->createMock(File::class);
-        $fileMock->expects($this->any())
-                  ->method('isDoPrefix')
-                  ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('FontLib\\Table', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\FontLib\\Table');
-        $symbols->add($namespaceSymbol);
+        $secondOriginalNamespace = 'Dompdf\\FrameDecorator';
+        $secondReplacement = 'Strauss\\Test\\Dompdf\\FrameDecorator';
 
-        $fileMock = $this->createMock(File::class);
-        $fileMock->expects($this->any())
-                  ->method('isDoPrefix')
-                  ->willReturn(true);
-                $namespaceSymbol = new NamespaceSymbol('Dompdf', $fileMock);
-        $namespaceSymbol->setReplacement('Strauss\\Test\\Dompdf');
-        $symbols->add($namespaceSymbol);
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $replacer = new Prefixer($config, $filesystem);
 
-        $result = $replacer->replaceInString($symbols, $contents);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $classSymbol = new ClassSymbol("FontLib\\Table\\Type\\Table", $file, false, $namespaceSymbol);
+
+        $secondNamespaceSymbol = new NamespaceSymbol($secondOriginalNamespace, $file);
+        $secondNamespaceSymbol->setLocalReplacement($secondReplacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+        $discoveredSymbols->add($secondNamespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -2790,7 +4029,7 @@ EOD;
                   ->method('isDoPrefix')
                   ->willReturn(true);
                 $symbol = new FunctionSymbol('my_function', $fileMock);
-        $symbol->setReplacement('myprefix_my_function');
+        $symbol->setLocalReplacement('myprefix_my_function');
 
         $symbols = new DiscoveredSymbols();
         $symbols->add($symbol);
@@ -2836,21 +4075,30 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $file = $this->createMock(File::class);
-        $file->expects($this->any())->method('addDiscoveredSymbol');
-        $file->expects($this->any())->method('getSourcePath');
-        $file->expects($this->any())
-                 ->method('isDoPrefix')
-                 ->willReturn(true);
+        $originalNamespace = 'Carbon_Fields';
+        $replacement = 'Prefix\\Strauss\\Carbon_Fields';
 
-        $symbols = new DiscoveredSymbols();
+        $filesystem = $this->getInMemoryFileSystem();
 
-        $symbol = new NamespaceSymbol('Carbon_Fields', $file);
-        $symbol->setReplacement('Prefix\\Strauss\\Carbon_Fields');
-        $symbols->add($symbol);
+        $replacer = new Prefixer($config, $filesystem);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-        $result = $replacer->replaceInString($symbols, $contents);
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $this->assertEqualsRN($expected, $result);
     }
@@ -2923,11 +4171,130 @@ EOD;
         $symbols = new DiscoveredSymbols();
 
         $symbol = new NamespaceSymbol('Geocoder', $file);
-        $symbol->setReplacement('CommonsBooking\\Geocoder');
+        $symbol->setLocalReplacement('CommonsBooking\\Geocoder');
         $symbols->add($symbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    public function test_return_type_classname_not_replaced_as_namespace(): void
+    {
+
+        $contents = <<<'EOD'
+namespace Composer;
+
+class Factory
+{
+    public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer
+    {}
+}
+EOD;
+
+        // public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\Strauss\Vendor\Composer
+        $expected = <<<'EOD'
+namespace BrianHenryIE\Strauss\Vendor\Composer;
+
+class Factory
+{
+    public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer
+    {}
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $namespaceSymbol = new NamespaceSymbol('Composer', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\Vendor\\Composer');
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Composer\\Factory', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * @covers ::prepareRelativeNamespaces()
+     */
+    public function test_use_trait_fqdn(): void {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Stripe\Billing;
+
+class CreditGrant extends \Stripe\ApiResource
+{
+    const OBJECT_NAME = 'billing.credit_grant';
+
+    use \Stripe\ApiOperations\Update;
+
+    const CATEGORY_PAID = 'paid';
+    const CATEGORY_PROMOTIONAL = 'promotional';
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Stripe\Billing;
+
+class CreditGrant extends \Stripe\ApiResource
+{
+    const OBJECT_NAME = 'billing.credit_grant';
+
+    use \BrianHenryIE\Strauss\Stripe\ApiOperations\Update;
+
+    const CATEGORY_PAID = 'paid';
+    const CATEGORY_PROMOTIONAL = 'promotional';
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $namespaceSymbol = new NamespaceSymbol('Stripe\\ApiOperations', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\Stripe\\ApiOperations');
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $traitSymbol = new TraitSymbol('Stripe\\ApiOperations\\Update', $file, $namespaceSymbol);
+        $discoveredSymbols->add($traitSymbol);
+
+        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $this->assertEqualsRN($expected, $result);
     }

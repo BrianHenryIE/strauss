@@ -77,7 +77,7 @@ EOD;
         chdir($this->testsWorkingDir . '/project');
         exec('composer install');
 
-        // teststempdir/project/vendor/strausstest/dependency
+        // teststempdir/x/project/vendor/strausstest/dependency
         $this->assertFileExists($this->testsWorkingDir . '/project/vendor/strausstest/dependency');
 
         $exitCode = $this->runStrauss($output);

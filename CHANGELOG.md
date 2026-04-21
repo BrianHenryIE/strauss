@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.x.x
+
+* Prefix own classes in phar
+
 ## 0.27.1 April 2025
 
 ## 0.27.0 March 2025
@@ -42,7 +46,7 @@
 * Fix: only update a _class extends_ namespace if it is global 
 * Fix: log message replacement in `InstalledJson::cleanTargetDirInstalledJson()`
 * Dependencies: use `conflict` to allow newer jsonmapper versions
-* Release: update `.editorconfig` 
+* Release: update `.gitattributes` 
 * Slightly better logging
 * [...more](https://github.com/BrianHenryIE/strauss/compare/0.24.0...0.24.1)
 

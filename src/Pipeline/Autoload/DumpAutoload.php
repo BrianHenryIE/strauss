@@ -3,12 +3,15 @@
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
+use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Autoload\AutoloadGenerator;
@@ -23,6 +26,8 @@ use Psr\Log\LoggerInterface;
 use Seld\JsonLint\ParsingException;
 
 /**
+ * @phpstan-import-type AutoloadKeyArray from ComposerPackage
+ * @phpstan-import-type ComposerConfigArray from ComposerPackage
  * @phpstan-import-type ComposerJsonArray from ComposerPackage
  */
 class DumpAutoload
@@ -36,19 +41,23 @@ class DumpAutoload
     protected Prefixer $projectReplace;
 
     protected FileEnumerator $fileEnumerator;
+    protected ComposerAutoloadGeneratorFactory $composerAutoloadGeneratorFactory;
 
     public function __construct(
         AutoloadConfigInterface $config,
-        Filesystem $filesystem,
+        FileSystem $filesystem,
         LoggerInterface $logger,
         Prefixer $projectReplace,
-        FileEnumerator $fileEnumerator
+        FileEnumerator $fileEnumerator,
+        ComposerAutoloadGeneratorFactory $composerAutoloadGeneratorFactory
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
         $this->setLogger($logger);
         $this->projectReplace = $projectReplace;
         $this->fileEnumerator = $fileEnumerator;
+
+        $this->composerAutoloadGeneratorFactory = $composerAutoloadGeneratorFactory;
     }
 
     /**
@@ -61,8 +70,6 @@ class DumpAutoload
         $this->generatedMainAutoloader();
 
         $this->createInstalledVersionsFiles();
-
-        $this->prefixNewAutoloader();
     }
 
     /**
@@ -87,7 +94,9 @@ class DumpAutoload
 
         $projectComposerJson = new JsonFile(
             $this->filesystem->makeAbsolute(
-                $this->config->getProjectDirectory() . '/'.Factory::getComposerFile()
+                $this->filesystem->normalizePath(
+                    $this->config->getProjectAbsolutePath() . '/' . Factory::getComposerFile()
+                )
             )
         );
 
@@ -120,15 +129,20 @@ class DumpAutoload
         /**
          * Cannot use `$composer->getConfig()`, need to create a new one so the `vendor-dir` is correct.
          */
-        $config = new Config(false, $this->config->getProjectDirectory());
+        $config = new Config(
+            false,
+            $this->filesystem->makeAbsolute(
+                $this->config->getProjectAbsolutePath()
+            )
+        );
 
         /** @var array{config?: array<string, mixed>} $projectComposerConfigMergeArray */
         $projectComposerConfigMergeArray = ['config' => $projectComposerJsonArray['config'] ?? []];
 
         $config->merge($projectComposerConfigMergeArray);
 
-        $generator = new ComposerAutoloadGenerator(
-            $this->config->getNamespacePrefix() ?? $this->config->getProjectDirectory(),
+        $generator = $this->composerAutoloadGeneratorFactory->get(
+            $this->config->getNamespacePrefix() ?? $this->config->getProjectAbsolutePath(),
             $composer->getEventDispatcher()
         );
         $isOptimize = $this->isOptimizeAutoloaderEnabled();
@@ -206,7 +220,19 @@ class DumpAutoload
             return;
         }
 
-        $this->filesystem->copy($this->config->getAbsoluteVendorDirectory() . '/composer/InstalledVersions.php', $this->config->getAbsoluteTargetDirectory() . '/composer/InstalledVersions.php');
+        $sourcePath = $this->config->getAbsoluteVendorDirectory() . '/composer/InstalledVersions.php';
+
+        if (!$this->filesystem->fileExists($sourcePath)) {
+            $this->logger->debug('InstalledVersions.php does not exist at {sourcePath}, skipping copy.', [
+                'sourcePath' => $sourcePath
+            ]);
+            return;
+        }
+
+        $this->filesystem->copy(
+            $sourcePath,
+            $this->config->getAbsoluteTargetDirectory() . '/composer/InstalledVersions.php'
+        );
 
         // This is just `<?php return array(...);`
         $installedPhpString = $this->filesystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.php');
@@ -232,53 +258,9 @@ class DumpAutoload
     /**
      * @throws FilesystemException
      */
-    protected function prefixNewAutoloader(): void
+    public function prefixTargetDirectoryComposerAutoloadFiles(): void
     {
-        if ($this->config->isTargetDirectoryVendor()) {
-            return;
-        }
-
-        $this->logger->debug('Prefixing the new Composer autoloader.');
-
-        $projectFiles = $this->fileEnumerator->compileFileListForPaths([
-            $this->config->getAbsoluteTargetDirectory() . '/composer',
-        ]);
-
-        $phpFiles = array_filter(
-            $projectFiles->getFiles(),
-            fn($file) => $file->isPhpFile()
-        );
-
-        $phpFilesAbsolutePaths = array_map(
-            fn($file) => $file->getSourcePath(),
-            $phpFiles
-        );
-
-        $sourceFile = new File(__DIR__, __DIR__);
-        $composerAutoloadNamespaceSymbol = new NamespaceSymbol(
-            'Composer\\Autoload',
-            $sourceFile
-        );
-        $composerAutoloadNamespaceSymbol->setReplacement(
-            $this->config->getNamespacePrefix() . '\\Composer\\Autoload'
-        );
-        $composerNamespaceSymbol = new NamespaceSymbol(
-            'Composer',
-            $sourceFile
-        );
-        $composerNamespaceSymbol->setReplacement(
-            $this->config->getNamespacePrefix() . '\\Composer'
-        );
-
-        $discoveredSymbols = new DiscoveredSymbols();
-        $discoveredSymbols->add(
-            $composerNamespaceSymbol
-        );
-        $discoveredSymbols->add(
-            $composerAutoloadNamespaceSymbol
-        );
-
-        $this->projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
+        $this->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
     }
 
     /**

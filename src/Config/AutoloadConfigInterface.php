@@ -27,7 +27,7 @@ interface AutoloadConfigInterface
     /**
      * The directory containing `composer.json`.
      */
-    public function getProjectDirectory(): string;
+    public function getProjectAbsolutePath(): string;
 
     public function isClassmapOutput(): bool;
 

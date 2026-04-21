@@ -46,9 +46,10 @@ class StraussConfigTest extends TestCase
     public function testGetters(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -76,27 +77,31 @@ class StraussConfigTest extends TestCase
 }
 EOD;
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
+        $projectDir = 'project';
+        $composerJsonPath = 'project/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertContains('pimple/pimple', $sut->getPackages());
+        $this->assertContains('pimple/pimple', $sut->getPackages());
 
-        self::assertEqualsRN(
-            $this->getFileSystem()->normalizePath(getcwd() . '/target_directory'),
+        $this->assertEqualsPaths(
+            $projectDir . '/target_directory/',
             $sut->getAbsoluteTargetDirectory()
         );
 
-        self::assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
 
-        self::assertEqualsRN('BrianHenryIE_Strauss_', $sut->getClassmapPrefix());
+        $this->assertEqualsRN('BrianHenryIE_Strauss_', $sut->getClassmapPrefix());
 
-        self::assertArrayHasKey('clancats/container', $sut->getOverrideAutoload());
+        $this->assertArrayHasKey('clancats/container', $sut->getOverrideAutoload());
 
-        self::assertFalse($sut->isDeleteVendorFiles());
+        $this->assertFalse($sut->isDeleteVendorFiles());
     }
 
     /**
@@ -107,9 +112,10 @@ EOD;
     public function testExtraKey(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -138,10 +144,14 @@ EOD;
 }
 EOD;
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $exception = null;
 
@@ -151,7 +161,7 @@ EOD;
             $exception = $e;
         }
 
-        self::assertNull($exception);
+        $this->assertNull($exception);
     }
 
     /**
@@ -162,9 +172,10 @@ EOD;
     public function testDefaultTargetDir(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -189,17 +200,20 @@ EOD;
 }
 EOD;
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
+        $projectDir = 'project';
+        $composerJsonPath = $projectDir .'/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute(
+                $composerJsonPath
+            )
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN(
-            $this->getFileSystem()->normalizePath(getcwd() . '/vendor-prefixed'),
-            $sut->getAbsoluteTargetDirectory()
-        );
+        $this->assertEqualsPaths($projectDir . '/vendor-prefixed/', $sut->getAbsoluteTargetDirectory());
     }
 
     /**
@@ -208,9 +222,10 @@ EOD;
     public function testDefaultNamespacePrefixFromAutoloaderPsr4(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -223,14 +238,18 @@ EOD;
 }
 EOD;
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
     }
 
     /**
@@ -238,10 +257,10 @@ EOD;
      */
     public function testDefaultNamespacePrefixFromAutoloaderPsr0(): void
     {
-
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -253,14 +272,19 @@ EOD;
   }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
     }
 
     /**
@@ -271,23 +295,28 @@ EOD;
     public function testDefaultNamespacePrefixWithNoAutoloader(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   }
 }
 EOD;
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN("Brianhenryie\\Strauss_Config_Test", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("Brianhenryie\\Strauss_Config_Test", $sut->getNamespacePrefix());
     }
 
     /**
@@ -296,9 +325,10 @@ EOD;
     public function testDefaultClassmapPrefixFromAutoloaderPsr4(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -311,14 +341,18 @@ EOD;
 }
 EOD;
 
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN("BrianHenryIE_Strauss_", $sut->getClassmapPrefix());
+        $this->assertEqualsRN("BrianHenryIE_Strauss_", $sut->getClassmapPrefix());
     }
 
     /**
@@ -327,9 +361,10 @@ EOD;
     public function testDefaultClassmapPrefixFromAutoloaderPsr0(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -341,15 +376,19 @@ EOD;
   }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN("BrianHenryIE_Strauss_", $sut->getClassmapPrefix());
+        $this->assertEqualsRN("BrianHenryIE_Strauss_", $sut->getClassmapPrefix());
     }
 
     /**
@@ -360,23 +399,29 @@ EOD;
     public function testDefaultClassmapPrefixWithNoAutoloader(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   }
 
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN("Brianhenryie_Strauss_Config_Test", $sut->getClassmapPrefix());
+        $this->assertEqualsRN("Brianhenryie_Strauss_Config_Test", $sut->getClassmapPrefix());
     }
 
     /**
@@ -384,10 +429,10 @@ EOD;
      */
     public function testGetPackagesFromConfig(): void
     {
-
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -415,14 +460,19 @@ EOD;
 }
 
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertContains('pimple/pimple', $sut->getPackages());
+        $this->assertContains('pimple/pimple', $sut->getPackages());
     }
 
 
@@ -430,9 +480,10 @@ EOD;
     {
         $this->markTestSkipped('Currently needs a reflectable property in the target object');
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "extra": {
     "strauss": {
       "exclude_prefix_packages": [
@@ -444,22 +495,23 @@ EOD;
 
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
+        $this->getFileSystem()->write($tmpfname, $composerJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
         $sut = new StraussConfig($composer);
 
-        self::assertContains('psr/container', $sut->getExcludePackagesFromPrefixing());
+        $this->assertContains('psr/container', $sut->getExcludePackagesFromPrefixing());
     }
 
 
     public function testGetExcludePackagesFromPrefixing(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "extra": {
     "strauss": {
         "exclude_from_prefix": {
@@ -472,35 +524,46 @@ EOD;
 }
 
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertContains('psr/container', $sut->getExcludePackagesFromPrefixing());
+        $this->assertContains('psr/container', $sut->getExcludePackagesFromPrefixing());
     }
 
 
     public function testGetExcludeFilePatternsFromPrefixingDefault(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
-  "name": "brianhenryie/strauss-config-test"
+  "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0"
 }
 
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
         // Changed in v0.14.0.
-        self::assertNotContains('/^psr.*$/', $sut->getExcludeFilePatternsFromPrefixing());
+        $this->assertNotContains('/^psr.*$/', $sut->getExcludeFilePatternsFromPrefixing());
     }
 
     /**
@@ -511,10 +574,11 @@ EOD;
     public function testGetExcludeFilePatternsFromPrefixingDefaultAfterExcludingPackages(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
-    "extra": {
+  "version": "1.0.0",
+  "extra": {
     "strauss": {
         "exclude_from_prefix": {
             "packages": ["yahnis-elsts/plugin-update-checker","erusev/parsedown"]
@@ -524,15 +588,20 @@ EOD;
 }
 
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
         // Changed in v0.14.0.
-        self::assertNotContains('/^psr.*$/', $sut->getExcludeFilePatternsFromPrefixing());
+        $this->assertNotContains('/^psr.*$/', $sut->getExcludeFilePatternsFromPrefixing());
     }
 
     /**
@@ -541,9 +610,10 @@ EOD;
     public function testGetPackagesNoConfig(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "name": "brianhenryie/strauss-config-test",
+  "version": "1.0.0",
   "require": {
     "league/container": "*"
   },
@@ -567,14 +637,19 @@ EOD;
   }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertContains('league/container', $sut->getPackages());
+        $this->assertContains('league/container', $sut->getPackages());
     }
 
     /**
@@ -583,7 +658,7 @@ EOD;
     public function testMapMozartConfig(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "extra": {
     "mozart": {
@@ -608,44 +683,46 @@ EOD;
   }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertContains('pimple/pimple', $sut->getPackages());
+        $this->assertContains('pimple/pimple', $sut->getPackages());
 
-        self::assertEqualsRN(
-            $this->getFileSystem()->normalizePath(getcwd() . '/dep_directory'),
-            $sut->getAbsoluteTargetDirectory()
-        );
+        $this->assertEqualsPaths($projectDir . '/dep_directory', $sut->getAbsoluteTargetDirectory());
 
-        self::assertEqualsRN("My_Mozart_Config", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("My_Mozart_Config", $sut->getNamespacePrefix());
 
-        self::assertEqualsRN('My_Mozart_Config_', $sut->getClassmapPrefix());
+        $this->assertEqualsRN('My_Mozart_Config_', $sut->getClassmapPrefix());
 
-        self::assertContains('psr/container', $sut->getExcludePackagesFromPrefixing());
+        $this->assertContains('psr/container', $sut->getExcludePackagesFromPrefixing());
 
-        self::assertArrayHasKey('clancats/container', $sut->getOverrideAutoload());
+        $this->assertArrayHasKey('clancats/container', $sut->getOverrideAutoload());
 
         // Mozart default was true.
-        self::assertTrue($sut->isDeleteVendorFiles());
+        $this->assertTrue($sut->isDeleteVendorFiles());
     }
 
     /**
      * Since sometimes the namespace we're prefixing will already have a leading backslash, sometimes
      * the namespace_prefix will want its slash at the beginning, sometimes at the end.
      *
-     * @see Prefixer::replaceNamespace()
+     * @see Prefixer::replaceNamespaces()
      *
      * @covers \BrianHenryIE\Strauss\Composer\Extra\StraussConfig::getNamespacePrefix
      */
     public function testNamespacePrefixHasNoSlash(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
   "extra": {
     "mozart": {
@@ -654,20 +731,25 @@ EOD;
   }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertEqualsRN("My_Mozart_Config", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("My_Mozart_Config", $sut->getNamespacePrefix());
     }
 
     public function testIncludeModifiedDateDefaultTrue(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -676,14 +758,19 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertTrue($sut->isIncludeModifiedDate());
+        $this->assertTrue($sut->isIncludeModifiedDate());
     }
 
     /**
@@ -694,7 +781,7 @@ EOD;
     public function testIncludeModifiedDate(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -704,21 +791,26 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertFalse($sut->isIncludeModifiedDate());
+        $this->assertFalse($sut->isIncludeModifiedDate());
     }
 
 
     public function testIncludeAuthorDefaultTrue(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -727,21 +819,26 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertTrue($sut->isIncludeAuthor());
+        $this->assertTrue($sut->isIncludeAuthor());
     }
 
 
     public function testIncludeAuthorFalse(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -751,20 +848,25 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertFalse($sut->isIncludeAuthor());
+        $this->assertFalse($sut->isIncludeAuthor());
     }
 
     public function testDeleteVendorPackages(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -774,21 +876,26 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertTrue($sut->isDeleteVendorPackages());
+        $this->assertTrue($sut->isDeleteVendorPackages());
     }
 
 
     public function testUpdateCallSitesConfigTrue(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -799,20 +906,25 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertNull($sut->getUpdateCallSites());
+        $this->assertNull($sut->getUpdateCallSites());
     }
 
     public function testUpdateCallSitesConfigFalse(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -823,22 +935,27 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertIsArray($sut->getUpdateCallSites());
-        self::assertEmpty($sut->getUpdateCallSites());
+        $this->assertIsArray($sut->getUpdateCallSites());
+        $this->assertEmpty($sut->getUpdateCallSites());
     }
 
 
     public function testUpdateCallSitesConfigList(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -849,22 +966,27 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
-        self::assertIsArray($sut->getUpdateCallSites());
-        self::assertCount(2, $sut->getUpdateCallSites());
+        $this->assertIsArray($sut->getUpdateCallSites());
+        $this->assertCount(2, $sut->getUpdateCallSites());
     }
 
 
     public function testUpdateCallSitesCliTrue(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -875,24 +997,28 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
         $cli = '--updateCallSites=true';
         $sut->updateFromCli($this->getInput($cli));
 
-        self::assertNull($sut->getUpdateCallSites());
+        $this->assertNull($sut->getUpdateCallSites());
     }
 
     public function testUpdateCallSitesCliFalse(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -903,25 +1029,30 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
         $cli = '--updateCallSites=false';
         $sut->updateFromCli($this->getInput($cli));
 
-        self::assertIsArray($sut->getUpdateCallSites());
-        self::assertEmpty($sut->getUpdateCallSites());
+        $this->assertIsArray($sut->getUpdateCallSites());
+        $this->assertEmpty($sut->getUpdateCallSites());
     }
 
 
     public function testUpdateCallSitesCliList(): void
     {
 
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -932,23 +1063,28 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
         $cli = '--updateCallSites=src,templates';
         $sut->updateFromCli($this->getInput($cli));
 
-        self::assertIsArray($sut->getUpdateCallSites());
-        self::assertCount(2, $sut->getUpdateCallSites());
+        $this->assertIsArray($sut->getUpdateCallSites());
+        $this->assertCount(2, $sut->getUpdateCallSites());
     }
 
     public function test_functions_prefix(): void
     {
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -958,10 +1094,15 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
@@ -972,7 +1113,7 @@ EOD;
 
     public function test_functions_prefix_disabled(): void
     {
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -982,10 +1123,15 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
@@ -997,7 +1143,7 @@ EOD;
 
     public function test_functions_not_set(): void
     {
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -1007,10 +1153,15 @@ EOD;
  }
 }
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $projectDir = 'project';
+        $composerJsonPath =  $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new StraussConfig($composer);
 
@@ -1021,7 +1172,7 @@ EOD;
 
     public function testConstantPrefixIsMappedFromComposerExtra(): void
     {
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
     {
      "extra":{
       "strauss": {
@@ -1031,7 +1182,7 @@ EOD;
     }
     EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        file_put_contents($tmpfname, $composerExtraStraussJson);
+        file_put_contents($tmpfname, $composerJson);
 
         $composer = Factory::create(new NullIO(), $tmpfname);
 
@@ -1044,7 +1195,7 @@ EOD;
 
     public function test_optimize_autoloader_default_true(): void
     {
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -1055,7 +1206,7 @@ EOD;
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
-            file_put_contents($tmpfname, $composerExtraStraussJson);
+            file_put_contents($tmpfname, $composerJson);
             $composer = Factory::create(new NullIO(), $tmpfname);
             $sut = new StraussConfig($composer);
             $this->assertTrue($sut->isOptimizeAutoloader());
@@ -1066,7 +1217,7 @@ EOD;
 
     public function test_optimize_autoloader_false(): void
     {
-        $composerExtraStraussJson = <<<'EOD'
+        $composerJson = <<<'EOD'
 {
  "extra":{
   "strauss": {
@@ -1078,7 +1229,7 @@ EOD;
 EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
-            file_put_contents($tmpfname, $composerExtraStraussJson);
+            file_put_contents($tmpfname, $composerJson);
             $composer = Factory::create(new NullIO(), $tmpfname);
             $sut = new StraussConfig($composer);
             $this->assertFalse($sut->isOptimizeAutoloader());

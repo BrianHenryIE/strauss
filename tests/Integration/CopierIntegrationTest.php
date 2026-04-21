@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 use stdClass;
 
@@ -49,7 +50,9 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor'));
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $targetDir = $this->testsWorkingDir . '/vendor-prefixed';
@@ -121,15 +124,17 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor'));
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
-        $targetDir = $this->testsWorkingDir . '/vendor-prefixed';
-        $vendorDir = $this->testsWorkingDir . '/vendor';
+        $targetVendorDir = $this->testsWorkingDir . '/vendor-prefixed';
+        $absoluteTargetVendorDir = $this->testsWorkingDir . '/vendor';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
-        $config->method('getAbsoluteTargetDirectory')->willReturn($targetDir);
+        $config->method('getAbsoluteVendorDirectory')->willReturn($absoluteTargetVendorDir);
+        $config->method('getAbsoluteTargetDirectory')->willReturn($targetVendorDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,
@@ -144,7 +149,7 @@ EOD;
 
         $file = 'Client.php';
         $relativePath = '/google/apiclient/src/';
-        $targetPath = $targetDir . $relativePath;
+        $targetPath = $targetVendorDir . $relativePath;
         $targetFile = $targetPath . $file;
 
         $copier->prepareTarget();

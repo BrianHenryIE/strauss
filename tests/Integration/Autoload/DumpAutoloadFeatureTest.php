@@ -4,15 +4,16 @@ namespace BrianHenryIE\Strauss\Autoload;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGenerator;
+use BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGeneratorFactory;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use Composer\Autoload\AutoloadGenerator;
 use Composer\Factory;
 use Composer\IO\NullIO;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mockery;
 
 /**
  * @see DumpAutoload
@@ -49,7 +50,25 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
             $config->setPackagesToCopy(['psr/log' => $psrLogPackage]);
             $config->setPackagesToPrefix(['psr/log' => $psrLogPackage]);
             $filesystem = $this->getFileSystem();
-            $dumpAutoload = new DumpAutoload($config, $filesystem, $this->logger, new Prefixer($config, $filesystem, $this->logger), new FileEnumerator($config, $filesystem, $this->logger));
+            $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
+            $composerAutoloadGenerator = new ComposerAutoloadGenerator('projectuniquestring', $composer->getEventDispatcher());
+            $composerAutoloadGeneratorFactory->expects('get')->once()->andReturn($composerAutoloadGenerator);
+            $dumpAutoload = new DumpAutoload(
+                $config,
+                $filesystem,
+                $this->getLogger(),
+                new Prefixer(
+                    $config,
+                    $filesystem,
+                    $this->getLogger()
+                ),
+                new FileEnumerator(
+                    $config,
+                    $filesystem,
+                    $this->getLogger()
+                ),
+                $composerAutoloadGeneratorFactory
+            );
             $dumpAutoload->generatedPrefixedAutoloader();
             $autoloadRealPath = $this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php';
             $this->assertFileExists($autoloadRealPath);
@@ -325,6 +344,8 @@ EOD;
     }
 
     /**
+     * Test passes when run individually.
+     *
      * vendor-prefixed/autoload* with setAuthoritativeClassmap aren't including the classes in classmap for indirect dependency
      *
      * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
@@ -396,5 +417,42 @@ EOD;
         $outputString = implode(PHP_EOL, $output);
 
         $this->assertEquals(0, $result_code, $outputString);
+    }
+
+    /**
+     * 'Composer\Autoload\ClassLoader' should be prefixed.
+     *
+     * @see vendor/composer/autoload_real.php
+     */
+    public function testItPrefixesComposerAutoloadClasses(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "dump/autoload",
+  "require": {
+    "psr/log": "1.0"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Company\\Project\\"
+    }
+  }
+}
+EOD;
+
+        chdir($this->testsWorkingDir);
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php');
+
+        $this->assertStringNotContainsString('\'Composer\\Autoload\\ClassLoader', $phpString);
+        $this->assertStringContainsString('Company\\Project\\Composer\\Autoload\\ClassLoader', $phpString);
     }
 }

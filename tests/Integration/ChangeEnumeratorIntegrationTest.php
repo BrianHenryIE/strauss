@@ -36,7 +36,8 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/wordpress/mcp-adapter/includes/Transport/Infrastructure/SessionManager.php');
         $this->assertStringNotContainsString(' = brianhenryie_strauss_wp_generate_uuid4(', $phpString);
@@ -52,7 +53,7 @@ EOD;
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.5.0');
 
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/namespaced-files-not-in-autoloader",
 	 "require": {
         "art4/requests-psr18-adapter": "1.3.0"
@@ -81,7 +82,8 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/art4/requests-psr18-adapter/v1-compat/autoload.php');
         $this->assertStringNotContainsString("class_exists('BrianHenryIE\\Strauss\\WpOrg\\Requests\\Requests')", $phpString);

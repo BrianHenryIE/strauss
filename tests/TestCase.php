@@ -1,4 +1,7 @@
 <?php
+/**
+ * "unit" tests should not write to the filesystem.
+ */
 
 namespace BrianHenryIE\Strauss;
 
@@ -6,61 +9,80 @@ use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
-use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\ServiceLocator;
+use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\Filesystem as FlysystemFileSystem;
+use League\Flysystem\PathNormalizer;
 use Mockery;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
+use stdClass;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
+    use CustomUnitTestAssertionsTrait;
+    use MarkTestsSkippedTrait;
+
     /**
      * The logger used by the objects.
      */
-    protected ?LoggerInterface $logger;
+    public ?LoggerInterface $logger;
 
     /**
      * The output logger.
      */
-    protected TestLogger $testLogger;
+    protected ?TestLogger $testLogger;
 
-    protected FileSystem $filesystem;
+    protected PathNormalizer $pathNormalizer;
+
+    /**
+     * A readonly filesystem for reading test fixtures.
+     */
+    protected FileSystem $fixturesFilesystem;
 
     protected FileSystem $inMemoryFilesystem;
 
-    public static function assertEqualsRN($expected, $actual, string $message = ''): void
+    protected function setUp(): void
     {
-        if (is_string($expected) && is_string($actual)) {
-            $expected = str_replace("\r\n", "\n", $expected);
-            $actual   = str_replace("\r\n", "\n", $actual);
+        parent::setUp();
+
+        /**
+         * We need to register the mem stream wrapper before the static methods in Composer are called.
+         *
+         * @see \Composer\Util\Filesystem::$streamWrappersRegex
+         * @see \Composer\Util\Filesystem::isStreamWrapperPath()
+         */
+        if (!in_array('mem', stream_get_wrappers())) {
+            stream_wrapper_register('mem', stdClass::class);
+            \Composer\Util\Filesystem::isStreamWrapperPath('mem://');
+            stream_wrapper_unregister('mem');
         }
-
-        self::assertEquals($expected, $actual, $message);
     }
 
-    public static function assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $actual, string $message = ''): void
+    protected function tearDown(): void
     {
-        self::assertEquals(
-            self::stripWhitespaceAndBlankLines($expected),
-            self::stripWhitespaceAndBlankLines($actual),
-            $message
-        );
-    }
+        parent::tearDown();
 
-    public static function assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $actual, string $message = ''): void
-    {
-        self::assertStringContainsString(
-            self::stripWhitespaceAndBlankLines($expected),
-            self::stripWhitespaceAndBlankLines($actual),
-            $message
-        );
+        Mockery::close();
+
+        if (in_array('mem', stream_get_wrappers())) {
+            /** @var FilesystemRegistry $registry */
+            $registry = ServiceLocator::get(FilesystemRegistry::class);
+            try {
+                /**
+                 * Also runs `stream_wrapper_unregister('mem')`
+                 */
+                $registry->unregister('mem');
+            } catch (Exception $e) {
+            }
+        }
     }
 
     protected static function stripWhitespaceAndBlankLines(string $string): string
@@ -74,45 +96,80 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
-    protected function getFileSystem(): Filesystem
+    protected function isPhpStormRunning(): bool
     {
+        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
+            return true;
+        }
 
+        if (isset($_SERVER['IDE_PHPUNIT_CUSTOM_LOADER'])) {
+            return true;
+        }
+        return false;
+    }
+
+    protected function getFixturesFilesystem(): FileSystem
+    {
+        if (!isset($this->fixturesFilesystem)) {
+            $projectFsAdapter = new LocalFilesystemAdapter(
+                FileSystem::getFsRoot(__FILE__)
+            );
+            $readonlyFsAdapter = new ReadOnlyFileSystem(
+                $projectFsAdapter
+            );
+            $this->fixturesFilesystem = new FileSystem(
+                $readonlyFsAdapter,
+                [],
+                FileSystem::makePathNormalizer(__FILE__),
+                new PathPrefixer(FileSystem::getFsRoot(__FILE__), DIRECTORY_SEPARATOR)
+            );
+        }
+        return $this->fixturesFilesystem;
+    }
+
+    /**
+     * This is for unit test to instantiate objects and query changes.
+     * It is not for loading fixtures.
+     */
+    protected function getFileSystem(): FileSystem
+    {
         if (! isset($this->filesystem)) {
-            $this->filesystem = $this->getNewFileSystem();
+            $this->filesystem = $this->getInMemoryFileSystem();
         }
 
         return $this->filesystem;
     }
-
-    protected function getNewFileSystem(): Filesystem
-    {
-        $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
-
-        $localFilesystemAdapter = new LocalFilesystemAdapter(
-            FileSystem::getFsRoot($workingDir),
-            null,
-            LOCK_EX,
-            LocalFilesystemAdapter::SKIP_LINKS
-        );
-
-        return new FileSystem(
-            new FlysystemFileSystem(
-                $localFilesystemAdapter,
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ],
-                Filesystem::makePathNormalizer($workingDir)
-            ),
-            $workingDir
-        );
-    }
+//
+//    protected function getNewFileSystem(string $workingDir = '/'): FileSystem
+//    {
+//        $testsWorkingDir = $this->testsWorkingDir ?? getcwd();
+//        $normalizer = FileSystem::makePathNormalizer('/');
+//
+//
+//        $localFilesystemAdapter = new LocalFilesystemAdapter(
+//            FileSystem::getFsRoot($testsWorkingDir),
+//            null,
+//            LOCK_EX,
+//            LocalFilesystemAdapter::SKIP_LINKS
+//        );
+//
+//        return new FileSystem(
+//            $localFilesystemAdapter,
+//            [
+//                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+//            ],
+//            $normalizer,
+//            null,
+//            $testsWorkingDir
+//        );
+//    }
 
     /**
      * Get an in-memory filesystem.
      */
     protected function getInMemoryFileSystem(): FileSystem
     {
-        if (! isset($inMemoryFilesystem)) {
+        if (!isset($this->inMemoryFilesystem)) {
             $this->inMemoryFilesystem = $this->getNewInMemoryFileSystem();
         }
 
@@ -121,60 +178,49 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
+        $normalizer = FileSystem::makePathNormalizer('mem://');
+
         $inMemoryFilesystem = new InMemoryFilesystemAdapter();
 
-        $normalizer = FileSystem::makePathNormalizer('/');
+        $pathPrefixer = new PathPrefixer('mem://', '/');
 
-        $leagueFilesystem = new FlysystemFileSystem(
+        $filesystem = new FileSystem(
             $inMemoryFilesystem,
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
             ],
-            $normalizer
-        );
-
-        $readonlyFilesystem = new ReadOnlyFileSystem(
-            $leagueFilesystem,
-            Filesystem::makePathNormalizer(getcwd())
-        );
-
-        $filesystem = new FileSystem(
-            $readonlyFilesystem,
-            'mem://',
+            $normalizer,
+            $pathPrefixer,
             'mem://'
         );
 
-        /** @var FilesystemRegistry $registry */
-        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-        // Register a file stream mem:// to handle file operations by third party libraries.
-        // This exception handling probably doesn't matter in real life but does in unit tests.
-        try {
-            $registry->get('mem');
-        } catch (\Exception $e) {
-            $registry->register('mem', $filesystem);
+        /**
+         * Register a file stream mem:// to handle file operations by third party libraries.
+         *
+         * @var FilesystemRegistry $registry
+         */
+        $registry = ServiceLocator::get(FilesystemRegistry::class);
+
+        if (method_exists($registry, 'has') && $registry->has('mem')) {
+            $registry->unregister('mem');
+        } else {
+            try {
+                $registry->get('mem');
+                $registry->unregister('mem');
+            } catch (Exception $exception) {
+                $e = $exception; // suggesting it was not unregistered. but maybe never existed.
+            }
         }
+
+        $registry->register('mem', $filesystem);
 
         return $filesystem;
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-        /** @var FilesystemRegistry $registry */
-        try {
-            $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-            $registry->unregister('mem');
-        } catch (\Exception $e) {
-        }
-
-        Mockery::close();
     }
 
     /**
      * Use this method when passing the logger to a class constructor.
      */
-    protected function getLogger(): LoggerInterface
+    public function getLogger(): LoggerInterface
     {
         if (! isset($this->logger)) {
             $this->logger = $this->getNewLogger();
@@ -187,7 +233,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         $logger = new Logger('logger');
         $logger->pushProcessor(new PsrLogMessageProcessor());
-        $logger->pushProcessor(new RelativeFilepathLogProcessor($this->getInMemoryFileSystem()));
+        $logger->pushProcessor(
+            new RelativeFilepathLogProcessor(
+                $this->getFileSystem()
+            )
+        );
         $logger->pushHandler(new PsrHandler($this->getTestLogger()));
 
         return $logger;
@@ -196,19 +246,12 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Use this method to retrieve the test logger for assertions.
      */
-    protected function getTestLogger(): TestLogger
+    public function getTestLogger(): TestLogger
     {
-        if (! isset($this->testLogger)) {
+        if (!isset($this->testLogger)) {
             $this->testLogger = new ColorLogger();
         }
 
         return $this->testLogger;
-    }
-
-    protected function markTestSkippedOnWindows(string $message = 'Skipped on Windows'): void
-    {
-        if (Platform::isWindows()) {
-            $this->markTestSkipped($message);
-        }
     }
 }
