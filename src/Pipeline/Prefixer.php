@@ -971,7 +971,13 @@ class Prefixer
                 }
 
                 if ($node instanceof \PhpParser\Node\Stmt\TraitUse) {
-                    $nameNodes = array_merge($nameNodes, $node->traits);
+                    $nameNodes = array_merge(
+                        $nameNodes,
+                        array_filter(
+                            $node->traits,
+                            fn($node) => !($node instanceof \PhpParser\Node\Name\FullyQualified)
+                        )
+                    );
                 }
 
                 if ($node instanceof \PhpParser\Node\Param

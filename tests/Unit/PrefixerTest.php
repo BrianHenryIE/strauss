@@ -18,6 +18,7 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use BrianHenryIE\Strauss\Types\TraitSymbol;
 use Mockery;
 use PhpParser\ParserFactory;
 
@@ -4219,6 +4220,72 @@ EOD;
 
         $classSymbol = new ClassSymbol('Composer\\Factory', $file, false, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
+
+        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * @covers ::prepareRelativeNamespaces()
+     */
+    public function test_use_trait_fqdn(): void {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Stripe\Billing;
+
+class CreditGrant extends \Stripe\ApiResource
+{
+    const OBJECT_NAME = 'billing.credit_grant';
+
+    use \Stripe\ApiOperations\Update;
+
+    const CATEGORY_PAID = 'paid';
+    const CATEGORY_PROMOTIONAL = 'promotional';
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace Stripe\Billing;
+
+class CreditGrant extends \Stripe\ApiResource
+{
+    const OBJECT_NAME = 'billing.credit_grant';
+
+    use \BrianHenryIE\Strauss\Stripe\ApiOperations\Update;
+
+    const CATEGORY_PAID = 'paid';
+    const CATEGORY_PROMOTIONAL = 'promotional';
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $namespaceSymbol = new NamespaceSymbol('Stripe\\ApiOperations', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\Stripe\\ApiOperations');
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $traitSymbol = new TraitSymbol('Stripe\\ApiOperations\\Update', $file, $namespaceSymbol);
+        $discoveredSymbols->add($traitSymbol);
 
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
