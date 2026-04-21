@@ -594,12 +594,14 @@ class Prefixer
         // Replace \Classname (fully qualified) references in any namespace context.
         $fqNodes = $nodeFinder->find($ast, function (Node $node) use ($globalClassesInterfacesTraitsToRename, &$positions) {
             if ($node->getAttribute('comments')) {
+                // TODO. This is recording comments repeatedly. Duplicates are later removed, but it'd be better to just not add them.
                 /** @var \PhpParser\Comment\Doc $comment */
-                $comment = $node->getAttribute('comments')[0];
-                $positions = array_merge(
-                    $positions,
-                    $this->findGlobalSymbolsPositionsInComment($comment, $globalClassesInterfacesTraitsToRename)
-                );
+                foreach ($node->getAttribute('comments') as $comment) {
+                    $positions = array_merge(
+                        $positions,
+                        $this->findGlobalSymbolsPositionsInComment($comment, $globalClassesInterfacesTraitsToRename)
+                    );
+                }
             }
             if (!( $node instanceof Name\FullyQualified )) {
                 return false;
