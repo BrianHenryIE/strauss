@@ -460,6 +460,8 @@ class InstalledJson
     }
 
     /**
+     * TODO: This runs twice but should only run once.
+     *
      * @param array<string,ComposerPackage> $flatDependencyTree
      * @param DiscoveredSymbols $discoveredSymbols
      * @throws Exception
