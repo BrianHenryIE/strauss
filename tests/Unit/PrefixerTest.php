@@ -4179,7 +4179,7 @@ EOD;
         $this->assertEqualsRN($expected, $result);
     }
 
-    public function test_return_type_classname_replaced_as_namespace(): void
+    public function test_return_type_classname_not_replaced_as_namespace(): void
     {
 
         $contents = <<<'EOD'
@@ -4187,7 +4187,7 @@ namespace Composer;
 
 class Factory
 {
-    public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): Composer
+    public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer
     {}
 }
 EOD;
@@ -4198,7 +4198,7 @@ namespace BrianHenryIE\Strauss\Vendor\Composer;
 
 class Factory
 {
-    public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): Composer
+    public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer
     {}
 }
 EOD;
