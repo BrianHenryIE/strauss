@@ -418,4 +418,41 @@ EOD;
 
         $this->assertEquals(0, $result_code, $outputString);
     }
+
+    /**
+     * 'Composer\Autoload\ClassLoader' should be prefixed.
+     *
+     * @see vendor/composer/autoload_real.php
+     */
+    public function testItPrefixesComposerAutoloadClasses(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "dump/autoload",
+  "require": {
+    "psr/log": "1.0"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Company\\Project\\"
+    }
+  }
+}
+EOD;
+
+        chdir($this->testsWorkingDir);
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php');
+
+        $this->assertStringNotContainsString('\'Composer\\Autoload\\ClassLoader', $phpString);
+        $this->assertStringContainsString('Company\\Project\\Composer\\Autoload\\ClassLoader', $phpString);
+    }
 }
