@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
+ * @see Aliases
  */
 class AliasesFeatureTest extends IntegrationTestCase
 {
@@ -55,6 +56,7 @@ EOD;
 
         $this->assertStringContainsString('autoload_aliases.php', $autoloadPhpString);
 
+        // Removes `autoload_aliases.php` etc. from `vendor/autoload.php`.
         exec('composer dump-autoload');
 
         /**

@@ -4,16 +4,17 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
-use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\NamespaceSort;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Exception;
 use League\Flysystem\FilesystemException;
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ClassConstFetch;
@@ -69,45 +70,58 @@ class Prefixer
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
         foreach ($files as $file) {
-            if (!$this->config->isTargetDirectoryVendor()
-                && !$file->isDoCopy()
-            ) {
-                continue;
-            }
+            $this->replaceInFile($discoveredSymbols, $file);
+        }
+    }
 
-            if ($this->filesystem->directoryExists($file->getAbsoluteTargetPath())) {
-                $this->logger->debug("is_dir() / nothing to do : {$file->getAbsoluteTargetPath()}");
-                continue;
-            }
+    protected function replaceInFile(DiscoveredSymbols $discoveredSymbols, FileBase $file): void
+    {
+        if (!$this->config->isTargetDirectoryVendor()
+            && !$file->isDoCopy()
+        ) {
+            return;
+        }
 
-            if (!$file->isPhpFile()) {
-                continue;
-            }
+        if ($this->filesystem->directoryExists($file->getTargetAbsolutePath())) {
+            $this->logger->debug("is_dir() / nothing to do : {targetAbsolutePath}", [
+                'targetAbsolutePath' => $file->getTargetAbsolutePath()
+            ]);
+            return;
+        }
 
-            if (!$this->filesystem->fileExists($file->getAbsoluteTargetPath())) {
-                $this->logger->warning("Expected file does not exist: {$file->getAbsoluteTargetPath()}");
-                continue;
-            }
+        if (!$file->isPhpFile()) {
+            return;
+        }
 
-            $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $file->getAbsoluteTargetPath());
+        if (!$this->filesystem->fileExists($file->getTargetAbsolutePath())) {
+            $this->logger->warning("Expected file does not exist: {targetAbsolutePath}", [
+                'targetAbsolutePath' => $file->getTargetAbsolutePath()
+            ]);
+            return;
+        }
 
-            $this->logger->debug("Updating contents of file: {$relativeFilePath}");
+        $this->logger->debug("Updating contents of file: {targetAbsolutePath}", [
+            'targetAbsolutePath' => $file->getTargetAbsolutePath()
+        ]);
 
-            /**
-             * Throws an exception, but unlikely to happen.
-             */
-            $contents = $this->filesystem->read($file->getAbsoluteTargetPath());
+        /**
+         * Throws an exception, but unlikely to happen.
+         */
+        $contents = $this->filesystem->read($file->getTargetAbsolutePath());
 
-            $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
+        $updatedContents = $this->replaceInString($discoveredSymbols, $contents, $file->getTargetAbsolutePath());
 
-            if ($updatedContents !== $contents) {
-                // TODO: diff here and debug log.
-                $file->setDidUpdate();
-                $this->filesystem->write($file->getAbsoluteTargetPath(), $updatedContents);
-                $this->logger->info("Updated contents of file: {$relativeFilePath}");
-            } else {
-                $this->logger->debug("No changes to file: {$relativeFilePath}");
-            }
+        if ($updatedContents !== $contents) {
+            // TODO: diff here and debug log.
+            $file->setDidUpdate();
+            $this->filesystem->write($file->getTargetAbsolutePath(), $updatedContents);
+            $this->logger->info("Updated contents of file: {targetAbsolutePath}", [
+                'targetAbsolutePath' => $file->getTargetAbsolutePath()
+            ]);
+        } else {
+            $this->logger->debug("No changes to file: {targetAbsolutePath}", [
+                'targetAbsolutePath' => $file->getTargetAbsolutePath()
+            ]);
         }
     }
 
@@ -125,21 +139,27 @@ class Prefixer
             $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
 
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
-                $this->logger->debug("is_dir() / nothing to do : {$relativeFilePath}");
+                $this->logger->debug("is_dir() / nothing to do : {relativeFilePath}", [
+                    'relativeFilePath' => $relativeFilePath
+                ]);
                 continue;
             }
 
             if (!$this->filesystem->fileExists($fileAbsolutePath)) {
-                $this->logger->warning("Expected file does not exist: {$relativeFilePath}");
+                $this->logger->warning("Expected file does not exist: {relativeFilePath}", [
+                    'relativeFilePath' => $relativeFilePath
+                ]);
                 continue;
             }
 
-            $this->logger->debug("Updating contents of file: {$relativeFilePath}");
+            $this->logger->debug("Updating contents of file (project): {fileAbsolutePath}", [
+                'fileAbsolutePath' => $fileAbsolutePath,
+            ]);
 
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
 
-            $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
+            $updatedContents = $this->replaceInString($discoveredSymbols, $contents, $fileAbsolutePath);
 
             if ($updatedContents !== $contents) {
                 $this->changedFiles[$fileAbsolutePath] = null;
@@ -157,64 +177,110 @@ class Prefixer
      *
      * @throws Exception
      */
-    public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents): string
+    public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents, ?string $fileAbsolutePath = null): string
     {
-        $classmapPrefix = $this->config->getClassmapPrefix();
+        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces()->getToRename();
+        $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix())->getToRename();
+        $functions = $discoveredSymbols->getDiscoveredFunctions()->getToRename();
 
-        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
-        $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
-        $classes = $discoveredSymbols->getGlobalClassChanges();
-        $functions = $discoveredSymbols->getDiscoveredFunctionChanges();
+        // This is maybe deprecated since regex has been replaced by php-parser.
+        $contents = $this->prepareRelativeNamespaces($contents, $discoveredSymbols->getDiscoveredNamespaces());
 
-        $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
-
-        if ($classmapPrefix) {
-            foreach ($classes as $classSymbol) {
-                $contents = $this->replaceClassname($contents, $classSymbol->getOriginalSymbolStripPrefix($classmapPrefix), $classmapPrefix);
-            }
+        // Prepend <?php if absent so php-parser treats the content as PHP code rather
+        // than inline HTML. The offset is subtracted from all collected positions below.
+        $phpOpenerLen = 0;
+        $parseContent = $contents;
+        if (stripos(ltrim($contents), '<?') !== 0) {
+            $phpOpenerLen = strlen("<?php\n");
+            $parseContent = "<?php\n" . $contents;
         }
 
-        // TODO: Move this out of the loop.
-        $namespacesChangesStrings = [];
-        foreach ($namespacesChanges as $originalNamespace => $namespaceSymbol) {
-            if (in_array($originalNamespace, $this->config->getExcludeNamespacesFromPrefixing())) {
-                $this->logger->info("Skipping namespace: $originalNamespace");
-                continue;
-            }
-            $namespacesChangesStrings[$originalNamespace] = $namespaceSymbol->getReplacement();
-        }
-        // This matters... it shouldn't.
-        uksort($namespacesChangesStrings, new NamespaceSort(NamespaceSort::SHORTEST));
-        foreach ($namespacesChangesStrings as $originalNamespace => $replacementNamespace) {
-            $contents = $this->replaceNamespace($contents, $originalNamespace, $replacementNamespace);
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $errorHandler = new \PhpParser\ErrorHandler\Collecting();
+        $ast = null;
+
+        $positions = [];
+
+        try {
+            $ast = $parser->parse($parseContent);
+//                $ast = $parser->parse($parseContent, $errorHandler);
+        } catch (\Exception $e) {
+            // This happens in template files, E.g `x.blade.php`.
+            $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: " . $e->getMessage(), [
+                'filePath' => $fileAbsolutePath ?? 'file',
+            ]);
+            return $contents;
         }
 
-        if (!is_null($this->config->getConstantsPrefix())) {
-            $contents = $this->replaceConstants($contents, $constants, $this->config->getConstantsPrefix());
+        if (is_null($ast)) {
+            return $contents;
         }
 
+        $positions = array_merge(
+            $positions,
+            $this->replaceNamespaces($ast, $discoveredSymbols->getNamespaces()->getToRename()),
+            $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraits()->getToRename()),
+            $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
+        );
+
+        // Adjust positions to be relative to the original $contents (before any <?php prepend).
+        if ($phpOpenerLen > 0) {
+            $positions = array_values(array_filter(
+                array_map(function ($pos) use ($phpOpenerLen) {
+                    $pos['start'] -= $phpOpenerLen;
+                    $pos['end'] -= $phpOpenerLen;
+                    return $pos;
+                }, $positions),
+                fn($pos) => $pos['start'] >= 0
+            ));
+        }
+
+        usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
+
+        $removeDuplicatePositions = [];
+        foreach ($positions as $postition) {
+//            if(isset($removeDuplicatePositions[$postition['start']])){
+//            }
+            $removeDuplicatePositions[$postition['start']] = $postition;
+        }
+        $positions = $removeDuplicatePositions;
+
+        foreach ($positions as $pos) {
+            $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
+        }
+
+        // TODO: Use AST.
         foreach ($functions as $functionSymbol) {
             $contents = $this->replaceFunctions($contents, $functionSymbol);
         }
 
-        $contents = $this->replaceConstFetchNamespaces($discoveredSymbols, $contents);
+        // TODO: Use AST.
+        if (!is_null($this->config->getConstantsPrefix())) {
+            $contents = $this->replaceConstants($contents, $constants, $this->config->getConstantsPrefix());
+        }
+
+        // The following are for replacing symbols inside strings.
+        // TODO: When functions and constants are implemented via AST, their respective string replacement part will need to be added here.
+
+        // TODO: filter to only namespaces of more than a single depth.
+        foreach ($discoveredSymbols->getNamespaces()->getToRename() as $namespaceSymbol) {
+            $contents = $this->replaceSingleClassnameInString($contents, $namespaceSymbol);
+        }
+
+        /** @var ClassSymbol $classSymbol */
+        foreach ($discoveredSymbols->getClassesInterfacesTraits()->getToRename() as $classSymbol) {
+            $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
+        }
 
         return $contents;
     }
 
-    protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, string $contents): string
+    protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, array $ast): array
     {
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        try {
-            $ast = $parser->parse($contents);
-        } catch (\PhpParser\Error $e) {
-            $this->logger->warning("Skipping ::replaceConstFetchNamespaces() in file due to parse error: " . $e->getMessage());
-            return $contents;
-        }
-
-        $namespaceSymbols = $symbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
-        if (empty($namespaceSymbols)) {
-            return $contents;
+        $namespaceSymbols = $symbols->getDiscoveredNamespaces();
+        $namespaceSymbolsArray = $namespaceSymbols->toArray();
+        if (empty($namespaceSymbolsArray)) {
+            return [];
         }
 
         $nodeFinder = new NodeFinder();
@@ -231,8 +297,8 @@ class Prefixer
             $parts = explode('\\', $full);
             $namespace = $parts[0] ?? null;
 
-            if ($namespace && isset($namespaceSymbols[$namespace])) {
-                $replacementNamespace = $namespaceSymbols[$namespace]->getReplacement();
+            if ($namespace && isset($namespaceSymbolsArray[$namespace])) {
+                $replacementNamespace = $namespaceSymbolsArray[$namespace]->getLocalReplacement();
                 $parts[0] = $replacementNamespace;
                 $newName = '\\' . implode('\\', $parts);
 
@@ -244,107 +310,252 @@ class Prefixer
             }
         }
 
-        usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
-
-        foreach ($positions as $pos) {
-            $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
-        }
-
-        return $contents;
+        return $positions;
     }
 
-    /**
-     * TODO: Test against traits.
-     *
-     * @param string $contents The text to make replacements in.
-     * @param string $originalNamespace
-     * @param string $replacement
-     *
-     * @return string The updated text.
-     * @throws Exception
-     */
-    public function replaceNamespace(string $contents, string $originalNamespace, string $replacement): string
+    protected function replaceNamespaces(array $ast, DiscoveredSymbols $namespaceChanges): array
     {
+        if (empty($namespaceChanges->toArray())) {
+            return [];
+        }
 
-        $searchNamespace = '\\' . rtrim($originalNamespace, '\\') . '\\';
-        $searchNamespace = str_replace('\\\\', '\\', $searchNamespace);
-        $searchNamespace = str_replace('\\', '\\\\{0,2}', $searchNamespace);
+        $nsMap = [];
+        foreach ($namespaceChanges as $change) {
+            $original = rtrim($change->getOriginalSymbol(), '\\');
+            $replacement = rtrim($change->getReplacementFqdnName(), '\\');
+            $nsMap[$original] = $replacement;
+        }
+        uksort($nsMap, fn($a, $b) => strlen($b) - strlen($a));
 
-        $pattern = "
-            /                              # Start the pattern
-            (
-            ^\s*                          # start of the string
-            |\\n\s*                        # start of the line
-            |(<?php\s+namespace|^\s*namespace|[\r\n]+\s*namespace)\s+                  # the namespace keyword
-            |use\s+                        # the use keyword
-            |use\s+function\s+			   # the use function syntax
-            |new\s+
-            |static\s+
-            |\"                            # inside a string that does not contain spaces - needs work
-            |'                             #   right now its just inside a string that doesnt start with a space
-            |implements\s+\\\\             # when the interface being implemented is namespaced inline
-            |extends\s+\\\\                    # when the class being extended is namespaced inline
-            |return\s+
-            |instanceof\s+                 # when checking the class type of an object in a conditional
-            |\(\s*                         # inside a function declaration as the first parameters type
-            |,\s*                          # inside a function declaration as a subsequent parameter type
-            |\.\s*                         # as part of a concatenated string
-            |=\s*                          # as the value being assigned to a variable
-            |\*\s+@\w+\s*                  # In a comments param etc
-            |&\s*                             # a static call as a second parameter of an if statement
-            |\|\s*
-            |!\s*                             # negating the result of a static call
-            |=>\s*                            # as the value in an associative array
-            |\[\s*                         # In a square array
-            |\?\s*                         # In a ternary operator
-            |:\s*                          # In a ternary operator
-            |<                             # In a generic type declaration
-            |\(string\)\s*                 # casting a namespaced class to a string
-            )
-            @?                             # Maybe preceded by the @ symbol for error suppression
-            (?<searchNamespace>
-            {$searchNamespace}             # followed by the namespace to replace
-            )
-            (?!:)                          # Not followed by : which would only be valid after a classname
-            (
-            \s*;                           # followed by a semicolon
-            |\s*{                          # or an opening brace for multiple namespaces per file
-            |\\\\{1,2}[a-zA-Z0-9_\x7f-\xff]{1,}         # or a classname no slashes
-            |\s+as                         # or the keyword as
-            |\"                            # or quotes
-            |'                             # or single quote
-            |:                             # or a colon to access a static
-            |\\\\{
-            |>                             # In a generic type declaration (end)
-            )
-            /Ux";                          // U: Non-greedy matching, x: ignore whitespace in pattern.
+        $nodeFinder = new NodeFinder();
+        $positions = [];
+        $handled = [];
 
-        $replacingFunction = function ($matches) use ($originalNamespace, $replacement) {
-            $singleBackslash = '\\';
-            $doubleBackslash = '\\\\';
-
-            if (false !== strpos($matches['0'], $doubleBackslash)) {
-                $originalNamespace = str_replace($singleBackslash, $doubleBackslash, $originalNamespace);
-                $replacement = str_replace($singleBackslash, $doubleBackslash, $replacement);
+        $findMatch = function (string $nameStr) use ($nsMap): ?array {
+            foreach ($nsMap as $original => $replacement) {
+                if ($nameStr === $original || str_starts_with($nameStr, $original . '\\')) {
+                    return ['original' => $original, 'replacement' => $replacement];
+                }
             }
-
-            return str_replace($originalNamespace, $replacement, $matches[0]);
+            return null;
         };
 
-        $result = preg_replace_callback($pattern, $replacingFunction, $contents);
+        $findPrefixMatch = function (string $nameStr) use ($nsMap): ?array {
+            foreach ($nsMap as $original => $replacement) {
+                if (str_starts_with($nameStr, $original . '\\')) {
+                    return ['original' => $original, 'replacement' => $replacement];
+                }
+            }
+            return null;
+        };
 
-        $this->checkPregError();
+        $prefixed = function (string $nameStr, string $original, string $replacement): string {
+            return $replacement . substr($nameStr, strlen($original));
+        };
 
-        // For prefixed functions which do not begin with a backslash, add one.
-        // I'm not certain this is a good idea.
-        // @see https://github.com/BrianHenryIE/strauss/issues/65
-        $functionReplacingPattern = '/\\\\?(' . preg_quote(ltrim($replacement, '\\'), '/') . '\\\\(?:[a-zA-Z0-9_\x7f-\xff]+\\\\)*[a-zA-Z0-9_\x7f-\xff]+\\()/';
+        // A: namespace declarations — keep relative (no leading \)
+        foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\Namespace_::class) as $ns) {
+            if ($ns->name !== null && ($match = $findMatch($ns->name->toString()))) {
+                $positions[] = [
+                    'start' => $ns->name->getStartFilePos(),
+                    'end' => $ns->name->getEndFilePos() + 1,
+                    'replacement' => $prefixed($ns->name->toString(), $match['original'], $match['replacement']),
+                ];
+                $handled[$ns->name->getStartFilePos()] = true;
+            }
+        }
 
-        return preg_replace(
-            $functionReplacingPattern,
-            "\\\\$1",
-            $result
-        );
+        // B: use items and group-use prefixes — keep relative (no leading \)
+        foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\UseItem::class) as $item) {
+            if ($match = $findMatch($item->name->toString())) {
+                $positions[] = [
+                    'start' => $item->name->getStartFilePos(),
+                    'end' => $item->name->getEndFilePos() + 1,
+                    'replacement' => $prefixed($item->name->toString(), $match['original'], $match['replacement']),
+                ];
+                $handled[$item->name->getStartFilePos()] = true;
+            }
+        }
+        foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\GroupUse::class) as $groupUse) {
+            if ($groupUse->prefix !== null && ($match = $findMatch($groupUse->prefix->toString()))) {
+                $positions[] = [
+                    'start' => $groupUse->prefix->getStartFilePos(),
+                    'end' => $groupUse->prefix->getEndFilePos() + 1,
+                    'replacement' => $prefixed($groupUse->prefix->toString(), $match['original'], $match['replacement']),
+                ];
+                $handled[$groupUse->prefix->getStartFilePos()] = true;
+            }
+        }
+
+        // C: fully-qualified Name nodes — retain leading \
+        foreach ($nodeFinder->find($ast, function (Node $node) use ($findMatch) {
+            return $node instanceof Name\FullyQualified && $findMatch($node->toString()) !== null;
+        }) as $name) {
+            if (isset($handled[$name->getStartFilePos()])) {
+                continue;
+            }
+            $match = $findMatch($name->toString());
+            $positions[] = [
+                'start' => $name->getStartFilePos(),
+                'end' => $name->getEndFilePos() + 1,
+                'replacement' => '\\' . $prefixed($name->toString(), $match['original'], $match['replacement']),
+            ];
+            $handled[$name->getStartFilePos()] = true;
+        }
+
+        // D: relative Name nodes used as namespace prefixes in code — promote to FQ.
+        foreach ($nodeFinder->find($ast, function (Node $node) use ($findPrefixMatch) {
+            return $node instanceof Name
+                && !($node instanceof Name\FullyQualified)
+                && $findPrefixMatch($node->toString()) !== null;
+        }) as $name) {
+            if (isset($handled[$name->getStartFilePos()])) {
+                continue;
+            }
+            $match = $findPrefixMatch($name->toString());
+            $positions[] = [
+                'start' => $name->getStartFilePos(),
+                'end' => $name->getEndFilePos() + 1,
+                'replacement' => '\\' . $prefixed($name->toString(), $match['original'], $match['replacement']),
+            ];
+        }
+
+        // Doc comments: scan for \OriginalNamespace references in @param/@return/etc.
+        foreach ($nodeFinder->find($ast, function (Node $node) {
+            return $node->getDocComment() !== null;
+        }) as $node) {
+            $doc = $node->getDocComment();
+            $text = $doc->getText();
+            foreach ($nsMap as $original => $replacement) {
+                $docSearchStr = '\\' . $original;
+                $docSearchLen = strlen($docSearchStr);
+                $offset = 0;
+                while (($pos = strpos($text, $docSearchStr, $offset)) !== false) {
+                    $after = $pos + $docSearchLen;
+                    if ($after >= strlen($text)
+                        || !preg_match('/[a-zA-Z0-9_\x7f-\xff]/', $text[$after])
+                    ) {
+                        $positions[] = [
+                            'start' => $doc->getStartFilePos() + $pos,
+                            'end' => $doc->getStartFilePos() + $after,
+                            'replacement' => '\\' . $replacement,
+                        ];
+                    }
+                    $offset = $pos + 1;
+                }
+            }
+        }
+
+        return $positions;
+    }
+
+    protected function findGlobalSymbolsPositionsInComment(Comment $comment, DiscoveredSymbols $globalSymbols): array
+    {
+        $positions = [];
+        foreach ($globalSymbols->getGlobalClassesInterfacesTraitsToRename() as $discoveredSymbol) {
+            $positions = array_merge($positions, $this->findGlobalSymbolPositionInComment($comment, $discoveredSymbol));
+        }
+        return $positions;
+    }
+
+    protected function findGlobalSymbolPositionInComment(Comment $comment, DiscoveredSymbol $globalSymbol): array
+    {
+        $positions = [];
+
+        $searchStr = '\\' . $globalSymbol->getOriginalSymbol();
+        $searchLen = strlen($searchStr);
+
+        $commentText = $comment->getText();
+        $startFilePos = $comment->getStartFilePos();
+        $offset = 0;
+        while (($pos = strpos($commentText, $searchStr, $offset)) !== false) {
+            $nextPos = $pos + $searchLen;
+            if ($nextPos >= strlen($commentText)
+                || !preg_match('/[a-zA-Z0-9_\x7f-\xff\\\\]/', $commentText[$nextPos])
+            ) {
+                $positions[] = [
+                    'start' => $startFilePos + $pos,
+                    'end' => $startFilePos + $nextPos,
+                    'replacement' => '\\' . $globalSymbol->getLocalReplacement(),
+                ];
+            }
+            $offset = $pos + 1;
+        }
+
+        return $positions;
+    }
+
+    protected function replaceSingleClassnameInString(string $contents, DiscoveredSymbol $symbol): string
+    {
+        $alsoSearchForVariableClassname = false;
+
+        if ($symbol instanceof NamespacedSymbol && $symbol->getNamespace()->isGlobal()) {
+            $replacementSymbolString = $symbol->getLocalReplacement();
+            $originalSymbolString    = $symbol->getOriginalSymbolStripPrefix($this->config->getClassmapPrefix());
+        } elseif ($symbol instanceof NamespaceSymbol) {
+            if ($symbol->isGlobal()) {
+                return $contents;
+            }
+            $originalSymbolString = $symbol->getOriginalSymbol();
+            $replacementSymbolString = $symbol->getReplacementFqdnName();
+
+            // E.g. `My\Namespace\$var` is used in some libraries.
+            $alsoSearchForVariableClassname = true;
+        } else {
+            $originalSymbolString = $symbol->getOriginalFqdnName();
+            $replacementSymbolString = $symbol->getFqdnReplacement();
+        }
+
+        /**
+         * Replace classnames in strings, e.g. `is_a( $recurrence, 'CronExpression' )`.
+         *
+         * `[^a-zA-Z0-9_\x7f-\xff\\\\]+` is anything but classname valid characters.
+         *
+         * TODO: Run this without the classname characters, log everytime a replacement is made across all test cases, add those to the test assertions, ensure this is always correct.
+         */
+        $pattern =    '/
+(
+                            [^a-zA-Z0-9_\x7f-\xff\\\\]
+                            [\'"]
+                            [\\\\]{0,2}
+)
+                        ('
+                            . str_replace('\\', '[\\\\]{1,2}', $originalSymbolString) .
+                        ')(
+                        '
+                      . ( $alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
+                      '
+                            [\'"]
+                            [^a-zA-Z0-9_\x7f-\xff\\\\]
+)
+                        /Ux';       // U: Non-greedy matching, x: ignore whitespace in pattern.
+
+        /**
+         * If $alsoSearchForVariableClassname the number of elements in the array is more
+         *
+         * @param array<array<string>> $capture
+         *
+         * @return string
+         */
+        $replacement = function (array $capture) use ($originalSymbolString, $replacementSymbolString, $alsoSearchForVariableClassname) {
+
+            if ($capture[2] === $originalSymbolString) {
+                $capture[2] = $replacementSymbolString;
+            }
+
+            if ($capture[2] === str_replace('\\', '\\\\', $originalSymbolString)) {
+                $capture[2] = str_replace('\\', '\\\\', $replacementSymbolString);
+            }
+
+            unset($capture[0]);
+            unset($capture[4]);
+
+            return implode('', $capture);
+        };
+
+        $contents = preg_replace_callback($pattern, $replacement, $contents);
+
+        return $contents;
     }
 
     /**
@@ -358,116 +569,163 @@ class Prefixer
      * @param string $contents
      * @param string $originalClassname
      * @param string $classnamePrefix
-     *
-     * @throws Exception
      */
-    public function replaceClassname(string $contents, string $originalClassname, string $classnamePrefix): string
+    public function findGlobalSymbolsPositionsInAst(array $ast, DiscoveredSymbols $globalClassesInterfacesTraitsToRename): array
     {
-        $searchClassname = preg_quote($originalClassname, '/');
-
-        // This could be more specific if we could enumerate all preceding and proceeding words ("new", "("...).
-        $pattern = '
-			/											# Start the pattern
-				(^\s*namespace|\r\n\s*namespace)\s+[a-zA-Z0-9_\x7f-\xff\\\\]+\s*{(.*?)(namespace|\z) 
-														# Look for a preceding namespace declaration, up until a 
-														# potential second namespace declaration.
-				|										# if found, match that much before continuing the search on
-								    		        	# the remainder of the string.
-                (^\s*namespace|\r\n\s*namespace)\s+[a-zA-Z0-9_\x7f-\xff\\\\]+\s*;(.*) # Skip lines just declaring the namespace.
-                |		        	
-				([^a-zA-Z0-9_\x7f-\xff\$\\\])(' . $searchClassname . ')([^a-zA-Z0-9_\x7f-\xff\\\]) # outside a namespace the class will not be prefixed with a slash
-				
-			/xsm'; //                                    # x: ignore whitespace in regex.  s dot matches newline, m: ^ and $ match start and end of line
-
-        $replacingFunction = function ($matches) use ($originalClassname, $classnamePrefix) {
-
-            // If we're inside a namespace other than the global namespace:
-            if (1 === preg_match('/\s*namespace\s+[a-zA-Z0-9_\x7f-\xff\\\\]+[;{\s\n]{1}.*/', $matches[0])) {
-                return $this->replaceGlobalClassInsideNamedNamespace(
-                    $matches[0],
-                    $originalClassname,
-                    $classnamePrefix
-                );
-            } else {
-                $newContents = '';
-                foreach ($matches as $index => $captured) {
-                    if (0 === $index) {
-                        continue;
-                    }
-
-                    if ($captured == $originalClassname) {
-                        $newContents .= $classnamePrefix;
-                    }
-
-                    $newContents .= $captured;
-                }
-                return $newContents;
-            }
-//            return $matches[1] . $matches[2] . $matches[3] . $classnamePrefix . $originalClassname . $matches[5];
-        };
-
-        $result = preg_replace_callback($pattern, $replacingFunction, $contents);
-
-        if (is_null($result)) {
-            throw new Exception('preg_replace_callback returned null');
+        if (empty($globalClassesInterfacesTraitsToRename)) {
+            return [];
         }
 
-        $this->checkPregError();
+        $nodeFinder = new NodeFinder();
+        $positions = [];
 
-        return $result;
+        // Replace \Classname (fully qualified) references in any namespace context.
+        $fqNodes = $nodeFinder->find($ast, function (Node $node) use ($globalClassesInterfacesTraitsToRename, &$positions) {
+            if ($node->getAttribute('comments')) {
+                /** @var \PhpParser\Comment\Doc $comment */
+                $comment = $node->getAttribute('comments')[0];
+                $positions = array_merge(
+                    $positions,
+                    $this->findGlobalSymbolsPositionsInComment($comment, $globalClassesInterfacesTraitsToRename)
+                );
+            }
+            if (!( $node instanceof Name\FullyQualified )) {
+                return false;
+            }
+            return $this->hasGlobalSymbolForNode($node, $globalClassesInterfacesTraitsToRename);
+        });
+
+        foreach ($fqNodes as $node) {
+            $positions[] = [
+                'start' => $node->getStartFilePos(),
+                'end' => $node->getEndFilePos() + 1,
+                'replacement' => '\\' . $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename),
+            ];
+        }
+
+        // In named namespaces, `use Classname;` must become `use PrefixedClassname as Classname;`
+        // so that unqualified references within the namespace continue to resolve correctly.
+        $namedNamespaces = array_filter(
+            $nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\Namespace_::class),
+            fn($ns) => $ns->name !== null
+        );
+        foreach ($namedNamespaces as $nsStmt) {
+            $useItems = $nodeFinder->findInstanceOf($nsStmt->stmts ?? [], \PhpParser\Node\UseItem::class);
+            foreach ($useItems as $useItem) {
+                if (!($useItem->name instanceof Name\FullyQualified)
+                     && $globalClassesInterfacesTraitsToRename->getClass($useItem->name->toString())
+                ) {
+                    $symbol = $globalClassesInterfacesTraitsToRename->getClass($useItem->name->toString());
+                    if ($symbol->isDoRename()) {
+                        $replacementClassname = $symbol->getLocalReplacement();
+                        $useClassname = array_reverse(explode('\\', $useItem->name->toString()))[0];
+
+                        $replacementString = $symbol->getLocalReplacement();
+                        if ($replacementClassname !== $useClassname && !$useItem->alias) {
+                            $replacementString .= ' as ' . $useClassname;
+                        }
+
+                        $positions[] = [
+                            'start' => $useItem->name->getStartFilePos(),
+                            'end' => $useItem->name->getEndFilePos() + 1,
+                            'replacement' => $replacementString,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // In global namespace context (either implicit, or explicit `namespace {}`), replace
+        // unqualified class name references and class/interface/trait/enum declarations.
+        $globalStmts = [];
+        foreach ($ast as $node) {
+            if ($node instanceof \PhpParser\Node\Stmt\Namespace_) {
+                if ($node->name === null) {
+                    $globalStmts = array_merge($globalStmts, $node->stmts ?? []);
+                }
+            } else {
+                $globalStmts[] = $node;
+            }
+        }
+
+        $classLike = $nodeFinder->find($globalStmts, function (Node $node) use ($globalClassesInterfacesTraitsToRename) {
+            return ($node instanceof \PhpParser\Node\Stmt\Class_
+                || $node instanceof \PhpParser\Node\Stmt\Interface_
+                || $node instanceof \PhpParser\Node\Stmt\Trait_
+                || $node instanceof \PhpParser\Node\Stmt\Enum_)
+                && isset($node->name)
+                && $node->name instanceof \PhpParser\Node\Identifier
+                && (
+                       $globalClassesInterfacesTraitsToRename->getClass($node->name->name)
+                       || $globalClassesInterfacesTraitsToRename->getInterface($node->name->name)
+                       || $globalClassesInterfacesTraitsToRename->getTrait($node->name->name)
+                   );
+        });
+        foreach ($classLike as $node) {
+            $positions[] = [
+                'start' => $node->name->getStartFilePos(),
+                'end' => $node->name->getEndFilePos() + 1,
+                'replacement' => $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename),
+            ];
+        }
+
+        $unqualifiedNameNodes = $nodeFinder->find($globalStmts, function (Node $node) use ($globalClassesInterfacesTraitsToRename) {
+            return $node instanceof Name
+                && !($node instanceof Name\FullyQualified)
+                   && $this->hasGlobalSymbolForNode($node, $globalClassesInterfacesTraitsToRename);
+        });
+        foreach ($unqualifiedNameNodes as $node) {
+            $positions[] = [
+                'start' => $node->getStartFilePos(),
+                'end' => $node->getEndFilePos() + 1,
+                'replacement' => $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename)
+            ];
+        }
+
+        return $positions;
+    }
+
+    protected function hasGlobalSymbolForNode(\PhpParser\Node $node, DiscoveredSymbols $discoveredSymbols): bool
+    {
+        return (bool) $this->getGlobalSymbolForNode($node, $discoveredSymbols);
     }
 
     /**
-     * Pass in a string and look for \Classname instances.
+     * Try to get the specific class/interface/trait symbol by type and name.
+     * Failing that, return whichever of class/interface/trait is found first by name, or null.
      *
-     * @param string $contents
-     * @param string $originalClassname
-     * @param string $classnamePrefix
-     * @return string
+     * There should just be one of any global name: `use MyABC;` (a class) is indistinguishable from `use MyABC;` (an interface).
+     *
+     * @param Node\Stmt $node
+     * @param DiscoveredSymbols $discoveredSymbols
+     *
+     * @return DiscoveredSymbol|null
      */
-    protected function replaceGlobalClassInsideNamedNamespace(
-        string $contents,
-        string $originalClassname,
-        string $classnamePrefix
-    ): string {
-        $replacement = $classnamePrefix . $originalClassname;
-
-        // use Prefixed_Class as Class;
-        $usePattern = '/
-			(\s*use\s+)
-			(' . $originalClassname . ')   # Followed by the classname
-			\s*;
-			/x'; //                    # x: ignore whitespace in regex.
-
-        $contents = preg_replace_callback(
-            $usePattern,
-            function ($matches) use ($replacement) {
-                return $matches[1] . $replacement . ' as ' . $matches[2] . ';';
-            },
-            $contents
-        );
-
-        $this->checkPregError();
-
-        $bodyPattern =
-            '/([^a-zA-Z0-9_\x7f-\xff]  # Not a class character
-			\\\)                       # Followed by a backslash to indicate global namespace
-			(' . $originalClassname . ')   # Followed by the classname
-			([^\\\;]{1})               # Not a backslash or semicolon which might indicate a namespace
-			/x'; //                    # x: ignore whitespace in regex.
-
-        $result = preg_replace_callback(
-            $bodyPattern,
-            function ($matches) use ($replacement) {
-                return $matches[1] . $replacement . $matches[3];
-            },
-            $contents
-        ) ?? $contents; // TODO: If this happens, it should raise an exception.
-
-        $this->checkPregError();
-
-        return $result;
+    protected function getGlobalSymbolForNode(\PhpParser\Node $node, DiscoveredSymbols $discoveredSymbols): ?DiscoveredSymbol
+    {
+        if ($node instanceof \PhpParser\Node\Stmt\Class_) {
+            return $discoveredSymbols->getClass($node->name->toString());
+        }
+        if ($node instanceof \PhpParser\Node\Stmt\Interface_) {
+            return $discoveredSymbols->getInterface($node->name->toString());
+        }
+        if ($node instanceof \PhpParser\Node\Stmt\Trait_) {
+            return $discoveredSymbols->getTrait($node->name->toString());
+        }
+        return $discoveredSymbols->getClass($node->toString())
+               ?? $discoveredSymbols->getInterface($node->toString())
+                ?? $discoveredSymbols->getTrait($node->toString());
     }
+
+    protected function getReplacementStringForNode(\PhpParser\Node $node, DiscoveredSymbols $discoveredSymbols)
+    {
+        $globalSymbol = $this->getGlobalSymbolForNode($node, $discoveredSymbols);
+        if ($globalSymbol) {
+            return $globalSymbol->getLocalReplacement();
+        }
+        return $node->toString();
+    }
+
 
     protected function checkPregError(): void
     {
@@ -484,7 +742,7 @@ class Prefixer
      * @param string[] $originalConstants
      * @param string $prefix
      */
-    protected function replaceConstants(string $contents, array $originalConstants, string $prefix): string
+    protected function replaceConstants(string $contents, DiscoveredSymbols $originalConstants, string $prefix): string
     {
 
         foreach ($originalConstants as $constant) {
@@ -502,7 +760,7 @@ class Prefixer
     protected function replaceFunctions(string $contents, FunctionSymbol $functionSymbol): string
     {
         $originalFunctionString = $functionSymbol->getOriginalSymbol();
-        $replacementFunctionString = $functionSymbol->getReplacement();
+        $replacementFunctionString = $functionSymbol->getLocalReplacement();
 
         if ($originalFunctionString === $replacementFunctionString) {
             return $contents;
@@ -602,10 +860,12 @@ class Prefixer
      * @see https://github.com/nette/latte/blob/0ac0843a459790d471821f6a82f5d13db831a0d3/src/Latte/Loaders/FileLoader.php#L20
      *
      * @param string $phpFileContent
-     * @param NamespaceSymbol[] $discoveredNamespaceSymbols
+     * @param DiscoveredSymbols $discoveredNamespaceSymbols
      */
-    protected function prepareRelativeNamespaces(string $phpFileContent, array $discoveredNamespaceSymbols): string
+    protected function prepareRelativeNamespaces(string $phpFileContent, DiscoveredSymbols $discoveredNamespaceSymbols): string
     {
+        $discoveredNamespaceSymbolsArray = $discoveredNamespaceSymbols->toArray();
+
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
         try {
@@ -616,7 +876,7 @@ class Prefixer
         }
 
         $traverser = new NodeTraverser();
-        $visitor = new class($discoveredNamespaceSymbols) extends \PhpParser\NodeVisitorAbstract {
+        $visitor = new class($discoveredNamespaceSymbolsArray) extends \PhpParser\NodeVisitorAbstract {
 
             public int $countChanges = 0;
             /** @var string[] */
@@ -717,6 +977,12 @@ class Prefixer
                 }
 
                 if ($node instanceof ClassConstFetch
+                    && $node->class instanceof Name
+                    && !($node->class instanceof \PhpParser\Node\Name\FullyQualified)) {
+                    $nameNodes[] = $node->class;
+                }
+
+                if ($node instanceof Node\Expr\New_
                     && $node->class instanceof Name
                     && !($node->class instanceof \PhpParser\Node\Name\FullyQualified)) {
                     $nameNodes[] = $node->class;

@@ -44,7 +44,7 @@ class StraussIssue34Test extends IntegrationTestCase
 }
 EOD;
         $phpFileJsonString = <<<'EOD'
-<?php 
+<?php
 
 namespace My_Namespace\My_Project;
 

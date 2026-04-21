@@ -22,5 +22,5 @@ interface FileSymbolScannerConfigInterface
     /**
      * Just for shortening paths to relative paths for logging.
      */
-    public function getProjectDirectory(): string;
+    public function getProjectAbsolutePath(): string;
 }

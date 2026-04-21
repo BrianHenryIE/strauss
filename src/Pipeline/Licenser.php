@@ -142,6 +142,7 @@ class Licenser
         /** @var ComposerPackage $dependency */
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
+            $packagePath = $this->filesystem->normalizePath($packagePath);
 
             if (!$packagePath) {
                 $this->logger->debug('Dependency {dependency} had no package path?', [
@@ -207,7 +208,9 @@ class Licenser
             );
 
             if ($updatedContents !== $contents) {
-                $this->logger->info("Adding change declaration to {$filepath}");
+                $this->logger->info("Adding change declaration to {filepath}", [
+                    'filepath' => $filepath
+                ]);
                 $this->filesystem->write($filepath, $updatedContents);
             }
         }

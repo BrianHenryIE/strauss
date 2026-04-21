@@ -26,11 +26,10 @@ class AliasesTest extends TestCase
         parent::setUp();
 
         if (!class_exists('Foo\\Bar\\Baz')) {
-            $includeFilePath = sys_get_temp_dir() . '/foo_bar_baz.php';
+            $includeFilePath = 'project/foo_bar_baz.php';
             $includeFile = '<?php namespace Foo\\Bar; class Baz {}';
             $this->getFileSystem()->write($includeFilePath, $includeFile);
-            include $includeFilePath;
-            file_exists($includeFilePath) && unlink($includeFilePath);
+            include $this->getFileSystem()->makeAbsolute($includeFilePath);
         }
     }
 
@@ -55,14 +54,19 @@ class AliasesTest extends TestCase
 
         $symbols = new DiscoveredSymbols();
         $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->times(1)->andReturn('vendor/foo/bar/baz.php');
-        $file->expects('addDiscoveredSymbol')->once();
+        $file->expects('getSourcePath')->times(2)->andReturn('vendor/foo/bar/baz.php');
+        $file->expects('addDiscoveredSymbol')->times(2);
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; class Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; class Baz {}');
 
-        $classSymbol = new ClassSymbol('Foo\\Bar\\Baz', $file, false, 'Foo\\Bar');
-        $classSymbol->setReplacement('Baz\\Foo\\Bar\\Baz');
+        $namespaceSymbol = new NamespaceSymbol(
+            'Foo\\Bar',
+            $file
+        );
+        $namespaceSymbol->setLocalReplacement('Baz\\Foo\\Bar');
+
+        $classSymbol = new ClassSymbol('Foo\\Bar\\Baz', $file, false, $namespaceSymbol);
         $symbols->add($classSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -70,14 +74,14 @@ class AliasesTest extends TestCase
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-'Foo\\Bar\\Baz' => 
+'Foo\\Bar\\Baz' =>
 	array (
 		'type' => 'class',
 		'classname' => 'Baz',
 		'isabstract' => false,
 		'namespace' => 'Foo\\Bar',
 		'extends' => 'Baz\\Foo\\Bar\\Baz',
-		'implements' => 
+		'implements' =>
 			array (
 			),
 ),
@@ -114,10 +118,10 @@ EOD;
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; class Baz {}');
 
         $functionSymbol = new FunctionSymbol('foo', $file);
-        $functionSymbol->setReplacement('bar_foo');
+        $functionSymbol->setLocalReplacement('bar_foo');
         $symbols->add($functionSymbol);
 
-        $namespaceSymbol = new NamespaceSymbol('Foo\\Bar', $file, '\\');
+        $namespaceSymbol = new NamespaceSymbol('Foo\\Bar', $file);
         $symbols->add($namespaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -126,8 +130,8 @@ EOD;
 
         $expected = <<<'EOD'
 if(!function_exists('\\foo')){
-    function foo(...$args) { 
-      return \bar_foo(...func_get_args()); 
+    function foo(...$args) {
+      return \bar_foo(...func_get_args());
     }
 }
 EOD;
@@ -150,14 +154,20 @@ EOD;
 
         $symbols = new DiscoveredSymbols();
         $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->times(1)->andReturn('vendor/foo/bar/baz.php');
-        $file->expects('addDiscoveredSymbol')->once();
+        $file->expects('getSourcePath')->times(2)->andReturn('vendor/foo/bar/baz.php');
+        $file->expects('addDiscoveredSymbol')->times(2);
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; interface Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; interface Baz {}');
 
-        $interfaceSymbol = new InterfaceSymbol('Foo\\Bar\\Baz', $file, 'Foo\\Bar');
-        $interfaceSymbol->setReplacement('Baz\\Foo\\Bar\\Baz');
+        $namespaceSymbol = new NamespaceSymbol(
+            'Foo\\Bar',
+            $file
+        );
+        $namespaceSymbol->setLocalReplacement('Baz\\Foo\\Bar');
+
+        $interfaceSymbol = new InterfaceSymbol('Foo\\Bar\\Baz', $file, $namespaceSymbol);
+
         $symbols->add($interfaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -165,12 +175,12 @@ EOD;
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-'Foo\\Bar\\Baz' => 
+'Foo\\Bar\\Baz' =>
 	array (
 		'type' => 'interface',
 		'interfacename' => 'Baz',
 		'namespace' => 'Foo\\Bar',
-		'extends' => 
+		'extends' =>
 		array (
 			0 => 'Baz\\Foo\\Bar\\Baz',
 			),
@@ -206,14 +216,19 @@ EOD;
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Bar; function baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Foo\\Bar; function baz {}');
 
-        $functionSymbol = new FunctionSymbol('baz', $file, 'Bar');
+        $namespaceSymbol = new NamespaceSymbol(
+            'Bar',
+            $file
+        );
+
+        $functionSymbol = new FunctionSymbol('baz', $file, $namespaceSymbol);
         $symbols->add($functionSymbol);
 
-        $functionSymbol = new FunctionSymbol('foobar', $file, 'Bar');
+        $functionSymbol = new FunctionSymbol('foobar', $file, $namespaceSymbol);
         $symbols->add($functionSymbol);
 
-        $namespaceSymbol = new NamespaceSymbol('Bar', $file, '\\');
-        $namespaceSymbol->setReplacement('Foo\\Bar');
+        $namespaceSymbol = new NamespaceSymbol('Bar', $file);
+        $namespaceSymbol->setLocalReplacement('Foo\\Bar');
         $symbols->add($namespaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -224,7 +239,7 @@ EOD;
 namespace Bar {
 	if(!function_exists('\\Bar\\baz')){
 		function baz(...$args) {
-			return \Foo\Bar\baz(...func_get_args()); 
+			return \Foo\Bar\baz(...func_get_args());
 		}
 	}
 	if(!function_exists('\\Bar\\foobar')){

@@ -16,7 +16,6 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
  */
 class DependenciesCommandTest extends TestCase
 {
-
     protected function getSut(
         ?InputInterface $inputInterfaceMock = null,
         ?ConsoleOutputInterface $outputInterfaceMock = null,
@@ -143,6 +142,9 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
+        $outputInterfaceMock->expects($this->exactly(0))
+                            ->method('getErrorOutput')
+                            ->willReturn($outputInterfaceMock);
 
         $logger = new ColorLogger();
 
@@ -181,6 +183,9 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
+        $outputInterfaceMock->expects($this->exactly(0))
+                            ->method('getErrorOutput')
+                            ->willReturn($outputInterfaceMock);
 
         $logger = new ColorLogger();
 
@@ -219,6 +224,9 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
+        $outputInterfaceMock->expects($this->exactly(0))
+                            ->method('getErrorOutput')
+                            ->willReturn($outputInterfaceMock);
 
         $logger = new ColorLogger();
 

@@ -3,10 +3,10 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Prefixer;
 
 /**
- * Class ReplacerIntegrationTest
- * @package BrianHenryIE\Strauss\Tests\Integration
+ * @see \BrianHenryIE\Strauss\Console\Commands\ReplaceCommand
  * @coversNothing
  */
 class ReplacerIntegrationTest extends IntegrationTestCase
@@ -251,7 +251,7 @@ EOD;
     "name": "brianhenryie/pdf-helpers",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\PdfHelpers\\": "src"
+            "BrianHenryIE\\\\PdfHelpers\\\\": "src"
         }
     },
     "require": {
@@ -316,11 +316,46 @@ EOD;
          */
         $expectedTargetFilePath = $this->testsWorkingDir . '/project/vendor-prefixed/brianhenryie/pdf-helpers/src/MpdfCrop.php';
 
-        $exitCode = $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output, '--debug');
         $this->assertEquals(0, $exitCode, $output);
 
         $this->assertFileExistsInFileSystem($expectedTargetFilePath);
         $updatedFile = $this->getFileSystem()->read($expectedTargetFilePath);
         $this->assertStringContainsString('extends Mpdf', $updatedFile);
+    }
+
+    /**
+     * @see Prefixer::replaceSingleClassnameInString()
+     */
+    public function test_replace_namespace_string(): void
+    {
+        $composerJsonString = <<<'JSON'
+{
+    "name": "brianhenryie/test-replace-namespace-string",
+    "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+    }
+  }
+}
+JSON;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $workingDir = $this->testsWorkingDir;
+        $relativeTargetDir = 'vendor-prefixed/';
+        $absoluteTargetDir = $workingDir . '/' . $relativeTargetDir;
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = $this->getFileSystem()->read($absoluteTargetDir . '/composer/autoload_real.php');
+
+        $this->assertStringNotContainsString("if ('Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
+        $this->assertStringContainsString("if ('BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
     }
 }

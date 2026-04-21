@@ -6,6 +6,8 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -24,7 +26,13 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Factory;
+use Composer\InstalledVersions;
+use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\ServiceLocator;
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
+use League\Flysystem\WhitespacePathNormalizer;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -87,7 +95,69 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             false
         );
 
+        $this->addOption(
+            'dry-run',
+            null,
+            4,
+            'Do not actually make any changes',
+            false
+        );
+
+        $this->addOption(
+            'info',
+            null,
+            4,
+            'output level',
+            false
+        );
+
+        $this->addOption(
+            'debug',
+            null,
+            4,
+            'output level',
+            false
+        );
+
+        if (version_compare(InstalledVersions::getVersion('symfony/console'), '7.2', '<')) {
+            $this->addOption(
+                'silent',
+                's',
+                4,
+                'output level',
+                false
+            );
+        }
+
         parent::configure();
+    }
+
+    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
+    {
+        $normalizer = new WhitespacePathNormalizer();
+        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+
+        $pathPrefixer = new PathPrefixer('mem://', '/');
+
+        $this->filesystem =
+            new FileSystem(
+                new ReadOnlyFileSystem(
+                    $this->filesystem->getAdapter(),
+                ),
+                [],
+                $normalizer,
+                $pathPrefixer
+            );
+
+        /**
+         * Register a file stream mem:// to handle file operations by third party libraries.
+         *
+         * @var FilesystemRegistry $registry
+         */
+        $registry = ServiceLocator::get(FilesystemRegistry::class);
+        $registry->register('mem', $this->filesystem);
+
+        return $filesystem;
     }
 
     /**
@@ -100,6 +170,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+//        $this->setLogger($this->getIOLogger($input, $output));
+
         try {
             $this->logger->notice('Starting... '/** version */); // + PHP version
 
@@ -107,6 +179,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->loadConfigFromComposerJson();
             $this->updateConfigFromCli($input);
 
+            // Checks dry-run, replaces filesystem and logger.
             parent::execute($input, $output);
 
             $this->buildDependencyList();
@@ -156,7 +229,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $composerFilePath = $this->filesystem->makeAbsolute(
             $this->filesystem->normalizePath(
-                $this->workingDir . '/' . Factory::getComposerFile()
+                $this->workingDir . '/' .Factory::getComposerFile()
             )
         );
         $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/composer.json');
@@ -164,6 +237,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger->info('Using: ' . $composerFilePath);
         }
 
+        $composerFilePath = $this->filesystem->normalizePath($composerFilePath);
+        $composerFilePath = $this->filesystem->makeAbsolute($composerFilePath);
         $this->projectComposerPackage = new ProjectComposerPackage($composerFilePath);
 
         // TODO: Print the config that Strauss is using.
@@ -231,6 +306,30 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
 
         // TODO: Print the dependency tree that Strauss has determined.
+
+        $symlinkedDependencies = array_filter($this->flatDependencyTree, fn ($dependency) => $dependency->getPackageAbsolutePath() !== $dependency->getRealPath());
+
+        if (!empty($symlinkedDependencies) &&
+            ($this->config->isDeleteVendorFiles() || ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()))
+        ) {
+            $list = implode(
+                ', ',
+                array_map(
+                    fn($dependency) => $dependency->getPackageName(),
+                    $symlinkedDependencies
+                )
+            );
+            $this->logger->error(
+                sprintf(
+                    'Symlinked package%s detected: %s',
+                    count($symlinkedDependencies) ? 's' : '',
+                    $list
+                )
+            );
+            // https://stackoverflow.com/a/65009324/336146
+            $this->logger->notice('Use `COMPOSER_MIRROR_PATH_REPOS=1 composer install` to copy symlinked packages to vendor directory.');
+            throw new Exception();
+        }
     }
 
 
@@ -262,18 +361,18 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $psr4autoloadKey = $autoloadKey['psr-4'];
             $namespaces = array_keys($psr4autoloadKey);
 
-            $file = new File($package->getPackageAbsolutePath() . '/composer.json', '/../composer.json');
+            $file = new File(
+                $package->getPackageAbsolutePath() . '/composer.json',
+                '/../composer.json',
+                $package->getPackageAbsolutePath() . '/composer.json',
+            );
 
             foreach ($namespaces as $namespace) {
                 // TODO: log.
                 $symbol = new NamespaceSymbol(
                     trim($namespace, '\\'),
-                    $file,
-                    '\\',
-                    $package
+                    $file
                 );
-                // TODO: respect all config options.
-//              $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
                 $this->discoveredSymbols->add($symbol);
             }
         }

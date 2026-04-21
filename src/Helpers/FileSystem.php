@@ -3,8 +3,6 @@
  * This class extends Flysystem's Filesystem class to add some additional functionality, particularly around
  * symlinks which are not supported by Flysystem.
  *
- * TODO: Delete and modify operations on files in symlinked directories should fail with a warning.
- *
  * @see https://github.com/thephpleague/flysystem/issues/599
  */
 
@@ -12,8 +10,10 @@ namespace BrianHenryIE\Strauss\Helpers;
 
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
+use League\Flysystem\Config;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
+use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
@@ -21,7 +21,7 @@ use League\Flysystem\PathNormalizer;
 use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 
-class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, PathNormalizer
+class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCompatTraitInterface, PathNormalizer
 {
     use FlysystemBackCompatTrait;
 
@@ -29,43 +29,70 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
 
     protected PathNormalizer $normalizer;
 
-    protected PathPrefixer $pathPrefixer;
+    /**
+     * @var PathPrefixer
+     */
+    protected $pathPrefixer;
 
-    /** No trailing slash */
-    protected string $workingDir;
+    /**
+     * @var ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter|FilesystemAdapter
+     */
+    protected $flysystemAdapter;
+
+    /**
+     * For calculating absolute paths outside the flysystem.
+     *
+     * No trailing slash.
+     *
+     * @var false|string
+     */
+    protected string $localFsLocation;
+
+    /**
+     * Private in parent class.
+     */
+    protected Config $config;
 
     /**
      * TODO: maybe restrict the constructor to only accept a LocalFilesystemAdapter.
      *
      * TODO: Check are any of these methods unused
      *
-     * @param FilesystemOperator $flysystem
-     * @param string $workingDir
-     * @param ?string $flysystemRoot In practice we always use the root of the drive which can be inferred from workingDir but that's not strictly required.
+     * @param ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter $adapter
+     * @param array $config
+     * @param PathNormalizer|null $pathNormalizer
      */
     public function __construct(
-        FilesystemOperator $flysystem,
-        string $workingDir,
-        ?string $flysystemRoot = null
+        FilesystemAdapter $adapter,
+        array $config = [],
+        ?PathNormalizer $pathNormalizer = null,
+        $pathPrefixer = null,
+        ?string $localFsLocation = null
     ) {
-        $this->flysystem = $flysystem;
-
-        $this->normalizer = self::makePathNormalizer($workingDir);
-
-        $this->workingDir = $workingDir;
-
-        $this->pathPrefixer = new PathPrefixer(
-            $flysystemRoot ?? self::getFsRoot($workingDir),
+        $localFsLocation        = $localFsLocation ?? self::getFsRoot(getcwd());
+        $pathNormalizer         = $pathNormalizer ?? self::makePathNormalizer($localFsLocation);
+        $pathPrefixer           = $pathPrefixer ?? new PathPrefixer(
+            $localFsLocation,
             DIRECTORY_SEPARATOR
         );
+
+        parent::__construct($adapter, $config, $pathNormalizer);
+
+        $this->config = new Config($config);
+
+        // Parent is private.
+        $this->normalizer       = $pathNormalizer;
+        $this->pathPrefixer     = $pathPrefixer;
+        $this->flysystemAdapter = $adapter;
+        $this->localFsLocation     = $localFsLocation;
     }
 
-    public static function getFsRoot(?string $path = null): string
+    public static function getFsRoot(?string $path = null): ?string
     {
         if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?? getcwd(), $output_array)) {
             return strtoupper($output_array[1]);
         }
-        return '/';
+        return null;
     }
 
     public static function makePathNormalizer(string $workingDir): PathNormalizer
@@ -76,7 +103,8 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             ],
             new StripFsRootPathNormalizer(
                 [
-                    FileSystem::getFsRoot($workingDir),
+                    str_replace('\\', '/', FileSystem::getFsRoot($workingDir)),
+                    str_replace('/', '\\', FileSystem::getFsRoot($workingDir)),
                     Filesystem::getFsRoot(),
                     Filesystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                     'c:\\',
@@ -84,6 +112,16 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
                 ]
             )
         );
+    }
+
+    public function getAdapter(): FilesystemAdapter
+    {
+        return $this->flysystemAdapter;
+    }
+
+    public function setAdapter(FilesystemAdapter $flysystemAdapter): void
+    {
+        $this->flysystemAdapter = $flysystemAdapter;
     }
 
     /**
@@ -127,17 +165,16 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             /** @var FileAttributes[] $fileAttributesArray */
             $fileAttributesArray = $directoryListing->toArray();
 
-
-            $f = array_map(
+            $paths = array_map(
                 fn(StorageAttributes $attributes): string => $this->makeAbsolute($attributes->path()),
                 $fileAttributesArray
             );
 
             if ($excludeDirectories) {
-                $f = array_filter($f, fn($path) => !$this->directoryExists($path));
+                $paths = array_filter($paths, fn($path) => !$this->directoryExists($path));
             }
 
-            $files = array_merge($files, $f);
+            $files = array_merge($files, $paths);
         }
 
         return $files;
@@ -177,144 +214,163 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
 
     public function fileExists(string $location): bool
     {
-        return $this->flysystem->fileExists(
+        return $this->flysystemAdapter->fileExists(
             $this->normalizePath($location)
         );
     }
 
     public function read(string $location): string
     {
-        return $this->flysystem->read(
+        return $this->flysystemAdapter->read(
             $this->normalizePath($location)
         );
     }
 
     public function readStream(string $location)
     {
-        return $this->flysystem->readStream(
+        return $this->flysystemAdapter->readStream(
             $this->normalizePath($location)
         );
     }
 
     public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
     {
-        return $this->flysystem->listContents(
+        return new DirectoryListing($this->flysystemAdapter->listContents(
             $this->normalizePath($location),
             $deep
-        );
+        ));
     }
 
+    /**
+     * @see \League\Flysystem\Filesystem::lastModified()
+     */
     public function lastModified(string $path): int
     {
-        return $this->flysystem->lastModified(
+        return $this->flysystemAdapter->lastModified(
             $this->normalizePath($path)
-        );
+        )->lastModified();
     }
 
     public function fileSize(string $path): int
     {
-        return $this->flysystem->fileSize(
+        return $this->flysystemAdapter->fileSize(
             $this->normalizePath($path)
-        );
+        )->fileSize();
     }
 
     public function mimeType(string $path): string
     {
-        return $this->flysystem->mimeType(
+        return $this->flysystemAdapter->mimeType(
             $this->normalizePath($path)
-        );
+        )->mimeType();
     }
 
+    /**
+     * @see \League\Flysystem\Filesystem::visibility()
+     */
     public function visibility(string $path): string
     {
-        return $this->flysystem->visibility(
+        return $this->flysystemAdapter->visibility(
             $this->normalizePath($path)
-        );
+        )->visibility();
     }
 
     /**
      * @param array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function write(string $location, string $contents, array $config = []): void
+    public function write(string $location, $contents, array $config = []): void
     {
-        $this->flysystem->write(
+        $this->flysystemAdapter->write(
             $this->normalizePath($location),
             $contents,
-            $config
+            $this->config->extend($config)
         );
     }
 
     /**
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function writeStream(string $location, $contents, array $config = []): void
+    public function writeStream(string $location, $contents, $config = []): void
     {
-        $this->flysystem->writeStream(
+        $this->rewindStream($contents);
+        $this->flysystemAdapter->writeStream(
             $this->normalizePath($location),
             $contents,
-            $config
+            $this->config->extend($config)
         );
+//        fclose($contents);
     }
+
+    /**
+     * @param resource $resource
+     */
+    private function rewindStream($resource): void
+    {
+        if (ftell($resource) !== 0 && stream_get_meta_data($resource)['seekable']) {
+            rewind($resource);
+        }
+    }
+
 
     public function setVisibility(string $path, string $visibility): void
     {
-        $this->flysystem->setVisibility(
-            $this->normalizePath($path),
+        $this->flysystemAdapter->setVisibility(
+            $this->normalizer->normalizePath($path),
             $visibility
         );
     }
 
     public function delete(string $location): void
     {
-        $this->flysystem->delete(
-            $this->normalizePath($location)
+        $this->flysystemAdapter->delete(
+            $this->normalizer->normalizePath($location)
         );
     }
 
     public function deleteDirectory(string $location): void
     {
-        $this->flysystem->deleteDirectory(
+        $this->flysystemAdapter->deleteDirectory(
             $this->normalizePath($location)
         );
     }
 
     /**
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function createDirectory(string $location, array $config = []): void
+    public function createDirectory(string $location, $config = []): void
     {
-        $this->flysystem->createDirectory(
+        $this->flysystemAdapter->createDirectory(
             $this->normalizePath($location),
-            $config
+            $this->config->extend($config)
         );
     }
 
     /**
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function move(string $source, string $destination, array $config = []): void
+    public function move(string $source, string $destination, $config = []): void
     {
-        $this->flysystem->move(
+        $this->flysystemAdapter->move(
             $this->normalizePath($source),
             $this->normalizePath($destination),
-            $config
+            $this->config->extend($config)
         );
     }
 
     /**
-     * @param array{visibility?:string} $config
+     * @param Config|array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function copy(string $source, string $destination, array $config = []): void
+    public function copy(string $source, string $destination, $config = []): void
     {
-        $this->flysystem->copy(
+        $this->flysystemAdapter->copy(
             $this->normalizePath($source),
             $this->normalizePath($destination),
-            $config
+            $this->config->extend($config)
         );
     }
 
@@ -359,13 +415,14 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
         // What will happen with strings that are not paths?!
 
         return $this->getRelativePath(
-            $this->workingDir,
+            $this->localFsLocation,
             $absolutePath
         );
     }
 
     /**
      * Check does the filepath point to a file outside the working directory.
+     * Check is a file under a symlinked path.
      *
      * @throws FilesystemException
      * @throws Exception
@@ -388,7 +445,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             return true;
         }
 
-        $workingDir = $this->normalizePath($this->workingDir);
+        $workingDir = $this->normalizePath($this->localFsLocation);
 
         return ! str_starts_with($normalizedPath, $workingDir);
     }
@@ -420,8 +477,20 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      */
     public function makeAbsolute(string $path): string
     {
-        $normalizedPath = self::normalizeDirSeparator($path);
-        $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->workingDir));
+        $fsRoot = self::getFsRoot($this->localFsLocation);
+
+        // If this is already prefixed with the drive(fs) root.
+        if (stripos($path, $fsRoot) === 0 || stripos($path, self::normalizeDirSeparator($fsRoot)) === 0) {
+            return $path;
+        }
+
+        $normalizedPath = $this->normalizePath($path);
+
+        if (strtolower(self::getFsRoot($this->localFsLocation)) === strtolower(self::getFsRoot($normalizedPath))) {
+            return $path;
+        }
+
+        $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->localFsLocation));
 
         if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
             return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
@@ -429,9 +498,9 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
 
         $prefixed = $this->pathPrefixer->prefixPath($this->normalizePath($path));
 
-        if ($this->flysystem instanceof ReadOnlyFileSystem) {
-            return str_replace(':/', '://', $prefixed);
-        }
+//        if ($this->flysystemAdapter instanceof ReadOnlyFileSystem) {
+//            return str_replace(':/', '://', $prefixed);
+//        }
 
         return self::normalizeDirSeparator($prefixed, DIRECTORY_SEPARATOR);
     }
@@ -454,5 +523,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
         }
 
         return empty($fsList);
+    }
+
+    public function getNormalizer(): PathNormalizer
+    {
+        return $this->normalizer;
     }
 }

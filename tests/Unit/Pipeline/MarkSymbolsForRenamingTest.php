@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
@@ -30,6 +31,8 @@ class MarkSymbolsForRenamingTest extends TestCase
     {
         $package = Mockery::mock(ComposerPackage::class);
         $package->shouldReceive('getPackageName')->andReturn('psr/log');
+        $package->shouldReceive('getPackageAbsolutePath')->andReturn('project/vendor/psr/log');
+        $package->shouldReceive('addFile');
 
         $config = Mockery::mock(MarkSymbolsForRenamingConfigInterface::class);
         $config->shouldReceive('getExcludePackagesFromCopy')->andReturn(['psr/log']);
@@ -48,17 +51,22 @@ class MarkSymbolsForRenamingTest extends TestCase
 
         $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
 
-        $file = new File('/vendor/psr/log/src/LoggerInterface.php', 'psr/log/src/LoggerInterface.php');
-        $symbol = new NamespaceSymbol('Psr\Log', $file, '\\', $package);
+        $file = new FileWithDependency(
+            $package,
+            'psr/log/src/LoggerInterface.php',
+            'project/vendor/psr/log/src/LoggerInterface.php',
+            'project/vendor-prefixed/psr/log/src/LoggerInterface.php'
+        );
+        $symbol = new NamespaceSymbol('Psr\Log', $file);
 
-        self::assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
+        $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($symbol);
 
         $sut->scanSymbols($discoveredSymbols);
 
-        self::assertFalse($symbol->isDoRename(), 'Symbol from excluded package should have doRename=false');
+        $this->assertFalse($symbol->isDoRename(), 'Symbol from excluded package should have doRename=false');
     }
 
     /**
@@ -91,17 +99,21 @@ class MarkSymbolsForRenamingTest extends TestCase
 
         $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
 
-        $file = new File('/vendor/monolog/monolog/src/Logger.php', 'monolog/monolog/src/Logger.php');
-        $symbol = new NamespaceSymbol('Monolog', $file, '\\', $package);
+        $file = new File(
+            'vendor/monolog/monolog/src/Logger.php',
+            'monolog/monolog/src/Logger.php',
+            'vendor-prefixed/monolog/monolog/src/Logger.php'
+        );
+        $symbol = new NamespaceSymbol('Monolog', $file);
 
-        self::assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
+        $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($symbol);
 
         $sut->scanSymbols($discoveredSymbols);
 
-        self::assertTrue($symbol->isDoRename(), 'Symbol from non-excluded package should remain doRename=true');
+        $this->assertTrue($symbol->isDoRename(), 'Symbol from non-excluded package should remain doRename=true');
     }
 
     /**
@@ -133,18 +145,22 @@ class MarkSymbolsForRenamingTest extends TestCase
 
         $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
 
-        $file = new File('/vendor/some/package/src/bootstrap.php', 'some/package/src/bootstrap.php');
+        $file = new File(
+            'vendor/some/package/src/bootstrap.php',
+            'some/package/src/bootstrap.php',
+            'vendor-prefixed/some/package/src/bootstrap.php'
+        );
         $file->setIsAutoloaded(true);
 
-        $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file, '\\', $package);
+        $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file);
 
-        self::assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
+        $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($symbol);
 
         $sut->scanSymbols($discoveredSymbols);
 
-        self::assertFalse($symbol->isDoRename(), 'Constant in exclude_constants.constants should have doRename=false');
+        $this->assertFalse($symbol->isDoRename(), 'Constant in exclude_constants.constants should have doRename=false');
     }
 }

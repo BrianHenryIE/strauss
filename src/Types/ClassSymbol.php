@@ -7,7 +7,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 /**
  * @phpstan-import-type ClassAliasArray from AutoloadAliasInterface
  */
-class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
+class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
 {
     protected ?string $extends;
     protected bool $isAbstract;
@@ -29,7 +29,7 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         string $fqdnClassname,
         FileBase $sourceFile,
         bool $isAbstract = false,
-        string $namespace = '\\',
+        ?NamespaceSymbol $namespace = null,
         ?string $extends = null,
         array $interfaces = []
     ) {
@@ -58,20 +58,6 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return $this->isAbstract;
     }
 
-    public function getOriginalSymbolStripPrefix(string $class_prefix): string
-    {
-        $fqdnOriginalSymbol = $this->fqdnOriginalSymbol;
-
-        while (str_starts_with($fqdnOriginalSymbol, $class_prefix) && $class_prefix !== $fqdnOriginalSymbol) {
-            $fqdnOriginalSymbol = preg_replace('/^'.preg_quote($class_prefix).'/', '', $fqdnOriginalSymbol);
-            if (is_null($fqdnOriginalSymbol)) {
-                return $this->fqdnOriginalSymbol;
-            }
-        }
-
-        return $fqdnOriginalSymbol;
-    }
-
     /**
      * @return ClassAliasArray
      */
@@ -81,8 +67,8 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
             'type' => 'class',
             'classname' => $this->getOriginalLocalName(),
             'isabstract' => $this->isAbstract,
-            'namespace' => $this->namespace,
-            'extends' => $this->getReplacement(),
+            'namespace' => $this->namespace->getOriginalSymbol(),
+            'extends' => $this->getReplacementFqdnName(),
             'implements' => $this->interfaces,
         );
     }

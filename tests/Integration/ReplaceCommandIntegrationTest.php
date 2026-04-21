@@ -10,6 +10,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues

@@ -2,12 +2,29 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter as LeagueInMemoryFilesystemAdapter;
+use League\Flysystem\PathNormalizer;
+use League\Flysystem\WhitespacePathNormalizer;
 
-class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter
+class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter implements FlysystemBackCompatTraitInterface
 {
+    use FlysystemBackCompatTrait;
+
+    protected PathNormalizer $normalizer;
+
+    /**
+     * @see FlysystemBackCompatTrait::directoryExists()
+     */
+    public function getNormalizer(): PathNormalizer
+    {
+        if (!isset($this->normalizer)) {
+            $this->normalizer = new StripProtocolPathNormalizer(['mem'], new WhitespacePathNormalizer());
+        }
+        return $this->normalizer;
+    }
 
     public function visibility(string $path): FileAttributes
     {
@@ -42,7 +59,7 @@ class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter
         parent::copy($source, $destination, $config);
     }
 
-    public function write(string $path, string $contents, Config $config): void
+    public function write(string $path, $contents, Config $config): void
     {
         // Make sure there is a directory for the file to be written to.
         if (false === strpos($path, '______DUMMY_FILE_FOR_FORCED_LISTING_IN_FLYSYSTEM_TEST')) {

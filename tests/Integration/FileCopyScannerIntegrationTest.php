@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
@@ -58,7 +59,9 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor'));
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $targetDir = $this->testsWorkingDir . '/vendor-prefixed';
@@ -107,7 +110,7 @@ EOD;
         self::assertNotEmpty($classes, 'Discovered classes should not be empty after scanning google/apiclient');
         self::assertNotEmpty($namespaces, 'Discovered namespaces should not be empty after scanning google/apiclient');
 
-        self::assertContains('Google_Task_Composer', $classes);
+        self::assertArrayHasKey('Google_Task_Composer', $classes->toArray());
     }
 
     /**

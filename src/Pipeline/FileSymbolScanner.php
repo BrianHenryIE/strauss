@@ -102,7 +102,7 @@ class FileSymbolScanner
             }
 
             $relativeFilePath = $this->filesystem->getRelativePath(
-                $this->config->getProjectDirectory(),
+                $this->config->getProjectAbsolutePath(),
                 $file->getSourcePath()
             );
 
@@ -115,20 +115,19 @@ class FileSymbolScanner
             $this->logger->info("Scanning file:::" . $relativeFilePath);
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
-                $file,
-                $file instanceof FileWithDependency ? $file->getDependency() : null
+                $file
             );
         }
 
         return $this->discoveredSymbols;
     }
 
-    protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
+    protected function find(string $contents, ?FileBase $file = null): void
     {
         $namespaces = $this->splitByNamespace($contents);
 
         foreach ($namespaces as $namespaceName => $contents) {
-            $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
+            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file);
 
             PhpCodeParser::$classExistsAutoload = false;
             $phpCode = PhpCodeParser::getFromString($contents);
@@ -146,7 +145,7 @@ class FileSymbolScanner
                 $isAbstract = (bool) $class->is_abstract;
                 $extends     = $class->parentClass;
                 $interfaces  = $class->interfaces;
-                $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $namespaceName, $extends, $interfaces);
+                $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $extends, $namespaceSymbol, $interfaces);
             }
 
             /** @var PHPFunction[] $phpFunctions */
@@ -155,27 +154,43 @@ class FileSymbolScanner
                 if (in_array($functionName, $this->getBuiltIns())) {
                     continue;
                 }
-                $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceName, $package);
-                $this->add($functionSymbol);
+                $functionSymbol = $this->discoveredSymbols->getFunction($functionName);
+                if (is_null($functionSymbol)) {
+                    $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceSymbol);
+                    $this->add($functionSymbol);
+                }
+                $functionSymbol->addSourceFile($file);
             }
 
             /** @var PHPConst[] $phpConstants */
             $phpConstants = $phpCode->getConstants();
             foreach ($phpConstants as $constantName => $constant) {
-                $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName, $package);
-                $this->add($constantSymbol);
+                $constantSymbol = $this->discoveredSymbols->getConst($constantName);
+                if (is_null($constantSymbol)) {
+                    $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceSymbol);
+                    $this->add($constantSymbol);
+                }
+                $constantSymbol->addSourceFile($file);
             }
 
             $phpInterfaces = $phpCode->getInterfaces();
             foreach ($phpInterfaces as $interfaceName => $interface) {
-                $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceName, $package);
-                $this->add($interfaceSymbol);
+                $interfaceSymbol = $this->discoveredSymbols->getInterface($interfaceName);
+                if (is_null($interfaceSymbol)) {
+                    $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceSymbol);
+                    $this->add($interfaceSymbol);
+                }
+                $interfaceSymbol->addSourceFile($file);
             }
 
-            $phpTraits =  $phpCode->getTraits();
+            $phpTraits = $phpCode->getTraits();
             foreach ($phpTraits as $traitName => $trait) {
-                $traitSymbol = new TraitSymbol($traitName, $file, $namespaceName, $package);
-                $this->add($traitSymbol);
+                $traitSymbol = $this->discoveredSymbols->getTrait($traitName);
+                if (is_null($traitSymbol)) {
+                    $traitSymbol = new TraitSymbol($traitName, $file, $namespaceSymbol);
+                    $this->add($traitSymbol);
+                }
+                $traitSymbol->addSourceFile($file);
             }
         }
     }
@@ -228,16 +243,16 @@ class FileSymbolScanner
      * @param string $fqdnClassname
      * @param bool $isAbstract
      * @param FileBase $file
-     * @param string $namespaceName
      * @param ?string $extends
+     * @param NamespaceSymbol|null $namespace
      * @param string[] $interfaces
      */
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,
         FileBase $file,
-        string $namespaceName,
         ?string $extends,
+        ?NamespaceSymbol $namespace,
         array $interfaces
     ): void {
         // TODO: This should be included but marked not to prefix.
@@ -245,22 +260,24 @@ class FileSymbolScanner
             return;
         }
 
-        $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespaceName, $extends, $interfaces);
-        $this->add($classSymbol);
+        $classSymbol = $this->discoveredSymbols->getClass($fqdnClassname);
+        if (is_null($classSymbol)) {
+            $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespace, $extends, $interfaces);
+            $this->add($classSymbol);
+        }
+        $classSymbol->addSourceFile($file);
     }
 
-    protected function addDiscoveredNamespaceChange(string $namespace, FileBase $file, ?ComposerPackage $package = null): void
+    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, ?FileBase $file = null): NamespaceSymbol
     {
-        $namespaceObj = $this->discoveredSymbols->getNamespace($namespace);
-        if ($namespaceObj) {
-            $namespaceObj->addSourceFile($file);
-            $file->addDiscoveredSymbol($namespaceObj);
-            return;
-        } else {
-            $namespaceObj = new NamespaceSymbol($namespace, $file, '\\', $package);
+        $namespaceObj = $this->discoveredSymbols->getNamespace($fqdnNamespace);
+        if (is_null($namespaceObj)) {
+            $namespaceObj = new NamespaceSymbol($fqdnNamespace, $file);
+            $this->add($namespaceObj);
         }
-
-        $this->add($namespaceObj);
+        $namespaceObj->addSourceFile($file);
+        $file->addDiscoveredSymbol($namespaceObj);
+        return $namespaceObj;
     }
 
     /**

@@ -93,6 +93,19 @@ class DependenciesEnumerator
     {
         $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
 
+        $installedJsonPath = $this->filesystem->makeAbsolute(
+            sprintf(
+                "%s/composer/installed.json",
+                $this->config->getAbsoluteVendorDirectory()
+            )
+        );
+        $installedJsonTxt = $this->filesystem->read($installedJsonPath);
+        $installedJson = json_decode($installedJsonTxt, true);
+        $installedJsonPackages = [];
+        foreach ($installedJson['packages'] as $package) {
+            $installedJsonPackages[$package['name']] = $package;
+        }
+
         foreach ($requiredPackageNames as $requiredPackageName) {
             // Avoid infinite recursion.
             if (isset($this->flatDependencyTree[$requiredPackageName])) {
@@ -125,7 +138,7 @@ class DependenciesEnumerator
                 $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock: ' . $packageComposerFile);
 
                 // TODO: These (.json, .lock) should be read once and reused.
-                $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . '/' . Factory::getComposerFile());
+                $composerJsonString = $this->filesystem->read($this->config->getProjectAbsolutePath() . '/' . Factory::getComposerFile());
                 /** @var ComposerJsonArray $composerJson */
                 $composerJson       = json_decode($composerJsonString, true, 512, JSON_THROW_ON_ERROR);
 
@@ -134,7 +147,7 @@ class DependenciesEnumerator
                     continue;
                 }
 
-                $composerLockPath = $this->config->getProjectDirectory() . '/' . Factory::getLockFile(Factory::getComposerFile());
+                $composerLockPath = $this->config->getProjectAbsolutePath() . '/' . Factory::getLockFile(Factory::getComposerFile());
                 $composerLockString     = $this->filesystem->read($composerLockPath);
                 /** @var null|array{packages:array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray}} $composerLockJsonArray */
                 $composerLockJsonArray           = json_decode($composerLockString, true);
@@ -169,8 +182,26 @@ class DependenciesEnumerator
                     continue;
                 }
 
-                $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
+                $projectVendorAbsoluteDir = $this->config->getAbsoluteVendorDirectory();
+
+                $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload, $projectVendorAbsoluteDir);
             }
+
+            $installedPackage = $installedJsonPackages[$requiredPackageName];
+            if (isset($installedPackage['dist'], $installedPackage['dist']['type']) && $installedPackage['dist']['type'] === 'path') {
+                $path = $installedPackage['dist']['url'];
+
+                $packageRealPath = $this->filesystem->normalizePath($this->config->getProjectAbsolutePath() . '/'.  $path);
+                $requiredComposerPackage->setRealpath(
+                    $packageRealPath
+                );
+            }
+            unset($installedPackage);
+            $requiredComposerPackage->setProjectVendorDirectory(
+                $this->filesystem->normalizePath(
+                    $this->config->getAbsoluteVendorDirectory()
+                )
+            );
 
             $this->logger->info('Analysing package ' . $requiredComposerPackage->getPackageName());
             $this->flatDependencyTree[$requiredComposerPackage->getPackageName()] = $requiredComposerPackage;
