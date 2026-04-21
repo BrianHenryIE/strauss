@@ -374,4 +374,12 @@ class ComposerPackage
     {
         return $this->files[$path] ?? null;
     }
+
+    /**
+     * So it works with `array_unique()`.
+     */
+    public function __toString()
+    {
+        return $this->getPackageName();
+    }
 }

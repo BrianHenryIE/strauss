@@ -111,15 +111,14 @@ abstract class DiscoveredSymbol
      */
     public function getPackages(): array
     {
-        // TODO: `array_unique`.
-        return array_values(array_filter(array_map(
+        return array_values(array_unique(array_filter(array_map(
             function (FileBase $file) {
                 return $file instanceof FileWithDependency
                     ? $file->getDependency()
                     : null;
             },
             $this->getSourceFiles()
-        )));
+        ))));
     }
 
     public function getPackageName(): ?string
