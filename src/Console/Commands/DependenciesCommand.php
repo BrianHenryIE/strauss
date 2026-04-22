@@ -494,20 +494,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $projectFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
 
-        $phpFiles = array_filter(
-            $projectFiles->getFiles(),
-            fn($file) => $file->isPhpFile()
-        );
-
-        $phpFilesAbsolutePaths = array_map(
-            fn($file) => $file->getSourcePath(),
-            $phpFiles
-        );
-
         // TODO: Warn when a file that was specified is not found
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
+        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $projectFiles);
     }
 
     protected function addLicenses(): void

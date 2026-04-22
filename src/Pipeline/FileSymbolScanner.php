@@ -69,7 +69,7 @@ class FileSymbolScanner
     }
 
 
-    protected function add(DiscoveredSymbol $symbol): void
+    protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
     {
         if (in_array($symbol->getOriginalLocalName(), $this->getBuiltIns())) {
             $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
@@ -79,6 +79,10 @@ class FileSymbolScanner
         }
 
         $this->discoveredSymbols->add($symbol);
+
+        if ($file instanceof FileWithDependency) {
+            $file->getDependency()->addDiscoveredSymbol($symbol);
+        }
 
         $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
         $newText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '' : 'new ';
@@ -257,7 +261,7 @@ class FileSymbolScanner
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,
-        FileBase $file,
+        ?FileBase $file,
         ?string $extends,
         ?NamespaceSymbol $namespace,
         array $interfaces
@@ -273,7 +277,7 @@ class FileSymbolScanner
         $classSymbol = $this->discoveredSymbols->getClass($fqdnClassname);
         if (is_null($classSymbol)) {
             $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespace, $extends, $interfaces);
-            $this->add($classSymbol);
+            $this->add($classSymbol, $file);
         }
         $classSymbol->addSourceFile($file);
     }

@@ -236,17 +236,12 @@ class ReplaceCommand extends AbstractRenamespacerCommand
             $this->logger
         );
 
-        $phpFilePaths = $fileEnumerator->compileFileListForPaths($callSitePaths);
+        $files = $fileEnumerator->compileFileListForPaths($callSitePaths);
 
         // TODO: Warn when a file that was specified is not found (during config validation).
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
-        $phpFilesAbsolutePaths = array_map(
-            fn($file) => $file->getSourcePath(),
-            $phpFilePaths->getFiles()
-        );
-
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
+        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $files);
     }
 
 

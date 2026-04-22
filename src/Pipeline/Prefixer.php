@@ -3,10 +3,12 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -111,7 +113,7 @@ class Prefixer
          */
         $contents = $this->filesystem->read($file->getTargetAbsolutePath());
 
-        $updatedContents = $this->replaceInString($discoveredSymbols, $contents, $file->getTargetAbsolutePath());
+        $updatedContents = $this->replaceInString($discoveredSymbols, $contents, $file);
 
         if ($updatedContents !== $contents) {
             // TODO: diff here and debug log.
@@ -129,13 +131,22 @@ class Prefixer
 
     /**
      * @param DiscoveredSymbols $discoveredSymbols
-     * @param string[] $absoluteFilePathsArray
+     * @param DiscoveredFiles $projectFiles
      *
      * @return void
      * @throws FilesystemException
      */
-    public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, array $absoluteFilePathsArray): void
+    public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, DiscoveredFiles $projectFiles): void
     {
+        $phpFiles = array_filter(
+            $projectFiles->getFiles(),
+            fn($file) => $file->isPhpFile()
+        );
+
+        $absoluteFilePathsArray = array_map(
+            fn($file) => $file->getSourcePath(),
+            $phpFiles
+        );
 
         foreach ($absoluteFilePathsArray as $fileAbsolutePath) {
             $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
@@ -161,7 +172,7 @@ class Prefixer
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
 
-            $updatedContents = $this->replaceInString($discoveredSymbols, $contents, $fileAbsolutePath);
+            $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
 
             if ($updatedContents !== $contents) {
                 $this->changedFiles[$fileAbsolutePath] = null;
@@ -179,8 +190,10 @@ class Prefixer
      *
      * @throws Exception
      */
-    public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents, ?string $fileAbsolutePath = null): string
+    public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents, ?FileBase $file = null): string
     {
+        $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
+
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces()->getToRename();
         $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix())->getToRename();
         $functions = $discoveredSymbols->getDiscoveredFunctions()->getToRename();
@@ -251,7 +264,6 @@ class Prefixer
             $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
         }
 
-        // TODO: Use AST.
         foreach ($functions as $functionSymbol) {
             $contents = $this->replaceFunctions($contents, $functionSymbol);
         }
@@ -264,13 +276,38 @@ class Prefixer
         // The following are for replacing symbols inside strings.
         // TODO: When functions and constants are implemented via AST, their respective string replacement part will need to be added here.
 
+        // Only search for symbols that might possibly be in this file.
+        // TODO: During the initial AST parse which now find symbols defined in a file, also record the symbols used in the file
+        if ($file instanceof FileWithDependency && !($file->getDependency() instanceof ProjectComposerPackage)) {
+            $discoveredSymbols = $file->getDependency()->getDiscoveredSymbolsDeep();
+        }
+
+        $this->logger->debug('Searching in {filename} for {count} symbol as string', [
+            'filename' => basename($fileAbsolutePath),
+            'count' => count($discoveredSymbols->toArray()),
+        ]);
+
         // TODO: filter to only namespaces of more than a single depth.
+        /** @var NamespaceSymbol $namespaceSymbol */
         foreach ($discoveredSymbols->getNamespaces()->getToRename() as $namespaceSymbol) {
+            $this->logger->debug('Searching in {filename} for {type} {name}', [
+                'filename' => basename($fileAbsolutePath),
+                'type' => get_class($namespaceSymbol),
+                'name' => $namespaceSymbol->getOriginalLocalName()
+            ]);
+
             $contents = $this->replaceSingleClassnameInString($contents, $namespaceSymbol);
         }
 
         /** @var ClassSymbol $classSymbol */
         foreach ($discoveredSymbols->getClassesInterfacesTraits()->getToRename() as $classSymbol) {
+
+            $this->logger->debug('Searching in {filename} for {type} {name}', [
+                'filename' => basename($fileAbsolutePath),
+                'type' => get_class($classSymbol),
+                'name' => $classSymbol->getOriginalLocalName(),
+            ]);
+
             $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
         }
 
