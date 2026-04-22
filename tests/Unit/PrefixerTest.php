@@ -21,6 +21,7 @@ use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use Mockery;
 use PhpParser\ParserFactory;
+use Symfony\Component\Console\Application as BaseApplication;
 
 /**
  * Class ReplacerTest
@@ -4437,6 +4438,66 @@ EOD;
 
         $this->assertEqualsRN($expected, $result);
     }
+
+    public function test_use_class_as_alias(): void
+    {
+        $contents = <<<'EOD'
+<?php
+namespace BrianHenryIE\Strauss\Console;
+
+use Symfony\Component\Console\Application as BaseApplication;
+
+class Application extends BaseApplication
+{
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+namespace BrianHenryIE\Strauss\Console;
+
+use BrianHenryIE\Strauss\Vendor\Symfony\Component\Console\Application as BaseApplication;
+
+class Application extends BaseApplication
+{
+}
+EOD;
+
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+//        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
+        $config->expects('isTargetDirectoryVendor')->andReturnFalse();
+        $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(false);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $namespaceSymbol = new NamespaceSymbol('Symfony\Component\Console\Application', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Vendor\Symfony\Component\Console');
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Symfony\Component\Console\Application\Application', $file, false, $namespaceSymbol);
+        $classSymbol->setDoRename(false);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+
 
     // Commenting out test that is not failing as required.
 //    public function test_global_class(): void
