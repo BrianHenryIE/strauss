@@ -109,7 +109,7 @@ class FileSymbolScanner
         foreach ($files->getFiles() as $file) {
             if ($file instanceof FileWithDependency && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
                 /**
-                 * We will not prefix symbols found in this file because it is in an excluded package.
+                 * We will not prefix symbols found in this file because it is not in a default or listed package.
                  *
                  * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
                  */
@@ -283,7 +283,10 @@ class FileSymbolScanner
             $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespace, $extends, $interfaces);
             $this->add($classSymbol, $file);
         }
-        $classSymbol->addSourceFile($file);
+        if ($file) {
+            $classSymbol->addSourceFile($file);
+            $file->addDiscoveredSymbol($classSymbol);
+        }
     }
 
     protected function addDiscoveredNamespaceChange(string $fqdnNamespace, ?FileBase $file = null): NamespaceSymbol
