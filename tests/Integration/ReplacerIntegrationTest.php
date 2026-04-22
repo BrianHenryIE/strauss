@@ -358,4 +358,38 @@ JSON;
         $this->assertStringNotContainsString("if ('Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
         $this->assertStringContainsString("if ('BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
     }
+
+    /**
+     * @see Prefixer::replaceSingleClassnameInString()
+     */
+    public function test_replace_string(): void
+    {
+        $composerJsonString = <<<'JSON'
+{
+    "name": "brianhenryie/test-replace-string",
+    "require": {
+      "justinrainbow/json-schema": "6.8.0"
+    },
+    "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+    }
+  }
+}
+JSON;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/justinrainbow/json-schema/src/JsonSchema/Constraints/Factory.php');
+
+        $this->assertStringNotContainsString("'array' => 'JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
+        $this->assertStringContainsString("'array' => 'BrianHenryIE\Strauss\JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
+    }
 }
