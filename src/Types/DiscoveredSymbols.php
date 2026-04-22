@@ -353,26 +353,31 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return $this->toArray();
     }
 
+    #[\ReturnTypeWillChange]
     public function getIterator()
     {
         return new ArrayIterator($this->toArray());
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return in_array($offset, $this->toArray(), true);
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->toArray()[$offset] ?? null;
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         throw new \BadMethodCallException();
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         throw new \BadMethodCallException();
@@ -381,6 +386,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     /**
      * So `count( $discoveredSymbols )` will work.
      */
+    #[\ReturnTypeWillChange]
     public function count()
     {
         return array_reduce(
