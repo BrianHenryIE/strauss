@@ -49,6 +49,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected FileSystem $inMemoryFilesystem;
 
+    protected FileSystem $filesystem;
+
     protected function setUp(): void
     {
         parent::setUp();
