@@ -71,6 +71,13 @@ class FileSymbolScanner
 
     protected function add(DiscoveredSymbol $symbol): void
     {
+        if (in_array($symbol->getOriginalLocalName(), $this->getBuiltIns())) {
+            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
+                'symbolName' => $symbol->getOriginalLocalName(),
+            ]);
+            return;
+        }
+
         $this->discoveredSymbols->add($symbol);
 
         $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
@@ -257,6 +264,9 @@ class FileSymbolScanner
     ): void {
         // TODO: This should be included but marked not to prefix.
         if (in_array($fqdnClassname, $this->getBuiltIns())) {
+            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
+                'symbolName' => $fqdnClassname,
+            ]);
             return;
         }
 
