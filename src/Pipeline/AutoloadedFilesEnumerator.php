@@ -176,6 +176,11 @@ class AutoloadedFilesEnumerator
                 ]);
             } else {
                 $file->setIsAutoloaded(true);
+                /**
+                 * We are assuming at this point that we will rename all autoloaded PHP files. Rules will be applied later.
+                 *
+                 * @see MarkSymbolsForRenaming
+                 */
                 $file->setDoPrefix(true);
             }
         }

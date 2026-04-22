@@ -217,6 +217,9 @@ class Prefixer
         $positions = [];
 
         try {
+            $this->logger->debug("Parsing {filePath} AST", [
+                'filePath' => $fileAbsolutePath ?? 'file',
+            ]);
             $ast = $parser->parse($parseContent);
 //                $ast = $parser->parse($parseContent, $errorHandler);
         } catch (\Exception $e) {
@@ -228,6 +231,9 @@ class Prefixer
         }
 
         if (is_null($ast)) {
+            $this->logger->warning("AST parse failed for {filePath}, returning.", [
+                'filePath' => $fileAbsolutePath ?? 'file',
+            ]);
             return $contents;
         }
 
@@ -282,9 +288,13 @@ class Prefixer
             $discoveredSymbols = $file->getDependency()->getDiscoveredSymbolsDeep();
         }
 
-        $this->logger->debug('Searching in {filename} for {count} symbol as string', [
+        $discoveredSymbolsCount = count($discoveredSymbols->toArray());
+        $this->logger->debug(sprintf(
+            'Searching in {filename} for {count} symbol%s as string',
+            $discoveredSymbolsCount === 0 ? '' : 's'
+        ), [
             'filename' => basename($fileAbsolutePath),
-            'count' => count($discoveredSymbols->toArray()),
+            'count' => $discoveredSymbolsCount,
         ]);
 
         // TODO: filter to only namespaces of more than a single depth.

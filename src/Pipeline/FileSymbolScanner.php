@@ -71,7 +71,7 @@ class FileSymbolScanner
 
     protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
     {
-        if (in_array($symbol->getOriginalLocalName(), $this->getBuiltIns())) {
+        if (in_array($symbol->getOriginalSymbol(), $this->getBuiltIns())) {
             $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
                 'symbolName' => $symbol->getOriginalLocalName(),
             ]);
@@ -108,8 +108,12 @@ class FileSymbolScanner
     {
         foreach ($files->getFiles() as $file) {
             if ($file instanceof FileWithDependency && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
-                $doPrefix = false;
-                $file->setDoPrefix($doPrefix);
+                /**
+                 * We will not prefix symbols found in this file because it is in an excluded package.
+                 *
+                 * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
+                 */
+                $file->setDoPrefix(false);
             }
 
             $relativeFilePath = $this->filesystem->getRelativePath(
