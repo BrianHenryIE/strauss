@@ -3,8 +3,6 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\IntegrationTestCase;
-
 class ExcludeFromPrefixFeatureTest extends IntegrationTestCase
 {
 
@@ -53,7 +51,7 @@ EOD;
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.5.0');
 
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/namespaced-files-not-in-autoloader",
 	 "require": {
         "art4/requests-psr18-adapter": "1.3.0"
@@ -81,5 +79,42 @@ EOD;
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/art4/requests-psr18-adapter/v1-compat/autoload.php');
 
         $this->assertStringContainsString("class_exists('WpOrg\\Requests\\Requests')", $php_string);
+    }
+
+    public function test_ClassLoader(): void
+    {
+        $composerJsonString = <<<'EOD'
+{
+    "name": "strauss/exclude-from-prefix",
+    "require": {
+        "composer/composer": "2.9.7"
+    },
+    "extra": {
+        "strauss": {
+            "target_directory": "vendor",
+            "namespace_prefix": "BrianHenryIE\\Strauss\\Vendor\\",
+            "exclude_from_prefix": {
+                "file_patterns": [
+                    "#composer\\/composer\\/src\\/Composer\\/Autoload\\/ClassLoader.php#"
+                ]
+            }
+        }
+    }
+}
+EOD;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+//        $exitCode = $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output, '--info');
+        assert($exitCode === 0, $output);
+
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassLoader.php');
+        $this->assertStringNotContainsString('namespace BrianHenryIE\\Strauss\\Vendor\\Composer\\Autoload;', $phpString);
+        $this->assertStringContainsString('namespace Composer\\Autoload;', $phpString);
     }
 }
