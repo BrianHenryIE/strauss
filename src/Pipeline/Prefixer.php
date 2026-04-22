@@ -305,11 +305,11 @@ class Prefixer
         // TODO: filter to only namespaces of more than a single depth.
         /** @var NamespaceSymbol $namespaceSymbol */
         foreach ($discoveredSymbols->getNamespaces()->getToRename() as $namespaceSymbol) {
-            $this->logger->debug('Searching in {filename} for {type}: {name}', [
-                'filename' => basename($fileAbsolutePath),
-                'type' => array_reverse(explode('\\', get_class($namespaceSymbol)))[0],
-                'name' => $namespaceSymbol->getOriginalLocalName()
-            ]);
+//            $this->logger->debug('Searching in {filename} for {type}: {name}', [
+//                'filename' => basename($fileAbsolutePath),
+//                'type' => array_reverse(explode('\\', get_class($namespaceSymbol)))[0],
+//                'name' => $namespaceSymbol->getOriginalLocalName()
+//            ]);
 
             $contents = $this->replaceSingleClassnameInString($contents, $namespaceSymbol);
         }
