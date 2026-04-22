@@ -185,7 +185,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
             $this->logger->notice('Done');
         } catch (Exception $e) {
-            $this->logger->error($e->getMessage());
+            $this->logger->error($e->getMessage() . ' in ' . $e->getFile() . ' ' . $e->getLine());
             return Command::FAILURE;
         }
 
