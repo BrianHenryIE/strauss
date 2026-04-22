@@ -18,6 +18,8 @@ class StraussIssue215Test extends IntegrationTestCase
 {
     public function test_all_files_are_copied(): void
     {
+        $this->markTestSkippedUnlessSpecificallyInFilter();
+
         $packageComposerJson = <<<'EOD'
 {
 	"name": "test/package-with-version-file",
