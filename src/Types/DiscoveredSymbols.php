@@ -88,7 +88,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return new DiscoveredSymbols(
             array_merge(
                 array_values($this->getNamespaces()->toArray()),
-                array_values($this->getGlobalClassesInterfacesTraits()->toArray()),
+                array_values($this->getClassesInterfacesTraits()->toArray()),
                 array_values($this->getConstants()->toArray()),
                 array_values($this->getDiscoveredFunctions()->toArray()),
             )
