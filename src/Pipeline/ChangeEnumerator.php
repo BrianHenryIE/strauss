@@ -33,6 +33,10 @@ class ChangeEnumerator
         $discoveredNamespaces = $discoveredSymbols->getDiscoveredNamespaces();
 
         foreach ($discoveredNamespaces as $symbol) {
+            if (!$symbol->isDoRename()) {
+                continue;
+            }
+
             // This line seems redundant.
             if ($symbol instanceof NamespaceSymbol) {
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
