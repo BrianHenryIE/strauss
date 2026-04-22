@@ -120,6 +120,14 @@ class StraussIssue146Test extends IntegrationTestCase
         $this->assertStringNotContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\\Strauss\\Vendor\\Composer', $php_string);
         // Confirm solution is correct.
         $this->assertStringContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer', $php_string);
+
+        // vendor/symfony/console/Application.php
+        // namespace Symfony\Component\Console;
+        $php_string = file_get_contents($this->testsWorkingDir . '/vendor/symfony/console/Application.php');
+        // Confirm problem is gone.
+        $this->assertStringNotContainsString('namespace Symfony\Component\Console;', $php_string);
+        // Confirm solution is correct.
+        $this->assertStringContainsString('namespace BrianHenryIE\Strauss\Symfony\Component\Console;', $php_string);
     }
 
     public function test_prefix_own_classes_for_test(): void
