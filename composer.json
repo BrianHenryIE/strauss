@@ -77,7 +77,12 @@
       "strauss": {
           "namespace_prefix": "BrianHenryIE\\Strauss\\Vendor\\",
           "target_directory": "vendor",
-          "updateCallSites": true
+          "updateCallSites": true,
+          "exclude_from_prefix": {
+              "file_patterns": [
+                  "#ClassLoader.php#"
+              ]
+          }
       }
     },
     "conflict": {
