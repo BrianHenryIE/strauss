@@ -24,12 +24,15 @@ rm -rf vendor/elazar/flystream/tests
 rm -rf vendor/elazar/flystream/docker
 rm -rf vendor/elazar/flystream/.github
 rm vendor/elazar/flystream/.*
+rm vendor/elazar/flystream/*.xml
+rm vendor/elazar/flystream/*.yml
 
 # @see https://github.com/JsonMapper/JsonMapper/pull/208
 rm -rf vendor/json-mapper/json-mapper/tests
 rm -rf vendor/json-mapper/json-mapper/.github
-rm -rf vendor/json-mapper/json-mapper/.*
-rm -rf vendor/json-mapper/json-mapper/*.dist
+rm vendor/json-mapper/json-mapper/.*
+rm vendor/json-mapper/json-mapper/*.dist
+rm vendor/json-mapper/json-mapper/*.xml
 
 ../bin/strauss --info;
 
@@ -48,7 +51,11 @@ done
 # Print a blank line after.
 echo
 
-composer dump-autoload;
+# Required for the autoloader to build correctly. TODO: should be done in PHP @see DumpAutoload.php.
+# Removes changes to `vendor/composer/autoload_real.php` etc.
+composer dump-autoload --classmap-authoritative;
+
+../bin/strauss prefix-vendor-autoload;
 
 cd ..;
 
