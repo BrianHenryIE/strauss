@@ -80,6 +80,27 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         }
     }
 
+
+    public function has(DiscoveredSymbol $symbol): bool
+    {
+        switch (get_class($symbol)) {
+            case NamespaceSymbol::class:
+                return isset($this->types[self::NAMESPACE_SYMBOL][$symbol->getOriginalSymbol()]);
+            case ConstantSymbol::class:
+                return isset($this->types[self::CONST_SYMBOL][$symbol->getOriginalSymbol()]);
+            case ClassSymbol::class:
+                return isset($this->types[self::CLASS_SYMBOL][$symbol->getOriginalSymbol()]);
+            case FunctionSymbol::class:
+                return isset($this->types[self::FUNCTION_SYMBOL][$symbol->getOriginalSymbol()]);
+            case InterfaceSymbol::class:
+                return isset($this->types[self::INTERFACE_SYMBOL][$symbol->getOriginalSymbol()]);
+            case TraitSymbol::class:
+                return isset($this->types[self::TRAIT_SYMBOL][$symbol->getOriginalSymbol()]);
+            default:
+                throw new InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
+        }
+    }
+
     /**
      * @return DiscoveredSymbol[]
      */
