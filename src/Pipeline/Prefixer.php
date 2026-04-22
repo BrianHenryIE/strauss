@@ -292,7 +292,7 @@ class Prefixer
         foreach ($discoveredSymbols->getNamespaces()->getToRename() as $namespaceSymbol) {
             $this->logger->debug('Searching in {filename} for {type} {name}', [
                 'filename' => basename($fileAbsolutePath),
-                'type' => get_class($namespaceSymbol),
+                'type' => basename(get_class($namespaceSymbol)),
                 'name' => $namespaceSymbol->getOriginalLocalName()
             ]);
 
@@ -301,10 +301,9 @@ class Prefixer
 
         /** @var ClassSymbol $classSymbol */
         foreach ($discoveredSymbols->getClassesInterfacesTraits()->getToRename() as $classSymbol) {
-
             $this->logger->debug('Searching in {filename} for {type} {name}', [
                 'filename' => basename($fileAbsolutePath),
-                'type' => get_class($classSymbol),
+                'type' => basename(get_class($classSymbol)),
                 'name' => $classSymbol->getOriginalLocalName(),
             ]);
 
