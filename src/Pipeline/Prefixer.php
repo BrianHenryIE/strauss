@@ -316,11 +316,11 @@ class Prefixer
 
         /** @var ClassSymbol $classSymbol */
         foreach ($discoveredSymbols->getClassesInterfacesTraits()->getToRename() as $classSymbol) {
-            $this->logger->debug('Searching in {filename} for {type}: {name}', [
-                'filename' => basename($fileAbsolutePath),
-                'type' => array_reverse(explode('\\', basename(get_class($classSymbol))))[0],
-                'name' => $classSymbol->getOriginalLocalName(),
-            ]);
+//            $this->logger->debug('Searching in {filename} for {type}: {name}', [
+//                'filename' => basename($fileAbsolutePath),
+//                'type' => array_reverse(explode('\\', basename(get_class($classSymbol))))[0],
+//                'name' => $classSymbol->getOriginalLocalName(),
+//            ]);
 
             $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
         }
