@@ -273,6 +273,10 @@ class StraussConfig implements
 
             $rename->addMapping(StraussConfig::class, 'constant_prefix', 'constantsPrefix');
 
+            // Handle misspelling.
+            $rename->addMapping(StraussConfig::class, 'exclude_files_from_update', 'excludeFilesFromUpdates');
+            $rename->addMapping(StraussConfig::class, 'exclude_files_from_updates', 'excludeFilesFromUpdates');
+
             $mapper->unshift($rename);
             $mapper->push(new CaseConversion(TextNotation::UNDERSCORE(), TextNotation::CAMEL_CASE()));
 
@@ -567,6 +571,20 @@ class StraussConfig implements
     {
         return $this->excludeFromCopy['file_patterns'] ?? array();
     }
+
+
+    /**
+     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>} $excludeFilesFromUpdates
+     */
+    public function setExcludeFilesFromUpdates(array $excludeFilesFromUpdates): void
+    {
+        foreach (array( 'packages', 'namespaces', 'file_patterns' ) as $key) {
+            if (isset($excludeFilesFromUpdates[$key])) {
+                $this->excludeFilesFromUpdates[$key] = $excludeFilesFromUpdates[$key];
+            }
+        }
+    }
+
 
     /**
      * @return string[]

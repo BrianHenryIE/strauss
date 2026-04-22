@@ -45,10 +45,10 @@ class MarkFilesExcludedFromChanges
     protected function fileMatchesFilePattern(File $file): bool
     {
         $vendorRelativePath = $file->getVendorRelativePath();
-        foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
+        foreach ($this->config->getExcludeFilesFromUpdateFilePatterns() as $excludeFilePattern) {
             if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
                 $this->logger->info('Exclude from changes: {filePath} matches pattern {pattern}', [
-                    'filePath' => $file->getTargetAbsolutePath(),
+                    'filePath' => $file->getVendorRelativePath(),
                     'pattern' => $excludeFilePattern
                 ]);
 
@@ -107,6 +107,9 @@ class MarkFilesExcludedFromChanges
             $excludePackages
         );
 
+        if ($matchingKey === false) {
+            return false;
+        }
 
         $this->logger->info('Exclude from changes: {filePath} matches package {package}', [
             'filePath' => $file->getTargetAbsolutePath(),
@@ -114,6 +117,6 @@ class MarkFilesExcludedFromChanges
         ]);
 
 
-        return $matchingKey !== false;
+        return true;
     }
 }

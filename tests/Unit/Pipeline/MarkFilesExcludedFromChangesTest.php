@@ -26,7 +26,7 @@ class MarkFilesExcludedFromChangesTest extends TestCase
         array $packages = []
     ): MarkFilesExcludedFromChangesConfigInterface {
         $config = Mockery::mock(MarkFilesExcludedFromChangesConfigInterface::class);
-        $config->shouldReceive('getExcludeFilePatternsFromPrefixing')->andReturn($filePatterns);
+        $config->shouldReceive('getExcludeFilesFromUpdateFilePatterns')->andReturn($filePatterns);
         $config->shouldReceive('getExcludeFileFromUpdateNamespaces')->andReturn($namespaces);
         $config->shouldReceive('getExcludeFilesFromUpdatePackages')->andReturn($packages);
         return $config;
