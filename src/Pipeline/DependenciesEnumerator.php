@@ -80,6 +80,12 @@ class DependenciesEnumerator
     {
         $this->recursiveGetAllDependencies($this->requiredPackageNames);
 
+        foreach ($this->flatDependencyTree as $composerPackage) {
+            foreach ($composerPackage->getRequiresNames() as $requiresName) {
+                $composerPackage->addDependency($this->flatDependencyTree[$requiresName]);
+            }
+        }
+
         return $this->flatDependencyTree;
     }
 

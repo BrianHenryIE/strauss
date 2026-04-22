@@ -9,6 +9,8 @@ namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
@@ -77,6 +79,11 @@ class ComposerPackage
      */
     protected array $requiresNames = [];
 
+    /**
+     * @var ComposerPackage[]
+     */
+    protected array $dependencies = [];
+
     protected string $license;
 
     /**
@@ -102,6 +109,8 @@ class ComposerPackage
      * @var FileWithDependency[]
      */
     protected array $files = [];
+
+    protected DiscoveredSymbols $discoveredSymbols;
 
     /**
      * @param string $absolutePath The absolute path to composer.json
@@ -142,6 +151,8 @@ class ComposerPackage
      */
     public function __construct(Composer $composer, ?array $overrideAutoload = null)
     {
+        $this->discoveredSymbols = new DiscoveredSymbols();
+
         $this->composer = $composer;
 
         $this->packageName = $composer->getPackage()->getName();
@@ -373,6 +384,63 @@ class ComposerPackage
     public function getFile(string $path): ?FileWithDependency
     {
         return $this->files[$path] ?? null;
+    }
+
+    public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void
+    {
+        $this->discoveredSymbols->add($symbol);
+    }
+
+    public function getDiscoveredSymbols(): DiscoveredSymbols
+    {
+        return $this->discoveredSymbols;
+    }
+
+    public function addDependency(ComposerPackage $composerPackage): void
+    {
+        $this->dependencies[$composerPackage->getPackageName()] = $composerPackage;
+    }
+
+    public function getDependencies(): array
+    {
+        return $this->dependencies;
+    }
+
+    public function getFlatDependencyTree(): array
+    {
+        $this->getDependenciesRecursive($this);
+        return $this->flatDependencyTree;
+    }
+
+    /** @var array<string, ComposerPackage> */
+    protected array $flatDependencyTree = [];
+    protected function getDependenciesRecursive(ComposerPackage $composerPackage): void
+    {
+        foreach ($composerPackage->getDependencies() as $dependency) {
+            if (isset($this->flatDependencyTree[$dependency->getPackageName()])) {
+                continue;
+            }
+            $this->flatDependencyTree[$dependency->getPackageName()] = $dependency;
+            foreach ($dependency->getDependencies() as $childDependency) {
+                $this->getDependenciesRecursive($childDependency);
+            }
+        }
+    }
+
+    protected DiscoveredSymbols $discoveredSymbolsDeep;
+
+    public function getDiscoveredSymbolsDeep(): DiscoveredSymbols
+    {
+        if (isset($this->discoveredSymbolsDeep)) {
+            return $this->discoveredSymbolsDeep;
+        }
+        $flatDependencyTree = $this->getFlatDependencyTree();
+        $dependencyDiscoveredSymbolsArray = [];
+        foreach ($flatDependencyTree as $dependency) {
+            $dependencyDiscoveredSymbolsArray = array_merge($dependencyDiscoveredSymbolsArray, $dependency->getDiscoveredSymbols()->toArray());
+        }
+        $this->discoveredSymbolsDeep = new DiscoveredSymbols($dependencyDiscoveredSymbolsArray);
+        return $this->discoveredSymbolsDeep;
     }
 
     /**
