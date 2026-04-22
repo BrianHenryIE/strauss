@@ -37,7 +37,7 @@ class File implements FileBase
 
     protected bool $didDelete = false;
 
-    protected bool $doPrefix = false;
+    protected bool $doPrefix = true;
 
     public function __construct(
         string $sourceAbsolutePath,
