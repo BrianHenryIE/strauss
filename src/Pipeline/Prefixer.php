@@ -147,12 +147,9 @@ class Prefixer
             fn($file) => $file->isPhpFile()
         );
 
-        $absoluteFilePathsArray = array_map(
-            fn($file) => $file->getSourcePath(),
-            $phpFiles
-        );
+        foreach ($phpFiles as $file) {
+            $fileAbsolutePath = $file->getSourcePath();
 
-        foreach ($absoluteFilePathsArray as $fileAbsolutePath) {
             $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
 
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
@@ -176,7 +173,7 @@ class Prefixer
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
 
-            $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
+            $updatedContents = $this->replaceInString($discoveredSymbols, $contents, $file);
 
             if ($updatedContents !== $contents) {
                 $this->changedFiles[$fileAbsolutePath] = null;
@@ -470,6 +467,10 @@ class Prefixer
         // A: namespace declarations — keep relative (no leading \)
         foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\Namespace_::class) as $ns) {
             if ($ns->name !== null && ($match = $findMatch($ns->name->toString()))) {
+                if (!$file->isDoPrefix()) {
+                    continue;
+                }
+
                 $positions[] = [
                     'start' => $ns->name->getStartFilePos(),
                     'end' => $ns->name->getEndFilePos() + 1,
@@ -528,7 +529,7 @@ class Prefixer
         }
 
         // D: relative Name nodes used as namespace prefixes in code — promote to FQ.
-        foreach ($nodeFinder->find($ast, function (Node $node) use ($findPrefixMatch) {
+        foreach ($nodeFinder->find($ast, function (Node $node) use ($findPrefixMatch, $namespaceChanges) {
             return $node instanceof Name
                 && !($node instanceof Name\FullyQualified)
                 && $findPrefixMatch($node->toString()) !== null;
@@ -536,6 +537,17 @@ class Prefixer
             if (isset($handled[$name->getStartFilePos()])) {
                 continue;
             }
+
+            $namespaceSymbol = $namespaceChanges->getNamespace($name->toString());
+
+            if (!$namespaceSymbol) {
+                continue;
+            }
+
+            if (!$file->isDoPrefix() && $file->getDiscoveredSymbols()->has($namespaceSymbol)) {
+                continue;
+            }
+
             $match = $findPrefixMatch($name->toString());
             $positions[] = [
                 'start' => $name->getStartFilePos(),
