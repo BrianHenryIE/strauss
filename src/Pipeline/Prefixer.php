@@ -764,9 +764,18 @@ class Prefixer
         if ($node instanceof \PhpParser\Node\Stmt\Trait_) {
             return $discoveredSymbols->getTrait($node->name->toString());
         }
-        return $discoveredSymbols->getClass($node->toString())
-               ?? $discoveredSymbols->getInterface($node->toString())
-                ?? $discoveredSymbols->getTrait($node->toString());
+        if ($node instanceof \PhpParser\Node\Stmt\Enum_) {
+            return $discoveredSymbols->getEnum($node->name->toString());
+        }
+        switch (true) {
+            case $node instanceof Name:
+                return $discoveredSymbols->getClass($node->toString())
+                       ?? $discoveredSymbols->getInterface($node->toString())
+                          ?? $discoveredSymbols->getTrait($node->toString());
+            default:
+                // TODO: enums.
+                return null;
+        }
     }
 
     protected function getReplacementStringForNode(\PhpParser\Node $node, DiscoveredSymbols $discoveredSymbols)
