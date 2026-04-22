@@ -215,6 +215,7 @@ class MarkSymbolsForRenaming
             $vendorRelativePath = $file->getVendorRelativePath();
             foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
                 if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
+                    $file->setDoPrefix(false);
                     return true;
                 }
             }
