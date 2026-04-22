@@ -7,10 +7,11 @@ namespace BrianHenryIE\Strauss\Types;
 
 use ArrayAccess;
 use ArrayIterator;
+use Countable;
 use InvalidArgumentException;
 use IteratorAggregate;
 
-class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
+class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 {
     private const CLASS_SYMBOL = 'CLASS';
     private const CONST_SYMBOL = 'CONST';
@@ -368,5 +369,17 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess
     public function offsetUnset($offset)
     {
         throw new \BadMethodCallException();
+    }
+
+    /**
+     * So `count( $discoveredSymbols )` will work.
+     */
+    public function count()
+    {
+        return array_reduce(
+            $this->types,
+            fn(int $count, array $item) => $count += count($item),
+            0
+        );
     }
 }
