@@ -82,7 +82,10 @@ class DependenciesEnumerator
 
         foreach ($this->flatDependencyTree as $composerPackage) {
             foreach ($composerPackage->getRequiresNames() as $requiresName) {
-                $composerPackage->addDependency($this->flatDependencyTree[$requiresName]);
+                // The package would be missing if it is in `provides`.
+                if (isset($this->flatDependencyTree[$requiresName])) {
+                    $composerPackage->addDependency($this->flatDependencyTree[$requiresName]);
+                }
             }
         }
 
