@@ -435,7 +435,7 @@ class ComposerPackage
             return $this->discoveredSymbolsDeep;
         }
         $flatDependencyTree = $this->getFlatDependencyTree();
-        $dependencyDiscoveredSymbolsArray = [];
+        $dependencyDiscoveredSymbolsArray = $this->discoveredSymbols->toArray();
         foreach ($flatDependencyTree as $dependency) {
             $dependencyDiscoveredSymbolsArray = array_merge($dependencyDiscoveredSymbolsArray, $dependency->getDiscoveredSymbols()->toArray());
         }
