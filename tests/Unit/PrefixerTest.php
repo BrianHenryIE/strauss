@@ -63,21 +63,6 @@ class PrefixerTest extends TestCase
 
         $contents = <<<'EOD'
 <?php
-/*
- * Copyright 2010 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 namespace Google;
 
@@ -86,57 +71,9 @@ use TypeError;
 
 class Service
 {
-  public $batchPath;
-  public $rootUrl;
-  public $version;
-  public $servicePath;
-  public $availableScopes;
-  public $resource;
-  private $client;
-
-  public function __construct($clientOrConfig = [])
-  {
-    if ($clientOrConfig instanceof Client) {
-      $this->client = $clientOrConfig;
-    } elseif (is_array($clientOrConfig)) {
-      $this->client = new Client($clientOrConfig ?: []);
-    } else {
-      $errorMessage = 'constructor must be array or instance of Google\Client';
-      if (class_exists('TypeError')) {
-        throw new TypeError($errorMessage);
-      }
-      trigger_error($errorMessage, E_USER_ERROR);
-    }
-  }
-
-  /**
-   * Return the associated Google\Client class.
-   * @return \Google\Client
-   */
-  public function getClient()
-  {
-    return $this->client;
-  }
-
-  /**
-   * Create a new HTTP Batch handler for this service
-   *
-   * @return Batch
-   */
-  public function createBatch()
-  {
-    return new Batch(
-        $this->client,
-        false,
-        $this->rootUrl,
-        $this->batchPath
-    );
-  }
 }
 EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
-
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
         $originalNamespace = 'Google\\Http';
         $replacement = 'BrianHenryIE\\Strauss\\Google\\Http';
@@ -158,6 +95,58 @@ EOD;
         $discoveredSymbols->add($namespaceSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
+        $file->setDoUpdate(true);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $expected = 'use BrianHenryIE\\Strauss\\Google\\Http\\Batch;';
+
+        $this->assertStringNotContainsString($expected, $result);
+    }
+
+    public function testReplaceNamespaceForClass(): void
+    {
+
+        $contents = <<<'EOD'
+<?php
+
+namespace Google;
+
+use Google\Http\Batch;
+use TypeError;
+
+class Service
+{
+}
+EOD;
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $originalNamespace = 'Google\\Http';
+        $replacement = 'BrianHenryIE\\Strauss\\Google\\Http';
+
+        $filesystem = $this->getInMemoryFileSystem();
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
+        $namespaceSymbol->setLocalReplacement($replacement);
+
+        $classSymbol = new ClassSymbol('Google\Http\Batch', $file, false, $namespaceSymbol);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+        $file->setDoUpdate(true);
 
         $replacer->replaceInFiles($discoveredSymbols, [$file]);
 
@@ -838,11 +827,14 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Chicken', $file);
         $namespaceSymbol->setLocalReplacement('My\\Mozart\\Prefix\\Chicken');
-
-        $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Chicken\Egg', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
@@ -877,11 +869,14 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
-
-        $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Symfony\Polyfill\Mbstring', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
@@ -2735,11 +2730,14 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Aws', $file);
         $namespaceSymbol->setLocalReplacement('StraussTest\\Aws');
-
-        $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Aws\Endpoint\UseDualstackEndpoint\Configurations', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
@@ -2777,9 +2775,7 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem);
 
@@ -2789,11 +2785,14 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Chophper', $file);
         $namespaceSymbol->setLocalReplacement('StraussTest\\Chophper');
-
-        $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
+
+        $functionSymbol = new FunctionSymbol('Chophper\some_func', $file, $namespaceSymbol);
+        $discoveredSymbols->add($functionSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
@@ -2876,21 +2875,24 @@ EOD;
 
         $replacer = new Prefixer($config, $filesystem);
 
+        $file = new File(
+            'project/vendor/league/oauth2/provideruse.php',
+            'league/oauth2/provideruse.php',
+            'project/vendor-prefixed/league/oauth2/provideruse.php'
+        );
+
         $discoveredSymbols = new DiscoveredSymbols();
 
         $providerNamespaceSymbol =new NamespaceSymbol('League\\OAuth2\\Client\\Provider');
         $providerNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Provider');
         $discoveredSymbols->add($providerNamespaceSymbol);
 
-        $accessorNamespaceSymbol = new NamespaceSymbol('League\\OAuth2\\Client\\Tool\\ArrayAccessorTrait');
-        $accessorNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Tool\\ArrayAccessorTrait');
-        $discoveredSymbols->add($accessorNamespaceSymbol);
+        $toolNamespaceSymbol = new NamespaceSymbol('League\\OAuth2\\Client\\Tool');
+        $toolNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Tool');
+        $discoveredSymbols->add($toolNamespaceSymbol);
 
-        $file = new File(
-            'project/vendor/league/oauth2/provideruse.php',
-            'league/oauth2/provideruse.php',
-            'project/vendor-prefixed/league/oauth2/provideruse.php'
-        );
+        $traitSymbol = new TraitSymbol('League\OAuth2\Client\Tool\ArrayAccessorTrait', $file, $toolNamespaceSymbol);
+        $discoveredSymbols->add($traitSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
@@ -3476,15 +3478,19 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
+        $discoveredSymbols->add($namespaceSymbol);
 
-        $symbols = new DiscoveredSymbols();
-        $symbols->add($namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Macros\BlockMacros', $fileMock, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceInString($symbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -3540,15 +3546,19 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
+        $discoveredSymbols->add($namespaceSymbol);
 
-        $symbols = new DiscoveredSymbols();
-        $symbols->add($namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Macros\BlockMacros', $fileMock, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceInString($symbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -3595,15 +3605,19 @@ EOD;
           ->method('isDoPrefix')
           ->willReturn(true);
 
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
+        $discoveredSymbols->add($namespaceSymbol);
 
-        $symbols = new DiscoveredSymbols();
-        $symbols->add($namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Macros\MacroSet', $fileMock, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceInString($symbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -3652,15 +3666,19 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
+        $discoveredSymbols->add($namespaceSymbol);
 
-        $symbols = new DiscoveredSymbols();
-        $symbols->add($namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Macros\MacroSet', $fileMock, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceInString($symbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -3723,15 +3741,18 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
+        $discoveredSymbols->add($namespaceSymbol);
 
-        $symbols = new DiscoveredSymbols();
-        $symbols->add($namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Runtime\Filters', $fileMock, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceInString($symbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -3785,15 +3806,18 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
+        $discoveredSymbols->add($namespaceSymbol);
 
-        $symbols = new DiscoveredSymbols();
-        $symbols->add($namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Tools\Linter', $fileMock, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceInString($symbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -3871,15 +3895,18 @@ EOD;
         $fileMock->expects($this->any())
                   ->method('isDoPrefix')
                   ->willReturn(true);
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('Latte', $fileMock);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
+        $discoveredSymbols->add($namespaceSymbol);
 
-        $symbols = new DiscoveredSymbols();
-        $symbols->add($namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Tools\Linter', $fileMock, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceInString($symbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -4088,11 +4115,14 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
-
-        $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Prefix\Strauss\Carbon_Fields\Container\User_Meta_Container', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
@@ -4170,9 +4200,12 @@ EOD;
 
         $symbols = new DiscoveredSymbols();
 
-        $symbol = new NamespaceSymbol('Geocoder', $file);
-        $symbol->setLocalReplacement('CommonsBooking\\Geocoder');
-        $symbols->add($symbol);
+        $namespaceSymbol = new NamespaceSymbol('Geocoder', $file);
+        $namespaceSymbol->setLocalReplacement('CommonsBooking\\Geocoder');
+        $symbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Geocoder\StatefulGeocoder', $file, false, $namespaceSymbol);
+        $symbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
         $result = $replacer->replaceInString($symbols, $contents);

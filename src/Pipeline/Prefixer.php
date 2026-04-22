@@ -246,6 +246,7 @@ class Prefixer
             $this->replaceNamespaces($ast, $discoveredSymbols->getNamespaces()->getToRename()),
             $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraits()->getToRename()),
             $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
+            $this->replaceUseStatementsForNamespacedClasses($ast, $discoveredSymbols),
         );
 
         // Adjust positions to be relative to the original $contents (before any <?php prepend).
@@ -365,6 +366,66 @@ class Prefixer
         return $positions;
     }
 
+    /**
+     * Replace class/interface/trait `use` statements driven by registered ClassSymbols.
+     *
+     * A namespace is "active" when at least one ClassSymbol is registered within it.
+     * For exact-match ClassSymbols the symbol's own replacement is used; for other classes
+     * in the namespace, namespace-prefix replacement is applied.
+     * Namespaces with no registered ClassSymbol are left alone.
+     */
+    protected function replaceUseStatementsForNamespacedClasses(array $ast, DiscoveredSymbols $discoveredSymbols): array
+    {
+        $activeNamespaces = [];
+        foreach ($discoveredSymbols->getClassesInterfacesTraits()->toArray() as $symbol) {
+            if ($symbol instanceof NamespacedSymbol
+                && !$symbol->getNamespace()->isGlobal()
+                && $symbol->isDoRename()
+            ) {
+                $ns = $symbol->getNamespace();
+                $original = rtrim($ns->getOriginalSymbol(), '\\');
+                $replacement = rtrim($ns->getReplacementFqdnName(), '\\');
+                $activeNamespaces[$original] = $replacement;
+            }
+        }
+
+        if (empty($activeNamespaces)) {
+            return [];
+        }
+
+        uksort($activeNamespaces, fn($a, $b) => strlen($b) - strlen($a));
+
+        $nodeFinder = new NodeFinder();
+        $positions = [];
+
+        foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\UseItem::class) as $item) {
+            $nameStr = $item->name->toString();
+            foreach ($activeNamespaces as $original => $replacement) {
+                if ($nameStr === $original || str_starts_with($nameStr, $original . '\\')) {
+                    $classSymbol = $discoveredSymbols->getClass($nameStr)
+                        ?? $discoveredSymbols->getInterface($nameStr)
+                        ?? $discoveredSymbols->getTrait($nameStr);
+
+                    if ($classSymbol && $classSymbol->isDoRename()) {
+                        $nsReplacement = rtrim($classSymbol->getNamespace()->getReplacementFqdnName(), '\\');
+                        $newName = $nsReplacement . '\\' . $classSymbol->getLocalReplacement();
+                    } else {
+                        $newName = $replacement . substr($nameStr, strlen($original));
+                    }
+
+                    $positions[] = [
+                        'start' => $item->name->getStartFilePos(),
+                        'end' => $item->name->getEndFilePos() + 1,
+                        'replacement' => $newName,
+                    ];
+                    break;
+                }
+            }
+        }
+
+        return $positions;
+    }
+
     protected function replaceNamespaces(array $ast, DiscoveredSymbols $namespaceChanges): array
     {
         if (empty($namespaceChanges->toArray())) {
@@ -417,15 +478,23 @@ class Prefixer
             }
         }
 
-        // B: use items and group-use prefixes — keep relative (no leading \)
-        foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\UseItem::class) as $item) {
-            if ($match = $findMatch($item->name->toString())) {
-                $positions[] = [
-                    'start' => $item->name->getStartFilePos(),
-                    'end' => $item->name->getEndFilePos() + 1,
-                    'replacement' => $prefixed($item->name->toString(), $match['original'], $match['replacement']),
-                ];
+        // B: use items.
+        // Class/interface/trait use items are always marked as handled to prevent section D from
+        // prepending '\'; their replacement is produced by replaceUseStatementsForNamespacedClasses.
+        // Function and constant use items keep namespace-prefix replacement here.
+        foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\Use_::class) as $useStmt) {
+            foreach ($useStmt->uses as $item) {
+                $nameStr = $item->name->toString();
                 $handled[$item->name->getStartFilePos()] = true;
+                if ($useStmt->type !== \PhpParser\Node\Stmt\Use_::TYPE_NORMAL) {
+                    if ($match = $findMatch($nameStr)) {
+                        $positions[] = [
+                            'start' => $item->name->getStartFilePos(),
+                            'end' => $item->name->getEndFilePos() + 1,
+                            'replacement' => $prefixed($nameStr, $match['original'], $match['replacement']),
+                        ];
+                    }
+                }
             }
         }
         // It would be necessary to split `use My\Namespace\{Class1, Class2};` into individual lines if one of
