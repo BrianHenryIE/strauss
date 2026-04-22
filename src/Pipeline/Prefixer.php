@@ -243,7 +243,7 @@ class Prefixer
 
         $positions = array_merge(
             $positions,
-            $this->replaceNamespaces($ast, $discoveredSymbols->getNamespaces()->getToRename()),
+            $this->replaceNamespaces($ast, $discoveredSymbols->getNamespaces()->getToRename(), $file),
             $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols->getGlobalClassesInterfacesTraits()->getToRename()),
             $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
             $this->replaceUseStatementsForNamespacedClasses($ast, $discoveredSymbols),
@@ -402,6 +402,7 @@ class Prefixer
             $nameStr = $item->name->toString();
             foreach ($activeNamespaces as $original => $replacement) {
                 if ($nameStr === $original || str_starts_with($nameStr, $original . '\\')) {
+                    /** @var ?DiscoveredSymbol $classSymbol */
                     $classSymbol = $discoveredSymbols->getClass($nameStr)
                         ?? $discoveredSymbols->getInterface($nameStr)
                         ?? $discoveredSymbols->getTrait($nameStr);
@@ -426,7 +427,7 @@ class Prefixer
         return $positions;
     }
 
-    protected function replaceNamespaces(array $ast, DiscoveredSymbols $namespaceChanges): array
+    protected function replaceNamespaces(array $ast, DiscoveredSymbols $namespaceChanges, FileBase $file): array
     {
         if (empty($namespaceChanges->toArray())) {
             return [];
