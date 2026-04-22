@@ -4236,7 +4236,8 @@ EOD;
     /**
      * @covers ::prepareRelativeNamespaces()
      */
-    public function test_use_trait_fqdn(): void {
+    public function test_use_trait_fqdn(): void
+    {
 
         $contents = <<<'EOD'
 <?php
