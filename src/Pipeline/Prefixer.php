@@ -86,6 +86,10 @@ class Prefixer
             return;
         }
 
+        if (!$file->getDoUpdate()) {
+            return;
+        }
+
         if ($this->filesystem->directoryExists($file->getTargetAbsolutePath())) {
             $this->logger->debug("is_dir() / nothing to do : {targetAbsolutePath}", [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
@@ -424,6 +428,8 @@ class Prefixer
                 $handled[$item->name->getStartFilePos()] = true;
             }
         }
+        // It would be necessary to split `use My\Namespace\{Class1, Class2};` into individual lines if one of
+        // those classes is excluded and one should be updated.
         foreach ($nodeFinder->findInstanceOf($ast, \PhpParser\Node\Stmt\GroupUse::class) as $groupUse) {
             if ($groupUse->prefix !== null && ($match = $findMatch($groupUse->prefix->toString()))) {
                 $positions[] = [

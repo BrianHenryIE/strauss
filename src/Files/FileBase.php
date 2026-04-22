@@ -49,6 +49,10 @@ interface FileBase
 
     public function getDidDelete(): bool;
 
+    public function setDoUpdate(bool $doUpdate): void;
+
+    public function getDoUpdate(): bool;
+
     public function setDidUpdate(): void;
 
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void;

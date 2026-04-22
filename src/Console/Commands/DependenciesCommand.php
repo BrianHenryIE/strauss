@@ -21,6 +21,7 @@ use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
+use BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges;
 use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -166,6 +167,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->analyseFilesToCopy();
             $this->markSymbolsForRenaming();
             $this->determineChanges();
+            $this->markFilesExcludedFromChanges();
+
+
+
             $this->copyFiles();
 
             $this->performReplacements();
@@ -400,6 +405,18 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
+    }
+
+    protected function markFilesExcludedFromChanges(): void
+    {
+        $this->logger->notice('Scanning files to omit from changes...');
+
+        $markFilesExcludedFromChanges = new MarkFilesExcludedFromChanges(
+            $this->config,
+            $this->logger
+        );
+
+        $markFilesExcludedFromChanges->scanDiscoveredFiles($this->discoveredFiles);
     }
 
     protected function analyseFilesToCopy(): void

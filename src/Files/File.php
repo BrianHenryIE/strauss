@@ -179,6 +179,18 @@ class File implements FileBase
         return $this->didUpdate;
     }
 
+    protected bool $doUpdate = true;
+
+    public function setDoUpdate(bool $doUpdate): void
+    {
+        $this->doUpdate = $doUpdate;
+    }
+
+    public function getDoUpdate(): bool
+    {
+        return $this->doUpdate;
+    }
+
     public function getVendorRelativePath(): string
     {
         return $this->vendorRelativePath;
