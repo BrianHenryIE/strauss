@@ -4,8 +4,11 @@
 # ./scripts/createphar.sh
 
 rm -rf build
+rm strauss.phar
+
 composer install --no-dev
 wget -O phar-composer.phar https://github.com/clue/phar-composer/releases/download/v1.4.0/phar-composer-1.4.0.phar
+
 mkdir build
 cp -R vendor build/vendor
 cp -R src build/src
@@ -16,11 +19,39 @@ cp bootstrap.php build
 cp CHANGELOG.md build
 
 cd build;
+
+rm -rf vendor/elazar/flystream/tests
+rm -rf vendor/elazar/flystream/docker
+rm -rf vendor/elazar/flystream/.github
+rm vendor/elazar/flystream/.*
+
+# @see https://github.com/JsonMapper/JsonMapper/pull/208
+rm -rf vendor/json-mapper/json-mapper/tests
+rm -rf vendor/json-mapper/json-mapper/.github
+rm -rf vendor/json-mapper/json-mapper/.*
+rm -rf vendor/json-mapper/json-mapper/*.dist
+
 ../bin/strauss --info;
+
+echo "Running php -l syntax check on files. Some packages, e.g. polyfills, conditionally load files with newer PHP syntax and will error."
+
+find . -type f -name "*.php" -print | sed '/^$/d' | \
+while IFS= read -r file; do
+    if php -l "$file" >/dev/null 2>&1; then
+        printf "."
+    else
+        echo
+        echo "Error in $file:"
+        php -l "$file"
+    fi
+done
+# Print a blank line after.
+echo
+
+composer dump-autoload;
 
 cd ..;
 
-rm strauss.phar
 php -d phar.readonly=off phar-composer.phar build ./build/
 
 rm phar-composer.phar
