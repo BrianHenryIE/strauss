@@ -19,6 +19,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     private const FUNCTION_SYMBOL = 'FUNCTION';
     private const TRAIT_SYMBOL = 'TRAIT';
     private const INTERFACE_SYMBOL = 'INTERFACE';
+    private const ENUM_SYMBOL = 'ENUM';
 
     /**
      * All discovered symbols, grouped by type, indexed by original name.
@@ -32,6 +33,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         self::FUNCTION_SYMBOL => [],
         self::TRAIT_SYMBOL => [],
         self::INTERFACE_SYMBOL => [],
+        self::ENUM_SYMBOL => [],
     ];
 
     /**
@@ -124,6 +126,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
                 $this->types[self::CLASS_SYMBOL],
                 $this->types[self::TRAIT_SYMBOL],
                 $this->types[self::INTERFACE_SYMBOL],
+                $this->types[self::ENUM_SYMBOL],
             )
         );
     }
@@ -330,6 +333,10 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     public function getInterface(string $interface): ?InterfaceSymbol
     {
         return $this->types[self::INTERFACE_SYMBOL][$interface] ?? null;
+    }
+    public function getEnum(string $enumName): ?TraitSymbol
+    {
+        return $this->types[self::ENUM_SYMBOL][$enumName] ?? null;
     }
 
     /**
