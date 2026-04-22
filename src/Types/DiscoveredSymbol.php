@@ -62,7 +62,10 @@ abstract class DiscoveredSymbol
      */
     public function getReplacementFqdnName(): string
     {
-        return $this->localReplacement ?? $this->fqdnOriginalSymbol;
+        // TODO: Should this be here ot should `::isDoRename()` always be called at the calling site.
+        return $this->isDoRename()
+            ? ($this->localReplacement ?? $this->fqdnOriginalSymbol)
+            : $this->fqdnOriginalSymbol;
     }
 
     /**
@@ -83,7 +86,9 @@ abstract class DiscoveredSymbol
 
     public function getLocalReplacement(): string
     {
-        return $this->localReplacement ?? $this->localOriginalSymbol;
+        return $this->isDoRename()
+            ? ($this->localReplacement ?? $this->localOriginalSymbol)
+            : $this->localOriginalSymbol;
     }
 
     public function setLocalReplacement(string $localReplacement): void
