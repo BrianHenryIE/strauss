@@ -279,11 +279,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Writing non-symlinked file at {path}", [
-                'path' => $path,
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Writing non-symlinked file at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::write($path, $contents, $config);
             return;
         }
@@ -308,11 +308,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Writing stream for non-symlinked file at {path}", [
-                'path' => $path,
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Writing stream for non-symlinked file at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::writeStream($path, $contents, $config);
             return;
         }
@@ -334,11 +334,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Setting visibility for non-symlinked file at {path}", [
-                'path' => $path,
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Setting visibility for non-symlinked file at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::setVisibility($path, $visibility);
             return;
         }
@@ -360,11 +360,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Deleting non-symlinked file at {path}", [
-                'path' => $path,
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Deleting non-symlinked file at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::delete($path);
             return;
         }
@@ -404,11 +404,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlinkPath = $this->getParentSymlink($path);
 
         if (!$symlinkPath) {
-            $this->logger->debug("Deleting non-symlinked directory at {path}", [
-                'path' => $path,
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Deleting non-symlinked directory at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::deleteDirectory($path);
             return;
         }
@@ -446,11 +446,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Creating directory at non-symlinked path {path}", [
-                'path' => $path,
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Creating directory at non-symlinked path {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::createDirectory($path, $config);
             return;
         }
