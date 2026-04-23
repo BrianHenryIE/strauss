@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
+use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
@@ -170,6 +171,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->markFilesExcludedFromChanges();
 
 
+            (new Psr0($this->filesystem, $this->logger))->setTargetDirectory($this->discoveredFiles);
 
             $this->copyFiles();
 

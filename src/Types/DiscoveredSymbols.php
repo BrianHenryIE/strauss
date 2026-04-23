@@ -418,4 +418,16 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
             0
         );
     }
+
+    public function notGlobal(): self
+    {
+        foreach ($this->types as $type => $types) {
+            foreach ($types as $index => $symbol) {
+                if ($symbol->isGlobal()) {
+                    unset($this->types[$type][$index]);
+                }
+            }
+        }
+        return $this;
+    }
 }

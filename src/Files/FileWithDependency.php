@@ -84,4 +84,9 @@ class FileWithDependency extends File implements HasDependency
     {
         return $this->doDelete ?? $this->dependency->isDoDelete();
     }
+
+    public function getNamespaces()
+    {
+        return $this->discoveredSymbols->getNamespaces();
+    }
 }
