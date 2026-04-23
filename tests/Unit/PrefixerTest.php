@@ -3218,7 +3218,7 @@ EOD;
     }
 
     /**
-     * @covers ::replaceFunctions
+     * @covers ::findFunctionPositionsInAst
      */
     public function testReplaceFunctions(): void
     {
@@ -4502,62 +4502,4 @@ EOD;
 
         $this->assertEqualsRN($expected, $result);
     }
-
-
-
-    // Commenting out test that is not failing as required.
-// strauss66 test
-//    public function test_global_class(): void
-//    {
-//        $contents = <<<'EOD'
-//<?php
-//namespace WPGraphQL\Registry\Utils;
-//
-//use WPGraphQL;
-//EOD;
-//
-//        // `use \Prefix_WPGraphQL;`.
-//        $expected = <<<'EOD'
-//<?php
-//namespace MyProject\Dependencies\WPGraphQL\Registry\Utils;
-//
-//use Prefix_WPGraphQL as WPGraphQL;
-//EOD;
-//
-//        $config = Mockery::mock(PrefixerConfigInterface::class);
-//        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
-//        $config->expects('isTargetDirectoryVendor')->andReturnFalse();
-//        $config->expects('getConstantsPrefix')->andReturn('Prefix_');
-//
-//        $file = new File(
-//            'vendor/package/name/src/file.php',
-//            'package/name/src/file.php',
-//            'vendor-prefixed/package/name/src/file.php',
-//        );
-//
-//        $discoveredSymbols = new DiscoveredSymbols();
-//
-//        $namespaceSymbol = new NamespaceSymbol('WPGraphQL\Registry', $file);
-//        $namespaceSymbol->setLocalReplacement('MyProject\Dependencies\WPGraphQL\Registry');
-//        $discoveredSymbols->add($namespaceSymbol);
-//
-//        $namespaceSymbol = new NamespaceSymbol('WPGraphQL', $file);
-//        $namespaceSymbol->setLocalReplacement('MyProject\Dependencies\WPGraphQL');
-//        $discoveredSymbols->add($namespaceSymbol);
-//
-//        $classSymbol = new ClassSymbol('WPGraphQL', $file);
-//        $classSymbol->setLocalReplacement('Prefix_WPGraphQL');
-//        $discoveredSymbols->add($classSymbol);
-//
-//        $filesystem = $this->getInMemoryFileSystem();
-//        $filesystem->write($file->getTargetAbsolutePath(), $contents);
-//
-//        $replacer = new Prefixer($config, $filesystem);
-//
-//        $replacer->replaceInFiles($discoveredSymbols, [$file]);
-//
-//        $result = $filesystem->read($file->getTargetAbsolutePath());
-//
-//        $this->assertEqualsRN($expected, $result);
-//    }
 }
