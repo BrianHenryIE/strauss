@@ -125,19 +125,29 @@ class FileCopyScanner
 
     protected function isNamespaceExcluded(FileBase $file): bool
     {
+        if (!$file->isPhpFile()) {
+            return false;
+        }
+        $namespacesInFile = array_map(
+            fn(NamespaceSymbol $symbol) => $symbol->getOriginalSymbol(),
+            $file->getDiscoveredSymbols()->getNamespaces()->notGlobal()->toArray()
+        );
         /** @var DiscoveredSymbol $symbol */
-        foreach ($file->getDiscoveredSymbols()->getNamespaces() as $symbol) {
-            foreach ($this->config->getExcludeNamespacesFromCopy() as $namespace) {
-                $namespace = rtrim($namespace, '\\');
-                if (in_array($file->getSourcePath(), array_keys($symbol->getSourceFiles()), true)
-                    // TODO: case insensitive check. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
-                    && str_starts_with($symbol->getOriginalSymbol(), $namespace)
-                ) {
-                    $this->logger->debug("File {sourcePath} will not be copied because namespace {$namespace} is excluded from copy.", [
-                        'sourcePath' => $file->getSourcePath(),
-                    ]);
-                    return true;
-                }
+        foreach ($this->config->getExcludeNamespacesFromCopy() as $excludedNamespaceString) {
+            $excludedNamespaceString = rtrim($excludedNamespaceString, '\\');
+
+            $excludedNamespacesInFile = array_reduce(
+                $namespacesInFile,
+                // TODO: case insensitive check. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
+                fn(array $carry, string $namespace) => str_starts_with($namespace, $excludedNamespaceString)
+                        ? array_merge($carry, [$namespace]) : $carry,
+                []
+            );
+            if (!empty($excludedNamespacesInFile)) {
+                $this->logger->debug("File {sourcePath} will not be copied because namespace {$excludedNamespaceString} is excluded from copy.", [
+                    'sourcePath' => $file->getSourcePath(),
+                ]);
+                return true;
             }
         }
         return false;
