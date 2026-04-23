@@ -101,6 +101,29 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         }
     }
 
+    public function get(string $fqdnName): ?DiscoveredSymbol
+    {
+        $found = array_reduce(
+            $this->types,
+            fn (int $carry, array $symbol) => $carry + (int) isset($symbol[$fqdnName]),
+            0
+        );
+
+        if ($found === 0) {
+            return null;
+        }
+
+        if ($found > 1) {
+            throw new \Exception('multiple symbols with the same name');
+        }
+
+        return $this->getClass($fqdnName)
+            ?? $this->getInterface($fqdnName)
+            ?? $this->getTrait($fqdnName)
+            ?? $this->getFunction($fqdnName)
+            ?? $this->getNamespace($fqdnName)
+            ?? $this->getNamespaceSymbolByString($fqdnName);
+    }
     /**
      * @return DiscoveredSymbol[]
      */
