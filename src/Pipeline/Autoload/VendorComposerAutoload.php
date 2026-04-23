@@ -61,7 +61,8 @@ class VendorComposerAutoload
 
         $newAutoloadPhpFilepath = $this->config->getAbsoluteTargetDirectory() . '/autoload.php';
 
-        if (!$this->fileSystem->fileExists($newAutoloadPhpFilepath)) {
+        // TODO: fix dry-run.
+        if (!$this->fileSystem->fileExists($newAutoloadPhpFilepath) & !$this->config->isDryRun()) {
             $this->logger->warning("No new autoload.php found: {newAutoloadPhpFilepath}", [
                 'newAutoloadPhpFilepath' => $newAutoloadPhpFilepath
             ]);

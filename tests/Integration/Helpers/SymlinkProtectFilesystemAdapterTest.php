@@ -72,6 +72,8 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_delete_directory_in_symlinked_directory(): void
     {
+        $this->expectErrorLogs();
+
         $this->filesystem->deleteDirectory($this->testsWorkingDir . '/fakedir/subdir');
 
         $this->assertTrue($this->getTestLogger()->hasErrorRecords());
@@ -87,6 +89,8 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_delete_file_in_symlinked_directory(): void
     {
+        $this->expectErrorLogs();
+
         $this->filesystem->delete($this->testsWorkingDir . '/fakedir/file.txt');
 
         $this->assertTrue($this->getTestLogger()->hasErrorRecords());
@@ -103,6 +107,8 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_write_file_in_symlinked_directory(): void
     {
+        $this->expectWarningLogs();
+
         $this->filesystem->write($this->testsWorkingDir . '/fakedir/file2.txt', 'test');
 
         $this->assertTrue($this->getTestLogger()->hasWarningRecords());

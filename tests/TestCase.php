@@ -85,6 +85,30 @@ class TestCase extends \PHPUnit\Framework\TestCase
             } catch (Exception $e) {
             }
         }
+
+        if ($this->allowErrorLogs === false) {
+            $this->assertFalse($this->getTestLogger()->hasErrorRecords(), "TestLogger::hasErrorRecords()");
+        } else {
+            $this->assertTrue($this->getTestLogger()->hasErrorRecords(), "Expected TestLogger::hasErrorRecords()");
+        }
+        if ($this->allowWarningLogs === false) {
+            $this->assertFalse($this->getTestLogger()->hasWarningRecords(), "TestLogger::hasWarningRecords()");
+        } else {
+            $this->assertTrue($this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords()");
+        }
+    }
+
+    public bool $allowWarningLogs = false;
+
+    protected function expectWarningLogs()
+    {
+        $this->allowWarningLogs = true;
+    }
+    public bool $allowErrorLogs = false;
+
+    protected function expectErrorLogs()
+    {
+        $this->allowErrorLogs = true;
     }
 
     protected static function stripWhitespaceAndBlankLines(string $string): string

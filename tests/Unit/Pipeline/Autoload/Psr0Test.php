@@ -30,8 +30,6 @@ class Psr0Test extends TestCase
 
         $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
         $sut->setTargetDirectory($discoveredFiles);
-
-        $this->expectNotToPerformAssertions();
     }
 
     /**
@@ -50,8 +48,6 @@ class Psr0Test extends TestCase
 
         $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
         $sut->setTargetDirectory($discoveredFiles);
-
-        $this->expectNotToPerformAssertions();
     }
 
     /**
@@ -74,8 +70,6 @@ class Psr0Test extends TestCase
 
         $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
         $sut->setTargetDirectory($discoveredFiles);
-
-        $this->expectNotToPerformAssertions();
     }
 
     /**
@@ -115,6 +109,8 @@ class Psr0Test extends TestCase
      */
     public function test_multiple_namespaces_logs_warning(): void
     {
+        $this->expectWarningLogs();
+
         $ns1 = new NamespaceSymbol('Pimple');
         $ns1->setLocalReplacement('BrianHenryIE\Strauss\Pimple');
         $ns2 = new NamespaceSymbol('Pimple\ServiceIterator');

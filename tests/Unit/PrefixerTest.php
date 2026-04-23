@@ -81,7 +81,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -129,7 +129,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -397,7 +397,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -638,7 +638,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -679,7 +679,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -723,7 +723,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -758,7 +758,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -801,7 +801,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -840,7 +840,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -882,7 +882,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -917,13 +917,13 @@ EOD;
     {
         $originalNamespace = 'Mpdf';
         $replacement = "Mozart\\Mpdf";
-        $contents = 'public function getServices( Mpdf $mpdf, LoggerInterface $logger, $config ) {}';
+        $contents = '<?php function getServices( Mpdf $mpdf, LoggerInterface $logger, $config ) {}';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -943,7 +943,7 @@ EOD;
 
         $result = $filesystem->read($file->getTargetAbsolutePath());
 
-        $expected = 'public function getServices( Mpdf $mpdf, LoggerInterface $logger, $config ) {}';
+        $expected = '<?php function getServices( Mpdf $mpdf, LoggerInterface $logger, $config ) {}';
 
         $this->assertEqualsRN($expected, $result);
     }
@@ -961,7 +961,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1000,7 +1000,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1047,7 +1047,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1082,7 +1082,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1119,7 +1119,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1158,7 +1158,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1192,7 +1192,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1231,7 +1231,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1281,7 +1281,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1289,11 +1289,14 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
-
-        $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Carbon_Fields\Container\Comment_Meta_Container', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
@@ -1319,7 +1322,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1359,7 +1362,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1391,13 +1394,13 @@ EOD;
     {
         $originalNamespace = "TrustedLogin";
         $replacement = "Prefix\\TrustedLogin";
-        $contents = "esc_html__( 'Learn about TrustedLogin', 'trustedlogin' )";
+        $contents = "esc_html__( 'Learn about TrustedLogin', 'trustedlogin' );";
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1417,7 +1420,7 @@ EOD;
 
         $result = $filesystem->read($file->getTargetAbsolutePath());
 
-        $expected = "esc_html__( 'Learn about TrustedLogin', 'trustedlogin' )";
+        $expected = "esc_html__( 'Learn about TrustedLogin', 'trustedlogin' );";
 
         $this->assertEqualsRN($expected, $result);
     }
@@ -1530,7 +1533,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1565,7 +1568,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1605,7 +1608,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1631,7 +1634,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1670,7 +1673,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1696,7 +1699,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1727,23 +1730,22 @@ EOD;
     {
 
         $config = $this->createMock(PrefixerConfigInterface::class);
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
         // If condition: Single.
         $contents = <<<'EOD'
-if ( \ST\StraussTestPackage2::hello() ) {
+if ( \ST\StraussTestClass::hello() ) {
     echo 'hello world';
 }
 EOD;
         $expected = <<<'EOD'
-if ( \StraussTest\ST\StraussTestPackage2::hello() ) {
+if ( \StraussTest\ST\StraussTestClass::hello() ) {
     echo 'hello world';
 }
 EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1751,11 +1753,14 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol('ST', $file);
         $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
-
-        $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('ST\StraussTestClass', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
@@ -1777,7 +1782,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1823,7 +1828,7 @@ if ( \StraussTest\ST\StraussTestPackage2::hello() && ! \StraussTest\ST\StraussTe
 EOD;
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1857,7 +1862,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1903,7 +1908,7 @@ if ( \StraussTest\ST\StraussTestPackage2::hello() || ! \StraussTest\ST\StraussTe
 EOD;
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1937,7 +1942,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -1986,7 +1991,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2035,7 +2040,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2084,7 +2089,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2133,7 +2138,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2181,7 +2186,7 @@ $assoc_arr1 = array(
 EOD;
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2230,7 +2235,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2309,7 +2314,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2596,7 +2601,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2671,7 +2676,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2757,7 +2762,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2774,7 +2779,7 @@ EOD;
         $classSymbol = new ClassSymbol('Aws\Endpoint\UseDualstackEndpoint\Configurations', $file, false, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
-        $functionSymbol = new FunctionSymbol('AWS\boolean_value', $file, $namespaceSymbol);
+        $functionSymbol = new FunctionSymbol('Aws\boolean_value', $file, $namespaceSymbol);
         $discoveredSymbols->add($functionSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
@@ -2815,7 +2820,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -2874,13 +2879,19 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
+        $file2 = new File(
+            'vendor/package/name/src/file2.php',
+            'package/name/src/file2.php',
+            'vendor-prefixed/package/name/src/file2.php',
+        );
+
         $discoveredSymbols = new DiscoveredSymbols();
 
         $namespaceSymbol = new NamespaceSymbol('WPGraphQL\Registry\Utils', $file);
         $namespaceSymbol->setLocalReplacement('StraussTest\WPGraphQL\Registry\Utils');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('WPGraphQL', $file);
+        $classSymbol = new ClassSymbol('WPGraphQL', $file2);
         $classSymbol->setLocalReplacement('StraussTest_WPGraphQL');
         $discoveredSymbols->add($classSymbol);
 
@@ -2914,7 +2925,7 @@ EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'project/vendor/league/oauth2/provideruse.php',
@@ -3051,7 +3062,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -3149,7 +3160,7 @@ EOD;
 
                 $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -3538,6 +3549,9 @@ EOD;
         $discoveredSymbols->add($namespaceSymbol);
 
         $classSymbol = new ClassSymbol('Latte\Macros\BlockMacros', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $classSymbol = new ClassSymbol('Latte\Macros\Compiler', $file, false, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -4029,7 +4043,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -4170,7 +4184,7 @@ EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -4320,7 +4334,7 @@ EOD;
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $replacer->replaceInFiles($discoveredSymbols, [$file]);
 
@@ -4387,7 +4401,7 @@ EOD;
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $replacer->replaceInFiles($discoveredSymbols, [$file]);
 
@@ -4437,7 +4451,7 @@ EOD;
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $replacer->replaceInFiles($discoveredSymbols, [$file]);
 

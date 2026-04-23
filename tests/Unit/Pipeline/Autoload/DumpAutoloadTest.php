@@ -70,8 +70,6 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $sut = new DumpAutoload($config, $filesystem, $this->getLogger(), $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory);
 
         $sut->generatedPrefixedAutoloader();
-
-        $this->expectNotToPerformAssertions();
     }
 
     /**

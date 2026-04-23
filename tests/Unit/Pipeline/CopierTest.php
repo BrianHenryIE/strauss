@@ -90,6 +90,8 @@ class CopierTest extends TestCase
      */
     public function test_file_not_found(): void
     {
+        $this->expectWarningLogs();
+
         $filesystem = $this->getFileSystem();
 
         $sourceDir = 'mem://source';

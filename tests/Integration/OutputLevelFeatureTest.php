@@ -117,6 +117,8 @@ EOD;
 
     public function test_dry_run_output_level(): void
     {
+        $this->expectWarningLogs();
+
         unset($this->logger);
 
         $this->isDryRun = true;
