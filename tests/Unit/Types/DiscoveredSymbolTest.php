@@ -20,12 +20,13 @@ class DiscoveredSymbolTest extends TestCase
      */
     public function testCreate(): void
     {
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
 
-        $fileMock = Mockery::mock(File::class);
-        $fileMock->expects('getSourcePath')->once()->andReturn('/path/to/file.php');
-        $fileMock->expects('addDiscoveredSymbol')->once();
-
-        $sut = new ClassSymbol('MyClass', $fileMock);
+        $sut = new ClassSymbol('MyClass', $file);
 
         $this->assertEquals('MyClass', $sut->getOriginalSymbol());
     }
@@ -62,12 +63,13 @@ class DiscoveredSymbolTest extends TestCase
      */
     public function testReplacement(): void
     {
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
 
-        $fileMock = Mockery::mock(File::class);
-        $fileMock->expects('getSourcePath')->once()->andReturn('/path/to/file.php');
-        $fileMock->expects('addDiscoveredSymbol')->once();
-
-        $sut = new ClassSymbol('MyClass', $fileMock);
+        $sut = new ClassSymbol('MyClass', $file);
 
         $sut->setLocalReplacement('MyClassRenamed');
 
