@@ -474,11 +474,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $destinationSymlink = $this->getParentSymlink($destination);
 
         if (!$sourceSymlink && !$destinationSymlink) {
-            $this->logger->debug("Creating directory at non-symlinked path {destination}", [
-                'destination' => $destination,
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Creating directory at non-symlinked path {destination}", [
+//                'destination' => $destination,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::move($source, $destination, $config);
             return;
         }
@@ -501,11 +501,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($destination);
 
         if (!$symlink) {
-            $this->logger->debug("Copying file/dir at non-symlinked path {destination}", [
-                'destination' => $destination,
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Copying file/dir at non-symlinked path {destination}", [
+//                'destination' => $destination,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::copy($source, $destination, $config);
             return;
         }
