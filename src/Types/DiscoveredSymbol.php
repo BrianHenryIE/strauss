@@ -81,7 +81,7 @@ abstract class DiscoveredSymbol
      */
     public function addSourceFile(FileBase $sourceFile): void
     {
-        $this->sourceFiles[$sourceFile->getSourcePath()] = $sourceFile;
+        $this->sourceFiles[$sourceFile->getVendorRelativePath()] = $sourceFile;
     }
 
     public function getLocalReplacement(): string
