@@ -195,4 +195,9 @@ class File implements FileBase
     {
         return $this->vendorRelativePath;
     }
+
+    public function getNamespaces(): DiscoveredSymbols
+    {
+        return $this->discoveredSymbols->getNamespaces();
+    }
 }

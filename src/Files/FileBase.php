@@ -61,4 +61,6 @@ interface FileBase
      * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
      */
     public function getDiscoveredSymbols(): DiscoveredSymbols;
+
+    public function getNamespaces(): DiscoveredSymbols;
 }
