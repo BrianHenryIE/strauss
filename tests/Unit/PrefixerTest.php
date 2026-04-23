@@ -556,9 +556,11 @@ EOD;
 
         $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $file = Mockery::mock(File::class);
-        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
-        $file->shouldReceive('addDiscoveredSymbol');
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
@@ -1441,9 +1443,11 @@ EOD;
 
         $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $file = Mockery::mock(File::class);
-        $file->shouldReceive('getSourcePath')->andReturn('prefixer_test.php');
-        $file->shouldReceive('addDiscoveredSymbol');
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
