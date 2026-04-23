@@ -4477,12 +4477,11 @@ EOD;
 
         $discoveredSymbols = new DiscoveredSymbols();
 
-        $namespaceSymbol = new NamespaceSymbol('Symfony\Component\Console\Application', $file);
+        $namespaceSymbol = new NamespaceSymbol('Symfony\Component\Console', $file);
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Vendor\Symfony\Component\Console');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Symfony\Component\Console\Application\Application', $file, false, $namespaceSymbol);
-        $classSymbol->setDoRename(false);
+        $classSymbol = new ClassSymbol('Symfony\Component\Console\Application', $file, false, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $filesystem = $this->getInMemoryFileSystem();
