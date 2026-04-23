@@ -102,6 +102,13 @@ class Prefixer
         }
 
         if (!$this->filesystem->fileExists($file->getTargetAbsolutePath())) {
+            // Some files are only sometimes present.
+            if (in_array($file->getTargetAbsolutePath(), [
+                $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
+                $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
+            ], true)) {
+                return;
+            }
             $this->logger->warning("Expected file does not exist: {targetAbsolutePath}", [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
             ]);
@@ -160,6 +167,13 @@ class Prefixer
             }
 
             if (!$this->filesystem->fileExists($fileAbsolutePath)) {
+                // Some files are only sometimes present.
+                if (in_array($fileAbsolutePath, [
+                    $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
+                    $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
+                    ], true)) {
+                    continue;
+                }
                 $this->logger->warning("Expected file does not exist: {relativeFilePath}", [
                     'relativeFilePath' => $relativeFilePath
                 ]);
