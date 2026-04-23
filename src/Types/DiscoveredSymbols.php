@@ -335,9 +335,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return $this->types[self::NAMESPACE_SYMBOL][$namespace] ?? null;
     }
 
-    public function getClass(string $class): ?ClassSymbol
+    public function getClass(string $fullyQualifiedClassname): ?ClassSymbol
     {
-        return $this->types[self::CLASS_SYMBOL][$class] ?? null;
+        return $this->types[self::CLASS_SYMBOL][$fullyQualifiedClassname] ?? null;
     }
     public function getConst(string $const): ?ConstantSymbol
     {
