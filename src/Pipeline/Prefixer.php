@@ -538,7 +538,9 @@ class Prefixer
                 continue;
             }
 
-            $namespaceSymbol = $namespaceChanges->getNamespace($name->toString());
+            $match = $findPrefixMatch($name->toString());
+
+            $namespaceSymbol = $namespaceChanges->getNamespace($match['original']);
 
             if (!$namespaceSymbol) {
                 continue;
@@ -548,7 +550,6 @@ class Prefixer
                 continue;
             }
 
-            $match = $findPrefixMatch($name->toString());
             $positions[] = [
                 'start' => $name->getStartFilePos(),
                 'end' => $name->getEndFilePos() + 1,

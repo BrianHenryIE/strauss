@@ -2770,6 +2770,9 @@ EOD;
         $classSymbol = new ClassSymbol('Aws\Endpoint\UseDualstackEndpoint\Configurations', $file, false, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
+        $functionSymbol = new FunctionSymbol('AWS\boolean_value', $file, $namespaceSymbol);
+        $discoveredSymbols->add($functionSymbol);
+
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
         $replacer->replaceInFiles($discoveredSymbols, [$file]);
@@ -4499,6 +4502,7 @@ EOD;
 
 
     // Commenting out test that is not failing as required.
+// strauss66 test
 //    public function test_global_class(): void
 //    {
 //        $contents = <<<'EOD'
