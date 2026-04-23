@@ -53,14 +53,18 @@ class VendorComposerAutoload
         $composerAutoloadPhpFilepath = $this->config->getAbsoluteVendorDirectory() . '/autoload.php';
 
         if (!$this->fileSystem->fileExists($composerAutoloadPhpFilepath)) {
-            $this->logger->info("No autoload.php found:" . $composerAutoloadPhpFilepath);
+            $this->logger->info("No autoload.php found: {composerAutoloadPhpFilepath}", [
+                'composerAutoloadPhpFilepath' => $composerAutoloadPhpFilepath
+            ]);
             return;
         }
 
         $newAutoloadPhpFilepath = $this->config->getAbsoluteTargetDirectory() . '/autoload.php';
 
         if (!$this->fileSystem->fileExists($newAutoloadPhpFilepath)) {
-            $this->logger->warning("No new autoload.php found: " . $newAutoloadPhpFilepath);
+            $this->logger->warning("No new autoload.php found: {newAutoloadPhpFilepath}", [
+                'newAutoloadPhpFilepath' => $newAutoloadPhpFilepath
+            ]);
         }
 
         $this->logger->info('Modifying original autoload.php to add `' . $newAutoloadPhpFilepath);
