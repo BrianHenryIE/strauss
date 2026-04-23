@@ -160,6 +160,7 @@ abstract class AbstractRenamespacerCommand extends Command
                     Filesystem::makePathNormalizer($this->workingDir)
                 )
             );
+            $this->filesystem->setLocalFsLocation('mem://');
 
             /** @var FilesystemRegistry $registry */
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
