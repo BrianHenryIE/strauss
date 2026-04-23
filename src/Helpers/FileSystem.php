@@ -96,10 +96,11 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     public static function getFsRoot(?string $path = null): ?string
     {
-        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?? getcwd(), $output_array)) {
+        if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path ?? getcwd(), $output_array)) {
             return strtoupper($output_array[1]);
         }
-        return null;
+        // Relative path.
+        return '';
     }
 
     public static function makePathNormalizer(string $workingDir): PathNormalizer
