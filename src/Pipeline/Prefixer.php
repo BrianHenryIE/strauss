@@ -315,7 +315,7 @@ class Prefixer
         }
 
         /** @var ClassSymbol $classSymbol */
-        foreach ($discoveredSymbols->getClassesInterfacesTraits()->getToRename() as $classSymbol) {
+        foreach ($discoveredSymbols->getNamespacedSymbols()->getToRename() as $classSymbol) {
 //            $this->logger->debug('Searching in {filename} for {type}: {name}', [
 //                'filename' => basename($fileAbsolutePath),
 //                'type' => array_reverse(explode('\\', basename(get_class($classSymbol))))[0],
@@ -377,7 +377,7 @@ class Prefixer
     protected function replaceUseStatementsForNamespacedClasses(array $ast, DiscoveredSymbols $discoveredSymbols): array
     {
         $activeNamespaces = [];
-        foreach ($discoveredSymbols->getClassesInterfacesTraits()->toArray() as $symbol) {
+        foreach ($discoveredSymbols->getNamespacedSymbols()->toArray() as $symbol) {
             if ($symbol instanceof NamespacedSymbol
                 && !$symbol->getNamespace()->isGlobal()
                 && $symbol->isDoRename()

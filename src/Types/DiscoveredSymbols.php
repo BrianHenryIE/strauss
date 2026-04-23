@@ -109,7 +109,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return new DiscoveredSymbols(
             array_merge(
                 array_values($this->getNamespaces()->toArray()),
-                array_values($this->getClassesInterfacesTraits()->toArray()),
+                array_values($this->getNamespacedSymbols()->toArray()),
                 array_values($this->getConstants()->toArray()),
                 array_values($this->getDiscoveredFunctions()->toArray()),
             )
@@ -138,9 +138,11 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @return array<string, ClassSymbol>
+     * Get all symbols that may have a namespace (i.e. no classes, interfaces etc.).
+     *
+     * @return array<string, NamespacedSymbol>
      */
-    public function getClassesInterfacesTraits(): DiscoveredSymbols
+    public function getNamespacedSymbols(): DiscoveredSymbols
     {
         return new DiscoveredSymbols(
             array_merge(
@@ -159,7 +161,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     {
         return new DiscoveredSymbols(
             array_filter(
-                $this->getClassesInterfacesTraits()->toArray(),
+                $this->getNamespacedSymbols()->toArray(),
                 fn($symbol) => ($symbol instanceof NamespacedSymbol) && $symbol->getNamespace()->isGlobal()
             )
         );

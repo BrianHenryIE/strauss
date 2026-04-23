@@ -87,7 +87,7 @@ class DiscoveredSymbolsTest extends TestCase
     }
 
     /**
-     * @covers ::getClassesInterfacesTraits
+     * @covers ::getNamespacedSymbols
      */
     public function testGetClassesInterfacesTraits(): void
     {
@@ -102,7 +102,7 @@ class DiscoveredSymbolsTest extends TestCase
         $sut->add(new NamespaceSymbol('myNamespace'));
         $sut->add(new ClassSymbol('myClass', $file));
 
-        $result = $sut->getClassesInterfacesTraits()->toArray();
+        $result = $sut->getNamespacedSymbols()->toArray();
 
         $this->assertCount(1, $result);
         $firstResult = array_pop($result);
