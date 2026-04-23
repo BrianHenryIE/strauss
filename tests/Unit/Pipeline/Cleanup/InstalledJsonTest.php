@@ -158,13 +158,18 @@ EOD;
         /** @var ComposerPackage|MockInterface $composerPackageMock */
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
         $composerPackageMock->expects('didDelete')->once()->andReturnFalse();
+        $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
+        $composerPackageMock->expects('addFile')->once();
 
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
         $flatDependencyTree = ['psr/container'=> $composerPackageMock];
 
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
-        $file->expects('addDiscoveredSymbol');
+        $file = new FileWithDependency(
+            $composerPackageMock,
+            'package/name/src/file.php',
+            'vendor/package/name/src/file.php',
+            'vendor/psr/container/src/ContainerInterface.php',
+        );
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
@@ -210,13 +215,18 @@ EOD;
         /** @var ComposerPackage|MockInterface $composerPackageMock */
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
         $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
+        $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
+        $composerPackageMock->expects('addFile')->once();
 
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
         $flatDependencyTree = ['psr/container'=> $composerPackageMock];
 
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
-        $file->expects('addDiscoveredSymbol');
+        $file = new FileWithDependency(
+            $composerPackageMock,
+            'vendor/psr/container/src/ContainerInterface.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
@@ -308,13 +318,19 @@ EOD;
         /** @var ComposerPackage|MockInterface $composerPackageMock */
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
         $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
+        $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
+        $composerPackageMock->expects('addFile')->once();
 
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
         $flatDependencyTree = ['psr/log'=> $composerPackageMock];
 
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->andReturn('vendor/psr/log/src/AbstractLogger.php');
-        $file->expects('addDiscoveredSymbol');
+        $file = new FileWithDependency(
+            $composerPackageMock,
+            'vendor/psr/log/src/AbstractLogger.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Log', $file);
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Log',);

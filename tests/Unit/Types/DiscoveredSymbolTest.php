@@ -37,15 +37,19 @@ class DiscoveredSymbolTest extends TestCase
     public function testMultipleSourceFiles(): void
     {
 
-        $fileMock1 = Mockery::mock(File::class);
-        $fileMock1->expects('getSourcePath')->once()->andReturn('/path/to/file1.php');
-        $fileMock1->expects('addDiscoveredSymbol')->once();
+        $file1 = new File(
+            'vendor/package1/name/src/file1.php',
+            'package2/name/src/file1.php',
+            'vendor-prefixed/package2/name/src/file1.php',
+        );
+        $file2 = new File(
+            'vendor/package2/name/src/file2.php',
+            'package2/name/src/file2.php',
+            'vendor-prefixed/package2/name/src/file2.php',
+        );
 
-        $fileMock2 = Mockery::mock(File::class);
-        $fileMock2->expects('getSourcePath')->once()->andReturn('/path/to/file2.php');
-
-        $sut = new ClassSymbol('MyClass', $fileMock1);
-        $sut->addSourceFile($fileMock2);
+        $sut = new ClassSymbol('MyClass', $file1);
+        $sut->addSourceFile($file2);
 
         $result = $sut->getSourceFiles();
 

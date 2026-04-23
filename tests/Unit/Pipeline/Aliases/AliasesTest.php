@@ -53,9 +53,12 @@ class AliasesTest extends TestCase
         );
 
         $symbols = new DiscoveredSymbols();
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->times(2)->andReturn('vendor/foo/bar/baz.php');
-        $file->expects('addDiscoveredSymbol')->times(2);
+
+        $file = new File(
+            'vendor/foo/bar/baz.php',
+            'foo/bar/baz.php',
+            'vendor-prefixed/foo/bar/baz.php',
+        );
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; class Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; class Baz {}');
@@ -110,9 +113,11 @@ EOD;
 
         $symbols = new DiscoveredSymbols();
 
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->atLeast()->once()->andReturn('vendor/foo/bar/baz.php');
-        $file->expects('addDiscoveredSymbol')->atLeast()->once();
+        $file = new File(
+            'vendor/foo/bar/baz.php',
+            'foo/bar/baz.php',
+            'vendor-prefixed/foo/bar/baz.php',
+        );
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; class Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; class Baz {}');
@@ -153,9 +158,12 @@ EOD;
         );
 
         $symbols = new DiscoveredSymbols();
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->times(2)->andReturn('vendor/foo/bar/baz.php');
-        $file->expects('addDiscoveredSymbol')->times(2);
+
+        $file = new File(
+            'vendor/foo/bar/baz.php',
+            'foo/bar/baz.php',
+            'vendor-prefixed/foo/bar/baz.php',
+        );
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Foo\\Bar; interface Baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Baz\\Foo\\Bar; interface Baz {}');
@@ -209,9 +217,12 @@ EOD;
         );
 
         $symbols = new DiscoveredSymbols();
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->atLeast()->once()->andReturn('vendor/foo/bar/baz.php');
-        $file->expects('addDiscoveredSymbol')->atLeast()->once();
+
+        $file = new File(
+            'vendor/foo/bar/baz.php',
+            'foo/bar/baz.php',
+            'vendor-prefixed/foo/bar/baz.php',
+        );
 
         $fileSystem->write('vendor/foo/bar/baz.php', '<?php namespace Bar; function baz {}');
         $fileSystem->write('vendor-prefixed/foo/bar/baz.php', '<?php namespace Foo\\Bar; function baz {}');
