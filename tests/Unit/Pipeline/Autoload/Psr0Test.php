@@ -6,7 +6,6 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -17,28 +16,19 @@ use Mockery;
  */
 class Psr0Test extends TestCase
 {
-    protected function makeFilesystem(): FileSystem
-    {
-        $filesystem = Mockery::mock(FileSystem::class);
-        $filesystem->allows('normalizePath')->andReturnUsing(
-            fn(string $path) => str_replace(['\\', '//'], ['/', '/'], $path)
-        );
-        return $filesystem;
-    }
-
     /**
      * @covers ::setTargetDirectory
      */
     public function test_non_file_with_dependency_is_skipped(): void
     {
         $file = Mockery::mock(FileBase::class);
-        $file->allows('getSourcePath')->andReturn('/vendor/pimple/pimple/src/Pimple/Container.php');
+        $file->allows('getSourcePath')->andReturn('vendor/pimple/pimple/src/Pimple/Container.php');
         $file->shouldNotReceive('setTargetAbsolutePath');
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
 
-        $sut = new Psr0($this->makeFilesystem(), $this->getLogger());
+        $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
         $sut->setTargetDirectory($discoveredFiles);
 
         $this->expectNotToPerformAssertions();
@@ -50,7 +40,7 @@ class Psr0Test extends TestCase
     public function test_non_php_file_is_skipped(): void
     {
         $file = Mockery::mock(FileWithDependency::class);
-        $file->allows('getSourcePath')->andReturn('/vendor/pimple/pimple/src/Pimple/Container.php');
+        $file->allows('getSourcePath')->andReturn('vendor/pimple/pimple/src/Pimple/Container.php');
         $file->expects('isPhpFile')->andReturnFalse();
         $file->shouldNotReceive('getDependency');
         $file->shouldNotReceive('setTargetAbsolutePath');
@@ -58,7 +48,7 @@ class Psr0Test extends TestCase
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
 
-        $sut = new Psr0($this->makeFilesystem(), $this->getLogger());
+        $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
         $sut->setTargetDirectory($discoveredFiles);
 
         $this->expectNotToPerformAssertions();
@@ -73,7 +63,7 @@ class Psr0Test extends TestCase
         $dependency->expects('getAutoload')->andReturn(['psr-4' => ['Pimple\\' => 'src/']]);
 
         $file = Mockery::mock(FileWithDependency::class);
-        $file->allows('getSourcePath')->andReturn('/vendor/pimple/pimple/src/Pimple/Container.php');
+        $file->allows('getSourcePath')->andReturn('vendor/pimple/pimple/src/Pimple/Container.php');
         $file->expects('isPhpFile')->andReturnTrue();
         $file->expects('getDependency')->andReturn($dependency);
         $file->shouldNotReceive('getNamespaces');
@@ -82,7 +72,7 @@ class Psr0Test extends TestCase
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
 
-        $sut = new Psr0($this->makeFilesystem(), $this->getLogger());
+        $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
         $sut->setTargetDirectory($discoveredFiles);
 
         $this->expectNotToPerformAssertions();
@@ -101,20 +91,20 @@ class Psr0Test extends TestCase
         $dependency->expects('getAutoload')->andReturn(['psr-0' => ['Pimple' => 'src/']]);
 
         $file = Mockery::mock(FileWithDependency::class);
-        $file->allows('getSourcePath')->andReturn('/vendor/pimple/pimple/src/Pimple/Container.php');
+        $file->allows('getSourcePath')->andReturn('vendor/pimple/pimple/src/Pimple/Container.php');
         $file->expects('isPhpFile')->andReturnTrue();
         $file->expects('getDependency')->andReturn($dependency);
         $file->expects('getNamespaces')->andReturn($namespaces);
         $file->expects('getPackageRelativePath')->andReturn('src/Pimple/Container.php');
-        $file->expects('getTargetAbsolutePath')->andReturn('/vendor-prefixed/pimple/pimple/src/Pimple/Container.php');
+        $file->expects('getTargetAbsolutePath')->andReturn('vendor-prefixed/pimple/pimple/src/Pimple/Container.php');
         $file->expects('setTargetAbsolutePath')
-            ->with('/vendor-prefixed/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php')
+            ->with('vendor-prefixed/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php')
             ->once();
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
 
-        $sut = new Psr0($this->makeFilesystem(), $this->getLogger());
+        $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
         $sut->setTargetDirectory($discoveredFiles);
 
         $this->addToAssertionCount(1); // Mockery verifies setTargetAbsolutePath was called with expected path
@@ -135,18 +125,18 @@ class Psr0Test extends TestCase
         $dependency->expects('getAutoload')->andReturn(['psr-0' => ['Pimple' => 'src/']]);
 
         $file = Mockery::mock(FileWithDependency::class);
-        $file->allows('getSourcePath')->andReturn('/vendor/pimple/pimple/src/Pimple/ServiceIterator.php');
+        $file->allows('getSourcePath')->andReturn('vendor/pimple/pimple/src/Pimple/ServiceIterator.php');
         $file->expects('isPhpFile')->andReturnTrue();
         $file->expects('getDependency')->andReturn($dependency);
         $file->expects('getNamespaces')->andReturn($namespaces);
         $file->expects('getPackageRelativePath')->andReturn('src/Pimple/ServiceIterator.php');
-        $file->expects('getTargetAbsolutePath')->andReturn('/vendor-prefixed/pimple/pimple/src/Pimple/ServiceIterator.php');
+        $file->expects('getTargetAbsolutePath')->andReturn('vendor-prefixed/pimple/pimple/src/Pimple/ServiceIterator.php');
         $file->expects('setTargetAbsolutePath')->once();
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
 
-        $sut = new Psr0($this->makeFilesystem(), $this->getLogger());
+        $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
         $sut->setTargetDirectory($discoveredFiles);
 
         $this->assertTrue($this->getTestLogger()->hasWarning('More than one namespace in PSR-0 file.'));
