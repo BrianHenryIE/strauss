@@ -504,7 +504,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
             return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
         }
 
-        if(\Composer\Util\Filesystem::isStreamWrapperPath($this->localFsLocation)) {
+        if (\Composer\Util\Filesystem::isStreamWrapperPath($this->localFsLocation)) {
             return $this->localFsLocation . $path;
         }
 
@@ -542,7 +542,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         return $this->normalizer;
     }
 
-    public function setLocalFsLocation( string $string ): void {
+    public function setLocalFsLocation(string $string): void
+    {
         $this->localFsLocation = $string;
     }
 }
