@@ -270,6 +270,11 @@ class Cleanup
                 continue;
             }
 
+            // Meta packages.
+            if (is_null($package->getPackageAbsolutePath())) {
+                continue;
+            }
+
             // Normal package.
             $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
 
