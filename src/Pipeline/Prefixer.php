@@ -268,14 +268,13 @@ class Prefixer
 
         $positions = array_merge(
             $positions,
-            $this->replaceNamespaces($ast, $discoveredSymbols->getNamespaces(), $file),
+            $this->replaceNamespaces($ast, $discoveredSymbols, $file),
             $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
             $this->replaceUseStatementsForNamespacedClasses($ast, $discoveredSymbols),
             $this->findFunctionPositionsInAst($ast, $functionsToRename),
             $this->findDocCommentPositionsInAst($ast, $discoveredSymbols),
             $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols),
         );
-
 
         // Adjust positions to be relative to the original $contents (before any <?php prepend).
         if ($phpOpenerLen > 0) {
@@ -423,26 +422,25 @@ class Prefixer
         foreach ($useItems as $item) {
             $nameStr = $item->name->toString();
             // Full match.
-            if($namespacedSymbols->get($nameStr)){
-
+            if ($namespacedSymbols->get($nameStr)) {
                 $positions[] = [
                     'start'       => $item->name->getStartFilePos(),
                     'end'         => $item->name->getEndFilePos() + 1,
                     'replacement' => $namespacedSymbols->get($nameStr)->getReplacementFqdnName(),
                 ];
                 break;
-            }else { // Partial match (group)
-                foreach ( $activeNamespaces as $original => $replacement ) {
-                    if ( $nameStr === $original || str_starts_with( $nameStr, $original . '\\' ) ) {
+            } else { // Partial match (group)
+                foreach ($activeNamespaces as $original => $replacement) {
+                    if ($nameStr === $original || str_starts_with($nameStr, $original . '\\')) {
 //                if ($nameStr === $original) {
                         /** @var ?DiscoveredSymbol $classSymbol */
-                        $classSymbol = $namespacedSymbols->get( $nameStr );
-                        if ( $classSymbol && $classSymbol->isDoRename() ) {
-                            $nsReplacement = rtrim( $classSymbol->getNamespace()->getReplacementFqdnName(), '\\' );
+                        $classSymbol = $namespacedSymbols->get($nameStr);
+                        if ($classSymbol && $classSymbol->isDoRename()) {
+                            $nsReplacement = rtrim($classSymbol->getNamespace()->getReplacementFqdnName(), '\\');
                             $newName       = $nsReplacement . '\\' . $classSymbol->getLocalReplacement();
 //                        $newName = $nsReplacement . $classSymbol->getLocalReplacement();
                         } else {
-                            $newName = $replacement . substr( $nameStr, strlen( $original ) );
+                            $newName = $replacement . substr($nameStr, strlen($original));
                         }
 
                         $positions[] = [
@@ -459,11 +457,11 @@ class Prefixer
         return $positions;
     }
 
-    protected function replaceNamespaces(array $ast, DiscoveredSymbols $namespaceChanges, FileBase $file): array
+    protected function replaceNamespaces(array $ast, DiscoveredSymbols $discoveredSymbols, FileBase $file): array
     {
-        $namespaces = $namespaceChanges->getNamespaces();
-        $namespacedChanges = $namespaceChanges->getNamespacedSymbols()->notGlobal();
-        if (empty($namespaceChanges)) {
+        $namespaces = $discoveredSymbols->getNamespaces();
+        $namespacedChanges = $discoveredSymbols->getNamespacedSymbols()->notGlobal();
+        if (empty($namespaces->getToRename())) {
             return [];
         }
 
@@ -479,7 +477,6 @@ class Prefixer
         $positions = [];
         $handled = [];
 
-
         /**
          * Prefix lookup for qualified names like Aws\SomeClass or Aws\boolean_value():
          * walks from the longest prefix down to length-1, doing exact key lookups.
@@ -487,11 +484,11 @@ class Prefixer
          *
          * @param string[] $parts
          */
-        $findPrefixSymbol = function (array $parts) use ($symbolMap, $namespaceChanges): ?array {
+        $findPrefixSymbol = function (array $parts) use ($symbolMap, $discoveredSymbols): ?array {
             for ($len = count($parts) - 1; $len >= 1; $len--) {
                 $prefix = implode('\\', array_slice($parts, 0, $len));
 
-                $discoveredNamespace = $namespaceChanges->getNamespace($prefix);
+                $discoveredNamespace = $discoveredSymbols->getNamespace($prefix);
                 if (isset($symbolMap[$prefix])) {
 //                if ($discoveredNamespace) {
                     return [
@@ -546,9 +543,9 @@ class Prefixer
         foreach ($nodeFinder->findInstanceOf($ast, Use_::class) as $useStmt) {
             foreach ($useStmt->uses as $item) {
                 $nameStr = $item->name->toString();
-                $handled[$item->name->getStartFilePos()] = true;
+//                $handled[$item->name->getStartFilePos()] = true;
                 if ($useStmt->type !== Use_::TYPE_NORMAL || $file->getDiscoveredSymbols()->count() === 2) {
-                    if ($symbol = $namespaceChanges->get($nameStr)) {
+                    if ($symbol = $discoveredSymbols->get($nameStr)) {
                         $replacement = $symbol->getReplacementFqdnName();
                     } elseif ($match = $findPrefixSymbol($item->name->getParts())) {
                         // groups
@@ -575,7 +572,7 @@ class Prefixer
                 continue;
             }
             $nameStr = $groupUse->prefix->toString();
-            if ($symbol = $namespaceChanges->get($nameStr)) {
+            if ($symbol = $discoveredSymbols->get($nameStr)) {
                 $replacement = $symbol->getReplacementFqdnName();
             } elseif ($match = $findPrefixSymbol($groupUse->prefix->getParts())) {
                 $replacement = rtrim($match['symbol']->getReplacementFqdnName(), '\\') . '\\' . $match['suffix'];
@@ -595,7 +592,7 @@ class Prefixer
             if (isset($handled[$name->getStartFilePos()])) {
                 continue;
             }
-            if ($symbol = $namespaceChanges->get($name->toString())) {
+            if ($symbol = $namespacedChanges->get($name->toString())) {
                 $replacement = $symbol->getReplacementFqdnName();
             } elseif ($match = $findPrefixSymbol($name->getParts())) {
                 $replacement = rtrim($match['symbol']->getReplacementFqdnName(), '\\') . '\\' . $match['suffix'];
@@ -837,9 +834,9 @@ class Prefixer
                         $useClassname = array_reverse(explode('\\', $useItem->name->toString()))[0];
 
                         $replacementString = $discoveredSymbol->getLocalReplacement();
-                        if ($replacementClassname !== $useClassname && !$useItem->alias) {
-                            $replacementString .= ' as ' . $useClassname;
-                        }
+                    if ($replacementClassname !== $useClassname && !$useItem->alias) {
+                        $replacementString .= ' as ' . $useClassname;
+                    }
 
                         $positions[] = [
                             'start' => $useItem->name->getStartFilePos(),
@@ -1061,7 +1058,7 @@ class Prefixer
             return $node->getDocComment() !== null;
         });
 
-        if(sizeof($commentNodes)===0){
+        if (sizeof($commentNodes)===0) {
             return [];
         }
 
