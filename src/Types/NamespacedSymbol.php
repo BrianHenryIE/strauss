@@ -35,7 +35,7 @@ class NamespacedSymbol extends DiscoveredSymbol
     public function getFqdnReplacement(): string
     {
         return $this->isDoRename()
-            ? $this->namespace->getLocalReplacement() . '\\' . $this->getLocalReplacement()
+            ? trim($this->namespace->getLocalReplacement() . '\\' . $this->getLocalReplacement(), '\\')
             : $this->fqdnOriginalSymbol;
     }
 
