@@ -401,6 +401,7 @@ class InstalledJson
                             // Replace $originalNamespace with updated namespace
 
                             // Just for dev – find a package like this and write a test for it.
+                            // pear/pear-core-minimal
                             if (empty($originalNamespace)) {
                                 // In the case of `nesbot/carbon`, it uses an empty namespace but the classes are in the `Carbon`
                                 // namespace, so using `override_autoload` should be a good solution if this proves to be an issue.
