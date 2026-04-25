@@ -126,7 +126,7 @@ class MarkSymbolsForRenamingTest extends TestCase
     public function testExcludeConstantsByNameNotMarkedForRenaming(): void
     {
         $package = Mockery::mock(ComposerPackage::class);
-        $package->shouldReceive('getPackageName')->andReturn('some/package');
+        $package->shouldReceive('getPackageName')->andReturn('some/package')->zeroOrMoreTimes();
 
         $config = Mockery::mock(MarkSymbolsForRenamingConfigInterface::class);
         $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
@@ -146,6 +146,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
 
         $dependency = Mockery::mock(ComposerPackage::class);
+        $dependency->expects('getPackageName')->andReturn('some/package')->zeroOrMoreTimes();
         $dependency->expects('getPackageAbsolutePath')->andReturn('vendor/some/package');
         $dependency->expects('addFile');
         $file = new FileWithDependency(
