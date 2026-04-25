@@ -128,6 +128,14 @@ class StraussIssue146Test extends IntegrationTestCase
         $this->assertStringNotContainsString('namespace Symfony\Component\Console;', $php_string);
         // Confirm solution is correct.
         $this->assertStringContainsString('namespace BrianHenryIE\Strauss\Symfony\Component\Console;', $php_string);
+
+        // vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+        // namespace Symfony\Component\Console;
+        $php_string = file_get_contents($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
+        // Confirm problem is gone.
+        $this->assertStringNotContainsString('use Composer\IO\IOInterface;', $php_string);
+        // Confirm solution is correct.
+        $this->assertStringContainsString('use BrianHenryIE\Strauss\Composer\IO\IOInterface;', $php_string);
     }
 
     public function test_prefix_own_classes_for_test(): void
