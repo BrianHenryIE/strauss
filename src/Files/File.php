@@ -75,11 +75,6 @@ class File implements FileBase
         return $this->doCopy;
     }
 
-    public function setIsAutoloaded(bool $isAutoloaded): void
-    {
-        $this->isAutoloaded = $isAutoloaded;
-    }
-
     public function isAutoloaded(): bool
     {
         return false;
