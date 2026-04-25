@@ -105,16 +105,18 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     {
         $found = array_reduce(
             $this->types,
-            fn (int $carry, array $symbol) => $carry + (int) isset($symbol[$fqdnName]),
-            0
+            fn (array $carry, array $symbol) => isset($symbol[$fqdnName]) ? array_merge($carry, [$symbol[$fqdnName]]) : $carry,
+            []
         );
 
-        if ($found === 0) {
+        if (count($found) === 0) {
             return null;
         }
 
-        if ($found > 1) {
-            throw new \Exception('multiple symbols with the same name');
+        if (count($found) > 1) {
+            $names = array_map(fn (DiscoveredSymbol $symbol) => $symbol->getName(), $found);
+            // E.g. an interface and class have the same name.
+            throw new \Exception('multiple symbols with the same name: ' . implode(', ', $names));
         }
 
         return $this->getClass($fqdnName)
