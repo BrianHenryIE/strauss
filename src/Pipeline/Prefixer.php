@@ -502,7 +502,7 @@ class Prefixer
             }
             $nameStr = $ns->name->toString();
 
-            if(isset($symbolMap[$nameStr])){
+            if (isset($symbolMap[$nameStr])) {
                 $namespaceSymbol = $symbolMap[$nameStr];
                 $positions[] = [
                     'start' => $ns->name->getStartFilePos(),
@@ -609,7 +609,7 @@ class Prefixer
                 continue;
             }
 
-            if(isset($symbolMap[$name->toString()])) {
+            if (isset($symbolMap[$name->toString()])) {
                 $namespaceSymbol = $symbolMap[$name->toString()];
                 $positions[] = [
                     'start' => $name->getStartFilePos(),
@@ -1064,12 +1064,17 @@ class Prefixer
 //                $docSearchStr = '\\' . $symbol->getOriginalSymbol();
                 $docSearchStr = $symbol->getOriginalSymbol();
                 $docSearchLen = strlen($docSearchStr);
+                // For global symbols (no \ in name), also treat \ as a boundary character
+                // so \GlobalClass is left to findGlobalSymbolPositionInComment.
+                $beforePattern = strpos($docSearchStr, '\\') === false
+                    ? '/[a-zA-Z0-9_\x7f-\xff\\\\]/'
+                    : '/[a-zA-Z0-9_\x7f-\xff]/';
                 $offset = 0;
                 while (($pos = strpos($text, $docSearchStr, $offset)) !== false) {
                     $after = $pos + $docSearchLen;
-                    if ($after >= strlen($text)
-                        || !preg_match('/[a-zA-Z0-9_\x7f-\xff]/', $text[$after])
-                    ) {
+                    $beforeOk = $pos === 0 || !preg_match($beforePattern, $text[$pos - 1]);
+                    $afterOk  = $after >= strlen($text) || !preg_match('/[a-zA-Z0-9_\x7f-\xff]/', $text[$after]);
+                    if ($beforeOk && $afterOk) {
                         $positions[] = [
                             'start' => $doc->getStartFilePos() + $pos,
                             'end' => $doc->getStartFilePos() + $after,
