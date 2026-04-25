@@ -11,6 +11,8 @@ final class StraussIssue64Test extends IntegrationTestCase
 {
     public function test_fails_when_symlinked_and_delete_vendor_files(): void
     {
+        $this->expectErrorLogs();
+
         // Do not use color-logger for this test, use the actual consolelogger.
         $this->logger = null;
 

@@ -74,8 +74,6 @@ class DryRunFeatureTest extends IntegrationTestCase
      */
     public function test_happy_path(): void
     {
-        $this->expectWarningLogs();
-
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
@@ -117,8 +115,6 @@ EOD;
      */
     public function test_cli_argument(): void
     {
-        $this->expectWarningLogs();
-
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
@@ -202,13 +198,6 @@ EOD;
      */
     public function testGenerateAutoload(): void
     {
-        /**
-         * TODO: AutoloadGenerator::dump() fails when using mem:// filesystem.
-         *
-         * @see \Composer\Util\Filesystem::safeCopy()
-         */
-        $this->expectWarningLogs();
-
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
@@ -252,8 +241,6 @@ EOD;
      */
     public function test_composer_files_not_modified(): void
     {
-        $this->expectWarningLogs();
-
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss",
