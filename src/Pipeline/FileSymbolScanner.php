@@ -107,7 +107,8 @@ class FileSymbolScanner
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
         foreach ($files->getFiles() as $file) {
-            if ($file instanceof FileWithDependency && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
+            if ($file instanceof FileWithDependency
+                && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
                 /**
                  * We will not prefix symbols found in this file because it is not in a default or listed package.
                  *
@@ -160,7 +161,10 @@ class FileSymbolScanner
                 $isAbstract = (bool) $class->is_abstract;
                 $extends     = $class->parentClass;
                 $interfaces  = $class->interfaces;
-                $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $extends, $namespaceSymbol, $interfaces);
+                $classSymbol = $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $extends, $namespaceSymbol, $interfaces);
+                if ($classSymbol) {
+                    $classSymbol->setDoRename($file->isDoPrefix());
+                }
             }
 
             /** @var PHPFunction[] $phpFunctions */
@@ -175,6 +179,7 @@ class FileSymbolScanner
                     $this->add($functionSymbol);
                 }
                 $functionSymbol->addSourceFile($file);
+                $functionSymbol->setDoRename($file->isDoPrefix());
             }
 
             /** @var PHPConst[] $phpConstants */
@@ -186,6 +191,7 @@ class FileSymbolScanner
                     $this->add($constantSymbol);
                 }
                 $constantSymbol->addSourceFile($file);
+                $constantSymbol->setDoRename($file->isDoPrefix());
             }
 
             $phpInterfaces = $phpCode->getInterfaces();
@@ -196,6 +202,7 @@ class FileSymbolScanner
                     $this->add($interfaceSymbol);
                 }
                 $interfaceSymbol->addSourceFile($file);
+                $interfaceSymbol->setDoRename($file->isDoPrefix());
             }
 
             $phpTraits = $phpCode->getTraits();
@@ -206,6 +213,7 @@ class FileSymbolScanner
                     $this->add($traitSymbol);
                 }
                 $traitSymbol->addSourceFile($file);
+                $traitSymbol->setDoRename($file->isDoPrefix());
             }
         }
     }
@@ -223,6 +231,7 @@ class FileSymbolScanner
         try {
             $ast = $parser->parse(trim($contents)) ?? [];
         } catch (\PhpParser\Error $e) {
+            $this->logger->error('Parse error: ' . $e->getMessage());
             return [];
         }
 
@@ -269,13 +278,13 @@ class FileSymbolScanner
         ?string $extends,
         ?NamespaceSymbol $namespace,
         array $interfaces
-    ): void {
+    ): ?ClassSymbol {
         // TODO: This should be included but marked not to prefix.
         if (in_array($fqdnClassname, $this->getBuiltIns())) {
             $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
                 'symbolName' => $fqdnClassname,
             ]);
-            return;
+            return null;
         }
 
         $classSymbol = $this->discoveredSymbols->getClass($fqdnClassname);
@@ -287,6 +296,7 @@ class FileSymbolScanner
             $classSymbol->addSourceFile($file);
             $file->addDiscoveredSymbol($classSymbol);
         }
+        return $classSymbol;
     }
 
     protected function addDiscoveredNamespaceChange(string $fqdnNamespace, ?FileBase $file = null): NamespaceSymbol
