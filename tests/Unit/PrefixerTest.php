@@ -90,11 +90,15 @@ EOD;
         );
         $file->setDoPrefix(true);
 
+        $discoveredSymbols = new DiscoveredSymbols();
+
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
-
-        $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Google\Http\Batch', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+        $classSymbol->setDoRename(false);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
         $file->setDoUpdate(true);
