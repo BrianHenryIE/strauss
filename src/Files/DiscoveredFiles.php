@@ -78,4 +78,15 @@ class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
     {
         return $this->files;
     }
+
+    /**
+     * @return FileWithDependency[]
+     */
+    public function getPsr0(): array
+    {
+        return array_filter(
+            $this->files,
+            fn(FileBase $file) => $file instanceof FileWithDependency && $file->isPsr0()
+        );
+    }
 }
