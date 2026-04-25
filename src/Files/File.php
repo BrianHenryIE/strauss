@@ -22,8 +22,6 @@ class File implements FileBase
      */
     protected bool $doCopy = true;
 
-    protected bool $isAutoloaded = false;
-
     /**
      * Should this file be deleted from the source directory?
      *
@@ -84,7 +82,7 @@ class File implements FileBase
 
     public function isAutoloaded(): bool
     {
-        return $this->isAutoloaded;
+        return false;
     }
 
     /**
