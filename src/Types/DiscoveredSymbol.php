@@ -64,7 +64,7 @@ abstract class DiscoveredSymbol
     {
         // TODO: Should this be here or should `::isDoRename()` always be called at the calling site.
         return $this->isDoRename()
-            ? ($this->localReplacement ?? $this->fqdnOriginalSymbol)
+            ? trim(($this->localReplacement ?? $this->fqdnOriginalSymbol), '\\')
             : $this->fqdnOriginalSymbol;
     }
 
