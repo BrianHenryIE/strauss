@@ -145,12 +145,16 @@ class MarkSymbolsForRenamingTest extends TestCase
 
         $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
 
-        $file = new File(
+        $dependency = Mockery::mock(ComposerPackage::class);
+        $dependency->expects('getPackageAbsolutePath')->andReturn('vendor/some/package');
+        $dependency->expects('addFile');
+        $file = new FileWithDependency(
+            $dependency,
             'vendor/some/package/src/bootstrap.php',
             'some/package/src/bootstrap.php',
             'vendor-prefixed/some/package/src/bootstrap.php'
         );
-        $file->setIsAutoloaded(true);
+        $file->addAutoloader('classmap');
 
         $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file);
 
