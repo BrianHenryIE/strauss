@@ -430,7 +430,17 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
 
         if ($this->config->isTargetDirectoryVendor()) {
-            // Nothing to do.
+            // PSR-0 files need to be moved.
+            foreach ($this->discoveredFiles->getPsr0() as $file) {
+                if ($file->getSourcePath() === $file->getTargetAbsolutePath()) {
+                    continue;
+                }
+                $this->filesystem->copy( // TODO: change to MOVE
+                    $file->getSourcePath(),
+                    $file->getTargetAbsolutePath()
+                );
+            }
+
             return;
         }
 
