@@ -1052,6 +1052,10 @@ class Prefixer
             return $node->getDocComment() !== null;
         });
 
+        if(sizeof($commentNodes)===0){
+            return [];
+        }
+
         $namespacedSymbols = $discoveredSymbols->getNamespacedSymbols()->getToRename();
 
         $this->logger->info('Searching {number_of_comments} comments for {number_of_symbols} symbols', [
@@ -1065,7 +1069,6 @@ class Prefixer
             $text = $doc->getText();
             /** @var NamespacedSymbol $symbol */
             foreach ($namespacedSymbols as $symbol) {
-
                 $replacement = $symbol->getReplacementFqdnName();
 //                $docSearchStr = '\\' . $symbol->getOriginalSymbol();
                 $docSearchStr = $symbol->getOriginalSymbol();
