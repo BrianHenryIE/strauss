@@ -22,6 +22,8 @@ class MozartIssue86Test extends IntegrationTestCase
      */
     public function test_do_not_parse_comments_to_classnames(): void
     {
+        // Empty namespace found in autoload. Behaviour is not fully documented: pear/pear-core-minimal
+        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {
