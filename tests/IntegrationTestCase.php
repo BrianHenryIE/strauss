@@ -22,6 +22,7 @@ use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\StorageAttributes;
+use League\Flysystem\UnixVisibility\VisibilityConverter;
 use SplFileInfo;
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -106,6 +107,13 @@ class IntegrationTestCase extends TestCase
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
+            if (! array_reduce(
+                ['--quiet','--warning','--notice','--info','--debug','--dry-run'],
+                fn(bool $carry, string $level) => $carry || str_contains($params, $level),
+                false
+            )) {
+                $params .= ' --info';
+            }
             // TODO add xdebug to the command
             exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params .' 2>&1', $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
@@ -312,7 +320,10 @@ class IntegrationTestCase extends TestCase
             $pathPrefixer    = new PathPrefixer($localFsLocation, DIRECTORY_SEPARATOR);
 
             $localFileSystemAdapter = new LocalfilesystemAdapter(
-                $localFsLocation
+                $localFsLocation,
+                null,
+                LOCK_EX,
+                LocalfilesystemAdapter::SKIP_LINKS
             );
             $this->localFileSystem = new FileSystem(
                 $localFileSystemAdapter,
