@@ -141,11 +141,6 @@ class IntegrationTestCase extends TestCase
                         parent::initialize($input, $output);
                         $this->setLogger($this->integrationTestCase->getTestLogger());
                     }
-
-                    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
-                    {
-                        return $this->integrationTestCase->getReadOnlyFileSystem($filesystem->getAdapter());
-                    }
                 };
         }
 
