@@ -23,6 +23,8 @@ class Psr0
 {
     use LoggerAwareTrait;
 
+    protected Filesystem $filesystem;
+
     public function __construct(
         Filesystem $filesystem,
         LoggerInterface $logger
