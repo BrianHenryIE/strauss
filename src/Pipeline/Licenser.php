@@ -142,6 +142,10 @@ class Licenser
         /** @var ComposerPackage $dependency */
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
+            // Meta packages.
+            if (is_null($packagePath)) {
+                continue;
+            }
             $packagePath = $this->filesystem->normalizePath($packagePath);
 
             if (!$packagePath) {
