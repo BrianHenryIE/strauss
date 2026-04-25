@@ -52,6 +52,10 @@ class FileEnumerator
             $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
             /** @var string $dependencyPackageAbsolutePath */
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
+            // Meta packages.
+            if (is_null($dependencyPackageAbsolutePath)) {
+                continue;
+            }
             $this->compileFileListForPaths([$dependencyPackageAbsolutePath], $dependency);
         }
 
@@ -102,10 +106,7 @@ class FileEnumerator
         }
 
         if ($dependency) {
-//        $isOutsideProjectDir = $this->filesystem->normalize($dependency->getRealPath())
-//                               !== $this->filesystem->normalize($dependency->getPackageAbsolutePath());
-
-            $isOutsideProjectDir = str_starts_with($dependency->getPackageAbsolutePath(), $this->config->getAbsoluteVendorDirectory());
+            $isOutsideProjectDir = !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath());
 
             $vendorRelativePath = $this->filesystem->getRelativePath(
                 $this->config->getAbsoluteVendorDirectory(),
@@ -126,7 +127,7 @@ class FileEnumerator
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
                 ?? new FileWithDependency(
                     $dependency,
-                    $this->filesystem->normalizePath($vendorRelativePath),
+                    FileSystem::normalizeDirSeparator($vendorRelativePath),
                     $this->filesystem->normalizePath($sourceAbsoluteFilepath),
                     $this->config->getAbsoluteTargetDirectory(). '/' . $vendorRelativePath
                 );
@@ -134,8 +135,10 @@ class FileEnumerator
 //            $f->setTargetAbsolutePath($this->config->getAbsoluteTargetDirectory() . '/' . $vendorRelativePath);
 
             $autoloaderType && $f->addAutoloader($autoloaderType);
-            //         $f->setDoDelete(!$isOutsideProjectDir);
-//            $f->setDoDelete($isOutsideProjectDir);
+
+            if($isOutsideProjectDir) {
+                $f->setDoDelete(false);
+            }
         } else {
             $vendorRelativePath = $this->filesystem->getRelativePath(
                 str_starts_with($sourceAbsoluteFilepath, $this->config->getAbsoluteVendorDirectory()) ? $this->config->getAbsoluteVendorDirectory() : $this->config->getAbsoluteTargetDirectory(),
