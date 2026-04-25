@@ -210,6 +210,10 @@ class IntegrationTestCase extends TestCase
             $registry->unregister('mem');
         } catch (Exception $e) {
         }
+
+        unset($this->localFileSystem);
+        unset($this->symlinkProtectFilesystem);
+        unset($this->readOnlyFileSystem);
     }
 
     /**
