@@ -195,8 +195,8 @@ class ComposerPackage
             $this->vendorRelativePath = $this->packageName;
             $this->packageAbsolutePath = $pathNormalizer->normalizePath(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
         // If the package is symlinked, the path will be outside the working directory.
-        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
-            $this->vendorRelativePath = $output_array[1];
+//        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
+//            $this->vendorRelativePath = $output_array[1];
         } elseif (!($this instanceof ProjectComposerPackage) && file_exists($packageAbsoluteDirectoryPath)) {
             $this->vendorRelativePath =
                 implode(
