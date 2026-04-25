@@ -69,7 +69,7 @@ EOD;
         self::assertStringNotContainsString('use Psr\Log\LoggerInterface', $project_file_php_string);
         self::assertStringContainsString('use BrianHenryIE\Strauss\Psr\Log\LoggerInterface', $project_file_php_string);
 
-        $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LoggerInterface.php');
+        $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/BrianHenryIE/Strauss/Psr/Log/LoggerInterface.php');
         self::assertStringNotContainsString('namespace Psr\Log;', $project_file_php_string);
         self::assertStringContainsString('namespace BrianHenryIE\Strauss\Psr\Log;', $project_file_php_string);
     }
