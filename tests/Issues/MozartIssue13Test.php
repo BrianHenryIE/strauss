@@ -30,7 +30,7 @@ class MozartIssue13Test extends IntegrationTestCase
 {
 	"name": "brianhenryie/mozart-issue-13",
 	"require": {
-		"paypal/rest-api-sdk-php": "*"
+		"paypal/rest-api-sdk-php": "1.14.0"
 	},
 	"extra": {
 		"strauss": {
@@ -54,7 +54,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/paypal/rest-api-sdk-php/lib/PayPal/Log/PayPalLogger.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/paypal/rest-api-sdk-php/lib/BrianHenryIE/Strauss/PayPal/Log/PayPalLogger.php');
 
         // Confirm solution is correct.
         self::assertStringContainsString('constant("\\\\BrianHenryIE\\\\Strauss\\\\Psr\\\\Log\\\\LogLevel::$loggingLevel")', $phpString);
