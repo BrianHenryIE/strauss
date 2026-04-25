@@ -251,9 +251,7 @@ class ComposerPackage
      */
     public function getPackageAbsolutePath(): ?string
     {
-        return !empty($this->packageAbsolutePath)
-            ? $this->packageAbsolutePath
-            : null;
+        return $this->packageAbsolutePath ?? $this->packageRealPath;
     }
 
     /**
@@ -358,7 +356,9 @@ class ComposerPackage
 
     public function setProjectVendorDirectory(string $parentProjectVendorDirectory)
     {
-        $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorRelativePath;
+        if (!is_null($this->packageAbsolutePath)) {
+            $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorRelativePath;
+        }
     }
 
     public function setPackageAbsolutePath(string $packageAbsolutePath)
