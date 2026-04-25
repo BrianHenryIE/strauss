@@ -108,7 +108,7 @@ class AutoloadedFilesEnumerator
                                 'packageName'  => $dependency->getPackageName(),
                             ]);
                         } else {
-                            $file->addAutoloadedIn('files');
+                            $file->addAutoloaderType('files');
                             $file->setDoPrefix(true);
                         }
                     }
@@ -189,7 +189,7 @@ class AutoloadedFilesEnumerator
                  * @see MarkSymbolsForRenaming
                  */
                 $file->setDoPrefix(true);
-                $file->addAutoloadedIn($autoloaderType);
+                $file->addAutoloaderType($autoloaderType);
             }
         }
     }
