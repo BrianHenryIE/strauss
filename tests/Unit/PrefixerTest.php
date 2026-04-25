@@ -88,6 +88,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
@@ -136,6 +137,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
@@ -197,6 +199,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
@@ -238,6 +241,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
@@ -271,6 +275,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
@@ -304,6 +309,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $interfaceSymbol = new InterfaceSymbol($originalName, $file);
         $interfaceSymbol->setLocalReplacement($globalPrefix . $originalName);
@@ -337,6 +343,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
@@ -370,6 +377,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $classSymbol = new ClassSymbol($originalClassname, $file);
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
@@ -404,6 +412,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
@@ -546,7 +555,7 @@ EOD;
      */
     public function test_it_does_not_replace_inside_namespace_singleline(): void
     {
-        $contents = "namespace Mozart; class Hello_World";
+        $contents = "namespace Mozart; class Hello_World {}";
         $expected = $contents;
 
         $originalClassname = 'Hello_World';
@@ -568,7 +577,7 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
 
-        $result = $sut->replaceInString($discoveredSymbols, $contents);
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
 
         $this->assertEqualsRN($expected, $result);
     }
@@ -645,6 +654,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
@@ -686,6 +696,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol1 = new NamespaceSymbol($originalNamespace1, $file);
         $namespaceSymbol1->setLocalReplacement($replacement);
@@ -1288,6 +1299,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -1434,10 +1446,10 @@ EOD;
      */
     public function testDoNotReplaceInVariableNames(): void
     {
-        $contents = "public static function objclone(\$object) {";
+        $contents = "class MyClass { public static function objclone(\$object) {} }";
 
         // NOT public static function objclone($Strauss_Issue19_object) {
-        $expected = "public static function objclone(\$object) {";
+        $expected = "class MyClass { public static function objclone(\$object) {} }";
 
         $originalClassname = 'object';
         $classnamePrefix = 'Prefixer_Test_';
@@ -1458,7 +1470,7 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($classSymbol);
 
-        $result = $sut->replaceInString($discoveredSymbols, $contents);
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
 
         $this->assertEqualsRN($expected, $result);
     }
@@ -2608,6 +2620,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol = new NamespaceSymbol('ST', $file);
         $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
@@ -2683,6 +2696,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol = new NamespaceSymbol('GuzzleHttp', $file);
         $namespaceSymbol->setLocalReplacement('StraussTest\\GuzzleHttp');
@@ -2769,6 +2783,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -2827,6 +2842,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -2878,12 +2894,14 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $file2 = new File(
             'vendor/package/name/src/file2.php',
             'package/name/src/file2.php',
             'vendor-prefixed/package/name/src/file2.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -2915,12 +2933,16 @@ EOD;
 <?php namespace League\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Tool\ArrayAccessorTrait;
+
+class MyClass {}
 EOD;
 
         $expected = <<<'EOD'
 <?php namespace Company\Project\League\OAuth2\Client\Provider;
 
 use Company\Project\League\OAuth2\Client\Tool\ArrayAccessorTrait;
+
+class MyClass {}
 EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -2932,12 +2954,16 @@ EOD;
             'league/oauth2/provideruse.php',
             'project/vendor-prefixed/league/oauth2/provideruse.php'
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
         $providerNamespaceSymbol =new NamespaceSymbol('League\\OAuth2\\Client\\Provider');
         $providerNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Provider');
         $discoveredSymbols->add($providerNamespaceSymbol);
+
+        $classSymbol = new ClassSymbol('League\\OAuth2\\Client\\Provider\\MyClass', $file, false, $providerNamespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $toolNamespaceSymbol = new NamespaceSymbol('League\\OAuth2\\Client\\Tool');
         $toolNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Tool');
@@ -3069,6 +3095,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol = new NamespaceSymbol('Aws', $file);
         $namespaceSymbol->setLocalReplacement('Company\\Project\\Aws');
@@ -3167,6 +3194,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol = new NamespaceSymbol('Aws', $file);
         $namespaceSymbol->setLocalReplacement('Company\\Project\\Aws');
@@ -3228,9 +3256,6 @@ EOD;
         $this->assertEqualsRN($expected, $result);
     }
 
-    /**
-     * @covers ::findFunctionPositionsInAst
-     */
     public function testReplaceFunctions(): void
     {
         $contents = <<<'EOD'
@@ -3483,16 +3508,20 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
 
         $namespaceSymbol = new NamespaceSymbol('GuzzleHttp', $file);
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\GuzzleHttp');
+        $discoveredSymbols->add($namespaceSymbol);
 
-        $symbols = new DiscoveredSymbols();
-        $symbols->add($namespaceSymbol);
+        $classSymbol = new ClassSymbol('GuzzleHttp\\BodySummarizer', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $result = $replacer->replaceInString($symbols, $contents, $file);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
 
         $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -3541,6 +3570,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -3613,6 +3643,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -3672,6 +3703,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -3680,6 +3712,9 @@ EOD;
         $discoveredSymbols->add($namespaceSymbol);
 
         $classSymbol = new ClassSymbol('Latte\Macros\MacroSet', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $classSymbol = new ClassSymbol('Latte\Compiler', $file, false, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -3734,6 +3769,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -3810,6 +3846,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -3877,6 +3914,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -3968,6 +4006,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -4050,6 +4089,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
@@ -4130,6 +4170,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $symbols = new DiscoveredSymbols();
 
@@ -4191,6 +4232,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -4321,6 +4363,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -4388,6 +4431,7 @@ EOD;
             'package/name/src/file.php',
             'vendor-prefixed/package/name/src/file.php',
         );
+        $file->setDoPrefix(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -4508,7 +4552,152 @@ EOD;
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
 
-        $replacer = new Prefixer($config, $filesystem);
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+
+    public function test_classloaader(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace Composer\Autoload;
+
+/**
+ * ClassLoader implements a PSR-0, PSR-4 and classmap class loader.
+ *
+ *     $loader = new \Composer\Autoload\ClassLoader();
+ */
+class ClassLoader
+{
+}
+EOD;
+        $expected = <<<'EOD'
+<?php
+
+namespace Composer\Autoload;
+
+/**
+ * ClassLoader implements a PSR-0, PSR-4 and classmap class loader.
+ *
+ *     $loader = new \Composer\Autoload\ClassLoader();
+ */
+class ClassLoader
+{
+}
+EOD;
+
+        $contents2 = <<<'EOD'
+<?php declare(strict_types=1);
+
+namespace Composer\Autoload;
+
+class AutoloadGenerator {}
+EOD;
+
+        $expected2 = <<<'EOD'
+<?php declare(strict_types=1);
+
+namespace BrianHenryIE\Strauss\Composer\Autoload;
+
+class AutoloadGenerator {}
+EOD;
+
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+        $config->expects('isTargetDirectoryVendor')->andReturnFalse()->times(2);
+        $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
+
+        $file = new File(
+            'vendor/composer/composer/src/Composer/Autoload/ClassLoader.php',
+            'composer/composer/src/Composer/Autoload/ClassLoader.php',
+            'vendor/composer/composer/src/Composer/Autoload/ClassLoader.php',
+        );
+        $file->setDoPrefix(false);
+
+        $file2 = new File(
+            'vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+            'composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+            'vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+        );
+        $file2->setDoPrefix(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $namespaceSymbol = new NamespaceSymbol('Composer\Autoload');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Composer\Autoload');
+        $discoveredSymbols->add($namespaceSymbol);
+
+//        $namespaceSymbol = new NamespaceSymbol('Composer', $file);
+//        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Composer');
+//        $discoveredSymbols->add($namespaceSymbol);
+
+        $classSymbol = new ClassSymbol('Composer\Autoload\AutoloadGenerator', $file, false, $namespaceSymbol);
+        $classSymbol->setDoRename(true);
+        $discoveredSymbols->add($classSymbol);
+
+        $classSymbol = new ClassSymbol('Composer\Autoload\ClassLoader', $file2, false, $namespaceSymbol);
+        $classSymbol->setDoRename(false);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+        $filesystem->write($file2->getTargetAbsolutePath(), $contents2);
+
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file, $file2]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+        $result2 = $filesystem->read($file2->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
+        $this->assertEqualsRN($expected2, $result2);
+    }
+
+    public function test_template_files_with_no_symbols(): void {
+
+        $contents = <<<'EOD'
+<?php
+use MyPackageNamespace\Namespace;
+
+return 'whatever';
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+use BrianHenryIE\Strauss\MyPackageNamespace\Namespace;
+
+return 'whatever';
+EOD;
+
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+//        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
+        $config->expects('isTargetDirectoryVendor')->andReturnFalse();
+        $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(false);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $namespaceSymbol = new NamespaceSymbol('MyPackageNamespace\Namespace', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\MyPackageNamespace\Namespace');
+        $discoveredSymbols->add($namespaceSymbol);
+
+        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem->write($file->getTargetAbsolutePath(), $contents);
+
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
         $replacer->replaceInFiles($discoveredSymbols, [$file]);
 
