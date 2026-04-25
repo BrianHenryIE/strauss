@@ -56,6 +56,9 @@ class NamespacedSymbol extends DiscoveredSymbol
      */
     public function getReplacementFqdnName(): string
     {
+        if (!$this->isDoRename()) {
+            return $this->fqdnOriginalSymbol;
+        }
         if (!$this->namespace->isGlobal()) {
             return $this->namespace->getReplacementFqdnName() . '\\' . ($this->localReplacement ?? $this->localOriginalSymbol);
         }
