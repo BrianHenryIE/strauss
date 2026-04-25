@@ -4720,4 +4720,61 @@ EOD;
 
         $this->assertEqualsRN($expected, $result);
     }
+
+    /**
+     * When multiple `use` statements in the same file each match a registered class symbol,
+     * only the first one was being renamed due to a `break` exiting the outer loop in
+     * replaceUseStatementsForNamespacedClasses.
+     *
+     * @see Prefixer::replaceUseStatementsForNamespacedClasses()
+     * @see https://github.com/BrianHenryIE/strauss/issues/146
+     */
+    public function test_multiple_use_statements_all_renamed(): void
+    {
+        $contents = <<<'EOD'
+<?php
+namespace SomePackage;
+
+use Composer\Config;
+use Composer\IO\IOInterface;
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+namespace SomePackage;
+
+use Prefixed\Composer\Config;
+use Prefixed\Composer\IO\IOInterface;
+EOD;
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(true);
+
+        $nsComposer = new NamespaceSymbol('Composer', $file);
+        $nsComposer->setLocalReplacement('Prefixed\Composer');
+
+        $nsComposerIO = new NamespaceSymbol('Composer\IO', $file);
+        $nsComposerIO->setLocalReplacement('Prefixed\Composer\IO');
+
+        $classConfig = new ClassSymbol('Composer\Config', $file, false, $nsComposer);
+        $classIOInterface = new ClassSymbol('Composer\IO\IOInterface', $file, false, $nsComposerIO);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($nsComposer);
+        $discoveredSymbols->add($nsComposerIO);
+        $discoveredSymbols->add($classConfig);
+        $discoveredSymbols->add($classIOInterface);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertEqualsRN($expected, $result);
+    }
 }
