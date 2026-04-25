@@ -105,6 +105,10 @@ class ChangeEnumerator
                 continue;
             }
 
+            if (!$symbol->isDoRename()) {
+                continue;
+            }
+
             if ($symbol->getNamespace()->isGlobal()) {
                 if ($symbol instanceof ClassSymbol) {
                     // Don't double-prefix classnames.
