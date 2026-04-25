@@ -348,9 +348,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return new DiscoveredSymbols(
             array_filter(
                 $this->toArray(),
-                fn(DiscoveredSymbol $symbol) =>
-                    ($symbol instanceof NamespacedSymbol && !$symbol->getNamespace()->isGlobal() && $symbol->getNamespace()->isDoRename())
-                    || ($symbol->isDoRename() && $symbol->getOriginalSymbol() !== $symbol->getReplacementFqdnName())
+                fn(DiscoveredSymbol $symbol) => $symbol->isDoRename() && $symbol->getOriginalSymbol() !== $symbol->getReplacementFqdnName()
             )
         );
     }
