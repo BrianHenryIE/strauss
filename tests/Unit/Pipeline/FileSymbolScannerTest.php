@@ -43,6 +43,7 @@ class FileSymbolScannerTest extends TestCase
         $file->shouldReceive('getTargetAbsolutePath')->andReturn('another/path');
         $file->shouldReceive('getVendorRelativePath')->andReturn('another/path');
         $file->shouldReceive('isDoCopy')->andReturnTrue();
+        $file->shouldReceive('isDoPrefix')->zeroOrMoreTimes()->andReturnTrue();
 
         return $file;
     }
