@@ -4660,7 +4660,8 @@ EOD;
         $this->assertEqualsRN($expected2, $result2);
     }
 
-    public function test_template_files_with_no_symbols(): void {
+    public function test_template_files_with_no_symbols(): void
+    {
 
         $contents = <<<'EOD'
 <?php

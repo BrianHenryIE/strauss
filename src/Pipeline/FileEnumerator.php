@@ -136,7 +136,7 @@ class FileEnumerator
 
             $autoloaderType && $f->addAutoloader($autoloaderType);
 
-            if($isOutsideProjectDir) {
+            if ($isOutsideProjectDir) {
                 $f->setDoDelete(false);
             }
         } else {
