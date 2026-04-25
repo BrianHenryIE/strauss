@@ -68,4 +68,8 @@ class NamespacedSymbol extends DiscoveredSymbol
                && // If it has a non-global namespace, ensure that should be renamed.
                ($this->namespace->isGlobal() || $this->namespace->isDoRename());
     }
+
+    public function isGlobal(): bool {
+        return $this->namespace->isGlobal();
+    }
 }
