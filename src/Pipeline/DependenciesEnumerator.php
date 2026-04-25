@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Factory;
+use Composer\Util\Platform;
 use Exception;
 use JsonException;
 use League\Flysystem\FilesystemException;
@@ -143,6 +144,13 @@ class DependenciesEnumerator
                 ]);
 
                 $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
+                $requiredComposerPackage->setRealpath(
+                    $this->filesystem->normalizePath(
+                        Platform::realpath(
+                            $this->filesystem->makeAbsolute($packageComposerFile)
+                        )
+                    )
+                );
             } else {
                 // Some packages download with NO `composer.json`! E.g. woocommerce/action-scheduler.
                 // Some packages download to a different directory than the package name.
@@ -199,10 +207,17 @@ class DependenciesEnumerator
             }
 
             $installedPackage = $installedJsonPackages[$requiredPackageName];
-            if (isset($installedPackage['dist'], $installedPackage['dist']['type']) && $installedPackage['dist']['type'] === 'path') {
+            if (is_null($requiredComposerPackage->getRealPath()) &&
+                isset($installedPackage['dist'], $installedPackage['dist']['type']) && $installedPackage['dist']['type'] === 'path') {
                 $path = $installedPackage['dist']['url'];
 
-                $packageRealPath = $this->filesystem->normalizePath($this->config->getProjectAbsolutePath() . '/'.  $path);
+                $packageRealPath = $this->filesystem->normalizePath(
+                    Platform::realpath(
+                        $this->filesystem->makeAbsolute(
+                            $this->config->getProjectAbsolutePath() . '/'.  $path
+                        )
+                    )
+                );
                 $requiredComposerPackage->setRealpath(
                     $packageRealPath
                 );

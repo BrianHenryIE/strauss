@@ -136,9 +136,9 @@ class FileEnumerator
 
             $autoloaderType && $f->addAutoloader($autoloaderType);
 
-            if ($isOutsideProjectDir) {
-                $f->setDoDelete(false);
-            }
+//            if ($isOutsideProjectDir) {
+//                $f->setDoDelete(false);
+//            }
         } else {
             $vendorRelativePath = $this->filesystem->getRelativePath(
                 str_starts_with($sourceAbsoluteFilepath, $this->config->getAbsoluteVendorDirectory()) ? $this->config->getAbsoluteVendorDirectory() : $this->config->getAbsoluteTargetDirectory(),

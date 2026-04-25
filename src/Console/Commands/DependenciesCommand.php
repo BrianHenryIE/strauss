@@ -289,7 +289,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         // TODO: Print the dependency tree that Strauss has determined.
 
-        $symlinkedDependencies = array_filter($this->flatDependencyTree, fn ($dependency) => $dependency->getPackageAbsolutePath() !== $dependency->getRealPath());
+        $symlinkedDependencies = array_filter(
+            $this->flatDependencyTree,
+            fn ($dependency) => !is_null($dependency->getRealPath()) && !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath())
+        );
 
         if (!empty($symlinkedDependencies) &&
             ($this->config->isDeleteVendorFiles() || ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()))
