@@ -1048,17 +1048,23 @@ class Prefixer
 
         $nodeFinder = new NodeFinder();
 
-        // Doc comments: scan for \OriginalNamespace references in @param/@return/etc.
-        foreach ($nodeFinder->find($ast, function (Node $node) {
+        $commentNodes = $nodeFinder->find($ast, function (Node $node) {
             return $node->getDocComment() !== null;
-        }) as $node) {
+        });
+
+        $namespacedSymbols = $discoveredSymbols->getNamespacedSymbols()->getToRename();
+
+        $this->logger->info('Searching {number_of_comments} comments for {number_of_symbols} symbols', [
+            'number_of_comments' => sizeof($commentNodes),
+            'number_of_symbols' => count($namespacedSymbols),
+        ]);
+
+        // Doc comments: scan for \OriginalNamespace references in @param/@return/etc.
+        foreach ($commentNodes as $node) {
             $doc = $node->getDocComment();
             $text = $doc->getText();
             /** @var NamespacedSymbol $symbol */
-            foreach ($discoveredSymbols->getNamespacedSymbols()->getToRename() as $symbol) {
-                if (!$symbol->isDoRename()) {
-                    continue;
-                }
+            foreach ($namespacedSymbols as $symbol) {
 
                 $replacement = $symbol->getReplacementFqdnName();
 //                $docSearchStr = '\\' . $symbol->getOriginalSymbol();
