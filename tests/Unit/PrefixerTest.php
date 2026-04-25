@@ -3555,7 +3555,7 @@ EOD;
 
 namespace Strauss\Test\Latte\Macros;
 
-use Strauss\Test\Latte;
+use BH_Latte as Latte;
 
 class BlockMacros extends MacroSet
 {
@@ -3567,7 +3567,9 @@ class BlockMacros extends MacroSet
 }
 EOD;
 
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+        $config->expects('getConstantsPrefix')->andReturn('BH_')->zeroOrMoreTimes();
+        $config->expects('getClassmapPrefix')->andReturn('BH_');
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -3578,14 +3580,22 @@ EOD;
 
         $discoveredSymbols = new DiscoveredSymbols();
 
-        $namespaceSymbol = new NamespaceSymbol('Latte', $file);
-        $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
+        $namespaceSymbol = new NamespaceSymbol('Latte\Macros', $file);
+        $namespaceSymbol->setLocalReplacement('Strauss\Test\Latte\Macros');
         $discoveredSymbols->add($namespaceSymbol);
 
         $classSymbol = new ClassSymbol('Latte\Macros\BlockMacros', $file, false, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
+        $namespaceSymbol = new NamespaceSymbol('Latte', $file);
+        $namespaceSymbol->setLocalReplacement('Strauss\Test\Latte');
+        $discoveredSymbols->add($namespaceSymbol);
+
         $classSymbol = new ClassSymbol('Latte\Macros\Compiler', $file, false, $namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $classSymbol = new ClassSymbol('Latte', $file, false);
+        $classSymbol->setLocalReplacement('BH_Latte');
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
