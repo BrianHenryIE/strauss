@@ -269,11 +269,11 @@ class Prefixer
         $positions = array_merge(
             $positions,
             $this->replaceNamespaces($ast, $discoveredSymbols->getNamespaces(), $file),
-            $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols),
             $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
             $this->replaceUseStatementsForNamespacedClasses($ast, $discoveredSymbols),
             $this->findFunctionPositionsInAst($ast, $functionsToRename),
             $this->findDocCommentPositionsInAst($ast, $discoveredSymbols),
+            $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols),
         );
 
 
@@ -418,28 +418,40 @@ class Prefixer
         $nodeFinder = new NodeFinder();
         $positions = [];
 
-        foreach ($nodeFinder->findInstanceOf($ast, UseItem::class) as $item) {
+        $namespacedSymbols = $discoveredSymbols->getNamespacedSymbols()->getToRename();
+        $useItems = $nodeFinder->findInstanceOf($ast, UseItem::class);
+        foreach ($useItems as $item) {
             $nameStr = $item->name->toString();
-            foreach ($activeNamespaces as $original => $replacement) {
-                if ($nameStr === $original || str_starts_with($nameStr, $original . '\\')) {
-                    /** @var ?DiscoveredSymbol $classSymbol */
-                    $classSymbol = $discoveredSymbols->getClass($nameStr)
-                        ?? $discoveredSymbols->getInterface($nameStr)
-                        ?? $discoveredSymbols->getTrait($nameStr);
+            // Full match.
+            if($namespacedSymbols->get($nameStr)){
 
-                    if ($classSymbol && $classSymbol->isDoRename()) {
-                        $nsReplacement = rtrim($classSymbol->getNamespace()->getReplacementFqdnName(), '\\');
-                        $newName = $nsReplacement . '\\' . $classSymbol->getLocalReplacement();
-                    } else {
-                        $newName = $replacement . substr($nameStr, strlen($original));
+                $positions[] = [
+                    'start'       => $item->name->getStartFilePos(),
+                    'end'         => $item->name->getEndFilePos() + 1,
+                    'replacement' => $namespacedSymbols->get($nameStr)->getReplacementFqdnName(),
+                ];
+                break;
+            }else { // Partial match (group)
+                foreach ( $activeNamespaces as $original => $replacement ) {
+                    if ( $nameStr === $original || str_starts_with( $nameStr, $original . '\\' ) ) {
+//                if ($nameStr === $original) {
+                        /** @var ?DiscoveredSymbol $classSymbol */
+                        $classSymbol = $namespacedSymbols->get( $nameStr );
+                        if ( $classSymbol && $classSymbol->isDoRename() ) {
+                            $nsReplacement = rtrim( $classSymbol->getNamespace()->getReplacementFqdnName(), '\\' );
+                            $newName       = $nsReplacement . '\\' . $classSymbol->getLocalReplacement();
+//                        $newName = $nsReplacement . $classSymbol->getLocalReplacement();
+                        } else {
+                            $newName = $replacement . substr( $nameStr, strlen( $original ) );
+                        }
+
+                        $positions[] = [
+                            'start'       => $item->name->getStartFilePos(),
+                            'end'         => $item->name->getEndFilePos() + 1,
+                            'replacement' => $newName,
+                        ];
+                        break;
                     }
-
-                    $positions[] = [
-                        'start' => $item->name->getStartFilePos(),
-                        'end' => $item->name->getEndFilePos() + 1,
-                        'replacement' => $newName,
-                    ];
-                    break;
                 }
             }
         }
@@ -819,14 +831,12 @@ class Prefixer
         foreach ($namedNamespaces as $nsStmt) {
             $useItems = $nodeFinder->findInstanceOf($nsStmt->stmts ?? [], UseItem::class);
             foreach ($useItems as $useItem) {
-                $discoveredSymbol = $this->getGlobalSymbolForNode($useItem, $globalClassesInterfacesTraitsToRename);
-                if (!($useItem->name instanceof FullyQualified) && $discoveredSymbol) {
-                    $symbol = $globalClassesInterfacesTraitsToRename->getClass($useItem->name->toString());
-                    if ($symbol->isDoRename()) {
-                        $replacementClassname = $symbol->getLocalReplacement();
+                $discoveredSymbol = $globalClassesInterfacesTraitsToRename->get($useItem->name->toString());
+                if (!($useItem->name instanceof FullyQualified) && $discoveredSymbol && $discoveredSymbol->isDoRename()) {
+                        $replacementClassname = $discoveredSymbol->getLocalReplacement();
                         $useClassname = array_reverse(explode('\\', $useItem->name->toString()))[0];
 
-                        $replacementString = $symbol->getLocalReplacement();
+                        $replacementString = $discoveredSymbol->getLocalReplacement();
                         if ($replacementClassname !== $useClassname && !$useItem->alias) {
                             $replacementString .= ' as ' . $useClassname;
                         }
@@ -836,7 +846,6 @@ class Prefixer
                             'end' => $useItem->name->getEndFilePos() + 1,
                             'replacement' => $replacementString,
                         ];
-                    }
                 }
             }
         }
@@ -1058,7 +1067,7 @@ class Prefixer
 
         $namespacedSymbols = $discoveredSymbols->getNamespacedSymbols()->getToRename();
 
-        $this->logger->info('Searching {number_of_comments} comments for {number_of_symbols} symbols', [
+        $this->logger->debug('Searching {number_of_comments} comments for {number_of_symbols} symbols', [
             'number_of_comments' => sizeof($commentNodes),
             'number_of_symbols' => count($namespacedSymbols),
         ]);
