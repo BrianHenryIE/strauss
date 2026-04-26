@@ -4777,4 +4777,61 @@ EOD;
 
         $this->assertEqualsRN($expected, $result);
     }
+
+    /**
+     * When a global class (e.g. WPGraphQL) shares its name with a registered namespace prefix, a
+     * `use WPGraphQL;` statement inside a named namespace should receive the classmap-prefix
+     * replacement (`use Prefix_WPGraphQL as WPGraphQL;`) and NOT the namespace replacement
+     * (`use MyProject\Dependencies\WPGraphQL;`).
+     *
+     * Covers both the case where the file is namespace-prefixed (doPrefix=true) and the case
+     * where it is excluded from the namespace prefix but classmap prefix still applies (doPrefix=false).
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/66
+     */
+    public function test_global_class_use_prefers_classmap_prefix_over_namespace_prefix(): void
+    {
+        $contents = <<<'EOD'
+<?php
+namespace WPGraphQL\Registry\Utils;
+
+use WPGraphQL;
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+namespace WPGraphQL\Registry\Utils;
+
+use Prefix_WPGraphQL as WPGraphQL;
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config->method('getClassmapPrefix')->willReturn('Prefix_');
+
+        // Simulate a file that is excluded from namespace prefix but still has classmap prefix applied.
+        $file = new File(
+            'vendor/wp-graphql/wp-graphql/src/Registry/Utils/PostObject.php',
+            'wp-graphql/wp-graphql/src/Registry/Utils/PostObject.php',
+            'vendor-prefixed/wp-graphql/wp-graphql/src/Registry/Utils/PostObject.php',
+        );
+        $file->setDoPrefix(false);
+
+        $nsWPGraphQL = new NamespaceSymbol('WPGraphQL', $file);
+        $nsWPGraphQL->setLocalReplacement('MyProject\Dependencies\WPGraphQL');
+
+        $nsRegistryUtils = new NamespaceSymbol('WPGraphQL\Registry\Utils', $file);
+        $nsRegistryUtils->setLocalReplacement('MyProject\Dependencies\WPGraphQL\Registry\Utils');
+
+        $classWPGraphQL = new ClassSymbol('WPGraphQL', $file);
+        $classWPGraphQL->setLocalReplacement('Prefix_WPGraphQL');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($nsWPGraphQL);
+        $discoveredSymbols->add($nsRegistryUtils);
+        $discoveredSymbols->add($classWPGraphQL);
+
+        $result = (new Prefixer($config, $this->getInMemoryFileSystem()))->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertEqualsRN($expected, $result);
+    }
 }
