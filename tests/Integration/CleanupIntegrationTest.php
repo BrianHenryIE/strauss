@@ -28,7 +28,7 @@ class CleanupIntegrationTest extends IntegrationTestCase
             $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
             $config = new StraussConfig($composer);
             $filesystem = $this->getFileSystem();
-            $cleanup = new Cleanup($config, $filesystem, $this->logger);
+            $cleanup = new Cleanup($config, $filesystem, $this->getLogger());
             $cleanup->rebuildVendorAutoloader();
             $autoloadRealPath = $this->testsWorkingDir . '/vendor/composer/autoload_real.php';
             $this->assertFileExists($autoloadRealPath);

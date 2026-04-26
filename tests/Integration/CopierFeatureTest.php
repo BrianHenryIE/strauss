@@ -22,8 +22,11 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Copier;
 
 /**
+ * @see Copier
+ * @see FileCopyScanner
  * @package BrianHenryIE\Strauss\Tests\Integration
  * @coversNothing
  */

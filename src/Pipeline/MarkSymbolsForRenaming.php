@@ -15,6 +15,7 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -44,7 +45,9 @@ class MarkSymbolsForRenaming
             // $this->config->getFlatDependencyTree
             // TODO: This is probably incorrect. If a file is conditionally loaded, it still needs its namespace updated.
             if (!$this->fileIsAutoloaded($symbol)) {
-//                $this->logger->debug()
+//                $this->logger->notice('Excluding {symbol} from renaming... because...', [
+//                    'symbol' => $symbol->getOriginalLocalName(),
+//                ]);
                 $symbol->setDoRename(false);
                 continue;
             }
@@ -109,8 +112,9 @@ class MarkSymbolsForRenaming
     protected function excludeFromPrefix(DiscoveredSymbol $symbol): bool
     {
         return $this->isExcludeFromPrefixPackage($symbol->getPackageName())
-            || $this->isExcludeFromPrefixNamespace($symbol->getNamespace())
-            || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles());
+            || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles())
+            || ( $symbol instanceof NamespacedSymbol && $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName()))
+            || ( $symbol instanceof NamespaceSymbol && $this->isExcludeFromPrefixNamespace($symbol->getOriginalSymbol()));
     }
 
     /**
@@ -211,6 +215,7 @@ class MarkSymbolsForRenaming
             $vendorRelativePath = $file->getVendorRelativePath();
             foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
                 if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
+                    $file->setDoPrefix(false);
                     return true;
                 }
             }
@@ -224,7 +229,7 @@ class MarkSymbolsForRenaming
     protected function isExcludeConstants(ConstantSymbol $symbol): bool
     {
         return $this->isExcludeConstantsPackage($symbol->getPackageName())
-            || $this->isExcludeConstantsNamespace($symbol->getNamespace())
+            || $this->isExcludeConstantsNamespace($symbol->getNamespaceName())
             || $this->isExcludedConstantsFilePattern($symbol->getSourceFiles())
             || $this->isExcludeConstantName($symbol->getOriginalSymbol());
     }

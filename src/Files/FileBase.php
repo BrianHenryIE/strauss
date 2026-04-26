@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 
 interface FileBase
 {
@@ -48,6 +49,10 @@ interface FileBase
 
     public function getDidDelete(): bool;
 
+    public function setDoUpdate(bool $doUpdate): void;
+
+    public function getDoUpdate(): bool;
+
     public function setDidUpdate(): void;
 
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void;
@@ -55,5 +60,7 @@ interface FileBase
     /**
      * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
      */
-    public function getDiscoveredSymbols(): array;
+    public function getDiscoveredSymbols(): DiscoveredSymbols;
+
+    public function getNamespaces(): DiscoveredSymbols;
 }

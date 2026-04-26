@@ -33,6 +33,10 @@ class ChangeEnumerator
         $discoveredNamespaces = $discoveredSymbols->getDiscoveredNamespaces();
 
         foreach ($discoveredNamespaces as $symbol) {
+            if (!$symbol->isDoRename()) {
+                continue;
+            }
+
             // This line seems redundant.
             if ($symbol instanceof NamespaceSymbol) {
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
@@ -78,7 +82,7 @@ class ChangeEnumerator
                     );
 
                     if ($prefixed !== $symbol->getOriginalSymbol()) {
-                        $symbol->setReplacement($prefixed);
+                        $symbol->setLocalReplacement($prefixed);
                         continue 2;
                     }
                 }
@@ -90,9 +94,9 @@ class ChangeEnumerator
 
 
         $classesTraitsInterfaces = array_merge(
-            $discoveredSymbols->getDiscoveredTraits(),
-            $discoveredSymbols->getDiscoveredInterfaces(),
-            $discoveredSymbols->getAllClasses()
+            $discoveredSymbols->getDiscoveredTraits()->toArray(),
+            $discoveredSymbols->getDiscoveredInterfaces()->toArray(),
+            $discoveredSymbols->getAllClasses()->toArray()
         );
 
         foreach ($classesTraitsInterfaces as $symbol) {
@@ -101,28 +105,32 @@ class ChangeEnumerator
                 continue;
             }
 
-            if ($symbol->getNamespace() === '\\') {
+            if (!$symbol->isDoRename()) {
+                continue;
+            }
+
+            if ($symbol->getNamespace()->isGlobal()) {
                 if ($symbol instanceof ClassSymbol) {
                     // Don't double-prefix classnames.
                     if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
                         continue;
                     }
 
-                    $symbol->setReplacement($this->config->getClassmapPrefix() . $symbol->getOriginalSymbol());
+                    $symbol->setLocalReplacement($this->config->getClassmapPrefix() . $symbol->getOriginalSymbol());
                 }
             }
 
             // If we're a namespaced class, apply the fqdnchange.
-            if ($symbol->getNamespace() !== '\\') {
-                if (isset($discoveredNamespaces[$symbol->getNamespace()])) {
-                    $newNamespace = $discoveredNamespaces[$symbol->getNamespace()];
+            if (!$symbol->getNamespace()->isGlobal()) {
+                if (isset($discoveredNamespaces[$symbol->getNamespaceName()])) {
+                    $newNamespace = $discoveredNamespaces[$symbol->getNamespaceName()];
                     $replacement = $this->determineNamespaceReplacement(
                         $newNamespace->getOriginalSymbol(),
-                        $newNamespace->getReplacement(),
+                        $newNamespace->getLocalReplacement(),
                         $symbol->getOriginalSymbol()
                     );
 
-                    $symbol->setReplacement($replacement);
+                    $symbol->setLocalReplacement($replacement);
 
                     unset($newNamespace, $replacement);
                 }
@@ -130,7 +138,7 @@ class ChangeEnumerator
             } else {
                 // Global class.
                 $replacement = $classmapPrefix . $symbol->getOriginalSymbol();
-                $symbol->setReplacement($replacement);
+                $symbol->setLocalReplacement($replacement);
             }
         }
 
@@ -138,7 +146,7 @@ class ChangeEnumerator
 
         foreach ($functionsSymbols as $symbol) {
             // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
-            if ($symbol->getNamespace() !== '\\') {
+            if (!$symbol->getNamespace()->isGlobal()) {
                 continue;
             }
             $functionPrefix = $this->config->getFunctionsPrefix();
@@ -146,7 +154,7 @@ class ChangeEnumerator
                 continue;
             }
 
-            $symbol->setReplacement($functionPrefix . $symbol->getOriginalSymbol());
+            $symbol->setLocalReplacement($functionPrefix . $symbol->getOriginalSymbol());
         }
     }
 

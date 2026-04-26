@@ -40,10 +40,16 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     protected $flysystemAdapter;
 
     /**
-     * For calculating project-relative file paths.
+     * For calculating absolute paths outside the flysystem.
+     *
      * No trailing slash.
      *
      * @var false|string
+     */
+    protected string $localFsLocation;
+
+    /**
+     * For printing relative paths.
      */
     protected string $workingDir;
 
@@ -66,12 +72,13 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         array $config = [],
         ?PathNormalizer $pathNormalizer = null,
         $pathPrefixer = null,
+        ?string $localFsLocation = null,
         ?string $workingDir = null
     ) {
-        $workingDir = $workingDir ?? self::getFsRoot(getcwd());
-        $pathNormalizer = $pathNormalizer ?? self::makePathNormalizer($workingDir);
-        $pathPrefixer = $pathPrefixer ?? new PathPrefixer(
-            $flysystemRoot ?? self::getFsRoot($workingDir),
+        $localFsLocation        = $localFsLocation ?? self::getFsRoot(getcwd());
+        $pathNormalizer         = $pathNormalizer ?? self::makePathNormalizer($localFsLocation);
+        $pathPrefixer           = $pathPrefixer ?? new PathPrefixer(
+            $localFsLocation,
             DIRECTORY_SEPARATOR
         );
 
@@ -80,18 +87,20 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->config = new Config($config);
 
         // Parent is private.
-        $this->normalizer = $pathNormalizer;
-        $this->pathPrefixer = $pathPrefixer;
+        $this->normalizer       = $pathNormalizer;
+        $this->pathPrefixer     = $pathPrefixer;
         $this->flysystemAdapter = $adapter;
-        $this->workingDir = $workingDir;
+        $this->localFsLocation  = $localFsLocation;
+        $this->workingDir       = $pathNormalizer->normalizePath($workingDir ?? $localFsLocation);
     }
 
-    public static function getFsRoot(?string $path = null): string
+    public static function getFsRoot(?string $path = null): ?string
     {
-        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?? getcwd(), $output_array)) {
+        if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path ?? getcwd(), $output_array)) {
             return strtoupper($output_array[1]);
         }
-        return '/';
+        // Relative path.
+        return '';
     }
 
     public static function makePathNormalizer(string $workingDir): PathNormalizer
@@ -102,7 +111,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
             ],
             new StripFsRootPathNormalizer(
                 [
-                    FileSystem::getFsRoot($workingDir),
+                    str_replace('\\', '/', FileSystem::getFsRoot($workingDir)),
+                    str_replace('/', '\\', FileSystem::getFsRoot($workingDir)),
                     Filesystem::getFsRoot(),
                     Filesystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                     'c:\\',
@@ -115,6 +125,11 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     public function getAdapter(): FilesystemAdapter
     {
         return $this->flysystemAdapter;
+    }
+
+    public function setAdapter(FilesystemAdapter $flysystemAdapter): void
+    {
+        $this->flysystemAdapter = $flysystemAdapter;
     }
 
     /**
@@ -272,7 +287,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      * @param array{visibility?:string} $config
      * @throws FilesystemException
      */
-    public function write(string $location, string $contents, array $config = []): void
+    public function write(string $location, $contents, array $config = []): void
     {
         $this->flysystemAdapter->write(
             $this->normalizePath($location),
@@ -287,16 +302,29 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      */
     public function writeStream(string $location, $contents, $config = []): void
     {
+        $this->rewindStream($contents);
         $this->flysystemAdapter->writeStream(
             $this->normalizePath($location),
             $contents,
             $this->config->extend($config)
         );
+//        fclose($contents);
     }
+
+    /**
+     * @param resource $resource
+     */
+    private function rewindStream($resource): void
+    {
+        if (ftell($resource) !== 0 && stream_get_meta_data($resource)['seekable']) {
+            rewind($resource);
+        }
+    }
+
 
     public function setVisibility(string $path, string $visibility): void
     {
-        $this->filesystem->setVisibility(
+        $this->flysystemAdapter->setVisibility(
             $this->normalizer->normalizePath($path),
             $visibility
         );
@@ -425,7 +453,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
             return true;
         }
 
-        $workingDir = $this->normalizePath($this->workingDir);
+        $workingDir = $this->normalizePath($this->localFsLocation);
 
         return ! str_starts_with($normalizedPath, $workingDir);
     }
@@ -457,11 +485,27 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      */
     public function makeAbsolute(string $path): string
     {
+        $fsRoot = self::getFsRoot($this->localFsLocation);
+
+        // If this is already prefixed with the drive(fs) root.
+        if (stripos($path, $fsRoot) === 0 || stripos($path, self::normalizeDirSeparator($fsRoot)) === 0) {
+            return $path;
+        }
+
         $normalizedPath = $this->normalizePath($path);
-        $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->workingDir));
+
+        if (strtolower(self::getFsRoot($this->localFsLocation)) === strtolower(self::getFsRoot($normalizedPath))) {
+            return $path;
+        }
+
+        $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->localFsLocation));
 
         if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
             return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
+        }
+
+        if (\Composer\Util\Filesystem::isStreamWrapperPath($this->localFsLocation)) {
+            return $this->localFsLocation . $path;
         }
 
         $prefixed = $this->pathPrefixer->prefixPath($this->normalizePath($path));
@@ -496,5 +540,10 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     public function getNormalizer(): PathNormalizer
     {
         return $this->normalizer;
+    }
+
+    public function setLocalFsLocation(string $string): void
+    {
+        $this->localFsLocation = $string;
     }
 }

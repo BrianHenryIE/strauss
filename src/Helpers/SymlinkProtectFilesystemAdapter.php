@@ -63,8 +63,10 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
     /**
      * Converts flysystem relative paths to filesystem absolute paths.
+     *
+     * @var PathPrefixer
      */
-    protected PathPrefixer $pathPrefixer;
+    protected $pathPrefixer;
 
     /**
      * Record of discovered symlink paths
@@ -100,7 +102,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     public function __construct(
         $location,
         ?PathNormalizer $pathNormalizer = null,
-        ?PathPrefixer $pathPrefixer = null,
+        $pathPrefixer = null,
         ?LoggerInterface $logger = null,
         ?VisibilityConverter $visibility = null,
         int $writeFlags = LOCK_EX,
@@ -277,10 +279,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Writing non-symlinked file at {$path}", [
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Writing non-symlinked file at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::write($path, $contents, $config);
             return;
         }
@@ -305,10 +308,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Writing stream for non-symlinked file at {$path}", [
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Writing stream for non-symlinked file at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::writeStream($path, $contents, $config);
             return;
         }
@@ -330,10 +334,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Setting visibility for non-symlinked file at {$path}", [
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Setting visibility for non-symlinked file at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::setVisibility($path, $visibility);
             return;
         }
@@ -355,10 +360,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Deleting non-symlinked file at {$path}", [
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Deleting non-symlinked file at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::delete($path);
             return;
         }
@@ -398,10 +404,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlinkPath = $this->getParentSymlink($path);
 
         if (!$symlinkPath) {
-            $this->logger->debug("Deleting non-symlinked directory at {$path}", [
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Deleting non-symlinked directory at {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::deleteDirectory($path);
             return;
         }
@@ -439,10 +446,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($path);
 
         if (!$symlink) {
-            $this->logger->debug("Creating directory at non-symlinked path {$path}", [
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Creating directory at non-symlinked path {path}", [
+//                'path' => $path,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::createDirectory($path, $config);
             return;
         }
@@ -466,10 +474,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $destinationSymlink = $this->getParentSymlink($destination);
 
         if (!$sourceSymlink && !$destinationSymlink) {
-            $this->logger->debug("Creating directory at non-symlinked path {$destination}", [
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Creating directory at non-symlinked path {destination}", [
+//                'destination' => $destination,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::move($source, $destination, $config);
             return;
         }
@@ -492,10 +501,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $symlink = $this->getParentSymlink($destination);
 
         if (!$symlink) {
-            $this->logger->debug("Copying file/dir at non-symlinked path {$destination}", [
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]);
+//            $this->logger->debug("Copying file/dir at non-symlinked path {destination}", [
+//                'destination' => $destination,
+//                'method' => __METHOD__,
+//                'args' => func_get_args()
+//            ]);
             parent::copy($source, $destination, $config);
             return;
         }
@@ -515,7 +525,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $path = $this->normalizer->normalizePath($path);
         $symlink = $this->getParentSymlink($path);
         if ($symlink) {
-            $this->logger->debug("FileExists {$path} inside symlink {$symlink}", [
+            $this->logger->debug("FileExists {path} inside symlink {symlinkPath}", [
+                'path' => $path,
+                'symlinkPath' => $symlink,
                 'source' => $path,
                 'method' => __METHOD__,
                 'args' => func_get_args()
@@ -530,7 +542,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $path = $this->normalizer->normalizePath($path);
         $symlink = $this->getParentSymlink($path);
         if ($symlink) {
-            $this->logger->debug("Reading symlinked file at {$path} to target {$symlink}", [
+            $this->logger->debug("Reading symlinked file at {path} to target {symlinkPath}", [
+                'path' => $path,
+                'symlinkPath' => $symlink,
                 'source' => $path,
                 'target' => $symlink,
                 'method' => __METHOD__,
@@ -546,7 +560,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $path = $this->normalizer->normalizePath($path);
         $symlink = $this->getParentSymlink($path);
         if ($symlink) {
-            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+            $this->logger->debug(__FUNCTION__ . " symlinked {path} to {symlinkPath}", [
+                'path' => $path,
+                'symlinkPath' => $symlink,
                 'source' => $path,
                 'target' => $symlink,
                 'method' => __METHOD__,
@@ -562,7 +578,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $path = $this->normalizer->normalizePath($path);
         $symlink = $this->getParentSymlink($path);
         if ($symlink) {
-            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+            $this->logger->debug(__FUNCTION__ . " symlinked {path} to {symlinkPath}", [
+                'path' => $path,
+                'symlinkPath' => $symlink,
                 'source' => $path,
                 'target' => $symlink,
                 'method' => __METHOD__,
@@ -578,7 +596,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $path = $this->normalizer->normalizePath($path);
         $symlink = $this->getParentSymlink($path);
         if ($symlink) {
-            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+            $this->logger->debug(__FUNCTION__ . " symlinked {path} to {symlinkPath}", [
+                'path' => $path,
+                'symlinkPath' => $symlink,
                 'source' => $path,
                 'target' => $symlink,
                 'method' => __METHOD__,
@@ -594,7 +614,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $path = $this->normalizer->normalizePath($path);
         $symlink = $this->getParentSymlink($path);
         if ($symlink) {
-            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+            $this->logger->debug(__FUNCTION__ . " symlinked {path} to {symlinkPath}", [
+                'path' => $path,
+                'symlinkPath' => $symlink,
                 'source' => $path,
                 'target' => $symlink,
                 'method' => __METHOD__,
@@ -610,7 +632,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $path = $this->normalizer->normalizePath($path);
         $symlink = $this->getParentSymlink($path);
         if ($symlink) {
-            $this->logger->debug(__FUNCTION__ . " symlinked {$path} to {$symlink}", [
+            $this->logger->debug(__FUNCTION__ . " symlinked {path} to {symlinkPath}", [
+                'path' => $path,
+                'symlinkPath' => $symlink,
                 'source' => $path,
                 'target' => $symlink,
                 'method' => __METHOD__,
@@ -626,7 +650,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $path = $this->normalizer->normalizePath($path);
         $symlink = $this->getParentSymlink($path);
         if ($symlink) {
-            $this->logger->debug(__FUNCTION__ . " {$path} is under symlink {$symlink}", [
+            $this->logger->debug(__FUNCTION__ . " {path} is under symlink {symlinkPath}", [
+                'path' => $path,
+                'symlinkPath' => $symlink,
                 'source' => $path,
                 'target' => $symlink,
                 'method' => __METHOD__,

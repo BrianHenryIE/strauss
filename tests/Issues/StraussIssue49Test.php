@@ -36,9 +36,9 @@ class StraussIssue49Test extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss_Local_Symlinked_Repositories_Fail\\",
+      "namespace_prefix": "BrianHenryIE\\S49_Local_Symlinked_Repositories_Fail\\",
       "target_directory": "/strauss/",
-      "classmap_prefix": "BH_Strauss_Local_Symlinked_Repositories_Fail_"
+      "classmap_prefix": "BH_S49_Local_Symlinked_Repositories_Fail_"
     }
   }
 }

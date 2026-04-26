@@ -84,4 +84,27 @@ class FileWithDependency extends File implements HasDependency
     {
         return $this->doDelete ?? $this->dependency->isDoDelete();
     }
+
+    public function addAutoloaderType(string $autoloaderType): void
+    {
+        $this->autoloaderTypes[$autoloaderType] = $autoloaderType;
+    }
+
+    public function setAutoloaderTypes(array $autoloaderTypes): void
+    {
+        $this->autoloaderTypes = $autoloaderTypes;
+    }
+    public function getAutoloaderTypes(): array
+    {
+        return $this->autoloaderTypes;
+    }
+    public function isPsr0(): bool
+    {
+        return in_array('psr-0', $this->autoloaderTypes);
+    }
+
+    public function isAutoloaded(): bool
+    {
+        return !empty($this->autoloaderTypes);
+    }
 }

@@ -77,9 +77,9 @@ class LicenserTest extends TestCase
 
         $result = $sut->getDiscoveredLicenseFiles();
 
-        self::assertCount(1, $result);
+        $this->assertCount(1, $result);
         // Currently contains an array entry: /Users/brianhenry/Sites/mozart/mozart/tests/Unit/developer-name/project-name/license.md
-        self::assertStringContainsString('developer-name/project-name/license.md', $result[0]);
+        $this->assertStringContainsString('developer-name/project-name/license.md', $result[0]);
     }
 
     /**
@@ -129,7 +129,7 @@ EOD;
             'proprietary'
         );
 
-        self::assertEqualsRN($expected, $actual);
+        $this->assertEqualsRN($expected, $actual);
     }
 
 
@@ -178,7 +178,7 @@ EOD;
             'proprietary'
         );
 
-        self::assertEqualsRN($expected, $actual);
+        $this->assertEqualsRN($expected, $actual);
     }
 
     /**
@@ -218,7 +218,7 @@ EOD;
             'proprietary'
         );
 
-        self::assertEqualsRN($expected, $actual);
+        $this->assertEqualsRN($expected, $actual);
     }
 
     /**
@@ -273,7 +273,7 @@ EOD;
             'GPL-2.0-or-later'
         );
 
-        self::assertEqualsRN($expected, $actual);
+        $this->assertEqualsRN($expected, $actual);
     }
 
 
@@ -345,7 +345,7 @@ EOD;
             );
         }
 
-        self::assertEqualsRN($expected, $contents);
+        $this->assertEqualsRN($expected, $contents);
     }
 
     /**
@@ -399,7 +399,7 @@ EOD;
             );
         }
 
-        self::assertEqualsRN($expected, $contents);
+        $this->assertEqualsRN($expected, $contents);
     }
 
     /**
@@ -462,7 +462,7 @@ EOD;
             );
         }
 
-        self::assertEqualsRN($expected, $contents);
+        $this->assertEqualsRN($expected, $contents);
     }
 
     /**
@@ -543,7 +543,7 @@ EOD;
             'MIT'
         );
 
-        self::assertEqualsRN($expected, $actual);
+        $this->assertEqualsRN($expected, $actual);
     }
 
     /**
@@ -592,6 +592,6 @@ EOD;
             );
         }
 
-        self::assertEqualsRN($expected, $contents);
+        $this->assertEqualsRN($expected, $contents);
     }
 }

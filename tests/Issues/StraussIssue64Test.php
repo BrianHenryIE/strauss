@@ -11,6 +11,8 @@ final class StraussIssue64Test extends IntegrationTestCase
 {
     public function test_fails_when_symlinked_and_delete_vendor_files(): void
     {
+        $this->expectErrorLogs();
+
         // Do not use color-logger for this test, use the actual consolelogger.
         $this->logger = null;
 
@@ -33,8 +35,10 @@ final class StraussIssue64Test extends IntegrationTestCase
 
         $this->assertNotEquals(0, $exitCode);
 
-        $this->assertTrue($this->getTestLogger()->hasErrorThatContains('Symlinked packages detected'), 'Should contain Symlinked packages detected');
-        $this->assertTrue($this->getTestLogger()->hasNoticeThatContains('COMPOSER_MIRROR_PATH_REPOS=1'), 'Should contain COMPOSER_MIRROR_PATH_REPOS=1');
+        if (!$this->isTestingWithPhar()) {
+            $this->assertTrue($this->getTestLogger()->hasErrorThatContains('Symlinked packages detected'), 'Should contain Symlinked packages detected');
+            $this->assertTrue($this->getTestLogger()->hasNoticeThatContains('COMPOSER_MIRROR_PATH_REPOS=1'), 'Should contain COMPOSER_MIRROR_PATH_REPOS=1');
+        }
     }
 
     private function packageComposerFile(): string

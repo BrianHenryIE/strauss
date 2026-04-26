@@ -22,7 +22,7 @@ class InstalledJsonTest extends \BrianHenryIE\Strauss\TestCase
     {
         $this->markTestSkipped('TODO');
 
-        $fileSystem = $this->getReadOnlyFileSystem();
+        $fileSystem = $this->getFileSystem();
         $config = Mockery::mock(CleanupConfigInterface::class);
 
         $sut = new InstalledJson(
@@ -45,7 +45,7 @@ class InstalledJsonTest extends \BrianHenryIE\Strauss\TestCase
 {"packages":[{"name":"psr\/container","version":"1.1.2","version_normalized":"1.1.2.0","source":{"type":"git","url":"https:\/\/github.com\/php-fig\/container.git","reference":"513e0666f7216c7459170d56df27dfcefe1689ea"},"dist":{"type":"zip","url":"https:\/\/api.github.com\/repos\/php-fig\/container\/zipball\/513e0666f7216c7459170d56df27dfcefe1689ea","reference":"513e0666f7216c7459170d56df27dfcefe1689ea","shasum":""},"require":{"php":">=7.4.0"},"time":"2021-11-05T16:50:12+00:00","type":"library","installation-source":"dist","autoload":{"psr-4":{"Psr\\Container\\":"src\/"}},"notification-url":"https:\/\/packagist.org\/downloads\/","license":["MIT"],"authors":[{"name":"PHP-FIG","homepage":"https:\/\/www.php-fig.org\/"}],"description":"Common Container Interface (PHP FIG PSR-11)","homepage":"https:\/\/github.com\/php-fig\/container","keywords":["PSR-11","container","container-interface","container-interop","psr"],"support":{"issues":"https:\/\/github.com\/php-fig\/container\/issues","source":"https:\/\/github.com\/php-fig\/container\/tree\/1.1.2"},"install-path":"..\/psr\/container"}],"dev":true,"dev-package-names":[]}
 EOD;
 
-        $fileSystem = $this->getReadOnlyFileSystem();
+        $fileSystem = $this->getFileSystem();
 
         $fileSystem->write('vendor/composer/installed.json', $installedJson);
 
@@ -136,7 +136,7 @@ EOD;
 }
 EOD;
 
-        $fileSystem = $this->getReadOnlyFileSystem();
+        $fileSystem = $this->getFileSystem();
 
         $fileSystem->createDirectory('vendor/composer');
         $fileSystem->write('vendor/composer/installed.json', $installedJson);
@@ -158,16 +158,21 @@ EOD;
         /** @var ComposerPackage|MockInterface $composerPackageMock */
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
         $composerPackageMock->expects('didDelete')->once()->andReturnFalse();
+        $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
+        $composerPackageMock->expects('addFile')->once();
 
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
         $flatDependencyTree = ['psr/container'=> $composerPackageMock];
 
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
-        $file->expects('addDiscoveredSymbol');
+        $file = new FileWithDependency(
+            $composerPackageMock,
+            'package/name/src/file.php',
+            'vendor/package/name/src/file.php',
+            'vendor/psr/container/src/ContainerInterface.php',
+        );
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
-        $namespaceSymbol->setReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -189,7 +194,7 @@ EOD;
 {"packages":[{"name":"psr\/container","version":"1.1.2","version_normalized":"1.1.2.0","source":{"type":"git","url":"https:\/\/github.com\/php-fig\/container.git","reference":"513e0666f7216c7459170d56df27dfcefe1689ea"},"dist":{"type":"zip","url":"https:\/\/api.github.com\/repos\/php-fig\/container\/zipball\/513e0666f7216c7459170d56df27dfcefe1689ea","reference":"513e0666f7216c7459170d56df27dfcefe1689ea","shasum":""},"require":{"php":">=7.4.0"},"time":"2021-11-05T16:50:12+00:00","type":"library","installation-source":"dist","autoload":{"psr-4":{"Psr\\Container\\":"src\/"}},"notification-url":"https:\/\/packagist.org\/downloads\/","license":["MIT"],"authors":[{"name":"PHP-FIG","homepage":"https:\/\/www.php-fig.org\/"}],"description":"Common Container Interface (PHP FIG PSR-11)","homepage":"https:\/\/github.com\/php-fig\/container","keywords":["PSR-11","container","container-interface","container-interop","psr"],"support":{"issues":"https:\/\/github.com\/php-fig\/container\/issues","source":"https:\/\/github.com\/php-fig\/container\/tree\/1.1.2"},"install-path":"..\/psr\/container"}],"dev":true,"dev-package-names":[]}
 EOD;
 
-        $fileSystem = $this->getReadOnlyFileSystem();
+        $fileSystem = $this->getFileSystem();
 
         $fileSystem->createDirectory('vendor/composer');
         $fileSystem->write('vendor/composer/installed.json', $installedJson);
@@ -210,16 +215,21 @@ EOD;
         /** @var ComposerPackage|MockInterface $composerPackageMock */
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
         $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
+        $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
+        $composerPackageMock->expects('addFile')->once();
 
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
         $flatDependencyTree = ['psr/container'=> $composerPackageMock];
 
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
-        $file->expects('addDiscoveredSymbol');
+        $file = new FileWithDependency(
+            $composerPackageMock,
+            'vendor/psr/container/src/ContainerInterface.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
-        $namespaceSymbol->setReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -287,7 +297,7 @@ EOD;
 }
 EOD;
 
-        $fileSystem = $this->getReadOnlyFileSystem();
+        $fileSystem = $this->getFileSystem();
 
         $fileSystem->createDirectory('vendor/composer');
         $fileSystem->write('vendor/composer/installed.json', $installedJson);
@@ -308,16 +318,22 @@ EOD;
         /** @var ComposerPackage|MockInterface $composerPackageMock */
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
         $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
+        $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
+        $composerPackageMock->expects('addFile')->once();
 
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
         $flatDependencyTree = ['psr/log'=> $composerPackageMock];
 
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->expects('getSourcePath')->andReturn('vendor/psr/log/src/AbstractLogger.php');
-        $file->expects('addDiscoveredSymbol');
+        $file = new FileWithDependency(
+            $composerPackageMock,
+            'vendor/psr/log/src/AbstractLogger.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Log', $file);
-        $namespaceSymbol->setReplacement('BrianHenryIE\\Tests\\Psr\\Log',);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Log',);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -336,8 +352,6 @@ EOD;
      */
     public function test_excluded_package_removed_from_target_installed_json_but_retained_in_vendor_installed_json(): void
     {
-        // TODO: Failing because writing to inmemory://path is setting an empty string.
-
         $installedJson = <<<'EOD'
 {
     "packages": [
@@ -360,7 +374,7 @@ EOD;
 }
 EOD;
 
-        $fileSystem = $this->getReadOnlyFileSystem();
+        $fileSystem = $this->getFileSystem();
         $fileSystem->createDirectory('vendor/composer');
         $fileSystem->createDirectory('vendor/psr/log');
         $fileSystem->write('vendor/psr/log/LoggerInterface.php', '<?php');

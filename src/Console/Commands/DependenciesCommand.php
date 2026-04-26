@@ -8,9 +8,9 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
-use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
+use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
@@ -22,27 +22,17 @@ use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
+use BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges;
 use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Factory;
 use Composer\InstalledVersions;
-use Elazar\Flystream\FilesystemRegistry;
-use Elazar\Flystream\ServiceLocator;
-use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
-use League\Flysystem\Config;
-use BrianHenryIE\Strauss\Helpers\PathPrefixer;
-use League\Flysystem\WhitespacePathNormalizer;
-use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
-use Psr\Log\NullLogger;
-use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class DependenciesCommand extends AbstractRenamespacerCommand
@@ -136,84 +126,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             );
         }
 
-        $localFilesystemLocation = PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
-
-        $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
-
-        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
-            $localFilesystemLocation,
-            null,
-            $pathPrefixer,
-            $this->logger
-        );
-
-        $this->filesystem = new Filesystem(
-            $symlinkProtectFilesystemAdapter,
-            [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ],
-            null,
-            $pathPrefixer
-        );
-
         parent::configure();
-    }
-
-    /**
-     * @param InputInterface $input The command line input to check for `--debug`, `--silent` etc.
-     * @param OutputInterface $output The Symfony object that actually prints the messages.
-     */
-    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
-    {
-        $isDryRun = isset($this->config) && $this->config->isDryRun();
-
-        // Who would want to dry-run without output?
-        if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
-            return new NullLogger();
-        }
-
-        $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
-
-        if ($input->hasOption('info') && $input->getOption('info') !== false) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        if ($isDryRun || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {
-            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
-            $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
-        }
-
-        return isset($this->logger) && $this->logger instanceof TestLogger
-            ? $this->logger
-            : new ConsoleLogger($output, $logLevel);
-    }
-
-    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
-    {
-        $normalizer = new WhitespacePathNormalizer();
-        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
-
-        $pathPrefixer = new PathPrefixer('mem://', '/');
-
-        $this->filesystem =
-            new FileSystem(
-                new ReadOnlyFileSystem(
-                    $this->filesystem->getAdapter(),
-                ),
-                [],
-                $normalizer,
-                $pathPrefixer
-            );
-
-        /**
-         * Register a file stream mem:// to handle file operations by third party libraries.
-         *
-         * @var FilesystemRegistry $registry
-         */
-        $registry = ServiceLocator::get(FilesystemRegistry::class);
-        $registry->register('mem', $this->filesystem);
-
-        return $filesystem;
     }
 
     /**
@@ -226,10 +139,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->setLogger($this->getIOLogger($input, $output));
-
-        $workingDir       = getcwd() . '/';
-        $this->workingDir = $workingDir;
+//        $this->setLogger($this->getIOLogger($input, $output));
 
         try {
             $this->logger->notice('Starting... '/** version */); // + PHP version
@@ -238,6 +148,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->loadConfigFromComposerJson();
             $this->updateConfigFromCli($input);
 
+            // Checks dry-run, replaces filesystem and logger.
             parent::execute($input, $output);
 
             $this->buildDependencyList();
@@ -252,6 +163,11 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->analyseFilesToCopy();
             $this->markSymbolsForRenaming();
             $this->determineChanges();
+            $this->markFilesExcludedFromChanges();
+
+
+            (new Psr0($this->filesystem, $this->logger))->setTargetDirectory($this->discoveredFiles);
+
             $this->copyFiles();
 
             $this->performReplacements();
@@ -267,9 +183,12 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             // After files have been deleted, we may need aliases.
             $this->generateAliasesFile();
 
+            $this->prefixComposerAutoloadFiles();
+
             $this->logger->notice('Done');
         } catch (Exception $e) {
-            $this->logger->error($e->getMessage());
+            $this->logger->error($e->getMessage() . ' in ' . $e->getFile() . ' ' . $e->getLine());
+            $this->logger->error('Please submit a bug report with a minimally reproducing composer.json and logs from running strauss --debug');
             return Command::FAILURE;
         }
 
@@ -287,7 +206,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $composerFilePath = $this->filesystem->makeAbsolute(
             $this->filesystem->normalizePath(
-                $this->workingDir . '/' . Factory::getComposerFile()
+                $this->workingDir . '/' .Factory::getComposerFile()
             )
         );
         $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/composer.json');
@@ -296,8 +215,9 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
 
         $composerFilePath = $this->filesystem->normalizePath($composerFilePath);
-        $composerFilePath = $this->filesystem->makeAbsolute($composerFilePath);
-        $this->projectComposerPackage = new ProjectComposerPackage($composerFilePath);
+        $this->projectComposerPackage = new ProjectComposerPackage(
+            $this->filesystem->makeAbsolute($composerFilePath)
+        );
 
         // TODO: Print the config that Strauss is using.
         // Maybe even highlight what is default config and what is custom config.
@@ -365,7 +285,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         // TODO: Print the dependency tree that Strauss has determined.
 
-        $symlinkedDependencies = array_filter($this->flatDependencyTree, fn ($dependency) => $dependency->getPackageAbsolutePath() !== $dependency->getRealPath());
+        $symlinkedDependencies = array_filter(
+            $this->flatDependencyTree,
+            fn ($dependency) => !is_null($dependency->getRealPath()) && !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath())
+        );
 
         if (!empty($symlinkedDependencies) &&
             ($this->config->isDeleteVendorFiles() || ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()))
@@ -429,12 +352,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
                 // TODO: log.
                 $symbol = new NamespaceSymbol(
                     trim($namespace, '\\'),
-                    $file,
-                    '\\',
-                    $package
+                    $file
                 );
-                // TODO: respect all config options.
-//              $symbol->setReplacement($this->config->getNamespacePrefix() . '\\' . trim($namespace, '\\'));
                 $this->discoveredSymbols->add($symbol);
             }
         }
@@ -489,6 +408,18 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 
+    protected function markFilesExcludedFromChanges(): void
+    {
+        $this->logger->notice('Scanning files to omit from changes...');
+
+        $markFilesExcludedFromChanges = new MarkFilesExcludedFromChanges(
+            $this->config,
+            $this->logger
+        );
+
+        $markFilesExcludedFromChanges->scanDiscoveredFiles($this->discoveredFiles);
+    }
+
     protected function analyseFilesToCopy(): void
     {
         (new FileCopyScanner($this->config, $this->filesystem, $this->logger))->scanFiles($this->discoveredFiles);
@@ -498,7 +429,17 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
 
         if ($this->config->isTargetDirectoryVendor()) {
-            // Nothing to do.
+            // PSR-0 files need to be moved.
+            foreach ($this->discoveredFiles->getPsr0() as $file) {
+                if ($file->getSourcePath() === $file->getTargetAbsolutePath()) {
+                    continue;
+                }
+                $this->filesystem->copy( // TODO: change to MOVE
+                    $file->getSourcePath(),
+                    $file->getTargetAbsolutePath()
+                );
+            }
+
             return;
         }
 
@@ -548,6 +489,9 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
     }
 
+    /**
+     * Update a project's /src/* files where they call the newly renamed /vendor/* classes etc.
+     */
     protected function performReplacementsInProjectFiles(): void
     {
         // TODO: this doesn't do tests?!
@@ -578,20 +522,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $projectFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
 
-        $phpFiles = array_filter(
-            $projectFiles->getFiles(),
-            fn($file) => $file->isPhpFile()
-        );
-
-        $phpFilesAbsolutePaths = array_map(
-            fn($file) => $file->getSourcePath(),
-            $phpFiles
-        );
-
         // TODO: Warn when a file that was specified is not found
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
+        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $projectFiles);
     }
 
     protected function addLicenses(): void
@@ -684,8 +618,14 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $vendorComposerAutoload->addVendorPrefixedAutoloadToVendorAutoload();
     }
 
+    protected function prefixComposerAutoloadFiles() : void
+    {
+
+        $this->replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
+    }
+
     /**
-     * 7.
+     *
      * Delete source files if desired.
      * Delete empty directories in destination.
      */

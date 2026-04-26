@@ -3,12 +3,15 @@
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
+use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Autoload\AutoloadGenerator;
@@ -42,7 +45,7 @@ class DumpAutoload
 
     public function __construct(
         AutoloadConfigInterface $config,
-        Filesystem $filesystem,
+        FileSystem $filesystem,
         LoggerInterface $logger,
         Prefixer $projectReplace,
         FileEnumerator $fileEnumerator,
@@ -67,8 +70,6 @@ class DumpAutoload
         $this->generatedMainAutoloader();
 
         $this->createInstalledVersionsFiles();
-
-        $this->prefixNewAutoloader();
     }
 
     /**
@@ -221,7 +222,7 @@ class DumpAutoload
 
         $sourcePath = $this->config->getAbsoluteVendorDirectory() . '/composer/InstalledVersions.php';
 
-        if (!file_exists($sourcePath)) {
+        if (!$this->filesystem->fileExists($sourcePath)) {
             $this->logger->debug('InstalledVersions.php does not exist at {sourcePath}, skipping copy.', [
                 'sourcePath' => $sourcePath
             ]);
@@ -257,53 +258,9 @@ class DumpAutoload
     /**
      * @throws FilesystemException
      */
-    protected function prefixNewAutoloader(): void
+    public function prefixTargetDirectoryComposerAutoloadFiles(): void
     {
-        if ($this->config->isTargetDirectoryVendor()) {
-            return;
-        }
-
-        $this->logger->debug('Prefixing the new Composer autoloader.');
-
-        $projectFiles = $this->fileEnumerator->compileFileListForPaths([
-            $this->config->getAbsoluteTargetDirectory() . '/composer',
-        ]);
-
-        $phpFiles = array_filter(
-            $projectFiles->getFiles(),
-            fn($file) => $file->isPhpFile()
-        );
-
-        $phpFilesAbsolutePaths = array_map(
-            fn($file) => $file->getSourcePath(),
-            $phpFiles
-        );
-
-        $sourceFile = new File(__DIR__, __DIR__, __DIR__);
-        $composerAutoloadNamespaceSymbol = new NamespaceSymbol(
-            'Composer\\Autoload',
-            $sourceFile
-        );
-        $composerAutoloadNamespaceSymbol->setReplacement(
-            $this->config->getNamespacePrefix() . '\\Composer\\Autoload'
-        );
-        $composerNamespaceSymbol = new NamespaceSymbol(
-            'Composer',
-            $sourceFile
-        );
-        $composerNamespaceSymbol->setReplacement(
-            $this->config->getNamespacePrefix() . '\\Composer'
-        );
-
-        $discoveredSymbols = new DiscoveredSymbols();
-        $discoveredSymbols->add(
-            $composerNamespaceSymbol
-        );
-        $discoveredSymbols->add(
-            $composerAutoloadNamespaceSymbol
-        );
-
-        $this->projectReplace->replaceInProjectFiles($discoveredSymbols, $phpFilesAbsolutePaths);
+        $this->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
     }
 
     /**

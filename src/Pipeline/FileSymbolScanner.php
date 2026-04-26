@@ -69,9 +69,20 @@ class FileSymbolScanner
     }
 
 
-    protected function add(DiscoveredSymbol $symbol): void
+    protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
     {
+        if (in_array($symbol->getOriginalSymbol(), $this->getBuiltIns())) {
+            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
+                'symbolName' => $symbol->getOriginalLocalName(),
+            ]);
+            return;
+        }
+
         $this->discoveredSymbols->add($symbol);
+
+        if ($file instanceof FileWithDependency) {
+            $file->getDependency()->addDiscoveredSymbol($symbol);
+        }
 
         $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
         $newText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '' : 'new ';
@@ -96,9 +107,14 @@ class FileSymbolScanner
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
         foreach ($files->getFiles() as $file) {
-            if ($file instanceof FileWithDependency && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
-                $doPrefix = false;
-                $file->setDoPrefix($doPrefix);
+            if ($file instanceof FileWithDependency
+                && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
+                /**
+                 * We will not prefix symbols found in this file because it is not in a default or listed package.
+                 *
+                 * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
+                 */
+                $file->setDoPrefix(false);
             }
 
             $relativeFilePath = $this->filesystem->getRelativePath(
@@ -115,20 +131,19 @@ class FileSymbolScanner
             $this->logger->info("Scanning file:::" . $relativeFilePath);
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
-                $file,
-                $file instanceof FileWithDependency ? $file->getDependency() : null
+                $file
             );
         }
 
         return $this->discoveredSymbols;
     }
 
-    protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
+    protected function find(string $contents, ?FileBase $file = null): void
     {
         $namespaces = $this->splitByNamespace($contents);
 
         foreach ($namespaces as $namespaceName => $contents) {
-            $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
+            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file);
 
             PhpCodeParser::$classExistsAutoload = false;
             $phpCode = PhpCodeParser::getFromString($contents);
@@ -146,7 +161,10 @@ class FileSymbolScanner
                 $isAbstract = (bool) $class->is_abstract;
                 $extends     = $class->parentClass;
                 $interfaces  = $class->interfaces;
-                $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $namespaceName, $extends, $interfaces);
+                $classSymbol = $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $extends, $namespaceSymbol, $interfaces);
+                if ($classSymbol) {
+                    $classSymbol->setDoRename($file->isDoPrefix());
+                }
             }
 
             /** @var PHPFunction[] $phpFunctions */
@@ -155,27 +173,47 @@ class FileSymbolScanner
                 if (in_array($functionName, $this->getBuiltIns())) {
                     continue;
                 }
-                $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceName, $package);
-                $this->add($functionSymbol);
+                $functionSymbol = $this->discoveredSymbols->getFunction($functionName);
+                if (is_null($functionSymbol)) {
+                    $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceSymbol);
+                    $this->add($functionSymbol);
+                }
+                $functionSymbol->addSourceFile($file);
+                $functionSymbol->setDoRename($file->isDoPrefix());
             }
 
             /** @var PHPConst[] $phpConstants */
             $phpConstants = $phpCode->getConstants();
             foreach ($phpConstants as $constantName => $constant) {
-                $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceName, $package);
-                $this->add($constantSymbol);
+                $constantSymbol = $this->discoveredSymbols->getConst($constantName);
+                if (is_null($constantSymbol)) {
+                    $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceSymbol);
+                    $this->add($constantSymbol);
+                }
+                $constantSymbol->addSourceFile($file);
+                $constantSymbol->setDoRename($file->isDoPrefix());
             }
 
             $phpInterfaces = $phpCode->getInterfaces();
             foreach ($phpInterfaces as $interfaceName => $interface) {
-                $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceName, $package);
-                $this->add($interfaceSymbol);
+                $interfaceSymbol = $this->discoveredSymbols->getInterface($interfaceName);
+                if (is_null($interfaceSymbol)) {
+                    $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceSymbol);
+                    $this->add($interfaceSymbol);
+                }
+                $interfaceSymbol->addSourceFile($file);
+                $interfaceSymbol->setDoRename($file->isDoPrefix());
             }
 
-            $phpTraits =  $phpCode->getTraits();
+            $phpTraits = $phpCode->getTraits();
             foreach ($phpTraits as $traitName => $trait) {
-                $traitSymbol = new TraitSymbol($traitName, $file, $namespaceName, $package);
-                $this->add($traitSymbol);
+                $traitSymbol = $this->discoveredSymbols->getTrait($traitName);
+                if (is_null($traitSymbol)) {
+                    $traitSymbol = new TraitSymbol($traitName, $file, $namespaceSymbol);
+                    $this->add($traitSymbol);
+                }
+                $traitSymbol->addSourceFile($file);
+                $traitSymbol->setDoRename($file->isDoPrefix());
             }
         }
     }
@@ -193,6 +231,7 @@ class FileSymbolScanner
         try {
             $ast = $parser->parse(trim($contents)) ?? [];
         } catch (\PhpParser\Error $e) {
+            $this->logger->error('Parse error: ' . $e->getMessage());
             return [];
         }
 
@@ -228,39 +267,48 @@ class FileSymbolScanner
      * @param string $fqdnClassname
      * @param bool $isAbstract
      * @param FileBase $file
-     * @param string $namespaceName
      * @param ?string $extends
+     * @param NamespaceSymbol|null $namespace
      * @param string[] $interfaces
      */
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,
-        FileBase $file,
-        string $namespaceName,
+        ?FileBase $file,
         ?string $extends,
+        ?NamespaceSymbol $namespace,
         array $interfaces
-    ): void {
+    ): ?ClassSymbol {
         // TODO: This should be included but marked not to prefix.
         if (in_array($fqdnClassname, $this->getBuiltIns())) {
-            return;
+            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
+                'symbolName' => $fqdnClassname,
+            ]);
+            return null;
         }
 
-        $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespaceName, $extends, $interfaces);
-        $this->add($classSymbol);
+        $classSymbol = $this->discoveredSymbols->getClass($fqdnClassname);
+        if (is_null($classSymbol)) {
+            $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespace, $extends, $interfaces);
+            $this->add($classSymbol, $file);
+        }
+        if ($file) {
+            $classSymbol->addSourceFile($file);
+            $file->addDiscoveredSymbol($classSymbol);
+        }
+        return $classSymbol;
     }
 
-    protected function addDiscoveredNamespaceChange(string $namespace, FileBase $file, ?ComposerPackage $package = null): void
+    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, ?FileBase $file = null): NamespaceSymbol
     {
-        $namespaceObj = $this->discoveredSymbols->getNamespace($namespace);
-        if ($namespaceObj) {
-            $namespaceObj->addSourceFile($file);
-            $file->addDiscoveredSymbol($namespaceObj);
-            return;
-        } else {
-            $namespaceObj = new NamespaceSymbol($namespace, $file, '\\', $package);
+        $namespaceObj = $this->discoveredSymbols->getNamespace($fqdnNamespace);
+        if (is_null($namespaceObj)) {
+            $namespaceObj = new NamespaceSymbol($fqdnNamespace, $file);
+            $this->add($namespaceObj);
         }
-
-        $this->add($namespaceObj);
+        $namespaceObj->addSourceFile($file);
+        $file->addDiscoveredSymbol($namespaceObj);
+        return $namespaceObj;
     }
 
     /**

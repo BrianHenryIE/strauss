@@ -22,7 +22,6 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -30,8 +29,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ReplaceCommand extends AbstractRenamespacerCommand
 {
-    use LoggerAwareTrait;
-
     /** @var Prefixer */
     protected Prefixer $replacer;
 
@@ -89,11 +86,6 @@ class ReplaceCommand extends AbstractRenamespacerCommand
             getcwd()
         );
 
-        // TODO: permissions?
-        $this->filesystem = new Filesystem(
-            new LocalFilesystemAdapter('/')
-        );
-
         parent::configure();
     }
 
@@ -107,7 +99,10 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
-            // TODO: where?!
+            /**
+             * @see \Symfony\Component\Console\Command\Command
+             * @see AbstractRenamespacerCommand
+             */
             parent::execute($input, $output);
 
             $this->updateConfigFromCli($input);
@@ -241,17 +236,12 @@ class ReplaceCommand extends AbstractRenamespacerCommand
             $this->logger
         );
 
-        $phpFilePaths = $fileEnumerator->compileFileListForPaths($callSitePaths);
+        $files = $fileEnumerator->compileFileListForPaths($callSitePaths);
 
         // TODO: Warn when a file that was specified is not found (during config validation).
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
-        $phpFilesAbsolutePaths = array_map(
-            fn($file) => $file->getSourcePath(),
-            $phpFilePaths->getFiles()
-        );
-
-        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $phpFilesAbsolutePaths);
+        $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $files);
     }
 
 

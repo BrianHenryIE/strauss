@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Factory;
+use Composer\Util\Platform;
 use Exception;
 use JsonException;
 use League\Flysystem\FilesystemException;
@@ -80,6 +81,15 @@ class DependenciesEnumerator
     {
         $this->recursiveGetAllDependencies($this->requiredPackageNames);
 
+        foreach ($this->flatDependencyTree as $composerPackage) {
+            foreach ($composerPackage->getRequiresNames() as $requiresName) {
+                // The package would be missing if it is in `provides`.
+                if (isset($this->flatDependencyTree[$requiresName])) {
+                    $composerPackage->addDependency($this->flatDependencyTree[$requiresName]);
+                }
+            }
+        }
+
         return $this->flatDependencyTree;
     }
 
@@ -129,9 +139,18 @@ class DependenciesEnumerator
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
             if ($this->filesystem->fileExists($packageComposerFile)) {
-                $this->logger->debug('Loading ComposerPackage::fromFile ' . $packageComposerFile);
+                $this->logger->debug('Loading ComposerPackage::fromFile {packageComposerFilePath}', [
+                    'packageComposerFilePath' => $packageComposerFile,
+                ]);
 
                 $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
+                $requiredComposerPackage->setRealpath(
+                    $this->filesystem->normalizePath(
+                        Platform::realpath(
+                            $this->filesystem->makeAbsolute($packageComposerFile)
+                        )
+                    )
+                );
             } else {
                 // Some packages download with NO `composer.json`! E.g. woocommerce/action-scheduler.
                 // Some packages download to a different directory than the package name.
@@ -188,10 +207,17 @@ class DependenciesEnumerator
             }
 
             $installedPackage = $installedJsonPackages[$requiredPackageName];
-            if (isset($installedPackage['dist'], $installedPackage['dist']['type']) && $installedPackage['dist']['type'] === 'path') {
+            if (is_null($requiredComposerPackage->getRealPath()) &&
+                isset($installedPackage['dist'], $installedPackage['dist']['type']) && $installedPackage['dist']['type'] === 'path') {
                 $path = $installedPackage['dist']['url'];
 
-                $packageRealPath = $this->filesystem->normalizePath($this->config->getProjectAbsolutePath() . '/'.  $path);
+                $packageRealPath = $this->filesystem->normalizePath(
+                    Platform::realpath(
+                        $this->filesystem->makeAbsolute(
+                            $this->config->getProjectAbsolutePath() . '/'.  $path
+                        )
+                    )
+                );
                 $requiredComposerPackage->setRealpath(
                     $packageRealPath
                 );

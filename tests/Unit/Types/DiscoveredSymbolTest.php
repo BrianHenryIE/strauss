@@ -2,9 +2,10 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\TestCase;
-use BrianHenryIE\Strauss\Types\ClassSymbol;
 use Mockery;
 
 /**
@@ -19,12 +20,13 @@ class DiscoveredSymbolTest extends TestCase
      */
     public function testCreate(): void
     {
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
 
-        $fileMock = Mockery::mock(File::class);
-        $fileMock->expects('getSourcePath')->once()->andReturn('/path/to/file.php');
-        $fileMock->expects('addDiscoveredSymbol')->once();
-
-        $sut = new ClassSymbol('MyClass', $fileMock);
+        $sut = new ClassSymbol('MyClass', $file);
 
         $this->assertEquals('MyClass', $sut->getOriginalSymbol());
     }
@@ -36,15 +38,19 @@ class DiscoveredSymbolTest extends TestCase
     public function testMultipleSourceFiles(): void
     {
 
-        $fileMock1 = Mockery::mock(File::class);
-        $fileMock1->expects('getSourcePath')->once()->andReturn('/path/to/file1.php');
-        $fileMock1->expects('addDiscoveredSymbol')->once();
+        $file1 = new File(
+            'vendor/package1/name/src/file1.php',
+            'package2/name/src/file1.php',
+            'vendor-prefixed/package2/name/src/file1.php',
+        );
+        $file2 = new File(
+            'vendor/package2/name/src/file2.php',
+            'package2/name/src/file2.php',
+            'vendor-prefixed/package2/name/src/file2.php',
+        );
 
-        $fileMock2 = Mockery::mock(File::class);
-        $fileMock2->expects('getSourcePath')->once()->andReturn('/path/to/file2.php');
-
-        $sut = new ClassSymbol('MyClass', $fileMock1);
-        $sut->addSourceFile($fileMock2);
+        $sut = new ClassSymbol('MyClass', $file1);
+        $sut->addSourceFile($file2);
 
         $result = $sut->getSourceFiles();
 
@@ -52,20 +58,50 @@ class DiscoveredSymbolTest extends TestCase
     }
 
     /**
-     * @covers ::setReplacement
-     * @covers ::getReplacement
+     * @covers ::setLocalReplacement
+     * @covers ::getLocalReplacement
      */
     public function testReplacement(): void
     {
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
 
-        $fileMock = Mockery::mock(File::class);
-        $fileMock->expects('getSourcePath')->once()->andReturn('/path/to/file.php');
-        $fileMock->expects('addDiscoveredSymbol')->once();
+        $sut = new ClassSymbol('MyClass', $file);
 
-        $sut = new ClassSymbol('MyClass', $fileMock);
+        $sut->setLocalReplacement('MyClassRenamed');
 
-        $sut->setReplacement('MyClassRenamed');
+        $this->assertEquals('MyClassRenamed', $sut->getLocalReplacement());
+    }
 
-        $this->assertEquals('MyClassRenamed', $sut->getReplacement());
+    /**
+     * @covers ::getPackages()
+     */
+    public function testFilterDuplicatePackages(): void
+    {
+        $composerJson = $this->getFixturesFilesystem()->read(__DIR__ . '/../Composer/projectcomposerpackage-test-1.json');
+        $composerJsonArray = json_decode($composerJson, true);
+        $dependency = ComposerPackage::fromComposerJsonArray($composerJsonArray);
+
+        $file1 = new FileWithDependency(
+            $dependency,
+            'vendor/path/to/file1.php',
+            'path/to/file1.php',
+            'vendor-prefixed/path/to/file1.php',
+        );
+
+        $file2 = new FileWithDependency(
+            $dependency,
+            'vendor/path/to/file2.php',
+            'path/to/file2.php',
+            'vendor-prefixed/path/to/file2.php',
+        );
+
+        $classSymbol = new ClassSymbol('myClass', $file1);
+        $classSymbol->addSourceFile($file2);
+
+        $this->assertCount(1, $classSymbol->getPackages());
     }
 }

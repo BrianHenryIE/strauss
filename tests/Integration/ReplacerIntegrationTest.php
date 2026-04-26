@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Prefixer;
 
 /**
  * @see \BrianHenryIE\Strauss\Console\Commands\ReplaceCommand
@@ -250,7 +251,7 @@ EOD;
     "name": "brianhenryie/pdf-helpers",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\PdfHelpers\\": "src"
+            "BrianHenryIE\\\\PdfHelpers\\\\": "src"
         }
     },
     "require": {
@@ -321,5 +322,74 @@ EOD;
         $this->assertFileExistsInFileSystem($expectedTargetFilePath);
         $updatedFile = $this->getFileSystem()->read($expectedTargetFilePath);
         $this->assertStringContainsString('extends Mpdf', $updatedFile);
+    }
+
+    /**
+     * @see Prefixer::replaceSingleClassnameInString()
+     */
+    public function test_replace_namespace_string(): void
+    {
+        $composerJsonString = <<<'JSON'
+{
+    "name": "brianhenryie/test-replace-namespace-string",
+    "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+    }
+  }
+}
+JSON;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $workingDir = $this->testsWorkingDir;
+        $relativeTargetDir = 'vendor-prefixed/';
+        $absoluteTargetDir = $workingDir . '/' . $relativeTargetDir;
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = $this->getFileSystem()->read($absoluteTargetDir . '/composer/autoload_real.php');
+
+        $this->assertStringNotContainsString("if ('Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
+        $this->assertStringContainsString("if ('BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
+    }
+
+    /**
+     * @see Prefixer::replaceSingleClassnameInString()
+     */
+    public function test_replace_string(): void
+    {
+        $composerJsonString = <<<'JSON'
+{
+    "name": "brianhenryie/test-replace-string",
+    "require": {
+      "justinrainbow/json-schema": "6.8.0"
+    },
+    "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+    }
+  }
+}
+JSON;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/justinrainbow/json-schema/src/JsonSchema/Constraints/Factory.php');
+
+        $this->assertStringNotContainsString("'array' => 'JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
+        $this->assertStringContainsString("'array' => 'BrianHenryIE\Strauss\JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
     }
 }

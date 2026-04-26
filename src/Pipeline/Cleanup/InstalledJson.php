@@ -359,7 +359,7 @@ class InstalledJson
     {
         $this->logger->debug('InstalledJson::updateNamespaces()');
 
-        $discoveredNamespaces = $discoveredSymbols->getNamespaces();
+        $discoveredNamespaces = $discoveredSymbols->getNamespaces()->toArray();
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
             if (!isset($package['autoload'])) {
@@ -401,6 +401,7 @@ class InstalledJson
                             // Replace $originalNamespace with updated namespace
 
                             // Just for dev – find a package like this and write a test for it.
+                            // pear/pear-core-minimal
                             if (empty($originalNamespace)) {
                                 // In the case of `nesbot/carbon`, it uses an empty namespace but the classes are in the `Carbon`
                                 // namespace, so using `override_autoload` should be a good solution if this proves to be an issue.
@@ -421,15 +422,15 @@ class InstalledJson
                                 continue;
                             }
 
-                            if ($trimmedOriginalNamespace === trim($namespaceSymbol->getReplacement(), '\\')) {
+                            if ($trimmedOriginalNamespace === trim($namespaceSymbol->getLocalReplacement(), '\\')) {
                                 $this->logger->debug('Namespace is unchanged: ' . $trimmedOriginalNamespace);
                                 continue;
                             }
 
                             // Update the namespace if it has changed.
-                            $this->logger->info('Updating namespace: ' . $trimmedOriginalNamespace . ' => ' . $namespaceSymbol->getReplacement());
+                            $this->logger->info('Updating namespace: ' . $trimmedOriginalNamespace . ' => ' . $namespaceSymbol->getLocalReplacement());
                             /** @phpstan-ignore offsetAccess.notFound */
-                            $autoload_key[$type][str_replace($trimmedOriginalNamespace, $namespaceSymbol->getReplacement(), $originalNamespace)] = $autoload_key[$type][$originalNamespace];
+                            $autoload_key[$type][str_replace($trimmedOriginalNamespace, $namespaceSymbol->getLocalReplacement(), $originalNamespace)] = $autoload_key[$type][$originalNamespace];
                             unset($autoload_key[$type][$originalNamespace]);
                         }
                         break;
@@ -460,6 +461,8 @@ class InstalledJson
     }
 
     /**
+     * TODO: This runs twice but should only run once.
+     *
      * @param array<string,ComposerPackage> $flatDependencyTree
      * @param DiscoveredSymbols $discoveredSymbols
      * @throws Exception

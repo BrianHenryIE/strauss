@@ -73,13 +73,13 @@ class FileSystemTest extends TestCase
             ],
             null,
             null,
-            '/'
+            $unixWorkingDir
         );
 
         // Simulate a path that's been through Flysystem's normalizer (no leading slash)
         $result = $sut->makeAbsolute('app/lib/composer.json');
 
-        $this->assertSame('/app/lib/composer.json', $result);
+        $this->assertSame('/home/user/project/app/lib/composer.json', $result);
     }
 
     /**

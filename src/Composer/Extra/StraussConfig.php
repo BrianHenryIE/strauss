@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\CopierConfigInterface;
+use BrianHenryIE\Strauss\Config\MarkFilesExcludedFromChangesConfigInterface;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
@@ -37,6 +38,7 @@ class StraussConfig implements
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     CopierConfigInterface,
+    MarkFilesExcludedFromChangesConfigInterface,
     MarkSymbolsForRenamingConfigInterface,
     FileSymbolScannerConfigInterface,
     FileEnumeratorConfig,
@@ -134,6 +136,13 @@ class StraussConfig implements
      * @var array{packages: string[], namespaces: string[], file_patterns: string[]}
      */
     protected array $excludeFromCopy = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
+
+    /**
+     * 'exclude_files_from_update' in composer/extra config. Make no changes to these files.
+     *
+     * @var array{packages: string[], namespaces: string[], file_patterns: string[]}
+     */
+    protected array $excludeFilesFromUpdates = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
 
     /**
      * @var array{packages: string[], namespaces: string[], file_patterns: string[]}
@@ -263,6 +272,10 @@ class StraussConfig implements
             $rename->addMapping(StraussConfig::class, 'function_prefix', 'functionsPrefix');
 
             $rename->addMapping(StraussConfig::class, 'constant_prefix', 'constantsPrefix');
+
+            // Handle misspelling.
+            $rename->addMapping(StraussConfig::class, 'exclude_files_from_update', 'excludeFilesFromUpdates');
+            $rename->addMapping(StraussConfig::class, 'exclude_files_from_updates', 'excludeFilesFromUpdates');
 
             $mapper->unshift($rename);
             $mapper->push(new CaseConversion(TextNotation::UNDERSCORE(), TextNotation::CAMEL_CASE()));
@@ -557,6 +570,44 @@ class StraussConfig implements
     public function getExcludeFilePatternsFromCopy(): array
     {
         return $this->excludeFromCopy['file_patterns'] ?? array();
+    }
+
+
+    /**
+     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>} $excludeFilesFromUpdates
+     */
+    public function setExcludeFilesFromUpdates(array $excludeFilesFromUpdates): void
+    {
+        foreach (array( 'packages', 'namespaces', 'file_patterns' ) as $key) {
+            if (isset($excludeFilesFromUpdates[$key])) {
+                $this->excludeFilesFromUpdates[$key] = $excludeFilesFromUpdates[$key];
+            }
+        }
+    }
+
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFilesFromUpdatePackages(): array
+    {
+        return $this->excludeFilesFromUpdates['packages'] ?? array();
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFileFromUpdateNamespaces(): array
+    {
+        return $this->excludeFilesFromUpdates['namespaces'] ?? array();
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFilesFromUpdateFilePatterns(): array
+    {
+        return $this->excludeFilesFromUpdates['file_patterns'] ?? array();
     }
 
     /**

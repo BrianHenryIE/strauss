@@ -42,7 +42,7 @@ class ChangeEnumeratorTest extends TestCase
 
         $this->assertEquals(
             'functions_prefix_myFunction',
-            $symbol->getReplacement()
+            $symbol->getLocalReplacement()
         );
     }
 }

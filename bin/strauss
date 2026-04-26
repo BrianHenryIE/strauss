@@ -18,6 +18,11 @@ call_user_func(function ($version) {
         if (!is_file($autoloader)) {
             continue;
         }
+
+        // When composer/composer is installed, this prevents the wrong "instance" of the static class being used.
+        $composerVendorDir = dirname($autoloader);
+        require_once $composerVendorDir .  '/composer/InstalledVersions.php';
+
         require $autoloader;
         break;
     }

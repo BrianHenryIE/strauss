@@ -30,7 +30,7 @@ class StraussIssue14Test extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+      "namespace_prefix": "BrianHenryIE\\Issue14\\"
     }
   }
 }
@@ -50,7 +50,7 @@ EOD;
         // was namespace GuzzleHttp\Psr7;
 
         // Confirm solution is correct.
-        self::assertStringContainsString('namespace BrianHenryIE\Strauss\GuzzleHttp\Psr7;', $php_string);
+        self::assertStringContainsString('namespace BrianHenryIE\Issue14\GuzzleHttp\Psr7;', $php_string);
     }
 
     public function testFilesAutoloaderIsGenerated(): void
@@ -64,7 +64,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+      "namespace_prefix": "BrianHenryIE\\Issue14\\"
     }
   }
 }
