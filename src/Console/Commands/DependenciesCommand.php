@@ -188,6 +188,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger->notice('Done');
         } catch (Exception $e) {
             $this->logger->error($e->getMessage() . ' in ' . $e->getFile() . ' ' . $e->getLine());
+            $this->logger->error('Please submit a bug report with a minimally reproducing composer.json and logs from running strauss --debug');
             return Command::FAILURE;
         }
 
