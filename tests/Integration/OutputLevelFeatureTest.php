@@ -93,7 +93,7 @@ EOD;
             $this->assertStringNotContainsString('[info]', $output);
             $this->assertStringNotContainsString('[debug]', $output);
         } else {
-            $this->doesNotPerformAssertions();
+            $this->expectNotToPerformAssertions();
         }
     }
 
