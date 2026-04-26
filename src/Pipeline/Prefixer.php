@@ -467,7 +467,7 @@ class Prefixer
         $symbolMap = [];
 //        foreach ($namespaceChanges->getNamespaces()->notGlobal() as $symbol) {
         foreach ($namespaces->getToRename() as $symbol) {
-            if(isset($symbolMap[rtrim($symbol->getOriginalSymbol(), '\\')])) {
+            if (isset($symbolMap[rtrim($symbol->getOriginalSymbol(), '\\')])) {
                 throw new Exception('losing data');
             }
             $symbolMap[rtrim($symbol->getOriginalSymbol(), '\\')] = $symbol;
@@ -838,10 +838,10 @@ class Prefixer
             $useItems = $nodeFinder->findInstanceOf($nsStmt->stmts ?? [], UseItem::class);
             foreach ($useItems as $useItem) {
                 $fqdn_name = $useItem->name->toString();
-                $discoveredSymbol = $globalClassesInterfacesTraitsToRename->get( $fqdn_name );
+                $discoveredSymbol = $globalClassesInterfacesTraitsToRename->get($fqdn_name);
                 if (!($useItem->name instanceof FullyQualified) && $discoveredSymbol && $discoveredSymbol->isDoRename()) {
                         $replacementClassname = $discoveredSymbol->getLocalReplacement();
-                        $useClassname = array_reverse(explode('\\', $fqdn_name ))[0];
+                        $useClassname = array_reverse(explode('\\', $fqdn_name))[0];
 
                         $replacementString = $discoveredSymbol->getLocalReplacement();
                     if ($replacementClassname !== $useClassname && !$useItem->alias) {
