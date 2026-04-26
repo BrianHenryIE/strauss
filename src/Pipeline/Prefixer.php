@@ -268,12 +268,12 @@ class Prefixer
 
         $positions = array_merge(
             $positions,
+            $this->replaceUseStatementsForNamespacedClasses($ast, $discoveredSymbols),
             $this->replaceNamespaces($ast, $discoveredSymbols, $file),
-            $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols),
             $this->findFunctionPositionsInAst($ast, $functionsToRename),
             $this->findDocCommentPositionsInAst($ast, $discoveredSymbols),
             $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
-            $this->replaceUseStatementsForNamespacedClasses($ast, $discoveredSymbols),
+            $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols),
         );
 
         // Adjust positions to be relative to the original $contents (before any <?php prepend).
@@ -467,6 +467,9 @@ class Prefixer
         $symbolMap = [];
 //        foreach ($namespaceChanges->getNamespaces()->notGlobal() as $symbol) {
         foreach ($namespaces->getToRename() as $symbol) {
+            if(isset($symbolMap[rtrim($symbol->getOriginalSymbol(), '\\')])) {
+                throw new Exception('losing data');
+            }
             $symbolMap[rtrim($symbol->getOriginalSymbol(), '\\')] = $symbol;
         }
         uksort($symbolMap, fn($a, $b) => strlen($b) - strlen($a));
@@ -619,6 +622,7 @@ class Prefixer
                 && !($node instanceof FullyQualified)
                 && count($node->getParts()) >= 2;
         }) as $name) {
+            // This needs to be available to other functions.
             if (isset($handled[$name->getStartFilePos()])) {
                 continue;
             }
@@ -880,10 +884,11 @@ class Prefixer
                    );
         });
         foreach ($classLike as $node) {
+            $replacement = $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename);
             $positions[] = [
                 'start' => $node->name->getStartFilePos(),
                 'end' => $node->name->getEndFilePos() + 1,
-                'replacement' => $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename),
+                'replacement' => $replacement
             ];
         }
 
@@ -893,10 +898,12 @@ class Prefixer
                    && $this->hasGlobalSymbolForNode($node, $globalClassesInterfacesTraitsToRename);
         });
         foreach ($unqualifiedNameNodes as $node) {
+            $replacement = $globalClassesInterfacesTraitsToRename->get($node->name)->getReplacementFqdnName();
             $positions[] = [
                 'start' => $node->getStartFilePos(),
                 'end' => $node->getEndFilePos() + 1,
-                'replacement' => $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename)
+                'replacement' => $replacement,
+//                'replacement' => $this->getReplacementStringForNode($node, $globalClassesInterfacesTraitsToRename)
             ];
         }
 
