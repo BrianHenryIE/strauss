@@ -30,6 +30,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
     use CustomUnitTestAssertionsTrait;
     use MarkTestsSkippedTrait;
 
+    protected string $projectDir;
+
     /**
      * The logger used by the objects.
      */
@@ -58,6 +60,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->projectDir = getcwd();
 
         /**
          * We need to register the mem stream wrapper before the static methods in Composer are called.
