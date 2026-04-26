@@ -40,8 +40,6 @@ class IntegrationTestCase extends TestCase
 {
     use CustomIntegrationTestAssertionsTrait;
 
-    protected string $projectDir;
-
     /** No trailing slash */
     protected string $testsWorkingDir;
 
@@ -56,8 +54,6 @@ class IntegrationTestCase extends TestCase
         parent::setUp();
 
         $this->envBeforeTest = $_ENV;
-
-        $this->projectDir = getcwd();
 
         $this->testsWorkingDir = FileSystem::normalizeDirSeparator(
             sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'))
@@ -106,13 +102,22 @@ class IntegrationTestCase extends TestCase
      */
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
     {
-        if (file_exists($this->projectDir . '/strauss.phar')) {
+        /**
+         * Let's try enable passing an environmental variable so we can get better logs in GitHub Actions.
+         *
+         * `RENAMESPACER_LOG=debug vendor/bin/strauss` ~~ `strauss --debug` but only in tests.
+         */
+        // todo: lowercase
+        $envLogLevel = trim(getenv('RENAMESPACER_LOG'), '-');
+
+        if ($this->isPhar()) {
             if (! array_reduce(
                 ['--quiet','--warning','--notice','--info','--debug','--dry-run'],
                 fn(bool $carry, string $level) => $carry || str_contains($params, $level),
                 false
             )) {
-                $params .= ' --info';
+                // Printing logs is slow.
+                $params .= ' --' . (empty($envLogLevel) ? 'quiet' : $envLogLevel);
             }
             // TODO add xdebug to the command
             exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params .' 2>&1', $output, $return_var);
@@ -168,14 +173,8 @@ class IntegrationTestCase extends TestCase
 
         $argv = array_merge(['strauss'], array_filter($paramsSplit));
 
-        /**
-         * Let's try enable passing an environmental variable so we can get better logs in GitHub Actions.
-         *
-         * `RENAMESPACER_LOG=debug vendor/bin/strauss` ~~ `strauss --debug` but only in tests.
-         */
-        $env_log_level = getenv('RENAMESPACER_LOG');
-        if (!empty($env_log_level)) {
-            $argv[] = '--' . strtolower(trim($env_log_level, '-'));
+        if (!empty($envLogLevel)) {
+            $argv[] = '--' . strtolower(trim($envLogLevel, '-'));
         }
 
         $inputInterface = new ArgvInput($argv);
