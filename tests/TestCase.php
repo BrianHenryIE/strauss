@@ -51,6 +51,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected FileSystem $filesystem;
 
+    public bool $allowErrorLogs = false;
+
+    public bool $allowWarningLogs = false;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -86,15 +90,18 @@ class TestCase extends \PHPUnit\Framework\TestCase
             }
         }
 
-        if ($this->allowErrorLogs === false) {
-            $this->assertFalse($this->getTestLogger()->hasErrorRecords(), "TestLogger::hasErrorRecords()");
-        } else {
-            $this->assertTrue($this->getTestLogger()->hasErrorRecords(), "Expected TestLogger::hasErrorRecords() but there were none.");
-        }
-        if ($this->allowWarningLogs === false) {
-            $this->assertFalse($this->getTestLogger()->hasWarningRecords(), "TestLogger::hasWarningRecords()");
-        } else {
-            $this->assertTrue($this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none.");
+        // When testing with the phar we're not able to set the logger.
+        if (!$this->isTestingWithPhar()) {
+            if ($this->allowErrorLogs === false) {
+                $this->assertFalse($this->getTestLogger()->hasErrorRecords(), "TestLogger::hasErrorRecords()");
+            } else {
+                $this->assertTrue($this->getTestLogger()->hasErrorRecords(), "Expected TestLogger::hasErrorRecords() but there were none.");
+            }
+            if ($this->allowWarningLogs === false) {
+                $this->assertFalse($this->getTestLogger()->hasWarningRecords(), "TestLogger::hasWarningRecords()");
+            } else {
+                $this->assertTrue($this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none.");
+            }
         }
 
         unset($this->logger);
@@ -104,17 +111,24 @@ class TestCase extends \PHPUnit\Framework\TestCase
         unset($this->fixturesFilesystem);
     }
 
-    public bool $allowWarningLogs = false;
-
     protected function expectWarningLogs()
     {
         $this->allowWarningLogs = true;
     }
-    public bool $allowErrorLogs = false;
 
     protected function expectErrorLogs()
     {
         $this->allowErrorLogs = true;
+    }
+
+    protected function isPhar(): bool
+    {
+        return file_exists($this->projectDir . '/strauss.phar');
+    }
+
+    protected function isTestingWithPhar(): bool
+    {
+        return $this->isPhar() && $this instanceof IntegrationTestCase;
     }
 
     protected static function stripWhitespaceAndBlankLines(string $string): string

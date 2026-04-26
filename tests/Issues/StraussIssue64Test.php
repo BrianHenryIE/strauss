@@ -35,8 +35,10 @@ final class StraussIssue64Test extends IntegrationTestCase
 
         $this->assertNotEquals(0, $exitCode);
 
-        $this->assertTrue($this->getTestLogger()->hasErrorThatContains('Symlinked packages detected'), 'Should contain Symlinked packages detected');
-        $this->assertTrue($this->getTestLogger()->hasNoticeThatContains('COMPOSER_MIRROR_PATH_REPOS=1'), 'Should contain COMPOSER_MIRROR_PATH_REPOS=1');
+        if (!$this->isTestingWithPhar()) {
+            $this->assertTrue($this->getTestLogger()->hasErrorThatContains('Symlinked packages detected'), 'Should contain Symlinked packages detected');
+            $this->assertTrue($this->getTestLogger()->hasNoticeThatContains('COMPOSER_MIRROR_PATH_REPOS=1'), 'Should contain COMPOSER_MIRROR_PATH_REPOS=1');
+        }
     }
 
     private function packageComposerFile(): string
