@@ -70,7 +70,7 @@ EOD;
         $this->assertEquals(0, $result_code, $outputString);
 
         // php -r "include __DIR__ . '/vendor/autoload.php'; new \Psr\Log\NullLogger();"
-        exec('php -r "include __DIR__ . \'/vendor/autoload.php\'; new \Psr\Log\NullLogger();" 2>&1', $output, $result_code);
+        exec('php -r "include __DIR__ . \'/vendor/autoload.php\'; new \Strauss\Issue183\Psr\Log\NullLogger();" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);
 
         $this->assertEquals(0, $result_code, $outputString);
