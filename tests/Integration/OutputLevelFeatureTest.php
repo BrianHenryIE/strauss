@@ -88,10 +88,12 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        if(!$this->isTestingWithPhar()) {
+        if (!$this->isTestingWithPhar()) {
             $this->assertStringContainsString('[notice]', $output);
             $this->assertStringNotContainsString('[info]', $output);
             $this->assertStringNotContainsString('[debug]', $output);
+        } else {
+            $this->doesNotPerformAssertions();
         }
     }
 
