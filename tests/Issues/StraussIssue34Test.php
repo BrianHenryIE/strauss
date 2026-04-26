@@ -35,7 +35,7 @@ class StraussIssue34Test extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\S34\\",
       "classmap_prefix": "BH_Strauss_",
       "target_directory": "vendor",
       "update_call_sites": true
@@ -67,10 +67,10 @@ EOD;
 
         $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/src/library.php');
         self::assertStringNotContainsString('use Psr\Log\LoggerInterface', $project_file_php_string);
-        self::assertStringContainsString('use BrianHenryIE\Strauss\Psr\Log\LoggerInterface', $project_file_php_string);
+        self::assertStringContainsString('use BrianHenryIE\S34\Psr\Log\LoggerInterface', $project_file_php_string);
 
-        $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/BrianHenryIE/Strauss/Psr/Log/LoggerInterface.php');
+        $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/BrianHenryIE/S34/Psr/Log/LoggerInterface.php');
         self::assertStringNotContainsString('namespace Psr\Log;', $project_file_php_string);
-        self::assertStringContainsString('namespace BrianHenryIE\Strauss\Psr\Log;', $project_file_php_string);
+        self::assertStringContainsString('namespace BrianHenryIE\S34\Psr\Log;', $project_file_php_string);
     }
 }

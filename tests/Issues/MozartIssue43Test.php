@@ -36,8 +36,8 @@ class MozartIssue43Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_",
+			"namespace_prefix": "BrianHenryIE\\M43\\",
+			"classmap_prefix": "BrianHenryIE_M43_",
 			"override_autoload": {
 				"guzzle/guzzle": {
 					"psr-4": {

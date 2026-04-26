@@ -110,14 +110,14 @@ class StraussIssue146Test extends IntegrationTestCase
         // Confirm problem is gone.
         $this->assertStringNotContainsString('new \\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString);
         // Confirm solution is correct.
-        $this->assertStringContainsString('new \\BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
+        $this->assertStringContainsString('new \\BrianHenryIE\\S146\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
 
         // vendor/composer/composer/src/Composer/Factory.php
         // public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\Strauss\Vendor\Composer
         $php_string = file_get_contents($this->testsWorkingDir .         '/vendor/composer/composer/src/Composer/Factory.php');
 //        $php_string = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/composer/src/Composer/Factory.php');
         // Confirm problem is gone.
-        $this->assertStringNotContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\\Strauss\\Vendor\\Composer', $php_string);
+        $this->assertStringNotContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\\S146\\Vendor\\Composer', $php_string);
         // Confirm solution is correct.
         $this->assertStringContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer', $php_string);
 
@@ -208,7 +208,7 @@ class StraussIssue146Test extends IntegrationTestCase
         $composerJsonString = file_get_contents($this->testsWorkingDir . '/composer.json');
         $composerJsonArray = json_decode($composerJsonString, true);
         $composerJsonArray['extra']['strauss'] = [
-            "namespace_prefix" => "BrianHenryIE\\Strauss",
+            "namespace_prefix" => "BrianHenryIE\\S146",
             "target_directory" => "vendor",
             "update_call_sites" => true,
         ];

@@ -34,8 +34,8 @@ class MozartIssue13Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_",
+			"namespace_prefix": "BrianHenryIE\\M13\\",
+			"classmap_prefix": "BrianHenryIE_M13_",
 			"exclude_from_prefix": {
 			    "file_patterns": [
 			    ]
@@ -54,9 +54,9 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/paypal/rest-api-sdk-php/lib/BrianHenryIE/Strauss/PayPal/Log/PayPalLogger.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/paypal/rest-api-sdk-php/lib/BrianHenryIE/M13/PayPal/Log/PayPalLogger.php');
 
         // Confirm solution is correct.
-        self::assertStringContainsString('constant("\\\\BrianHenryIE\\\\Strauss\\\\Psr\\\\Log\\\\LogLevel::$loggingLevel")', $phpString);
+        self::assertStringContainsString('constant("\\\\BrianHenryIE\\\\M13\\\\Psr\\\\Log\\\\LogLevel::$loggingLevel")', $phpString);
     }
 }

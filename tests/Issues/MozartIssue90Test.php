@@ -36,8 +36,8 @@ class MozartIssue90Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_"
+			"namespace_prefix": "BrianHenryIE\\M90\\",
+			"classmap_prefix": "BrianHenryIE_M90_"
 		}
 	}
 }

@@ -54,7 +54,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\S262\\",
       "delete_vendor_packages": true,
       "exclude_from_copy": {
         "packages": [

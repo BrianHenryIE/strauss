@@ -33,8 +33,8 @@ class MozartIssue86Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_",
+			"namespace_prefix": "BrianHenryIE\\M86\\",
+			"classmap_prefix": "BrianHenryIE_M86_",
 			"override_autoload": {
 				"pear/pear-core-minimal": {
 					"classmap": [
@@ -83,8 +83,8 @@ EOD;
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_"
+			"namespace_prefix": "BrianHenryIE\\M86\\",
+			"classmap_prefix": "BrianHenryIE_M86_"
 		}
 	}
 }
@@ -102,9 +102,9 @@ EOD;
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/afragen/wp-dependency-installer/wp-dependency-installer.php');
 
         // Confirm problem is gone.
-        self::assertStringNotContainsString('Path BrianHenryIE_Strauss_to plugin or theme', $php_string, 'Text in comment still prefixed.');
+        self::assertStringNotContainsString('Path BrianHenryIE_M86_to plugin or theme', $php_string, 'Text in comment still prefixed.');
 
         // Confirm solution is correct.
-        self::assertStringContainsString('BrianHenryIE_Strauss_WP_Dependency_Installer', $php_string, 'Class name not properly prefixed.');
+        self::assertStringContainsString('BrianHenryIE_M86_WP_Dependency_Installer', $php_string, 'Class name not properly prefixed.');
     }
 }
