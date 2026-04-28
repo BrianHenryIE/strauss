@@ -4834,4 +4834,41 @@ EOD;
 
         $this->assertEqualsRN($expected, $result);
     }
+
+    public function tests_autoload_generator_classloader_null_character(): void
+    {
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = new File(
+            'vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+            'composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+            'vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+        );
+        $file->setDoPrefix(false);
+
+        $namespaceSymbol = new NamespaceSymbol('Composer\Autoload', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Composer\Autoload');
+
+        $classSymbol = new ClassSymbol('ClassLoader', $file, false, $namespaceSymbol);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem->write(
+            $file->getTargetAbsolutePath(),
+            file_get_contents(getcwd() . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php')
+        );
+
+        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $result);
+        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\Strauss\Composer\Autoload\ClassLoader\\0";', $result);
+    }
 }
