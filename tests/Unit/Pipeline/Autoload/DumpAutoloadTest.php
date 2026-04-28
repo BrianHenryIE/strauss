@@ -22,7 +22,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
     /**
      * @covers ::__construct
      * @covers ::generatedPrefixedAutoloader
-     * @covers ::generatedMainAutoloader
+     * @covers ::generateMainAutoloader
      */
     public function testGeneratedPrefixedAutoloader(): void
     {

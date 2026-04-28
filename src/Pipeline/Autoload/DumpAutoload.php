@@ -67,7 +67,7 @@ class DumpAutoload
      */
     public function generatedPrefixedAutoloader(): void
     {
-        $this->generatedMainAutoloader();
+        $this->generateMainAutoloader();
 
         $this->createInstalledVersionsFiles();
     }
@@ -78,7 +78,7 @@ class DumpAutoload
      * @throws ParsingException
      * @throws FilesystemException
      */
-    protected function generatedMainAutoloader(): void
+    protected function generateMainAutoloader(): void
     {
         /**
          * Unfortunately, `::dump()` creates the target directories if they don't exist, even though it otherwise respects `::setDryRun()`.
