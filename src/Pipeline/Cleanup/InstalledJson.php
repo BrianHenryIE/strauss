@@ -375,19 +375,7 @@ class InstalledJson
             foreach ($autoload_key as $type => $autoload) {
                 switch ($type) {
                     case 'psr-0':
-                        /** @var string $relativePath */
-                        foreach (array_values((array) $autoload_key[$type]) as $relativePath) {
-                            $packageRelativePath = $package['install-path'];
-                            if (1 === preg_match('#.*'.preg_quote($this->config->getAbsoluteTargetDirectory(), '#').'/(.*)#', $packageRelativePath, $matches)) {
-                                $packageRelativePath = $matches[1];
-                            }
-                            // Convert psr-0 autoloading to classmap autoloading
-                            if ($this->filesystem->directoryExists($this->config->getAbsoluteTargetDirectory() . '/composer/' . $packageRelativePath . $relativePath)) {
-                                $autoload_key['classmap'][] = $relativePath;
-                            }
-                        }
                         // Intentionally fall through
-                        // Although the PSR-0 implementation here is a bit of a hack.
                     case 'psr-4':
                         /**
                          * e.g.
