@@ -571,23 +571,14 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $this->logger->notice('Generating autoloader...');
 
-        $allFilesAutoloaders = $this->dependenciesEnumerator->getAllFilesAutoloaders();
-        $filesAutoloaders = array();
-        foreach ($allFilesAutoloaders as $packageName => $packageFilesAutoloader) {
-            if (in_array($packageName, $this->config->getExcludePackagesFromCopy())) {
-                continue;
-            }
-            $filesAutoloaders[$packageName] = $packageFilesAutoloader;
-        }
-
-        $classmap = new Autoload(
+        $autoload = new Autoload(
             $this->config,
-            $filesAutoloaders,
+            [],
             $this->filesystem,
             $this->logger
         );
 
-        $classmap->generate($this->flatDependencyTree, $this->discoveredSymbols);
+        $autoload->generate($this->flatDependencyTree, $this->discoveredSymbols);
     }
 
     /**
