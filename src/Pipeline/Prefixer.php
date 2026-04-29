@@ -326,9 +326,10 @@ class Prefixer
             'count' => $discoveredSymbolsCount,
         ]);
 
-        // TODO: filter to only namespaces of more than a single depth.
+        // TODO: optionally filter to only namespaces of more than a single depth.
+        $namespaceSymbolsToRename = $discoveredSymbols->getNamespaces()->getToRename();
         /** @var NamespaceSymbol $namespaceSymbol */
-        foreach ($discoveredSymbols->getNamespaces()->getToRename() as $namespaceSymbol) {
+        foreach ($namespaceSymbolsToRename as $namespaceSymbol) {
 //            $this->logger->debug('Searching in {filename} for {type}: {name}', [
 //                'filename' => basename($fileAbsolutePath),
 //                'type' => array_reverse(explode('\\', get_class($namespaceSymbol)))[0],
