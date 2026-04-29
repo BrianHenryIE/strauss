@@ -472,4 +472,40 @@ EOD;
         $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\Composer\\Autoload;', $phpString);
         $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
     }
+    /**
+     *
+     */
+    public function test_functions_replace_react_promise(): void
+    {
+        $this->markTestSkippedUnlessSpecificallyInFilter();
+
+        $composerJsonString = <<<'EOD'
+{
+    "name": "strauss/react-promise-functions",
+    "require": {
+        "react/promise": "3.3.0"
+    },
+    "extra": {
+        "strauss": {
+            "target_directory": "vendor",
+            "namespace_prefix": "BrianHenryIE\\Strauss\\"
+        }
+    }
+}
+EOD;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
+
+        // vendor/react/promise/src/Internal/RejectedPromise.php
+        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/react/promise/src/Internal/RejectedPromise.php');
+        $this->assertStringNotContainsString('use function React\Promise\resolve;', $autoloadGeneratorString);
+        $this->assertStringContainsString('use function BrianHenryIE\Strauss\React\Promise\resolve;', $autoloadGeneratorString);
+    }
 }

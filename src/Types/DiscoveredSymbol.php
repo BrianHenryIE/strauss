@@ -169,4 +169,9 @@ abstract class DiscoveredSymbol
     {
         $this->dependencies->add($package);
     }
+
+    public function getDependencies(): DependenciesCollection
+    {
+        return $this->dependencies;
+    }
 }

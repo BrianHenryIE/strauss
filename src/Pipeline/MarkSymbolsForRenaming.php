@@ -8,6 +8,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
@@ -98,6 +99,18 @@ class MarkSymbolsForRenaming
     {
         // The same namespace symbols are found in lots of files so this test isn't useful.
         if ($symbol instanceof NamespaceSymbol) {
+            return true;
+        }
+
+        /**
+         * If a symbol is in a package with a files autoloader, let's assume it is autoloaded, since following the
+         * includes of the autoloader is more work than necessary right now.
+         */
+        $dependenciesWithFilesAutoloaders = array_filter(
+            $symbol->getDependencies()->toArray(),
+            fn(ComposerPackage $dependency) => $dependency->isFilesAutoloaded()
+        );
+        if (!empty($dependenciesWithFilesAutoloaders)) {
             return true;
         }
 

@@ -475,4 +475,8 @@ class ComposerPackage
     {
         return isset($this->autoload['psr-0']);
     }
+    public function isFilesAutoloaded()
+    {
+        return isset($this->autoload['files']);
+    }
 }
