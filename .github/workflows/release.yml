@@ -15,7 +15,7 @@ jobs:
     name: Create Strauss phar on new release
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
         with:
           ref: master
 
@@ -36,7 +36,7 @@ jobs:
           find bin -name 'strauss' -exec sed -i "s/}, '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*');/}, '$CURRENT_RELEASE');/" {} +
 
       - name: Commit updated README.md
-        uses: stefanzweifel/git-auto-commit-action@v4.1.1
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           branch: master
           file_pattern: "bin/strauss"
@@ -67,7 +67,7 @@ jobs:
           fi
 
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v5
+        uses: crazy-max/ghaction-import-gpg@v7
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
