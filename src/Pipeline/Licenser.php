@@ -319,9 +319,7 @@ class Licenser
 
             $commentEnd =  rtrim(rtrim($lineStart, ' '), '*').'*/';
 
-            $replaceWith = $matches[1] . $matches[2] . $appendString . $commentEnd;
-
-            return $replaceWith;
+            return $matches[1] . $matches[2] . $appendString . $commentEnd;
         };
 
         // If it's a simple case where there is no existing header, add the existing license.

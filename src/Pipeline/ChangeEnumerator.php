@@ -124,7 +124,6 @@ class ChangeEnumerator
 
                     unset($newNamespace, $replacement);
                 }
-                continue;
             } else {
                 // Global class.
                 // Don't double-prefix classnames.

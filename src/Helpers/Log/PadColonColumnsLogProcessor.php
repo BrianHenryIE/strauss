@@ -48,7 +48,7 @@ class PadColonColumnsLogProcessor implements ProcessorInterface
 
     private function pad(string $text, int $padLength): string
     {
-        $padded = str_pad($text, $padLength, ' ', STR_PAD_RIGHT);
+        $padded = str_pad($text, $padLength);
         return str_replace($text, $text . ':', $padded);
     }
 }

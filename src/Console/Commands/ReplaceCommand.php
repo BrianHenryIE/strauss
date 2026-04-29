@@ -33,8 +33,6 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     /** @var Prefixer */
     protected Prefixer $replacer;
 
-    protected DependenciesCollection $flatDependencyTree;
-
     /**
      * ArrayAccess of \BrianHenryIE\Strauss\File objects indexed by their path relative to the output target directory.
      *

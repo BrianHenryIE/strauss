@@ -5,6 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -42,6 +43,8 @@ abstract class AbstractRenamespacerCommand extends Command
     protected ProjectComposerPackage $projectComposerPackage;
 
     protected StraussConfig $config;
+
+    protected DependenciesCollection $flatDependencyTree;
 
     /**
      * Set name and description, call parent class to add dry-run, verbosity options.
@@ -103,6 +106,8 @@ abstract class AbstractRenamespacerCommand extends Command
      */
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
+        $this->flatDependencyTree = new DependenciesCollection([]);
+
         $logger = new Logger('logger');
         $this->logger = $logger;
 

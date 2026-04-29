@@ -785,9 +785,7 @@ class Prefixer
             return implode('', $capture);
         };
 
-        $contents = preg_replace_callback($pattern, $replacement, $contents);
-
-        return $contents;
+        return preg_replace_callback($pattern, $replacement, $contents);
     }
 
     /**
@@ -954,6 +952,7 @@ class Prefixer
         switch (true) {
             case $node->name instanceof Name:
                 $nodeNameString = $node->name->toString();
+                // TODO: tidy this up. This function probably has a better alternative in `DiscoveredSymbols()`.
             case $node instanceof Name:
                 $nodeNameString = $nodeNameString ?? $node->toString();
                 return $discoveredSymbols->getClass($nodeNameString)

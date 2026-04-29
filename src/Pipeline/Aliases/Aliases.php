@@ -162,9 +162,7 @@ class Aliases
 
         $aliasesArray = $this->getAliasesArray($modifiedSymbols);
 
-        $autoloadAliasesFileString = $this->getTemplate($aliasesArray, $autoloadAliasesFunctionsString);
-
-        return $autoloadAliasesFileString;
+        return $this->getTemplate($aliasesArray, $autoloadAliasesFunctionsString);
     }
 
     /**

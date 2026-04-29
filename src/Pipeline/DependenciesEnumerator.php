@@ -204,7 +204,7 @@ class DependenciesEnumerator
 
                 $projectVendorAbsoluteDir = $this->config->getAbsoluteVendorDirectory();
 
-                $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload, $projectVendorAbsoluteDir);
+                $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
             }
 
             $installedPackage = $installedJsonPackages[$requiredPackageName];

@@ -4,6 +4,7 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
@@ -41,8 +42,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     protected Prefixer $replacer;
 
     protected DependenciesEnumerator $dependenciesEnumerator;
-
-    protected DeepDependenciesCollection $flatDependencyTree;
 
     /**
      * ArrayAccess of \BrianHenryIE\Strauss\File objects indexed by their path relative to the output target directory.
