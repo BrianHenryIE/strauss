@@ -41,6 +41,8 @@ use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\UseItem;
 use PhpParser\NodeFinder;
+use PhpParser\NodeTraverser;
+use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -60,6 +62,10 @@ class Prefixer
      * @var array<string, ?ComposerPackage>
      */
     protected array $changedFiles = array();
+
+    protected ?Parser $parser = null;
+
+    protected ?NodeFinder $nodeFinder = null;
 
     public function __construct(
         PrefixerConfigInterface $config,
@@ -372,7 +378,7 @@ class Prefixer
         $positions = [];
 
         /** @var ConstFetch[] $constFetches */
-        $constFetches = $nodeFinder->find($ast, function (Node $node) {
+        $constFetches = $this->getNodeFinder()->find($ast, function (Node $node) {
             return $node instanceof ConstFetch
                 && $node->name instanceof FullyQualified;
         });
@@ -1140,19 +1146,19 @@ class Prefixer
         ];
 
         /** @var FuncCall[] $funcCalls */
-        $funcCalls = $nodeFinder->findInstanceOf($ast, FuncCall::class);
-        foreach ($funcCalls as $call) {
-            if (!$call->name instanceof Name
-                || !in_array($call->name->toString(), $functionsUsingConstantName, true)
-                || !isset($call->args[0])
-                || !$call->args[0] instanceof Arg
-                || !$call->args[0]->value instanceof String_
+        $funcCalls = $nodeFinder->findInstanceOf( $ast, FuncCall::class );
+        foreach ( $funcCalls as $call ) {
+            if ( ! $call->name instanceof Name
+                 || ! in_array( $call->name->toString(), $functionsUsingConstantName, true )
+                 || ! isset( $call->args[0] )
+                 || ! $call->args[0] instanceof Arg
+                 || ! $call->args[0]->value instanceof String_
             ) {
                 continue;
             }
 
             $stringNode = $call->args[0]->value;
-            if ($stringNode->value !== $originalConstant) {
+            if ( $stringNode->value !== $originalConstant ) {
                 continue;
             }
 
@@ -1198,7 +1204,7 @@ class Prefixer
         $nodeFinder = new NodeFinder();
 
         // Function declarations (global only)
-        $functionDefs = $nodeFinder->findInstanceOf($ast, Function_::class);
+        $functionDefs = $this->getNodeFinder()->findInstanceOf($ast, Function_::class);
         foreach ($functionDefs as $func) {
             $functionSymbol = $discoveredSymbols->getFunction($func->name->name);
             if ($functionSymbol && $functionSymbol->isDoRename()) {
@@ -1209,6 +1215,18 @@ class Prefixer
                 ];
             }
         }
+
+        // If it is a build-in function that accepts a function name as its argument.
+        $functionsUsingCallable = [
+            'function_exists' => true,
+            'call_user_func' => true,
+            'call_user_func_array' => true,
+            'forward_static_call' => true,
+            'forward_static_call_array' => true,
+            'register_shutdown_function' => true,
+            'register_tick_function' => true,
+            'unregister_tick_function' => true,
+        ];
 
         // Calls (global only)
         $functionCalls = $nodeFinder->findInstanceOf($ast, FuncCall::class);
@@ -1233,19 +1251,7 @@ class Prefixer
                 continue;
             }
 
-            // If it is a build-in function that accepts a function name as its argument.
-            $functionsUsingCallable = [
-                'function_exists',
-                'call_user_func',
-                'call_user_func_array',
-                'forward_static_call',
-                'forward_static_call_array',
-                'register_shutdown_function',
-                'register_tick_function',
-                'unregister_tick_function',
-            ];
-
-            if (in_array($call->name->toString(), $functionsUsingCallable)
+            if (isset($functionsUsingCallable[$call->name->toString()])
                  && isset($call->args[0])
                  && $call->args[0] instanceof Arg
                  && $call->args[0]->value instanceof String_
@@ -1421,5 +1427,23 @@ class Prefixer
             return $output_array[1];
         }
         return null;
+    }
+
+    protected function getParser(): Parser
+    {
+        if (!isset($this->parser)) {
+            $this->parser = (new ParserFactory())->createForNewestSupportedVersion();
+        }
+
+        return $this->parser;
+    }
+
+    protected function getNodeFinder(): NodeFinder
+    {
+        if (!isset($this->nodeFinder)) {
+            $this->nodeFinder = new NodeFinder();
+        }
+
+        return $this->nodeFinder;
     }
 }
