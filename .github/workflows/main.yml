@@ -39,7 +39,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:v2
+          tools: composer:v2, clue/phar-composer
           extensions: fileinfo, gd, zip
 
       - name: Setup problem matcher for PHPUnit
