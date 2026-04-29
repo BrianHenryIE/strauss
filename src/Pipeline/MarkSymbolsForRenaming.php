@@ -44,7 +44,7 @@ class MarkSymbolsForRenaming
         foreach ($allSymbols as $symbol) {
             // $this->config->getFlatDependencyTree
             // TODO: This is probably incorrect. If a file is conditionally loaded, it still needs its namespace updated.
-            if (!$this->fileIsAutoloaded($symbol)) {
+            if (!$this->symbolIsAutoloaded($symbol)) {
 //                $this->logger->notice('Excluding {symbol} from renaming... because...', [
 //                    'symbol' => $symbol->getOriginalLocalName(),
 //                ]);
@@ -87,7 +87,7 @@ class MarkSymbolsForRenaming
      * There are packages where a class may be defined in two different files and they are conditionally loaded.
      * TODO: How best to handle this scenario?
      */
-    protected function fileIsAutoloaded(DiscoveredSymbol $symbol): bool
+    protected function symbolIsAutoloaded(DiscoveredSymbol $symbol): bool
     {
         // The same namespace symbols are found in lots of files so this test isn't useful.
         if ($symbol instanceof NamespaceSymbol) {
