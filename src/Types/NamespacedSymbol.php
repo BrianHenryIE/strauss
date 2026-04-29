@@ -8,7 +8,9 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\FileBase;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 
 class NamespacedSymbol extends DiscoveredSymbol
 {
@@ -75,5 +77,36 @@ class NamespacedSymbol extends DiscoveredSymbol
     public function isGlobal(): bool
     {
         return $this->namespace->isGlobal();
+    }
+
+    public function isPsr0Autoloaded(): bool
+    {
+        return (bool) $this->getPsr0NamespaceString();
+    }
+
+    public function getPsr0NamespaceString(): ?string
+    {
+        /** @var ComposerPackage $dependency */
+        foreach ($this->dependencies as $dependency) {
+            if (! $dependency->isPsr0Autoloaded()) {
+                continue;
+            }
+            foreach ($this->getSourceFiles() as $file) {
+                if (! ( $file instanceof FileWithDependency )) {
+                    continue;
+                }
+                if ($file->getDependency()->getPackageName() === $dependency->getPackageName()) {
+                    foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePath) {
+                        if (str_starts_with(
+                            trim($file->getPackageRelativePath(), '\\/'),
+                            trim($autoloadPackageRelativePath, '\\/')
+                        )) {
+                            return $psr0namespace;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

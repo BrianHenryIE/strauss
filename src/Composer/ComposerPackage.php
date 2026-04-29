@@ -7,6 +7,7 @@
 
 namespace BrianHenryIE\Strauss\Composer;
 
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -111,6 +112,8 @@ class ComposerPackage
     protected array $files = [];
 
     protected DiscoveredSymbols $discoveredSymbols;
+
+    protected DiscoveredSymbols $discoveredSymbolsDeep;
 
     /**
      * @param string $absolutePath The absolute path to composer.json
@@ -290,6 +293,11 @@ class ComposerPackage
         return $this->autoload;
     }
 
+    public function hasPsr0(): bool
+    {
+        return isset($this->autoload['psr-0']);
+    }
+
     /**
      * The names of the packages in the composer.json's "requires" field (without version).
      *
@@ -408,6 +416,14 @@ class ComposerPackage
         return $this->files[$path] ?? null;
     }
 
+    /**
+     * @return FileWithDependency[]
+     */
+    public function getFiles(): DiscoveredFiles
+    {
+        return new DiscoveredFiles($this->files);
+    }
+
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void
     {
         $this->discoveredSymbols->add($symbol);
@@ -433,8 +449,6 @@ class ComposerPackage
         return new DeepDependenciesCollection($this->dependencies);
     }
 
-    protected DiscoveredSymbols $discoveredSymbolsDeep;
-
     public function getDiscoveredSymbolsDeep(): DiscoveredSymbols
     {
         if (isset($this->discoveredSymbolsDeep)) {
@@ -455,5 +469,10 @@ class ComposerPackage
     public function __toString()
     {
         return $this->getPackageName();
+    }
+
+    public function isPsr0Autoloaded()
+    {
+        return isset($this->autoload['psr-0']);
     }
 }

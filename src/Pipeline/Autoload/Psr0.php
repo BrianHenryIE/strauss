@@ -11,13 +11,22 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Filesystem;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+
+// We have a PSR-0 key
+// PHP files may be in namespaces
+// They may be global with underscores.
 
 class Psr0
 {
@@ -33,60 +42,64 @@ class Psr0
         $this->filesystem = $filesystem;
     }
 
-    public function setTargetDirectory(DiscoveredFiles $files)
-    {
-        /** @var FileBase $file */
-        foreach ($files as $file) {
-            if (!($file instanceof FileWithDependency)) {
+    public function setTargetDirectory(
+        DependenciesCollection $flatDependencyTree,
+        DiscoveredFiles $discoveredFiles,
+        DiscoveredSymbols $discoveredSymbols
+    ): void {
+        /** @var ComposerPackage $package */
+        foreach ($flatDependencyTree as $package) {
+            if (! $package->hasPsr0()) {
                 continue;
             }
 
-            if (!$file->isPhpFile()) {
-                continue;
-            }
+            $composerAutoloadKey = $package->getAutoload();
 
-            $composerAutoloadKey = $file->getDependency()->getAutoload();
-            if (!array_key_exists('psr-0', $composerAutoloadKey)) {
-                continue;
-            }
+            /** @var FileWithDependency[] $allPackagesFiles */
 
-            foreach ($composerAutoloadKey['psr-0'] as $psrRootNamespace => $path) {
-                $namespacesInFile = $file->getNamespaces()->notGlobal();
+            /** @var DiscoveredFiles $files */
+            $allPackagesFiles = $package->getFiles();
 
-                if (count($namespacesInFile) > 1) {
-                    // I must check the spec, surely it's a contradiction.
-                    $this->logger->warning('More than one namespace in PSR-0 file.');
+            foreach ($composerAutoloadKey['psr-0'] as $psrRootNamespace => $packageRelativeNamespacePath) {
+                // TODO: we need to have already run "determine changes" so we can set the target directory based on exclusion rules etc.
+                $namespaceSymbol = $discoveredSymbols->getNamespace($psrRootNamespace);
+
+                /** @var FileWithDependency $file */
+                foreach ($allPackagesFiles as $file) {
+                    $filePackageRelativePath = $file->getPackageRelativePath();
+
+                    if (! str_starts_with(
+                        $filePackageRelativePath,
+                        $packageRelativeNamespacePath
+                    )) {
+                        continue;
+                    }
+
+                    // It doesn't matter here whether we are using actual namespaces or underscored classnames, the target directoru still changes.
+
+                    $originalNamespaceString    = $this->filesystem->normalizePath(
+                        $packageRelativeNamespacePath . '/' . $namespaceSymbol->getOriginalSymbol()
+                    );
+                    $replacementNamespaceString = $this->filesystem->normalizePath(
+                        $packageRelativeNamespacePath . '/' . $namespaceSymbol->getReplacementFqdnName()
+                    );
+
+                    $updatedRelativePath = preg_replace(
+                        '#^' . $originalNamespaceString . '#',
+                        $replacementNamespaceString,
+                        $filePackageRelativePath
+                    );
+
+                    $updatedTargetPath = preg_replace(
+                        '#' . $filePackageRelativePath . '$#',
+                        $updatedRelativePath,
+                        $file->getTargetAbsolutePath()
+                    );
+
+                    $file->setTargetAbsolutePath($this->filesystem->normalizePath($updatedTargetPath));
                 }
-
-                // This line is necessary because `array_pop()` will call unimplemented `::offsetUnset()`.
-                $namespacesArray = $namespacesInFile->toArray();
-
-                /** @var NamespaceSymbol $fileNamespaceSymbol */
-                $fileNamespaceSymbol = array_pop($namespacesArray);
-
-                $packageRelativePath = $file->getPackageRelativePath();
-
-                $originalNamespaceString = $this->filesystem->normalizePath(
-                    $path .'/'.$fileNamespaceSymbol->getOriginalSymbol()
-                );
-                $replacementNamespaceString = $this->filesystem->normalizePath(
-                    $path .'/'.$fileNamespaceSymbol->getReplacementFqdnName()
-                );
-
-                $updatedRelativePath = preg_replace(
-                    '#^'.$originalNamespaceString.'#',
-                    $replacementNamespaceString,
-                    $packageRelativePath
-                );
-
-                $updatedTargetPath = preg_replace(
-                    '#'.$packageRelativePath.'$#',
-                    $updatedRelativePath,
-                    $file->getTargetAbsolutePath()
-                );
-
-                $file->setTargetAbsolutePath($this->filesystem->normalizePath($updatedTargetPath));
             }
         }
+        // Has exclude-from-classmap become invalid?
     }
 }

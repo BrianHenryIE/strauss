@@ -105,6 +105,17 @@ class FileWithDependency extends File implements HasDependency
 
     public function isAutoloaded(): bool
     {
+        if ($this->dependency->hasPsr0()) {
+            foreach ($this->getDependency()->getAutoload()['psr-0'] as $autoloadPackageRelativePath) {
+                if (str_starts_with(
+                    trim($this->packageRelativePath, '\\/'),
+                    trim($autoloadPackageRelativePath, '\\/')
+                )) {
+                    return true;
+                }
+            }
+        }
+
         return !empty($this->autoloaderTypes);
     }
 }

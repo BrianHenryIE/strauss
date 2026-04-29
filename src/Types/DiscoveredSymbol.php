@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Types;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
@@ -29,6 +30,9 @@ abstract class DiscoveredSymbol
 
     protected bool $doRename = true;
 
+    // Possibly empty.
+    protected DependenciesCollection $dependencies;
+
     /**
      * @param string $fqdnSymbol The classname / namespace etc.
      * @param ?FileBase $sourceFile The file it was discovered in. Unneeded for global namespace and some (Composer) predictable files.
@@ -37,6 +41,8 @@ abstract class DiscoveredSymbol
         string $fqdnSymbol,
         ?FileBase $sourceFile = null
     ) {
+        $this->dependencies = new DependenciesCollection([]);
+
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 
         // TODO: Add `::isGlobal()` to `NamespacedSymbol`.
@@ -82,6 +88,10 @@ abstract class DiscoveredSymbol
     public function addSourceFile(FileBase $sourceFile): void
     {
         $this->sourceFiles[$sourceFile->getVendorRelativePath()] = $sourceFile;
+
+        if ($sourceFile instanceof FileWithDependency) {
+            $this->addDependency($sourceFile->getDependency());
+        }
     }
 
     public function getLocalReplacement(): string
@@ -153,5 +163,10 @@ abstract class DiscoveredSymbol
     public function __toString(): string
     {
         return $this->getOriginalSymbol();
+    }
+
+    public function addDependency(\BrianHenryIE\Strauss\Composer\ComposerPackage $package)
+    {
+        $this->dependencies->add($package);
     }
 }

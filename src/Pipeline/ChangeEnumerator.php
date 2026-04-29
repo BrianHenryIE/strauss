@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -109,17 +110,6 @@ class ChangeEnumerator
                 continue;
             }
 
-            if ($symbol->getNamespace()->isGlobal()) {
-                if ($symbol instanceof ClassSymbol) {
-                    // Don't double-prefix classnames.
-                    if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
-                        continue;
-                    }
-
-                    $symbol->setLocalReplacement($this->config->getClassmapPrefix() . $symbol->getOriginalSymbol());
-                }
-            }
-
             // If we're a namespaced class, apply the fqdnchange.
             if (!$symbol->getNamespace()->isGlobal()) {
                 if (isset($discoveredNamespaces[$symbol->getNamespaceName()])) {
@@ -137,8 +127,12 @@ class ChangeEnumerator
                 continue;
             } else {
                 // Global class.
-                $replacement = $classmapPrefix . $symbol->getOriginalSymbol();
-                $symbol->setLocalReplacement($replacement);
+                // Don't double-prefix classnames.
+                if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
+                    continue;
+                }
+
+                $this->globalOrPsr0($symbol, $classmapPrefix, $discoveredSymbols);
             }
         }
 
@@ -149,12 +143,38 @@ class ChangeEnumerator
             if (!$symbol->getNamespace()->isGlobal()) {
                 continue;
             }
-            $functionPrefix = $this->config->getFunctionsPrefix();
             if (empty($functionPrefix) || str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
                 continue;
             }
+            $this->globalOrPsr0($symbol, $this->config->getFunctionsPrefix(), $discoveredSymbols);
+        }
+    }
 
-            $symbol->setLocalReplacement($functionPrefix . $symbol->getOriginalSymbol());
+    protected function globalOrPsr0(NamespacedSymbol $symbol, string $globalPrefix, DiscoveredSymbols $discoveredSymbols): void
+    {
+
+        if ($symbol->isPsr0Autoloaded()) {
+            $psr0Namespace = $discoveredSymbols->getNamespace($symbol->getPsr0NamespaceString());
+
+            $underscoredOriginalNamespace = str_replace('\\', '_', $psr0Namespace->getOriginalLocalName());
+            $underscoredNewNamespace = str_replace('\\', '_', $psr0Namespace->getReplacementFqdnName());
+
+            $classnameParts = explode('_', $symbol->getOriginalSymbol());
+            $classname = array_pop($classnameParts);
+            $originalNamespace = implode('_', $classnameParts);
+
+            // Still global
+            if (empty($originalNamespace)) {
+                $replacement = $globalPrefix . $symbol->getOriginalSymbol();
+                $symbol->setLocalReplacement($replacement);
+            } else {
+                $unnamespacedClass = preg_replace('#^' . $underscoredOriginalNamespace . '#', '', $symbol->getOriginalSymbol());
+                $replacementPsr0Classname = trim($underscoredNewNamespace . $unnamespacedClass, '_');
+                $symbol->setLocalReplacement($replacementPsr0Classname);
+            }
+        } else {
+            $replacement = $globalPrefix . $symbol->getOriginalSymbol();
+            $symbol->setLocalReplacement($replacement);
         }
     }
 

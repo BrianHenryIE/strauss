@@ -7,6 +7,7 @@ use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
@@ -26,6 +27,7 @@ use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use BrianHenryIE\Strauss\Types\Psr0NamespaceSymbol;
 use Composer\Factory;
 use Exception;
 use Symfony\Component\Console\Command\Command;
@@ -40,8 +42,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
     protected DependenciesEnumerator $dependenciesEnumerator;
 
-    /** @var array<string,ComposerPackage> */
-    protected array $flatDependencyTree = [];
+    protected DeepDependenciesCollection $flatDependencyTree;
 
     /**
      * ArrayAccess of \BrianHenryIE\Strauss\File objects indexed by their path relative to the output target directory.
@@ -165,7 +166,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
             $this->discoveredSymbols = new DiscoveredSymbols();
 
-            $this->enumeratePsr4Namespaces();
+            $this->enumeratePsrNamespaces();
             $this->enumerateAutoloadedFiles();
             $this->scanFilesForSymbols();
             $this->analyseFilesToCopy();
@@ -173,8 +174,11 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->determineChanges();
             $this->markFilesExcludedFromChanges();
 
-
-            (new Psr0($this->filesystem, $this->logger))->setTargetDirectory($this->discoveredFiles);
+            (new Psr0($this->filesystem, $this->logger))->setTargetDirectory(
+                $this->flatDependencyTree,
+                $this->discoveredFiles,
+                $this->discoveredSymbols
+            );
 
             $this->copyFiles();
 
@@ -338,34 +342,32 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);
     }
 
-    /**
-     * TODO: currently this must run after ::determineChanges() so the discoveredSymbols object exists,
-     * but logically it should run first.
-     */
-    protected function enumeratePsr4Namespaces(): void
+    protected function enumeratePsrNamespaces(): void
     {
         foreach ($this->config->getPackagesToPrefix() as $package) {
-            $autoloadKey = $package->getAutoload();
-            if (! isset($autoloadKey['psr-4'])) {
-                continue;
-            }
+            $autoloadTypes = $package->getAutoload();
+            foreach (array_keys($autoloadTypes) as $autoloadKeyType) {
+                switch ($autoloadKeyType) {
+                    case 'psr-0':
+                        // Fall-through.
+                    case 'psr-4':
+                        $namespaces = array_keys($autoloadTypes[$autoloadKeyType]);
 
-            $psr4autoloadKey = $autoloadKey['psr-4'];
-            $namespaces = array_keys($psr4autoloadKey);
+                        foreach ($namespaces as $namespace) {
+                            // TODO: log.
 
-            $file = new File(
-                $package->getPackageAbsolutePath() . '/composer.json',
-                '/../composer.json',
-                $package->getPackageAbsolutePath() . '/composer.json',
-            );
+                            $symbol = $autoloadKeyType === 'psr-0'
+                                ? new Psr0NamespaceSymbol(trim($namespace, '\\'))
+                                : new NamespaceSymbol(trim($namespace, '\\'));
 
-            foreach ($namespaces as $namespace) {
-                // TODO: log.
-                $symbol = new NamespaceSymbol(
-                    trim($namespace, '\\'),
-                    $file
-                );
-                $this->discoveredSymbols->add($symbol);
+                            $this->discoveredSymbols->add($symbol);
+                            $symbol->addDependency($package);
+                            $package->addDiscoveredSymbol($symbol);
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }

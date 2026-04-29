@@ -12,6 +12,11 @@ class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
     /** @var array<string,FileBase|File|FileWithDependency> */
     protected array $files = [];
 
+    public function __construct(array $files = [])
+    {
+        $this->files = $files;
+    }
+
     public function add(FileBase $file): void
     {
         $this->files[$file->getSourcePath()] = $file;
