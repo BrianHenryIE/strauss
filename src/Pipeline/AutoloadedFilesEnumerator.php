@@ -12,6 +12,7 @@ use Composer\ClassMapGenerator\ClassMapGenerator;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+use SplFileInfo;
 
 class AutoloadedFilesEnumerator
 {
@@ -152,8 +153,9 @@ class AutoloadedFilesEnumerator
                                 );
                                 continue;
                             }
+                            $absolutePath = new SplFileInfo($this->filesystem->makeAbsolute($autoloadKeyPath));
                             $classMapGenerator->scanPaths(
-                                $this->filesystem->makeAbsolute($autoloadKeyPath),
+                                $absolutePath,
                                 $excluded,
                                 $autoloadType,
                                 $namespace,
