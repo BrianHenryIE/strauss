@@ -424,8 +424,16 @@ class InstalledJson
 
                             // Update the namespace if it has changed.
                             $this->logger->info('Updating namespace: ' . $trimmedOriginalNamespace . ' => ' . $namespaceSymbol->getLocalReplacement());
+                            $newKey = str_replace($trimmedOriginalNamespace, $namespaceSymbol->getLocalReplacement(), $originalNamespace);
+                            // PSR-0 underscore convention (PEAR-style): packages where class names use underscores
+                            // as directory separators with no PHP namespace declarations have no source files on
+                            // the namespace symbol. Their installed.json key must use underscores to match.
+                            // TODO: if this fails, filter the source files' namespaces to ensure they are all global.
+                            if ($type === 'psr-0' && empty($namespaceSymbol->getSourceFiles())) {
+                                $newKey = str_replace('\\', '_', $newKey);
+                            }
                             /** @phpstan-ignore offsetAccess.notFound */
-                            $autoload_key[$type][str_replace($trimmedOriginalNamespace, $namespaceSymbol->getLocalReplacement(), $originalNamespace)] = $autoload_key[$type][$originalNamespace];
+                            $autoload_key[$type][$newKey] = $autoload_key[$type][$originalNamespace];
                             unset($autoload_key[$type][$originalNamespace]);
                         }
                         break;

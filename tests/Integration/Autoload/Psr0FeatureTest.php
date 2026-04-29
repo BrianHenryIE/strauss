@@ -99,11 +99,11 @@ EOD;
         $this->assertStringContainsString('class BrianHenryIE_Strauss_HTMLPurifier_DefinitionCache_Serializer', $phpString);
 
         $installedJson = json_decode($this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json'), true);
-        $this->assertEquals('BrianHenryIE\Strauss\HTMLPurifier', array_key_first($installedJson['packages'][0]['autoload']['psr-0']));
+        $this->assertEquals('BrianHenryIE_Strauss_HTMLPurifier', array_key_first($installedJson['packages'][0]['autoload']['psr-0']));
 
         // php -r "include __DIR__ . '/vendor/autoload.php'; new HTMLPurifier_DefinitionCache_Serializer('type');"
         // php -r "include __DIR__ . '/vendor-prefixed/autoload.php'; new BrianHenryIE_Strauss_HTMLPurifier_DefinitionCache_Serializer('type');"
-        exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; new BrianHenryIE_Strauss_HTMLPurifier_DefinitionCache_Serializer();" 2>&1', $output, $result_code);
+        exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; new BrianHenryIE_Strauss_HTMLPurifier_DefinitionCache_Serializer(\'type\');" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);
         $this->assertEquals(0, $result_code, $outputString);
     }
