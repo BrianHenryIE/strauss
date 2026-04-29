@@ -195,6 +195,10 @@ class DependenciesEnumerator
                     continue;
                 }
 
+                $this->logger->info('Found {requiredPackageName} in composer.lock.', [
+                    'requiredPackageName' => $requiredPackageName,
+                ]);
+
                 if (!isset($requiredPackageComposerJson['autoload'])
                     && empty($requiredPackageComposerJson['require'])
                     && (!isset($requiredPackageComposerJson['type']) || $requiredPackageComposerJson['type'] != 'metapackage')
@@ -210,10 +214,10 @@ class DependenciesEnumerator
                 $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
             }
 
-            $installedPackage = $installedJsonPackages[$requiredPackageName];
-            if (is_null($requiredComposerPackage->getRealPath())
-//                && isset($installedPackage['dist'], $installedPackage['dist']['type'])
-                && $installedPackage['dist']['type'] === 'path') {
+            if (isset($installedJsonPackages[$requiredPackageName])
+                && is_null($requiredComposerPackage->getRealPath())
+                && $installedJsonPackages[$requiredPackageName]['dist']['type'] === 'path') {
+                $installedPackage = $installedJsonPackages[$requiredPackageName];
                 $path = $installedPackage['dist']['url'];
 
                 $packageRealPath = $this->filesystem->normalizePath(
@@ -287,9 +291,7 @@ class DependenciesEnumerator
     protected function removeVirtualPackagesFilter(string $requiredPackageName): bool
     {
         return ! (
-            0 === strpos($requiredPackageName, 'ext')
-            // E.g. `php`, `php-64bit`.
-            || (0 === strpos($requiredPackageName, 'php') && false === strpos($requiredPackageName, '/'))
+            ComposerPackage::isPlatformPackageName($requiredPackageName, true)
             || in_array($requiredPackageName, $this->virtualPackages)
         );
     }

@@ -49,7 +49,7 @@ class IntegrationTestCase extends TestCase
 
     protected FileSystem $readOnlyFileSystem;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -191,7 +191,7 @@ class IntegrationTestCase extends TestCase
      *
      * @see https://stackoverflow.com/questions/3349753/delete-directory-with-files-in-it
      */
-    public function tearDown(): void
+    protected function tearDown(): void
     {
         parent::tearDown();
 

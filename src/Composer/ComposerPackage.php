@@ -15,6 +15,7 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
+use Composer\PartialComposer;
 use Composer\Util\Platform;
 use Exception;
 
@@ -31,9 +32,9 @@ class ComposerPackage
      *
      * @see Factory::create
      *
-     * @var Composer
+     * @var PartialComposer
      */
-    protected Composer $composer;
+    protected PartialComposer $composer;
 
     /**
      * The name of the project in composer.json.
@@ -124,9 +125,7 @@ class ComposerPackage
      */
     public static function fromFile(string $absolutePath, ?array $overrideAutoload = null): ComposerPackage
     {
-        $composer = Factory::create(new NullIO(), $absolutePath, true);
-
-        return new ComposerPackage($composer, $overrideAutoload);
+        return new ComposerPackage(self::createPartialComposer($absolutePath), $overrideAutoload);
     }
 
     /**
@@ -138,21 +137,30 @@ class ComposerPackage
      */
     public static function fromComposerJsonArray(array $jsonArray, ?array $overrideAutoload = null): ComposerPackage
     {
-        $factory = new Factory();
-        $io = new NullIO();
-        $composer = $factory->createComposer($io, $jsonArray, true);
+        return new ComposerPackage(self::createPartialComposer($jsonArray), $overrideAutoload);
+    }
 
-        return new ComposerPackage($composer, $overrideAutoload);
+    /**
+     * @param string|ComposerJsonArray $composerInput
+     */
+    private static function createPartialComposer($composerInput): PartialComposer
+    {
+        $factory = new Factory();
+
+        /** @var PartialComposer $composer */
+        $composer = $factory->createComposer(new NullIO(), $composerInput, true, null, false);
+
+        return $composer;
     }
 
     /**
      * Create a PHP object to represent a composer package.
      *
-     * @param Composer $composer
+     * @param PartialComposer $composer
      * @param ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
      * @throws Exception
      */
-    public function __construct(Composer $composer, ?array $overrideAutoload = null)
+    public function __construct(PartialComposer $composer, ?array $overrideAutoload = null)
     {
         $this->discoveredSymbols = new DiscoveredSymbols();
 
@@ -196,8 +204,16 @@ class ComposerPackage
         $vendorAbsoluteDirectoryPath = $fsCurrentWorkingDirectory . '/vendor';
         if ('metapackage' !== $composer->getPackage()->getType()) {
             if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
+                $resolvedPackagePath = realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName);
+                $this->packageAbsolutePath = $pathNormalizer->normalizePath(
+                    false !== $resolvedPackagePath
+                        ? $resolvedPackagePath
+                        : $vendorAbsoluteDirectoryPath . '/' . $this->packageName
+                );
+
+
                 $this->vendorRelativePath  = $this->packageName;
-                $this->packageAbsolutePath = $pathNormalizer->normalizePath(Platform::realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
+                //$this->packageAbsolutePath = $pathNormalizer->normalizePath(Platform::realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
                 // If the package is symlinked, the path will be outside the working directory.
 //        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
 //            $this->vendorRelativePath = $output_array[1];
@@ -307,12 +323,23 @@ class ComposerPackage
      */
     public function getRequiresNames(): array
     {
-        // Unset PHP, ext-*.
-        $removePhpExt = function ($element) {
-            return !( 0 === strpos($element, 'ext') || 'php' === $element );
-        };
+        return array_filter(
+            $this->requiresNames,
+            static function (string $requiredPackageName): bool {
+                return !self::isPlatformPackageName($requiredPackageName);
+            }
+        );
+    }
 
-        return array_filter($this->requiresNames, $removePhpExt);
+    public static function isPlatformPackageName(string $packageName, bool $includePhpVariants = false): bool
+    {
+        return 0 === strpos($packageName, 'ext')
+            || 'php' === $packageName
+            || (
+                $includePhpVariants
+                && 0 === strpos($packageName, 'php')
+                && false === strpos($packageName, '/')
+            );
     }
 
     public function getLicense():string

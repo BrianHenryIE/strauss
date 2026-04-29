@@ -59,6 +59,11 @@ class FileEnumerator
                 continue;
             }
             $this->compileFileListForPaths([$dependencyPackageAbsolutePath], $dependency);
+//            $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths([$dependencyPackageAbsolutePath]);
+//
+//            foreach ($absoluteFilePaths as $sourceAbsolutePath) {
+//                $this->addFile($sourceAbsolutePath, $dependency);
+//            }
         }
 
         $this->discoveredFiles->sort();
