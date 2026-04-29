@@ -167,6 +167,16 @@ class ComposerPackage
 
         $this->packageName = $composer->getPackage()->getName();
 
+        $fsComposerJsonFileAbsolute = $composer->getConfig()->getConfigSource()->getName();
+
+        $fsCurrentWorkingDirectory = getcwd();
+        if ($fsCurrentWorkingDirectory === false) {
+            /**
+             * @see Platform::getCwd()
+             */
+            throw new Exception('Could not determine working directory. Please comment out ~'.__LINE__.' in ' . __FILE__.' and see does it work regardless.');
+        }
+
         $pathNormalizer = FileSystem::makePathNormalizer(Platform::getcwd());
 
         // This is null for some packages, e.g. `wptrt/admin-notices`
@@ -177,24 +187,14 @@ class ComposerPackage
                 $projectVendorDirRegexMatch[1]
             );
         }
-        $fsComposerJsonFileAbsolute = $composer->getConfig()->getConfigSource()->getName();
-        $fsComposerAbsoluteDirectoryPath = realpath(dirname($fsComposerJsonFileAbsolute));
         $composerJsonFileAbsolute = $pathNormalizer->normalizePath($fsComposerJsonFileAbsolute);
-
+        $fsComposerAbsoluteDirectoryPath = realpath(dirname($fsComposerJsonFileAbsolute));
         if (false !== $fsComposerAbsoluteDirectoryPath) {
             if (str_starts_with($composerJsonFileAbsolute, $projectVendorDirAbsolute)) {
                 $this->packageAbsolutePath = $composerJsonFileAbsolute;
             }
         }
 
-
-        $fsCurrentWorkingDirectory = getcwd();
-        if ($fsCurrentWorkingDirectory === false) {
-            /**
-             * @see Platform::getCwd()
-             */
-            throw new Exception('Could not determine working directory. Please comment out ~'.__LINE__.' in ' . __FILE__.' and see does it work regardless.');
-        }
         $fsCurrentWorkingDirectory = FileSystem::normalizeDirSeparator($fsCurrentWorkingDirectory);
 
         /** @var string $packageVendorAbsoluteDirectoryPath */
