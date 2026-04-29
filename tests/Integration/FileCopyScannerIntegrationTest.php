@@ -78,7 +78,7 @@ EOD;
             $this->getLogger()
         );
 
-        $files = $fileEnumerator->compileFileListForDependencies(New DependenciesCollection($dependencies));
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
         foreach ($files->getFiles() as $file) {
             $file->setDoPrefix($file->isPhpFile());
         }
