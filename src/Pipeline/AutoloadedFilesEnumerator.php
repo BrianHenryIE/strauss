@@ -154,7 +154,10 @@ class AutoloadedFilesEnumerator
                                 );
                                 continue;
                             }
-                            $absolutePath = new SplFileInfo($this->filesystem->makeAbsolute($autoloadKeyPath));
+                            $absolutePath = $this->filesystem->makeAbsolute($autoloadKeyPath);
+                            if (str_starts_with($absolutePath, 'mem://')) {
+                                $absolutePath = new SplFileInfo($absolutePath);
+                            }
                             $classMapGenerator->scanPaths(
                                 $absolutePath,
                                 $excluded,
