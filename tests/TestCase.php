@@ -69,7 +69,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
          * @see \Composer\Util\Filesystem::$streamWrappersRegex
          * @see \Composer\Util\Filesystem::isStreamWrapperPath()
          */
-        if (!in_array('mem', stream_get_wrappers())) {
+        if (!in_array('mem', stream_get_wrappers())
+            && method_exists(\Composer\Util\Filesystem::class, 'isStreamWrapperPath')
+        ) {
             stream_wrapper_register('mem', stdClass::class);
             \Composer\Util\Filesystem::isStreamWrapperPath('mem://');
             stream_wrapper_unregister('mem');
