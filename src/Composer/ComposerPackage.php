@@ -148,15 +148,6 @@ class ComposerPackage
 
         $composerJsonFileAbsolute = $composer->getConfig()->getConfigSource()->getName();
 
-        $pathNormalizer = FileSystem::makePathNormalizer(getcwd());
-        
-        $fsComposerAbsoluteDirectoryPath = realpath(dirname($composerJsonFileAbsolute));
-        if (false !== $fsComposerAbsoluteDirectoryPath) {
-            $fsComposerAbsoluteDirectoryPath = FileSystem::normalizeDirSeparator($fsComposerAbsoluteDirectoryPath);
-            $this->packageAbsolutePath = $fsComposerAbsoluteDirectoryPath;
-        }
-        $fsComposerAbsoluteDirectoryPath = $fsComposerAbsoluteDirectoryPath ?: FileSystem::normalizeDirSeparator(dirname($composerJsonFileAbsolute));
-
         $fsCurrentWorkingDirectory = getcwd();
         if ($fsCurrentWorkingDirectory === false) {
             /**
@@ -164,6 +155,15 @@ class ComposerPackage
              */
             throw new Exception('Could not determine working directory. Please comment out ~'.__LINE__.' in ' . __FILE__.' and see does it work regardless.');
         }
+
+        $pathNormalizer = FileSystem::makePathNormalizer($fsCurrentWorkingDirectory);
+
+        $fsComposerAbsoluteDirectoryPath = realpath(dirname($composerJsonFileAbsolute));
+        if (false !== $fsComposerAbsoluteDirectoryPath) {
+            $fsComposerAbsoluteDirectoryPath = FileSystem::normalizeDirSeparator($fsComposerAbsoluteDirectoryPath);
+            $this->packageAbsolutePath = $fsComposerAbsoluteDirectoryPath;
+        }
+        $fsComposerAbsoluteDirectoryPath = $fsComposerAbsoluteDirectoryPath ?: FileSystem::normalizeDirSeparator(dirname($composerJsonFileAbsolute));
         $fsCurrentWorkingDirectory = FileSystem::normalizeDirSeparator($fsCurrentWorkingDirectory);
 
         /** @var string $vendorAbsoluteDirectoryPath */
