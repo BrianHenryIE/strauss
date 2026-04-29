@@ -17,6 +17,7 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use BrianHenryIE\Strauss\Types\Psr0NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
@@ -74,8 +75,14 @@ class MarkSymbolsForRenaming
 //                    $symbol->setDoRename(false);
 //                }
 //            }
+            /**
+             * I'm not sure what this was added for, but psr-0 namespaces that are found when scanning autoload
+             * keys are used to check do files exist under that directory.
+             */
             if (!$this->config->isTargetDirectoryVendor()
-                && !$this->isSymbolFoundInFileThatIsCopied($symbol)) {
+                && !$this->isSymbolFoundInFileThatIsCopied($symbol)
+                && !($symbol instanceof Psr0NamespaceSymbol)
+            ) {
                 $symbol->setDoRename(false);
             }
         }
