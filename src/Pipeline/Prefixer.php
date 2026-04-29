@@ -313,9 +313,10 @@ class Prefixer
 
         // Only search for symbols that might possibly be in this file.
         // TODO: During the initial AST parse which now find symbols defined in a file, also record the symbols used in the file
-        if ($file instanceof FileWithDependency && !($file->getDependency() instanceof ProjectComposerPackage)) {
-            $discoveredSymbols = $file->getDependency()->getDiscoveredSymbolsDeep();
-        }
+        // TODO: bug: this is dropping all non-class symbols, presumably never registered against the file.
+//        if ($file instanceof FileWithDependency && !($file->getDependency() instanceof ProjectComposerPackage)) {
+//            $discoveredSymbols = $file->getDependency()->getDiscoveredSymbolsDeep();
+//        }
 
         $discoveredSymbolsCount = count($discoveredSymbols->toArray());
         $this->logger->debug(sprintf(
