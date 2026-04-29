@@ -143,10 +143,11 @@ class ChangeEnumerator
             if (!$symbol->getNamespace()->isGlobal()) {
                 continue;
             }
+            $functionPrefix = $this->config->getFunctionsPrefix();
             if (empty($functionPrefix) || str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
                 continue;
             }
-            $this->globalOrPsr0($symbol, $this->config->getFunctionsPrefix(), $discoveredSymbols);
+            $this->globalOrPsr0($symbol, $functionPrefix, $discoveredSymbols);
         }
     }
 
