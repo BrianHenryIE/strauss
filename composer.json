@@ -75,14 +75,9 @@
     },
     "extra": {
       "strauss": {
-          "namespace_prefix": "BrianHenryIE\\Strauss\\Vendor\\",
+          "namespace_prefix": "BrianHenryIE\\Strauss\\",
           "target_directory": "vendor",
-          "updateCallSites": true,
-          "exclude_from_prefix": {
-              "file_patterns": [
-                  "#ClassLoader.php#"
-              ]
-          }
+          "updateCallSites": true
       }
     },
     "conflict": {
