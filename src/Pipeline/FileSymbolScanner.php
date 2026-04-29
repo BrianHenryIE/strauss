@@ -60,45 +60,10 @@ class FileSymbolScanner
         FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
-        $this->discoveredSymbols = $discoveredSymbols;
-
         $this->config = $config;
-
+        $this->discoveredSymbols = $discoveredSymbols;
         $this->filesystem = $filesystem;
         $this->logger = $logger ?? new NullLogger();
-    }
-
-
-    protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
-    {
-        if (in_array($symbol->getOriginalSymbol(), $this->getBuiltIns())) {
-            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
-                'symbolName' => $symbol->getOriginalLocalName(),
-            ]);
-            return;
-        }
-
-        $this->discoveredSymbols->add($symbol);
-
-        if ($file instanceof FileWithDependency) {
-            $file->getDependency()->addDiscoveredSymbol($symbol);
-        }
-
-        $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
-        $newText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '' : 'new ';
-
-        $this->loggedSymbols[] = $symbol->getOriginalSymbol();
-
-        $this->logger->log(
-            $level,
-            sprintf(
-                "Found %s%s:::%s",
-                $newText,
-                // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
-                strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
-                $symbol->getOriginalSymbol()
-            )
-        );
     }
 
     /**
@@ -188,7 +153,7 @@ class FileSymbolScanner
                 $constantSymbol = $this->discoveredSymbols->getConst($constantName);
                 if (is_null($constantSymbol)) {
                     $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceSymbol);
-                    $this->add($constantSymbol);
+                    $this->add($constantSymbol, $file);
                 }
                 $constantSymbol->addSourceFile($file);
                 $constantSymbol->setDoRename($file->isDoPrefix());
@@ -215,7 +180,41 @@ class FileSymbolScanner
                 $traitSymbol->addSourceFile($file);
                 $traitSymbol->setDoRename($file->isDoPrefix());
             }
+
+            // TODO: enum.
         }
+    }
+
+    protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
+    {
+        if (in_array($symbol->getOriginalSymbol(), $this->getBuiltIns())) {
+            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
+                'symbolName' => $symbol->getOriginalLocalName(),
+            ]);
+            return;
+        }
+
+        $this->discoveredSymbols->add($symbol);
+
+        if ($file instanceof FileWithDependency) {
+            $file->getDependency()->addDiscoveredSymbol($symbol);
+        }
+
+        $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
+        $newText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '' : 'new ';
+
+        $this->loggedSymbols[] = $symbol->getOriginalSymbol();
+
+        $this->logger->log(
+            $level,
+            sprintf(
+                "Found %s%s:::%s",
+                $newText,
+                // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
+                strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
+                $symbol->getOriginalSymbol()
+            )
+        );
     }
 
     /**
