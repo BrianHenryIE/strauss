@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
@@ -266,20 +267,23 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 
         $this->config->setPackagesToCopy(
-            array_filter($this->flatDependencyTree, function ($dependency) {
-                return !in_array($dependency, $this->config->getExcludePackagesFromCopy());
-            },
-            ARRAY_FILTER_USE_KEY)
+            array_filter(
+                $this->flatDependencyTree->toArray(),
+                function ($dependency) {
+                    return !in_array($dependency, $this->config->getExcludePackagesFromCopy());
+                },
+                ARRAY_FILTER_USE_KEY
+            )
         );
 
         $this->config->setPackagesToPrefix(
-            array_filter($this->flatDependencyTree, function ($dependency) {
+            array_filter($this->flatDependencyTree->toArray(), function ($dependency) {
                 return !in_array($dependency, $this->config->getExcludePackagesFromPrefixing());
             },
             ARRAY_FILTER_USE_KEY)
         );
 
-        foreach ($this->flatDependencyTree as $dependency) {
+        foreach ($this->flatDependencyTree->toArray() as $dependency) {
             // Sort of duplicating the logic above.
             $dependency->setCopy(
                 !in_array($dependency->getPackageName(), $this->config->getExcludePackagesFromCopy())
@@ -293,7 +297,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         // TODO: Print the dependency tree that Strauss has determined.
 
         $symlinkedDependencies = array_filter(
-            $this->flatDependencyTree,
+            $this->flatDependencyTree->toArray(),
             fn ($dependency) => !is_null($dependency->getRealPath()) && !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath())
         );
 
@@ -375,7 +379,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->filesystem,
             $this->logger
         );
-        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree);
+        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree->toArray());
     }
 
     protected function scanFilesForSymbols(): void

@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
@@ -32,8 +33,7 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     /** @var Prefixer */
     protected Prefixer $replacer;
 
-    /** @var ComposerPackage[] */
-    protected array $flatDependencyTree = [];
+    protected DependenciesCollection $flatDependencyTree;
 
     /**
      * ArrayAccess of \BrianHenryIE\Strauss\File objects indexed by their path relative to the output target directory.

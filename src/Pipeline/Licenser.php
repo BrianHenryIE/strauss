@@ -17,6 +17,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\LicenserConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -31,8 +32,7 @@ class Licenser
 {
     use LoggerAwareTrait;
 
-    /** @var ComposerPackage[]  */
-    protected array $dependencies;
+    protected DependenciesCollection $dependencies;
 
     // The author of the current project who is running Strauss to make the changes to the required libraries.
     protected string $author;
@@ -64,7 +64,7 @@ class Licenser
      */
     public function __construct(
         LicenserConfigInterface $config,
-        array            $dependencies,
+        DependenciesCollection  $dependencies,
         string           $author,
         FileSystem       $filesystem,
         ?LoggerInterface $logger = null

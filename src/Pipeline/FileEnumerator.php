@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
@@ -43,12 +44,14 @@ class FileEnumerator
     }
 
     /**
-     * @param ComposerPackage[] $dependencies
+     * @param ComposerPackage[] $flatDependencies
+     *
      * @throws FilesystemException
      */
-    public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
+    public function compileFileListForDependencies(DependenciesCollection $flatDependencies): DiscoveredFiles
     {
-        foreach ($dependencies as $dependency) {
+        /** @var ComposerPackage $dependency */
+        foreach ($flatDependencies as $dependency) {
             $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
             /** @var string $dependencyPackageAbsolutePath */
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();

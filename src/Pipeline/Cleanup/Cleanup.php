@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
@@ -60,7 +61,7 @@ class Cleanup
      *
      * @throws FilesystemException
      */
-    public function deleteFiles(array $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
+    public function deleteFiles(DependenciesCollection $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
             $this->logger->info('No cleanup required.');
@@ -80,11 +81,11 @@ class Cleanup
         $this->deleteEmptyDirectories($discoveredFiles->getFiles());
     }
 
-    /** @param array<string,ComposerPackage> $flatDependencyTree
+    /**
      * @throws Exception
      * @throws FilesystemException
      */
-    public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    public function cleanupVendorInstalledJson(DependenciesCollection $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $installedJson = new InstalledJson(
             $this->config,
@@ -243,10 +244,9 @@ class Cleanup
     }
 
     /**
-     * @param array<string,ComposerPackage> $flatDependencyTree
      * @throws FilesystemException
      */
-    protected function doIsDeleteVendorPackages(array $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
+    protected function doIsDeleteVendorPackages(DependenciesCollection $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
     {
         $this->logger->info('Deleting original vendor packages.');
 

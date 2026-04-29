@@ -17,6 +17,7 @@
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -122,12 +123,17 @@ class InstalledJson
 
     /**
      * @param InstalledJsonArray $installedJsonArray
-     * @param array<string,ComposerPackage> $flatDependencyTree
+     * @param DependenciesCollection $flatDependencyTree
      * @param string[] $excludedPackageNames
      * @return InstalledJsonArray
      */
-    protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree, string $path, array $excludedPackageNames = []): array
-    {
+    protected function updatePackagePaths(
+        array $installedJsonArray,
+        DependenciesCollection $flatDependencyTree,
+        string $path,
+        DiscoveredSymbols $discoveredSymbols,
+        array $excludedPackageNames = []
+    ): array {
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
             if (in_array($package['name'], $excludedPackageNames, true)) {
@@ -136,7 +142,7 @@ class InstalledJson
             }
 
             // Skip packages that were never copied in the first place.
-            if (!in_array($package['name'], array_keys($flatDependencyTree))) {
+            if (!in_array($package['name'], array_keys($flatDependencyTree->toArray()))) {
                 $this->logger->debug('Skipping package: ' . $package['name']);
                 continue;
             }
@@ -186,7 +192,7 @@ class InstalledJson
      * @return InstalledJsonArray
      * @throws FilesystemException
      */
-    protected function removeMissingAutoloadKeyPaths(array $installedJsonArray, string $vendorDir, string $installedJsonPath): array
+    protected function removeMissingAutoloadKeyPaths(array $installedJsonArray, string $vendorDir, string $installedJsonPath, DiscoveredSymbols $discoveredSymbols): array
     {
         foreach ($installedJsonArray['packages'] as $packageIndex => $packageArray) {
             if (!isset($packageArray['autoload'])) {
@@ -222,6 +228,7 @@ class InstalledJson
                         $installedJsonArray['packages'][$packageIndex]['autoload'][$type] = array_values($filtered);
                         break;
                     case 'psr-0':
+                        // Intentionally fall through.
                     case 'psr-4':
                         foreach ($autoload as $namespace => $paths) {
                             switch (true) {
@@ -277,10 +284,10 @@ class InstalledJson
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      *
      * @param InstalledJsonArray $installedJsonArray
-     * @param array<string,ComposerPackage> $flatDependencyTree
+     * @param DependenciesCollection $flatDependencyTree
      * @return InstalledJsonArray
      */
-    protected function removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson(array $installedJsonArray, array $flatDependencyTree, string $installedJsonPath): array
+    protected function removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson(array $installedJsonArray, DependenciesCollection $flatDependencyTree, string $installedJsonPath): array
     {
         /**
          * @var int $key
@@ -311,10 +318,10 @@ class InstalledJson
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      *
      * @param InstalledJsonArray $installedJsonArray
-     * @param array<string,ComposerPackage> $flatDependencyTree
+     * @param DependenciesCollection $flatDependencyTree
      * @return InstalledJsonArray
      */
-    protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, array $flatDependencyTree, string $installedJsonPath): array
+    protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, DependenciesCollection $flatDependencyTree, string $installedJsonPath): array
     {
         /**
          * @var int $key
@@ -325,7 +332,7 @@ class InstalledJson
 
             $remove = false;
 
-            if (!in_array($packageName, array_keys($flatDependencyTree))) {
+            if (!in_array($packageName, array_keys($flatDependencyTree->toArray()))) {
                 // If it's not a package we were ever considering copying, then we can remove it.
                 $remove = true;
             } else {
@@ -451,12 +458,10 @@ class InstalledJson
     /**
      * TODO: This runs twice but should only run once.
      *
-     * @param array<string,ComposerPackage> $flatDependencyTree
-     * @param DiscoveredSymbols $discoveredSymbols
      * @throws Exception
      * @throws FilesystemException
      */
-    public function cleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    public function cleanTargetDirInstalledJson(DependenciesCollection $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $this->logger->debug('InstalledJson::cleanTargetDirInstalledJson()');
 
@@ -485,10 +490,11 @@ class InstalledJson
             $installedJsonArray,
             $flatDependencyTree,
             $this->config->getAbsoluteTargetDirectory(),
+            $discoveredSymbols,
             $this->config->getExcludePackagesFromCopy()
         );
 
-        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getAbsoluteTargetDirectory(), $installedJsonFile->getPath());
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getAbsoluteTargetDirectory(), $installedJsonFile->getPath(), $discoveredSymbols);
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(
             $installedJsonArray,
@@ -499,7 +505,7 @@ class InstalledJson
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
         foreach ($installedJsonArray['packages'] as $index => $package) {
-            if (!in_array($package['name'], array_keys($flatDependencyTree))) {
+            if (!in_array($package['name'], array_keys($flatDependencyTree->toArray()))) {
                 unset($installedJsonArray['packages'][$index]);
             }
         }
@@ -525,11 +531,10 @@ class InstalledJson
      * When `delete-vendor-packages` or `delete-vendor-files` is true, files and directories which have been deleted
      * must also be removed from `installed.json` or Composer will throw an error.
      *
-     * @param array<string,ComposerPackage> $flatDependencyTree
      * @throws Exception
      * @throws FilesystemException
      */
-    public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    public function cleanupVendorInstalledJson(DependenciesCollection $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $this->logger->debug('InstalledJson::cleanupVendorInstalledJson()');
 
@@ -544,14 +549,15 @@ class InstalledJson
          */
         $installedJsonArray = $vendorInstalledJsonFile->read();
 
-        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getAbsoluteVendorDirectory(), $vendorInstalledJsonFile->getPath());
+        $installedJsonArray = $this->removeMissingAutoloadKeyPaths($installedJsonArray, $this->config->getAbsoluteVendorDirectory(), $vendorInstalledJsonFile->getPath(), $discoveredSymbols);
 
         $installedJsonArray = $this->removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson($installedJsonArray, $flatDependencyTree, $vendorInstalledJsonFile->getPath());
 
         $installedJsonArray = $this->updatePackagePaths(
             $installedJsonArray,
             $flatDependencyTree,
-            $this->config->getAbsoluteVendorDirectory()
+            $this->config->getAbsoluteVendorDirectory(),
+            $discoveredSymbols
         );
 
         // Only relevant when source = target.

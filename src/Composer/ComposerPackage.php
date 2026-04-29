@@ -428,25 +428,9 @@ class ComposerPackage
         return $this->dependencies;
     }
 
-    public function getFlatDependencyTree(): array
+    public function getFlatDependencyTree(): DeepDependenciesCollection
     {
-        $this->getDependenciesRecursive($this);
-        return $this->flatDependencyTree;
-    }
-
-    /** @var array<string, ComposerPackage> */
-    protected array $flatDependencyTree = [];
-    protected function getDependenciesRecursive(ComposerPackage $composerPackage): void
-    {
-        foreach ($composerPackage->getDependencies() as $dependency) {
-            if (isset($this->flatDependencyTree[$dependency->getPackageName()])) {
-                continue;
-            }
-            $this->flatDependencyTree[$dependency->getPackageName()] = $dependency;
-            foreach ($dependency->getDependencies() as $childDependency) {
-                $this->getDependenciesRecursive($childDependency);
-            }
-        }
+        return new DeepDependenciesCollection($this->dependencies);
     }
 
     protected DiscoveredSymbols $discoveredSymbolsDeep;

@@ -11,6 +11,7 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use Mockery;
@@ -31,16 +32,15 @@ class FileEnumeratorTest extends TestCase
 
         $config = Mockery::mock(FileEnumeratorConfig::class);
         $filesystem = $this->getFileSystem();
-        $logger = $this->getLogger();
 
         $sut = new FileEnumerator($config, $filesystem, $this->getLogger());
 
         $dependency = Mockery::mock(ComposerPackage::class);
-        $dependency->expects('getPackageName')->andReturn('test/package');
+        $dependency->allows('getPackageName')->andReturn('test/package');
         $dependency->expects('getPackageAbsolutePath')->andReturn('path/to/project/vendor/package');
 
         /** @var ComposerPackage[] $dependencies */
-        $dependencies = [$dependency];
+        $dependencies = new DependenciesCollection([$dependency]);
 
         $result = $sut->compileFileListForDependencies($dependencies);
 

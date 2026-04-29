@@ -6,6 +6,8 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\Factory;
@@ -37,8 +39,7 @@ class DependenciesEnumerator
         'php-http/client-implementation'
     );
 
-    /** @var array<string, ComposerPackage> */
-    protected array $flatDependencyTree = array();
+    protected array $flatDependencyArray = [];
 
     /**
      * Record the files autoloaders for later use in building our own autoloader.
@@ -77,20 +78,20 @@ class DependenciesEnumerator
      * @throws Exception
      * @throws FilesystemException
      */
-    public function getAllDependencies(): array
+    public function getAllDependencies(): DeepDependenciesCollection
     {
         $this->recursiveGetAllDependencies($this->requiredPackageNames);
 
-        foreach ($this->flatDependencyTree as $composerPackage) {
+        foreach ($this->flatDependencyArray as $composerPackage) {
             foreach ($composerPackage->getRequiresNames() as $requiresName) {
                 // The package would be missing if it is in `provides`.
-                if (isset($this->flatDependencyTree[$requiresName])) {
-                    $composerPackage->addDependency($this->flatDependencyTree[$requiresName]);
+                if (isset($this->flatDependencyArray[$requiresName])) {
+                    $composerPackage->addDependency($this->flatDependencyArray[$requiresName]);
                 }
             }
         }
 
-        return $this->flatDependencyTree;
+        return new DeepDependenciesCollection($this->flatDependencyArray);
     }
 
     /**
@@ -118,7 +119,7 @@ class DependenciesEnumerator
 
         foreach ($requiredPackageNames as $requiredPackageName) {
             // Avoid infinite recursion.
-            if (isset($this->flatDependencyTree[$requiredPackageName])) {
+            if (isset($this->flatDependencyArray[$requiredPackageName])) {
                 continue;
             }
 
@@ -230,7 +231,7 @@ class DependenciesEnumerator
             );
 
             $this->logger->info('Analysing package ' . $requiredComposerPackage->getPackageName());
-            $this->flatDependencyTree[$requiredComposerPackage->getPackageName()] = $requiredComposerPackage;
+            $this->flatDependencyArray[$requiredComposerPackage->getPackageName()] = $requiredComposerPackage;
 
             $nextRequiredPackageNames = $requiredComposerPackage->getRequiresNames();
 
@@ -242,7 +243,7 @@ class DependenciesEnumerator
                 continue;
             }
 
-            $newPackages = array_diff($nextRequiredPackageNames, array_keys($this->flatDependencyTree));
+            $newPackages = array_diff($nextRequiredPackageNames, array_keys($this->flatDependencyArray));
 
             $newPackagesString = implode(', ', $newPackages);
             if (!empty($newPackagesString)) {
@@ -268,7 +269,7 @@ class DependenciesEnumerator
     public function getAllFilesAutoloaders(): array
     {
         $filesAutoloaders = array();
-        foreach ($this->flatDependencyTree as $packageName => $composerPackage) {
+        foreach ($this->flatDependencyArray as $packageName => $composerPackage) {
             if (isset($composerPackage->getAutoload()['files'])) {
                 $filesAutoloaders[$packageName] = $composerPackage->getAutoload()['files'];
             }
