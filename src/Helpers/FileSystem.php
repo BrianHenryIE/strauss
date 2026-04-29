@@ -243,10 +243,10 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
     {
-        return new DirectoryListing($this->flysystemAdapter->listContents(
+        return parent::listContents(
             $this->normalizePath($location),
             $deep
-        ));
+        );
     }
 
     /**
@@ -504,6 +504,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
             return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
         }
 
+//        if ($this->getAdapter() instanceof InMemoryFilesystemAdapter || $this->getAdapter() instanceof ReadOnlyFileSystem) {
         if (\Composer\Util\Filesystem::isStreamWrapperPath($this->localFsLocation)) {
             return $this->localFsLocation . $path;
         }
