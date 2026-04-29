@@ -112,12 +112,12 @@ class IntegrationTestCase extends TestCase
 
         if ($this->isPhar()) {
             if (! array_reduce(
-                ['--quiet','--warning','--notice','--info','--debug','--dry-run'],
+                ['--quiet','--warning','--info','--debug','--dry-run'],
                 fn(bool $carry, string $level) => $carry || str_contains($params, $level),
                 false
             )) {
                 // Printing logs is slow.
-                $params .= ' --' . (empty($envLogLevel) ? 'quiet' : $envLogLevel);
+                $params .= ' --' . (empty($envLogLevel) ? 'info' : $envLogLevel);
             }
             // TODO add xdebug to the command
             exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params .' 2>&1', $output, $return_var);
