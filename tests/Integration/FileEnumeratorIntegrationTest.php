@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -78,7 +79,7 @@ EOD;
             $this->getLogger()
         );
 
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
 
         $filePath = $this->getFileSystem()->normalizePath($workingDir . '/vendor/google/apiclient/src/aliases.php');
         $this->assertNotNull(

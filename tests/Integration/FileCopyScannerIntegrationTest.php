@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -77,7 +78,7 @@ EOD;
             $this->getLogger()
         );
 
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(New DependenciesCollection($dependencies));
         foreach ($files->getFiles() as $file) {
             $file->setDoPrefix($file->isPhpFile());
         }

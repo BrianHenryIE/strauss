@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -162,7 +163,7 @@ EOD;
         $composerPackageMock->expects('addFile')->once();
 
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
-        $flatDependencyTree = ['psr/container'=> $composerPackageMock];
+        $flatDependencyTree = new DependenciesCollection(['psr/container'=> $composerPackageMock]);
 
         $file = new FileWithDependency(
             $composerPackageMock,
@@ -218,8 +219,7 @@ EOD;
         $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
         $composerPackageMock->expects('addFile')->once();
 
-        /** @var array<string,ComposerPackage> $flatDependencyTree*/
-        $flatDependencyTree = ['psr/container'=> $composerPackageMock];
+        $flatDependencyTree = new DependenciesCollection(['psr/container'=> $composerPackageMock]);
 
         $file = new FileWithDependency(
             $composerPackageMock,
@@ -321,8 +321,7 @@ EOD;
         $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
         $composerPackageMock->expects('addFile')->once();
 
-        /** @var array<string,ComposerPackage> $flatDependencyTree*/
-        $flatDependencyTree = ['psr/log'=> $composerPackageMock];
+        $flatDependencyTree = new DependenciesCollection(['psr/log'=> $composerPackageMock]);
 
         $file = new FileWithDependency(
             $composerPackageMock,
@@ -398,7 +397,7 @@ EOD;
         $composerPackageMock->shouldReceive('didDelete')->andReturnFalse();
 
         /** @var array<string,ComposerPackage> $flatDependencyTree */
-        $flatDependencyTree = ['psr/log' => $composerPackageMock];
+        $flatDependencyTree = new DependenciesCollection(['psr/log' => $composerPackageMock]);
 
         $discoveredSymbols = new DiscoveredSymbols();
 

@@ -7,6 +7,7 @@ namespace BrianHenryIE\Strauss;
 
 use ArrayIterator;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
@@ -32,13 +33,12 @@ class LicenserTest extends TestCase
     {
         $config = $this->createStub(StraussConfig::class);
 
-        $dependencies = array();
-
         $packagePath = __DIR__.'/vendor/developer-name/project-name/';
         $dependency = Mockery::mock(ComposerPackage::class);
-        $dependency->expects('getPackageName')->andReturn('developer-name/project-name');
+        $dependency->allows('getPackageName')->andReturn('developer-name/project-name');
         $dependency->expects('getPackageAbsolutePath')->andReturn($packagePath);
-        $dependencies[] = $dependency;
+
+        $dependencies = new DependenciesCollection([$dependency]);
 
         $filesystemMock = Mockery::mock(FileSystem::class);
 
@@ -95,13 +95,15 @@ class LicenserTest extends TestCase
      */
     public function testAppendHeaderCommentInformationNoHeader(): void
     {
+        $dependencies = new DependenciesCollection([]);
+
         $author = 'BrianHenryIE';
 
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
+        $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -145,6 +147,7 @@ EOD;
      */
     public function testAppendHeaderCommentNoDate(): void
     {
+        $dependencies = new DependenciesCollection([]);
 
         $author = 'BrianHenryIE';
 
@@ -152,7 +155,7 @@ EOD;
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(false);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
-        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
+        $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -186,13 +189,14 @@ EOD;
      */
     public function testAppendHeaderCommentNoAuthor(): void
     {
+        $dependencies = new DependenciesCollection([]);
 
         $author = 'BrianHenryIE';
 
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(false);
 
-        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
+        $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -226,13 +230,14 @@ EOD;
      */
     public function testWithLicenceAlreadyInHeader(): void
     {
+        $dependencies = new DependenciesCollection([]);
 
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
+        $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php // phpcs:ignore WordPress.Files.FileName
@@ -284,13 +289,14 @@ EOD;
      */
     public function testWithTwoCommentsBeforeFirstCode(): void
     {
+        $dependencies = new DependenciesCollection([]);
 
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
+        $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -353,13 +359,14 @@ EOD;
      */
     public function testUnusualHeaderCommentStyle(): void
     {
+        $dependencies = new DependenciesCollection([]);
 
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
+        $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -407,13 +414,14 @@ EOD;
      */
     public function testCommentWithLicenseWord(): void
     {
+        $dependencies = new DependenciesCollection([]);
 
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
+        $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -475,13 +483,14 @@ EOD;
      */
     public function testIncorrectlyMatching(): void
     {
+        $dependencies = new DependenciesCollection([]);
 
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
+        $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php
@@ -551,12 +560,14 @@ EOD;
      */
     public function testLicenseDetailsOnlyInsertedOncePerFile(): void
     {
+        $dependencies = new DependenciesCollection([]);
+
         $config = $this->createMock(StraussConfig::class);
         $config->expects($this->once())->method('isIncludeModifiedDate')->willReturn(true);
         $config->expects($this->once())->method('isIncludeAuthor')->willReturn(true);
 
         $author = 'BrianHenryIE';
-        $sut = new Licenser($config, array(), $author, $this->getInMemoryFileSystem());
+        $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
 <?php

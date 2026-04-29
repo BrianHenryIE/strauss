@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Copier;
@@ -67,7 +68,7 @@ EOD;
             $this->getFileSystem(),
             $this->getLogger()
         );
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
 
         $fileCopyScanner = new FileCopyScanner($config, $this->getFileSystem());
         $fileCopyScanner->scanFiles($files);
@@ -141,7 +142,7 @@ EOD;
             $this->getFileSystem(),
             $this->getLogger()
         );
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
 
         (new FileCopyScanner($config, $this->getFileSystem()))->scanFiles($files);
 
