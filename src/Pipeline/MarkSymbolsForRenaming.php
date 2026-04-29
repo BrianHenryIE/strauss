@@ -102,18 +102,6 @@ class MarkSymbolsForRenaming
             return true;
         }
 
-        /**
-         * If a symbol is in a package with a files autoloader, let's assume it is autoloaded, since following the
-         * includes of the autoloader is more work than necessary right now.
-         */
-        $dependenciesWithFilesAutoloaders = array_filter(
-            $symbol->getDependencies()->toArray(),
-            fn(ComposerPackage $dependency) => $dependency->isFilesAutoloaded()
-        );
-        if (!empty($dependenciesWithFilesAutoloaders)) {
-            return true;
-        }
-
         $sourceFiles = array_filter(
             $symbol->getSourceFiles(),
             fn (FileBase $file) => basename($file->getVendorRelativePath()) !== 'composer.json'

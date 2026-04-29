@@ -11,6 +11,8 @@ use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\ClassMapGenerator\ClassMapGenerator;
 use League\Flysystem\FilesystemException;
+use PhpParser\NodeFinder;
+use PhpParser\ParserFactory;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use SplFileInfo;
@@ -113,6 +115,9 @@ class AutoloadedFilesEnumerator
                             $file->addAutoloaderType('files');
                             $file->setDoPrefix(true);
                         }
+
+                        $visited = [];
+                        $this->markIncludedFilesRecursive($filePackageAbsolutePath, $dependency, $dependencyPackageAbsolutePath, $visited);
                     }
                     break;
                 case 'classmap':
@@ -176,6 +181,89 @@ class AutoloadedFilesEnumerator
             }
         }
     }
+    private function markIncludedFilesRecursive(
+        string $absoluteFilePath,
+        ComposerPackage $dependency,
+        string $packageAbsolutePath,
+        array &$visited
+    ): void {
+        if (isset($visited[$absoluteFilePath])) {
+            return;
+        }
+        $visited[$absoluteFilePath] = true;
+
+        if (!$this->filesystem->exists($absoluteFilePath)) {
+            return;
+        }
+
+        $contents = $this->filesystem->read($absoluteFilePath);
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        try {
+            $ast = $parser->parse($contents);
+        } catch (\PhpParser\Error $e) {
+            $this->logger->warning('Could not parse {file}: {message}', [
+                'file' => $absoluteFilePath, 'message' => $e->getMessage(),
+            ]);
+            return;
+        }
+
+        $nodeFinder = new NodeFinder();
+        $includeNodes = $nodeFinder->findInstanceOf($ast, \PhpParser\Node\Expr\Include_::class);
+        $includingDir = dirname($absoluteFilePath);
+
+        foreach ($includeNodes as $node) {
+            $resolvedPath = $this->resolveIncludePath($node->expr, $includingDir);
+            if ($resolvedPath === null) {
+                $this->logger->debug('Cannot statically resolve include expression in {file}', [
+                    'file' => $absoluteFilePath,
+                ]);
+                continue;
+            }
+
+            if (!str_starts_with($resolvedPath, $packageAbsolutePath)) {
+                continue;
+            }
+
+            $relPath = $this->filesystem->getRelativePath($packageAbsolutePath, $resolvedPath);
+            $file = $dependency->getFile(FileSystem::normalizeDirSeparator($relPath));
+            if ($file) {
+                $file->addAutoloaderType('files');
+                $file->setDoPrefix(true);
+            }
+
+            $this->markIncludedFilesRecursive($resolvedPath, $dependency, $packageAbsolutePath, $visited);
+        }
+    }
+
+    private function resolveIncludePath(\PhpParser\Node\Expr $expr, string $includingDir): ?string
+    {
+        if ($expr instanceof \PhpParser\Node\Scalar\String_) {
+            $path = $expr->value;
+            return str_starts_with($path, '/') ? $path : $includingDir . '/' . $path;
+        }
+
+        if ($expr instanceof \PhpParser\Node\Expr\BinaryOp\Concat) {
+            $left = $expr->left;
+            $right = $expr->right;
+
+            $base = null;
+            if ($left instanceof \PhpParser\Node\Scalar\MagicConst\Dir) {
+                $base = $includingDir;
+            } elseif ($left instanceof \PhpParser\Node\Expr\FuncCall
+                && $left->name instanceof \PhpParser\Node\Name
+                && strtolower((string) $left->name) === 'dirname'
+            ) {
+                $base = $includingDir;
+            }
+
+            if ($base !== null && $right instanceof \PhpParser\Node\Scalar\String_) {
+                return $base . $right->value;
+            }
+        }
+
+        return null;
+    }
+
     protected function processClassmapFiles(ClassMapGenerator $classMapGenerator, ComposerPackage $dependency, string $autoloaderType): void
     {
         $classMap = $classMapGenerator->getClassMap();
