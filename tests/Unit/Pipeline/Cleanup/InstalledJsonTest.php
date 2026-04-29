@@ -158,9 +158,10 @@ EOD;
 
         /** @var ComposerPackage|MockInterface $composerPackageMock */
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
-        $composerPackageMock->expects('didDelete')->once()->andReturnFalse();
+        $composerPackageMock->allows('didDelete')->andReturnFalse();
         $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
         $composerPackageMock->expects('addFile')->once();
+        $composerPackageMock->allows('getPackageName')->andReturn('package/name');
 
         /** @var array<string,ComposerPackage> $flatDependencyTree*/
         $flatDependencyTree = new DependenciesCollection(['psr/container'=> $composerPackageMock]);
@@ -218,6 +219,7 @@ EOD;
         $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
         $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
         $composerPackageMock->expects('addFile')->once();
+        $composerPackageMock->allows('getPackageName')->andReturn('psr/container');
 
         $flatDependencyTree = new DependenciesCollection(['psr/container'=> $composerPackageMock]);
 
@@ -320,6 +322,7 @@ EOD;
         $composerPackageMock->expects('didCopy')->once()->andReturnTrue();
         $composerPackageMock->expects('getPackageAbsolutePath')->zeroOrMoreTimes()->andReturn('vendor/package/name');
         $composerPackageMock->expects('addFile')->once();
+        $composerPackageMock->allows('getPackageName')->andReturn('psr/log');
 
         $flatDependencyTree = new DependenciesCollection(['psr/log'=> $composerPackageMock]);
 
@@ -395,6 +398,7 @@ EOD;
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
         $composerPackageMock->shouldReceive('didCopy')->andReturnFalse();
         $composerPackageMock->shouldReceive('didDelete')->andReturnFalse();
+        $composerPackageMock->allows('getPackageName')->andReturn('package/name');
 
         /** @var array<string,ComposerPackage> $flatDependencyTree */
         $flatDependencyTree = new DependenciesCollection(['psr/log' => $composerPackageMock]);

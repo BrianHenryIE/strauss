@@ -149,6 +149,8 @@ class MarkSymbolsForRenamingTest extends TestCase
         $dependency->expects('getPackageName')->andReturn('some/package')->zeroOrMoreTimes();
         $dependency->expects('getPackageAbsolutePath')->andReturn('vendor/some/package');
         $dependency->expects('addFile');
+        $dependency->allows('hasPsr0')->andReturnFalse();
+
         $file = new FileWithDependency(
             $dependency,
             'vendor/some/package/src/bootstrap.php',

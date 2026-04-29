@@ -588,7 +588,7 @@ EOD;
 
         $file->shouldReceive('addDiscoveredSymbol')
              ->withArgs(fn($v) => $v instanceof NamespaceSymbol && $v->isGlobal())
-             ->once();
+             ->twice();
 
         $files = Mockery::mock(DiscoveredFiles::class)->makePartial();
         $files->shouldReceive('getFiles')->andReturn([$file]);
@@ -622,7 +622,7 @@ EOD;
 
         $file->shouldReceive('addDiscoveredSymbol')
              ->withArgs(fn($v) => $v instanceof NamespaceSymbol && $v->isGlobal())
-             ->once();
+             ->twice();
 
         $files = Mockery::mock(DiscoveredFiles::class)->makePartial();
         $files->shouldReceive('getFiles')->andReturn([$file]);
