@@ -15,6 +15,7 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use Composer\ClassMapGenerator\ClassMapGenerator;
 use Exception;
 use League\Flysystem\FilesystemException;
 use PhpParser\Comment;
@@ -1388,6 +1389,7 @@ class Prefixer
             'ClassLoader.php',
             'installed.json',
             'installed.php',
+            'InstalledVersions.php',
             'platform_check.php',
         ];
 
@@ -1408,45 +1410,60 @@ class Prefixer
         }
 
         // During `--dry-run`, until Composer fully supports streamwrappers.
-        if (empty($composerFiles)) {
+        if ($this->config->isDryRun()) {
             return;
         }
 
+        $classMapGenerator = new ClassMapGenerator();
+        $classMapGenerator->scanPaths(array_map(
+            fn(File $file) => new \SplFileInfo(
+                $this->filesystem->makeAbsolute(
+                    $file->getTargetAbsolutePath()
+                )
+            ),
+            $composerFiles
+        ));
+
+        $classMap = $classMapGenerator->getClassMap();
+
         $discoveredSymbols = new DiscoveredSymbols();
 
-        $composerAutoloadNamespaceSymbol = new NamespaceSymbol('Composer\\Autoload');
-        $composerAutoloadNamespaceSymbol->setLocalReplacement(
-            $this->config->getNamespacePrefix() . '\\Composer\\Autoload'
-        );
-        $discoveredSymbols->add($composerAutoloadNamespaceSymbol);
+        foreach ($classMap->getMap() as $fqdnClass => $absolutePath) {
+            $namespaceString = $this->getNamespaceFromFqdn($fqdnClass);
+            if (!$namespaceString) {
+                continue;
+            }
+            if ($discoveredSymbols->getNamespace($namespaceString)) {
+                continue;
+            }
+            $namespaceSymbol = new NamespaceSymbol($namespaceString);
+            $namespaceSymbol->setLocalReplacement(
+                $this->config->getNamespacePrefix() . '\\' . preg_replace('#^(BrianHenryIE\\\\Strauss\\\\)*#', '', $namespaceString)
+            );
+            $discoveredSymbols->add($namespaceSymbol);
+        }
 
-        $composerNamespaceSymbol = new NamespaceSymbol('Composer');
-        $composerNamespaceSymbol->setLocalReplacement(
-            $this->config->getNamespacePrefix() . '\\Composer'
-        );
-        $discoveredSymbols->add($composerNamespaceSymbol);
-
-        if (isset($composerFiles['ClassLoader.php'])) {
+        foreach ($classMap->getMap() as $fqdnClass => $absolutePath) {
+            $namespace = $discoveredSymbols->getNamespace(
+                $this->getNamespaceFromFqdn($fqdnClass) ?? '\\'
+            );
             $classLoaderSymbol = new ClassSymbol(
-                'Composer\\Autoload\\ClassLoader',
-                $composerFiles['ClassLoader.php'],
+                $fqdnClass,
+                $composerFiles[basename($absolutePath)],
                 false,
-                $composerAutoloadNamespaceSymbol
+                $namespace
             );
             $discoveredSymbols->add($classLoaderSymbol);
         }
 
-        if (isset($composerFiles['installed.php'])) {
-            $installedVersions = new ClassSymbol(
-                'Composer\\InstalledVersions',
-                $composerFiles['installed.php'],
-                false,
-                $composerNamespaceSymbol
-            );
-            $discoveredSymbols->add($installedVersions);
-        }
-
-
         $this->replaceInFiles($discoveredSymbols, $discoveredFiles->getFiles());
+    }
+
+    protected function getNamespaceFromFqdn(string $namespacedString): ?string
+    {
+        if (1 === preg_match('/(.*)(\\\\[^\\\\]*$)/', $namespacedString, $output_array)) {
+            return $output_array[1];
+        }
+        return null;
     }
 }
