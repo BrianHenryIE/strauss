@@ -6,8 +6,6 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
@@ -28,7 +26,6 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Factory;
-use Composer\InstalledVersions;
 use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -116,7 +113,17 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             false
         );
 
-        if (version_compare(InstalledVersions::getVersion('symfony/console'), '7.2', '<')) {
+        /**
+         * When run via. `strauss.phar`, classes such as `InstalledVersions` are prefixed, but when installed
+         * via Composer, the unprefixed version is used.
+         *
+         * TODO: deduplicate code with {@see AbstractRenamespacerCommand}.
+         */
+        $symfonyVersion = class_exists(\BrianHenryIE\Strauss\Composer\InstalledVersions::class)
+            ? \BrianHenryIE\Strauss\Composer\InstalledVersions::getVersion('symfony/console')
+            : \Composer\InstalledVersions::getVersion('symfony/console');
+
+        if (version_compare($symfonyVersion, '7.2', '<')) {
             $this->addOption(
                 'silent',
                 's',
