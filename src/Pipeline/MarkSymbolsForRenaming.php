@@ -81,7 +81,7 @@ class MarkSymbolsForRenaming
              */
             if (!$this->config->isTargetDirectoryVendor()
                 && !$this->isSymbolFoundInFileThatIsCopied($symbol)
-                && !($symbol instanceof Psr0NamespaceSymbol)
+                && !($symbol instanceof NamespaceSymbol)
             ) {
                 $symbol->setDoRename(false);
             }
