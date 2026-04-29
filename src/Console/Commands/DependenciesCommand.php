@@ -380,7 +380,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->filesystem,
             $this->logger
         );
-        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree->toArray());
+        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree);
     }
 
     protected function scanFilesForSymbols(): void
