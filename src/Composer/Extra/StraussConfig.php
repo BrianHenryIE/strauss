@@ -966,7 +966,7 @@ class StraussConfig implements
 
         if ($input->hasOption('dry-run') && $input->getOption('dry-run') !== false) {
             // If we're here, the parameter was passed in the CLI command.
-            $this->dryRun = empty($input->getOption('dry-run')) || (bool)filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $this->dryRun = empty($input->getOption('dry-run')) || filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
     }
 
