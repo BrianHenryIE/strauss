@@ -22,7 +22,11 @@ use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use League\Flysystem\FilesystemException;
+use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserContainer;
+use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserErrorHandler;
+use BrianHenryIE\SimplePhpParser\Parsers\Helper\Utils;
 use PhpParser\Node;
+use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
@@ -32,10 +36,23 @@ use BrianHenryIE\SimplePhpParser\Model\PHPClass;
 use BrianHenryIE\SimplePhpParser\Model\PHPConst;
 use BrianHenryIE\SimplePhpParser\Model\PHPFunction;
 use BrianHenryIE\SimplePhpParser\Parsers\PhpCodeParser;
+use BrianHenryIE\SimplePhpParser\Parsers\Visitors\ASTVisitor;
 
 class FileSymbolScanner
 {
     use LoggerAwareTrait;
+
+    /**
+     * @var array<class-string<DiscoveredSymbol>,string>
+     */
+    private const SYMBOL_LOG_TYPES = [
+        ClassSymbol::class => 'class',
+        ConstantSymbol::class => 'constant',
+        FunctionSymbol::class => 'function',
+        InterfaceSymbol::class => 'interface',
+        NamespaceSymbol::class => 'namespace',
+        TraitSymbol::class => 'trait',
+    ];
 
     protected DiscoveredSymbols $discoveredSymbols;
 
@@ -46,10 +63,18 @@ class FileSymbolScanner
     /** @var string[] */
     protected array $builtIns = [];
 
+    protected ?Parser $parser = null;
+    protected ?Standard $prettyPrinter = null;
+
     /**
-     * @var string[]
+     * @var array<string,bool>
      */
     protected array $loggedSymbols = [];
+
+    /**
+     * @var array<string,bool>
+     */
+    protected array $builtInsLookup = [];
 
     /**
      * FileScanner constructor.
@@ -66,26 +91,69 @@ class FileSymbolScanner
         $this->logger = $logger ?? new NullLogger();
     }
 
+    protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
+    {
+        if (in_array($symbol->getOriginalSymbol(), $this->getBuiltIns())) {
+            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
+                'symbolName' => $symbol->getOriginalLocalName(),
+            ]);
+            return;
+        }
+
+        $this->discoveredSymbols->add($symbol);
+
+        if ($file instanceof FileWithDependency) {
+            $file->getDependency()->addDiscoveredSymbol($symbol);
+        }
+
+        $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
+        $newText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '' : 'new ';
+
+        $this->loggedSymbols[] = $symbol->getOriginalSymbol();
+
+        $this->logger->log(
+            $level,
+            sprintf(
+                "Found %s%s:::%s",
+                $newText,
+                // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
+                strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
+                $symbol->getOriginalSymbol()
+            )
+        );
+    }
+
     /**
      * @throws FilesystemException
      */
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
+        $packagesToPrefixLookup = array_fill_keys(array_keys($this->config->getPackagesToPrefix()), true);
+        $projectDirectory = $this->config->getProjectAbsolutePath();
+
         foreach ($files->getFiles() as $file) {
             if ($file instanceof FileWithDependency
                 && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
-                /**
-                 * We will not prefix symbols found in this file because it is not in a default or listed package.
-                 *
-                 * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
-                 */
-                $file->setDoPrefix(false);
+                    /**
+                     * We will not prefix symbols found in this file because it is not in a default or listed package.
+                     *
+                     * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
+                     */
+                    $file->setDoPrefix(false);
+//                    continue;
             }
 
-            $relativeFilePath = $this->filesystem->getRelativePath(
-                $this->config->getProjectAbsolutePath(),
-                $file->getSourcePath()
-            );
+            if ($file instanceof FileWithDependency
+                && !isset($packagesToPrefixLookup[$file->getDependency()->getPackageName()])
+            ) {
+                $doPrefix = false;
+                $file->setDoPrefix($doPrefix);
+            }
+
+            $relativeFilePath =
+                $file instanceof FileWithDependency
+                    ? $file->getVendorRelativePath()
+                    : $this->filesystem->getRelativePath($projectDirectory, $file->getSourcePath());
 
             if (!$file->isPhpFile()) {
                 $file->setDoPrefix(false);
@@ -96,22 +164,22 @@ class FileSymbolScanner
             $this->logger->info("Scanning file:::" . $relativeFilePath);
             $this->find(
                 $this->filesystem->read($file->getSourcePath()),
-                $file
+                $file,
+                $file instanceof FileWithDependency ? $file->getDependency() : null
             );
         }
 
         return $this->discoveredSymbols;
     }
 
-    protected function find(string $contents, FileBase $file): void
+    protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
     {
         $namespaces = $this->splitByNamespace($contents);
+        PhpCodeParser::$classExistsAutoload = false;
 
         foreach ($namespaces as $namespaceName => $contents) {
-            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file);
-
-            PhpCodeParser::$classExistsAutoload = false;
-            $phpCode = PhpCodeParser::getFromString($contents);
+            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
+            $phpCode = $this->parsePhpCode($contents);
 
             /** @var PHPClass[] $phpClasses */
             $phpClasses = $phpCode->getClasses();
@@ -136,7 +204,7 @@ class FileSymbolScanner
             /** @var PHPFunction[] $phpFunctions */
             $phpFunctions = $phpCode->getFunctions();
             foreach ($phpFunctions as $functionName => $function) {
-                if (in_array($functionName, $this->getBuiltIns())) {
+                if ($this->isBuiltInSymbol($functionName)) {
                     continue;
                 }
                 $functionSymbol = $this->discoveredSymbols->getFunction($functionName);
@@ -186,50 +254,31 @@ class FileSymbolScanner
         }
     }
 
-    protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
-    {
-        if (in_array($symbol->getOriginalSymbol(), $this->getBuiltIns())) {
-            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
-                'symbolName' => $symbol->getOriginalLocalName(),
-            ]);
-            return;
-        }
-
-        $this->discoveredSymbols->add($symbol);
-
-        if ($file instanceof FileWithDependency) {
-            $file->getDependency()->addDiscoveredSymbol($symbol);
-        }
-
-        $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
-        $newText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '' : 'new ';
-
-        $this->loggedSymbols[] = $symbol->getOriginalSymbol();
-
-        $this->logger->log(
-            $level,
-            sprintf(
-                "Found %s%s:::%s",
-                $newText,
-                // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
-                strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
-                $symbol->getOriginalSymbol()
-            )
-        );
-    }
-
     /**
      * @param string $contents
      * @return array<string,string>
      */
     protected function splitByNamespace(string $contents):array
     {
+        $namespaceDeclarations = $this->getNamespaceDeclarations($contents);
+
+        if (count($namespaceDeclarations) === 0) {
+            if ($this->hasMalformedNamespaceDeclaration($contents)) {
+                return [];
+            }
+
+            return ['\\' => '<?php' . PHP_EOL . PHP_EOL . $contents];
+        }
+
+        if (count($namespaceDeclarations) === 1) {
+            $namespaceName = $namespaceDeclarations[0] ?? '\\';
+            $namespaceName = empty($namespaceName) ? '\\' : $namespaceName;
+            return [$namespaceName => $contents];
+        }
+
         $result = [];
-
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
-
         try {
-            $ast = $parser->parse(trim($contents)) ?? [];
+            $ast = $this->getParser()->parse(trim($contents)) ?? [];
         } catch (\PhpParser\Error $e) {
             $this->logger->error('Parse error: ' . $e->getMessage());
             return [];
@@ -241,7 +290,7 @@ class FileSymbolScanner
                     if (count($ast) === 1) {
                         $result['\\'] = $contents;
                     } else {
-                        $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . (new Standard())->prettyPrintFile($rootNode->stmts);
+                        $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . $this->getPrettyPrinter()->prettyPrintFile($rootNode->stmts);
                     }
                 } else {
                     $namespaceName = $rootNode->name->name;
@@ -249,7 +298,7 @@ class FileSymbolScanner
                         $result[$namespaceName] = $contents;
                     } else {
                         // This was failing for `phpoffice/phpspreadsheet/src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php`
-                        $result[$namespaceName] = '<?php' . PHP_EOL . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL . PHP_EOL . (new Standard())->prettyPrintFile($rootNode->stmts);
+                        $result[$namespaceName] = '<?php' . PHP_EOL . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL . PHP_EOL . $this->getPrettyPrinter()->prettyPrintFile($rootNode->stmts);
                     }
                 }
             }
@@ -280,7 +329,7 @@ class FileSymbolScanner
         array $interfaces
     ): ?ClassSymbol {
         // TODO: This should be included but marked not to prefix.
-        if (in_array($fqdnClassname, $this->getBuiltIns())) {
+        if ($this->isBuiltInSymbol($fqdnClassname)) {
             $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
                 'symbolName' => $fqdnClassname,
             ]);
@@ -299,7 +348,7 @@ class FileSymbolScanner
         return $classSymbol;
     }
 
-    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file): NamespaceSymbol
+    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file, ?ComposerPackage $package = null): NamespaceSymbol
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($fqdnNamespace);
         if (is_null($namespaceObj)) {
@@ -364,5 +413,171 @@ class FileSymbolScanner
         );
 
         $this->builtIns = $flatArray;
+        $this->builtInsLookup = array_fill_keys($this->builtIns, true);
+    }
+
+    protected function isBuiltInSymbol(string $symbolName): bool
+    {
+        if (empty($this->builtInsLookup)) {
+            $this->loadBuiltIns();
+        }
+
+        return isset($this->builtInsLookup[$symbolName]);
+    }
+
+    protected function getParser(): Parser
+    {
+        return $this->parser ??= (new ParserFactory())->createForNewestSupportedVersion();
+    }
+
+    protected function getPrettyPrinter(): Standard
+    {
+        return $this->prettyPrinter ??= new Standard();
+    }
+
+    protected function parsePhpCode(string $contents): ParserContainer
+    {
+        $parserContainer = new ParserContainer();
+        $visitor = new ASTVisitor($parserContainer);
+
+        $result = PhpCodeParser::process($contents, null, $parserContainer, $visitor);
+        if (!$result instanceof ParserContainer && $result instanceof ParserErrorHandler) {
+            return $parserContainer;
+        }
+
+        $interfaces = $parserContainer->getInterfaces();
+        foreach ($interfaces as &$interface) {
+            $interface->parentInterfaces = $visitor->combineParentInterfaces($interface);
+        }
+        unset($interface);
+
+        $classes = &$parserContainer->getClassesByReference();
+        foreach ($classes as &$class) {
+            $class->interfaces = Utils::flattenArray(
+                $visitor->combineImplementedInterfaces($class),
+                false
+            );
+        }
+        unset($class);
+
+        return $parserContainer;
+    }
+
+    /**
+     * Collect declared namespaces in source order. Namespace operators (namespace\foo) are ignored.
+     *
+     * @return array<int,string|null> Null indicates the explicit global namespace.
+     */
+    protected function getNamespaceDeclarations(string $contents): array
+    {
+        $tokens = token_get_all($contents);
+
+        $declarations = [];
+        $tokenCount = count($tokens);
+        for ($i = 0; $i < $tokenCount; $i++) {
+            $token = $tokens[$i];
+
+            if (!is_array($token) || $token[0] !== T_NAMESPACE) {
+                continue;
+            }
+
+            $nextIndex = $this->nextSignificantTokenIndex($tokens, $i + 1);
+            if (is_null($nextIndex)) {
+                continue;
+            }
+
+            $next = $tokens[$nextIndex];
+            if (is_string($next) && ($next === ';' || $next === '{')) {
+                $declarations[] = null;
+                continue;
+            }
+
+            $namespaceName = '';
+            while (!is_null($nextIndex)) {
+                $current = $tokens[$nextIndex];
+
+                if (is_array($current) && $this->isNamespaceNameToken($current[0])) {
+                    $namespaceName .= $current[1];
+                    $nextIndex = $this->nextSignificantTokenIndex($tokens, $nextIndex + 1);
+                    continue;
+                }
+
+                if (is_string($current) && $current === '\\') {
+                    $namespaceName .= '\\';
+                    $nextIndex = $this->nextSignificantTokenIndex($tokens, $nextIndex + 1);
+                    continue;
+                }
+
+                if (is_string($current) && ($current === ';' || $current === '{')) {
+                    if ($namespaceName !== '') {
+                        $declarations[] = trim($namespaceName, '\\');
+                    }
+                }
+                break;
+            }
+        }
+
+        return $declarations;
+    }
+
+    protected function hasMalformedNamespaceDeclaration(string $contents): bool
+    {
+        $tokens = token_get_all($contents);
+        $tokenCount = count($tokens);
+        for ($i = 0; $i < $tokenCount; $i++) {
+            $token = $tokens[$i];
+
+            if (!is_array($token) || $token[0] !== T_NAMESPACE) {
+                continue;
+            }
+
+            $nextIndex = $this->nextSignificantTokenIndex($tokens, $i + 1);
+            if (is_null($nextIndex)) {
+                continue;
+            }
+
+            $next = $tokens[$nextIndex];
+            if (is_string($next) && ($next === ';' || $next === '{')) {
+                continue;
+            }
+
+            if (is_array($next) && $this->isNamespaceNameToken($next[0])) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<int, array<int, mixed>|string> $tokens
+     */
+    protected function nextSignificantTokenIndex(array $tokens, int $start): ?int
+    {
+        $tokenCount = count($tokens);
+        for ($i = $start; $i < $tokenCount; $i++) {
+            $token = $tokens[$i];
+            if (is_array($token) && in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+
+            return $i;
+        }
+
+        return null;
+    }
+
+    protected function isNamespaceNameToken(int $tokenType): bool
+    {
+        if ($tokenType === T_STRING || $tokenType === T_NS_SEPARATOR) {
+            return true;
+        }
+
+        return
+            (defined('T_NAME_QUALIFIED') && $tokenType === T_NAME_QUALIFIED)
+            || (defined('T_NAME_FULLY_QUALIFIED') && $tokenType === T_NAME_FULLY_QUALIFIED)
+            || (defined('T_NAME_RELATIVE') && $tokenType === T_NAME_RELATIVE);
     }
 }

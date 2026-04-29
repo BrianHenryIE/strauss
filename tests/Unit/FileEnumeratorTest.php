@@ -56,8 +56,9 @@ class FileEnumeratorTest extends TestCase
     public function testCompileFileListForDependenciesAggregatesAndSortsFiles(): void
     {
         $config = Mockery::mock(FileEnumeratorConfig::class);
-        $config->allows('getAbsoluteVendorDirectory')->andReturn('/project/vendor/');
-        $config->allows('getAbsoluteTargetDirectory')->andReturn('/project/vendor-prefixed/');
+        $config->allows('getProjectAbsolutePath')->andReturn('/project');
+        $config->allows('getAbsoluteVendorDirectory')->andReturn('/project/vendor');
+        $config->allows('getAbsoluteTargetDirectory')->andReturn('/project/vendor-prefixed');
 
         $filesystem = Mockery::mock(FileSystem::class);
         $filesystem->expects('findAllFilesAbsolutePaths')
@@ -74,6 +75,7 @@ class FileEnumeratorTest extends TestCase
         $filesystem->allows('directoryExists')->andReturnFalse();
         $filesystem->allows('fileExists')->andReturnTrue();
         $filesystem->allows('getRelativePath')->andReturnArg(1);
+        $filesystem->allows('normalizePath')->andReturnArg(0);
 
         $sut = new FileEnumerator($config, $filesystem, $this->getLogger());
 
@@ -88,7 +90,7 @@ class FileEnumeratorTest extends TestCase
             'vendor/vendor-a/'
         );
 
-        $result = $sut->compileFileListForDependencies([$dependencyB, $dependencyA]);
+        $result = $sut->compileFileListForDependencies(new DependenciesCollection([$dependencyB, $dependencyA]));
 
         $this->assertSame(
             [
@@ -112,8 +114,9 @@ class FileEnumeratorTest extends TestCase
         $filesystem->write('mem://project/vendor/vendor-a/src/A.php', '<?php class AClass {}');
 
         $config = Mockery::mock(FileEnumeratorConfig::class);
-        $config->allows('getAbsoluteVendorDirectory')->andReturn('mem://project/vendor/');
-        $config->allows('getAbsoluteTargetDirectory')->andReturn('mem://project/vendor-prefixed/');
+        $config->allows('getProjectAbsolutePath')->andReturn('mem://project');
+        $config->allows('getAbsoluteVendorDirectory')->andReturn('mem://project/vendor');
+        $config->allows('getAbsoluteTargetDirectory')->andReturn('mem://project/vendor-prefixed');
 
         $dependencyForDependencies = $this->mockDependency(
             'vendor/vendor-a',
@@ -130,7 +133,7 @@ class FileEnumeratorTest extends TestCase
         $sutDependencies = new FileEnumerator($config, $filesystem, $this->getLogger());
         $sutPaths = new FileEnumerator($config, $filesystem, $this->getLogger());
 
-        $dependenciesResult = $sutDependencies->compileFileListForDependencies([$dependencyForDependencies]);
+        $dependenciesResult = $sutDependencies->compileFileListForDependencies(new DependenciesCollection([$dependencyForDependencies]));
         $pathsResult = $sutPaths->compileFileListForPaths(
             ['mem://project/vendor/vendor-a'],
             $dependencyForPaths

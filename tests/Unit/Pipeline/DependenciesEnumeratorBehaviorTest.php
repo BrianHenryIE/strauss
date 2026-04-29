@@ -145,7 +145,7 @@ class DependenciesEnumeratorBehaviorTest extends IntegrationTestCase
         $this->writeJsonFile($this->testsWorkingDir . '/composer.json', ['name' => 'local/project']);
 
         exec('composer update --no-dev');
-        
+
         $this->writeJsonFile($this->testsWorkingDir . '/composer.lock', ['packages' => []]);
 
         $this->writeJsonFile($this->testsWorkingDir . '/vendor/acme/real/composer.json', [

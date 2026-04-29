@@ -813,6 +813,11 @@ EOD;
      */
     public function test_invalid_regex_pattern_handling(): void
     {
+        /**
+         * preg_match(): Compilation failed: missing terminating ] for character class at offset 13 in /Users/brianhenry/Sites/strauss/strauss/src/Pipeline/FileCopyScanner.php 170
+         */
+        $this->expectErrorLogs();
+
         $composerJsonString = <<<'EOD'
 {
   "name": "test/copier-invalid-regex",

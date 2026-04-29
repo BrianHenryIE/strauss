@@ -376,7 +376,6 @@ EOD;
     	}
     	";
 
-
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
         $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);

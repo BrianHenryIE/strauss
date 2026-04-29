@@ -358,6 +358,16 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
+     * @return string[]
+     */
+    public function originalLocalNames(): array {
+        return array_map(
+            fn(DiscoveredSymbol $symbol) => $symbol->getOriginalLocalName(),
+            $this->toArray()
+        );
+    }
+
+    /**
      * @return DiscoveredSymbol[]
      */
     public function __serialize(): array
