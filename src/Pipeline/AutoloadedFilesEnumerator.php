@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\ClassMapGenerator\ClassMapGenerator;
@@ -34,7 +35,7 @@ class AutoloadedFilesEnumerator
     /**
      * @param ComposerPackage[] $dependencies
      */
-    public function scanForAutoloadedFiles(array $dependencies): void
+    public function scanForAutoloadedFiles(DependenciesCollection $dependencies): void
     {
         foreach ($dependencies as $dependency) {
             $this->scanPackage($dependency);
