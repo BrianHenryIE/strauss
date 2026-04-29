@@ -97,6 +97,7 @@ class Psr0
                     );
 
                     $file->setTargetAbsolutePath($this->filesystem->normalizePath($updatedTargetPath));
+                    $file->addAutoloader('psr-0');
                 }
             }
         }
