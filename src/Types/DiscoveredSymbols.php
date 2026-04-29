@@ -161,7 +161,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     public function getNamespace(string $namespace): ?NamespaceSymbol
     {
-        return $this->types[self::NAMESPACE_SYMBOL][$namespace] ?? null;
+        return $this->types[self::NAMESPACE_SYMBOL][trim($namespace, '\\')] ?? null;
     }
 
     /**
