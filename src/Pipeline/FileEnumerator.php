@@ -52,7 +52,11 @@ class FileEnumerator
             $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
             /** @var string $dependencyPackageAbsolutePath */
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
-            $this->compileFileListForPaths([$dependencyPackageAbsolutePath], $dependency);
+            $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths([$dependencyPackageAbsolutePath]);
+
+            foreach ($absoluteFilePaths as $sourceAbsolutePath) {
+                $this->addFile($sourceAbsolutePath, $dependency);
+            }
         }
 
         $this->discoveredFiles->sort();

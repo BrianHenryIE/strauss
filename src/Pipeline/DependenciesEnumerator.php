@@ -225,9 +225,7 @@ class DependenciesEnumerator
     protected function removeVirtualPackagesFilter(string $requiredPackageName): bool
     {
         return ! (
-            0 === strpos($requiredPackageName, 'ext')
-            // E.g. `php`, `php-64bit`.
-            || (0 === strpos($requiredPackageName, 'php') && false === strpos($requiredPackageName, '/'))
+            ComposerPackage::isPlatformPackageName($requiredPackageName, true)
             || in_array($requiredPackageName, $this->virtualPackages)
         );
     }
