@@ -109,7 +109,6 @@ class FileEnumerator
         }
 
         if ($dependency) {
-            $isOutsideProjectDir = !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath());
 
             $vendorRelativePath = $this->filesystem->getRelativePath(
                 $this->config->getAbsoluteVendorDirectory(),
