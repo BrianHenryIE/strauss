@@ -23,19 +23,23 @@ cd build;
 rm -rf vendor/elazar/flystream/tests
 rm -rf vendor/elazar/flystream/docker
 rm -rf vendor/elazar/flystream/.github
-rm vendor/elazar/flystream/.*
+rm "vendor/elazar/flystream/.*"
 rm vendor/elazar/flystream/*.xml
 rm vendor/elazar/flystream/*.yml
 
 # @see https://github.com/JsonMapper/JsonMapper/pull/208
 rm -rf vendor/json-mapper/json-mapper/tests
 rm -rf vendor/json-mapper/json-mapper/.github
-rm vendor/json-mapper/json-mapper/.*
+rm "vendor/json-mapper/json-mapper/.*"
 rm vendor/json-mapper/json-mapper/*.dist
 rm vendor/json-mapper/json-mapper/*.xml
 
 ../bin/strauss --info;
 
+# TODO: This shouldn't be generated at all (it's not being loaded right now, so not a pressing issue).
+rm vendor/composer/autoload_aliases.php
+
+# TODO: add the number of files that are about to be checked.
 echo "Running php -l syntax check on files. Some packages, e.g. polyfills, conditionally load files with newer PHP syntax and will error."
 
 find . -type f -name "*.php" -print | sed '/^$/d' | \
