@@ -11,6 +11,7 @@ namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use Composer\Autoload\AutoloadGenerator;
 use GuzzleHttp\Client;
 use ZipArchive;
 
@@ -92,7 +93,6 @@ class StraussIssue146Test extends IntegrationTestCase
 //            "composer/composer" => "*",
 //        ];
         $composerJsonArray['extra']['strauss']['target_directory'] = "vendor";
-//        $composerJsonArray['extra']['strauss']['target_directory'] = "vendor-prefixed";
         file_put_contents($this->testsWorkingDir . '/composer.json', json_encode($composerJsonArray, JSON_PRETTY_PRINT));
 
         exec('composer install --no-dev --no-scripts');
@@ -103,38 +103,53 @@ class StraussIssue146Test extends IntegrationTestCase
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        // vendor/composer/autoload_real.php
-        // self::$loader = $loader = new \Composer\Autoload\ClassLoader(\dirname(__DIR__));
-        $autoloadRealPhpString = file_get_contents($this->testsWorkingDir .'/vendor/composer/autoload_real.php');
-//        $autoloadRealPhpString = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_real.php');
-        // Confirm problem is gone.
-        $this->assertStringNotContainsString('new \\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString);
-        // Confirm solution is correct.
-        $this->assertStringContainsString('new \\BrianHenryIE\\S146\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
+        /**
+         * @see AutoloadGenerator::getStaticFile()
+         * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+         */
+        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
+        $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
+        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\Strauss\Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
 
-        // vendor/composer/composer/src/Composer/Factory.php
-        // public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\Strauss\Vendor\Composer
+        /**
+         * @see vendor/composer/autoload_real.php
+         *
+         * `self::$loader = $loader = new \Composer\Autoload\ClassLoader(\dirname(__DIR__));`.
+         */
+        $autoloadRealPhpString = file_get_contents($this->testsWorkingDir .'/vendor/composer/autoload_real.php');
+        $this->assertStringNotContainsString('new \\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString);
+        $this->assertStringContainsString('new \\BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
+
+        /**
+         * Return type was being treated as a namespace and prefixed.
+         *
+         * @see \Composer\Factory::create()
+         * @see vendor/composer/composer/src/Composer/Factory.php
+         *
+         * `public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\Strauss\Vendor\Composer`;
+         */
         $php_string = file_get_contents($this->testsWorkingDir .         '/vendor/composer/composer/src/Composer/Factory.php');
-//        $php_string = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/composer/src/Composer/Factory.php');
-        // Confirm problem is gone.
         $this->assertStringNotContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\\S146\\Vendor\\Composer', $php_string);
-        // Confirm solution is correct.
         $this->assertStringContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer', $php_string);
 
-        // vendor/symfony/console/Application.php
-        // namespace Symfony\Component\Console;
+        /**
+         * @see vendor/symfony/console/Application.php
+         * @see \Symfony\Component\Console\Application
+         *
+         * `namespace Symfony\Component\Console;`
+         */
         $php_string = file_get_contents($this->testsWorkingDir . '/vendor/symfony/console/Application.php');
-        // Confirm problem is gone.
         $this->assertStringNotContainsString('namespace Symfony\Component\Console;', $php_string);
-        // Confirm solution is correct.
         $this->assertStringContainsString('namespace BrianHenryIE\Strauss\Symfony\Component\Console;', $php_string);
 
-        // vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
-        // namespace Symfony\Component\Console;
+        /**
+         * @see \Composer\Autoload\AutoloadGenerator
+         * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+         *
+         * `use Composer\IO\IOInterface;`.
+         */
         $php_string = file_get_contents($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
-        // Confirm problem is gone.
         $this->assertStringNotContainsString('use Composer\IO\IOInterface;', $php_string);
-        // Confirm solution is correct.
         $this->assertStringContainsString('use BrianHenryIE\Strauss\Composer\IO\IOInterface;', $php_string);
     }
 

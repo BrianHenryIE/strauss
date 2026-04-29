@@ -392,4 +392,84 @@ JSON;
         $this->assertStringNotContainsString("'array' => 'JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
         $this->assertStringContainsString("'array' => 'BrianHenryIE\Strauss\JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
     }
+
+    /**
+     * Test an edge case where the class is surrounded by null character.
+     *
+     * @see AutoloadGenerator::getStaticFile()
+     * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+     */
+    public function test_ClassLoader(): void
+    {
+        $this->markTestSkippedUnlessSpecificallyInFilter();
+
+        $composerJsonString = <<<'EOD'
+{
+    "name": "strauss/exclude-from-prefix",
+    "require": {
+        "composer/composer": "2.9.7"
+    },
+    "provide": {
+        "composer/ca-bundle": "*",
+        "composer/class-map-generator": "*",
+        "composer/metadata-minifier": "*",
+        "composer/pcre": "*",
+        "composer/semver": "*",
+        "composer/spdx-licenses": "*",
+        "composer/xdebug-handler": "*",
+        "justinrainbow/json-schema": "*",
+        "marc-mabe/php-enum": "*",
+        "psr/container": "*",
+        "psr/log": "*",
+        "react/promise": "*",
+        "seld/jsonlint": "*",
+        "seld/phar-utils": "*",
+        "seld/signal-handler": "*",
+        "symfony/console": "*",
+        "symfony/deprecation-contracts": "*",
+        "symfony/filesystem": "*",
+        "symfony/finder": "*",
+        "symfony/polyfill-ctype": "*",
+        "symfony/polyfill-intl-grapheme": "*",
+        "symfony/polyfill-intl-normalizer": "*",
+        "symfony/polyfill-mbstring": "*",
+        "symfony/polyfill-php73": "*",
+        "symfony/polyfill-php80": "*",
+        "symfony/polyfill-php81": "*",
+        "symfony/polyfill-php84": "*",
+        "symfony/process": "*",
+        "symfony/service-contracts": "*",
+        "symfony/string": "*"
+    },
+    "extra": {
+        "strauss": {
+            "target_directory": "vendor",
+            "namespace_prefix": "BrianHenryIE\\Strauss\\"
+        }
+    }
+}
+EOD;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
+
+        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
+        $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
+        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\Strauss\Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
+
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassLoader.php');
+        $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
+        $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\Composer\\Autoload;', $phpString);
+
+        // vendor/composer/composer/src/Composer/Autoload/ClassMapGenerator.php
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassMapGenerator.php');
+        $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\Composer\\Autoload;', $phpString);
+        $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
+    }
 }
