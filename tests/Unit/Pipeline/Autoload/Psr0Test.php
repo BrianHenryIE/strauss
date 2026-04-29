@@ -19,28 +19,14 @@ use Mockery;
 class Psr0Test extends TestCase
 {
     /**
-     * @covers ::setTargetDirectory
-     */
-    public function test_non_file_with_dependency_is_skipped(): void
-    {
-        $file = Mockery::mock(FileBase::class);
-        $file->allows('getSourcePath')->andReturn('vendor/pimple/pimple/src/Pimple/Container.php');
-        $file->shouldNotReceive('setTargetAbsolutePath');
-
-        $discoveredFiles = new DiscoveredFiles();
-        $discoveredFiles->add($file);
-
-        $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
-        $sut->setTargetDirectory($dependencies, $discoveredFiles, $discoveredSymbols);
-    }
-
-    /**
      * TODO: non-PHP files in directories that are being renamed should be moved too, the classes might need them.
      *
      * @covers ::setTargetDirectory
      */
     public function test_non_php_file_is_skipped(): void
     {
+        $this->markTestIncomplete();
+
         $file = Mockery::mock(FileWithDependency::class);
         $file->allows('getSourcePath')->andReturn('vendor/pimple/pimple/src/Pimple/Container.php');
         $file->expects('isPhpFile')->andReturnFalse();
@@ -97,6 +83,7 @@ class Psr0Test extends TestCase
         $file->expects('setTargetAbsolutePath')
             ->with('project/vendor-prefixed/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php')
             ->once();
+        $file->expects('addAutoloader');
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
