@@ -12,7 +12,6 @@ use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
-use Composer\InstalledVersions;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\PathPrefixer;
 use Monolog\Handler\PsrHandler;
@@ -78,8 +77,15 @@ abstract class AbstractRenamespacerCommand extends Command
             false
         );
 
-        /** @var string $installedSymfonyVersion */
-        $installedSymfonyVersion = InstalledVersions::getVersion('symfony/console');
+        /**
+         * When run via. `strauss.phar`, classes such as `InstalledVersions` are prefixed, but when installed
+         * via Composer, the unprefixed version is used.
+         *
+         * @var string $installedSymfonyVersion
+         */
+        $installedSymfonyVersion = class_exists(\BrianHenryIE\Strauss\Composer\InstalledVersions::class)
+            ? \BrianHenryIE\Strauss\Composer\InstalledVersions::getVersion('symfony/console')
+            : \Composer\InstalledVersions::getVersion('symfony/console');
 
         if (version_compare($installedSymfonyVersion, '7.2', '<')) {
             $this->addOption(
