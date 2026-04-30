@@ -9,6 +9,11 @@ trait MarkTestsSkippedTrait
 
     protected function markTestSkippedUnlessSpecificallyInFilter(): void
     {
+        // Always run in CI.
+        if (getenv('GITHUB_ACTIONS') === 'true') {
+            return;
+        }
+
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
         $function = $backtrace[1]['function'];
         $argvFilterIndex = array_search('--filter', $GLOBALS['argv']);
