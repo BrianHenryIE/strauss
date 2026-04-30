@@ -153,7 +153,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $logger->pushHandler(new PsrHandler($this->getConsoleLogger($input, $output)));
     }
 
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger->pushHandler(new PsrHandler($logger));
     }

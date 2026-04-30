@@ -160,7 +160,7 @@ class ComposerPackage
 
         $this->packageName = $composer->getPackage()->getName();
 
-        $pathNormalizer = FileSystem::makePathNormalizer(getcwd());
+        $pathNormalizer = FileSystem::makePathNormalizer(Platform::getcwd());
 
         // This is null for some packages, e.g. `wptrt/admin-notices`
         $packageVendorDirAbsolute = $this->composer->getConfig()->get('vendor-dir');
@@ -197,7 +197,7 @@ class ComposerPackage
         if ('metapackage' !== $composer->getPackage()->getType()) {
             if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
                 $this->vendorRelativePath  = $this->packageName;
-                $this->packageAbsolutePath = $pathNormalizer->normalizePath(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
+                $this->packageAbsolutePath = $pathNormalizer->normalizePath(Platform::realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
                 // If the package is symlinked, the path will be outside the working directory.
 //        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
 //            $this->vendorRelativePath = $output_array[1];
@@ -384,19 +384,19 @@ class ComposerPackage
         return $this->didDelete;
     }
 
-    public function setProjectVendorDirectory(string $parentProjectVendorDirectory)
+    public function setProjectVendorDirectory(string $parentProjectVendorDirectory): void
     {
         if (!is_null($this->packageAbsolutePath)) {
             $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorRelativePath;
         }
     }
 
-    public function setPackageAbsolutePath(string $packageAbsolutePath)
+    public function setPackageAbsolutePath(string $packageAbsolutePath): void
     {
         $this->packageAbsolutePath = $packageAbsolutePath;
     }
 
-    public function setRealpath(string $realpath)
+    public function setRealpath(string $realpath): void
     {
         $this->packageRealPath = $realpath;
     }
@@ -473,11 +473,11 @@ class ComposerPackage
         return $this->getPackageName();
     }
 
-    public function isPsr0Autoloaded()
+    public function isPsr0Autoloaded(): bool
     {
         return isset($this->autoload['psr-0']);
     }
-    public function isFilesAutoloaded()
+    public function isFilesAutoloaded(): bool
     {
         return isset($this->autoload['files']);
     }

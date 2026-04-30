@@ -165,7 +165,7 @@ abstract class DiscoveredSymbol
         return $this->getOriginalSymbol();
     }
 
-    public function addDependency(\BrianHenryIE\Strauss\Composer\ComposerPackage $package)
+    public function addDependency(\BrianHenryIE\Strauss\Composer\ComposerPackage $package): void
     {
         $this->dependencies->add($package);
     }

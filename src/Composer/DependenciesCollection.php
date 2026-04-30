@@ -88,7 +88,7 @@ class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countabl
         return count($this->dependencies);
     }
 
-    public function add(ComposerPackage $package)
+    public function add(ComposerPackage $package): void
     {
         $this->dependencies[$package->getPackageName()] = $package;
     }
