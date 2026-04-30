@@ -204,6 +204,7 @@ jobs:
 
       - name: Sign the PHAR
         run: |
+          export GPG_TTY=$(tty)
           ls strauss.phar
           gpg --local-user ${{ secrets.GPG_USER }} \
               --batch \
