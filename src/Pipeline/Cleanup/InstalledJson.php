@@ -381,7 +381,7 @@ class InstalledJson
             foreach ($autoload_key as $type => $autoload) {
                 switch ($type) {
                     case 'psr-0':
-                        foreach ($autoload_key[$type] ?? [] as $paths) {
+                        foreach ($autoload as $paths) {
                             foreach ((array) $paths as $relativePath) {
                                 if (!is_string($relativePath)) {
                                     continue;

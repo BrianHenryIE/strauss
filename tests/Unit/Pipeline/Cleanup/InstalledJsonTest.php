@@ -411,12 +411,12 @@ EOD;
             $this->installedPackage('vendor/dev-only', ['psr-4' => ['Vendor\\DevOnly\\' => 'src/']]),
         ], true, ['vendor/dev-only']));
 
-        $config = $this->installedJsonConfig(excludePackagesFromCopy: ['vendor/excluded']);
+        $config = $this->installedJsonConfig(['vendor/excluded']);
         $sut = new InstalledJson($config, $fileSystem, new NullLogger());
 
         $flatDependencyTree = [
-            'vendor/copied' => $this->composerPackage(didCopy: true),
-            'vendor/excluded' => $this->composerPackage(didCopy: false),
+            'vendor/copied' => $this->composerPackage(true),
+            'vendor/excluded' => $this->composerPackage(false),
         ];
 
         $sut->copyInstalledJson();
@@ -452,7 +452,7 @@ EOD;
 
         $sut = new InstalledJson($this->installedJsonConfig(), $fileSystem, new NullLogger());
         $sut->cleanupVendorInstalledJson(
-            ['vendor/pkg' => $this->composerPackage(didDelete: false)],
+            ['vendor/pkg' => $this->composerPackage(false, false)],
             new DiscoveredSymbols()
         );
 
@@ -477,7 +477,7 @@ EOD;
 
         $sut = new InstalledJson($this->installedJsonConfig(), $fileSystem, new NullLogger());
         $sut->cleanupVendorInstalledJson(
-            ['vendor/pkg' => $this->composerPackage(didDelete: true)],
+            ['vendor/pkg' => $this->composerPackage(false, true)],
             new DiscoveredSymbols()
         );
 

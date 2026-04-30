@@ -133,6 +133,9 @@ abstract class AbstractRenamespacerCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * @phpstan-return Logger::DEBUG|Logger::INFO|Logger::NOTICE
+     */
     private function getMinimumMonologLevel(InputInterface $input): int
     {
         if ($this->isDryRunConfigured() || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {

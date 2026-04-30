@@ -78,7 +78,7 @@ class CleanupTest extends \BrianHenryIE\Strauss\TestCase
         }
 
         $sut = new Cleanup(
-            $this->cleanupConfig(deleteVendorFiles: true),
+            $this->cleanupConfig(true),
             $filesystem,
             new NullLogger()
         );
@@ -116,7 +116,7 @@ class CleanupTest extends \BrianHenryIE\Strauss\TestCase
         $excluded->shouldNotReceive('setDidDelete');
 
         $sut = new Cleanup(
-            $this->cleanupConfig(deleteVendorPackages: true, excludePackagesFromCopy: ['vendor-c/excluded']),
+            $this->cleanupConfig(false, true, ['vendor-c/excluded']),
             $filesystem,
             new NullLogger()
         );
