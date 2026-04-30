@@ -63,8 +63,11 @@ class AbstractRenamespacerCommandTest extends TestCase
 
 class LoggingProbeCommand extends AbstractRenamespacerCommand
 {
-    public function __construct(private CountingLogProcessor $processor)
+    private CountingLogProcessor $processor;
+
+    public function __construct(CountingLogProcessor $processor)
     {
+        $this->processor = $processor;
         parent::__construct();
     }
 
