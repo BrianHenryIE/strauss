@@ -110,8 +110,6 @@ jobs:
         env:
           GPG_USER: ${{ secrets.GPG_USER }}
         run: |
-          set -euo pipefail
-
           KEY_INFO="$(gpg --batch --list-secret-keys --with-colons "$GPG_USER" 2>/dev/null || true)"
 
           if [ -z "$KEY_INFO" ]; then
@@ -204,7 +202,6 @@ jobs:
 
       - name: Sign the PHAR
         run: |
-          export GPG_TTY=$(tty)
           ls strauss.phar
           gpg --local-user ${{ secrets.GPG_USER }} \
               --batch \
