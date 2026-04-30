@@ -3,6 +3,7 @@ name: Build, tag and attach releases
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 concurrency:
   # Cancel previous runs of this workflow if they are testing the same branch
@@ -14,6 +15,35 @@ jobs:
     runs-on: ubuntu-latest
     name: Create Strauss phar on new release
     steps:
+      - name: Resolve release tag
+        id: resolve_release_tag
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            let tagName = context.payload.release?.tag_name;
+
+            if (!tagName) {
+              try {
+                const latestRelease = await github.rest.repos.getLatestRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                });
+                tagName = latestRelease.data.tag_name;
+              } catch (error) {
+                core.setFailed(`Unable to determine the latest published release tag: ${error.message}`);
+                return;
+              }
+            }
+
+            if (!tagName) {
+              core.setFailed('Unable to determine a release tag for this workflow run.');
+              return;
+            }
+
+            core.info(`Using release tag ${tagName}`);
+            core.setOutput('tag', tagName);
+
       - name: Git checkout
         uses: actions/checkout@v6
         with:
@@ -31,7 +61,7 @@ jobs:
 
       - name: "Edit `strauss/bin/strauss` to update the version number"
         env:
-          CURRENT_RELEASE: ${{ github.event.release.tag_name }}
+          CURRENT_RELEASE: ${{ steps.resolve_release_tag.outputs.tag }}
         run: |
           find bin -name 'strauss' -exec sed -i "s/}, '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*');/}, '$CURRENT_RELEASE');/" {} +
 
@@ -59,7 +89,7 @@ jobs:
 
       - name: Check version
         run: |
-          TAG_NAME="${{ github.event.release.tag_name }}"
+          TAG_NAME="${{ steps.resolve_release_tag.outputs.tag }}"
           CURRENT_VERSION="$(php strauss.phar --version | sed -e 's#^.\+ \([0-9.]\+\)$#\1#')"
           if [ "${TAG_NAME#v}" != "${CURRENT_VERSION}" ]; then
             echo "::error::Latest tag differs from current version"
@@ -91,6 +121,7 @@ jobs:
 
       - uses: meeDamian/github-release@2.0
         with:
+          tag: ${{ steps.resolve_release_tag.outputs.tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             strauss.phar
