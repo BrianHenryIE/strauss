@@ -138,9 +138,6 @@ class File implements FileBase
         $this->discoveredSymbols->add($symbol);
     }
 
-    /**
-     * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
-     */
     public function getDiscoveredSymbols(): DiscoveredSymbols
     {
         return $this->discoveredSymbols;

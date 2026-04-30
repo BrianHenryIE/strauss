@@ -39,6 +39,7 @@ class DependenciesEnumerator
         'php-http/client-implementation'
     );
 
+    /** @var array<string,ComposerPackage> */
     protected array $flatDependencyArray = [];
 
     /**
@@ -74,7 +75,6 @@ class DependenciesEnumerator
     }
 
     /**
-     * @return array<string, ComposerPackage> Packages indexed by package name.
      * @throws Exception
      * @throws FilesystemException
      */

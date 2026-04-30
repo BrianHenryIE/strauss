@@ -55,11 +55,13 @@ class Psr0
 
             $composerAutoloadKey = $package->getAutoload();
 
-            /** @var FileWithDependency[] $allPackagesFiles */
-
-            /** @var DiscoveredFiles $files */
+            /** @var DiscoveredFiles $allPackagesFiles */
             $allPackagesFiles = $package->getFiles();
 
+            /**
+             * @see ComposerPackage::hasPsr0()
+             * @phpstan-ignore offsetAccess.notFound
+             */
             foreach ($composerAutoloadKey['psr-0'] as $psrRootNamespace => $packageRelativeNamespacePath) {
                 // TODO: we need to have already run "determine changes" so we can set the target directory based on exclusion rules etc.
                 $namespaceSymbol = $discoveredSymbols->getNamespace($psrRootNamespace);

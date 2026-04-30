@@ -59,7 +59,7 @@ class Licenser
     /**
      * Licenser constructor.
      *
-     * @param ComposerPackage[] $dependencies Whose folders are searched for existing license.txt files.
+     * @param DependenciesCollection $dependencies Whose folders are searched for existing license.txt files.
      * @param string $author To add to each modified file's header
      */
     public function __construct(

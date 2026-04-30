@@ -10,6 +10,10 @@ use ArrayIterator;
 use Countable;
 use IteratorAggregate;
 
+/**
+ * @implements IteratorAggregate<string, ComposerPackage>
+ * @implements ArrayAccess<string, ComposerPackage>
+ */
 class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countable
 {
 
@@ -75,6 +79,8 @@ class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countabl
 
     /**
      * TODO: direct dependencies or complete dependency tree?
+     *
+     * @return int
      */
     #[\ReturnTypeWillChange]
     public function count()

@@ -34,9 +34,6 @@ class AutoloadedFilesEnumerator
         $this->setLogger($logger);
     }
 
-    /**
-     * @param ComposerPackage[] $dependencies
-     */
     public function scanForAutoloadedFiles(DependenciesCollection $dependencies): void
     {
         foreach ($dependencies as $dependency) {
@@ -181,6 +178,16 @@ class AutoloadedFilesEnumerator
             }
         }
     }
+
+    /**
+     * @param string $absoluteFilePath
+     * @param ComposerPackage $dependency
+     * @param string $packageAbsolutePath
+     * @param array<string,bool> $visited
+     *
+     * @return void
+     * @throws FilesystemException
+     */
     private function markIncludedFilesRecursive(
         string $absoluteFilePath,
         ComposerPackage $dependency,

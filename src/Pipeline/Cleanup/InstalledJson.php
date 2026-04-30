@@ -376,6 +376,7 @@ class InstalledJson
             }
 
             $autoload_key = $package['autoload'];
+            // TODO: This was added before good PSR-0 support, we just added PSR-0 to the classmap and it worked ok.
             if (!isset($autoload_key['classmap'])) {
                 $autoload_key['classmap'] = [];
             }

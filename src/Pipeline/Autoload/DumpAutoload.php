@@ -271,6 +271,7 @@ class DumpAutoload
      * @see AutoloadGenerator::dump() 412:431
      * @throws \Random\RandomException in PHP 8.2+
      * @throws FilesystemException
+     * @phpstan-ignore throws.notThrowable
      */
     protected function getSuffix(): ?string
     {

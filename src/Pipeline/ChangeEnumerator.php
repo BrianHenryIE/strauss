@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
@@ -100,6 +101,7 @@ class ChangeEnumerator
             $discoveredSymbols->getAllClasses()->toArray()
         );
 
+        /** @var NamespacedSymbol $symbol */
         foreach ($classesTraitsInterfaces as $symbol) {
             if (str_starts_with($symbol->getOriginalSymbol(), $classmapPrefix)) {
                 // Already prefixed / second scan.
@@ -137,6 +139,7 @@ class ChangeEnumerator
 
         $functionsSymbols = $discoveredSymbols->getDiscoveredFunctions();
 
+        /** @var FunctionSymbol $symbol */
         foreach ($functionsSymbols as $symbol) {
             // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
             if (!$symbol->getNamespace()->isGlobal()) {

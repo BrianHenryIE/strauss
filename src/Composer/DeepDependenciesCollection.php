@@ -22,7 +22,12 @@ class DeepDependenciesCollection extends DependenciesCollection
         parent::__construct($flatDependencies);
     }
 
-
+    /**
+     * @param ComposerPackage $composerPackage
+     * @param ComposerPackage[] $flatDependenciesArray
+     *
+     * @return ComposerPackage[]
+     */
     protected static function getDependenciesRecursive(ComposerPackage $composerPackage, array $flatDependenciesArray): array
     {
         foreach ($composerPackage->getDependencies() as $dependency) {

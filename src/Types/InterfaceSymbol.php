@@ -18,7 +18,7 @@ class InterfaceSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     /**
      * @param string $fqdnClassname
      * @param FileBase $sourceFile
-     * @param ?string $namespace
+     * @param ?NamespaceSymbol $namespace
      * @param ?ComposerPackage $package
      * @param string[] $extends
      */

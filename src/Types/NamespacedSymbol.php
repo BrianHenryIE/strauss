@@ -96,6 +96,13 @@ class NamespacedSymbol extends DiscoveredSymbol
                     continue;
                 }
                 if ($file->getDependency()->getPackageName() === $dependency->getPackageName()) {
+                    /**
+                     * This is verified in {@see ComposerPackage::isPsr0Autoloaded()}.
+                     *
+                     * @var string $psr0namespace
+                     * @var string|string[] $autoloadPackageRelativePath
+                     * @phpstan-ignore offsetAccess.notFound
+                     */
                     foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePath) {
                         if (str_starts_with(
                             trim($file->getPackageRelativePath(), '\\/'),

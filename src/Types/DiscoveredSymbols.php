@@ -11,6 +11,10 @@ use Countable;
 use InvalidArgumentException;
 use IteratorAggregate;
 
+/**
+ * @implements IteratorAggregate<string, DiscoveredSymbol>
+ * @implements ArrayAccess<string, DiscoveredSymbol>
+ */
 class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 {
     private const CLASS_SYMBOL = 'CLASS';
@@ -24,7 +28,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     /**
      * All discovered symbols, grouped by type, indexed by original name.
      *
-     * @var array{'NAMESPACE':array<string,NamespaceSymbol>, 'CONST':array<string,ConstantSymbol>, 'CLASS':array<string,ClassSymbol>, 'FUNCTION':array<string,FunctionSymbol>, 'TRAIT':array<string,TraitSymbol>, 'INTERFACE':array<string,InterfaceSymbol>}
+     * @var array{'NAMESPACE':array<string,NamespaceSymbol>, 'CONST':array<string,ConstantSymbol>, 'CLASS':array<string,ClassSymbol>, 'FUNCTION':array<string,FunctionSymbol>, 'TRAIT':array<string,TraitSymbol>, 'INTERFACE':array<string,InterfaceSymbol>, 'ENUM':array<string,NamespacedSymbol>}
      */
     protected array $types = [
         self::CLASS_SYMBOL => [],
@@ -128,9 +132,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
             ?? $this->getNamespace($fqdnName)
             ?? $this->getNamespaceSymbolByString($fqdnName);
     }
-    /**
-     * @return DiscoveredSymbol[]
-     */
+
     public function getSymbols(): DiscoveredSymbols
     {
         return new DiscoveredSymbols(
@@ -143,17 +145,11 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         );
     }
 
-    /**
-     * @return array<string, ConstantSymbol>
-     */
     public function getConstants(): DiscoveredSymbols
     {
         return new DiscoveredSymbols($this->types[self::CONST_SYMBOL]);
     }
 
-    /**
-     * @return array<string, NamespaceSymbol>
-     */
     public function getNamespaces(): DiscoveredSymbols
     {
         return new DiscoveredSymbols($this->types[self::NAMESPACE_SYMBOL]);
@@ -166,8 +162,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     /**
      * Get all symbols that may have a namespace (i.e. no classes, interfaces etc.).
-     *
-     * @return array<string, NamespacedSymbol>
      */
     public function getNamespacedSymbols(): DiscoveredSymbols
     {
@@ -181,9 +175,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         );
     }
 
-    /**
-     * @return array<string, ClassSymbol>
-     */
     public function getGlobalClassesInterfacesTraits(): DiscoveredSymbols
     {
         return new DiscoveredSymbols(
@@ -194,9 +185,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         );
     }
 
-    /**
-     * @return array<string, ClassSymbol>
-     */
     public function getGlobalClassesInterfacesTraitsToRename(): DiscoveredSymbols
     {
         return new DiscoveredSymbols(
@@ -207,9 +195,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         );
     }
 
-    /**
-     * @return array<string, ClassSymbol>
-     */
     public function getAllClasses(): DiscoveredSymbols
     {
         return new DiscoveredSymbols($this->types[self::CLASS_SYMBOL]);
@@ -217,8 +202,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     /**
      * TODO: Order by longest string first. (or instead, record classnames with their namespaces)
-     *
-     * @return array<string, NamespaceSymbol>
      */
     public function getDiscoveredNamespaces(): DiscoveredSymbols
     {
@@ -240,9 +223,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return new DiscoveredSymbols($discoveredNamespaceReplacements);
     }
 
-    /**
-     * @return string[]
-     */
     public function getDiscoveredClasses(?string $classmapPrefix = ''): DiscoveredSymbols
     {
         $discoveredClasses = $this->getGlobalClassesInterfacesTraits()->toArray();
@@ -258,24 +238,15 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @return string[]
+     * @deprecated Use ::getConstants()
      */
-    public function getDiscoveredConstants(?string $constantsPrefix = ''): DiscoveredSymbols
+    public function getDiscoveredConstants(): DiscoveredSymbols
     {
-        return new DiscoveredSymbols(
-            array_filter(
-                $this->getConstants()->toArray(),
-                function (ConstantSymbol $replacement) use ($constantsPrefix) {
-                    return empty($constantsPrefix) || ! str_starts_with($replacement->getOriginalSymbol(), $constantsPrefix);
-                }
-            )
-        );
+        return $this->getConstants();
     }
 
     /**
      * Constant names that should be prefixed (symbol has isDoRename()).
-     *
-     * @return string[]
      */
     public function getDiscoveredConstantChanges(?string $constantsPrefix = ''): DiscoveredSymbols
     {
@@ -294,17 +265,11 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         );
     }
 
-    /**
-     * @return FunctionSymbol[]
-     */
     public function getDiscoveredFunctions(): DiscoveredSymbols
     {
         return new DiscoveredSymbols($this->types[self::FUNCTION_SYMBOL]);
     }
 
-    /**
-     * @return FunctionSymbol[]
-     */
     public function getDiscoveredFunctionChanges(): DiscoveredSymbols
     {
         return new DiscoveredSymbols(
@@ -315,17 +280,11 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         );
     }
 
-    /**
-     * @return array<string,TraitSymbol>
-     */
     public function getDiscoveredTraits(): DiscoveredSymbols
     {
         return new DiscoveredSymbols($this->types[self::TRAIT_SYMBOL]);
     }
 
-    /**
-     * @return array<string,InterfaceSymbol>
-     */
     public function getDiscoveredInterfaces(): DiscoveredSymbols
     {
         return new DiscoveredSymbols($this->types[self::INTERFACE_SYMBOL]);
@@ -396,35 +355,62 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return array_merge(...array_values($this->types));
     }
 
+    /**
+     * @return DiscoveredSymbol[]
+     */
     public function __serialize(): array
     {
         return $this->toArray();
     }
 
+    /**
+     * @return Traversable<DiscoveredSymbol>
+     */
     #[\ReturnTypeWillChange]
     public function getIterator()
     {
         return new ArrayIterator($this->toArray());
     }
 
+    /**
+     * @param string $offset
+     *
+     * @return bool
+     */
     #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return in_array($offset, $this->toArray(), true);
     }
 
+    /**
+     * @param string $offset
+     *
+     * @return DiscoveredSymbol|null
+     */
     #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->toArray()[$offset] ?? null;
     }
 
+    /**
+     * @param string $offset
+     * @param DiscoveredSymbol$value
+     *
+     * @return void
+     */
     #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         throw new \BadMethodCallException();
     }
 
+    /**
+     * @param string $offset
+     *
+     * @return void
+     */
     #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
@@ -433,6 +419,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     /**
      * So `count( $discoveredSymbols )` will work.
+     *
+     * @return int
      */
     #[\ReturnTypeWillChange]
     public function count()
@@ -446,7 +434,15 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     public function notGlobal(): self
     {
+        /**
+         * @var string $type
+         * @var array<string, DiscoveredSymbol> $types
+         */
         foreach ($this->types as $type => $types) {
+            /**
+             * @var string $index
+             * @var DiscoveredSymbol $symbol
+             */
             foreach ($types as $index => $symbol) {
                 if ($symbol->isGlobal()) {
                     unset($this->types[$type][$index]);

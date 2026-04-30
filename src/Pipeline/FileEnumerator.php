@@ -44,7 +44,7 @@ class FileEnumerator
     }
 
     /**
-     * @param ComposerPackage[] $flatDependencies
+     * @param DependenciesCollection $flatDependencies
      *
      * @throws FilesystemException
      */
@@ -53,7 +53,6 @@ class FileEnumerator
         /** @var ComposerPackage $dependency */
         foreach ($flatDependencies as $dependency) {
             $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
-            /** @var string $dependencyPackageAbsolutePath */
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
             // Meta packages.
             if (is_null($dependencyPackageAbsolutePath)) {
@@ -109,7 +108,6 @@ class FileEnumerator
         }
 
         if ($dependency) {
-
             $vendorRelativePath = $this->filesystem->getRelativePath(
                 $this->config->getAbsoluteVendorDirectory(),
                 $sourceAbsoluteFilepath

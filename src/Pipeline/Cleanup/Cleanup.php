@@ -57,8 +57,6 @@ class Cleanup
      * Maybe delete the source files that were copied (depending on config),
      * then delete empty directories.
      *
-     * @param array<string,ComposerPackage> $flatDependencyTree
-     *
      * @throws FilesystemException
      */
     public function deleteFiles(DependenciesCollection $flatDependencyTree, DiscoveredFiles $discoveredFiles): void

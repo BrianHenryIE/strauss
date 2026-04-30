@@ -18,7 +18,7 @@ class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     /**
      * @param string $fqdnClassname
      * @param FileBase $sourceFile
-     * @param ?string $namespace
+     * @param ?NamespaceSymbol $namespace
      * @param ?ComposerPackage $composerPackage
      * @param ?string[] $uses
      */

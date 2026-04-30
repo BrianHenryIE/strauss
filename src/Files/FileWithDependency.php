@@ -90,10 +90,17 @@ class FileWithDependency extends File implements HasDependency
         $this->autoloaderTypes[$autoloaderType] = $autoloaderType;
     }
 
+    /**
+     * @param string[] $autoloaderTypes
+     */
     public function setAutoloaderTypes(array $autoloaderTypes): void
     {
         $this->autoloaderTypes = $autoloaderTypes;
     }
+
+    /**
+     * @return string[] The autoloader types that this file is loaded under.
+     */
     public function getAutoloaderTypes(): array
     {
         return $this->autoloaderTypes;
@@ -106,6 +113,10 @@ class FileWithDependency extends File implements HasDependency
     public function isAutoloaded(): bool
     {
         if ($this->dependency->hasPsr0()) {
+            /**
+             * This is checked by {@see ComposerPackage::hasPsr0()}.
+             * @phpstan-ignore offsetAccess.notFound
+             */
             foreach ($this->getDependency()->getAutoload()['psr-0'] as $autoloadPackageRelativePath) {
                 if (str_starts_with(
                     trim($this->packageRelativePath, '\\/'),

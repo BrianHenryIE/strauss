@@ -132,7 +132,6 @@ class FileCopyScanner
             fn(NamespaceSymbol $symbol) => $symbol->getOriginalSymbol(),
             $file->getDiscoveredSymbols()->getNamespaces()->notGlobal()->toArray()
         );
-        /** @var DiscoveredSymbol $symbol */
         foreach ($this->config->getExcludeNamespacesFromCopy() as $excludedNamespaceString) {
             $excludedNamespaceString = rtrim($excludedNamespaceString, '\\');
 

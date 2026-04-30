@@ -4,14 +4,23 @@ namespace BrianHenryIE\Strauss\Files;
 
 use ArrayAccess;
 use ArrayIterator;
+use BadMethodCallException;
 use Countable;
 use IteratorAggregate;
+use Traversable;
 
+/**
+ * @implements IteratorAggregate<string, FileBase>
+ * @implements ArrayAccess<string, FileBase>
+ */
 class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
 {
     /** @var array<string,FileBase|File|FileWithDependency> */
     protected array $files = [];
 
+    /**
+     * @param FileBase[] $files
+     */
     public function __construct(array $files = [])
     {
         $this->files = $files;
@@ -45,18 +54,31 @@ class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
         ksort($this->files);
     }
 
+    /**
+     * @return Traversable
+     */
     #[\ReturnTypeWillChange]
     public function getIterator()
     {
         return new ArrayIterator($this->files);
     }
 
+    /**
+     * @param string $offset Absolute path.
+     *
+     * @return bool
+     */
     #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return in_array($offset, $this->files, true);
     }
 
+    /**
+     * @param string $offset Absolute path.
+     *
+     * @return ?FileBase
+     */
     #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
@@ -66,17 +88,17 @@ class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
     #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
-        throw new \BadMethodCallException();
+        throw new BadMethodCallException();
     }
 
     #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
-        throw new \BadMethodCallException();
+        throw new BadMethodCallException();
     }
 
     /**
-     * So `count( $discoveredSymbols )` will work.
+     * @return int
      */
     #[\ReturnTypeWillChange]
     public function count()

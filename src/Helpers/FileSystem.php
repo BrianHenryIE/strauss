@@ -42,9 +42,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     /**
      * For calculating absolute paths outside the flysystem.
      *
-     * No trailing slash.
-     *
-     * @var false|string
+     * No trailing slash, except for root directories (e.g., '/' or 'C:/' or 'mem://').
      */
     protected string $localFsLocation;
 
@@ -137,10 +135,6 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      *
      * PHP native functions (realpath, getcwd, dirname) return backslashes on Windows,
      * but Flysystem always uses forward slashes. This method ensures consistency.
-     *
-     * Accepts null to preserve original str_replace() behavior where null is treated as empty string.
-     *
-     * @param string|false|null $path
      */
     public static function normalizeDirSeparator($path, $slashTo = '/'): string
     {
@@ -284,7 +278,11 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
+     * @param string $location
+     * @param string $contents
      * @param array{visibility?:string} $config
+     *
+     * @return void
      * @throws FilesystemException
      */
     public function write(string $location, $contents, array $config = []): void
@@ -297,7 +295,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
-     * @param Config|array{visibility?:string} $config
+     * @param array{visibility?:string} $config
      * @throws FilesystemException
      */
     public function writeStream(string $location, $contents, $config = []): void
@@ -345,7 +343,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
-     * @param Config|array{visibility?:string} $config
+     * @param array{visibility?:string} $config
      * @throws FilesystemException
      */
     public function createDirectory(string $location, $config = []): void
@@ -357,7 +355,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
-     * @param Config|array{visibility?:string} $config
+     * @param array{visibility?:string} $config
      * @throws FilesystemException
      */
     public function move(string $source, string $destination, $config = []): void
@@ -370,7 +368,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     }
 
     /**
-     * @param Config|array{visibility?:string} $config
+     * @param array{visibility?:string} $config
      * @throws FilesystemException
      */
     public function copy(string $source, string $destination, $config = []): void
