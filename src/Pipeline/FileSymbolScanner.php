@@ -119,9 +119,10 @@ class FileSymbolScanner
                 // Skip classes defined in other files.
                 // I tried to use the $class->file property but it was autoloading from Strauss so incorrectly setting
                 // the path, different to the file being scanned.
-                if (false !== strpos($contents, "use {$fqdnClassname};")) {
-                    continue;
-                }
+                // TODO this was causing false positives when found in comments.
+//                if (false !== strpos($contents, "use {$fqdnClassname};")) {
+//                    continue;
+//                }
 
                 $isAbstract = (bool) $class->is_abstract;
                 $extends     = $class->parentClass;

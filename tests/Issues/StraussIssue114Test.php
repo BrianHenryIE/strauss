@@ -19,6 +19,13 @@ class StraussIssue114Test extends IntegrationTestCase
     {
         $this->markTestSkippedUnlessSpecificallyInFilter();
 
+        /**
+         * Warning     : Skipping Prefixing in vendor-prefixed/mtdowling/jmespath.php/bin/jp.php due to parse error: Syntax error, unexpected '<' on line 3
+         *
+         * File starts with `#!/usr/bin/env php`.
+         */
+        $this->expectWarningLogs();
+
         $composerJsonString = <<<'EOD'
 {
   "name": "issue/114",
