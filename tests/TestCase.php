@@ -99,12 +99,12 @@ class TestCase extends \PHPUnit\Framework\TestCase
         // When testing with the phar we're not able to set the logger.
         if (!$this->isTestingWithPhar()) {
             if ($this->allowErrorLogs === false) {
-                $this->assertFalse($this->getTestLogger()->hasErrorRecords(), "TestLogger::hasErrorRecords()");
+                $this->assertFalse($this->getTestLogger()->hasErrorRecords(), "Unexpected TestLogger::hasErrorRecords() logged");
             } else {
                 $this->assertTrue($this->getTestLogger()->hasErrorRecords(), "Expected TestLogger::hasErrorRecords() but there were none.");
             }
             if ($this->allowWarningLogs === false) {
-                $this->assertFalse($this->getTestLogger()->hasWarningRecords(), "TestLogger::hasWarningRecords()");
+                $this->assertFalse($this->getTestLogger()->hasWarningRecords(), "Unexpected TestLogger::hasWarningRecords() logged");
             } else {
                 $this->assertTrue($this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none.");
             }
