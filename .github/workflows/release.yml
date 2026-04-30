@@ -112,7 +112,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          KEY_INFO="$(gpg --batch --list-secret-keys --with-colons "$GPG_USER"  | awk -F: '/^sec/ && ($7=="" || $7 > systime())' 2>/dev/null || true)"
+          # KEY_INFO="$(gpg --batch --list-secret-keys --with-colons "$GPG_USER" | awk -F: '/^sec/ && ($7=="" || $7 > systime())' 2>/dev/null || true)"
+          KEY_INFO="$(gpg --batch --list-secret-keys --with-colons "$GPG_USER" 2>/dev/null || true)"
 
           if [ -z "$KEY_INFO" ]; then
             echo "::error title=GPG key not available::Unable to find an imported secret GPG key for '$GPG_USER'."
