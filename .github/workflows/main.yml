@@ -59,6 +59,14 @@ jobs:
         uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
         with:
           phpunit-command: vendor/bin/phpunit
+          max-runs: 1
+        env:
+          RENAMESPACER_LOG: "debug"
+
+      - name: Run previously workflows' failed tests first
+        uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
+        with:
+          phpunit-command: vendor/bin/phpunit
         env:
           RENAMESPACER_LOG: "debug"
 
