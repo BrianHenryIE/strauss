@@ -2,11 +2,8 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserContainer;
-use BrianHenryIE\SimplePhpParser\Parsers\PhpCodeParser;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
@@ -356,44 +353,5 @@ PHP,
             'interfaces' => $interfaces,
             'traits' => $traits,
         ];
-    }
-}
-
-class ScannerHarness extends FileSymbolScanner
-{
-    public function scanString(string $contents, FileBase $file): DiscoveredSymbols
-    {
-        $this->find($contents, $file, null);
-
-        return $this->discoveredSymbols;
-    }
-}
-
-final class LegacyGetFromStringScanner extends ScannerHarness
-{
-    protected function parsePhpCode(string $contents): ParserContainer
-    {
-        return PhpCodeParser::getFromString($contents);
-    }
-}
-
-final class RecordingParserInputScanner extends ScannerHarness
-{
-    /** @var string[] */
-    private array $parserInputs = [];
-
-    /**
-     * @return string[]
-     */
-    public function getParserInputs(): array
-    {
-        return $this->parserInputs;
-    }
-
-    protected function parsePhpCode(string $contents): ParserContainer
-    {
-        $this->parserInputs[] = $contents;
-
-        return parent::parsePhpCode($contents);
     }
 }
