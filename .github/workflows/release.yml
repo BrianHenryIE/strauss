@@ -112,7 +112,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # KEY_INFO="$(gpg --batch --list-secret-keys --with-colons "$GPG_USER" | awk -F: '/^sec/ && ($7=="" || $7 > systime())' 2>/dev/null || true)"
           KEY_INFO="$(gpg --batch --list-secret-keys --with-colons "$GPG_USER" 2>/dev/null || true)"
 
           if [ -z "$KEY_INFO" ]; then
@@ -120,17 +119,75 @@ jobs:
             exit 1
           fi
 
-          KEY_FINGERPRINT="$(printf '%s\n' "$KEY_INFO" | awk -F: '$1=="fpr" { print $10; exit }')"
-          KEY_EXPIRY="$(printf '%s\n' "$KEY_INFO" | awk -F: '$1=="sec" { print $7; exit }')"
+          NOW="$(date +%s)"
+          PARSED_KEY_INFO="$(printf '%s\n' "$KEY_INFO" | awk -F: -v now="$NOW" '
+            $1=="sec" {
+              total++;
+              current_expiry=$7;
+              current_valid=(current_expiry=="" || current_expiry=="0" || current_expiry>now);
+              if (current_valid) {
+                valid_total++;
+              }
+              next;
+            }
+            $1=="fpr" {
+              if (current_valid && valid_fpr=="") {
+                valid_fpr=$10;
+                valid_expiry=current_expiry;
+              }
+              if (!current_valid && expired_fpr=="") {
+                expired_fpr=$10;
+                expired_expiry=current_expiry;
+              }
+              current_valid="";
+              current_expiry="";
+            }
+            END {
+              print "TOTAL_KEYS=" total+0;
+              print "VALID_KEYS=" valid_total+0;
+              print "KEY_FINGERPRINT=" valid_fpr;
+              print "KEY_EXPIRY=" valid_expiry;
+              print "EXPIRED_FINGERPRINT=" expired_fpr;
+              print "EXPIRED_EXPIRY=" expired_expiry;
+            }
+          ')"
+
+          TOTAL_KEYS="0"
+          VALID_KEYS="0"
+          KEY_FINGERPRINT=""
+          KEY_EXPIRY=""
+          EXPIRED_FINGERPRINT=""
+          EXPIRED_EXPIRY=""
+          while IFS='=' read -r PARSED_KEY PARSED_VALUE; do
+            case "$PARSED_KEY" in
+              TOTAL_KEYS) TOTAL_KEYS="$PARSED_VALUE" ;;
+              VALID_KEYS) VALID_KEYS="$PARSED_VALUE" ;;
+              KEY_FINGERPRINT) KEY_FINGERPRINT="$PARSED_VALUE" ;;
+              KEY_EXPIRY) KEY_EXPIRY="$PARSED_VALUE" ;;
+              EXPIRED_FINGERPRINT) EXPIRED_FINGERPRINT="$PARSED_VALUE" ;;
+              EXPIRED_EXPIRY) EXPIRED_EXPIRY="$PARSED_VALUE" ;;
+            esac
+          done <<< "$PARSED_KEY_INFO"
+
+          if [ "$TOTAL_KEYS" -eq 0 ]; then
+            echo "::error title=GPG key not available::Unable to find an imported secret GPG key for '$GPG_USER'."
+            exit 1
+          fi
 
           if [ -z "$KEY_FINGERPRINT" ]; then
-            echo "::error title=Unable to inspect imported GPG key::The imported secret GPG key for '$GPG_USER' could not be inspected."
+            if [ -n "$EXPIRED_EXPIRY" ] && [ "$EXPIRED_EXPIRY" != "0" ]; then
+              EXPIRES_AT="$(date -u -d "@$EXPIRED_EXPIRY" '+%Y-%m-%d %H:%M:%S UTC')"
+              echo "::error title=GPG key expired::Found $TOTAL_KEYS matching key(s) for '$GPG_USER', but all are expired (for example: $EXPIRED_FINGERPRINT expired on $EXPIRES_AT)."
+            else
+              echo "::error title=Unable to inspect imported GPG key::Found $TOTAL_KEYS matching key(s) for '$GPG_USER', but none could be validated for signing."
+            fi
+            echo "Rotate the signing key, update GPG_PRIVATE_KEY / GPG_USER / PASSPHRASE secrets, and rerun this workflow."
+            echo "PHAR signing guide: https://phar.io/howto/sign-and-upload-to-github.html"
+            echo "OpenPGP key publishing guide: https://keys.openpgp.org/about/usage/"
             exit 1
           fi
 
           if [ -n "$KEY_EXPIRY" ] && [ "$KEY_EXPIRY" != "0" ]; then
-            NOW="$(date +%s)"
-
             if [ "$KEY_EXPIRY" -le "$NOW" ]; then
               EXPIRES_AT="$(date -u -d "@$KEY_EXPIRY" '+%Y-%m-%d %H:%M:%S UTC')"
 
@@ -142,12 +199,17 @@ jobs:
             fi
           fi
 
-          echo "Imported GPG key $KEY_FINGERPRINT is valid for signing."
+          echo "SIGNING_KEY_FINGERPRINT=$KEY_FINGERPRINT" >> "$GITHUB_ENV"
+          echo "Imported $TOTAL_KEYS matching key(s); using non-expired key $KEY_FINGERPRINT for signing."
 
       - name: Sign the PHAR
         run: |
+          set -euo pipefail
+
+          SIGNING_ID="${SIGNING_KEY_FINGERPRINT:-${{ secrets.GPG_USER }}}"
+
           ls strauss.phar
-          gpg --local-user ${{ secrets.GPG_USER }} \
+          gpg --local-user "$SIGNING_ID" \
               --batch \
               --yes \
               --passphrase="${{ secrets.PASSPHRASE }}" \
