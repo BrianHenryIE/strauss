@@ -47,7 +47,7 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v6
         with:
-          ref: master # TODO: This should be the release commit (which is _probably_ master).
+          ref: ${{ steps.resolve_release_tag.outputs.tag }}
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
