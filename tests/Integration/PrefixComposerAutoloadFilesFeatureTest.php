@@ -13,6 +13,8 @@ class PrefixComposerAutoloadFilesFeatureTest extends IntegrationTestCase
 
     public function test_correct_renaming_in_composer_autoloader_files(): void
     {
+        $this->markTestSkippedOnPhpVersionBelow('8.0.0');
+
         $composerJsonString = <<<'EOD'
 {
   "name": "strauss/issue183",
