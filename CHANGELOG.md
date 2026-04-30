@@ -3,6 +3,7 @@
 ## 0.27.2 April 2025
 
 * Fix: over-eager cleanup – preserve vendor autoload entries for `exclude_from_copy` packages
+* Fix: GPG key had expired causing release assets to be unavailable
 
 ## 0.27.1 April 2025
 
