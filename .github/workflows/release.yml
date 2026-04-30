@@ -97,6 +97,12 @@ jobs:
             exit 10
           fi
 
+      # TODO: check validity of key. When expired, print friendly failure message with link to Phive / OpenPGP
+      # https://phar.io/howto/sign-and-upload-to-github.html
+      # https://keys.openpgp.org/about/usage/
+      # https://github.com/marketplace/actions/import-gpg
+      # gpg --armor --export-secret-key BrianHenryIE@gmail.com | pbcopy
+
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v7
         with:
