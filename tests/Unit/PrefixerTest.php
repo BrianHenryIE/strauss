@@ -2101,9 +2101,11 @@ EOD;
 <?php
 function foo() {}
 function pref_foo() {}
+function pref_pref_foo() {}
 
 foo();
 pref_foo();
+pref_pref_foo();
 call_user_func('foo');
 EOD;
 
@@ -2124,16 +2126,58 @@ EOD;
         $secondFunctionSymbol->setReplacement('pref_pref_foo');
         $symbols->add($secondFunctionSymbol);
 
+        $thirdFunctionSymbol = new FunctionSymbol('pref_pref_foo', $fileMock);
+        $thirdFunctionSymbol->setReplacement('final_foo');
+        $symbols->add($thirdFunctionSymbol);
+
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
         $result = $replacer->replaceInString($symbols, $contents);
 
-        self::assertSame(['pref_pref_foo', 'pref_pref_foo'], $this->getFunctionDeclarationNames($result));
+        self::assertSame(['final_foo', 'final_foo', 'final_foo'], $this->getFunctionDeclarationNames($result));
         self::assertSame(
-            ['pref_pref_foo', 'pref_pref_foo', 'call_user_func'],
+            ['final_foo', 'final_foo', 'final_foo', 'call_user_func'],
             $this->getFunctionCallNames($result)
         );
-        self::assertSame(['pref_pref_foo'], $this->getCallableStringValues($result));
+        self::assertSame(['final_foo'], $this->getCallableStringValues($result));
+    }
+
+    public function testReplaceFunctionsDoesNotCascadeThroughEarlierSymbols(): void
+    {
+        $contents = <<<'EOD'
+<?php
+function foo() {}
+function pref_foo() {}
+
+foo();
+pref_foo();
+call_user_func('foo');
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $symbols = new DiscoveredSymbols();
+
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                 ->method('isDoPrefix')
+                 ->willReturn(true);
+
+        $firstFunctionSymbol = new FunctionSymbol('pref_foo', $fileMock);
+        $firstFunctionSymbol->setReplacement('final_foo');
+        $symbols->add($firstFunctionSymbol);
+
+        $secondFunctionSymbol = new FunctionSymbol('foo', $fileMock);
+        $secondFunctionSymbol->setReplacement('pref_foo');
+        $symbols->add($secondFunctionSymbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        self::assertSame(['pref_foo', 'final_foo'], $this->getFunctionDeclarationNames($result));
+        self::assertSame(['pref_foo', 'final_foo', 'call_user_func'], $this->getFunctionCallNames($result));
+        self::assertSame(['pref_foo'], $this->getCallableStringValues($result));
     }
 
     public function testReplaceFunctionsLeavesUnmappedCallableStringsUnchanged(): void

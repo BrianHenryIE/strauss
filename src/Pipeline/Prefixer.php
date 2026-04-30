@@ -355,9 +355,7 @@ class Prefixer
         foreach ($replacementContext['namespaceChangesStrings'] as $originalNamespace => $replacementNamespace) {
             $escapedNamespace = str_replace('\\', '\\\\', $originalNamespace);
             if (strpos($contents, $originalNamespace) === false
-                && strpos($contents, '\\' . $originalNamespace) === false
                 && strpos($contents, $escapedNamespace) === false
-                && strpos($contents, '\\\\' . $escapedNamespace) === false
             ) {
                 continue;
             }

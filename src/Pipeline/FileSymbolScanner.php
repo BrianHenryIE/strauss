@@ -66,6 +66,13 @@ class FileSymbolScanner
     protected ?Parser $parser = null;
     protected ?Standard $prettyPrinter = null;
 
+    private ?string $namespaceTokenCacheContents = null;
+
+    /**
+     * @var array<int, array<int, mixed>|string>|null
+     */
+    private ?array $namespaceTokenCacheTokens = null;
+
     /**
      * @var array<string,bool>
      */
@@ -217,14 +224,24 @@ class FileSymbolScanner
      */
     protected function splitByNamespace(string $contents):array
     {
-        $namespaceDeclarations = $this->getNamespaceDeclarations($contents);
+        $this->namespaceTokenCacheContents = $contents;
+        $this->namespaceTokenCacheTokens = token_get_all($contents);
+
+        try {
+            $namespaceDeclarations = $this->getNamespaceDeclarations($contents);
+            $hasMalformedNamespaceDeclaration = count($namespaceDeclarations) === 0
+                && $this->hasMalformedNamespaceDeclaration($contents);
+        } finally {
+            $this->namespaceTokenCacheContents = null;
+            $this->namespaceTokenCacheTokens = null;
+        }
 
         if (count($namespaceDeclarations) === 0) {
-            if ($this->hasMalformedNamespaceDeclaration($contents)) {
+            if ($hasMalformedNamespaceDeclaration) {
                 return [];
             }
 
-            return ['\\' => '<?php' . PHP_EOL . PHP_EOL . $contents];
+            return ['\\' => $this->ensurePhpOpeningTag($contents)];
         }
 
         if (count($namespaceDeclarations) === 1) {
@@ -246,7 +263,7 @@ class FileSymbolScanner
                     if (count($ast) === 1) {
                         $result['\\'] = $contents;
                     } else {
-                        $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . $this->getPrettyPrinter()->prettyPrintFile($rootNode->stmts);
+                        $result['\\'] = $this->getPrettyPrinter()->prettyPrintFile($rootNode->stmts);
                     }
                 } else {
                     $namespaceName = $rootNode->name->name;
@@ -254,7 +271,7 @@ class FileSymbolScanner
                         $result[$namespaceName] = $contents;
                     } else {
                         // This was failing for `phpoffice/phpspreadsheet/src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php`
-                        $result[$namespaceName] = '<?php' . PHP_EOL . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL . PHP_EOL . $this->getPrettyPrinter()->prettyPrintFile($rootNode->stmts);
+                        $result[$namespaceName] = '<?php' . PHP_EOL . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL . PHP_EOL . $this->getPrettyPrinter()->prettyPrint($rootNode->stmts);
                     }
                 }
             }
@@ -262,10 +279,20 @@ class FileSymbolScanner
 
         // TODO: is this necessary?
         if (empty($result)) {
-            $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . $contents;
+            $result['\\'] = $this->ensurePhpOpeningTag($contents);
         }
 
         return $result;
+    }
+
+    private function ensurePhpOpeningTag(string $contents): string
+    {
+        $trimmedContents = ltrim($contents);
+        if (0 === strpos($trimmedContents, '<?')) {
+            return $contents;
+        }
+
+        return '<?php' . PHP_EOL . PHP_EOL . $contents;
     }
 
     /**
@@ -415,7 +442,7 @@ class FileSymbolScanner
      */
     protected function getNamespaceDeclarations(string $contents): array
     {
-        $tokens = token_get_all($contents);
+        $tokens = $this->getNamespaceTokens($contents);
 
         $declarations = [];
         $tokenCount = count($tokens);
@@ -467,7 +494,7 @@ class FileSymbolScanner
 
     protected function hasMalformedNamespaceDeclaration(string $contents): bool
     {
-        $tokens = token_get_all($contents);
+        $tokens = $this->getNamespaceTokens($contents);
         $tokenCount = count($tokens);
         for ($i = 0; $i < $tokenCount; $i++) {
             $token = $tokens[$i];
@@ -494,6 +521,18 @@ class FileSymbolScanner
         }
 
         return false;
+    }
+
+    /**
+     * @return array<int, array<int, mixed>|string>
+     */
+    private function getNamespaceTokens(string $contents): array
+    {
+        if ($this->namespaceTokenCacheTokens !== null && $this->namespaceTokenCacheContents === $contents) {
+            return $this->namespaceTokenCacheTokens;
+        }
+
+        return token_get_all($contents);
     }
 
     /**

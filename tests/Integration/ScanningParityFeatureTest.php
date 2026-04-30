@@ -23,6 +23,7 @@ class ScanningParityFeatureTest extends IntegrationTestCase
       "LocalScan\\": "src/"
     },
     "files": [
+      "src/plain-global.php",
       "src/globals.php",
       "src/multi.php"
     ]
@@ -47,6 +48,13 @@ namespace {
     }
 
     const GLOBAL_CONST = 'global';
+}
+PHP;
+
+        $plainGlobalPhp = <<<'PHP'
+<?php
+function plain_global_helper() {
+    return 'plain';
 }
 PHP;
 
@@ -115,6 +123,7 @@ JSON;
         mkdir($this->testsWorkingDir . '/scan-fixture/src', 0777, true);
         $this->getFileSystem()->write($this->testsWorkingDir . '/scan-fixture/composer.json', $dependencyComposerJson);
         $this->getFileSystem()->write($this->testsWorkingDir . '/scan-fixture/src/NamedClass.php', $namedPhp);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/scan-fixture/src/plain-global.php', $plainGlobalPhp);
         $this->getFileSystem()->write($this->testsWorkingDir . '/scan-fixture/src/globals.php', $globalsPhp);
         $this->getFileSystem()->write($this->testsWorkingDir . '/scan-fixture/src/Consumer.php', $consumerPhp);
         $this->getFileSystem()->write($this->testsWorkingDir . '/scan-fixture/src/multi.php', $multiPhp);
@@ -130,22 +139,27 @@ JSON;
         $this->assertEquals(0, $exitCode, $output);
 
         $namedPath = $this->testsWorkingDir . '/project/vendor-prefixed/local/scan-fixture/src/NamedClass.php';
+        $plainGlobalPath = $this->testsWorkingDir . '/project/vendor-prefixed/local/scan-fixture/src/plain-global.php';
         $globalsPath = $this->testsWorkingDir . '/project/vendor-prefixed/local/scan-fixture/src/globals.php';
         $consumerPath = $this->testsWorkingDir . '/project/vendor-prefixed/local/scan-fixture/src/Consumer.php';
         $multiPath = $this->testsWorkingDir . '/project/vendor-prefixed/local/scan-fixture/src/multi.php';
 
         $this->assertTrue($this->getFileSystem()->fileExists($namedPath));
+        $this->assertTrue($this->getFileSystem()->fileExists($plainGlobalPath));
         $this->assertTrue($this->getFileSystem()->fileExists($globalsPath));
         $this->assertTrue($this->getFileSystem()->fileExists($consumerPath));
         $this->assertTrue($this->getFileSystem()->fileExists($multiPath));
 
         $namedOutput = $this->getFileSystem()->read($namedPath);
+        $plainGlobalOutput = $this->getFileSystem()->read($plainGlobalPath);
         $globalsOutput = $this->getFileSystem()->read($globalsPath);
         $consumerOutput = $this->getFileSystem()->read($consumerPath);
         $multiOutput = $this->getFileSystem()->read($multiPath);
 
         $this->assertSame(['MyPrefix\\LocalScan'], $this->getNamespaces($namedOutput));
         $this->assertContains('NamedClass', $this->getClassNames($namedOutput));
+
+        $this->assertContains('myprefix_plain_global_helper', $this->getFunctionDeclarationNames($plainGlobalOutput));
 
         $this->assertContains('MyPrefix_GlobalClass', $this->getClassNames($globalsOutput));
         $this->assertContains('myprefix_global_helper', $this->getFunctionDeclarationNames($globalsOutput));

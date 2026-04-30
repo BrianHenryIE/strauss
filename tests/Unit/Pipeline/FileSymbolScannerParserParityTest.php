@@ -14,6 +14,8 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use Mockery;
+use PhpParser\Error;
+use PhpParser\ParserFactory;
 
 /**
  * @covers \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
@@ -93,6 +95,15 @@ PHP;
     public static function edgeCaseProvider(): array
     {
         return [
+            'plain_global_file' => [
+                <<<'PHP'
+<?php
+function plain_global_helper() {
+    return true;
+}
+PHP,
+                '/tmp/plain-global.php',
+            ],
             'namespace_keyword_in_string_and_namespace_operator' => [
                 <<<'PHP'
 <?php
@@ -206,13 +217,50 @@ PHP,
         ];
     }
 
+    private function countOpeningTags(string $contents): int
+    {
+        $count = 0;
+        foreach (token_get_all($contents) as $token) {
+            if (is_array($token) && $token[0] === T_OPEN_TAG) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param string[] $parserInputs
+     */
+    private function assertParserInputsAreValid(array $parserInputs): void
+    {
+        self::assertNotEmpty($parserInputs);
+
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        foreach ($parserInputs as $parserInput) {
+            self::assertSame(
+                1,
+                $this->countOpeningTags($parserInput),
+                'Scanner namespace split should produce exactly one PHP opening tag per parser input.'
+            );
+
+            try {
+                $parser->parse($parserInput);
+            } catch (Error $e) {
+                self::fail('Scanner namespace split produced invalid PHP: ' . $e->getMessage());
+            }
+        }
+    }
+
     private function assertScannerParity(string $contents, string $sourcePath): void
     {
         $legacyScanner = $this->newScanner(LegacyGetFromStringScanner::class);
-        $modernScanner = $this->newScanner(ScannerHarness::class);
+        /** @var RecordingParserInputScanner $modernScanner */
+        $modernScanner = $this->newScanner(RecordingParserInputScanner::class);
 
         $legacySymbols = $legacyScanner->scanString($contents, new File($sourcePath, basename($sourcePath)));
         $modernSymbols = $modernScanner->scanString($contents, new File($sourcePath . '.new', basename($sourcePath . '.new')));
+        $this->assertParserInputsAreValid($modernScanner->getParserInputs());
 
         self::assertSame(
             $this->snapshotSymbols($legacySymbols),
@@ -326,5 +374,26 @@ final class LegacyGetFromStringScanner extends ScannerHarness
     protected function parsePhpCode(string $contents): ParserContainer
     {
         return PhpCodeParser::getFromString($contents);
+    }
+}
+
+final class RecordingParserInputScanner extends ScannerHarness
+{
+    /** @var string[] */
+    private array $parserInputs = [];
+
+    /**
+     * @return string[]
+     */
+    public function getParserInputs(): array
+    {
+        return $this->parserInputs;
+    }
+
+    protected function parsePhpCode(string $contents): ParserContainer
+    {
+        $this->parserInputs[] = $contents;
+
+        return parent::parsePhpCode($contents);
     }
 }
