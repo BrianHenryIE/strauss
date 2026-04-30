@@ -73,16 +73,7 @@ jobs:
           commit_message: "🤖 Update version number in bin"
 
       - name: Create .phar
-        run: |
-          wget -O phar-composer.phar https://github.com/clue/phar-composer/releases/download/v1.4.0/phar-composer-1.4.0.phar
-          mkdir build
-          mv vendor build/vendor
-          mv src build/src
-          mv bin build/bin
-          mv composer.json build
-          mv bootstrap.php build
-          cp CHANGELOG.md build
-          php -d phar.readonly=off phar-composer.phar build ./build/
+        run: ./scripts/createphar.sh
 
       - name: Test run strauss
         run: php strauss.phar --version
