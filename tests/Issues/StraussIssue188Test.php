@@ -45,7 +45,10 @@ EOD;
         $this->assertStringContainsString("class Client implements ClientInterface, \\Company\\PluginFramework\\Psr\\Http\\Client\\ClientInterface", $php_string);
     }
 
-
+    /**
+     * Passing locally, failing on GitHub Actions.
+     * @runInSeparateProcess
+     */
     public function test_issue_188_extends(): void
     {
         $this->markTestSkippedUnlessSpecificallyInFilter();
