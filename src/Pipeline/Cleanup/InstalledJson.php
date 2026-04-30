@@ -51,6 +51,12 @@ class InstalledJson
 
     protected FileSystem $filesystem;
 
+    /** @var array<string,bool> */
+    private array $existsCache = [];
+
+    /** @var array<string,bool> */
+    private array $directoryExistsCache = [];
+
     public function __construct(
         CleanupConfigInterface $config,
         FileSystem $filesystem,
@@ -98,10 +104,7 @@ class InstalledJson
     protected function getJsonFile(string $vendorDir): JsonFile
     {
         $installedJsonFile = new JsonFile(
-            sprintf(
-                '%s/composer/installed.json',
-                $this->filesystem->makeAbsolute($vendorDir)
-            )
+            $this->filesystem->makeAbsolute(rtrim($vendorDir, '/\\') . '/composer/installed.json')
         );
         if (!$installedJsonFile->exists()) {
             if (!$this->config->isDryRun()) {
@@ -128,15 +131,17 @@ class InstalledJson
      */
     protected function updatePackagePaths(array $installedJsonArray, array $flatDependencyTree, string $path, array $excludedPackageNames = []): array
     {
+        $dependencyPackageNames = array_fill_keys(array_keys($flatDependencyTree), true);
+        $excludedPackageNamesLookup = array_fill_keys($excludedPackageNames, true);
 
         foreach ($installedJsonArray['packages'] as $key => $package) {
-            if (in_array($package['name'], $excludedPackageNames, true)) {
+            if (isset($excludedPackageNamesLookup[$package['name']])) {
                 unset($installedJsonArray['packages'][$key]);
                 continue;
             }
 
             // Skip packages that were never copied in the first place.
-            if (!in_array($package['name'], array_keys($flatDependencyTree))) {
+            if (!isset($dependencyPackageNames[$package['name']])) {
                 $this->logger->debug('Skipping package: ' . $package['name']);
                 continue;
             }
@@ -144,12 +149,12 @@ class InstalledJson
 
             // `composer/` is here because the install-path is relative to the `vendor/composer` directory.
             $packageDir = $path . '/composer/' . $package['install-path'];
-            if (!$this->filesystem->directoryExists($packageDir)) {
+            if (!$this->directoryExists($packageDir)) {
                 $this->logger->debug('Package directory does not exist at : ' . $packageDir);
 
                 $newInstallPath = $path . '/'.str_replace('../', '', $package['install-path']);
 
-                if (!$this->filesystem->directoryExists($newInstallPath)) {
+                if (!$this->directoryExists($newInstallPath)) {
                     unset($installedJsonArray['packages'][$key]);
                     $this->logger->info('Package directory does not exist: ' . $newInstallPath);
                     continue;
@@ -174,7 +179,7 @@ class InstalledJson
      */
     protected function pathExistsInPackage(string $vendorDir, array $packageArray, string $relativePath): bool
     {
-        return $this->filesystem->exists(
+        return $this->exists(
             $vendorDir . '/composer/' . $packageArray['install-path'] . '/' . $relativePath
         );
     }
@@ -198,7 +203,7 @@ class InstalledJson
             }
             // delete_vendor_files
             $path = $vendorDir . '/composer/' . $packageArray['install-path'];
-            $pathExists = $this->filesystem->directoryExists($path);
+            $pathExists = $this->directoryExists($path);
             // delete_vendor_packages
             if (!$pathExists) {
                 $this->logger->info(
@@ -316,6 +321,7 @@ class InstalledJson
      */
     protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, array $flatDependencyTree, string $installedJsonPath): array
     {
+        $dependencyPackageNames = array_fill_keys(array_keys($flatDependencyTree), true);
         /**
          * @var int $key
          * @var InstalledJsonPackageArray $packageArray
@@ -325,7 +331,7 @@ class InstalledJson
 
             $remove = false;
 
-            if (!in_array($packageName, array_keys($flatDependencyTree))) {
+            if (!isset($dependencyPackageNames[$packageName])) {
                 // If it's not a package we were ever considering copying, then we can remove it.
                 $remove = true;
             } else {
@@ -375,15 +381,19 @@ class InstalledJson
             foreach ($autoload_key as $type => $autoload) {
                 switch ($type) {
                     case 'psr-0':
-                        /** @var string $relativePath */
-                        foreach (array_values((array) $autoload_key[$type]) as $relativePath) {
-                            $packageRelativePath = $package['install-path'];
-                            if (1 === preg_match('#.*'.preg_quote($this->config->getAbsoluteTargetDirectory(), '#').'/(.*)#', $packageRelativePath, $matches)) {
-                                $packageRelativePath = $matches[1];
-                            }
-                            // Convert psr-0 autoloading to classmap autoloading
-                            if ($this->filesystem->directoryExists($this->config->getAbsoluteTargetDirectory() . '/composer/' . $packageRelativePath . $relativePath)) {
-                                $autoload_key['classmap'][] = $relativePath;
+                        foreach ($autoload_key[$type] ?? [] as $paths) {
+                            foreach ((array) $paths as $relativePath) {
+                                if (!is_string($relativePath)) {
+                                    continue;
+                                }
+                                $packageRelativePath = $package['install-path'];
+                                if (1 === preg_match('#.*'.preg_quote($this->config->getAbsoluteTargetDirectory(), '#').'/(.*)#', $packageRelativePath, $matches)) {
+                                    $packageRelativePath = $matches[1];
+                                }
+                                // Convert psr-0 autoloading to classmap autoloading
+                                if ($this->directoryExists($this->config->getAbsoluteTargetDirectory() . '/composer/' . $packageRelativePath . $relativePath)) {
+                                    $autoload_key['classmap'][] = $relativePath;
+                                }
                             }
                         }
                         // Intentionally fall through
@@ -468,6 +478,7 @@ class InstalledJson
     public function cleanTargetDirInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $this->logger->debug('InstalledJson::cleanTargetDirInstalledJson()');
+        $this->resetPathCaches();
 
         $targetDir = $this->config->getAbsoluteTargetDirectory();
         try {
@@ -507,8 +518,9 @@ class InstalledJson
 
         $installedJsonArray = $this->updateNamespaces($installedJsonArray, $discoveredSymbols);
 
+        $dependencyPackageNames = array_fill_keys(array_keys($flatDependencyTree), true);
         foreach ($installedJsonArray['packages'] as $index => $package) {
-            if (!in_array($package['name'], array_keys($flatDependencyTree))) {
+            if (!isset($dependencyPackageNames[$package['name']])) {
                 unset($installedJsonArray['packages'][$index]);
             }
         }
@@ -541,6 +553,7 @@ class InstalledJson
     public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $this->logger->debug('InstalledJson::cleanupVendorInstalledJson()');
+        $this->resetPathCaches();
 
         $vendorDir = $this->config->getAbsoluteVendorDirectory();
 
@@ -571,5 +584,29 @@ class InstalledJson
         }
 
         $this->logger->debug('Finished InstalledJson::cleanupVendorInstalledJson()');
+    }
+
+    private function resetPathCaches(): void
+    {
+        $this->existsCache = [];
+        $this->directoryExistsCache = [];
+    }
+
+    private function exists(string $path): bool
+    {
+        $path = FileSystem::normalizeDirSeparator($path);
+        if (!array_key_exists($path, $this->existsCache)) {
+            $this->existsCache[$path] = $this->filesystem->exists($path);
+        }
+        return $this->existsCache[$path];
+    }
+
+    private function directoryExists(string $path): bool
+    {
+        $path = FileSystem::normalizeDirSeparator($path);
+        if (!array_key_exists($path, $this->directoryExistsCache)) {
+            $this->directoryExistsCache[$path] = $this->filesystem->directoryExists($path);
+        }
+        return $this->directoryExistsCache[$path];
     }
 }

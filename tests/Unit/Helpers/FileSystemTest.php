@@ -113,6 +113,7 @@ class FileSystemTest extends TestCase
             $this->assertSame('C:/Users/dev/project/composer.json', $result);
         } else {
             $this->assertSame('C:\\Users\\dev\\project\\composer.json', $result);
+            $this->assertSame('C:\\Users\\dev\\project\\composer.json', $sut->makeAbsolute('C://Users/dev/project/composer.json'));
         }
     }
 
@@ -142,6 +143,21 @@ class FileSystemTest extends TestCase
         } else {
             $this->assertSame('d:\\Work\\project\\composer.json', $result);
         }
+    }
+
+    /**
+     * @covers ::makeAbsolute
+     */
+    public function testMakeAbsolutePreservesStreamWrapperProtocol(): void
+    {
+        $sut = $this->getInMemoryFileSystem();
+
+        $this->assertSame('mem://vendor/composer/installed.json', $sut->makeAbsolute('mem://vendor/composer/installed.json'));
+        $this->assertSame('mem://vendor/composer/installed.json', $sut->makeAbsolute('vendor/composer/installed.json'));
+        $this->assertSame(
+            DIRECTORY_SEPARATOR === '/' ? 'C:/Users/dev/project/composer.json' : 'C:\\Users\\dev\\project\\composer.json',
+            $sut->makeAbsolute('C://Users/dev/project/composer.json')
+        );
     }
 
     /**
@@ -195,6 +211,26 @@ class FileSystemTest extends TestCase
         $result = $sut->directoryExists(__FILE__);
 
         $this->assertFalse($result);
+    }
+
+    /**
+     * @covers ::isSymlinked
+     */
+    public function testIsSymlinkedReturnsFalseForNormalFileInWorkingDirectory(): void
+    {
+        $sut = new FileSystem(
+            new \League\Flysystem\Filesystem(
+                new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot()
+                ),
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ]
+            ),
+            __DIR__
+        );
+
+        $this->assertFalse($sut->isSymlinked(__FILE__));
     }
 
     /**

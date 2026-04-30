@@ -384,7 +384,8 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             return true;
         }
 
-        if (realpath($osPath) !== $osPath) {
+        $realPath = realpath($osPath);
+        if (false !== $realPath && self::normalizeDirSeparator($realPath) !== self::normalizeDirSeparator($osPath)) {
             return true;
         }
 
@@ -421,16 +422,25 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
     public function makeAbsolute(string $path): string
     {
         $normalizedPath = self::normalizeDirSeparator($path);
+        $normalizedPath = preg_replace('#^([a-zA-Z]):/+#', '$1:/', $normalizedPath) ?? $normalizedPath;
+        if (1 === preg_match('#^[a-zA-Z]:/#', $normalizedPath)) {
+            return self::normalizeDirSeparator($normalizedPath, DIRECTORY_SEPARATOR);
+        }
+
+        if (1 === preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]{1,}://#', $normalizedPath)) {
+            return $normalizedPath;
+        }
+
         $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->workingDir));
 
         if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
-            return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
+            return self::normalizeDirSeparator($normalizedPath, DIRECTORY_SEPARATOR);
         }
 
-        $prefixed = $this->pathPrefixer->prefixPath($this->normalizePath($path));
-
-        if ($this->flysystem instanceof ReadOnlyFileSystem) {
-            return str_replace(':/', '://', $prefixed);
+        $prefixed = self::normalizeDirSeparator($this->pathPrefixer->prefixPath($this->normalizePath($path)));
+        $prefixed = preg_replace('#^([a-zA-Z][a-zA-Z0-9+.-]{1,}):/(?!/)#', '$1://', $prefixed) ?? $prefixed;
+        if (1 === preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]{1,}://#', $prefixed)) {
+            return $prefixed;
         }
 
         return self::normalizeDirSeparator($prefixed, DIRECTORY_SEPARATOR);
