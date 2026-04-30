@@ -12,15 +12,11 @@
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
-use BrianHenryIE\Strauss\Helpers\Filesystem;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
@@ -32,10 +28,10 @@ class Psr0
 {
     use LoggerAwareTrait;
 
-    protected Filesystem $filesystem;
+    protected FileSystem $filesystem;
 
     public function __construct(
-        Filesystem $filesystem,
+        FileSystem $filesystem,
         LoggerInterface $logger
     ) {
         $this->logger = $logger;
@@ -63,6 +59,10 @@ class Psr0
              * @phpstan-ignore offsetAccess.notFound
              */
             foreach ($composerAutoloadKey['psr-0'] as $psrRootNamespace => $packageRelativeNamespacePath) {
+                if (is_array($packageRelativeNamespacePath)) {
+                    throw new \Exception('psr-0 autoload key as array not yet implemented. open an issue ' . $package->getPackageName());
+                }
+
                 // TODO: we need to have already run "determine changes" so we can set the target directory based on exclusion rules etc.
                 $namespaceSymbol = $discoveredSymbols->getNamespace($psrRootNamespace);
 

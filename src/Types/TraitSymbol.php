@@ -29,7 +29,7 @@ class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
         ?ComposerPackage $composerPackage = null,
         ?array $uses = null
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace, $composerPackage);
 
         $this->uses = (array) $uses;
     }

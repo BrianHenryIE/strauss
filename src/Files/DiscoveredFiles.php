@@ -23,7 +23,9 @@ class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
      */
     public function __construct(array $files = [])
     {
-        $this->files = $files;
+        foreach ($files as $file) {
+            $this->files[ $file->getSourcePath()] = $file;
+        }
     }
 
     public function add(FileBase $file): void
@@ -71,7 +73,7 @@ class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
     #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
-        return in_array($offset, $this->files, true);
+        return array_key_exists($offset, $this->files);
     }
 
     /**

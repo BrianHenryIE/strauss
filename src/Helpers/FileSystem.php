@@ -8,6 +8,7 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use Composer\Util\Platform;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
@@ -73,7 +74,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         ?string $localFsLocation = null,
         ?string $workingDir = null
     ) {
-        $localFsLocation        = $localFsLocation ?? self::getFsRoot(getcwd());
+        $localFsLocation        = $localFsLocation ?? self::getFsRoot(Platform::getcwd());
         $pathNormalizer         = $pathNormalizer ?? self::makePathNormalizer($localFsLocation);
         $pathPrefixer           = $pathPrefixer ?? new PathPrefixer(
             $localFsLocation,
@@ -94,7 +95,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
 
     public static function getFsRoot(?string $path = null): ?string
     {
-        if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path ?? getcwd(), $output_array)) {
+        if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path ?? Platform::getcwd(), $output_array)) {
             return strtoupper($output_array[1]);
         }
         // Relative path.
@@ -111,8 +112,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
                 [
                     str_replace('\\', '/', FileSystem::getFsRoot($workingDir)),
                     str_replace('/', '\\', FileSystem::getFsRoot($workingDir)),
-                    Filesystem::getFsRoot(),
-                    Filesystem::normalizeDirSeparator(FileSystem::getFsRoot()),
+                    FileSystem::getFsRoot(),
+                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                     'c:\\',
                     'c:/',
                 ]

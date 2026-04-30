@@ -23,6 +23,7 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
+use Composer\Util\Platform;
 use Exception;
 use InvalidArgumentException;
 use JsonMapper\Enums\TextNotation;
@@ -228,7 +229,7 @@ class StraussConfig implements
      */
     public function __construct(?Composer $composer = null)
     {
-        $normalizer = FileSystem::makePathNormalizer(getcwd());
+        $normalizer = FileSystem::makePathNormalizer(Platform::getcwd());
         if (isset($composer)) {
             $composerDir = $composer->getConfig()->getConfigSource()->getName();
             // Composer factory accepts a file or directory.
@@ -236,7 +237,7 @@ class StraussConfig implements
                 ? dirname($composerDir) : $composerDir;
             $this->projectAbsolutePath = $normalizer->normalizePath($composerDir);
         } else {
-            $this->projectAbsolutePath = $normalizer->normalizePath(getcwd());
+            $this->projectAbsolutePath = $normalizer->normalizePath(Platform::getcwd());
         }
 
         $configExtraSettings = null;

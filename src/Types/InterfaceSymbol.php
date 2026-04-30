@@ -29,7 +29,7 @@ class InterfaceSymbol extends NamespacedSymbol implements AutoloadAliasInterface
         ?ComposerPackage $package = null,
         array $extends = []
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace, $package);
 
         $this->extends = $extends;
     }

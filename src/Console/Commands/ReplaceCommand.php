@@ -21,6 +21,7 @@ use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use Composer\Util\Platform;
 use Exception;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Symfony\Component\Console\Command\Command;
@@ -134,7 +135,7 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         $this->logger->notice('Loading cli config...');
 
         $config = new StraussConfig();
-        $config->setProjectAbsolutePath(getcwd());
+        $config->setProjectAbsolutePath(Platform::getcwd());
 
         /** @var string $inputFrom */
         $inputFrom = $input->getOption('from');

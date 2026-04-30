@@ -39,13 +39,13 @@ abstract class DiscoveredSymbol
      */
     public function __construct(
         string $fqdnSymbol,
-        ?FileBase $sourceFile = null
+        ?FileBase $sourceFile = null,
+        ?ComposerPackage $composerPackage = null
     ) {
         $this->dependencies = new DependenciesCollection([]);
 
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 
-        // TODO: Add `::isGlobal()` to `NamespacedSymbol`.
         if (!str_contains($fqdnSymbol, '\\') || ($this instanceof NamespaceSymbol)) {
             $this->localOriginalSymbol = $fqdnSymbol;
         } else {
@@ -57,6 +57,8 @@ abstract class DiscoveredSymbol
             $sourceFile->addDiscoveredSymbol($this);
         }
     }
+
+    abstract public function isGlobal(): bool;
 
     public function getOriginalSymbol(): string
     {

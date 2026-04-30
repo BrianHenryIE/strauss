@@ -114,7 +114,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $this->setLogger($logger ?? new NullLogger());
 
         $this->pathPrefixer = $pathPrefixer ?? new PathPrefixer($location, DIRECTORY_SEPARATOR);
-        $this->normalizer = $pathNormalizer ?? Filesystem::makePathNormalizer($location);
+        $this->normalizer = $pathNormalizer ?? FileSystem::makePathNormalizer($location);
     }
 
     /**

@@ -14,6 +14,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\MarkFilesExcludedFromChangesConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use Psr\Log\LoggerInterface;
 
@@ -42,7 +43,7 @@ class MarkFilesExcludedFromChanges
         }
     }
 
-    protected function fileMatchesFilePattern(File $file): bool
+    protected function fileMatchesFilePattern(FileBase $file): bool
     {
         $vendorRelativePath = $file->getVendorRelativePath();
         foreach ($this->config->getExcludeFilesFromUpdateFilePatterns() as $excludeFilePattern) {
@@ -76,7 +77,7 @@ class MarkFilesExcludedFromChanges
      *
      * A PHP file can contain multiple namespaces, but that is generally discouraged.
      */
-    protected function fileMatchesNamespace(File $file): bool
+    protected function fileMatchesNamespace(FileBase $file): bool
     {
         $matchingNamespaces = array_intersect(
             $file->getDiscoveredSymbols()->getDiscoveredNamespaces()->toArray(),
@@ -95,7 +96,7 @@ class MarkFilesExcludedFromChanges
         return true;
     }
 
-    protected function fileMatchesPackage(File $file): bool
+    protected function fileMatchesPackage(FileBase $file): bool
     {
         if (!($file instanceof FileWithDependency)) {
             return false;

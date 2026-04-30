@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use Composer\Factory;
+use Composer\Util\Platform;
 use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -92,6 +93,6 @@ class PrefixComposerAutoloadFilesCommand extends AbstractRenamespacerCommand
 
         $this->config = $this->projectComposerPackage->getStraussConfig();
         $config = new StraussConfig();
-        $config->setProjectAbsolutePath(getcwd());
+        $config->setProjectAbsolutePath(Platform::getcwd());
     }
 }

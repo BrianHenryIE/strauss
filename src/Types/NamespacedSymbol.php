@@ -22,9 +22,10 @@ class NamespacedSymbol extends DiscoveredSymbol
     public function __construct(
         string $fqdnSymbol,
         FileBase $sourceFile,
-        ?NamespaceSymbol $namespace = null
+        ?NamespaceSymbol $namespace = null,
+        ?ComposerPackage $composerPackage = null
     ) {
-        parent::__construct($fqdnSymbol, $sourceFile);
+        parent::__construct($fqdnSymbol, $sourceFile, $composerPackage);
 
         $this->namespace = $namespace ?? NamespaceSymbol::global();
     }

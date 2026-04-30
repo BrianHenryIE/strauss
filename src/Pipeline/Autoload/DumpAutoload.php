@@ -256,14 +256,6 @@ class DumpAutoload
     }
 
     /**
-     * @throws FilesystemException
-     */
-    public function prefixTargetDirectoryComposerAutoloadFiles(): void
-    {
-        $this->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
-    }
-
-    /**
      * If there is an existing autoloader, it will use the same suffix. If there is not, it pulls the suffix from
      * {Composer::getLocker()} and clashes with the existing autoloader.
      *
