@@ -57,7 +57,7 @@ class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @return Traversable
+     * @return Traversable<FileBase>
      */
     #[\ReturnTypeWillChange]
     public function getIterator()
@@ -105,7 +105,7 @@ class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
     #[\ReturnTypeWillChange]
     public function count()
     {
-        return $this->files;
+        return count($this->files);
     }
 
     /**

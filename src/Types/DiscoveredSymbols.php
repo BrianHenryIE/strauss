@@ -10,6 +10,7 @@ use ArrayIterator;
 use Countable;
 use InvalidArgumentException;
 use IteratorAggregate;
+use Traversable;
 
 /**
  * @implements IteratorAggregate<string, DiscoveredSymbol>
@@ -120,7 +121,10 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         }
 
         if (count($found) > 1) {
-            $names = array_map(fn (DiscoveredSymbol $symbol) => $symbol->getName(), $found);
+            $names = array_map(
+                fn (DiscoveredSymbol $symbol):string => $symbol->getOriginalLocalName(),
+                $found
+            );
             // E.g. an interface and class have the same name.
             throw new \Exception('multiple symbols with the same name: ' . implode(', ', $names));
         }
@@ -292,16 +296,14 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     /**
      * Get all discovered symbols that are classes, interfaces, or traits, i.e. only those that are autoloadable.
-     *
-     * @return array<DiscoveredSymbol>
      */
     public function getClassmapSymbols(): DiscoveredSymbols
     {
         return new DiscoveredSymbols(
             array_merge(
-                $this->getGlobalClassesInterfacesTraits(),
-                $this->getDiscoveredInterfaces(),
-                $this->getDiscoveredTraits(),
+                $this->getGlobalClassesInterfacesTraits()->toArray(),
+                $this->getDiscoveredInterfaces()->toArray(),
+                $this->getDiscoveredTraits()->toArray(),
             )
         );
     }
@@ -341,7 +343,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     {
         return $this->types[self::INTERFACE_SYMBOL][$interface] ?? null;
     }
-    public function getEnum(string $enumName): ?TraitSymbol
+    public function getEnum(string $enumName): ?NamespacedSymbol
     {
         return $this->types[self::ENUM_SYMBOL][$enumName] ?? null;
     }
@@ -380,7 +382,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
+        // Fixing this breaks tests.
         return in_array($offset, $this->toArray(), true);
+        // return array_key_exists($offset, $this->toArray());
     }
 
     /**

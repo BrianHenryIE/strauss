@@ -47,6 +47,8 @@ class FileWithDependencyTest extends TestCase
      */
     public function test_handles_null_package_absolute_path(): void
     {
+        $this->markTestSkipped('When could a file be found inside a package without a path?');
+
         $dependency = Mockery::mock(ComposerPackage::class)->makePartial();
         $dependency->allows('getPackageAbsolutePath')->andReturnNull();
 

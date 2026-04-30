@@ -64,6 +64,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      *
      * @param ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter $adapter
      * @param array $config
+     * @param PathPrefixer|object $pathPrefixer
      * @param PathNormalizer|null $pathNormalizer
      */
     public function __construct(
@@ -137,7 +138,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      * PHP native functions (realpath, getcwd, dirname) return backslashes on Windows,
      * but Flysystem always uses forward slashes. This method ensures consistency.
      */
-    public static function normalizeDirSeparator($path, $slashTo = '/'): string
+    public static function normalizeDirSeparator(string $path, string $slashTo = '/'): string
     {
         $slashFrom = $slashTo === '/' ? '\\' : '/';
 

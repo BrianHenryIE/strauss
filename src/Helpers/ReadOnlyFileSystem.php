@@ -196,8 +196,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
         $inMemoryFilePaths = (array) array_map(fn($file) => $file->path(), $inMemoryFilesArray);
 
-        /** @var FileAttributes[] $parentFilesystemArray */
         $parentFilesystemGenerator = $this->delegateFilesystemAdapter->listContents($path, $deep);
+        /** @var FileAttributes[] $parentFilesystemArray */
         $parentFilesystemArray = $parentFilesystemGenerator instanceof Traversable
             ? iterator_to_array($parentFilesystemGenerator, false)
             : (array) $parentFilesystemGenerator;
@@ -301,6 +301,12 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         return $filesize;
     }
 
+    /**
+     * TODO: Check does this return type change between Flysystem v2/v3.
+     *
+     * @return FileAttributes|string
+     */
+    #[\ReturnTypeWillChange]
     public function mimeType(string $path): FileAttributes
     {
         throw new BadMethodCallException('Not yet implemented');
@@ -347,22 +353,22 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
     /**
      *
      * @param string $path
-     * @param object|FilesystemReader $filesystem
+     * @param FilesystemAdapter $filesystemAdapter
      * @return bool
      * @throws FilesystemException
      */
-    protected function directoryExistsIn(string $path, FilesystemAdapter $filesystem): bool
+    protected function directoryExistsIn(string $path, FilesystemAdapter $filesystemAdapter): bool
     {
         $path = $this->pathNormalizer->normalizePath($path);
 
-        if (method_exists($filesystem, 'directoryExists')) {
-            return $filesystem->directoryExists($path);
+        if (method_exists($filesystemAdapter, 'directoryExists')) {
+            return $filesystemAdapter->directoryExists($path);
         }
 
         $parentDirectoryPath = dirname($path);
 
-        /** @var FileSystemReader $filesystem */
-        $parentDirectoryContents = $filesystem->listContents(
+        /** @var FileSystemReader $filesystemAdapter */
+        $parentDirectoryContents = $filesystemAdapter->listContents(
             $this->pathNormalizer->normalizePath($parentDirectoryPath),
             false
         );

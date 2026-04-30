@@ -393,7 +393,7 @@ class InstalledJson
                          * * {"psr-4":{"Another\\Package\\":["src","includes"]}}
                          * * {"psr-0":{"PayPal":"lib\/"}}
                          */
-                        foreach ($autoload_key[$type] ?? [] as $originalNamespace => $packageRelativeDirectory) {
+                        foreach ($autoload_key[$type] as $originalNamespace => $packageRelativeDirectory) {
                             // Replace $originalNamespace with updated namespace
 
                             // Just for dev – find a package like this and write a test for it.

@@ -225,7 +225,7 @@ class Prefixer
         $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
 
         $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces()->getToRename();
-        $constants = $discoveredSymbols->getDiscoveredConstants($this->config->getConstantsPrefix())->getToRename();
+        $constants = $discoveredSymbols->getDiscoveredConstants()->getToRename();
         $functionsToRename = $discoveredSymbols->getDiscoveredFunctions()->getToRename();
 
         // This is maybe deprecated since regex has been replaced by php-parser.
@@ -354,6 +354,11 @@ class Prefixer
         return $contents;
     }
 
+    /**
+     * @param array<\PhpParser\Node\Stmt> $ast
+     *
+     * @return array{start:int,end:int,replacement:string}|array{}
+     */
     protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, array $ast): array
     {
         $namespaceSymbols = $symbols->getDiscoveredNamespaces();
@@ -399,6 +404,10 @@ class Prefixer
      * For exact-match ClassSymbols the symbol's own replacement is used; for other classes
      * in the namespace, namespace-prefix replacement is applied.
      * Namespaces with no registered ClassSymbol are left alone.
+     *
+     * @param array<\PhpParser\Node\Stmt> $ast
+     *
+     * @return array{start:int,end:int,replacement:string}|array{}
      */
     protected function replaceUseStatementsForNamespacedClasses(array $ast, DiscoveredSymbols $discoveredSymbols): array
     {
@@ -435,7 +444,7 @@ class Prefixer
                 foreach ($activeNamespaces as $original => $replacement) {
                     if (str_starts_with($nameStr, $original . '\\')) {
 //                if ($nameStr === $original) {
-                        /** @var ?DiscoveredSymbol $classSymbol */
+                        /** @var ?NamespacedSymbol $classSymbol */
                         $classSymbol = $namespacedSymbols->get($nameStr);
                         if ($classSymbol && $classSymbol->isDoRename()) {
                             $nsReplacement = rtrim($classSymbol->getNamespace()->getReplacementFqdnName(), '\\');
@@ -458,11 +467,16 @@ class Prefixer
         return $positions;
     }
 
+    /**
+     * @param array<\PhpParser\Node\Stmt> $ast
+     *
+     * @return array{start:int,end:int,replacement:string}|array{}
+     */
     protected function replaceNamespaces(array $ast, DiscoveredSymbols $discoveredSymbols, FileBase $file): array
     {
         $namespaces = $discoveredSymbols->getNamespaces();
         $namespacedChanges = $discoveredSymbols->getNamespacedSymbols()->notGlobal();
-        if (empty($namespaces->getToRename())) {
+        if (count($namespaces->getToRename()) === 0) {
             return [];
         }
 
@@ -731,10 +745,12 @@ class Prefixer
                 $updatedPrefixLine = str_replace($originalSymbolString, $replacementSymbolString, $prefixLine);
                 $contents = str_replace($prefixLine, $updatedPrefixLine, $contents);
             }
-        } else {
+        } elseif ($symbol instanceof NamespacedSymbol) {
             $originalSymbolString = $symbol->getOriginalFqdnName();
             $replacementSymbolString = $symbol->getFqdnReplacement();
             $alsoSearchForStaticProperty = true;
+        } else {
+            throw new Exception('I dont think we can reach here');
         }
 
         /**
@@ -766,10 +782,8 @@ class Prefixer
          * If $alsoSearchForVariableClassname the number of elements in the array is more
          *
          * @param array<array<string>> $capture
-         *
-         * @return string
          */
-        $replacement = function (array $capture) use ($originalSymbolString, $replacementSymbolString, $alsoSearchForVariableClassname) {
+        $replacement = function (array $capture) use ($originalSymbolString, $replacementSymbolString): string {
 
             if ($capture[2] === $originalSymbolString) {
                 $capture[2] = $replacementSymbolString;
@@ -796,15 +810,15 @@ class Prefixer
      * In a global namespace:
      * * new Classname()
      *
-     * @param string $contents
-     * @param string $originalClassname
-     * @param string $classnamePrefix
+     * @param array<\PhpParser\Node\Stmt> $ast
+     *
+     * @return array{start:int,end:int,replacement:string}|array{}
      */
     public function findGlobalSymbolsPositionsInAst(array $ast, DiscoveredSymbols $discoveredSymbols): array
     {
         $globalClassesInterfacesTraitsToRename = $discoveredSymbols->getGlobalClassesInterfacesTraits()->getToRename();
 
-        if (empty($globalClassesInterfacesTraitsToRename)) {
+        if (count($globalClassesInterfacesTraitsToRename) === 0) {
             return [];
         }
 
@@ -964,7 +978,7 @@ class Prefixer
         }
     }
 
-    protected function getReplacementStringForNode(Node $node, DiscoveredSymbols $discoveredSymbols)
+    protected function getReplacementStringForNode(Node $node, DiscoveredSymbols $discoveredSymbols): string
     {
         $globalSymbol = $this->getGlobalSymbolForNode($node, $discoveredSymbols);
         if ($globalSymbol) {
@@ -975,10 +989,6 @@ class Prefixer
 
     /**
      * TODO: This should be split and brought to FileScanner.
-     *
-     * @param string $contents
-     * @param string[] $originalConstants
-     * @param string $prefix
      */
     protected function replaceConstants(string $contents, DiscoveredSymbols $originalConstants, string $prefix): string
     {
@@ -1148,11 +1158,12 @@ class Prefixer
      * @see https://github.com/nette/latte/blob/0ac0843a459790d471821f6a82f5d13db831a0d3/src/Latte/Loaders/FileLoader.php#L20
      *
      * @param string $phpFileContent
-     * @param DiscoveredSymbols $discoveredNamespaceSymbols
+     * @param DiscoveredSymbols $discoveredSymbols
      */
-    protected function prepareRelativeNamespaces(string $phpFileContent, DiscoveredSymbols $discoveredNamespaceSymbols): string
+    protected function prepareRelativeNamespaces(string $phpFileContent, DiscoveredSymbols $discoveredSymbols): string
     {
-        $discoveredNamespaceSymbolsArray = $discoveredNamespaceSymbols->toArray();
+        /** @var NamespaceSymbol[] $discoveredNamespaceSymbolsArray */
+        $discoveredNamespaceSymbolsArray = $discoveredSymbols->getNamespaces()->toArray();
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 

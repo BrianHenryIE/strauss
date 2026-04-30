@@ -103,7 +103,7 @@ class FileSymbolScanner
         return $this->discoveredSymbols;
     }
 
-    protected function find(string $contents, ?FileBase $file = null): void
+    protected function find(string $contents, FileBase $file): void
     {
         $namespaces = $this->splitByNamespace($contents);
 
@@ -274,7 +274,7 @@ class FileSymbolScanner
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,
-        ?FileBase $file,
+        FileBase $file,
         ?string $extends,
         ?NamespaceSymbol $namespace,
         array $interfaces
@@ -292,14 +292,14 @@ class FileSymbolScanner
             $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespace, $extends, $interfaces);
             $this->add($classSymbol, $file);
         }
-        if ($file) {
-            $classSymbol->addSourceFile($file);
+        $classSymbol->addSourceFile($file);
+        if ($file instanceof FileWithDependency) {
             $file->addDiscoveredSymbol($classSymbol);
         }
         return $classSymbol;
     }
 
-    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, ?FileBase $file = null): NamespaceSymbol
+    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file): NamespaceSymbol
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($fqdnNamespace);
         if (is_null($namespaceObj)) {
@@ -307,7 +307,9 @@ class FileSymbolScanner
             $this->add($namespaceObj);
         }
         $namespaceObj->addSourceFile($file);
-        $file->addDiscoveredSymbol($namespaceObj);
+        if ($file instanceof FileWithDependency) {
+            $file->addDiscoveredSymbol($namespaceObj);
+        }
         return $namespaceObj;
     }
 

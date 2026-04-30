@@ -43,6 +43,9 @@ abstract class DiscoveredSymbol
         ?ComposerPackage $composerPackage = null
     ) {
         $this->dependencies = new DependenciesCollection([]);
+        if ($composerPackage) {
+            $this->dependencies->add($composerPackage);
+        }
 
         $this->fqdnOriginalSymbol = $fqdnSymbol;
 

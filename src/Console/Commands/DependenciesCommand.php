@@ -317,7 +317,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger->error(
                 sprintf(
                     'Symlinked package%s detected: %s',
-                    count($symlinkedDependencies) ? 's' : '',
+                    count($symlinkedDependencies) > 1 ? 's' : '',
                     $list
                 )
             );

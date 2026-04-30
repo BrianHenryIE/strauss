@@ -3,9 +3,13 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use League\Flysystem\FileAttributes;
+use League\Flysystem\FilesystemOperator;
 
 /**
  * @see FlysystemBackCompatInterface
+ *
+ * @template T of FilesystemOperator
+ * @mixin T
  */
 trait FlysystemBackCompatTrait
 {

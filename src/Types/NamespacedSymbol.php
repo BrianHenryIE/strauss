@@ -15,7 +15,7 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 class NamespacedSymbol extends DiscoveredSymbol
 {
 
-    protected ?NamespaceSymbol $namespace;
+    protected NamespaceSymbol $namespace;
 
     protected string $fqdnOriginalSymbol;
 
@@ -49,9 +49,7 @@ class NamespacedSymbol extends DiscoveredSymbol
 
     public function getNamespaceName(): ?string
     {
-        return $this->namespace
-            ? $this->namespace->getOriginalSymbol()
-            : null; // TODO: should this return `\`?
+        return $this->namespace->getOriginalSymbol();
     }
 
     /**
@@ -105,6 +103,9 @@ class NamespacedSymbol extends DiscoveredSymbol
                      * @phpstan-ignore offsetAccess.notFound
                      */
                     foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePath) {
+                        if (is_array($autoloadPackageRelativePath)) {
+                            throw new \Exception('No support for array autoload paths in PSR-0 autoloading. Please open an issue.');
+                        }
                         if (str_starts_with(
                             trim($file->getPackageRelativePath(), '\\/'),
                             trim($autoloadPackageRelativePath, '\\/')
