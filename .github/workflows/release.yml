@@ -204,12 +204,8 @@ jobs:
 
       - name: Sign the PHAR
         run: |
-          set -euo pipefail
-
-          SIGNING_ID="${SIGNING_KEY_FINGERPRINT:-${{ secrets.GPG_USER }}}"
-
           ls strauss.phar
-          gpg --local-user "$SIGNING_ID" \
+          gpg --local-user ${{ secrets.GPG_USER }} \
               --batch \
               --yes \
               --passphrase="${{ secrets.PASSPHRASE }}" \
