@@ -24,6 +24,7 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
+use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
@@ -44,6 +45,10 @@ class Prefixer
      * @var array<string, ?ComposerPackage>
      */
     protected array $changedFiles = array();
+
+    protected ?Parser $parser = null;
+
+    protected ?NodeFinder $nodeFinder = null;
 
     public function __construct(
         PrefixerConfigInterface $config,
@@ -68,6 +73,8 @@ class Prefixer
      */
     public function replaceInFiles(DiscoveredSymbols $discoveredSymbols, array $files): void
     {
+        $replacementContext = $this->buildReplacementContext($discoveredSymbols);
+
         foreach ($files as $file) {
             if (!$this->config->isTargetDirectoryVendor()
                 && !$file->isDoCopy()
@@ -98,7 +105,7 @@ class Prefixer
              */
             $contents = $this->filesystem->read($file->getAbsoluteTargetPath());
 
-            $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
+            $updatedContents = $this->replaceInStringWithContext($contents, $replacementContext);
 
             if ($updatedContents !== $contents) {
                 // TODO: diff here and debug log.
@@ -120,6 +127,7 @@ class Prefixer
      */
     public function replaceInProjectFiles(DiscoveredSymbols $discoveredSymbols, array $absoluteFilePathsArray): void
     {
+        $replacementContext = $this->buildReplacementContext($discoveredSymbols);
 
         foreach ($absoluteFilePathsArray as $fileAbsolutePath) {
             $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
@@ -139,7 +147,7 @@ class Prefixer
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
 
-            $updatedContents = $this->replaceInString($discoveredSymbols, $contents);
+            $updatedContents = $this->replaceInStringWithContext($contents, $replacementContext);
 
             if ($updatedContents !== $contents) {
                 $this->changedFiles[$fileAbsolutePath] = null;
@@ -159,69 +167,44 @@ class Prefixer
      */
     public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents): string
     {
-        $classmapPrefix = $this->config->getClassmapPrefix();
-
-        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
-        $constants = $discoveredSymbols->getDiscoveredConstantChanges($this->config->getConstantsPrefix());
-        $classes = $discoveredSymbols->getGlobalClassChanges();
-        $functions = $discoveredSymbols->getDiscoveredFunctionChanges();
-
-        $contents = $this->prepareRelativeNamespaces($contents, $namespacesChanges);
-
-        if ($classmapPrefix) {
-            foreach ($classes as $classSymbol) {
-                $contents = $this->replaceClassname($contents, $classSymbol->getOriginalSymbolStripPrefix($classmapPrefix), $classmapPrefix);
-            }
-        }
-
-        // TODO: Move this out of the loop.
-        $namespacesChangesStrings = [];
-        foreach ($namespacesChanges as $originalNamespace => $namespaceSymbol) {
-            if (in_array($originalNamespace, $this->config->getExcludeNamespacesFromPrefixing())) {
-                $this->logger->info("Skipping namespace: $originalNamespace");
-                continue;
-            }
-            $namespacesChangesStrings[$originalNamespace] = $namespaceSymbol->getReplacement();
-        }
-        // This matters... it shouldn't.
-        uksort($namespacesChangesStrings, new NamespaceSort(NamespaceSort::SHORTEST));
-        foreach ($namespacesChangesStrings as $originalNamespace => $replacementNamespace) {
-            $contents = $this->replaceNamespace($contents, $originalNamespace, $replacementNamespace);
-        }
-
-        if (!is_null($this->config->getConstantsPrefix())) {
-            $contents = $this->replaceConstants($contents, $constants, $this->config->getConstantsPrefix());
-        }
-
-        foreach ($functions as $functionSymbol) {
-            $contents = $this->replaceFunctions($contents, $functionSymbol);
-        }
-
-        $contents = $this->replaceConstFetchNamespaces($discoveredSymbols, $contents);
-
-        return $contents;
+        return $this->replaceInStringWithContext(
+            $contents,
+            $this->buildReplacementContext($discoveredSymbols)
+        );
     }
 
     protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, string $contents): string
     {
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        return $this->replaceConstFetchNamespacesByMap(
+            $symbols->getDiscoveredNamespaces($this->config->getNamespacePrefix()),
+            $contents
+        );
+    }
+
+    /**
+     * @param array<string, NamespaceSymbol> $namespaceSymbols
+     */
+    protected function replaceConstFetchNamespacesByMap(array $namespaceSymbols, string $contents): string
+    {
+        if (empty($namespaceSymbols)) {
+            return $contents;
+        }
+
+        if (strpos($contents, '\\') === false) {
+            return $contents;
+        }
+
         try {
-            $ast = $parser->parse($contents);
+            $ast = $this->getParser()->parse($contents) ?? [];
         } catch (\PhpParser\Error $e) {
             $this->logger->warning("Skipping ::replaceConstFetchNamespaces() in file due to parse error: " . $e->getMessage());
             return $contents;
         }
 
-        $namespaceSymbols = $symbols->getDiscoveredNamespaces($this->config->getNamespacePrefix());
-        if (empty($namespaceSymbols)) {
-            return $contents;
-        }
-
-        $nodeFinder = new NodeFinder();
         $positions = [];
 
         /** @var ConstFetch[] $constFetches */
-        $constFetches = $nodeFinder->find($ast, function (Node $node) {
+        $constFetches = $this->getNodeFinder()->find($ast, function (Node $node) {
             return $node instanceof ConstFetch
                 && $node->name instanceof Name\FullyQualified;
         });
@@ -251,6 +234,147 @@ class Prefixer
         }
 
         return $contents;
+    }
+
+    /**
+     * @return array{
+     *     classmapPrefix:?string,
+     *     classes:array<string,ClassSymbol>,
+     *     namespaceChanges:array<string,NamespaceSymbol>,
+     *     namespaceChangesStrings:array<string,string>,
+     *     constantsPrefix:?string,
+     *     constants:array<string>,
+     *     functionReplacements:array<string,string>,
+     *     namespaceSymbols:array<string,NamespaceSymbol>
+     * }
+     */
+    protected function buildReplacementContext(DiscoveredSymbols $discoveredSymbols): array
+    {
+        $namespaceChanges = $discoveredSymbols->getDiscoveredNamespaceChanges($this->config->getNamespacePrefix());
+        $constantsPrefix = $this->config->getConstantsPrefix();
+
+        return [
+            'classmapPrefix' => $this->config->getClassmapPrefix(),
+            'classes' => $discoveredSymbols->getGlobalClassChanges(),
+            'namespaceChanges' => $namespaceChanges,
+            'namespaceChangesStrings' => $this->buildNamespaceReplacementMap($namespaceChanges),
+            'constantsPrefix' => $constantsPrefix,
+            'constants' => $discoveredSymbols->getDiscoveredConstantChanges($constantsPrefix),
+            'functionReplacements' => $this->buildFunctionReplacementMap($discoveredSymbols->getDiscoveredFunctionChanges()),
+            'namespaceSymbols' => $discoveredSymbols->getDiscoveredNamespaces($this->config->getNamespacePrefix()),
+        ];
+    }
+
+    /**
+     * @param array<string, NamespaceSymbol> $namespaceChanges
+     * @return array<string,string>
+     */
+    protected function buildNamespaceReplacementMap(array $namespaceChanges): array
+    {
+        $namespaceChangesStrings = [];
+        foreach ($namespaceChanges as $originalNamespace => $namespaceSymbol) {
+            if (in_array($originalNamespace, $this->config->getExcludeNamespacesFromPrefixing(), true)) {
+                $this->logger->info("Skipping namespace: $originalNamespace");
+                continue;
+            }
+            $namespaceChangesStrings[$originalNamespace] = $namespaceSymbol->getReplacement();
+        }
+
+        // This matters... it shouldn't.
+        uksort($namespaceChangesStrings, new NamespaceSort(NamespaceSort::SHORTEST));
+
+        return $namespaceChangesStrings;
+    }
+
+    /**
+     * @param FunctionSymbol[] $functions
+     * @return array<string,string>
+     */
+    protected function buildFunctionReplacementMap(array $functions): array
+    {
+        $orderedFunctionReplacements = [];
+        foreach ($functions as $functionSymbol) {
+            $originalFunctionString = $functionSymbol->getOriginalSymbol();
+            $replacementFunctionString = $functionSymbol->getReplacement();
+            if ($originalFunctionString === $replacementFunctionString) {
+                continue;
+            }
+            $orderedFunctionReplacements[] = [
+                'original' => $originalFunctionString,
+                'replacement' => $replacementFunctionString,
+            ];
+        }
+
+        $functionReplacementMap = [];
+        $replacementsCount = count($orderedFunctionReplacements);
+
+        for ($i = 0; $i < $replacementsCount; $i++) {
+            $replacementFunctionString = $orderedFunctionReplacements[$i]['replacement'];
+
+            // Preserve legacy behavior where replacements can cascade through later symbols.
+            for ($j = $i + 1; $j < $replacementsCount; $j++) {
+                if ($replacementFunctionString === $orderedFunctionReplacements[$j]['original']) {
+                    $replacementFunctionString = $orderedFunctionReplacements[$j]['replacement'];
+                }
+            }
+
+            $functionReplacementMap[$orderedFunctionReplacements[$i]['original']] = $replacementFunctionString;
+        }
+
+        return $functionReplacementMap;
+    }
+
+    /**
+     * @param array{
+     *     classmapPrefix:?string,
+     *     classes:array<string,ClassSymbol>,
+     *     namespaceChanges:array<string,NamespaceSymbol>,
+     *     namespaceChangesStrings:array<string,string>,
+     *     constantsPrefix:?string,
+     *     constants:array<string>,
+     *     functionReplacements:array<string,string>,
+     *     namespaceSymbols:array<string,NamespaceSymbol>
+     * } $replacementContext
+     *
+     * @throws Exception
+     */
+    protected function replaceInStringWithContext(string $contents, array $replacementContext): string
+    {
+        $contents = $this->prepareRelativeNamespaces($contents, $replacementContext['namespaceChanges']);
+
+        if (!empty($replacementContext['classmapPrefix'])) {
+            foreach ($replacementContext['classes'] as $classSymbol) {
+                $contents = $this->replaceClassname(
+                    $contents,
+                    $classSymbol->getOriginalSymbolStripPrefix($replacementContext['classmapPrefix']),
+                    $replacementContext['classmapPrefix']
+                );
+            }
+        }
+
+        foreach ($replacementContext['namespaceChangesStrings'] as $originalNamespace => $replacementNamespace) {
+            $escapedNamespace = str_replace('\\', '\\\\', $originalNamespace);
+            if (strpos($contents, $originalNamespace) === false
+                && strpos($contents, $escapedNamespace) === false
+            ) {
+                continue;
+            }
+            $contents = $this->replaceNamespace($contents, $originalNamespace, $replacementNamespace);
+        }
+
+        if (!is_null($replacementContext['constantsPrefix'])) {
+            $contents = $this->replaceConstants(
+                $contents,
+                $replacementContext['constants'],
+                $replacementContext['constantsPrefix']
+            );
+        }
+
+        if (!empty($replacementContext['functionReplacements'])) {
+            $contents = $this->replaceFunctionsBatch($contents, $replacementContext['functionReplacements']);
+        }
+
+        return $this->replaceConstFetchNamespacesByMap($replacementContext['namespaceSymbols'], $contents);
     }
 
     /**
@@ -501,17 +625,25 @@ class Prefixer
 
     protected function replaceFunctions(string $contents, FunctionSymbol $functionSymbol): string
     {
-        $originalFunctionString = $functionSymbol->getOriginalSymbol();
-        $replacementFunctionString = $functionSymbol->getReplacement();
+        return $this->replaceFunctionsBatch(
+            $contents,
+            [
+                $functionSymbol->getOriginalSymbol() => $functionSymbol->getReplacement(),
+            ]
+        );
+    }
 
-        if ($originalFunctionString === $replacementFunctionString) {
+    /**
+     * @param array<string,string> $functionReplacementMap
+     */
+    protected function replaceFunctionsBatch(string $contents, array $functionReplacementMap): string
+    {
+        if (empty($functionReplacementMap)) {
             return $contents;
         }
 
-        $nodeFinder = new NodeFinder();
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
         try {
-            $ast = $parser->parse($contents);
+            $ast = $this->getParser()->parse($contents) ?? [];
         } catch (\PhpParser\Error $e) {
             $this->logger->warning("Skipping ::replaceFunctions() in file due to parse error: " . $e->getMessage());
             return $contents;
@@ -520,53 +652,69 @@ class Prefixer
         $positions = [];
 
         // Function declarations (global only)
-        $functionDefs = $nodeFinder->findInstanceOf($ast, Function_::class);
+        $functionDefs = $this->getNodeFinder()->findInstanceOf($ast, Function_::class);
         foreach ($functionDefs as $func) {
-            if ($func->name->name === $originalFunctionString) {
-                $positions[] = [
-                    'start' => $func->name->getStartFilePos(),
-                    'end' => $func->name->getEndFilePos() + 1,
-                ];
+            $functionName = $func->name->name;
+            if (!isset($functionReplacementMap[$functionName])) {
+                continue;
             }
+            $positions[] = [
+                'start' => $func->name->getStartFilePos(),
+                'end' => $func->name->getEndFilePos() + 1,
+                'replacement' => $functionReplacementMap[$functionName],
+            ];
         }
 
         // Calls (global only)
-        $calls = $nodeFinder->findInstanceOf($ast, FuncCall::class);
+        $calls = $this->getNodeFinder()->findInstanceOf($ast, FuncCall::class);
         foreach ($calls as $call) {
-            if ($call->name instanceof Name &&
-                $call->name->toString() === $originalFunctionString
-            ) {
-                $positions[] = [
-                    'start' => $call->name->getStartFilePos(),
-                    'end' => $call->name->getEndFilePos() + 1,
-                ];
+            if (!($call->name instanceof Name)) {
+                continue;
             }
+
+            $functionName = $call->name->toString();
+            if (!isset($functionReplacementMap[$functionName])) {
+                continue;
+            }
+
+            $positions[] = [
+                'start' => $call->name->getStartFilePos(),
+                'end' => $call->name->getEndFilePos() + 1,
+                'replacement' => $functionReplacementMap[$functionName],
+            ];
         }
 
         $functionsUsingCallable = [
-            'function_exists',
-            'call_user_func',
-            'call_user_func_array',
-            'forward_static_call',
-            'forward_static_call_array',
-            'register_shutdown_function',
-            'register_tick_function',
-            'unregister_tick_function',
+            'function_exists' => true,
+            'call_user_func' => true,
+            'call_user_func_array' => true,
+            'forward_static_call' => true,
+            'forward_static_call_array' => true,
+            'register_shutdown_function' => true,
+            'register_tick_function' => true,
+            'unregister_tick_function' => true,
         ];
 
         foreach ($calls as $call) {
-            if ($call->name instanceof Name &&
-                in_array($call->name->toString(), $functionsUsingCallable)
-                && isset($call->args[0])
-                && $call->args[0] instanceof Arg
-                && $call->args[0]->value instanceof String_
-                && $call->args[0]->value->value === $originalFunctionString
+            if (!($call->name instanceof Name)
+                || !isset($functionsUsingCallable[$call->name->toString()])
+                || !isset($call->args[0])
+                || !($call->args[0] instanceof Arg)
+                || !($call->args[0]->value instanceof String_)
             ) {
-                $positions[] = [
-                    'start' => $call->args[0]->value->getStartFilePos() + 1, // do not change quotes
-                    'end' => $call->args[0]->value->getEndFilePos(),
-                ];
+                continue;
             }
+
+            $functionName = $call->args[0]->value->value;
+            if (!isset($functionReplacementMap[$functionName])) {
+                continue;
+            }
+
+            $positions[] = [
+                'start' => $call->args[0]->value->getStartFilePos() + 1, // do not change quotes
+                'end' => $call->args[0]->value->getEndFilePos(),
+                'replacement' => $functionReplacementMap[$functionName],
+            ];
         }
 
         if (empty($positions)) {
@@ -577,7 +725,7 @@ class Prefixer
         usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
 
         foreach ($positions as $pos) {
-            $contents = substr_replace($contents, $replacementFunctionString, $pos['start'], $pos['end'] - $pos['start']);
+            $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
         }
         return $contents;
     }
@@ -606,10 +754,16 @@ class Prefixer
      */
     protected function prepareRelativeNamespaces(string $phpFileContent, array $discoveredNamespaceSymbols): string
     {
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        if (empty($discoveredNamespaceSymbols)) {
+            return $phpFileContent;
+        }
+
+        if (strpos($phpFileContent, '\\') === false) {
+            return $phpFileContent;
+        }
 
         try {
-            $ast = $parser->parse($phpFileContent);
+            $ast = $this->getParser()->parse($phpFileContent) ?? [];
         } catch (\PhpParser\Error $e) {
             $this->logger->warning("Skipping ::prepareRelativeNamespaces() in file due to parse error: " . $e->getMessage());
             return $phpFileContent;
@@ -647,7 +801,9 @@ class Prefixer
             {
 
                 if ($node instanceof \PhpParser\Node\Stmt\Namespace_) {
-                    $this->using[] = $node->name->name;
+                    if (!is_null($node->name)) {
+                        $this->using[] = $node->name->name;
+                    }
                     $this->lastNode = $node;
                     return $node;
                 }
@@ -808,5 +964,23 @@ class Prefixer
         $updatedContent = str_replace('use \\\\', 'use \\', $updatedContent);
 
         return $updatedContent;
+    }
+
+    protected function getParser(): Parser
+    {
+        if (!isset($this->parser)) {
+            $this->parser = (new ParserFactory())->createForNewestSupportedVersion();
+        }
+
+        return $this->parser;
+    }
+
+    protected function getNodeFinder(): NodeFinder
+    {
+        if (!isset($this->nodeFinder)) {
+            $this->nodeFinder = new NodeFinder();
+        }
+
+        return $this->nodeFinder;
     }
 }

@@ -117,14 +117,41 @@ abstract class AbstractRenamespacerCommand extends Command
             }
         }
 
+        $outputLogger = $this->getLogger($input, $output);
+        if ($outputLogger instanceof NullLogger) {
+            $this->setLogger($outputLogger);
+            return Command::SUCCESS;
+        }
+
         $logger = new Logger('logger');
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
         $logger->pushProcessor(new PadColonColumnsLogProcessor());
-        $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
+        $logger->pushHandler(new PsrHandler($outputLogger, $this->getMinimumMonologLevel($input)));
         $this->setLogger($logger);
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * @phpstan-return Logger::DEBUG|Logger::INFO|Logger::NOTICE
+     */
+    private function getMinimumMonologLevel(InputInterface $input): int
+    {
+        if ($this->isDryRunConfigured() || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {
+            return Logger::DEBUG;
+        }
+
+        if ($input->hasOption('info') && $input->getOption('info') !== false) {
+            return Logger::INFO;
+        }
+
+        return Logger::NOTICE;
+    }
+
+    private function isDryRunConfigured(): bool
+    {
+        return isset($this->config) && $this->config->isDryRun();
     }
 
     /**
@@ -165,7 +192,7 @@ abstract class AbstractRenamespacerCommand extends Command
     protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         // If a subclass has a config and it is a dry-run, increase verbosity
-        $isDryRun = property_exists($this, 'config') && isset($this->config) && method_exists($this->config, 'isDryRun') && $this->config->isDryRun();
+        $isDryRun = $this->isDryRunConfigured();
 
         // Who would want to dry-run without output?
         if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {

@@ -5,6 +5,7 @@ namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
@@ -399,6 +400,92 @@ EOD;
         $this->assertNotContains('psr/log', $targetInstalledPackageNames);
     }
 
+    public function test_clean_target_installed_json_keeps_copied_packages_and_removes_excluded_and_dev_packages(): void
+    {
+        $fileSystem = $this->getInMemoryFileSystem();
+        $fileSystem->createDirectory('vendor/composer');
+        $fileSystem->createDirectory('vendor-prefixed/vendor/copied/src');
+        $fileSystem->write('vendor/composer/installed.json', $this->installedJson([
+            $this->installedPackage('vendor/copied', ['psr-4' => ['Vendor\\Copied\\' => 'src/']]),
+            $this->installedPackage('vendor/excluded', ['psr-4' => ['Vendor\\Excluded\\' => 'src/']]),
+            $this->installedPackage('vendor/dev-only', ['psr-4' => ['Vendor\\DevOnly\\' => 'src/']]),
+        ], true, ['vendor/dev-only']));
+
+        $config = $this->installedJsonConfig(['vendor/excluded']);
+        $sut = new InstalledJson($config, $fileSystem, new NullLogger());
+
+        $flatDependencyTree = [
+            'vendor/copied' => $this->composerPackage(true),
+            'vendor/excluded' => $this->composerPackage(false),
+        ];
+
+        $sut->copyInstalledJson();
+        $sut->cleanTargetDirInstalledJson($flatDependencyTree, new DiscoveredSymbols());
+
+        $targetInstalledJson = $this->readInstalledJsonArray($fileSystem, 'vendor-prefixed/composer/installed.json');
+        self::assertSame(['vendor/copied'], $this->packageNames($targetInstalledJson));
+        self::assertFalse($targetInstalledJson['dev']);
+        self::assertSame([], $targetInstalledJson['dev-package-names']);
+    }
+
+    public function test_cleanup_vendor_installed_json_filters_missing_autoload_paths_for_all_supported_autoload_types(): void
+    {
+        $fileSystem = $this->getInMemoryFileSystem();
+        $fileSystem->createDirectory('vendor/composer');
+        $fileSystem->write('vendor/vendor/pkg/src/keep.php', '<?php');
+        $fileSystem->createDirectory('vendor/vendor/pkg/classes');
+        $fileSystem->createDirectory('vendor/vendor/pkg/legacy');
+        $fileSystem->write('vendor/composer/installed.json', $this->installedJson([
+            $this->installedPackage('vendor/pkg', [
+                'files' => ['src/keep.php', 'src/missing.php'],
+                'classmap' => ['classes', 'missing-classmap'],
+                'psr-4' => [
+                    'Vendor\\Pkg\\' => 'src/',
+                    'Vendor\\Pkg\\Extra\\' => ['src/', 'missing-dir'],
+                ],
+                'psr-0' => [
+                    'Legacy_' => ['legacy', 'missing-legacy'],
+                ],
+                'exclude-from-classmap' => ['/Tests/'],
+            ]),
+        ]));
+
+        $sut = new InstalledJson($this->installedJsonConfig(), $fileSystem, new NullLogger());
+        $sut->cleanupVendorInstalledJson(
+            ['vendor/pkg' => $this->composerPackage(false, false)],
+            new DiscoveredSymbols()
+        );
+
+        $installedJson = $this->readInstalledJsonArray($fileSystem, 'vendor/composer/installed.json');
+        $autoload = $installedJson['packages'][0]['autoload'];
+        self::assertSame(['src/keep.php'], $autoload['files']);
+        self::assertSame(['classes'], $autoload['classmap']);
+        self::assertSame('src/', $autoload['psr-4']['Vendor\\Pkg\\']);
+        self::assertSame(['src/'], $autoload['psr-4']['Vendor\\Pkg\\Extra\\']);
+        self::assertSame(['legacy'], $autoload['psr-0']['Legacy_']);
+        self::assertSame(['/Tests/'], $autoload['exclude-from-classmap']);
+    }
+
+    public function test_cleanup_vendor_installed_json_clears_deleted_package_autoload_when_package_record_remains(): void
+    {
+        $fileSystem = $this->getInMemoryFileSystem();
+        $fileSystem->createDirectory('vendor/composer');
+        $fileSystem->createDirectory('vendor/vendor/pkg/src');
+        $fileSystem->write('vendor/composer/installed.json', $this->installedJson([
+            $this->installedPackage('vendor/pkg', ['psr-4' => ['Vendor\\Pkg\\' => 'src/']]),
+        ]));
+
+        $sut = new InstalledJson($this->installedJsonConfig(), $fileSystem, new NullLogger());
+        $sut->cleanupVendorInstalledJson(
+            ['vendor/pkg' => $this->composerPackage(false, true)],
+            new DiscoveredSymbols()
+        );
+
+        $installedJson = $this->readInstalledJsonArray($fileSystem, 'vendor/composer/installed.json');
+        self::assertSame(['vendor/pkg'], $this->packageNames($installedJson));
+        self::assertSame([], $installedJson['packages'][0]['autoload']);
+    }
+
     /**
      * @return string[]
      */
@@ -414,5 +501,79 @@ EOD;
             static fn(array $package): ?string => $package['name'] ?? null,
             $installedJsonArray['packages']
         )));
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $packages
+     * @param string[] $devPackageNames
+     */
+    private function installedJson(array $packages, bool $dev = false, array $devPackageNames = []): string
+    {
+        return json_encode([
+            'packages' => $packages,
+            'dev' => $dev,
+            'dev-package-names' => $devPackageNames,
+        ], JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * @param array<string,mixed> $autoload
+     * @return array<string,mixed>
+     */
+    private function installedPackage(string $name, array $autoload, ?string $installPath = null): array
+    {
+        return [
+            'name' => $name,
+            'version' => '1.0.0',
+            'version_normalized' => '1.0.0.0',
+            'type' => 'library',
+            'installation-source' => 'dist',
+            'autoload' => $autoload,
+            'install-path' => $installPath ?? '../' . $name,
+        ];
+    }
+
+    private function installedJsonConfig(array $excludePackagesFromCopy = []): CleanupConfigInterface
+    {
+        $config = Mockery::mock(CleanupConfigInterface::class);
+        $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('mem://vendor');
+        $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('mem://vendor-prefixed');
+        $config->shouldReceive('getExcludePackagesFromCopy')->andReturn($excludePackagesFromCopy);
+        $config->shouldReceive('isDryRun')->andReturnFalse();
+
+        return $config;
+    }
+
+    private function composerPackage(bool $didCopy = false, bool $didDelete = false): ComposerPackage
+    {
+        /** @var ComposerPackage|MockInterface $composerPackage */
+        $composerPackage = Mockery::mock(ComposerPackage::class);
+        $composerPackage->shouldReceive('didCopy')->andReturn($didCopy);
+        $composerPackage->shouldReceive('didDelete')->andReturn($didDelete);
+
+        return $composerPackage;
+    }
+
+    /**
+     * @return array{packages:array<int,array<string,mixed>>, dev:bool, dev-package-names:array<string>}
+     */
+    private function readInstalledJsonArray(FileSystem $fileSystem, string $path): array
+    {
+        $installedJson = json_decode($fileSystem->read($path), true);
+        self::assertIsArray($installedJson);
+
+        return $installedJson;
+    }
+
+    /**
+     * @param array{packages:array<int,array<string,mixed>>} $installedJson
+     * @return string[]
+     */
+    private function packageNames(array $installedJson): array
+    {
+        return array_values(array_map(
+            static fn(array $package): string => $package['name'],
+            $installedJson['packages']
+        ));
     }
 }

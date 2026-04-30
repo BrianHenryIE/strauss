@@ -9,9 +9,9 @@ namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
+use Composer\PartialComposer;
 use Composer\Util\Platform;
 use Exception;
 
@@ -28,9 +28,9 @@ class ComposerPackage
      *
      * @see Factory::create
      *
-     * @var Composer
+     * @var PartialComposer
      */
-    protected Composer $composer;
+    protected PartialComposer $composer;
 
     /**
      * The name of the project in composer.json.
@@ -105,9 +105,7 @@ class ComposerPackage
      */
     public static function fromFile(string $absolutePath, ?array $overrideAutoload = null): ComposerPackage
     {
-        $composer = Factory::create(new NullIO(), $absolutePath, true);
-
-        return new ComposerPackage($composer, $overrideAutoload);
+        return new ComposerPackage(self::createPartialComposer($absolutePath), $overrideAutoload);
     }
 
     /**
@@ -119,36 +117,36 @@ class ComposerPackage
      */
     public static function fromComposerJsonArray(array $jsonArray, ?array $overrideAutoload = null): ComposerPackage
     {
-        $factory = new Factory();
-        $io = new NullIO();
-        $composer = $factory->createComposer($io, $jsonArray, true);
+        return new ComposerPackage(self::createPartialComposer($jsonArray), $overrideAutoload);
+    }
 
-        return new ComposerPackage($composer, $overrideAutoload);
+    /**
+     * @param string|ComposerJsonArray $composerInput
+     */
+    private static function createPartialComposer($composerInput): PartialComposer
+    {
+        $factory = new Factory();
+
+        /** @var PartialComposer $composer */
+        $composer = $factory->createComposer(new NullIO(), $composerInput, true, null, false);
+
+        return $composer;
     }
 
     /**
      * Create a PHP object to represent a composer package.
      *
-     * @param Composer $composer
+     * @param PartialComposer $composer
      * @param ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
      * @throws Exception
      */
-    public function __construct(Composer $composer, ?array $overrideAutoload = null)
+    public function __construct(PartialComposer $composer, ?array $overrideAutoload = null)
     {
         $this->composer = $composer;
 
         $this->packageName = $composer->getPackage()->getName();
 
         $composerJsonFileAbsolute = $composer->getConfig()->getConfigSource()->getName();
-
-        $pathNormalizer = FileSystem::makePathNormalizer(getcwd());
-        
-        $fsComposerAbsoluteDirectoryPath = realpath(dirname($composerJsonFileAbsolute));
-        if (false !== $fsComposerAbsoluteDirectoryPath) {
-            $fsComposerAbsoluteDirectoryPath = FileSystem::normalizeDirSeparator($fsComposerAbsoluteDirectoryPath);
-            $this->packageAbsolutePath = $fsComposerAbsoluteDirectoryPath;
-        }
-        $fsComposerAbsoluteDirectoryPath = $fsComposerAbsoluteDirectoryPath ?: FileSystem::normalizeDirSeparator(dirname($composerJsonFileAbsolute));
 
         $fsCurrentWorkingDirectory = getcwd();
         if ($fsCurrentWorkingDirectory === false) {
@@ -157,13 +155,27 @@ class ComposerPackage
              */
             throw new Exception('Could not determine working directory. Please comment out ~'.__LINE__.' in ' . __FILE__.' and see does it work regardless.');
         }
+
+        $pathNormalizer = FileSystem::makePathNormalizer($fsCurrentWorkingDirectory);
+
+        $fsComposerAbsoluteDirectoryPath = realpath(dirname($composerJsonFileAbsolute));
+        if (false !== $fsComposerAbsoluteDirectoryPath) {
+            $fsComposerAbsoluteDirectoryPath = FileSystem::normalizeDirSeparator($fsComposerAbsoluteDirectoryPath);
+            $this->packageAbsolutePath = $fsComposerAbsoluteDirectoryPath;
+        }
+        $fsComposerAbsoluteDirectoryPath = $fsComposerAbsoluteDirectoryPath ?: FileSystem::normalizeDirSeparator(dirname($composerJsonFileAbsolute));
         $fsCurrentWorkingDirectory = FileSystem::normalizeDirSeparator($fsCurrentWorkingDirectory);
 
         /** @var string $vendorAbsoluteDirectoryPath */
         $vendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
         if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
             $this->relativePath = $this->packageName;
-            $this->packageAbsolutePath = $pathNormalizer->normalizePath(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
+            $resolvedPackagePath = realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName);
+            $this->packageAbsolutePath = $pathNormalizer->normalizePath(
+                false !== $resolvedPackagePath
+                    ? $resolvedPackagePath
+                    : $vendorAbsoluteDirectoryPath . '/' . $this->packageName
+            );
         // If the package is symlinked, the path will be outside the working directory.
         } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
             $this->relativePath = $output_array[1];
@@ -240,12 +252,23 @@ class ComposerPackage
      */
     public function getRequiresNames(): array
     {
-        // Unset PHP, ext-*.
-        $removePhpExt = function ($element) {
-            return !( 0 === strpos($element, 'ext') || 'php' === $element );
-        };
+        return array_filter(
+            $this->requiresNames,
+            static function (string $requiredPackageName): bool {
+                return !self::isPlatformPackageName($requiredPackageName);
+            }
+        );
+    }
 
-        return array_filter($this->requiresNames, $removePhpExt);
+    public static function isPlatformPackageName(string $packageName, bool $includePhpVariants = false): bool
+    {
+        return 0 === strpos($packageName, 'ext')
+            || 'php' === $packageName
+            || (
+                $includePhpVariants
+                && 0 === strpos($packageName, 'php')
+                && false === strpos($packageName, '/')
+            );
     }
 
     public function getLicense():string

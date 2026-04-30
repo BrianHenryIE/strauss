@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Tests\Issues\MozartIssue93Test;
+use BrianHenryIE\Strauss\Tests\PhpAstAssertions;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -31,6 +32,8 @@ use PHPUnit\Framework\MockObject\Exception;
  */
 class PrefixerTest extends TestCase
 {
+    use PhpAstAssertions;
+
     public function testNamespaceReplacer(): void
     {
 
@@ -2025,6 +2028,274 @@ EOD;
         $result = $replacer->replaceInString($symbols, $contents);
 
         $this->assertEqualsRN($expected, $result);
+    }
+
+    public function testReplaceMultipleFunctionsAndKeepMethodsUntouched(): void
+    {
+        $contents = <<<'EOD'
+<?php
+if (! function_exists('first_fn')) {
+    function first_fn()
+    {
+        return 1;
+    }
+}
+if (! function_exists('second_fn')) {
+    function second_fn()
+    {
+        return 2;
+    }
+}
+
+class ExampleClass
+{
+    public function first_fn()
+    {
+        return 'method';
+    }
+}
+
+$a = first_fn();
+$b = second_fn();
+call_user_func('first_fn');
+call_user_func_array('second_fn', []);
+$c = (new ExampleClass())->first_fn();
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $symbols = new DiscoveredSymbols();
+
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                 ->method('isDoPrefix')
+                 ->willReturn(true);
+
+        $firstFunctionSymbol = new FunctionSymbol('first_fn', $fileMock);
+        $firstFunctionSymbol->setReplacement('pref_first_fn');
+        $symbols->add($firstFunctionSymbol);
+
+        $secondFunctionSymbol = new FunctionSymbol('second_fn', $fileMock);
+        $secondFunctionSymbol->setReplacement('pref_second_fn');
+        $symbols->add($secondFunctionSymbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        self::assertSame(['pref_first_fn', 'pref_second_fn'], $this->getFunctionDeclarationNames($result));
+        self::assertSame(['first_fn'], $this->getClassMethodNames($result));
+        self::assertContains('pref_first_fn', $this->getFunctionCallNames($result));
+        self::assertContains('pref_second_fn', $this->getFunctionCallNames($result));
+        self::assertNotContains('first_fn', $this->getFunctionCallNames($result));
+        self::assertNotContains('second_fn', $this->getFunctionCallNames($result));
+        self::assertSame(
+            ['pref_first_fn', 'pref_second_fn', 'pref_first_fn', 'pref_second_fn'],
+            $this->getCallableStringValues($result)
+        );
+    }
+
+    public function testReplaceFunctionsPreservesLegacyCascadingBehavior(): void
+    {
+        $contents = <<<'EOD'
+<?php
+function foo() {}
+function pref_foo() {}
+function pref_pref_foo() {}
+
+foo();
+pref_foo();
+pref_pref_foo();
+call_user_func('foo');
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $symbols = new DiscoveredSymbols();
+
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                 ->method('isDoPrefix')
+                 ->willReturn(true);
+
+        $firstFunctionSymbol = new FunctionSymbol('foo', $fileMock);
+        $firstFunctionSymbol->setReplacement('pref_foo');
+        $symbols->add($firstFunctionSymbol);
+
+        $secondFunctionSymbol = new FunctionSymbol('pref_foo', $fileMock);
+        $secondFunctionSymbol->setReplacement('pref_pref_foo');
+        $symbols->add($secondFunctionSymbol);
+
+        $thirdFunctionSymbol = new FunctionSymbol('pref_pref_foo', $fileMock);
+        $thirdFunctionSymbol->setReplacement('final_foo');
+        $symbols->add($thirdFunctionSymbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        self::assertSame(['final_foo', 'final_foo', 'final_foo'], $this->getFunctionDeclarationNames($result));
+        self::assertSame(
+            ['final_foo', 'final_foo', 'final_foo', 'call_user_func'],
+            $this->getFunctionCallNames($result)
+        );
+        self::assertSame(['final_foo'], $this->getCallableStringValues($result));
+    }
+
+    public function testReplaceFunctionsDoesNotCascadeThroughEarlierSymbols(): void
+    {
+        $contents = <<<'EOD'
+<?php
+function foo() {}
+function pref_foo() {}
+
+foo();
+pref_foo();
+call_user_func('foo');
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $symbols = new DiscoveredSymbols();
+
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                 ->method('isDoPrefix')
+                 ->willReturn(true);
+
+        $firstFunctionSymbol = new FunctionSymbol('pref_foo', $fileMock);
+        $firstFunctionSymbol->setReplacement('final_foo');
+        $symbols->add($firstFunctionSymbol);
+
+        $secondFunctionSymbol = new FunctionSymbol('foo', $fileMock);
+        $secondFunctionSymbol->setReplacement('pref_foo');
+        $symbols->add($secondFunctionSymbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        self::assertSame(['pref_foo', 'final_foo'], $this->getFunctionDeclarationNames($result));
+        self::assertSame(['pref_foo', 'final_foo', 'call_user_func'], $this->getFunctionCallNames($result));
+        self::assertSame(['pref_foo'], $this->getCallableStringValues($result));
+    }
+
+    public function testReplaceFunctionsLeavesUnmappedCallableStringsUnchanged(): void
+    {
+        $contents = <<<'EOD'
+<?php
+function mapped_fn() {}
+
+mapped_fn();
+function_exists('mapped_fn');
+call_user_func('mapped_fn');
+
+function_exists('unmapped_fn');
+call_user_func('unmapped_fn');
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $symbols = new DiscoveredSymbols();
+
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                 ->method('isDoPrefix')
+                 ->willReturn(true);
+
+        $functionSymbol = new FunctionSymbol('mapped_fn', $fileMock);
+        $functionSymbol->setReplacement('pref_mapped_fn');
+        $symbols->add($functionSymbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        self::assertSame(['pref_mapped_fn'], $this->getFunctionDeclarationNames($result));
+        self::assertContains('pref_mapped_fn', $this->getFunctionCallNames($result));
+        self::assertNotContains('mapped_fn', $this->getFunctionCallNames($result));
+        self::assertSame(
+            ['pref_mapped_fn', 'pref_mapped_fn', 'unmapped_fn', 'unmapped_fn'],
+            $this->getCallableStringValues($result)
+        );
+    }
+
+    public function testReplaceFunctionsBatchReturnsOriginalContentOnParseError(): void
+    {
+        $contents = "<?php\nfunction broken( {\n";
+        $replacer = new PrefixerParseErrorHarness(
+            $this->createMock(PrefixerConfigInterface::class),
+            $this->getInMemoryFileSystem(),
+            $this->getLogger()
+        );
+
+        $result = $replacer->callReplaceFunctionsBatch($contents, ['broken' => 'pref_broken']);
+
+        self::assertSame($contents, $result);
+        self::assertTrue($this->getTestLogger()->hasWarningThatContains('Skipping ::replaceFunctions()'));
+    }
+
+    public function testReplaceConstFetchNamespacesByMapReturnsOriginalContentOnParseError(): void
+    {
+        $contents = "<?php\nfunction broken( { return \\Vendor\\Package\\VALUE; }\n";
+        $file = $this->createMock(File::class);
+        $namespace = new NamespaceSymbol('Vendor\\Package', $file);
+        $namespace->setReplacement('Pref\\Vendor\\Package');
+        $replacer = new PrefixerParseErrorHarness(
+            $this->createMock(PrefixerConfigInterface::class),
+            $this->getInMemoryFileSystem(),
+            $this->getLogger()
+        );
+
+        $result = $replacer->callReplaceConstFetchNamespacesByMap(['Vendor\\Package' => $namespace], $contents);
+
+        self::assertSame($contents, $result);
+        self::assertTrue($this->getTestLogger()->hasWarningThatContains('Skipping ::replaceConstFetchNamespaces()'));
+    }
+
+    public function testPrepareRelativeNamespacesReturnsOriginalContentOnParseError(): void
+    {
+        $contents = "<?php\nfunction broken( { use Vendor\\Package\\TraitName; }\n";
+        $file = $this->createMock(File::class);
+        $namespace = new NamespaceSymbol('Vendor\\Package', $file);
+        $replacer = new PrefixerParseErrorHarness(
+            $this->createMock(PrefixerConfigInterface::class),
+            $this->getInMemoryFileSystem(),
+            $this->getLogger()
+        );
+
+        $result = $replacer->callPrepareRelativeNamespaces($contents, [$namespace]);
+
+        self::assertSame($contents, $result);
+        self::assertTrue($this->getTestLogger()->hasWarningThatContains('Skipping ::prepareRelativeNamespaces()'));
+    }
+
+    public function testReplaceNamespaceHandlesEscapedStringsThroughPrefilter(): void
+    {
+        $contents = <<<'EOD'
+<?php
+$singleEscaped = '\Vendor\Package\ClassName';
+$doubleEscaped = '\\Vendor\\Package\\ClassName';
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $symbols = new DiscoveredSymbols();
+
+        $fileMock = $this->createMock(File::class);
+        $fileMock->expects($this->any())
+                 ->method('isDoPrefix')
+                 ->willReturn(true);
+
+        $namespaceSymbol = new NamespaceSymbol('Vendor\Package', $fileMock);
+        $namespaceSymbol->setReplacement('Pref\Vendor\Package');
+        $symbols->add($namespaceSymbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $result = $replacer->replaceInString($symbols, $contents);
+
+        $this->assertStringContainsString('\Pref\Vendor\Package\ClassName', $result);
+        $this->assertStringContainsString('\\Pref\\Vendor\\Package\\ClassName', $result);
     }
 
     /**

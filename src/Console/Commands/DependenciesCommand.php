@@ -460,16 +460,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function generateAutoloader(): void
     {
-        if (isset($this->projectComposerPackage->getAutoload()['classmap'])
-            && in_array(
-                $this->config->getAbsoluteTargetDirectory(),
-                array_map(
-                    fn(string $entry) => trim($entry, '\\/'),
-                    $this->projectComposerPackage->getAutoload()['classmap']
-                ),
-                true
-            )
-        ) {
+        if ($this->shouldSkipAutoloaderGeneration()) {
             $this->logger->notice('Skipping autoloader generation as target directory is in Composer classmap. Run `composer dump-autoload`.');
             return;
         }
@@ -493,6 +484,23 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
 
         $classmap->generate($this->flatDependencyTree, $this->discoveredSymbols);
+    }
+
+    private function shouldSkipAutoloaderGeneration(): bool
+    {
+        $autoload = $this->projectComposerPackage->getAutoload();
+        if (!isset($autoload['classmap'])) {
+            return false;
+        }
+
+        return in_array(
+            $this->config->getAbsoluteTargetDirectory(),
+            array_map(
+                fn(string $entry) => trim($entry, '\\/'),
+                $autoload['classmap']
+            ),
+            true
+        );
     }
 
     /**
@@ -542,11 +550,41 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         // This will check the config to check should it delete or not.
         $cleanup->deleteFiles($this->flatDependencyTree, $this->discoveredFiles);
 
-        $cleanup->cleanupVendorInstalledJson($this->flatDependencyTree, $this->discoveredSymbols);
+        $this->cleanupInstalledJson();
         if ($this->config->isDeleteVendorFiles() || $this->config->isDeleteVendorPackages()) {
             // Rebuild the autoloader after cleanup.
             // This is needed because cleanup may have deleted files that were in the autoloader.
             $cleanup->rebuildVendorAutoloader();
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function cleanupInstalledJson(): void
+    {
+        $shouldCleanTarget = !$this->config->isTargetDirectoryVendor()
+            && (!$this->config->isClassmapOutput() || $this->shouldSkipAutoloaderGeneration());
+        $shouldCleanVendor = $this->config->isTargetDirectoryVendor()
+            || $this->config->isDeleteVendorFiles()
+            || $this->config->isDeleteVendorPackages();
+
+        if (!$shouldCleanTarget && !$shouldCleanVendor) {
+            return;
+        }
+
+        $installedJson = new InstalledJson(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+
+        if ($shouldCleanTarget) {
+            $installedJson->cleanTargetDirInstalledJson($this->flatDependencyTree, $this->discoveredSymbols);
+        }
+
+        if ($shouldCleanVendor) {
+            $installedJson->cleanupVendorInstalledJson($this->flatDependencyTree, $this->discoveredSymbols);
         }
     }
 }

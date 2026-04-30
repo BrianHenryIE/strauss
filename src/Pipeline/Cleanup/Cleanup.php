@@ -183,24 +183,7 @@ class Cleanup
     {
         $this->logger->info('Deleting empty directories.');
 
-        $sourceFiles = array_map(
-            fn($file) => $file->getSourcePath(),
-            $files
-        );
-
-        // Get the root folders of the moved files.
-        $rootSourceDirectories = [];
-        foreach ($sourceFiles as $sourceFile) {
-            $arr = explode("/", $sourceFile, 2);
-            $dir = $arr[0];
-            $rootSourceDirectories[ $dir ] = $dir;
-        }
-        $rootSourceDirectories = array_map(
-            function (string $path): string {
-                return $this->config->getAbsoluteVendorDirectory() . '/' . $path;
-            },
-            array_keys($rootSourceDirectories)
-        );
+        $rootSourceDirectories = $this->getRootSourceDirectories($files);
 
         foreach ($rootSourceDirectories as $rootSourceDirectory) {
             if (!$this->filesystem->directoryExists($rootSourceDirectory) || is_link($rootSourceDirectory)) {
@@ -209,23 +192,23 @@ class Cleanup
 
             $dirList = $this->filesystem->listContents($rootSourceDirectory, true);
 
-            $allFilePaths = array_map(
-                fn($file) => $file->path(),
-                $dirList->toArray()
-            );
+            $allDirectoryPaths = [];
+            foreach ($dirList as $entry) {
+                if ($entry->isDir()) {
+                    $allDirectoryPaths[] = $entry->path();
+                }
+            }
 
             // Sort by longest path first, so subdirectories are deleted before the parent directories are checked.
             usort(
-                $allFilePaths,
-                fn($a, $b) => count(explode('/', $b)) - count(explode('/', $a))
+                $allDirectoryPaths,
+                fn($a, $b) => substr_count($b, '/') - substr_count($a, '/')
             );
 
-            foreach ($allFilePaths as $filePath) {
-                if ($this->filesystem->directoryExists($filePath)
-                    && $this->filesystem->isDirectoryEmpty($filePath)
-                ) {
-                    $this->logger->debug('Deleting empty directory ' . $filePath);
-                    $this->filesystem->deleteDirectory($filePath);
+            foreach ($allDirectoryPaths as $directoryPath) {
+                if ($this->filesystem->isDirectoryEmpty($directoryPath)) {
+                    $this->logger->debug('Deleting empty directory ' . $directoryPath);
+                    $this->filesystem->deleteDirectory($directoryPath);
                 }
             }
         }
@@ -239,6 +222,34 @@ class Cleanup
 //            }
 //        }
         $this->logger->debug('Finished Cleanup::deleteEmptyDirectories()');
+    }
+
+    /**
+     * @param FileBase[] $files
+     * @return string[]
+     */
+    private function getRootSourceDirectories(array $files): array
+    {
+        $vendorDirectory = rtrim(FileSystem::normalizeDirSeparator($this->config->getAbsoluteVendorDirectory()), '/');
+        $rootSourceDirectories = [];
+
+        foreach ($files as $file) {
+            $vendorRelativePath = $this->filesystem->getRelativePath($vendorDirectory, $file->getSourcePath());
+            $vendorRelativePath = ltrim(FileSystem::normalizeDirSeparator($vendorRelativePath), '/');
+
+            if ($vendorRelativePath === '' || str_starts_with($vendorRelativePath, '../')) {
+                continue;
+            }
+
+            $rootDirectory = explode('/', $vendorRelativePath, 2)[0] ?? '';
+            if ($rootDirectory === '') {
+                continue;
+            }
+
+            $rootSourceDirectories[$rootDirectory] = $vendorDirectory . '/' . $rootDirectory;
+        }
+
+        return array_values($rootSourceDirectories);
     }
 
     /**
