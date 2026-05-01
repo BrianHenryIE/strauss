@@ -33,7 +33,7 @@ class MozartIssue62Test extends IntegrationTestCase
      */
     public function testGuzzleNamespaceIsPrefixedInS3Client(): void
     {
-        self::markTestSkipped('Very slow to run.');
+        self::markTestSkippedBH('Very slow to run.');
 
         $composerJsonString = <<<'EOD'
 {

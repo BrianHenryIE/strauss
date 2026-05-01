@@ -10,15 +10,15 @@ trait MarkTestsSkippedTrait
      * Only skip tests locally for convenience. Never skip tests in CI.
      *
      * Use `::markTestIncomplete()` if necessary.
-     * The `::markTestSkipped...()` functions in this trait broadly call `parent::markTestSkipped()` directly.
+     * The `::markTestSkipped...()` functions in this trait broadly call `parent::markTestSkippedBH()` directly.
      */
-    public static function markTestSkipped(string $message = ''): void
+    public static function markTestSkippedBH(string $message = ''): void
     {
         if (getenv('GITHUB_ACTIONS') === 'true') {
             return;
         }
 
-        parent::markTestSkipped($message);
+        $this->markTestSkipped($message);
     }
 
     protected function markTestSkippedUnlessSpecificallyInFilter(): void
@@ -28,14 +28,14 @@ trait MarkTestsSkippedTrait
         $argvFilterIndex = array_search('--filter', $GLOBALS['argv']);
         $phpunitFilter = $GLOBALS['argv'][$argvFilterIndex + 1];
         if (!str_contains($phpunitFilter, $function)) {
-            $this->markTestSkipped('slow');
+            $this->markTestSkippedBH('slow');
         }
     }
 
     protected function markTestSkippedOnWindows(string $message = 'Skipped on Windows'): void
     {
         if (Platform::isWindows()) {
-            parent::markTestSkipped($message);
+            parent::markTestSkippedBH($message);
         }
     }
 
@@ -70,8 +70,8 @@ trait MarkTestsSkippedTrait
 
         if ($testPhpVersionConstraintMatch || $systemPhpVersionConstraintMatch) {
             empty($message)
-                ? parent::markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
-                : parent::markTestSkipped($message);
+                ? parent::markTestSkippedBH("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
+                : parent::markTestSkippedBH($message);
         }
     }
 }

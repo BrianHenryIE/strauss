@@ -26,7 +26,7 @@ class MozartIssue43Test extends IntegrationTestCase
      */
     public function testAwsSdkSucceeds(): void
     {
-        self::markTestSkipped('Very slow to run');
+        self::markTestSkippedBH('Very slow to run');
 
         $composerJsonString = <<<'EOD'
 {
