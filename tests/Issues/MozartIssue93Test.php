@@ -25,7 +25,7 @@ class MozartIssue93Test extends IntegrationTestCase
     public function test_it_does_not_make_classname_replacement_inside_namespaced_file(): void
     {
 
-        $this->markTestSkipped('Not respecting the pinned commit.');
+        $this->markTestIncomplete('Not respecting the pinned commit.');
 
         $composerJsonString = <<<'EOD'
 {

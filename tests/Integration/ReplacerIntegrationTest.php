@@ -14,7 +14,7 @@ class ReplacerIntegrationTest extends IntegrationTestCase
 
     public function testReplaceNamespace(): void
     {
-        $this->markTestSkipped('Ironically, this is failing because it downloads a newer psr/log but strauss has already loaded an older one.');
+        $this->markTestIncomplete('Ironically, this is failing because it downloads a newer psr/log but strauss has already loaded an older one.');
 
         $composerJsonString = <<<'EOD'
 {

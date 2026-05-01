@@ -681,7 +681,7 @@ EOD;
     {
         // This test is complex to set up reliably across different systems
         // so we'll mark it as skipped for now but provide the test structure
-        $this->markTestSkipped('Symlink test requires complex setup - implementation depends on system symlink support');
+        $this->markTestIncomplete('Symlink test requires complex setup - implementation depends on system symlink support');
 
         // The test would verify:
         // 1. Symlinked files are detected by FileCopyScanner.php:101

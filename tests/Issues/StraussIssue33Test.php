@@ -25,11 +25,9 @@ class StraussIssue33Test extends IntegrationTestCase
      */
     public function test_backtrack_limit_exhausted(): void
     {
-        if (version_compare(phpversion(), '8.1', '>=')) {
-            $this->markTestSkipped("Package specified for test is not PHP 8.1 compatible. Running tests under PHP " . phpversion());
-        }
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.1');
 
-        $this->markTestSkipped('passes when run alone.');
+        $this->markTestSkippedUnlessSpecificallyInFilter();
 
         $composerJsonString = <<<'EOD'
 {

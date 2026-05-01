@@ -198,7 +198,7 @@ class StraussIssue146Test extends IntegrationTestCase
 
     public function test_prefix_own_classes_old(): void
     {
-        $this->markTestSkipped('Skip until release of 0.25.0. Earlier versions will always fail.');
+        $this->markTestIncomplete('Skip until release of 0.25.0. Earlier versions will always fail.');
 
         $repoUrl = 'https://github.com/BrianHenryIE/strauss/archive/refs/tags/0.25.0.zip';
 

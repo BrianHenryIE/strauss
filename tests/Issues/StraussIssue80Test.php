@@ -55,7 +55,7 @@ EOD;
      */
     public function test_google_api_single_backslash_in_string(): void
     {
-        self::markTestSkipped('Slow test. Was for double \\ inside strings.');
+        $this->markTestSkipped('Slow test. Was for double \\ inside strings.');
 
         $composerJsonString = <<<'EOD'
 {

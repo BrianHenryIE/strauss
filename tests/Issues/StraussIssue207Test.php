@@ -105,7 +105,7 @@ EOD;
 
         $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/plugin-update-checker.php');
 
-        $this->markTestSkipped("I'm unsure what the best thing to do here is. Should the files be prefixed or not?");
+        $this->markTestIncomplete("I'm unsure what the best thing to do here is. Should the files be prefixed or not?");
 
         // Do not prefix.
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/Puc/v5p6/Autoloader.php');

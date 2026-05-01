@@ -527,7 +527,7 @@ EOD;
      */
     public function it_does_not_replace_inside_namespace_multiline(): void
     {
-        self::markTestSkipped('No longer describes how the code behaves.');
+        $this->markTestIncomplete('No longer describes how the code behaves.');
 
         $contents = "
         namespace Mozart;

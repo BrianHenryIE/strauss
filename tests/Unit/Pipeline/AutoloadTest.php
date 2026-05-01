@@ -16,7 +16,7 @@ class AutoloadTest extends TestCase
      */
     public function testGenerateClassmap(): void
     {
-        $this->markTestSkipped('TODO: move to VendorComposerAutoloadTest');
+        $this->markTestIncomplete('TODO: move to VendorComposerAutoloadTest');
 
         $config = \Mockery::mock(AutoloadConfigInterface::class);
         $config->expects('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed')->once();
@@ -57,7 +57,7 @@ class AutoloadTest extends TestCase
      */
     public function testGenerateClassmapParentRelativeDir(): void
     {
-        $this->markTestSkipped('TODO: move to VendorComposerAutoloadTest');
+        $this->markTestIncomplete('TODO: move to VendorComposerAutoloadTest');
 
         $config = \Mockery::mock(AutoloadConfigInterface::class);
         $config->expects('getAbsoluteTargetDirectory')->andReturn('../vendor-prefixed')->once();
@@ -96,7 +96,7 @@ class AutoloadTest extends TestCase
      */
     public function testGenerateFilesAutoloader(): void
     {
-        $this->markTestSkipped('TODO: move to VendorComposerAutoloadTest');
+        $this->markTestIncomplete('TODO: move to VendorComposerAutoloadTest');
 
         $config = \Mockery::mock(AutoloadConfigInterface::class);
         $config->expects('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed')->once();

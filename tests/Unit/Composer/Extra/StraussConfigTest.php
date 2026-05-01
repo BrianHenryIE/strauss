@@ -478,7 +478,7 @@ EOD;
 
     public function testGetOldSyntaxExcludePackagesFromPrefixing(): void
     {
-        $this->markTestSkipped('Currently needs a reflectable property in the target object');
+        $this->markTestIncomplete('Currently needs a reflectable property in the target object');
 
         $composerJson = <<<'EOD'
 {
