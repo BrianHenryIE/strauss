@@ -32,8 +32,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
- * PHP 7.4 tests are passing but 8.1+ are failing, I'm using `@runTestsInSeparateProcesses` in an attempt to remedy what is mostly out of memory errors.
- * @runTestsInSeparateProcesses
  * Class IntegrationTestCase
  * @package BrianHenryIE\Strauss\Tests\Integration\Util
  * @coversNothing
