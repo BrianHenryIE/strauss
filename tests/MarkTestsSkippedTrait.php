@@ -6,14 +6,23 @@ use Composer\Util\Platform;
 
 trait MarkTestsSkippedTrait
 {
-
-    protected function markTestSkippedUnlessSpecificallyInFilter(): void
+    /**
+     * Only skip tests locally for convenience. Never skip tests in CI.
+     *
+     * Use `::markTestIncomplete()` if necessary.
+     * The `::markTestSkipped...()` functions in this trait broadly call `parent::markTestSkipped()` directly.
+     */
+    public static function markTestSkipped(string $message = ''): void
     {
-        // Always run in CI.
         if (getenv('GITHUB_ACTIONS') === 'true') {
             return;
         }
 
+        parent::markTestSkipped($message);
+    }
+
+    protected function markTestSkippedUnlessSpecificallyInFilter(): void
+    {
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
         $function = $backtrace[1]['function'];
         $argvFilterIndex = array_search('--filter', $GLOBALS['argv']);
@@ -26,7 +35,7 @@ trait MarkTestsSkippedTrait
     protected function markTestSkippedOnWindows(string $message = 'Skipped on Windows'): void
     {
         if (Platform::isWindows()) {
-            $this->markTestSkipped($message);
+            parent::markTestSkipped($message);
         }
     }
 
@@ -61,8 +70,8 @@ trait MarkTestsSkippedTrait
 
         if ($testPhpVersionConstraintMatch || $systemPhpVersionConstraintMatch) {
             empty($message)
-                ? $this->markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
-                : $this->markTestSkipped($message);
+                ? parent::markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
+                : parent::markTestSkipped($message);
         }
     }
 }
