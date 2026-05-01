@@ -308,7 +308,7 @@ EOD;
         $contents = "
         // A class as good as any.
         class Whatever {
-        	
+
         }
         ";
 
@@ -466,7 +466,7 @@ EOD;
         $contents = "
     	// A class as good as any; class as versatile as any.
     	class Whatever_Ever {
-    	
+
     	}
     	";
 
@@ -960,7 +960,7 @@ if (! function_exists('collect')) {
     {
         return new Collection($value);
     }
-} 
+}
 EOD;
 
 

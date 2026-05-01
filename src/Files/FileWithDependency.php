@@ -25,21 +25,26 @@ class FileWithDependency extends File implements HasDependency
      */
     protected array $autoloaderTypes = [];
 
-    public function __construct(ComposerPackage $dependency, string $vendorRelativePath, string $sourceAbsolutePath)
-    {
-        parent::__construct($sourceAbsolutePath, $vendorRelativePath);
+    public function __construct(
+        ComposerPackage $dependency,
+        string $vendorRelativePath,
+        string $sourceAbsolutePath,
+        string $targetAbsolutePath
+    ) {
+        parent::__construct($sourceAbsolutePath, $vendorRelativePath, $targetAbsolutePath);
+
+        $this->dependency = $dependency;
 
         /** @var string $packageAbsolutePath */
         $packageAbsolutePath = $dependency->getPackageAbsolutePath();
 
-        $this->vendorRelativePath = ltrim($vendorRelativePath, '/\\');
+        $this->vendorRelativePath = $vendorRelativePath;
+
         $this->packageRelativePath = str_replace(
             FileSystem::normalizeDirSeparator($packageAbsolutePath),
             '',
             FileSystem::normalizeDirSeparator($sourceAbsolutePath)
         );
-
-        $this->dependency         = $dependency;
 
         // Set this to null so we query the package's `isDelete` setting.
         $this->doDelete = null;

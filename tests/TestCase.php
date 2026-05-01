@@ -6,11 +6,17 @@ use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\StripProtocolPathNormalizer;
+use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\PathNormalizer;
+use League\Flysystem\WhitespacePathNormalizer;
 use League\Flysystem\Filesystem as FlysystemFileSystem;
 use Mockery;
 use Monolog\Handler\PsrHandler;
@@ -18,22 +24,55 @@ use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
+use Symfony\Component\Finder\Finder;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
+    use CustomAssertionsTrait;
+
     /**
      * The logger used by the objects.
      */
-    protected ?LoggerInterface $logger;
+    public ?LoggerInterface $logger;
 
     /**
      * The output logger.
      */
-    protected TestLogger $testLogger;
+    protected ?TestLogger $testLogger;
 
     protected FileSystem $filesystem;
 
     protected FileSystem $inMemoryFilesystem;
+
+    protected string $testsWorkingDir;
+
+    protected PathNormalizer $pathNormalizer;
+
+    protected FileSystem $symlinkProtectFilesystem;
+
+    protected FileSystem $readOnlyFileSystem;
+
+    protected function setUp(): void
+    {
+        $this->createWorkingDir();
+
+        parent::setUp();
+
+        /**
+         * We need to register the mem stream wrapper before the static methods in Composer are called.
+         *
+         * @see \Composer\Util\Filesystem::$streamWrappersRegex
+         * @see \Composer\Util\Filesystem::isStreamWrapperPath()
+         */
+        if (!in_array('mem', stream_get_wrappers())) {
+            stream_wrapper_register('mem', \stdClass::class);
+            \Composer\Util\Filesystem::isStreamWrapperPath('mem://');
+            stream_wrapper_unregister('mem');
+        }
+
+        $this->pathNormalizer = new StripProtocolPathNormalizer(['mem'], new WhitespacePathNormalizer());
+    }
+
 
     public static function assertEqualsRN($expected, $actual, string $message = ''): void
     {
@@ -45,22 +84,80 @@ class TestCase extends \PHPUnit\Framework\TestCase
         self::assertEquals($expected, $actual, $message);
     }
 
-    public static function assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $actual, string $message = ''): void
+
+    protected function createWorkingDir(): void
     {
-        self::assertEquals(
-            self::stripWhitespaceAndBlankLines($expected),
-            self::stripWhitespaceAndBlankLines($actual),
-            $message
-        );
+        $this->testsWorkingDir = sprintf('%s/%s/', sys_get_temp_dir(), uniqid('strausstestdir'));
+
+        if ('Darwin' === PHP_OS) {
+            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
+        }
+
+        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
+        // we set breakpoints, we can easily browse the files.
+        if ($this->isPhpStormRunning()) {
+            $this->testsWorkingDir = getcwd() . '/teststempdir/';
+        }
+
+        if (file_exists($this->testsWorkingDir)) {
+            $this->deleteDir($this->testsWorkingDir);
+        }
+
+        @mkdir($this->testsWorkingDir);
     }
 
-    public static function assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $actual, string $message = ''): void
+    protected function deleteDir($dir)
     {
-        self::assertStringContainsString(
-            self::stripWhitespaceAndBlankLines($expected),
-            self::stripWhitespaceAndBlankLines($actual),
-            $message
+        if (!file_exists($dir)) {
+            return;
+        }
+        $filesystem = new Filesystem(
+            new LocalFilesystemAdapter('/')
         );
+
+        $symfonyFilesystem = new \Symfony\Component\Filesystem\Filesystem();
+        $isSymlink = function ($file) use ($symfonyFilesystem) {
+            return !is_null($symfonyFilesystem->readlink($file));
+        };
+
+        /**
+         * Delete symlinks first.
+         *
+         * @see https://github.com/thephpleague/flysystem/issues/1560
+         */
+        $finder = new Finder();
+        $finder->in($dir);
+        if ($finder->hasResults()) {
+
+            /** @var \SplFileInfo[] $files */
+            $files = iterator_to_array($finder->getIterator());
+            /** @var \SplFileInfo[] $links */
+            $links = array_filter(
+                $files,
+                function ($file) use ($isSymlink) {
+                    return $isSymlink($file->getPath());
+                }
+            );
+
+            // Sort by longest filename first.
+            uasort($links, function ($a, $b) {
+                return strlen($b->getPath()) <=> strlen($a->getPath());
+            });
+
+            foreach ($links as $link) {
+                $linkPath = "{$link->getPath()}/{$link->getFilename()}";
+                unlink($linkPath);
+                if (is_readable($linkPath)) {
+                    rmdir($linkPath);
+                }
+            }
+        }
+
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $filesystem->deleteDirectory($dir);
     }
 
     protected static function stripWhitespaceAndBlankLines(string $string): string
@@ -72,6 +169,18 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $string = implode(PHP_EOL, array_map('trim', explode(PHP_EOL, $string)));
 
         return trim($string);
+    }
+
+    protected function isPhpStormRunning(): bool
+    {
+        if (isset($_SERVER['__CFBundleIdentifier']) && $_SERVER['__CFBundleIdentifier'] == 'com.jetbrains.PhpStorm') {
+            return true;
+        }
+
+        if (isset($_SERVER['IDE_PHPUNIT_CUSTOM_LOADER'])) {
+            return true;
+        }
+        return false;
     }
 
     protected function getFileSystem(): Filesystem
@@ -86,24 +195,24 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewFileSystem(): Filesystem
     {
-        $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
+        $testsWorkingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
+        $normalizer = FileSystem::makePathNormalizer('/');
 
         $localFilesystemAdapter = new LocalFilesystemAdapter(
-            FileSystem::getFsRoot($workingDir),
+            FileSystem::getFsRoot($testsWorkingDir),
             null,
             LOCK_EX,
             LocalFilesystemAdapter::SKIP_LINKS
         );
 
         return new FileSystem(
-            new FlysystemFileSystem(
-                $localFilesystemAdapter,
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ],
-                Filesystem::makePathNormalizer($workingDir)
-            ),
-            $workingDir
+            $localFilesystemAdapter,
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            $normalizer,
+            null,
+            $testsWorkingDir
         );
     }
 
@@ -112,7 +221,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getInMemoryFileSystem(): FileSystem
     {
-        if (! isset($inMemoryFilesystem)) {
+        if (!isset($this->inMemoryFilesystem)) {
             $this->inMemoryFilesystem = $this->getNewInMemoryFileSystem();
         }
 
@@ -121,51 +230,104 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
+        $normalizer = FileSystem::makePathNormalizer('inmemory://');
+
         $inMemoryFilesystem = new InMemoryFilesystemAdapter();
 
-        $normalizer = FileSystem::makePathNormalizer('/');
+        $pathPrefixer = new PathPrefixer('inmemory://', '/');
 
-        $leagueFilesystem = new FlysystemFileSystem(
+        $filesystem = new Filesystem(
             $inMemoryFilesystem,
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
             ],
-            $normalizer
+            $normalizer,
+            $pathPrefixer,
+            'inmemory://'
         );
 
-        $readonlyFilesystem = new ReadOnlyFileSystem(
-            $leagueFilesystem,
-            Filesystem::makePathNormalizer(getcwd())
-        );
-
-        $filesystem = new FileSystem(
-            $readonlyFilesystem,
-            'mem://',
-            'mem://'
-        );
-
-        /** @var FilesystemRegistry $registry */
+        /**
+         * Register a file stream mem:// to handle file operations by third party libraries.
+         *
+         * @var FilesystemRegistry $registry
+         */
         $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-        // Register a file stream mem:// to handle file operations by third party libraries.
-        // This exception handling probably doesn't matter in real life but does in unit tests.
-        try {
-            $registry->get('mem');
-        } catch (\Exception $e) {
-            $registry->register('mem', $filesystem);
+
+        if (method_exists($registry, 'has') && $registry->has('inmemory')) {
+            $registry->unregister('inmemory');
+        } else {
+            try {
+                $registry->get('inmemory');
+                $registry->unregister('inmemory');
+            } catch (Exception $exception) {
+            }
         }
 
+        $registry->register('inmemory', $filesystem);
+
         return $filesystem;
+    }
+
+    public function getReadOnlyFileSystem(?FileSystem $filesystem = null)
+    {
+        if (isset($this->readOnlyFileSystem)) {
+            return $this->readOnlyFileSystem;
+        }
+
+        if (is_null($filesystem)) {
+            $filesystem = isset($this->testsWorkingDir)
+                ? $this->getSymlinkProtectFilesystem()
+                : $this->getNewInMemoryFileSystem();
+        }
+
+        $normalizer = new WhitespacePathNormalizer();
+        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+
+        $pathPrefixer = new PathPrefixer('mem://', '/');
+
+        $this->readOnlyFileSystem =
+            new FileSystem(
+                new ReadOnlyFileSystem(
+                    $filesystem->getAdapter(),
+                ),
+                [],
+                $normalizer,
+                $pathPrefixer
+            );
+
+        /**
+         * Register a file stream mem:// to handle file operations by third party libraries.
+         *
+         * @var FilesystemRegistry $registry
+         */
+        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+
+        if (method_exists($registry, 'has') && $registry->has('mem')) {
+            $registry->unregister('mem');
+        } else {
+            try {
+                $registry->get('mem');
+                $registry->unregister('mem');
+            } catch (Exception $exception) {
+            }
+        }
+
+        $registry->register('mem', $this->readOnlyFileSystem);
+
+        return $this->readOnlyFileSystem;
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
 
-        /** @var FilesystemRegistry $registry */
-        try {
+        if (in_array('mem', stream_get_wrappers())) {
+            /** @var FilesystemRegistry $registry */
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
+            /**
+             * Also runs `stream_wrapper_unregister('mem')`
+             */
             $registry->unregister('mem');
-        } catch (\Exception $e) {
         }
 
         Mockery::close();
@@ -174,7 +336,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Use this method when passing the logger to a class constructor.
      */
-    protected function getLogger(): LoggerInterface
+    public function getLogger(): LoggerInterface
     {
         if (! isset($this->logger)) {
             $this->logger = $this->getNewLogger();
@@ -187,10 +349,45 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         $logger = new Logger('logger');
         $logger->pushProcessor(new PsrLogMessageProcessor());
-        $logger->pushProcessor(new RelativeFilepathLogProcessor($this->getInMemoryFileSystem()));
+        $logger->pushProcessor(
+            new RelativeFilepathLogProcessor(
+                $this->getReadOnlyFileSystem(
+                    $this->getSymlinkProtectFilesystem()
+                )
+            )
+        );
         $logger->pushHandler(new PsrHandler($this->getTestLogger()));
 
         return $logger;
+    }
+
+    protected function getSymlinkProtectFilesystem(): FileSystem
+    {
+        if (isset($this->symlinkProtectFilesystem)) {
+            return $this->symlinkProtectFilesystem;
+        }
+
+        $localFilesystemLocation = Filesystem::getFsRoot($this->testsWorkingDir);
+
+        $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
+
+        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
+            $localFilesystemLocation,
+            Filesystem::makePathNormalizer($this->testsWorkingDir),
+            $pathPrefixer,
+            $this->getTestLogger()
+        );
+
+        $this->symlinkProtectFilesystem = new Filesystem(
+            $symlinkProtectFilesystemAdapter,
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            $pathPrefixer
+        );
+
+        return $this->symlinkProtectFilesystem;
     }
 
     /**
@@ -198,7 +395,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getTestLogger(): TestLogger
     {
-        if (! isset($this->testLogger)) {
+        if (!isset($this->testLogger)) {
             $this->testLogger = new ColorLogger();
         }
 

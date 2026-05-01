@@ -19,7 +19,6 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -74,11 +73,11 @@ class FileCopyScanner
                 $copy = false;
             }
 
-            if ($copy) {
+//            if ($copy) {
 //                $this->logger->debug("Marking file {relativeFilePath} to be copied.", [
 //                    'relativeFilePath' => $this->filesystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $file->getSourcePath()),
 //                ]);
-            }
+//            }
 
             $file->setDoCopy($copy);
 
@@ -86,7 +85,7 @@ class FileCopyScanner
                 $target = $file instanceof FileWithDependency
                     ?  $this->config->getAbsoluteTargetDirectory() . '/' . $file->getDependency()->getRelativePath() . '/'. $file->getPackageRelativePath()
                     : $file->getSourcePath();
-                $file->setAbsoluteTargetPath(FileSystem::normalizeDirSeparator($target));
+                $file->setTargetAbsolutePath(FileSystem::normalizeDirSeparator($target));
             }
 
             $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->filesystem->isSymlinked($file->getSourcePath());

@@ -19,7 +19,7 @@ interface CleanupConfigInterface
     /**
      * The directory containing `composer.json`.
      */
-    public function getProjectDirectory(): string;
+    public function getProjectAbsolutePath(): string;
 
     /**
      * Packages to exclude from copying (and therefore from deletion).

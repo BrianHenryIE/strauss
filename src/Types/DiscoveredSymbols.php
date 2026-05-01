@@ -34,7 +34,8 @@ class DiscoveredSymbols
     public function __construct()
     {
         // TODO: Should this have the root package?
-        $this->types[self::NAMESPACE_SYMBOL]['\\'] = new NamespaceSymbol('\\', new File('', ''));
+        // A namespace doesn't have a single file.
+        $this->types[self::NAMESPACE_SYMBOL]['\\'] = new NamespaceSymbol('\\', new File('', '', ''));
     }
 
     /**

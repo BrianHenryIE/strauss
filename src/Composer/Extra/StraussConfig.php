@@ -48,12 +48,12 @@ class StraussConfig implements
     /**
      * The directory containing `composer.json`. Probably `cwd()`.
      */
-    protected string $projectDirectory;
+    protected string $projectAbsolutePath;
 
     /**
      * The output directory.
      */
-    protected string $targetDirectory = 'vendor-prefixed';
+    protected string $targetVendorRelativePath = 'vendor-prefixed';
 
     /**
      * The vendor directory.
@@ -219,6 +219,16 @@ class StraussConfig implements
      */
     public function __construct(?Composer $composer = null)
     {
+        $normalizer = FileSystem::makePathNormalizer(getcwd());
+        if (isset($composer)) {
+            $composerDir = $composer->getConfig()->getConfigSource()->getName();
+            // Composer factory accepts a file or directory.
+            $composerDir               = str_ends_with($composerDir, '.json') // TODO: replace with a file exists/dir exists check.
+                ? dirname($composerDir) : $composerDir;
+            $this->projectAbsolutePath = $normalizer->normalizePath($composerDir);
+        } else {
+            $this->projectAbsolutePath = $normalizer->normalizePath(getcwd());
+        }
 
         $configExtraSettings = null;
 
@@ -238,7 +248,8 @@ class StraussConfig implements
             $mapper = (new JsonMapperFactory())->bestFit();
 
             $rename = new Rename();
-            $rename->addMapping(StraussConfig::class, 'dep_directory', 'targetDirectory');
+            $rename->addMapping(StraussConfig::class, 'target_directory', 'targetVendorRelativePath');
+            $rename->addMapping(StraussConfig::class, 'dep_directory', 'targetVendorRelativePath');
             $rename->addMapping(StraussConfig::class, 'dep_namespace', 'namespacePrefix');
 
             $rename->addMapping(StraussConfig::class, 'exclude_packages', 'excludePackages');
@@ -319,11 +330,16 @@ class StraussConfig implements
             }, $composer->getPackage()->getRequires());
         }
 
+        // @deprecated.
         // If the bool flag for classmapOutput wasn't set in the JSON config.
         if (!isset($this->classmapOutput)) {
             $this->classmapOutput = true;
             // Check each autoloader.
             if (isset($composer)) {
+                $autoloadKey = $composer->getPackage()->getAutoload();
+                if (isset($autoloadKey['classmap']) && in_array($this->targetVendorRelativePath, $autoloadKey['classmap'], true)) {
+                    $this->classmapOutput = false;
+                }
                 foreach ($composer->getPackage()->getAutoload() as $autoload) {
                     // To see if one of its paths.
                     foreach ($autoload as $entry) {
@@ -362,9 +378,7 @@ class StraussConfig implements
      */
     public function getAbsoluteTargetDirectory(): string
     {
-        return FileSystem::normalizeDirSeparator(
-            trim($this->getProjectDirectory(), '\\/') . '/' . trim($this->targetDirectory, '\\/')
-        );
+        return $this->getProjectAbsolutePath() . '/' . $this->targetVendorRelativePath;
     }
 
     public function isTargetDirectoryVendor(): bool
@@ -378,16 +392,16 @@ class StraussConfig implements
     public function getRelativeTargetDirectory(): string
     {
         return FileSystem::normalizeDirSeparator(
-            trim($this->targetDirectory, '\\/')
+            trim($this->targetVendorRelativePath, '\\/')
         );
     }
 
     /**
-     * @param string $targetDirectory
+     * @param string $targetVendorRelativePath
      */
-    public function setTargetDirectory(string $targetDirectory): void
+    public function setTargetVendorRelativePath(string $targetVendorRelativePath): void
     {
-        $this->targetDirectory = $targetDirectory;
+        $this->targetVendorRelativePath = $targetVendorRelativePath;
     }
 
     /**
@@ -395,7 +409,7 @@ class StraussConfig implements
      */
     public function getAbsoluteVendorDirectory(): string
     {
-        return trim($this->getProjectDirectory() . '/' . $this->relativeVendorDirectory, '\\/');
+        return $this->getProjectAbsolutePath() . '/' . $this->relativeVendorDirectory;
     }
 
     /**
@@ -917,15 +931,19 @@ class StraussConfig implements
      */
     public function isCreateAliases(): bool
     {
-        return $this->deleteVendorPackages || $this->deleteVendorFiles || trim($this->targetDirectory, '\\/') === 'vendor';
+        return $this->deleteVendorPackages || $this->deleteVendorFiles || trim($this->targetVendorRelativePath, '\\/') === 'vendor';
     }
 
-    public function getProjectDirectory(): string
+    public function getProjectAbsolutePath(): string
     {
-        $projectDirectory = rtrim(FileSystem::normalizeDirSeparator($this->projectDirectory ?? getcwd()), '\\/');
+        return $this->projectAbsolutePath;
+    }
 
-        return $this->isDryRun()
-            ? 'mem://' . ltrim($projectDirectory, '/')
-            : $projectDirectory;
+    /**
+     * @param string $projectAbsolutePath Should be normalized path.
+     */
+    public function setProjectAbsolutePath(string $projectAbsolutePath): void
+    {
+        $this->projectAbsolutePath = $projectAbsolutePath;
     }
 }

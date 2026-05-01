@@ -6,6 +6,9 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -24,10 +27,22 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Factory;
+use Composer\InstalledVersions;
+use Elazar\Flystream\FilesystemRegistry;
+use Elazar\Flystream\ServiceLocator;
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
+use League\Flysystem\Config;
+use BrianHenryIE\Strauss\Helpers\PathPrefixer;
+use League\Flysystem\WhitespacePathNormalizer;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
+use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class DependenciesCommand extends AbstractRenamespacerCommand
@@ -87,7 +102,118 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             false
         );
 
+        $this->addOption(
+            'dry-run',
+            null,
+            4,
+            'Do not actually make any changes',
+            false
+        );
+
+        $this->addOption(
+            'info',
+            null,
+            4,
+            'output level',
+            false
+        );
+
+        $this->addOption(
+            'debug',
+            null,
+            4,
+            'output level',
+            false
+        );
+
+        if (version_compare(InstalledVersions::getVersion('symfony/console'), '7.2', '<')) {
+            $this->addOption(
+                'silent',
+                's',
+                4,
+                'output level',
+                false
+            );
+        }
+
+        $localFilesystemLocation = PHP_OS_FAMILY === 'Windows' ? substr(getcwd(), 0, 3) : '/';
+
+        $pathPrefixer = new PathPrefixer($localFilesystemLocation, DIRECTORY_SEPARATOR);
+
+        $symlinkProtectFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
+            $localFilesystemLocation,
+            null,
+            $pathPrefixer,
+            $this->logger
+        );
+
+        $this->filesystem = new Filesystem(
+            $symlinkProtectFilesystemAdapter,
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            $pathPrefixer
+        );
+
         parent::configure();
+    }
+
+    /**
+     * @param InputInterface $input The command line input to check for `--debug`, `--silent` etc.
+     * @param OutputInterface $output The Symfony object that actually prints the messages.
+     */
+    protected function getIOLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+    {
+        $isDryRun = isset($this->config) && $this->config->isDryRun();
+
+        // Who would want to dry-run without output?
+        if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
+            return new NullLogger();
+        }
+
+        $logLevel = [LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL];
+
+        if ($input->hasOption('info') && $input->getOption('info') !== false) {
+            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        if ($isDryRun || ($input->hasOption('debug') && $input->getOption('debug') !== false)) {
+            $logLevel[LogLevel::INFO]= OutputInterface::VERBOSITY_NORMAL;
+            $logLevel[LogLevel::DEBUG]= OutputInterface::VERBOSITY_NORMAL;
+        }
+
+        return isset($this->logger) && $this->logger instanceof TestLogger
+            ? $this->logger
+            : new ConsoleLogger($output, $logLevel);
+    }
+
+    protected function getReadOnlyFileSystem(FileSystem $filesystem): FileSystem
+    {
+        $normalizer = new WhitespacePathNormalizer();
+        $normalizer = new StripProtocolPathNormalizer(['mem'], $normalizer);
+
+        $pathPrefixer = new PathPrefixer('mem://', '/');
+
+        $this->filesystem =
+            new FileSystem(
+                new ReadOnlyFileSystem(
+                    $this->filesystem->getAdapter(),
+                ),
+                [],
+                $normalizer,
+                $pathPrefixer
+            );
+
+        /**
+         * Register a file stream mem:// to handle file operations by third party libraries.
+         *
+         * @var FilesystemRegistry $registry
+         */
+        $registry = ServiceLocator::get(FilesystemRegistry::class);
+        $registry->register('mem', $this->filesystem);
+
+        return $filesystem;
     }
 
     /**
@@ -100,6 +226,11 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->setLogger($this->getIOLogger($input, $output));
+
+        $workingDir       = getcwd() . '/';
+        $this->workingDir = $workingDir;
+
         try {
             $this->logger->notice('Starting... '/** version */); // + PHP version
 
@@ -164,6 +295,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger->info('Using: ' . $composerFilePath);
         }
 
+        $composerFilePath = $this->filesystem->normalizePath($composerFilePath);
+        $composerFilePath = $this->filesystem->makeAbsolute($composerFilePath);
         $this->projectComposerPackage = new ProjectComposerPackage($composerFilePath);
 
         // TODO: Print the config that Strauss is using.
@@ -231,6 +364,30 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
 
         // TODO: Print the dependency tree that Strauss has determined.
+
+        $symlinkedDependencies = array_filter($this->flatDependencyTree, fn ($dependency) => $dependency->getPackageAbsolutePath() !== $dependency->getRealPath());
+
+        if (!empty($symlinkedDependencies) &&
+            ($this->config->isDeleteVendorFiles() || ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()))
+        ) {
+            $list = implode(
+                ', ',
+                array_map(
+                    fn($dependency) => $dependency->getPackageName(),
+                    $symlinkedDependencies
+                )
+            );
+            $this->logger->error(
+                sprintf(
+                    'Symlinked package%s detected: %s',
+                    count($symlinkedDependencies) ? 's' : '',
+                    $list
+                )
+            );
+            // https://stackoverflow.com/a/65009324/336146
+            $this->logger->notice('Use `COMPOSER_MIRROR_PATH_REPOS=1 composer install` to copy symlinked packages to vendor directory.');
+            throw new Exception();
+        }
     }
 
 
@@ -262,7 +419,11 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $psr4autoloadKey = $autoloadKey['psr-4'];
             $namespaces = array_keys($psr4autoloadKey);
 
-            $file = new File($package->getPackageAbsolutePath() . '/composer.json', '/../composer.json');
+            $file = new File(
+                $package->getPackageAbsolutePath() . '/composer.json',
+                '/../composer.json',
+                $package->getPackageAbsolutePath() . '/composer.json',
+            );
 
             foreach ($namespaces as $namespace) {
                 // TODO: log.

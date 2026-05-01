@@ -5,7 +5,8 @@ namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
- * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson
+ * @coversNothing
+ * @see \BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson
  */
 class InstalledJsonIntegrationTest extends IntegrationTestCase
 {
