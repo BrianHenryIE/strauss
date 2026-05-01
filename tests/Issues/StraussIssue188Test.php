@@ -81,7 +81,8 @@ EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
-        exec('composer install --no-dev');
+        exec('composer install --no-dev -vvv');
+
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
