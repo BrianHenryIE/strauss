@@ -7,6 +7,8 @@ rm -rf build
 rm strauss.phar
 
 composer install --no-dev
+
+# TODO: in GitHub Actions, ideally this will be downloaded by setup-php action, but will be saved in a different directory so check it is in $PATH.
 wget -O phar-composer.phar https://github.com/clue/phar-composer/releases/download/v1.4.0/phar-composer-1.4.0.phar
 
 mkdir build
@@ -65,6 +67,7 @@ cd ..;
 
 php -d phar.readonly=off phar-composer.phar build ./build/
 
+# TODO: don't bother if we're running in GitHub Actions.
 rm phar-composer.phar
 rm -rf build
 composer install
