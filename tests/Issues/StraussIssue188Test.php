@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -47,7 +48,6 @@ EOD;
 
     /**
      * Passing locally, failing on GitHub Actions.
-     * @runInSeparateProcess
      */
     public function test_issue_188_extends(): void
     {
@@ -61,16 +61,6 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "override_autoload": {
-        "mpdf/mpdf": {
-          "files": [
-            "data/",
-            "src/",
-            "tmp/",
-            "ttfonts"
-          ]
-        }
-      },
       "namespace_prefix": "Company\\PluginFramework\\"
     }
   }
@@ -81,7 +71,9 @@ EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
-        exec('composer install --no-dev -vvv');
+        exec('php -d memory_limit=-1 $(which composer) update --no-dev -vvv');
+
+        $this->getLogger()->info('Composer install finished. Running strauss.');
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
