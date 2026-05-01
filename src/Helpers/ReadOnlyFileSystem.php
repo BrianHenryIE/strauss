@@ -177,9 +177,6 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
     {
         $path = $this->pathNormalizer->normalizePath($path);
 
-        /** @var FileAttributes[] $actual */
-//        $actual = $this->filesystem->listContents($path, $deep)->toArray();
-
         $deletedFilesGenerator = $this->deletedFiles->listContents($path, $deep);
         $deletedFilesArray = $deletedFilesGenerator instanceof Traversable
             ? iterator_to_array($deletedFilesGenerator, false)
