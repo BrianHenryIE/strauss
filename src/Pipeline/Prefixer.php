@@ -738,7 +738,11 @@ class Prefixer
             // E.g. `My\Namespace\$var` is used in some libraries.
             $alsoSearchForVariableClassname = true;
 
-            // Handle special case inside Composer\Autoload\AutoloadGenerator.
+            /**
+             * Handle special case with null character `\0`.
+             *
+             * @see \Composer\Autoload\AutoloadGenerator
+             */
             $isComposerAutoloadNamespace = 'Composer\Autoload' === $originalSymbolString;
             if ($isComposerAutoloadNamespace) {
                 $prefixLine = '$prefix = "\0Composer\Autoload\ClassLoader\0";';
