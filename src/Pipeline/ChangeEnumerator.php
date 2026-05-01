@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use BrianHenryIE\Strauss\Types\Psr0NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
@@ -63,15 +64,16 @@ class ChangeEnumerator
                     unset($pattern, $replacement);
                 }
 
-                if (! is_null($this->config->getNamespacePrefix())) {
-                    $stripPattern   = '~^(' . preg_quote($this->config->getNamespacePrefix(), '~') . '\\\\*)*(.*)~';
+                $namespacePrefix = $this->config->getNamespacePrefix();
+                if (! is_null($namespacePrefix)) {
+                    $stripPattern   = '~^(' . preg_quote($namespacePrefix, '~') . '\\\\*)*(.*)~';
                     $strippedSymbol = preg_replace(
                         $stripPattern,
                         '$2',
                         $symbol->getOriginalSymbol()
                     );
-                    $namespaceReplacementPatterns[ "~(" . preg_quote($this->config->getNamespacePrefix(), '~') . '\\\\*)*' . preg_quote($strippedSymbol, '~') . '~' ]
-                                    = "{$this->config->getNamespacePrefix()}\\{$strippedSymbol}";
+                    $namespaceReplacementPatterns[ "~(" . preg_quote($namespacePrefix, '~') . '\\\\*)*' . preg_quote($strippedSymbol, '~') . '~' ]
+                                    = "{$namespacePrefix}\\{$strippedSymbol}";
                     unset($stripPattern, $strippedSymbol);
                 }
 
@@ -109,6 +111,10 @@ class ChangeEnumerator
             }
 
             if (!$symbol->isDoRename()) {
+                continue;
+            }
+
+            if (empty($classmapPrefix)) {
                 continue;
             }
 
@@ -155,8 +161,8 @@ class ChangeEnumerator
 
     protected function globalOrPsr0(NamespacedSymbol $symbol, string $globalPrefix, DiscoveredSymbols $discoveredSymbols): void
     {
-
         if ($symbol->isPsr0Autoloaded()) {
+            /** @var Psr0NamespaceSymbol $psr0Namespace */
             $psr0Namespace = $discoveredSymbols->getNamespace($symbol->getPsr0NamespaceString());
 
             $underscoredOriginalNamespace = str_replace('\\', '_', $psr0Namespace->getOriginalLocalName());
@@ -188,6 +194,9 @@ class ChangeEnumerator
     {
         $search = '/' . preg_quote($originalNamespace, '/') . '/';
 
-        return preg_replace($search, $newNamespace, $fqdnClassname, 1);
+        return preg_replace($search, $newNamespace, $fqdnClassname, 1)
+                ?? (function () {
+                    throw new \Exception(preg_last_error_msg(), preg_last_error());
+                })();
     }
 }

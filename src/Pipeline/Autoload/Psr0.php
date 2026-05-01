@@ -66,6 +66,10 @@ class Psr0
                 // TODO: we need to have already run "determine changes" so we can set the target directory based on exclusion rules etc.
                 $namespaceSymbol = $discoveredSymbols->getNamespace($psrRootNamespace);
 
+                if (!$namespaceSymbol) {
+                    throw new \Exception('Namespace symbol not found for ' . $psrRootNamespace);
+                }
+
                 /** @var FileWithDependency $file */
                 foreach ($allPackagesFiles as $file) {
                     $filePackageRelativePath = $file->getPackageRelativePath();
@@ -90,13 +94,17 @@ class Psr0
                         '#^' . $originalNamespaceString . '#',
                         $replacementNamespaceString,
                         $filePackageRelativePath
-                    );
+                    ) ?? (function () {
+                        throw new \Exception(preg_last_error_msg(), preg_last_error());
+                    })();
 
                     $updatedTargetPath = preg_replace(
                         '#' . $filePackageRelativePath . '$#',
                         $updatedRelativePath,
                         $file->getTargetAbsolutePath()
-                    );
+                    ) ?? (function () {
+                        throw new \Exception(preg_last_error_msg(), preg_last_error());
+                    })();
 
                     $file->setTargetAbsolutePath($this->filesystem->normalizePath($updatedTargetPath));
                     $file->addAutoloader('psr-0');

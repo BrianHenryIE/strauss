@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use Composer\Factory;
 use Composer\Util\Platform;
 use Exception;
@@ -20,6 +21,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
+ * @phpstan-import-type InstalledJsonArray from InstalledJson
  * @phpstan-import-type ComposerJsonArray from ComposerPackage
  * @phpstan-import-type AutoloadKeyArray from ComposerPackage
  */
@@ -111,6 +113,7 @@ class DependenciesEnumerator
             )
         );
         $installedJsonTxt = $this->filesystem->read($installedJsonPath);
+        /** @var InstalledJsonArray $installedJson */
         $installedJson = json_decode($installedJsonTxt, true);
         $installedJsonPackages = [];
         foreach ($installedJson['packages'] as $package) {
@@ -208,8 +211,9 @@ class DependenciesEnumerator
             }
 
             $installedPackage = $installedJsonPackages[$requiredPackageName];
-            if (is_null($requiredComposerPackage->getRealPath()) &&
-                isset($installedPackage['dist'], $installedPackage['dist']['type']) && $installedPackage['dist']['type'] === 'path') {
+            if (is_null($requiredComposerPackage->getRealPath())
+//                && isset($installedPackage['dist'], $installedPackage['dist']['type'])
+                && $installedPackage['dist']['type'] === 'path') {
                 $path = $installedPackage['dist']['url'];
 
                 $packageRealPath = $this->filesystem->normalizePath(

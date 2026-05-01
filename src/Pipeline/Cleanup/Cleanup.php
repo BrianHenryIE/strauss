@@ -269,18 +269,19 @@ class Cleanup
             }
 
             // Meta packages.
-            if (is_null($package->getPackageAbsolutePath())) {
+            $packageAbsolutePath = $package->getPackageAbsolutePath();
+            if (is_null($packageAbsolutePath)) {
                 continue;
             }
 
             // Normal package.
-            $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
+            $this->logger->info('Deleting ' . $packageAbsolutePath);
 
-            $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
+            $this->filesystem->deleteDirectory($packageAbsolutePath);
 
             $package->setDidDelete(true);
 
-            $packageParentDir = dirname($package->getPackageAbsolutePath());
+            $packageParentDir = dirname($packageAbsolutePath) ?? $packageAbsolutePath;
             if ($this->filesystem->isDirectoryEmpty($packageParentDir)) {
                 $this->logger->info('Deleting empty directory ' . $packageParentDir);
                 $this->filesystem->deleteDirectory($packageParentDir);

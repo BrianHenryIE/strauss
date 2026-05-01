@@ -19,6 +19,7 @@ use BrianHenryIE\Strauss\Types\AutoloadAliasInterface;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -91,8 +92,6 @@ class Aliases
 
     public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
     {
-//        $modifiedSymbols = $this->getModifiedSymbols($symbols);
-
         $outputFilepath = $this->getAliasFilepath();
 
         $fileString = $this->buildStringOfAliases($symbols, basename($outputFilepath));
@@ -109,49 +108,6 @@ class Aliases
             '%s/composer/autoload_aliases.php',
             $this->config->getAbsoluteVendorDirectory()
         );
-    }
-
-    protected function getModifiedSymbols(DiscoveredSymbols $symbols): DiscoveredSymbols
-    {
-        $modifiedSymbols = new DiscoveredSymbols();
-        foreach ($symbols->toArray() as $symbol) {
-            if ($symbol->getOriginalSymbol() !== $symbol->getLocalReplacement()) {
-                $modifiedSymbols->add($symbol);
-            }
-            if ($symbol instanceof FunctionSymbol) {
-                $functionNamespace = $symbols->getNamespaceSymbolByString($symbol->getNamespaceName());
-                $isFunctionHasChangedNamespace = $functionNamespace->isChangedNamespace();
-
-                if ($isFunctionHasChangedNamespace || $symbol->getOriginalSymbol() !== $symbol->getLocalReplacement()
-                ) {
-                    $modifiedSymbols->add($symbol);
-                }
-            }
-        }
-        return $modifiedSymbols;
-    }
-
-    /**
-     * @param array<string,string> $classmap FQDN classname : absolute file path.
-     */
-    protected function registerAutoloader(array $classmap): void
-    {
-
-        // Need to autoload the classes for reflection to work (this is maybe just an issue during tests).
-        spl_autoload_register(function (string $class) use ($classmap) {
-            if (isset($classmap[$class])) {
-                $this->logger->debug("Autoloading $class from {$classmap[$class]}");
-                try {
-                    include_once $classmap[$class];
-                } catch (\Throwable $e) {
-                    if (false !== strpos($e->getMessage(), 'PHPUnit')) {
-                        $this->logger->warning("Error autoloading $class from {$classmap[$class]}: " . $e->getMessage());
-                    } else {
-                        $this->logger->error("Error autoloading $class from {$classmap[$class]}: " . $e->getMessage());
-                    }
-                }
-            }
-        });
     }
 
     protected function buildStringOfAliases(DiscoveredSymbols $modifiedSymbols, string $outputFilename): string
@@ -269,6 +225,7 @@ class Aliases
             foreach ($symbols as $symbol) {
                 $originalLocalSymbol = $symbol->getOriginalLocalName();
 
+                /** @var NamespaceSymbol $namespaceSymbol */
                 $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespaceName());
 
                 if (!($symbol instanceof FunctionSymbol
@@ -319,7 +276,10 @@ class Aliases
         $localOriginalFunction = array_reverse(explode('\\', $namespacedOriginalFunction))[0];
 
         $namespacedReplacementFunction = '\\' . trim($namespacedReplacementFunction, '\\');
-        $namespacedReplacementFunction = preg_replace('/\\\\+/', '\\', $namespacedReplacementFunction);
+        $namespacedReplacementFunction = preg_replace('/\\\\+/', '\\', $namespacedReplacementFunction)
+                                         ?? (function () {
+                                             throw new \Exception(preg_last_error_msg(), preg_last_error());
+                                         })();
 
         return <<<EOD
                     if(!function_exists('$namespacedOriginalFunction')){

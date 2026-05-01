@@ -31,7 +31,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
     protected PathNormalizer $normalizer;
 
     /**
-     * @var PathPrefixer
+     * @var PathPrefixer|object (PathPrefixer does not have an interface).
      */
     protected $pathPrefixer;
 
@@ -63,7 +63,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
      * TODO: Check are any of these methods unused
      *
      * @param ReadOnlyFileSystem|SymlinkProtectFilesystemAdapter $adapter
-     * @param array $config
+     * @param array{visibility?:string} $config
      * @param PathPrefixer|object $pathPrefixer
      * @param PathNormalizer|null $pathNormalizer
      */
@@ -94,7 +94,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->workingDir       = $pathNormalizer->normalizePath($workingDir ?? $localFsLocation);
     }
 
-    public static function getFsRoot(string $path): ?string
+    public static function getFsRoot(string $path): string
     {
         if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path, $output_array)) {
             return strtoupper($output_array[1]);

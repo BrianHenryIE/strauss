@@ -128,21 +128,23 @@ class FileCopyScanner
         if (!$file->isPhpFile()) {
             return false;
         }
-        $namespacesInFile = array_map(
-            fn(NamespaceSymbol $symbol): string => $symbol->getOriginalSymbol(),
+        /** @var string[] $namespaceStringsInFile */
+        $namespaceStringsInFile = array_map(
+            fn(DiscoveredSymbol $symbol): string => $symbol->getOriginalSymbol(),
             $file->getDiscoveredSymbols()->getNamespaces()->notGlobal()->toArray()
         );
         foreach ($this->config->getExcludeNamespacesFromCopy() as $excludedNamespaceString) {
             $excludedNamespaceString = rtrim($excludedNamespaceString, '\\');
 
-            $excludedNamespacesInFile = array_reduce(
-                $namespacesInFile,
-                // TODO: case insensitive check. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
-                fn(array $carry, string $namespace) => str_starts_with($namespace, $excludedNamespaceString)
-                        ? array_merge($carry, [$namespace]) : $carry,
+            /** @var string[] $excludedNamespaceStringsInFile */
+            $excludedNamespaceStringsInFile = array_reduce(
+                $namespaceStringsInFile,
+                // TODO: use case insensitive check instead. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
+                fn(array $carry, string $namespaceString) => str_starts_with($namespaceString, $excludedNamespaceString)
+                        ? array_merge($carry, [$namespaceString]) : $carry,
                 []
             );
-            if (!empty($excludedNamespacesInFile)) {
+            if (!empty($excludedNamespaceStringsInFile)) {
                 $this->logger->debug("File {sourcePath} will not be copied because namespace {$excludedNamespaceString} is excluded from copy.", [
                     'sourcePath' => $file->getSourcePath(),
                 ]);

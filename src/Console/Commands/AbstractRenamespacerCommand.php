@@ -113,7 +113,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->logger = $logger;
 
         $workingDir      = Platform::getcwd();
-        $localFsLocation = FileSystem::getFsRoot($workingDir) ?? '';
+        $localFsLocation = FileSystem::getFsRoot($workingDir);
 
         $pathNormalizer = Filesystem::makePathNormalizer($localFsLocation);
 

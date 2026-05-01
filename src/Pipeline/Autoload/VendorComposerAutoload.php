@@ -159,6 +159,7 @@ class VendorComposerAutoload
     protected function isComposerNoDev(): bool
     {
         $installedJson = $this->fileSystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.json');
+        /** @var InstalledJsonArray $installedJsonArray */
         $installedJsonArray = json_decode($installedJson, true);
         return !$installedJsonArray['dev'];
     }

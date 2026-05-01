@@ -47,7 +47,7 @@ class NamespacedSymbol extends DiscoveredSymbol
         return $this->namespace;
     }
 
-    public function getNamespaceName(): ?string
+    public function getNamespaceName(): string
     {
         return $this->namespace->getOriginalSymbol();
     }

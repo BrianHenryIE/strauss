@@ -276,7 +276,13 @@ class AutoloadedFilesEnumerator
         $classMap = $classMapGenerator->getClassMap();
         $classMapPaths = $classMap->getMap();
         foreach ($classMapPaths as $fileAbsolutePath) {
-            $relativePath = $this->filesystem->getRelativePath($dependency->getPackageAbsolutePath(), $fileAbsolutePath);
+            /**
+             * This will never be null because we have been looking inside this path!
+             *
+             * @var string $packageAbsolutePath
+             */
+            $packageAbsolutePath = $dependency->getPackageAbsolutePath();
+            $relativePath = $this->filesystem->getRelativePath($packageAbsolutePath, $fileAbsolutePath);
             $file = $dependency->getFile($relativePath);
             if (!$file) {
                 $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
