@@ -68,8 +68,6 @@ EOD;
      */
     public function test_unit_backtrack_limit_exhausted(): void
     {
-        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.1.0', 'SKIPPED MESSAGE: Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes)');
-
         $contents = $this->getFileSystem()->read(__DIR__.'/data/Mpdf.php');
 
         $originalClassname = 'WP_Dependency_Installer';
