@@ -94,9 +94,9 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
         $this->workingDir       = $pathNormalizer->normalizePath($workingDir ?? $localFsLocation);
     }
 
-    public static function getFsRoot(?string $path = null): ?string
+    public static function getFsRoot(string $path): ?string
     {
-        if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path ?? Platform::getcwd(), $output_array)) {
+        if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path, $output_array)) {
             return strtoupper($output_array[1]);
         }
         // Relative path.
@@ -113,8 +113,8 @@ class FileSystem extends \League\Flysystem\Filesystem implements FlysystemBackCo
                 [
                     str_replace('\\', '/', FileSystem::getFsRoot($workingDir)),
                     str_replace('/', '\\', FileSystem::getFsRoot($workingDir)),
-                    FileSystem::getFsRoot(),
-                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
+                    FileSystem::getFsRoot(Platform::getcwd()),
+                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot(Platform::getcwd())),
                     'c:\\',
                     'c:/',
                 ]

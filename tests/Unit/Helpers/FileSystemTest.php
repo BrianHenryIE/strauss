@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\Strauss\TestCase;
+use Composer\Util\Platform;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemException;
@@ -23,7 +24,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new LocalFilesystemAdapter(
-                FileSystem::getFsRoot()
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
@@ -39,7 +40,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new LocalFilesystemAdapter(
-                FileSystem::getFsRoot()
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
@@ -176,7 +177,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new LocalFilesystemAdapter(
-                FileSystem::getFsRoot()
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
@@ -201,7 +202,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new LocalFilesystemAdapter(
-                FileSystem::getFsRoot()
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
@@ -229,7 +230,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new LocalFilesystemAdapter(
-                FileSystem::getFsRoot()
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
@@ -255,7 +256,7 @@ class FileSystemTest extends TestCase
     {
         $sut = new FileSystem(
             new LocalFilesystemAdapter(
-                FileSystem::getFsRoot()
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',

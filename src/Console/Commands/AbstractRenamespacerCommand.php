@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
+use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\PathPrefixer;
 use Monolog\Handler\PsrHandler;
@@ -111,8 +112,8 @@ abstract class AbstractRenamespacerCommand extends Command
         $logger = new Logger('logger');
         $this->logger = $logger;
 
-        $workingDir       = getcwd() . '/';
-        $localFsLocation = FileSystem::getFsRoot($workingDir);
+        $workingDir      = Platform::getcwd();
+        $localFsLocation = FileSystem::getFsRoot($workingDir) ?? '';
 
         $pathNormalizer = Filesystem::makePathNormalizer($localFsLocation);
 
