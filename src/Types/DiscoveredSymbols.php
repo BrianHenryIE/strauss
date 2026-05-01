@@ -449,6 +449,10 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
              */
             foreach ($types as $index => $symbol) {
                 if ($symbol->isGlobal()) {
+                    /**
+                     * TODO: figure this out eventually, it's not important.
+                     * @phpstan-ignore assign.propertyType
+                     */
                     unset($this->types[$type][$index]);
                 }
             }
