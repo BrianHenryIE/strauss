@@ -308,6 +308,8 @@ class StraussConfig implements
             }
         }
 
+        // When no classmapPrefix is set, infer it from the psr-4 autoload key.
+        // TODO: we don't want to use the first psr-4 key, we want to use the shortest?
         if (! isset($this->classmapPrefix)) {
             if (isset($composer, $composer->getPackage()->getAutoload()['psr-4'])) {
                 $autoloadKey = array_key_first($composer->getPackage()->getAutoload()['psr-4']);
@@ -327,8 +329,12 @@ class StraussConfig implements
                 }, $classmapPrefix);
                 $classmapPrefix = str_replace("\\", "_", $classmapPrefix);
                 $this->setClassmapPrefix($classmapPrefix);
-            } elseif (isset($this->namespacePrefix)) {
-                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $this->getNamespacePrefix()) ?? str_replace('\\', '_', $this->getNamespacePrefix());
+            } elseif ($this->getNamespacePrefix()) {
+                $classmapPrefix = preg_replace(
+                    '/[^\w\/]+/',
+                    '_',
+                    $this->getNamespacePrefix()
+                ) ?? str_replace('\\', '_', $this->getNamespacePrefix());
                 $classmapPrefix = rtrim($classmapPrefix, '_') . '_';
                 $this->setClassmapPrefix($classmapPrefix);
             }
