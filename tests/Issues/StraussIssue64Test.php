@@ -14,7 +14,7 @@ final class StraussIssue64Test extends IntegrationTestCase
         $this->expectErrorLogs();
 
         // Do not use color-logger for this test, use the actual consolelogger.
-        $this->logger = null;
+//        $this->logger = null;
 
         $paths = [
             $main_package_dir = $this->testsWorkingDir . '/main-package',
@@ -32,11 +32,10 @@ final class StraussIssue64Test extends IntegrationTestCase
         exec('composer install');
 
         $exitCode = $this->runStrauss($output);
-
         $this->assertNotEquals(0, $exitCode);
 
         if (!$this->isTestingWithPhar()) {
-            $this->assertTrue($this->getTestLogger()->hasErrorThatContains('Symlinked packages detected'), 'Should contain Symlinked packages detected');
+            $this->assertTrue($this->getTestLogger()->hasErrorThatContains('Symlinked package detected'), 'Should contain Symlinked package detected');
             $this->assertTrue($this->getTestLogger()->hasNoticeThatContains('COMPOSER_MIRROR_PATH_REPOS=1'), 'Should contain COMPOSER_MIRROR_PATH_REPOS=1');
         }
     }
