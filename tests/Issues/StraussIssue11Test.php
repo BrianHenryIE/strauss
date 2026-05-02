@@ -136,7 +136,14 @@ EOD;
      */
     public function test_static_namespace(): void
     {
-        $this->markTestSkippedBH('too slow');
+        $this->markTestSkippedLocally('too slow');
+
+        /**
+         * HTML file with php filetype.
+         *
+         * [warning] Skipping Prefixing in src/Mozart/htmlburger/carbon-fields/templates/Container/comment_meta.php due to parse error: Syntax error, unexpected '<' on line 2
+         */
+        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {
