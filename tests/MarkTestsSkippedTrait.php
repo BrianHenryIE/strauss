@@ -4,6 +4,10 @@ namespace BrianHenryIE\Strauss;
 
 use Composer\Util\Platform;
 
+/**
+ * @mixin \PHPUnit\Framework\TestCase
+ * @mixin \PHPUnit\Framework\Assert
+ */
 trait MarkTestsSkippedTrait
 {
     /**
@@ -12,7 +16,7 @@ trait MarkTestsSkippedTrait
      * Use `::markTestIncomplete()` if necessary.
      * The `::markTestSkipped...()` functions in this trait broadly call `parent::markTestSkippedBH()` directly.
      */
-    public static function markTestSkippedBH(string $message = ''): void
+    public function markTestSkippedBH(string $message = ''): void
     {
         if (getenv('GITHUB_ACTIONS') === 'true') {
             return;
@@ -35,7 +39,7 @@ trait MarkTestsSkippedTrait
     protected function markTestSkippedOnWindows(string $message = 'Skipped on Windows'): void
     {
         if (Platform::isWindows()) {
-            parent::markTestSkippedBH($message);
+            $this->markTestSkipped($message);
         }
     }
 
@@ -70,8 +74,8 @@ trait MarkTestsSkippedTrait
 
         if ($testPhpVersionConstraintMatch || $systemPhpVersionConstraintMatch) {
             empty($message)
-                ? parent::markTestSkippedBH("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
-                : parent::markTestSkippedBH($message);
+                ? $this->markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
+                : $this->markTestSkipped($message);
         }
     }
 }
