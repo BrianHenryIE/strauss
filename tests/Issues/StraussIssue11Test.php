@@ -80,6 +80,13 @@ EOD;
     {
         $this->markTestSkippedLocally('too slow');
 
+        /**
+         * HTML file with .php suffix.
+         *
+         * Skipping Prefixing in src/Mozart/htmlburger/carbon-fields/templates/Container/comment_meta.php due to parse error: Syntax error, unexpected '<' on line 2
+         */
+        $this->expectWarningLogs();
+
         $composerJsonString = <<<'EOD'
 {
 	"name": "brianhenryie/strauss-issue-8",
@@ -127,7 +134,7 @@ EOD;
         // This was not being prefixed.
         self::assertStringNotContainsString('$ioc->register( new \Carbon_Fields\Provider\Container_Condition_Provider() );', $phpString);
 
-        self::assertStringContainsString('$ioc->register( new \MZoo\MBO_Sandbox\Dependencies\Carbon_Fields\Provider\Container_Condition_Provider() );', $phpString);
+        self::assertStringContainsString('$ioc->register(new \MZoo\MBO_Sandbox\Dependencies\Carbon_Fields\Provider\Container_Condition_Provider());', $phpString);
     }
 
 
