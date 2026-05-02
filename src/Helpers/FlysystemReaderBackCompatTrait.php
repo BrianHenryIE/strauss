@@ -11,7 +11,7 @@
  *
  * @see https://github.com/thephpleague/flysystem/blob/3.x/src/Filesystem.php#L46-L51
  *
- * `FilesystemAdapter` 3.x also introduced `::directoryExists()` so we re-use its compatability trait here.
+ * `FilesystemAdapter` 3.x also introduced `::directoryExists()` so we re-use its compatibility trait here.
  * @see FlysystemAdapterBackCompatTrait
  */
 
