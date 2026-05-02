@@ -52,6 +52,11 @@ EOD;
       "target_directory": "vendor",
       "update_call_sites": true
     }
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
   }
 }
 EOD;

@@ -68,6 +68,11 @@ EOD;
       "namespace_prefix": "My\\Prefix\\",
       "classmap_prefix": "MyPrefix_"
     }
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
   }
 }
 EOD;

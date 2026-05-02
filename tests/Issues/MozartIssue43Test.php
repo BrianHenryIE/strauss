@@ -65,6 +65,10 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/AWS/Common/Aws.php');
+        /**
+         * File path has changed since test was originally written – PSR-0 support moves files into subdir matching the namespace.
+         */
+//        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Aws/Common/Aws.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/BrianHenryIE/M43/Aws/Common/Aws.php');
     }
 }

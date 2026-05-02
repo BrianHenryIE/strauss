@@ -11,14 +11,21 @@ use Composer\Util\Platform;
 trait MarkTestsSkippedTrait
 {
     /**
-     * Only skip tests locally for convenience. Never skip tests in CI.
+     * Only skip tests locally for convenience. Never skip tests in `GITHUB_ACTIONS`.
+     *
+     * If tests are run individually they do not skip.
+     * If env `RUN_SLOW_TESTS` is true they do not skip.
      *
      * Use `::markTestIncomplete()` if necessary.
-     * The `::markTestSkipped...()` functions in this trait broadly call `parent::markTestSkippedBH()` directly.
+     * The `::markTestSkipped...()` functions in this trait broadly call `parent::markTestSkipped()` directly.
      */
     public function markTestSkippedLocally(string $message = ''): void
     {
         if (getenv('GITHUB_ACTIONS') === 'true') {
+            return;
+        }
+
+        if (getenv('RUN_SLOW_TESTS') === 'true') {
             return;
         }
 

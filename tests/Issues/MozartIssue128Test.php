@@ -19,9 +19,10 @@ class MozartIssue128Test extends IntegrationTestCase
      */
     public function test_fpdf(): void
     {
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.0', 'setasign/fpdi v2.3.0 requires php ^5.6 || ^7.0');
 
         if (version_compare(phpversion(), '7.0', '>')) {
-            $this->markTestSkippedLocally( "Package specified for test is not PHP 8.0 compatible. Running tests under PHP " . phpversion());
+            $this->markTestSkippedLocally("Package specified for test is not PHP 8.0 compatible. Running tests under PHP " . phpversion());
         }
 
         $composerJsonString = <<<'EOD'
@@ -37,6 +38,11 @@ class MozartIssue128Test extends IntegrationTestCase
     "strauss": {
       "target_directory": "vendor-prefixed",
       "namespace_prefix": "\\Strauss\\"
+    }
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
     }
   }
 }

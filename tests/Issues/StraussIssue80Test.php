@@ -7,7 +7,10 @@
 
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -114,7 +117,7 @@ EOD;
         $inputInterfaceMock = $this->createMock(InputInterface::class);
         $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
-        $strauss = new Compose();
+        $strauss = new DependenciesCommand();
 
         $result = $strauss->run($inputInterfaceMock, $outputInterfaceMock);
 
