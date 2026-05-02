@@ -17,8 +17,6 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
-use League\Flysystem\FilesystemReader;
-
 /**
  * @mixin FlysystemReaderBackCompatTraitInterface
  *
@@ -44,6 +42,7 @@ trait FlysystemReaderBackCompatTrait
             return parent::has($location);
         }
 
+        // Can we assume ::fileExists and ::directoryExists will ::normalizePath anyway?!
         return $this->fileExists($this->normalizePath($location)) || $this->directoryExists($this->normalizePath($location));
     }
 }
