@@ -12,7 +12,7 @@ use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\ServiceLocator;
@@ -384,7 +384,7 @@ class IntegrationTestCase extends TestCase
 
         $this->readOnlyFileSystem =
             new FileSystem(
-                new ReadOnlyFileSystem(
+                new ReadOnlyFileSystemAdapter(
                     $protectedFilesystemAdapter
                 ),
                 [],

@@ -11,7 +11,7 @@ use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
@@ -167,7 +167,7 @@ abstract class AbstractRenamespacerCommand extends Command
 
         if ($this->config->isDryRun()) {
             $this->filesystem->setAdapter(
-                new ReadOnlyFileSystem(
+                new ReadOnlyFileSystemAdapter(
                     $this->filesystem->getAdapter(),
                     Filesystem::makePathNormalizer($this->workingDir)
                 )

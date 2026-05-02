@@ -42,6 +42,7 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use Composer\Util\Platform;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
@@ -54,9 +55,9 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements FlysystemBackCompatTraitInterface
+class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements FlysystemAdapterBackCompatTraitInterface
 {
-    use FlysystemBackCompatTrait;
+    use FlysystemAdapterBackCompatTrait;
     use LoggerAwareTrait;
 
     protected PathNormalizer $normalizer;
@@ -64,7 +65,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     /**
      * Converts flysystem relative paths to filesystem absolute paths.
      *
-     * @var PathPrefixer
+     * @var \BrianHenryIE\Strauss\Helpers\PathPrefixerInterface|\League\Flysystem\PathPrefixer
      */
     protected $pathPrefixer;
 
@@ -81,6 +82,8 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      * Record of non-symlinked paths to avoid running is_link repeatedly.
      *
      * I.e. no need to `/check/every/level/of/this/when` when partial path has been checked before.
+     *
+     * @var string[]
      */
     protected array $nonSymlinkPaths = [];
 
@@ -99,8 +102,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      */
     protected array $deletedPaths = [];
 
+    /**
+     * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer
+     */
     public function __construct(
-        $location,
+        string $location,
         ?PathNormalizer $pathNormalizer = null,
         $pathPrefixer = null,
         ?LoggerInterface $logger = null,
@@ -198,14 +204,14 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
     protected function recordSymlink(string $path, ?string $realpath = null): void
     {
-        $symlinkTarget = $realpath ?? realpath($path);
-
         if (isset($this->symlinkRealPaths[$path])) {
             return;
         }
 
+        $symlinkTarget = $realpath ?? Platform::realpath($this->pathPrefixer->prefixPath($path));
+
         $this->parentSymlinkPathCache[$path] = $path;
-        $this->symlinkRealPaths[$path] = $realpath;
+        $this->symlinkRealPaths[$path] = $symlinkTarget;
 
         $this->logger->info(
             "New symlink found at {$path} target {$symlinkTarget}.",
@@ -216,6 +222,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         );
     }
 
+    /**
+     * @return array<string, string> Array of flysystem paths : realpath.
+     */
     public function getSymlinks(): array
     {
         return $this->symlinkRealPaths;
@@ -262,11 +271,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     }
 
     /**
-     * @see FlysystemBackCompatTrait::directoryExists()
+     * @see FlysystemReaderBackCompatTrait::directoryExists()
      */
-    public function getNormalizer(): PathNormalizer
+    public function normalizePath(string $path): string
     {
-        return $this->normalizer;
+        return $this->normalizer->normalizePath($path);
     }
 
     /**
@@ -486,7 +495,10 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $this->logger->warning(
             'Attempted to move file/directory under a symlinked path.',
             [
-                'symlink' => $sourceSymlink || $destinationSymlink,
+                'source' => $source,
+                'sourceSymlink' => $sourceSymlink,
+                'destination' => $destination,
+                'destinationSymlink' => $destinationSymlink,
                 'method' => __METHOD__,
                 'args' =>func_get_args()
             ]

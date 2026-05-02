@@ -10,7 +10,7 @@ use Mockery;
 use League\Flysystem\FileSystem as FlysystemFileSystem;
 
 /**
- * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem
+ * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter
  */
 class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 {
@@ -30,7 +30,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 //        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
         $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
 //        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
 
         $target = $this->testsWorkingDir . '/target.php';
 
@@ -64,7 +64,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 //        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
 
 //        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter('/'));
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
 
         $sut->write($source, 'source');
         $config = Mockery::mock(Config::class);
@@ -93,7 +93,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
 //        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
 
         $sut->delete($source);
 
@@ -112,7 +112,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
 //        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
 
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
         $sut->delete($source);
 
         // when I try to read the file
@@ -133,7 +133,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->getFileSystem()->write($aRealFile, 'file1');
 
         $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
         assert(1 === count($sut->listContents($this->testsWorkingDir, false)->toArray()));
 
         // When it is deleted
@@ -158,7 +158,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->getFileSystem()->write($aRealFile, 'file1');
 
         $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
         assert(1 === count($sut->listContents($this->testsWorkingDir, false)->toArray()));
 
         $config = Mockery::mock(Config::class);
@@ -188,7 +188,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
         $this->getFileSystem()->write($source, $contents);
 
         $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
 
         $destination = $this->testsWorkingDir . '/destination.php';
 
@@ -213,7 +213,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
 //        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
 
         $this->assertTrue($sut->directoryExists($newDir), $newDir . ' should be visible to ReadOnlyFileSystem');
     }
@@ -232,7 +232,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 //                new LocalFilesystemAdapter($fsRoot)
 //            )
 //        );
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
 
         $filesystem = new FileSystem($sut, [], null, null, '/');
 
@@ -255,7 +255,7 @@ class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 
         $fsRoot = FileSystem::getFsRoot($this->testsWorkingDir);
 //        $sut = new ReadOnlyFileSystem(new FlysystemFileSystem(new LocalFilesystemAdapter($fsRoot)));
-        $sut = new ReadOnlyFileSystem(new LocalFilesystemAdapter($fsRoot));
+        $sut = new ReadOnlyFileSystemAdapter(new LocalFilesystemAdapter($fsRoot));
 
         $config = Mockery::mock(Config::class);
         $config->expects('get')->with(Config::OPTION_VISIBILITY, Visibility::PUBLIC)->andReturn(Visibility::PUBLIC);

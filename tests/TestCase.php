@@ -10,7 +10,7 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\ServiceLocator;
 use Exception;
@@ -166,7 +166,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             $projectFsAdapter = new LocalFilesystemAdapter(
                 FileSystem::getFsRoot(__FILE__)
             );
-            $readonlyFsAdapter = new ReadOnlyFileSystem(
+            $readonlyFsAdapter = new ReadOnlyFileSystemAdapter(
                 $projectFsAdapter
             );
             $this->fixturesFilesystem = new FileSystem(

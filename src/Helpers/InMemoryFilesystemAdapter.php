@@ -9,21 +9,21 @@ use League\Flysystem\InMemory\InMemoryFilesystemAdapter as LeagueInMemoryFilesys
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\WhitespacePathNormalizer;
 
-class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter implements FlysystemBackCompatTraitInterface
+class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter implements FlysystemAdapterBackCompatTraitInterface
 {
-    use FlysystemBackCompatTrait;
+    use FlysystemAdapterBackCompatTrait;
 
     protected PathNormalizer $normalizer;
 
     /**
-     * @see FlysystemBackCompatTrait::directoryExists()
+     * @see FlysystemReaderBackCompatTrait::directoryExists()
      */
-    public function getNormalizer(): PathNormalizer
+    public function normalizePath(string $path): string
     {
         if (!isset($this->normalizer)) {
             $this->normalizer = new StripProtocolPathNormalizer(['mem'], new WhitespacePathNormalizer());
         }
-        return $this->normalizer;
+        return $this->normalizer->normalizePath($path);
     }
 
     public function visibility(string $path): FileAttributes
@@ -59,7 +59,10 @@ class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter implemen
         parent::copy($source, $destination, $config);
     }
 
-    public function write(string $path, $contents, Config $config): void
+    /**
+     * @see \League\Flysystem\FilesystemAdapter::write()
+     */
+    public function write(string $path, string $contents, Config $config): void
     {
         // Make sure there is a directory for the file to be written to.
         if (false === strpos($path, '______DUMMY_FILE_FOR_FORCED_LISTING_IN_FLYSYSTEM_TEST')) {
