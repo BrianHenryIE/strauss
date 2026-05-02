@@ -18,7 +18,7 @@ class StraussIssue74Test extends IntegrationTestCase
 
     public function test_prefix_global_function(): void
     {
-        $this->markTestSkippedBH('slow');
+        $this->markTestSkippedLocally('slow');
 
         $composerJsonString = <<<'EOD'
 {
@@ -55,7 +55,7 @@ EOD;
 
     public function test_twig(): void
     {
-        $this->markTestSkippedBH('slow');
+        $this->markTestSkippedLocally('slow');
 
         $composerJsonString = <<<'EOD'
 {

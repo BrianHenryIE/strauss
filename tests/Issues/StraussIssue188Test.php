@@ -51,7 +51,7 @@ EOD;
      */
     public function test_issue_188_extends(): void
     {
-        $this->markTestSkippedUnlessSpecificallyInFilter();
+        $this->markTestSkippedLocally();
 
         $composerJsonString = <<<'EOD'
 {

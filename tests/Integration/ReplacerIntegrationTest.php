@@ -401,7 +401,7 @@ JSON;
      */
     public function test_ClassLoader(): void
     {
-        $this->markTestSkippedUnlessSpecificallyInFilter();
+        $this->markTestSkippedLocally();
 
         $composerJsonString = <<<'EOD'
 {
@@ -477,7 +477,7 @@ EOD;
      */
     public function test_functions_replace_react_promise(): void
     {
-        $this->markTestSkippedUnlessSpecificallyInFilter();
+        $this->markTestSkippedLocally();
 
         $composerJsonString = <<<'EOD'
 {

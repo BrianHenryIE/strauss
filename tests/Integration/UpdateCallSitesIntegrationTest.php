@@ -17,7 +17,7 @@ class UpdateCallSitesIntegrationTest extends IntegrationTestCase
     public function test_updateCallSites_functions(): void
     {
         // TODO: Find alternative to twig for this test.
-        $this->markTestSkippedBH('Exceptionally slow test');
+        $this->markTestSkippedLocally('Exceptionally slow test');
 
         $file1 = <<<'EOD'
 <?php

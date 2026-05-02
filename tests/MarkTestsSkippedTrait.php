@@ -16,23 +16,18 @@ trait MarkTestsSkippedTrait
      * Use `::markTestIncomplete()` if necessary.
      * The `::markTestSkipped...()` functions in this trait broadly call `parent::markTestSkippedBH()` directly.
      */
-    public function markTestSkippedBH(string $message = ''): void
+    public function markTestSkippedLocally(string $message = ''): void
     {
         if (getenv('GITHUB_ACTIONS') === 'true') {
             return;
         }
 
-        $this->markTestSkipped($message);
-    }
-
-    protected function markTestSkippedUnlessSpecificallyInFilter(): void
-    {
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
         $function = $backtrace[1]['function'];
         $argvFilterIndex = array_search('--filter', $GLOBALS['argv']);
         $phpunitFilter = $GLOBALS['argv'][$argvFilterIndex + 1];
         if (!str_contains($phpunitFilter, $function)) {
-            $this->markTestSkippedBH('slow');
+            $this->markTestSkippedLocally($message);
         }
     }
 

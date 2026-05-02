@@ -17,7 +17,7 @@ class StraussIssue114Test extends IntegrationTestCase
 {
     public function test_muted_errors(): void
     {
-        $this->markTestSkippedUnlessSpecificallyInFilter();
+        $this->markTestSkippedLocally();
 
         /**
          * Warning     : Skipping Prefixing in vendor-prefixed/mtdowling/jmespath.php/bin/jp.php due to parse error: Syntax error, unexpected '<' on line 3

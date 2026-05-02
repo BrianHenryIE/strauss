@@ -26,7 +26,7 @@ class StraussIssue11Test extends IntegrationTestCase
      */
     public function test_migrate_mozart_config(): void
     {
-        $this->markTestSkippedBH('too slow');
+        $this->markTestSkippedLocally('too slow');
 
         $composerExtraStraussJson = <<<'EOD'
 {
@@ -78,7 +78,7 @@ EOD;
      */
     public function test_carbon_fields(): void
     {
-        $this->markTestSkippedBH('too slow');
+        $this->markTestSkippedLocally('too slow');
 
         $composerJsonString = <<<'EOD'
 {
@@ -183,8 +183,8 @@ EOD;
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/src/Mozart/htmlburger/carbon-fields/core/Container.php');
 
         // This was not being prefixed.
-        self::assertStringNotContainsString('@method static \Carbon_Fields\Container\Comment_Meta_Container', $phpString);
+        $this->assertStringNotContainsString('@method static \Carbon_Fields\Container\Comment_Meta_Container', $phpString);
 
-        self::assertStringContainsString('@method static \MZoo\MBO_Sandbox\Dependencies\Carbon_Fields\Container\Comment_Meta_Container', $phpString);
+        $this->assertStringContainsString('@method static \MZoo\MBO_Sandbox\Dependencies\Carbon_Fields\Container\Comment_Meta_Container', $phpString);
     }
 }

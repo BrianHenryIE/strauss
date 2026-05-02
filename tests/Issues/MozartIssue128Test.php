@@ -21,7 +21,7 @@ class MozartIssue128Test extends IntegrationTestCase
     {
 
         if (version_compare(phpversion(), '7.0', '>')) {
-            $this->markTestSkippedBH("Package specified for test is not PHP 8.0 compatible. Running tests under PHP " . phpversion());
+            $this->markTestSkippedLocally( "Package specified for test is not PHP 8.0 compatible. Running tests under PHP " . phpversion());
         }
 
         $composerJsonString = <<<'EOD'

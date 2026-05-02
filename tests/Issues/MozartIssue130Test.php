@@ -25,7 +25,7 @@ class MozartIssue130Test extends IntegrationTestCase
      */
     public function test_config_copied(): void
     {
-        $this->markTestSkippedBH('too slow');
+        $this->markTestSkippedLocally('too slow');
 
         $composerJsonString = <<<'EOD'
 {

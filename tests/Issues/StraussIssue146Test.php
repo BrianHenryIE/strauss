@@ -61,7 +61,7 @@ class StraussIssue146Test extends IntegrationTestCase
 
     public function test_prefix_own_classes_for_release(): void
     {
-        $this->markTestSkippedUnlessSpecificallyInFilter();
+        $this->markTestSkippedLocally();
 
         $projectDir = preg_replace('#/$#', '', $this->projectDir);
         $buildDir = preg_replace('#/$#', '', $this->testsWorkingDir);
