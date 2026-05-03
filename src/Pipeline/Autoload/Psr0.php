@@ -59,10 +59,6 @@ class Psr0
              * @phpstan-ignore offsetAccess.notFound
              */
             foreach ($composerAutoloadKey['psr-0'] as $psrRootNamespace => $packageRelativeNamespacePath) {
-                if (is_array($packageRelativeNamespacePath)) {
-                    throw new \Exception('psr-0 autoload key as array not yet implemented. open an issue ' . $package->getPackageName());
-                }
-
                 // TODO: we need to have already run "determine changes" so we can set the target directory based on exclusion rules etc.
                 $namespaceSymbol = $discoveredSymbols->getNamespace($psrRootNamespace);
 
