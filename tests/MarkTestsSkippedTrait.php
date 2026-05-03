@@ -33,9 +33,11 @@ trait MarkTestsSkippedTrait
         $function = $backtrace[1]['function'];
         $argvFilterIndex = array_search('--filter', $GLOBALS['argv']);
         $phpunitFilter = $GLOBALS['argv'][$argvFilterIndex + 1];
-        if (!str_contains($phpunitFilter, $function)) {
-            $this->markTestSkippedLocally($message);
+        if (str_contains($phpunitFilter, $function)) {
+            return;
         }
+
+        $this->markTestSkipped($message);
     }
 
     protected function markTestSkippedOnWindows(string $message = 'Skipped on Windows'): void
