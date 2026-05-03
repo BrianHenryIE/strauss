@@ -311,22 +311,26 @@ class StraussConfig implements
         // When no classmapPrefix is set, infer it from the psr-4 autoload key.
         // TODO: we don't want to use the first psr-4 key, we want to use the shortest?
         if (! isset($this->classmapPrefix)) {
-            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4'])) {
+            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4']) && !empty($composer->getPackage()->getAutoload()['psr-4'])) {
                 $autoloadKey = array_key_first($composer->getPackage()->getAutoload()['psr-4']);
                 $classmapPrefix = str_replace("\\", "_", $autoloadKey);
                 $this->setClassmapPrefix($classmapPrefix);
-            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0'])) {
+            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0']) && !empty($composer->getPackage()->getAutoload()['psr-0'])) {
                 $autoloadKey = array_key_first($composer->getPackage()->getAutoload()['psr-0']);
                 $classmapPrefix = str_replace("\\", "_", $autoloadKey);
                 $this->setClassmapPrefix($classmapPrefix);
             } elseif (isset($composer) && '__root__' !== $composer->getPackage()->getName()) {
                 $packageName = $composer->getPackage()->getName();
-                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $packageName);
+                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $packageName) ?? (function () {
+                    throw new \Exception(preg_last_error_msg(), preg_last_error());
+                })();
                 $classmapPrefix = str_replace('/', '\\', $classmapPrefix);
-                // Uppercase the first letter of each word.
+                // Uppercase the first letter of each word. ~`ucfirst()`.
                 $classmapPrefix = preg_replace_callback('/(?<=^|_|\\\\)[a-z]/', function ($match) {
                     return strtoupper($match[0]);
-                }, $classmapPrefix);
+                }, $classmapPrefix) ?? (function () {
+                    throw new \Exception(preg_last_error_msg(), preg_last_error());
+                })();
                 $classmapPrefix = str_replace("\\", "_", $classmapPrefix);
                 $this->setClassmapPrefix($classmapPrefix);
             } elseif ($this->getNamespacePrefix()) {

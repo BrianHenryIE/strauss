@@ -281,7 +281,7 @@ class Cleanup
 
             $package->setDidDelete(true);
 
-            $packageParentDir = dirname($packageAbsolutePath) ?? $packageAbsolutePath;
+            $packageParentDir = dirname($packageAbsolutePath);
             if ($this->filesystem->isDirectoryEmpty($packageParentDir)) {
                 $this->logger->info('Deleting empty directory ' . $packageParentDir);
                 $this->filesystem->deleteDirectory($packageParentDir);

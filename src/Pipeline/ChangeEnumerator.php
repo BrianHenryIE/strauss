@@ -71,7 +71,9 @@ class ChangeEnumerator
                         $stripPattern,
                         '$2',
                         $symbol->getOriginalSymbol()
-                    );
+                    ) ?? (function () {
+                        throw new \Exception(preg_last_error_msg(), preg_last_error());
+                    })();
                     $namespaceReplacementPatterns[ "~(" . preg_quote($namespacePrefix, '~') . '\\\\*)*' . preg_quote($strippedSymbol, '~') . '~' ]
                                     = "{$namespacePrefix}\\{$strippedSymbol}";
                     unset($stripPattern, $strippedSymbol);
@@ -83,7 +85,9 @@ class ChangeEnumerator
                         $namespaceReplacementPattern,
                         $replacement,
                         $symbol->getOriginalSymbol()
-                    );
+                    ) ?? (function () {
+                        throw new \Exception(preg_last_error_msg(), preg_last_error());
+                    })();
 
                     if ($prefixed !== $symbol->getOriginalSymbol()) {
                         $symbol->setLocalReplacement($prefixed);
@@ -162,7 +166,12 @@ class ChangeEnumerator
     protected function globalOrPsr0(NamespacedSymbol $symbol, string $globalPrefix, DiscoveredSymbols $discoveredSymbols): void
     {
         if ($symbol->isPsr0Autoloaded()) {
-            /** @var Psr0NamespaceSymbol $psr0Namespace */
+            /**
+             * @var Psr0NamespaceSymbol $psr0Namespace
+             *
+             * `::isPsr0Autoloaded()` proves it is not null.
+             * @phpstan-ignore argument.type
+             */
             $psr0Namespace = $discoveredSymbols->getNamespace($symbol->getPsr0NamespaceString());
 
             $underscoredOriginalNamespace = str_replace('\\', '_', $psr0Namespace->getOriginalLocalName());

@@ -161,7 +161,7 @@ class VendorComposerAutoload
         $installedJson = $this->fileSystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.json');
         /** @var InstalledJsonArray $installedJsonArray */
         $installedJsonArray = json_decode($installedJson, true);
-        return !$installedJsonArray['dev'];
+        return !isset($installedJsonArray['dev']) || !$installedJsonArray['dev'];
     }
 
     /**

@@ -271,7 +271,9 @@ class Aliases
         string $namespacedReplacementFunction
     ): string {
         $namespacedOriginalFunction = '\\\\' . trim($namespacedOriginalFunction, '\\');
-        $namespacedOriginalFunction = preg_replace('/\\\\+/', '\\\\\\\\', $namespacedOriginalFunction);
+        $namespacedOriginalFunction = preg_replace('/\\\\+/', '\\\\\\\\', $namespacedOriginalFunction) ?? (function () {
+            throw new \Exception(preg_last_error_msg(), preg_last_error());
+        })();
 
         $localOriginalFunction = array_reverse(explode('\\', $namespacedOriginalFunction))[0];
 
