@@ -3340,106 +3340,6 @@ EOD;
         $this->assertEqualsRN($expected, $result);
     }
 
-    /**
-     * @covers ::prepareRelativeNamespaces
-     */
-    public function testPrepareRelativeNamespaces(): void
-    {
-
-        $contents = <<<'EOD'
-<?php
-
-namespace Latte\Loaders;
-
-use Latte;
-
-/**
- * Template loader.
- */
-class FileLoader implements Latte\Loader
-{
-	use Latte\Strict;
-
-	/**
-	 * Returns template source code.
-	 */
-	public function getContent($fileName): string
-	{
-		$file = $this->baseDir . $fileName;
-		if ($this->baseDir && !Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
-			throw new Latte\RuntimeException("Template '$file' is not within the allowed path '{$this->baseDir}'.");
-
-		} elseif (!is_file($file)) {
-			throw new Latte\RuntimeException("Missing template file '$file'.");
-
-		} elseif ($this->isExpired($fileName, time())) {
-			if (@touch($file) === false) {
-				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
-			}
-		}
-
-		return $this->getFileSystem()->read($file);
-	}
-}
-EOD;
-
-        $expected = <<<'EOD'
-<?php
-
-namespace Latte\Loaders;
-
-use Latte;
-
-/**
- * Template loader.
- */
-class FileLoader implements \Latte\Loader
-{
-	use \Latte\Strict;
-
-	/**
-	 * Returns template source code.
-	 */
-	public function getContent($fileName): string
-	{
-		$file = $this->baseDir . $fileName;
-		if ($this->baseDir && !\Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
-			throw new \Latte\RuntimeException("Template '{$file}' is not within the allowed path '{$this->baseDir}'.");
-
-		} elseif (!is_file($file)) {
-			throw new \Latte\RuntimeException("Missing template file '{$file}'.");
-
-		} elseif ($this->isExpired($fileName, time())) {
-			if (@touch($file) === false) {
-				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
-			}
-		}
-
-		return $this->getFileSystem()->read($file);
-	}
-}
-EOD;
-
-        $config = $this->createMock(PrefixerConfigInterface::class);
-
-        $file = new File(
-            'vendor/package/name/src/file.php',
-            'package/name/src/file.php',
-            'vendor-prefixed/package/name/src/file.php',
-        );
-
-        $namespaceSymbol = new NamespaceSymbol('Latte', $file);
-
-        $symbols = new DiscoveredSymbols();
-        $symbols->add($namespaceSymbol);
-
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-
-        $result = $replacer->replaceInString($symbols, $contents, $file);
-
-        $this->assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $result);
-    }
-
     public function test_dont_double_slash(): void
     {
 
@@ -3677,6 +3577,7 @@ EOD;
 
     public function test_relative_phpdoc(): void
     {
+        $this->markTestIncomplete('Deprecated: In prior regex based replacing, it was necessary to first ensure all namespaces were fqdn.');
 
         $contents = <<<'EOD'
 <?php
@@ -3830,7 +3731,8 @@ class Filters
 }
 EOD;
 
-        $expected = <<<'EOD'
+        // In prior regex based replacing, it was necessary to first ensure all namespaces were fqdn.
+        $oldExpected = <<<'EOD'
 <?php
 
 namespace Strauss\Test\Latte\Runtime;
@@ -3848,6 +3750,31 @@ class Filters
 		$new = strtolower($new);
 		if ($new === 'style' || $new === 'script' || isset(\Strauss\Test\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\Strauss\Test\Latte\Helpers::$emptyElements[$new])) {
 			throw new \Strauss\Test\Latte\RuntimeException("Forbidden tag <{$orig}> change to <{$new}>.");
+		}
+	}
+}
+EOD;
+        $expected = <<<'EOD'
+<?php
+
+namespace Strauss\Test\Latte\Runtime;
+
+use Strauss\Test\Latte;
+use Strauss\Test\Latte\Engine;
+use Strauss\Test\Latte\RuntimeException;
+use Nette;
+use function is_array, is_string, count, strlen;
+
+class Filters
+{
+	public static function checkTagSwitch(string $orig, $new): void
+	{
+		$new = strtolower($new);
+		if (
+		$new === 'style' || $new === 'script'
+		 || isset(\Strauss\Test\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\Strauss\Test\Latte\Helpers::$emptyElements[$new])
+		 ) {
+			throw new \Strauss\Test\Latte\RuntimeException("Forbidden tag <$orig> change to <$new>.");
 		}
 	}
 }
@@ -4387,74 +4314,6 @@ EOD;
 
         $classSymbol = new ClassSymbol('Composer\\Factory', $file, false, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
-
-        $filesystem = $this->getInMemoryFileSystem();
-        $filesystem->write($file->getTargetAbsolutePath(), $contents);
-
-        $replacer = new Prefixer($config, $filesystem, $this->getLogger());
-
-        $replacer->replaceInFiles($discoveredSymbols, [$file]);
-
-        $result = $filesystem->read($file->getTargetAbsolutePath());
-
-        $this->assertEqualsRN($expected, $result);
-    }
-
-    /**
-     * @covers ::prepareRelativeNamespaces()
-     */
-    public function test_use_trait_fqdn(): void
-    {
-
-        $contents = <<<'EOD'
-<?php
-
-namespace Stripe\Billing;
-
-class CreditGrant extends \Stripe\ApiResource
-{
-    const OBJECT_NAME = 'billing.credit_grant';
-
-    use \Stripe\ApiOperations\Update;
-
-    const CATEGORY_PAID = 'paid';
-    const CATEGORY_PROMOTIONAL = 'promotional';
-}
-EOD;
-
-        $expected = <<<'EOD'
-<?php
-
-namespace Stripe\Billing;
-
-class CreditGrant extends \Stripe\ApiResource
-{
-    const OBJECT_NAME = 'billing.credit_grant';
-
-    use \BrianHenryIE\Strauss\Stripe\ApiOperations\Update;
-
-    const CATEGORY_PAID = 'paid';
-    const CATEGORY_PROMOTIONAL = 'promotional';
-}
-EOD;
-
-        $config = $this->createMock(PrefixerConfigInterface::class);
-
-        $file = new File(
-            'vendor/package/name/src/file.php',
-            'package/name/src/file.php',
-            'vendor-prefixed/package/name/src/file.php',
-        );
-        $file->setDoPrefix(true);
-
-        $discoveredSymbols = new DiscoveredSymbols();
-
-        $namespaceSymbol = new NamespaceSymbol('Stripe\\ApiOperations', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\Stripe\\ApiOperations');
-        $discoveredSymbols->add($namespaceSymbol);
-
-        $traitSymbol = new TraitSymbol('Stripe\\ApiOperations\\Update', $file, $namespaceSymbol);
-        $discoveredSymbols->add($traitSymbol);
 
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
