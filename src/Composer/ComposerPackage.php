@@ -7,16 +7,20 @@
 
 namespace BrianHenryIE\Strauss\Composer;
 
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
+use Composer\PartialComposer;
 use Composer\Util\Platform;
 use Exception;
 
 /**
- * @phpstan-type AutoloadKeyArray array{files?:array<string>, "classmap"?:array<string>, "psr-4"?:array<string,string|array<string>>, "exclude_from_classmap"?:array<string>}
+ * @phpstan-type AutoloadKeyArray array{files?:array<string>, "classmap"?:array<string>, "psr-4"?:array<string,string|array<string>>, "psr-0"?:array<string,string|array<string>>, "exclude_from_classmap"?:array<string>}
  * @phpstan-type ComposerConfigArray array{vendor-dir?:string}
  * @phpstan-type ComposerJsonArray array{name?:string, type?:string, license?:string, require?:array<string,string>, autoload?:AutoloadKeyArray, config?:ComposerConfigArray, repositories?:array<mixed>, provide?:array<string,string>}
  * @see \Composer\Config::merge()
@@ -28,9 +32,9 @@ class ComposerPackage
      *
      * @see Factory::create
      *
-     * @var Composer
+     * @var PartialComposer
      */
-    protected Composer $composer;
+    protected PartialComposer $composer;
 
     /**
      * The name of the project in composer.json.
@@ -77,6 +81,11 @@ class ComposerPackage
      */
     protected array $requiresNames = [];
 
+    /**
+     * @var ComposerPackage[]
+     */
+    protected array $dependencies = [];
+
     protected string $license;
 
     /**
@@ -103,6 +112,10 @@ class ComposerPackage
      */
     protected array $files = [];
 
+    protected DiscoveredSymbols $discoveredSymbols;
+
+    protected DiscoveredSymbols $discoveredSymbolsDeep;
+
     /**
      * @param string $absolutePath The absolute path to composer.json
      * @param ?array{files?:array<string>, classmap?:array<string>, psr?:array<string,string|array<string>>} $overrideAutoload Optional configuration to replace the package's own autoload definition with
@@ -112,9 +125,7 @@ class ComposerPackage
      */
     public static function fromFile(string $absolutePath, ?array $overrideAutoload = null): ComposerPackage
     {
-        $composer = Factory::create(new NullIO(), $absolutePath, true);
-
-        return new ComposerPackage($composer, $overrideAutoload);
+        return new ComposerPackage(self::createPartialComposer($absolutePath), $overrideAutoload);
     }
 
     /**
@@ -126,27 +137,38 @@ class ComposerPackage
      */
     public static function fromComposerJsonArray(array $jsonArray, ?array $overrideAutoload = null): ComposerPackage
     {
-        $factory = new Factory();
-        $io = new NullIO();
-        $composer = $factory->createComposer($io, $jsonArray, true);
+        return new ComposerPackage(self::createPartialComposer($jsonArray), $overrideAutoload);
+    }
 
-        return new ComposerPackage($composer, $overrideAutoload);
+    /**
+     * @param string|ComposerJsonArray $composerInput
+     */
+    private static function createPartialComposer($composerInput): PartialComposer
+    {
+        $factory = new Factory();
+
+        /** @var PartialComposer $composer */
+        $composer = $factory->createComposer(new NullIO(), $composerInput, true, null, false);
+
+        return $composer;
     }
 
     /**
      * Create a PHP object to represent a composer package.
      *
-     * @param Composer $composer
+     * @param PartialComposer $composer
      * @param ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
      * @throws Exception
      */
-    public function __construct(Composer $composer, ?array $overrideAutoload = null)
+    public function __construct(PartialComposer $composer, ?array $overrideAutoload = null)
     {
+        $this->discoveredSymbols = new DiscoveredSymbols();
+
         $this->composer = $composer;
 
         $this->packageName = $composer->getPackage()->getName();
 
-        $pathNormalizer = FileSystem::makePathNormalizer(getcwd());
+        $pathNormalizer = FileSystem::makePathNormalizer(Platform::getcwd());
 
         // This is null for some packages, e.g. `wptrt/admin-notices`
         $packageVendorDirAbsolute = $this->composer->getConfig()->get('vendor-dir');
@@ -157,9 +179,9 @@ class ComposerPackage
             );
         }
         $fsComposerJsonFileAbsolute = $composer->getConfig()->getConfigSource()->getName();
+        $fsComposerAbsoluteDirectoryPath = realpath(dirname($fsComposerJsonFileAbsolute));
         $composerJsonFileAbsolute = $pathNormalizer->normalizePath($fsComposerJsonFileAbsolute);
 
-        $fsComposerAbsoluteDirectoryPath = realpath(dirname($fsComposerJsonFileAbsolute));
         if (false !== $fsComposerAbsoluteDirectoryPath) {
             if (str_starts_with($composerJsonFileAbsolute, $projectVendorDirAbsolute)) {
                 $this->packageAbsolutePath = $composerJsonFileAbsolute;
@@ -176,17 +198,45 @@ class ComposerPackage
         }
         $fsCurrentWorkingDirectory = FileSystem::normalizeDirSeparator($fsCurrentWorkingDirectory);
 
-        /** @var string $vendorAbsoluteDirectoryPath */
-        $vendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
-        if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
-            $this->vendorRelativePath = $this->packageName;
-            $this->packageAbsolutePath = $pathNormalizer->normalizePath(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
-        // If the package is symlinked, the path will be outside the working directory.
-        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
-            $this->vendorRelativePath = $output_array[1];
-        } elseif (1 === preg_match('/.*[\/\\\\]([^\/\\\\]+[\/\\\\][^\/\\\\]+)[\/\\\\]composer.json/', $composerJsonFileAbsolute, $output_array)) {
-        // Not every package gets installed to a folder matching its name (crewlabs/unsplash).
-            $this->vendorRelativePath = $output_array[1];
+        /** @var string $packageVendorAbsoluteDirectoryPath */
+        $packageVendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
+        $packageAbsoluteDirectoryPath = dirname($packageVendorAbsoluteDirectoryPath);
+        $vendorAbsoluteDirectoryPath = $fsCurrentWorkingDirectory . '/vendor';
+        if ('metapackage' !== $composer->getPackage()->getType()) {
+            if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
+                $resolvedPackagePath = realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName);
+                $this->packageAbsolutePath = $pathNormalizer->normalizePath(
+                    false !== $resolvedPackagePath
+                        ? $resolvedPackagePath
+                        : $vendorAbsoluteDirectoryPath . '/' . $this->packageName
+                );
+
+
+                $this->vendorRelativePath  = $this->packageName;
+                //$this->packageAbsolutePath = $pathNormalizer->normalizePath(Platform::realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
+                // If the package is symlinked, the path will be outside the working directory.
+//        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
+//            $this->vendorRelativePath = $output_array[1];
+            } elseif (! ( $this instanceof ProjectComposerPackage ) && file_exists($packageAbsoluteDirectoryPath)) {
+                $this->vendorRelativePath  =
+                    implode(
+                        '/',
+                        array_slice(
+                            explode(
+                                '/',
+                                FileSystem::normalizeDirSeparator($packageAbsoluteDirectoryPath)
+                            ),
+                            - 2
+                        )
+                    );
+                $this->packageAbsolutePath = $pathNormalizer->normalizePath($packageAbsoluteDirectoryPath);
+            } elseif (1 === preg_match('/.*[\/\\\\]([^\/\\\\]+[\/\\\\][^\/\\\\]+)[\/\\\\]composer.json/', $composerJsonFileAbsolute, $output_array)) {
+                // Not every package gets installed to a folder matching its name (crewlabs/unsplash).
+                if (! ( $this instanceof ProjectComposerPackage )) {
+                    $this->vendorRelativePath = $output_array[1];
+                }
+                $this->packageAbsolutePath = dirname($composerJsonFileAbsolute);
+            }
         }
 
         if (!is_null($overrideAutoload)) {
@@ -237,12 +287,12 @@ class ComposerPackage
 
     /**
      * No leading or tailing slash
+     *
+     * Possibly a symlink.
      */
     public function getPackageAbsolutePath(): ?string
     {
-        return !empty($this->packageAbsolutePath)
-            ? $this->packageAbsolutePath
-            : null;
+        return $this->packageAbsolutePath;
     }
 
     /**
@@ -259,6 +309,11 @@ class ComposerPackage
         return $this->autoload;
     }
 
+    public function hasPsr0(): bool
+    {
+        return isset($this->autoload['psr-0']);
+    }
+
     /**
      * The names of the packages in the composer.json's "requires" field (without version).
      *
@@ -268,12 +323,23 @@ class ComposerPackage
      */
     public function getRequiresNames(): array
     {
-        // Unset PHP, ext-*.
-        $removePhpExt = function ($element) {
-            return !( 0 === strpos($element, 'ext') || 'php' === $element );
-        };
+        return array_filter(
+            $this->requiresNames,
+            static function (string $requiredPackageName): bool {
+                return !self::isPlatformPackageName($requiredPackageName);
+            }
+        );
+    }
 
-        return array_filter($this->requiresNames, $removePhpExt);
+    public static function isPlatformPackageName(string $packageName, bool $includePhpVariants = false): bool
+    {
+        return 0 === strpos($packageName, 'ext')
+            || 'php' === $packageName
+            || (
+                $includePhpVariants
+                && 0 === strpos($packageName, 'php')
+                && false === strpos($packageName, '/')
+            );
     }
 
     public function getLicense():string
@@ -345,24 +411,26 @@ class ComposerPackage
         return $this->didDelete;
     }
 
-    public function setProjectVendorDirectory(string $parentProjectVendorDirectory)
+    public function setProjectVendorDirectory(string $parentProjectVendorDirectory): void
     {
-        $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorRelativePath;
+        if (!is_null($this->packageAbsolutePath)) {
+            $this->packageAbsolutePath = $parentProjectVendorDirectory . '/' . $this->vendorRelativePath;
+        }
     }
 
-    public function setPackageAbsolutePath(string $packageAbsolutePath)
+    public function setPackageAbsolutePath(string $packageAbsolutePath): void
     {
         $this->packageAbsolutePath = $packageAbsolutePath;
     }
 
-    public function setRealpath(string $realpath)
+    public function setRealpath(string $realpath): void
     {
         $this->packageRealPath = $realpath;
     }
 
     public function getRealPath(): ?string
     {
-        return $this->packageRealPath ?? $this->getPackageAbsolutePath();
+        return $this->packageRealPath;
     }
 
     public function addFile(FileWithDependency $file): void
@@ -373,5 +441,71 @@ class ComposerPackage
     public function getFile(string $path): ?FileWithDependency
     {
         return $this->files[$path] ?? null;
+    }
+
+    public function getFiles(): DiscoveredFiles
+    {
+        return new DiscoveredFiles($this->files);
+    }
+
+    public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void
+    {
+        $this->discoveredSymbols->add($symbol);
+    }
+
+    public function getDiscoveredSymbols(): DiscoveredSymbols
+    {
+        return $this->discoveredSymbols;
+    }
+
+    public function addDependency(ComposerPackage $composerPackage): void
+    {
+        $this->dependencies[$composerPackage->getPackageName()] = $composerPackage;
+    }
+
+    /**
+     * @return ComposerPackage[]
+     */
+    public function getDependencies(): array
+    {
+        return $this->dependencies;
+    }
+
+    public function getFlatDependencyTree(): DeepDependenciesCollection
+    {
+        return new DeepDependenciesCollection($this->dependencies);
+    }
+
+    public function getDiscoveredSymbolsDeep(): DiscoveredSymbols
+    {
+        if (isset($this->discoveredSymbolsDeep)) {
+            return $this->discoveredSymbolsDeep;
+        }
+        $flatDependencyTree = $this->getFlatDependencyTree();
+        $dependencyDiscoveredSymbolsArray = $this->discoveredSymbols->toArray();
+        foreach ($flatDependencyTree as $dependency) {
+            $dependencyDiscoveredSymbolsArray = array_merge($dependencyDiscoveredSymbolsArray, $dependency->getDiscoveredSymbols()->toArray());
+        }
+        $this->discoveredSymbolsDeep = new DiscoveredSymbols($dependencyDiscoveredSymbolsArray);
+        return $this->discoveredSymbolsDeep;
+    }
+
+    /**
+     * So it works with `array_unique()`.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->getPackageName();
+    }
+
+    public function isPsr0Autoloaded(): bool
+    {
+        return isset($this->autoload['psr-0']);
+    }
+    public function isFilesAutoloaded(): bool
+    {
+        return isset($this->autoload['files']);
     }
 }

@@ -16,13 +16,6 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
  */
 class DependenciesCommandTest extends TestCase
 {
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->createWorkingDir();
-    }
-
     protected function getSut(
         ?InputInterface $inputInterfaceMock = null,
         ?ConsoleOutputInterface $outputInterfaceMock = null,

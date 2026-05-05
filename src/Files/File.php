@@ -6,6 +6,7 @@
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 
 class File implements FileBase
 {
@@ -21,8 +22,6 @@ class File implements FileBase
      */
     protected bool $doCopy = true;
 
-    protected bool $isAutoloaded = false;
-
     /**
      * Should this file be deleted from the source directory?
      *
@@ -30,20 +29,21 @@ class File implements FileBase
      */
     protected ?bool $doDelete = false;
 
-    /** @var DiscoveredSymbol[] */
-    protected array $discoveredSymbols = [];
+    protected DiscoveredSymbols $discoveredSymbols;
 
     protected string $targetAbsolutePath;
 
     protected bool $didDelete = false;
 
-    protected bool $doPrefix = false;
+    protected bool $doPrefix = true;
 
     public function __construct(
         string $sourceAbsolutePath,
         string $vendorRelativePath,
         string $targetAbsolutePath
     ) {
+        $this->discoveredSymbols = new DiscoveredSymbols();
+
         $this->sourceAbsolutePath = $sourceAbsolutePath;
         $this->vendorRelativePath = $vendorRelativePath;
         $this->targetAbsolutePath = $targetAbsolutePath;
@@ -75,14 +75,9 @@ class File implements FileBase
         return $this->doCopy;
     }
 
-    public function setIsAutoloaded(bool $isAutoloaded): void
-    {
-        $this->isAutoloaded = $isAutoloaded;
-    }
-
     public function isAutoloaded(): bool
     {
-        return $this->isAutoloaded;
+        return false;
     }
 
     /**
@@ -140,13 +135,10 @@ class File implements FileBase
 
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void
     {
-        $this->discoveredSymbols[$symbol->getOriginalSymbol()] = $symbol;
+        $this->discoveredSymbols->add($symbol);
     }
 
-    /**
-     * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
-     */
-    public function getDiscoveredSymbols(): array
+    public function getDiscoveredSymbols(): DiscoveredSymbols
     {
         return $this->discoveredSymbols;
     }
@@ -177,8 +169,25 @@ class File implements FileBase
         return $this->didUpdate;
     }
 
+    protected bool $doUpdate = true;
+
+    public function setDoUpdate(bool $doUpdate): void
+    {
+        $this->doUpdate = $doUpdate;
+    }
+
+    public function getDoUpdate(): bool
+    {
+        return $this->doUpdate;
+    }
+
     public function getVendorRelativePath(): string
     {
         return $this->vendorRelativePath;
+    }
+
+    public function getNamespaces(): DiscoveredSymbols
+    {
+        return $this->discoveredSymbols->getNamespaces();
     }
 }

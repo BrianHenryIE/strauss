@@ -18,6 +18,11 @@ call_user_func(function ($version) {
         if (!is_file($autoloader)) {
             continue;
         }
+
+        // When composer/composer is installed, this prevents the wrong "instance" of the static class being used.
+        $composerVendorDir = dirname($autoloader);
+        require_once $composerVendorDir .  '/composer/InstalledVersions.php';
+
         require $autoloader;
         break;
     }
@@ -33,4 +38,4 @@ call_user_func(function ($version) {
 
     $app = new BrianHenryIE\Strauss\Console\Application($version);
     $app->run();
-}, '0.27.1');
+}, '0.28.0');

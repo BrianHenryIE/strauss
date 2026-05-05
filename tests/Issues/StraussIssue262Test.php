@@ -54,7 +54,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\S262\\",
       "delete_vendor_packages": true,
       "exclude_from_copy": {
         "packages": [
@@ -77,7 +77,7 @@ EOD;
         chdir($this->testsWorkingDir . '/project');
         exec('composer install');
 
-        // teststempdir/project/vendor/strausstest/dependency
+        // teststempdir/x/project/vendor/strausstest/dependency
         $this->assertFileExists($this->testsWorkingDir . '/project/vendor/strausstest/dependency');
 
         $exitCode = $this->runStrauss($output);

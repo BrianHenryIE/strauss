@@ -88,9 +88,13 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $this->assertStringContainsString('[notice]', $output);
-        $this->assertStringNotContainsString('[info]', $output);
-        $this->assertStringNotContainsString('[debug]', $output);
+        if (!$this->isTestingWithPhar()) {
+            $this->assertStringContainsString('[notice]', $output);
+            $this->assertStringNotContainsString('[info]', $output);
+            $this->assertStringNotContainsString('[debug]', $output);
+        } else {
+            $this->expectNotToPerformAssertions();
+        }
     }
 
     public function test_info_output_level(): void

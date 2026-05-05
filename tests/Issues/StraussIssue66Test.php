@@ -15,7 +15,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue66Test extends IntegrationTestCase
 {
-
     /**
      */
     public function test_wp_graphql_prefix_main_class(): void
@@ -24,18 +23,44 @@ class StraussIssue66Test extends IntegrationTestCase
         $composerJsonString = <<<'EOD'
 {
   "require": {
-    "wp-graphql/wp-graphql": "^1.12"
+    "wp-graphql/wp-graphql": "1.12"
   },
   "config": {
     "audit": {
       "block-insecure": false
     }
   },
+  "provides": {
+      "appsero/client": "*",
+      "ivome/graphql-relay-php": "*",
+      "webonyx/graphql-php": "*"
+  },
   "extra": {
     "strauss": {
       "namespace_prefix": "MyProject\\Dependencies\\",
       "classmap_prefix": "Prefix_",
-      "constant_prefix": "Prefix_"
+      "constant_prefix": "Prefix_",
+      "exclude_from_copy": {
+        "file_patterns": [
+          "#\/tests\/#",
+          "#\/wordpress-org\/#"
+        ],
+        "packages": [
+          "appsero/client",
+          "ivome/graphql-relay-php",
+          "webonyx/graphql-php"
+        ]
+      },
+      "exclude_from_prefix": {
+        "file_patterns": [
+          "#\/src\/.*\/#"
+        ],
+        "packages": [
+          "appsero/client",
+          "ivome/graphql-relay-php",
+          "webonyx/graphql-php"
+        ]
+      }
     }
   }
 }

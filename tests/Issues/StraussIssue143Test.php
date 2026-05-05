@@ -51,8 +51,8 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/LoggerInterface.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/psr/log/Strauss/Issue143/Psr/Log/LoggerInterface.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/Strauss/Issue143/Psr/Log/LoggerInterface.php');
         $this->assertStringContainsString('namespace Strauss\\Issue143\\Psr\\Log;', $phpString);
 
         $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/autoload.php');
@@ -64,7 +64,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         $classmapString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
-        $this->assertStringContainsString('/psr/log/Psr/Log/LoggerAwareInterface.php', $classmapString);
+        $this->assertStringContainsString('/psr/log/Strauss/Issue143/Psr/Log/LoggerAwareInterface.php', $classmapString);
         $this->assertStringNotContainsString('\'Psr\\\\Log\\\\NullLogger', $classmapString);
         $this->assertStringContainsString('\'Strauss\\\\Issue143\\\\Psr\\\\Log\\\\NullLogger', $classmapString);
 

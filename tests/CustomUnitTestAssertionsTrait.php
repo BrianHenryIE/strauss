@@ -2,9 +2,11 @@
 
 namespace BrianHenryIE\Strauss;
 
-trait CustomAssertionsTrait
-{
+use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Composer\Util\Platform;
 
+trait CustomUnitTestAssertionsTrait
+{
     public static function assertEqualsRN($expected, $actual, string $message = ''): void
     {
         if (is_string($expected) && is_string($actual)) {
@@ -44,9 +46,11 @@ trait CustomAssertionsTrait
 
     protected function assertEqualsPaths(string $expected, string $actual, string $message = ''): void
     {
+        $pathNormalizer = FileSystem::makePathNormalizer(FileSystem::getFsRoot(getcwd()));
+
         self::assertEquals(
-            $this->pathNormalizer->normalizePath($expected),
-            $this->pathNormalizer->normalizePath($actual),
+            $pathNormalizer->normalizePath($expected),
+            $pathNormalizer->normalizePath($actual),
             $message
         );
     }

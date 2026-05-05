@@ -5,24 +5,25 @@
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
-use Composer\InstalledVersions;
+use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter;
+use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
+use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
+use League\Flysystem\PathPrefixer;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
-use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use League\Flysystem\Config;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
@@ -30,7 +31,10 @@ use Symfony\Component\Console\Logger\ConsoleLogger;
 
 abstract class AbstractRenamespacerCommand extends Command
 {
-    use LoggerAwareTrait;
+    /**
+     * @var LoggerInterface&Logger
+     */
+    protected $logger;
 
     /** No trailing slash */
     protected string $workingDir;
@@ -40,6 +44,8 @@ abstract class AbstractRenamespacerCommand extends Command
     protected ProjectComposerPackage $projectComposerPackage;
 
     protected StraussConfig $config;
+
+    protected DependenciesCollection $flatDependencyTree;
 
     /**
      * Set name and description, call parent class to add dry-run, verbosity options.
@@ -75,8 +81,15 @@ abstract class AbstractRenamespacerCommand extends Command
             false
         );
 
-        /** @var string $installedSymfonyVersion */
-        $installedSymfonyVersion = InstalledVersions::getVersion('symfony/console');
+        /**
+         * When run via. `strauss.phar`, classes such as `InstalledVersions` are prefixed, but when installed
+         * via Composer, the unprefixed version is used.
+         *
+         * @var string $installedSymfonyVersion
+         */
+        $installedSymfonyVersion = class_exists(\BrianHenryIE\Strauss\Composer\InstalledVersions::class)
+            ? \BrianHenryIE\Strauss\Composer\InstalledVersions::getVersion('symfony/console')
+            : \Composer\InstalledVersions::getVersion('symfony/console');
 
         if (version_compare($installedSymfonyVersion, '7.2', '<')) {
             $this->addOption(
@@ -89,6 +102,63 @@ abstract class AbstractRenamespacerCommand extends Command
         }
     }
 
+    /**
+     * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
+     */
+    protected function initialize(InputInterface $input, OutputInterface $output): void
+    {
+        $this->flatDependencyTree = new DependenciesCollection([]);
+
+        $logger = new Logger('logger');
+        $this->logger = $logger;
+
+        $workingDir      = Platform::getcwd();
+        $localFsLocation = FileSystem::getFsRoot($workingDir);
+
+        $pathNormalizer = Filesystem::makePathNormalizer($localFsLocation);
+
+        $pathPrefixer = new PathPrefixer(
+            $localFsLocation,
+            DIRECTORY_SEPARATOR
+        );
+
+        // Extends `LocalFilesystemAdapter`.
+        $localFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
+            $localFsLocation,
+            $pathNormalizer,
+            $pathPrefixer,
+            $logger
+        );
+
+        $this->filesystem = new FileSystem(
+            $localFilesystemAdapter,
+            [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
+            $pathNormalizer,
+            $pathPrefixer,
+            $localFsLocation,
+            $workingDir,
+        );
+
+        $this->workingDir = $this->filesystem->normalizePath($workingDir);
+
+        $this->configureLogger($logger, $input, $output);
+    }
+
+    protected function configureLogger(Logger $logger, InputInterface $input, OutputInterface $output): void
+    {
+        $logger->pushProcessor(new PsrLogMessageProcessor());
+        $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
+        $logger->pushProcessor(new PadColonColumnsLogProcessor());
+        $logger->pushHandler(new PsrHandler($this->getConsoleLogger($input, $output)));
+    }
+
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger->pushHandler(new PsrHandler($logger));
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!isset($this->config)) {
@@ -96,17 +166,13 @@ abstract class AbstractRenamespacerCommand extends Command
         }
 
         if ($this->config->isDryRun()) {
-            $this->filesystem =
-                new FileSystem(
-                    new ReadOnlyFileSystem(
-                        $this->filesystem->getAdapter(),
-                        Filesystem::makePathNormalizer($this->workingDir)
-                    ),
-                    [],
-                    null,
-                    null,
-                    $this->workingDir
-                );
+            $this->filesystem->setAdapter(
+                new ReadOnlyFileSystemAdapter(
+                    $this->filesystem->getAdapter(),
+                    Filesystem::makePathNormalizer($this->workingDir)
+                )
+            );
+            $this->filesystem->setLocalFsLocation('mem://');
 
             /** @var FilesystemRegistry $registry */
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
@@ -118,50 +184,12 @@ abstract class AbstractRenamespacerCommand extends Command
             } catch (\Exception $e) {
                 $registry->register('mem', $this->filesystem);
             }
-        }
 
-        $logger = new Logger('logger');
-        $logger->pushProcessor(new PsrLogMessageProcessor());
-        $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
-        $logger->pushProcessor(new PadColonColumnsLogProcessor());
-        if (isset($this->logger) && !($this->logger instanceof ConsoleLogger)) {
-            $logger->pushHandler(new PsrHandler($this->logger));
+            $this->logger->reset();
+            $this->configureLogger($this->logger, $input, $output);
         }
-        $logger->pushHandler(new PsrHandler($this->getConsoleLogger($input, $output)));
-        $this->setLogger($logger);
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
-     */
-    protected function initialize(InputInterface $input, OutputInterface $output): void
-    {
-        $this->workingDir = getcwd() . '';
-
-        if (!isset($this->filesystem)) {
-            $localFilesystemAdapter = new LocalFilesystemAdapter(
-                FileSystem::getFsRoot($this->workingDir),
-                null,
-                LOCK_EX,
-                LocalFilesystemAdapter::SKIP_LINKS
-            );
-
-            $this->filesystem = new FileSystem(
-                $localFilesystemAdapter,
-                [
-                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ],
-                Filesystem::makePathNormalizer($this->workingDir),
-                null,
-                $this->workingDir
-            );
-        }
-
-        if (method_exists($this, 'setLogger') && !isset($this->logger)) {
-            $this->setLogger($this->getConsoleLogger($input, $output));
-        }
     }
 
     /**
@@ -170,7 +198,7 @@ abstract class AbstractRenamespacerCommand extends Command
     protected function getConsoleLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         // If a subclass has a config and it is a dry-run, increase verbosity
-        $isDryRun = property_exists($this, 'config') && isset($this->config) && method_exists($this->config, 'isDryRun') && $this->config->isDryRun();
+        $isDryRun = isset($this->config) && $this->config->isDryRun();
 
         // Who would want to dry-run without output?
         if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
@@ -190,7 +218,6 @@ abstract class AbstractRenamespacerCommand extends Command
 
         return new ConsoleLogger($output, $logLevel);
     }
-
 
     protected function createConfig(InputInterface $input): StraussConfig
     {

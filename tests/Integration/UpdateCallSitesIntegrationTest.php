@@ -17,7 +17,7 @@ class UpdateCallSitesIntegrationTest extends IntegrationTestCase
     public function test_updateCallSites_functions(): void
     {
         // TODO: Find alternative to twig for this test.
-        $this->markTestSkipped('Exceptionally slow test');
+        $this->markTestSkippedLocally('Exceptionally slow test');
 
         $file1 = <<<'EOD'
 <?php
@@ -51,6 +51,11 @@ EOD;
       "classmap_prefix": "BH_Strauss_",
       "target_directory": "vendor",
       "update_call_sites": true
+    }
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
     }
   }
 }

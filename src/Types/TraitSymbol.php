@@ -8,7 +8,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 /**
  * @phpstan-import-type TraitAliasArray from AutoloadAliasInterface
  */
-class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
+class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
 {
     /**
      * @var string[]
@@ -18,18 +18,18 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
     /**
      * @param string $fqdnClassname
      * @param FileBase $sourceFile
-     * @param ?string $namespace
+     * @param ?NamespaceSymbol $namespace
      * @param ?ComposerPackage $composerPackage
      * @param ?string[] $uses
      */
     public function __construct(
         string $fqdnClassname,
         FileBase $sourceFile,
-        ?string $namespace = null,
+        ?NamespaceSymbol $namespace = null,
         ?ComposerPackage $composerPackage = null,
         ?array $uses = null
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace ?? '\\', $composerPackage);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace, $composerPackage);
 
         $this->uses = (array) $uses;
     }
@@ -50,8 +50,8 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return array (
             'type' => 'trait',
             'traitname' => $this->getOriginalLocalName(),
-            'namespace' => $this->namespace,
-            'use' => [$this->getReplacement()],
+            'namespace' => $this->namespace->getOriginalSymbol(),
+            'use' => [$this->getReplacementFqdnName()],
         );
     }
 }

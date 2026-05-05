@@ -16,6 +16,7 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemReader;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToReadFile;
@@ -27,9 +28,9 @@ use Traversable;
 // TODO: When a directory is deleted, all the files in that directory should be marked deleted?
 // OR each parent directory of a file should be checked it exists before the file is read?
 
-class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitInterface
+class ReadOnlyFileSystemAdapter implements FilesystemAdapter, FlysystemAdapterBackCompatTraitInterface
 {
-    use FlysystemBackCompatTrait;
+    use FlysystemAdapterBackCompatTrait;
 
     protected FilesystemAdapter $delegateFilesystemAdapter;
     protected ModifiedFilesInMemoryFilesystemAdapter $inMemoryFiles;
@@ -177,9 +178,6 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
     {
         $path = $this->pathNormalizer->normalizePath($path);
 
-        /** @var FileAttributes[] $actual */
-//        $actual = $this->filesystem->listContents($path, $deep)->toArray();
-
         $deletedFilesGenerator = $this->deletedFiles->listContents($path, $deep);
         $deletedFilesArray = $deletedFilesGenerator instanceof Traversable
             ? iterator_to_array($deletedFilesGenerator, false)
@@ -196,8 +194,8 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
 
         $inMemoryFilePaths = (array) array_map(fn($file) => $file->path(), $inMemoryFilesArray);
 
-        /** @var FileAttributes[] $parentFilesystemArray */
         $parentFilesystemGenerator = $this->delegateFilesystemAdapter->listContents($path, $deep);
+        /** @var FileAttributes[] $parentFilesystemArray */
         $parentFilesystemArray = $parentFilesystemGenerator instanceof Traversable
             ? iterator_to_array($parentFilesystemGenerator, false)
             : (array) $parentFilesystemGenerator;
@@ -298,9 +296,12 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
             return $filesize;
         }
 
-        return $filesize;
+        return new FileAttributes($path, $filesize);
     }
 
+    /**
+     * @see FilesystemAdapter::mimeType()
+     */
     public function mimeType(string $path): FileAttributes
     {
         throw new BadMethodCallException('Not yet implemented');
@@ -311,21 +312,25 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
         throw new BadMethodCallException('Not yet implemented');
     }
 
+    /**
+     * @see FilesystemAdapter::visibility()
+     * @see LocalFilesystemAdapter::visibility()
+     */
     public function visibility(string $path): FileAttributes
     {
         $defaultVisibility = Visibility::PUBLIC;
 
         $path = $this->pathNormalizer->normalizePath($path);
 
-        if (!$this->has($path)) {
+        if (!$this->fileExists($path) && !$this->directoryExists($path)) {
             throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
         }
 
-        if ($this->deletedFiles->has($path)) {
+        if ($this->deletedFiles->fileExists($path) || $this->deletedFiles->directoryExists($path)) {
             throw UnableToRetrieveMetadata::visibility($path, 'file does not exist');
         }
 
-        if ($this->inMemoryFiles->has($path)) {
+        if ($this->inMemoryFiles->fileExists($path) || $this->inMemoryFiles->directoryExists($path)) {
             return $this->inMemoryFiles->visibility($path);
         }
 
@@ -347,22 +352,22 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
     /**
      *
      * @param string $path
-     * @param object|FilesystemReader $filesystem
+     * @param FilesystemAdapter $filesystemAdapter
      * @return bool
      * @throws FilesystemException
      */
-    protected function directoryExistsIn(string $path, FilesystemAdapter $filesystem): bool
+    protected function directoryExistsIn(string $path, FilesystemAdapter $filesystemAdapter): bool
     {
         $path = $this->pathNormalizer->normalizePath($path);
 
-        if (method_exists($filesystem, 'directoryExists')) {
-            return $filesystem->directoryExists($path);
+        if (method_exists($filesystemAdapter, 'directoryExists')) {
+            return $filesystemAdapter->directoryExists($path);
         }
 
         $parentDirectoryPath = dirname($path);
 
-        /** @var FileSystemReader $filesystem */
-        $parentDirectoryContents = $filesystem->listContents(
+        /** @var FileSystemReader $filesystemAdapter */
+        $parentDirectoryContents = $filesystemAdapter->listContents(
             $this->pathNormalizer->normalizePath($parentDirectoryPath),
             false
         );
@@ -380,10 +385,15 @@ class ReadOnlyFileSystem implements FilesystemAdapter, FlysystemBackCompatTraitI
     }
 
     /**
-     * @see FlysystemBackCompatTrait::directoryExists()
+     * @see FlysystemReaderBackCompatTrait::directoryExists()
      */
     public function getNormalizer(): PathNormalizer
     {
         return $this->pathNormalizer;
+    }
+
+    public function normalizePath(string $path): string
+    {
+        return $this->pathNormalizer->normalizePath($path);
     }
 }

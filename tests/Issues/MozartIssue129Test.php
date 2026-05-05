@@ -14,10 +14,11 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 
 /**
  * Class MozartIssue129Test
@@ -34,22 +35,39 @@ class MozartIssue129Test extends TestCase
      */
     public function test_test($phpString, $expected)
     {
-
         $config = $this->createMock(StraussConfig::class);
+
+        $filesystem = $this->getInMemoryFileSystem();
 
         $original = 'Example\Sdk\Endpoints';
         $replacement = 'Strauss\Example\Sdk\Endpoints';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $namespaceSymbol = new NamespaceSymbol($original);
+        $namespaceSymbol->setDoRename(true);
+        $namespaceSymbol->setLocalReplacement($replacement);
 
-        $result = $replacer->replaceNamespace($phpString, $original, $replacement);
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
 
-        self::assertEqualsRN($expected, $result);
+        $file = new File(
+            'sourceAbsolutePath.php',
+            'vendorRelativePath.php',
+            'targetAbsolutePath.php'
+        );
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $phpString);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
     public static function pairTestDataProvider()
     {
-
         $fromTo = [];
 
         $contents = <<<'EOD'

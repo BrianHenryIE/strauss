@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Prefixer;
 
 /**
  * @see \BrianHenryIE\Strauss\Console\Commands\ReplaceCommand
@@ -13,7 +14,7 @@ class ReplacerIntegrationTest extends IntegrationTestCase
 
     public function testReplaceNamespace(): void
     {
-        $this->markTestSkipped('Ironically, this is failing because it downloads a newer psr/log but strauss has already loaded an older one.');
+        $this->markTestIncomplete('Ironically, this is failing because it downloads a newer psr/log but strauss has already loaded an older one.');
 
         $composerJsonString = <<<'EOD'
 {
@@ -250,7 +251,7 @@ EOD;
     "name": "brianhenryie/pdf-helpers",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\PdfHelpers\\": "src"
+            "BrianHenryIE\\\\PdfHelpers\\\\": "src"
         }
     },
     "require": {
@@ -321,5 +322,190 @@ EOD;
         $this->assertFileExistsInFileSystem($expectedTargetFilePath);
         $updatedFile = $this->getFileSystem()->read($expectedTargetFilePath);
         $this->assertStringContainsString('extends Mpdf', $updatedFile);
+    }
+
+    /**
+     * @see Prefixer::replaceSingleClassnameInString()
+     */
+    public function test_replace_namespace_string(): void
+    {
+        $composerJsonString = <<<'JSON'
+{
+    "name": "brianhenryie/test-replace-namespace-string",
+    "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+    }
+  }
+}
+JSON;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $workingDir = $this->testsWorkingDir;
+        $relativeTargetDir = 'vendor-prefixed/';
+        $absoluteTargetDir = $workingDir . '/' . $relativeTargetDir;
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = $this->getFileSystem()->read($absoluteTargetDir . '/composer/autoload_real.php');
+
+        $this->assertStringNotContainsString("if ('Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
+        $this->assertStringContainsString("if ('BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
+    }
+
+    /**
+     * @see Prefixer::replaceSingleClassnameInString()
+     */
+    public function test_replace_string(): void
+    {
+        $composerJsonString = <<<'JSON'
+{
+    "name": "brianhenryie/test-replace-string",
+    "require": {
+      "justinrainbow/json-schema": "6.8.0"
+    },
+    "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+    }
+  }
+}
+JSON;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/justinrainbow/json-schema/src/JsonSchema/Constraints/Factory.php');
+
+        $this->assertStringNotContainsString("'array' => 'JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
+        $this->assertStringContainsString("'array' => 'BrianHenryIE\Strauss\JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
+    }
+
+    /**
+     * Test an edge case where the class is surrounded by null character.
+     *
+     * @see AutoloadGenerator::getStaticFile()
+     * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+     */
+    public function test_ClassLoader(): void
+    {
+        $this->markTestSkippedLocally();
+
+        $composerJsonString = <<<'EOD'
+{
+    "name": "strauss/exclude-from-prefix",
+    "require": {
+        "composer/composer": "2.9.7"
+    },
+    "provide": {
+        "composer/ca-bundle": "*",
+        "composer/class-map-generator": "*",
+        "composer/metadata-minifier": "*",
+        "composer/pcre": "*",
+        "composer/semver": "*",
+        "composer/spdx-licenses": "*",
+        "composer/xdebug-handler": "*",
+        "justinrainbow/json-schema": "*",
+        "marc-mabe/php-enum": "*",
+        "psr/container": "*",
+        "psr/log": "*",
+        "react/promise": "*",
+        "seld/jsonlint": "*",
+        "seld/phar-utils": "*",
+        "seld/signal-handler": "*",
+        "symfony/console": "*",
+        "symfony/deprecation-contracts": "*",
+        "symfony/filesystem": "*",
+        "symfony/finder": "*",
+        "symfony/polyfill-ctype": "*",
+        "symfony/polyfill-intl-grapheme": "*",
+        "symfony/polyfill-intl-normalizer": "*",
+        "symfony/polyfill-mbstring": "*",
+        "symfony/polyfill-php73": "*",
+        "symfony/polyfill-php80": "*",
+        "symfony/polyfill-php81": "*",
+        "symfony/polyfill-php84": "*",
+        "symfony/process": "*",
+        "symfony/service-contracts": "*",
+        "symfony/string": "*"
+    },
+    "extra": {
+        "strauss": {
+            "target_directory": "vendor",
+            "namespace_prefix": "BrianHenryIE\\Strauss\\"
+        }
+    }
+}
+EOD;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
+
+        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
+        $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
+        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\Strauss\Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
+
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassLoader.php');
+        $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
+        $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\Composer\\Autoload;', $phpString);
+
+        // vendor/composer/composer/src/Composer/Autoload/ClassMapGenerator.php
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassMapGenerator.php');
+        $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\Composer\\Autoload;', $phpString);
+        $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
+    }
+    /**
+     *
+     */
+    public function test_functions_replace_react_promise(): void
+    {
+        $this->markTestSkippedLocally();
+
+        $composerJsonString = <<<'EOD'
+{
+    "name": "strauss/react-promise-functions",
+    "require": {
+        "react/promise": "3.3.0"
+    },
+    "extra": {
+        "strauss": {
+            "target_directory": "vendor",
+            "namespace_prefix": "BrianHenryIE\\Strauss\\"
+        }
+    }
+}
+EOD;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        assert($exitCode === 0, $output);
+
+        // vendor/react/promise/src/Internal/RejectedPromise.php
+        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/react/promise/src/Internal/RejectedPromise.php');
+        $this->assertStringNotContainsString('use function React\Promise\resolve;', $autoloadGeneratorString);
+        $this->assertStringContainsString('use function BrianHenryIE\Strauss\React\Promise\resolve;', $autoloadGeneratorString);
     }
 }

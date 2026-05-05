@@ -18,7 +18,7 @@ class StraussIssue91Test extends IntegrationTestCase
     public function test_issue_91(): void
     {
         if (!extension_loaded('gd')) {
-            $this->markTestSkipped('GD extension not loaded');
+            $this->markTestIncomplete('GD extension not loaded');
         }
 
         $composerJsonString = <<<'EOD'

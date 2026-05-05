@@ -8,7 +8,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 /**
  * @phpstan-import-type InterfaceAliasArray from AutoloadAliasInterface
  */
-class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
+class InterfaceSymbol extends NamespacedSymbol implements AutoloadAliasInterface
 {
     /**
      * @var string[]
@@ -18,18 +18,18 @@ class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
     /**
      * @param string $fqdnClassname
      * @param FileBase $sourceFile
-     * @param ?string $namespace
+     * @param ?NamespaceSymbol $namespace
      * @param ?ComposerPackage $package
      * @param string[] $extends
      */
     public function __construct(
         string $fqdnClassname,
         FileBase $sourceFile,
-        ?string $namespace = null,
+        ?NamespaceSymbol $namespace = null,
         ?ComposerPackage $package = null,
         array $extends = []
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace ?? '\\', $package);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace, $package);
 
         $this->extends = $extends;
     }
@@ -50,8 +50,8 @@ class InterfaceSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return array (
             'type' => 'interface',
             'interfacename' => $this->getOriginalLocalName(),
-            'namespace' => $this->namespace,
-            'extends' => [$this->getReplacement()] + $this->getExtends(),
+            'namespace' => $this->namespace->getOriginalSymbol(),
+            'extends' => [$this->getReplacementFqdnName()] + $this->getExtends(),
         );
     }
 }

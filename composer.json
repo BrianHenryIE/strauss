@@ -23,18 +23,18 @@
     },
     "require": {
         "ext-json": "*",
-        "brianhenryie/simple-php-code-parser": "^0.15.3",
+        "composer-runtime-api": "^2.0",
+        "brianhenryie/simple-php-code-parser": "^0.15.5",
         "composer/class-map-generator": "^1.6.0",
         "composer/composer": "dev-main#4b766fabec26294c1aebbd828d359de642bf3099",
-        "composer-runtime-api": "^2.0",
-        "elazar/flystream": "^0.6.0|^1.4",
+        "elazar/flystream": "^0.6.0 || ^1.4",
         "json-mapper/json-mapper": "^2.0.0",
-        "league/flysystem": "^2.1|^3.0",
-        "league/flysystem-memory": "*",
+        "league/flysystem": "^2.5 || ^3.0",
+        "league/flysystem-memory": "^2.0.6 || ^3.31.0",
         "monolog/monolog": "^2.10",
         "nikic/php-parser": "^5.4.0",
-        "symfony/console": "^4|^5|^6|^7",
-        "symfony/finder": "^4|^5|^6|^7"
+        "symfony/console": "^4 || ^5 || ^6 || ^7",
+        "symfony/finder": "^4 || ^5 || ^6 || ^7"
     },
     "autoload": {
         "psr-4": {
@@ -59,9 +59,10 @@
     },
     "require-dev": {
         "php": "^7.4|^8.0",
+        "ext-json": "*",
+        "ext-zip": "*",
         "brianhenryie/color-logger": "*",
         "brianhenryie/php-codecoverage-markdown": "^0.1.0",
-        "clue/phar-composer": "^1.4",
         "jaschilz/php-coverage-badger": "^2.0",
         "mockery/mockery": "^1.6",
         "phpstan/extension-installer": "^1.4",
@@ -72,14 +73,11 @@
         "squizlabs/php_codesniffer": "^3.5"
     },
     "extra": {
-        "patches": {
-            "composer/composer": {
-                "Improve stream wrapper support": "https://github.com/composer/composer/pull/12396.patch"
-            },
-            "elazar/flystream": {
-                "Catch exceptions; return false ": "https://github.com/elazar/flystream/pull/17.patch"
-            }
-        }
+      "strauss": {
+          "namespace_prefix": "BrianHenryIE\\Strauss\\",
+          "target_directory": "vendor",
+          "updateCallSites": true
+      }
     },
     "conflict": {
       "json-mapper/json-mapper": "2.23.0 | 2.24.0"
@@ -144,6 +142,9 @@
         "sort-packages": true,
         "allow-plugins": {
             "phpstan/extension-installer": true
+        },
+        "platform": {
+            "php": "7.4"
         }
     }
 }

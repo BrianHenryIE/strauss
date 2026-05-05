@@ -20,6 +20,11 @@ class StraussIssue247Test extends IntegrationTestCase
     {
         $this->markTestSkippedOnPhpVersionBelow('8.1.0');
 
+        /**
+         * `Expected discovered file at ../../../../../../../stringify.php not found in package respect/stringifier`.
+         */
+        $this->expectWarningLogs();
+
         $composerJsonString = <<<'EOD'
 {
     "name": "issue247/webfx-wordpress-plugin-pokemon",

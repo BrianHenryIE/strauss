@@ -2,6 +2,8 @@
 /**
  * A logger that changes file paths to be relative to the project directory.
  *
+ * If a variable that is being replaced as the term 'path' in it, the path will be made relative to workingdir.
+ *
  * @see \BrianHenryIE\Strauss\Helpers\FileSystem::getProjectRelativePath()
  */
 

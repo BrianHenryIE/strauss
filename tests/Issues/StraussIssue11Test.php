@@ -26,7 +26,7 @@ class StraussIssue11Test extends IntegrationTestCase
      */
     public function test_migrate_mozart_config(): void
     {
-        $this->markTestSkipped('too slow');
+        $this->markTestSkippedLocally('too slow');
 
         $composerExtraStraussJson = <<<'EOD'
 {
@@ -66,7 +66,7 @@ EOD;
         $input = $this->createMock(InputInterface::class);
         $straussConfig = new StraussConfig($composer, $input);
 
-        self::assertEqualsRN('src/Mozart/', $straussConfig->getAbsoluteTargetDirectory());
+        self::assertEqualsRN('src/Mozart', $straussConfig->getRelativeTargetDirectory());
 
         self::assertEqualsRN("MZoo\\MBO_Sandbox\\Dependencies", $straussConfig->getNamespacePrefix());
     }
@@ -78,7 +78,14 @@ EOD;
      */
     public function test_carbon_fields(): void
     {
-        $this->markTestSkipped('too slow');
+        $this->markTestSkippedLocally('too slow');
+
+        /**
+         * HTML file with .php suffix.
+         *
+         * Skipping Prefixing in src/Mozart/htmlburger/carbon-fields/templates/Container/comment_meta.php due to parse error: Syntax error, unexpected '<' on line 2
+         */
+        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {
@@ -130,13 +137,19 @@ EOD;
         self::assertStringContainsString('$ioc->register( new \MZoo\MBO_Sandbox\Dependencies\Carbon_Fields\Provider\Container_Condition_Provider() );', $phpString);
     }
 
-
     /**
      * @author BrianHenryIE
      */
     public function test_static_namespace(): void
     {
-        $this->markTestSkipped('too slow');
+        $this->markTestSkippedLocally('too slow');
+
+        /**
+         * HTML file with php filetype.
+         *
+         * [warning] Skipping Prefixing in src/Mozart/htmlburger/carbon-fields/templates/Container/comment_meta.php due to parse error: Syntax error, unexpected '<' on line 2
+         */
+        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {
@@ -183,8 +196,8 @@ EOD;
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/src/Mozart/htmlburger/carbon-fields/core/Container.php');
 
         // This was not being prefixed.
-        self::assertStringNotContainsString('@method static \Carbon_Fields\Container\Comment_Meta_Container', $phpString);
+        $this->assertStringNotContainsString('@method static \Carbon_Fields\Container\Comment_Meta_Container', $phpString);
 
-        self::assertStringContainsString('@method static \MZoo\MBO_Sandbox\Dependencies\Carbon_Fields\Container\Comment_Meta_Container', $phpString);
+        $this->assertStringContainsString('@method static \MZoo\MBO_Sandbox\Dependencies\Carbon_Fields\Container\Comment_Meta_Container', $phpString);
     }
 }

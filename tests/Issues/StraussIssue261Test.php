@@ -20,6 +20,11 @@ class StraussIssue261Test extends IntegrationTestCase
     {
         $this->markTestSkippedOnPhpVersionBelow('8.1.0');
 
+        /**
+         * `Skipping non-existent autoload path in respect/stringifier: vendor/respect/stringifier/tests/src`.
+         */
+        $this->expectWarningLogs();
+
         $composerJsonString = <<<'EOD'
 {
     "name": "strauss/issue261",

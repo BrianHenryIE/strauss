@@ -25,7 +25,7 @@ class MozartIssue93Test extends IntegrationTestCase
     public function test_it_does_not_make_classname_replacement_inside_namespaced_file(): void
     {
 
-        $this->markTestSkipped('Not respecting the pinned commit.');
+        $this->markTestIncomplete('Not respecting the pinned commit.');
 
         $composerJsonString = <<<'EOD'
 {
@@ -39,8 +39,8 @@ class MozartIssue93Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_"
+			"namespace_prefix": "BrianHenryIE\\M93\\",
+			"classmap_prefix": "BrianHenryIE_M93_"
 		}
 	},
 	"minimum-stability": "dev"
@@ -59,7 +59,7 @@ EOD;
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/strauss/brianhenryie/wp-logger/src/class-logger.php');
 
         // Confirm problem is gone.
-        self::assertStringNotContainsString('class BrianHenryIE_Strauss_Logger extends', $php_string);
+        self::assertStringNotContainsString('class BrianHenryIE_M93_Logger extends', $php_string);
 
         // Confirm solution is correct.
         self::assertStringContainsString('class Logger extends', $php_string);

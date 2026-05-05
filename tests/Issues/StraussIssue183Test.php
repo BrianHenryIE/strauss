@@ -70,23 +70,29 @@ EOD;
         $this->assertEquals(0, $result_code, $outputString);
 
         // php -r "include __DIR__ . '/vendor/autoload.php'; new \Psr\Log\NullLogger();"
-        exec('php -r "include __DIR__ . \'/vendor/autoload.php\'; new \Psr\Log\NullLogger();" 2>&1', $output, $result_code);
+        exec('php -r "include __DIR__ . \'/vendor/autoload.php\'; new \Strauss\Issue183\Psr\Log\NullLogger();" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);
 
         $this->assertEquals(0, $result_code, $outputString);
     }
 
+    /**
+     * Test that e.g. `use \Psr\Log\LoggerAwareTrait` still works via the alias file after deleting the original file.
+     *
+     * Mentions of `allow_url_include` etc in the test were when trying to `include` streamwrapped files to load the
+     * new PHP, but this is not possible.
+     */
     public function test_allow_url_include(): void
     {
-        $composerJsonString = <<<EOD
+        $composerJsonString = <<<'EOD'
 {
   "name": "strauss/issue183",
   "require": {
-    "psr/log": "*"
+    "psr/log": "1.0"
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "Strauss\\\\Issue183\\\\",
+      "namespace_prefix": "Strauss\\Issue183\\",
       "delete_vendor_packages": true
     }
   }
@@ -101,6 +107,11 @@ EOD;
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
+
+        // vendor/composer/autoload_static.php
+        $autoloadStaticPhpString = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_static.php');
+        $this->assertStringContainsString('public static $classMap =', $autoloadStaticPhpString, 'Classmap not in autoload_static.');
+        $this->assertStringContainsString('Strauss\\\\Issue183\\\\Psr\\\\Log\\\\LoggerAwareTrait', $autoloadStaticPhpString, 'Classmap not in autoload_static.');
 
         // Directive 'allow_url_include' is deprecated
 
@@ -125,11 +136,19 @@ EOD;
 
         // php -d allow_url_include=on -d error_reporting="E_ALL & ~E_DEPRECATED" vendor/bin/strauss
 
-//        exec('php -d allow_url_include=on -d error_reporting="E_ALL & ~E_DEPRECATED" -r "include __DIR__ . \'/vendor/autoload.php\'; new class() { use \Psr\Log\LoggerAwareTrait; };" 2>&1', $output, $result_code);
+        // php -r "include __DIR__ . '/vendor-prefixed/autoload.php'; new class() { use Strauss\Issue183\Psr\Log\LoggerAwareTrait; };"
+        exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; new class() { use Strauss\Issue183\Psr\Log\LoggerAwareTrait; };" 2>&1', $output, $result_code);
+        $outputString = implode(PHP_EOL, $output);
+        $this->assertEquals(0, $result_code, $outputString);
+
+        exec('composer dump-autoload');
+
+        $output = null;
+        $exitCode = $this->runStrauss($output, 'include-autoloader');
+        $this->assertEquals(0, $exitCode, $output);
+
         exec('php -r "include __DIR__ . \'/vendor/autoload.php\'; new class() { use \Psr\Log\LoggerAwareTrait; };" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);
-
-        $this->assertEmpty($outputString, $outputString);
         $this->assertEquals(0, $result_code, $outputString);
     }
 }

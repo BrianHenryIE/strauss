@@ -22,11 +22,11 @@ class ComposerPackageTest extends TestCase
 
         $composer = ComposerPackage::fromFile($testFile);
 
-        self::assertEqualsRN('iio/libmergepdf', $composer->getPackageName());
+        $this->assertEqualsRN('iio/libmergepdf', $composer->getPackageName());
 
-        self::assertIsArray($composer->getAutoload());
+        $this->assertIsArray($composer->getAutoload());
 
-        self::assertIsArray($composer->getRequiresNames());
+        $this->assertIsArray($composer->getRequiresNames());
     }
 
     /**
@@ -41,8 +41,8 @@ class ComposerPackageTest extends TestCase
 
         $requiresNames = $composer->getRequiresNames();
 
-        self::assertContains('tecnickcom/tcpdf', $requiresNames);
-        self::assertContains('setasign/fpdi', $requiresNames);
+        $this->assertContains('tecnickcom/tcpdf', $requiresNames);
+        $this->assertContains('setasign/fpdi', $requiresNames);
     }
 
     /**
@@ -57,8 +57,8 @@ class ComposerPackageTest extends TestCase
 
         $requiresNames = $composer->getRequiresNames();
 
-        self::assertNotContains('ext-curl', $requiresNames);
-        self::assertNotContains('php', $requiresNames);
+        $this->assertNotContains('ext-curl', $requiresNames);
+        $this->assertNotContains('php', $requiresNames);
     }
 
 
@@ -74,9 +74,9 @@ class ComposerPackageTest extends TestCase
 
         $autoload = $composer->getAutoload();
 
-        self::assertArrayHasKey('psr-0', $autoload);
+        $this->assertArrayHasKey('psr-0', $autoload);
 
-        self::assertIsArray($autoload['psr-0']);
+        $this->assertIsArray($autoload['psr-0']);
     }
 
     /**
@@ -91,9 +91,9 @@ class ComposerPackageTest extends TestCase
 
         $autoload = $composer->getAutoload();
 
-        self::assertArrayHasKey('psr-4', $autoload);
+        $this->assertArrayHasKey('psr-4', $autoload);
 
-        self::assertIsArray($autoload['psr-4']);
+        $this->assertIsArray($autoload['psr-4']);
     }
 
     /**
@@ -108,9 +108,9 @@ class ComposerPackageTest extends TestCase
 
         $autoload = $composer->getAutoload();
 
-        self::assertArrayHasKey('classmap', $autoload);
+        $this->assertArrayHasKey('classmap', $autoload);
 
-        self::assertIsArray($autoload['classmap']);
+        $this->assertIsArray($autoload['classmap']);
     }
 
     /**
@@ -125,9 +125,9 @@ class ComposerPackageTest extends TestCase
 
         $autoload = $composer->getAutoload();
 
-        self::assertArrayHasKey('files', $autoload);
+        $this->assertArrayHasKey('files', $autoload);
 
-        self::assertIsArray($autoload['files']);
+        $this->assertIsArray($autoload['files']);
     }
 
     public function testPsr4Array(): void
@@ -141,25 +141,29 @@ class ComposerPackageTest extends TestCase
 }
 
 EOD;
-        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
-        $this->getFileSystem()->write($tmpfname, $composerJson);
+        $projectDir = 'project';
+        $composerJsonPath = $projectDir . '/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = Factory::create(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
 
         $sut = new ComposerPackage($composer);
 
         $autoload = $sut->getAutoload();
 
-        self::assertArrayHasKey('psr-4', $autoload);
+        $this->assertArrayHasKey('psr-4', $autoload);
 
         $psr4Autoload = $autoload['psr-4'];
 
-        self::assertArrayHasKey('Monolog\\', $psr4Autoload);
+        $this->assertArrayHasKey('Monolog\\', $psr4Autoload);
 
         $monologAutoload = $psr4Autoload['Monolog\\'];
 
-        self::assertContains('src/', $monologAutoload);
-        self::assertContains('lib/', $monologAutoload);
+        $this->assertContains('src/', $monologAutoload);
+        $this->assertContains('lib/', $monologAutoload);
     }
 
     public function testOverrideAutoload(): void
