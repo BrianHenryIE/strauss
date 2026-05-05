@@ -134,9 +134,8 @@ EOD;
         // This was not being prefixed.
         self::assertStringNotContainsString('$ioc->register( new \Carbon_Fields\Provider\Container_Condition_Provider() );', $phpString);
 
-        self::assertStringContainsString('$ioc->register(new \MZoo\MBO_Sandbox\Dependencies\Carbon_Fields\Provider\Container_Condition_Provider());', $phpString);
+        self::assertStringContainsString('$ioc->register( new \MZoo\MBO_Sandbox\Dependencies\Carbon_Fields\Provider\Container_Condition_Provider() );', $phpString);
     }
-
 
     /**
      * @author BrianHenryIE
