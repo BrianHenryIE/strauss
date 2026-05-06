@@ -36,6 +36,11 @@ class DryRunFeatureTest extends IntegrationTestCase
         $this->assertFalse($config->isDryRun());
     }
 
+    /**
+     * @param string $directory
+     *
+     * @return array<string, array<string, string>>
+     */
     protected function getDirectoryMd5s(string $directory): array
     {
         $files = new \RecursiveIteratorIterator(
@@ -54,6 +59,10 @@ class DryRunFeatureTest extends IntegrationTestCase
         return [md5(implode('', $hashes)), $hashes];
     }
 
+    /**
+     * @param array<string, array<string, string>> $hashesBefore
+     * @param array<string, array<string, string>> $hashesAfter
+     */
     protected function assertEqualsDirectoryHashes(array $hashesBefore, array $hashesAfter): void
     {
         if ($hashesBefore[0] === $hashesAfter[0]) {
