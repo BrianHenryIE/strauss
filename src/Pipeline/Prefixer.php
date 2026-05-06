@@ -740,11 +740,30 @@ class Prefixer
              *
              * @see \Composer\Autoload\AutoloadGenerator
              */
-            $isComposerAutoloadNamespace = 'Composer\Autoload' === $originalSymbolString;
-            if ($isComposerAutoloadNamespace) {
-                $prefixLine = '$prefix = "\0Composer\Autoload\ClassLoader\0";';
-                $updatedPrefixLine = str_replace($originalSymbolString, $replacementSymbolString, $prefixLine);
-                $contents = str_replace($prefixLine, $updatedPrefixLine, $contents);
+            $unprefixedNamespace = implode('\\', ['Comp'.'oser','Autoload']);
+            $isComposerAutoloadNamespace = str_ends_with($originalSymbolString, $unprefixedNamespace);
+            $hasComposerAutoloadNamespace = str_contains($contents, $unprefixedNamespace);
+            if ($isComposerAutoloadNamespace && $hasComposerAutoloadNamespace) {
+                /**
+                 * TODO: I'm worried that dump-autoload when running via `.phar` will include `BrianHenryIE\Strauss` prefix. I don't think I have addressed that issue here.
+                 *
+                 * @see strauss.phar/src/Pipeline/Prefixer.php
+                 * @see strauss.phar/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+                 */
+                $prefixLinePrefixesArrays = [
+                    array_merge(explode("\\", $this->config->getNamespacePrefix()), ['Comp'.'oser','Autoload','ClassLoader']),
+                    ['BrianHenryIE','Strauss','Comp'.'oser','Autoload','ClassLoader'],
+                    ['Comp'.'oser','Autoload','ClassLoader'],
+                ];
+                foreach ($prefixLinePrefixesArrays as $prefixLinePrefixArray) {
+                    $findPrefixLine = '$prefix = "\0' . implode("\\", $prefixLinePrefixArray) . '\0";';
+                    $replaceWithUpdatedPrefixLine = str_replace($originalSymbolString, $replacementSymbolString, $findPrefixLine);
+                    $replacedCount = 0;
+                    $contents = str_replace($findPrefixLine, $replaceWithUpdatedPrefixLine, $contents, $replacedCount);
+                    if ($replacedCount && $originalSymbolString !== $replacementSymbolString) {
+                        break;
+                    }
+                }
             }
         } elseif ($symbol instanceof NamespacedSymbol) {
             $originalSymbolString = $symbol->getOriginalFqdnName();
