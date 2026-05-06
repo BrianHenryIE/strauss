@@ -4347,6 +4347,7 @@ EOD;
 //        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
         $config->expects('isTargetDirectoryVendor')->andReturnFalse();
         $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
+        $config->allows('getNamespacePrefix')->andReturn('BrianHenryIE\\StraussTest\\');
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -4485,6 +4486,7 @@ EOD;
         $config = Mockery::mock(PrefixerConfigInterface::class);
         $config->expects('isTargetDirectoryVendor')->andReturnFalse()->times(2);
         $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
+        $config->allows('getNamespacePrefix')->andReturn('BrianHenryIE\\StraussTest\\');
 
         $file = new File(
             'vendor/composer/composer/src/Composer/Autoload/ClassLoader.php',
