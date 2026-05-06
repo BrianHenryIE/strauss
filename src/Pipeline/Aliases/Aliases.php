@@ -71,6 +71,9 @@ class Aliases
             throw new RuntimeException('Expected file not found at: ' . __DIR__ . '/autoload_aliases.template.php');
         }
 
+        /**
+         * `// FunctionsAndConstants` serves as a placeholder in the template which we replace with the code.
+         */
         $template = str_replace(
             '// FunctionsAndConstants',
             $globalFunctionsString,
