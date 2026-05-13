@@ -17,8 +17,6 @@ class NamespacedSymbol extends DiscoveredSymbol
 
     protected NamespaceSymbol $namespace;
 
-    protected string $fqdnOriginalSymbol;
-
     public function __construct(
         string $fqdnSymbol,
         FileBase $sourceFile,
