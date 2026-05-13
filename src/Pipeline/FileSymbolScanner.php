@@ -180,7 +180,16 @@ class FileSymbolScanner
 
         foreach ($namespaces as $namespaceName => $contents) {
             $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
-            $phpCode = $this->parsePhpCode($contents);
+            try {
+                $phpCode = $this->parsePhpCode($contents);
+            } catch (ParserErrorException $e) {
+                $this->logger->warning('Failed to parse namespace {namespaceName} in file {filePath} with error: {errorMessage}', [
+                    'namespaceName' => $namespaceName,
+                    'filePath' => $file->getSourcePath(),
+                    'errorMessage' => $e->getMessage(),
+                ]);
+                continue;
+            }
 
             /** @var PHPClass[] $phpClasses */
             $phpClasses = $phpCode->getClasses();
@@ -443,7 +452,7 @@ class FileSymbolScanner
 
         $result = PhpCodeParser::process($contents, null, $parserContainer, $visitor);
         if ($result instanceof ParserErrorHandler) {
-            throw new ParserErrorException($parserContainer);
+            throw new ParserErrorException($result);
         }
 
         $interfaces = $parserContainer->getInterfaces();
