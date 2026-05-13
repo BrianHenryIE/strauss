@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\ParserErrorException;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -441,8 +442,8 @@ class FileSymbolScanner
         $visitor = new ASTVisitor($parserContainer);
 
         $result = PhpCodeParser::process($contents, null, $parserContainer, $visitor);
-        if (!$result instanceof ParserContainer && $result instanceof ParserErrorHandler) {
-            return $parserContainer;
+        if ($result instanceof ParserErrorHandler) {
+            throw new ParserErrorException($parserContainer);
         }
 
         $interfaces = $parserContainer->getInterfaces();
