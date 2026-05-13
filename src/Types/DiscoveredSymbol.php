@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
+use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use Composer\Package\PackageInterface;
 
@@ -151,18 +152,18 @@ abstract class DiscoveredSymbol
         return $packages[0]->getPackageName();
     }
 
-    public function getOriginalSymbolStripPrefix(string $class_prefix): string
+    /**
+     * @deprecated This is only being called in {@see Prefixer::replaceSingleClassnameInString()}, the actual determination should be made in {@see ChangeEnumerator}.
+     */
+    public function getOriginalSymbolStripPrefix(string $classPrefix): string
     {
-        $fqdnOriginalSymbol = $this->fqdnOriginalSymbol;
+        $symbolName = $this->fqdnOriginalSymbol;
 
-        while (str_starts_with($fqdnOriginalSymbol, $class_prefix) && $class_prefix !== $fqdnOriginalSymbol) {
-            $fqdnOriginalSymbol = preg_replace('/^'.preg_quote($class_prefix).'/', '', $fqdnOriginalSymbol);
-            if (is_null($fqdnOriginalSymbol)) {
-                return $this->fqdnOriginalSymbol;
-            }
+        while (str_starts_with($symbolName, $classPrefix) && trim($classPrefix, '_') !== trim($symbolName, '_')) {
+            $symbolName = preg_replace('/^'.preg_quote($classPrefix) . '/', '', $symbolName) ?? $symbolName;
         }
 
-        return $fqdnOriginalSymbol;
+        return trim($symbolName, '_');
     }
 
     public function __toString(): string
