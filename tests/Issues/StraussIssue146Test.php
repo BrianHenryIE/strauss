@@ -124,7 +124,7 @@ class StraussIssue146Test extends IntegrationTestCase
         /**
          * Return type was being treated as a namespace and prefixed.
          *
-         * @see \Composer\Factory::create()
+         * @see \Composer\Factory::createComposer()
          * @see vendor/composer/composer/src/Composer/Factory.php
          *
          * `public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\Strauss\Vendor\Composer`;

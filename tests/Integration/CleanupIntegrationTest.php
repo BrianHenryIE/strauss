@@ -25,7 +25,7 @@ class CleanupIntegrationTest extends IntegrationTestCase
             file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
             exec('composer install', $output, $exitCode);
             $this->assertEquals(0, $exitCode, implode(PHP_EOL, $output));
-            $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
+            $composer = (new Factory())->createComposer(new NullIO(), $this->testsWorkingDir . '/composer.json');
             $config = new StraussConfig($composer);
             $filesystem = $this->getFileSystem();
             $cleanup = new Cleanup($config, $filesystem, $this->getLogger());

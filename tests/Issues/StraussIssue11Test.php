@@ -61,7 +61,7 @@ EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = (new Factory())->createComposer(new NullIO(), $tmpfname);
 
         $input = $this->createMock(InputInterface::class);
         $straussConfig = new StraussConfig($composer, $input);

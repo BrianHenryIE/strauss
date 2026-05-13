@@ -29,7 +29,7 @@ class ComposerPackageFactoryParityTest extends TestCase
      */
     public function test_from_file_matches_legacy_factory_create(string $fixturePath): void
     {
-        $legacyComposer = Factory::create(new NullIO(), $fixturePath, true);
+        $legacyComposer = (new Factory())->createComposer(new NullIO(), $fixturePath, true);
         $legacy = new ComposerPackage($legacyComposer);
 
         $fast = ComposerPackage::fromFile($fixturePath);

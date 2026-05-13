@@ -130,7 +130,7 @@ class Cleanup
             )
         );
         $projectComposerJsonArray = $projectComposerJson->read();
-        $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
+        $composer = (new Factory())->createComposer(new NullIO(), $projectComposerJsonArray);
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
         $config = $composer->getConfig();

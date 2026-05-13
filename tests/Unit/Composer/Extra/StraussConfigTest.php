@@ -81,7 +81,7 @@ EOD;
         $composerJsonPath = 'project/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -148,7 +148,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -204,7 +204,7 @@ EOD;
         $composerJsonPath = $projectDir .'/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute(
                 $composerJsonPath
@@ -242,7 +242,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -277,7 +277,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -309,7 +309,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -345,7 +345,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -381,7 +381,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -414,7 +414,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -465,7 +465,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -497,7 +497,7 @@ EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         $this->getFileSystem()->write($tmpfname, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = (new Factory())->createComposer(new NullIO(), $tmpfname);
 
         $sut = new StraussConfig($composer);
 
@@ -529,7 +529,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -555,7 +555,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -593,7 +593,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -642,7 +642,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -688,7 +688,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -736,7 +736,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -763,7 +763,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -796,7 +796,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -824,7 +824,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -853,7 +853,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -881,7 +881,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -911,7 +911,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -940,7 +940,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -971,7 +971,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -1002,7 +1002,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -1034,7 +1034,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -1068,7 +1068,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -1099,7 +1099,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -1128,7 +1128,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -1158,7 +1158,7 @@ EOD;
         $composerJsonPath =  $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );
@@ -1184,7 +1184,7 @@ EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         file_put_contents($tmpfname, $composerJson);
 
-        $composer = Factory::create(new NullIO(), $tmpfname);
+        $composer = (new Factory())->createComposer(new NullIO(), $tmpfname);
 
         $sut = new StraussConfig($composer);
 
@@ -1207,7 +1207,7 @@ EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
             file_put_contents($tmpfname, $composerJson);
-            $composer = Factory::create(new NullIO(), $tmpfname);
+            $composer = (new Factory())->createComposer(new NullIO(), $tmpfname);
             $sut = new StraussConfig($composer);
             $this->assertTrue($sut->isOptimizeAutoloader());
         } finally {
@@ -1230,7 +1230,7 @@ EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
             file_put_contents($tmpfname, $composerJson);
-            $composer = Factory::create(new NullIO(), $tmpfname);
+            $composer = (new Factory())->createComposer(new NullIO(), $tmpfname);
             $sut = new StraussConfig($composer);
             $this->assertFalse($sut->isOptimizeAutoloader());
         } finally {

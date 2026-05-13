@@ -145,7 +145,7 @@ EOD;
         $composerJsonPath = $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
-        $composer = Factory::create(
+        $composer = (new Factory())->createComposer(
             new NullIO(),
             $this->getFileSystem()->makeAbsolute($composerJsonPath)
         );

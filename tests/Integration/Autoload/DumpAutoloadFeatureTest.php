@@ -44,7 +44,7 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
                 }
             }
             copy($this->testsWorkingDir . '/vendor/autoload.php', $this->testsWorkingDir . '/vendor-prefixed/autoload.php');
-            $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
+            $composer = (new Factory())->createComposer(new NullIO(), $this->testsWorkingDir . '/composer.json');
             $config = new StraussConfig($composer);
             $psrLogPackage = ComposerPackage::fromFile($this->testsWorkingDir . '/vendor/psr/log/composer.json');
             $config->setPackagesToCopy(['psr/log' => $psrLogPackage]);
