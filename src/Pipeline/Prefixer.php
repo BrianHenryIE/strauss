@@ -1,14 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
-use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -22,15 +22,11 @@ use PhpParser\Comment;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
-use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
-use PhpParser\Node\Expr\StaticCall;
-use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
-use PhpParser\Node\Param;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Enum_;
@@ -39,13 +35,10 @@ use PhpParser\Node\Stmt\GroupUse;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\UseItem;
 use PhpParser\NodeFinder;
-use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
-use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -269,7 +262,7 @@ class Prefixer
             $this->replaceNamespaces($ast, $discoveredSymbols, $file),
             $this->findFunctionPositionsInAst($ast, $functionsToRename),
             $this->findDocCommentPositionsInAst($ast, $discoveredSymbols),
-            $this->replaceConstFetchNamespaces($discoveredSymbols, $ast),
+            $this->findPositionsOfUsesOfNamespacedConstants($discoveredSymbols, $ast),
             $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols),
         );
 
@@ -355,7 +348,7 @@ class Prefixer
      *
      * @return array{start:int,end:int,replacement:string}|array{}
      */
-    protected function replaceConstFetchNamespaces(DiscoveredSymbols $symbols, array $ast): array
+    protected function findPositionsOfUsesOfNamespacedConstants(DiscoveredSymbols $symbols, array $ast): array
     {
         $namespaceSymbols = $symbols->getDiscoveredNamespaces();
         $namespaceSymbolsArray = $namespaceSymbols->toArray();
@@ -1027,7 +1020,8 @@ class Prefixer
     {
 
         foreach ($originalConstants as $constant) {
-            $contents = $this->replaceConstant($contents, $constant, $prefix . $constant);
+//            $contents = $this->replaceConstant($contents, $constant, $prefix . $constant);
+            $contents = $this->replaceConstant($contents, $constant->getOriginalSymbol(), $constant->getReplacementFqdnName());
         }
 
         return $contents;
