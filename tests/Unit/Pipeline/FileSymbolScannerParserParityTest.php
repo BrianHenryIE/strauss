@@ -1,4 +1,8 @@
 <?php
+/*
+ * phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses
+ * TODO: "Each class must be in a file by itself".
+ */
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
