@@ -441,6 +441,11 @@ JSON;
         "symfony/service-contracts": "*",
         "symfony/string": "*"
     },
+    "config": {
+        "audit": {
+          "block-insecure": false
+        }
+    },
     "extra": {
         "strauss": {
             "target_directory": "vendor",
