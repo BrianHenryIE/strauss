@@ -16,6 +16,7 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemReader;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
@@ -58,7 +59,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer,
      *
      * TODO: Check are any of these methods unused
      *
-     * @param ReadOnlyFileSystemAdapter|SymlinkProtectFilesystemAdapter $adapter
+     * @param ReadOnlyFileSystemAdapter|SymlinkProtectFilesystemAdapter|LocalFilesystemAdapter|InMemoryFilesystemAdapter $adapter
      * @param array{visibility?:string} $config
      * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer
      * @param PathNormalizer|null $pathNormalizer

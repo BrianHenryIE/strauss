@@ -20,6 +20,7 @@ use Composer\Json\JsonFile;
 use Composer\Repository\InstalledFilesystemRepository;
 use Exception;
 use League\Flysystem\FilesystemException;
+use League\Flysystem\StorageAttributes;
 use Phar;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -188,12 +189,14 @@ class Cleanup
             'ClassLoader.php'
         ];
 
+        /** @var StorageAttributes|array{path:string} $composerFile */
         foreach ($this->filesystem->listContents($composerDirectoryPath) as $composerFile) {
             if (!in_array(basename($composerFile['path']), $filesToProcess, true)) {
                 continue;
             }
 
             $fileContents = $this->filesystem->read($composerFile['path']);
+            /** @var string $updated */
             $updated = preg_replace('/\\\\?BrianHenryIE\\\\{1,2}Strauss\\\\{1,2}/', '', $fileContents) ?? (function () {
                 throw new \Exception(preg_last_error_msg(), preg_last_error());
             })();
