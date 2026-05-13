@@ -11,6 +11,7 @@ use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use BrianHenryIE\Strauss\Helpers\PathPrefixer;
 use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter;
+use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\ServiceLocator;
 use Exception;
@@ -61,7 +62,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::setUp();
 
-        $this->projectDir = getcwd();
+        $this->projectDir = Platform::getcwd();
 
         /**
          * We need to register the mem stream wrapper before the static methods in Composer are called.
@@ -125,12 +126,12 @@ class TestCase extends \PHPUnit\Framework\TestCase
         unset($this->fixturesFilesystem);
     }
 
-    protected function expectWarningLogs()
+    protected function expectWarningLogs(): void
     {
         $this->allowWarningLogs = true;
     }
 
-    protected function expectErrorLogs()
+    protected function expectErrorLogs(): void
     {
         $this->allowErrorLogs = true;
     }
@@ -148,8 +149,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected static function stripWhitespaceAndBlankLines(string $string): string
     {
         $string = str_replace("\r\n", "\n", $string);
-        $string = preg_replace('/^\s*/m', '', $string);
-        $string = preg_replace('/\n\s*\n/', "\n", $string);
+        $string = preg_replace('/^\s*/m', '', $string) ?? $string;
+        $string = preg_replace('/\n\s*\n/', "\n", $string) ?? $string;
         $string = str_replace("\\n", '', $string);
         $string = implode(PHP_EOL, array_map('trim', explode(PHP_EOL, $string)));
 

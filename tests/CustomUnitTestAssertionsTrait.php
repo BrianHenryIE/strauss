@@ -7,17 +7,15 @@ use Composer\Util\Platform;
 
 trait CustomUnitTestAssertionsTrait
 {
-    public static function assertEqualsRN($expected, $actual, string $message = ''): void
+    public static function assertEqualsRN(string $expected, string $actual, string $message = ''): void
     {
-        if (is_string($expected) && is_string($actual)) {
-            $expected = str_replace("\r\n", "\n", $expected);
-            $actual = str_replace("\r\n", "\n", $actual);
-        }
+        $expected = str_replace("\r\n", "\n", $expected);
+        $actual = str_replace("\r\n", "\n", $actual);
 
         self::assertEquals($expected, $actual, $message);
     }
 
-    public static function assertEqualsRemoveBlankLinesLeadingWhitespace($expected, $actual, string $message = ''): void
+    public static function assertEqualsRemoveBlankLinesLeadingWhitespace(string $expected, string $actual, string $message = ''): void
     {
         self::assertEquals(
             self::stripWhitespaceAndBlankLines($expected),
@@ -26,7 +24,7 @@ trait CustomUnitTestAssertionsTrait
         );
     }
 
-    public static function assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $actual, string $message = ''): void
+    public static function assertStringContainsStringRemoveBlankLinesLeadingWhitespace(string $expected, string $actual, string $message = ''): void
     {
         self::assertStringContainsString(
             self::stripWhitespaceAndBlankLines($expected),
@@ -46,7 +44,7 @@ trait CustomUnitTestAssertionsTrait
 
     protected function assertEqualsPaths(string $expected, string $actual, string $message = ''): void
     {
-        $pathNormalizer = FileSystem::makePathNormalizer(FileSystem::getFsRoot(getcwd()));
+        $pathNormalizer = FileSystem::makePathNormalizer(FileSystem::getFsRoot(Platform::getcwd()));
 
         self::assertEquals(
             $pathNormalizer->normalizePath($expected),

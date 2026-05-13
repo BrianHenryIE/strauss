@@ -43,6 +43,7 @@ class IntegrationTestCase extends TestCase
     /** No trailing slash */
     protected string $testsWorkingDir;
 
+    /** @var array<string, string> */
     protected array $envBeforeTest = [];
 
     protected FileSystem $symlinkProtectFilesystem;
@@ -108,7 +109,7 @@ class IntegrationTestCase extends TestCase
          * `RENAMESPACER_LOG=debug vendor/bin/strauss` ~~ `strauss --debug` but only in tests.
          */
         // todo: lowercase
-        $envLogLevel = trim(getenv('RENAMESPACER_LOG'), '-');
+        $envLogLevel = trim(getenv('RENAMESPACER_LOG') ?: '', '-');
 
         if ($this->isPhar()) {
             if (! array_reduce(
@@ -159,6 +160,9 @@ class IntegrationTestCase extends TestCase
 
         // TODO: I don't know what I did to break the previous colorlogger output so this is just a crutch.
         $output = new class() extends BufferedOutput {
+            /**
+             * @return void
+             */
             protected function doWrite(string $message, bool $newline)
             {
                 parent::doWrite($message, $newline);
@@ -206,8 +210,8 @@ class IntegrationTestCase extends TestCase
         }
 
         // Hmmm... `mem` also needs to be unique to the tests run.
-        /** @var FilesystemRegistry $registry */
         try {
+            /** @var FilesystemRegistry $registry */
             $registry = ServiceLocator::get(FilesystemRegistry::class);
             $registry->unregister('mem');
         } catch (Exception $e) {
@@ -221,9 +225,9 @@ class IntegrationTestCase extends TestCase
     /**
      * @throws FilesystemException
      */
-    protected function deleteDir($dir)
+    protected function deleteDir(string $directoryPath): void
     {
-        if (!file_exists($dir)) {
+        if (!file_exists($directoryPath)) {
             return;
         }
         $filesystem = $this->getFileSystem();
@@ -239,7 +243,7 @@ class IntegrationTestCase extends TestCase
          * @see https://github.com/thephpleague/flysystem/issues/1560
          */
         $finder = new Finder();
-        $finder->in($dir);
+        $finder->in($directoryPath);
         if ($finder->hasResults()) {
 
             /** @var SplFileInfo[] $files */
@@ -265,15 +269,15 @@ class IntegrationTestCase extends TestCase
             }
         }
 
-        if (!is_dir($dir)) {
+        if (!is_dir($directoryPath)) {
             return;
         }
 
-        if (!$filesystem->directoryExists($dir)) {
+        if (!$filesystem->directoryExists($directoryPath)) {
             return;
         }
 
-        $filesystem->deleteDirectory($dir);
+        $filesystem->deleteDirectory($directoryPath);
     }
 
     /**
@@ -353,7 +357,7 @@ class IntegrationTestCase extends TestCase
             $this->getTestLogger()
         );
 
-        $this->symlinkProtectFileSystem = new FileSystem(
+        $this->symlinkProtectFilesystem = new FileSystem(
             $symlinkProtectFilesystemAdapter,
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
@@ -366,16 +370,17 @@ class IntegrationTestCase extends TestCase
     }
 
 
-    public function getReadOnlyFileSystem(?FilesystemAdapter $protectedFilesystemAdapter = null)
+    public function getReadOnlyFileSystem(?FilesystemAdapter $protectedFilesystemAdapter = null): FileSystem
     {
         if (isset($this->readOnlyFileSystem)) {
             return $this->readOnlyFileSystem;
         }
 
         if (is_null($protectedFilesystemAdapter)) {
-            $protectedFilesystemAdapter = isset($this->testsWorkingDir)
+            $protectedFilesystem = isset($this->testsWorkingDir)
                 ? $this->getSymlinkProtectFilesystem()
                 : $this->getNewInMemoryFileSystem();
+            $protectedFilesystemAdapter = $protectedFilesystem->getAdapter();
         }
 
         $normalizer = FileSystem::makePathNormalizer($this->testsWorkingDir);

@@ -47,19 +47,19 @@ trait MarkTestsSkippedTrait
         }
     }
 
-    public function markTestSkippedOnPhpVersionBelow(string $php_version, string $message = '')
+    public function markTestSkippedOnPhpVersionBelow(string $php_version, string $message = ''): void
     {
         $this->markTestSkippedOnPhpVersion($php_version, '<', $message);
     }
-    public function markTestSkippedOnPhpVersionEqualOrBelow(string $php_version, string $message = '')
+    public function markTestSkippedOnPhpVersionEqualOrBelow(string $php_version, string $message = ''): void
     {
         $this->markTestSkippedOnPhpVersion($php_version, '<=', $message);
     }
-    public function markTestSkippedOnPhpVersionAbove(string $php_version, string $message = '')
+    public function markTestSkippedOnPhpVersionAbove(string $php_version, string $message = ''): void
     {
         $this->markTestSkippedOnPhpVersion($php_version, '>', $message);
     }
-    public function markTestSkippedOnPhpVersionEqualOrAbove(string $php_version, string $message = '')
+    public function markTestSkippedOnPhpVersionEqualOrAbove(string $php_version, string $message = ''): void
     {
         $this->markTestSkippedOnPhpVersion($php_version, '>=', $message);
     }
@@ -67,10 +67,12 @@ trait MarkTestsSkippedTrait
     /**
      * Checks both the PHP version the tests are running under and the system PHP version.
      */
-    public function markTestSkippedOnPhpVersion(string $php_version, string $operator, string $message = '')
+    public function markTestSkippedOnPhpVersion(string $php_version, string $operator, string $message = ''): void
     {
         exec('php -v', $output);
-        preg_match('/PHP\s([\d\\\.]*)/', $output[0], $php_version_capture);
+        if (1 !== preg_match('/PHP\s([\d\\\.]*)/', $output[0], $php_version_capture)) {
+            $this->fail('Error determining PHP version');
+        }
         $system_php_version = $php_version_capture[1];
 
         $testPhpVersionConstraintMatch = version_compare(phpversion(), $php_version, $operator);
