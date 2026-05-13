@@ -29,7 +29,6 @@ class StraussIssue101Test extends IntegrationTestCase
         "strauss": {
             "namespace_prefix": "Ademti\\Test\\Dependencies",
             "classmap_prefix": "Ademti_Test_Dependencies",
-            "constant_prefix": "A_T_D_",
             "delete_vendor_packages": true,
             "delete_vendor_files": true
         }
