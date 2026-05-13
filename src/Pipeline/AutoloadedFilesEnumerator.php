@@ -214,6 +214,13 @@ class AutoloadedFilesEnumerator
             return;
         }
 
+        if (is_null($ast)) {
+            $this->logger->warning('Parsed {file} return null', [
+                'file' => $absoluteFilePath,
+            ]);
+            return;
+        }
+
         $nodeFinder = new NodeFinder();
         $includeNodes = $nodeFinder->findInstanceOf($ast, \PhpParser\Node\Expr\Include_::class);
         $includingDir = dirname($absoluteFilePath);
