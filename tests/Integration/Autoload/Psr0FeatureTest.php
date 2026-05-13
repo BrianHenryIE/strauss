@@ -41,12 +41,12 @@ EOD;
 
         // vendor/pimple/pimple/src/Pimple/Container.php
         // vendor-prefixed/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . '/vendor-prefixed/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php'));
+        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . '/vendor-prefixed/pimple/pimple/src/BrianHenryIE/TestStrauss/Pimple/Container.php'));
 
         $installedJson = json_decode($this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json'), true);
-        $this->assertEquals('BrianHenryIE\Strauss\Pimple', array_key_first($installedJson['packages'][0]['autoload']['psr-0']));
+        $this->assertEquals('BrianHenryIE\TestStrauss\Pimple', array_key_first($installedJson['packages'][0]['autoload']['psr-0']));
 
-        exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; new \BrianHenryIE\Strauss\Pimple\Container();" 2>&1', $output, $result_code);
+        exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; new \BrianHenryIE\TestStrauss\Pimple\Container();" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);
 
         $this->assertEquals(0, $result_code, $outputString);
@@ -93,17 +93,17 @@ EOD;
 
         // vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Serializer.php
         // vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/Strauss/HTMLPurifier/DefinitionCache/Serializer.php
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/Strauss/HTMLPurifier/DefinitionCache/Serializer.php'));
+        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier/DefinitionCache/Serializer.php'));
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/Strauss/HTMLPurifier/DefinitionCache/Serializer.php');
-        $this->assertStringContainsString('class BrianHenryIE_Strauss_HTMLPurifier_DefinitionCache_Serializer', $phpString);
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier/DefinitionCache/Serializer.php');
+        $this->assertStringContainsString('class BrianHenryIE_TestStrauss_HTMLPurifier_DefinitionCache_Serializer', $phpString);
 
         $installedJson = json_decode($this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json'), true);
-        $this->assertEquals('BrianHenryIE_Strauss_HTMLPurifier', array_key_first($installedJson['packages'][0]['autoload']['psr-0']));
+        $this->assertEquals('BrianHenryIE_TestStrauss_HTMLPurifier', array_key_first($installedJson['packages'][0]['autoload']['psr-0']));
 
         // php -r "include __DIR__ . '/vendor/autoload.php'; new HTMLPurifier_DefinitionCache_Serializer('type');"
         // php -r "include __DIR__ . '/vendor-prefixed/autoload.php'; new BrianHenryIE_Strauss_HTMLPurifier_DefinitionCache_Serializer('type');"
-        exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; new BrianHenryIE_Strauss_HTMLPurifier_DefinitionCache_Serializer(\'type\');" 2>&1', $output, $result_code);
+        exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; new BrianHenryIE_TestStrauss_HTMLPurifier_DefinitionCache_Serializer(\'type\');" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);
         $this->assertEquals(0, $result_code, $outputString);
     }
