@@ -15,12 +15,30 @@ class File implements FileBase
      */
     protected string $sourceAbsolutePath;
 
+    /**
+     * This cannot always be inferred from sourceAbsolutePath when that is via a symlink.
+     */
     protected string $vendorRelativePath;
+
+    protected string $targetAbsolutePath;
+
+
+    protected DiscoveredSymbols $discoveredSymbols;
 
     /**
      * Should this file be copied to the target directory?
      */
     protected bool $doCopy = true;
+
+    /**
+     * Do prefix/renane symbols found in this file.
+     */
+    protected bool $doPrefix = true;
+
+    /**
+     * Do edit this file.
+     */
+    protected bool $doUpdate = true;
 
     /**
      * Should this file be deleted from the source directory?
@@ -29,13 +47,7 @@ class File implements FileBase
      */
     protected ?bool $doDelete = false;
 
-    protected DiscoveredSymbols $discoveredSymbols;
-
-    protected string $targetAbsolutePath;
-
     protected bool $didDelete = false;
-
-    protected bool $doPrefix = true;
 
     public function __construct(
         string $sourceAbsolutePath,
@@ -63,13 +75,12 @@ class File implements FileBase
      * Some combination of file copy exclusions and vendor-dir == target-dir
      *
      * @param bool $doCopy
-     *
-     * @return void
      */
     public function setDoCopy(bool $doCopy): void
     {
         $this->doCopy = $doCopy;
     }
+
     public function isDoCopy(): bool
     {
         return $this->doCopy;
@@ -168,8 +179,6 @@ class File implements FileBase
     {
         return $this->didUpdate;
     }
-
-    protected bool $doUpdate = true;
 
     public function setDoUpdate(bool $doUpdate): void
     {
