@@ -5,6 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
@@ -27,6 +28,7 @@ use Psr\Log\LoggerInterface;
 use Seld\JsonLint\ParsingException;
 
 /**
+ * @phpstan-import-type ComposerJsonArray from ComposerPackage
  * @phpstan-import-type InstalledJsonArray from InstalledJson
  */
 class Cleanup
@@ -130,6 +132,7 @@ class Cleanup
                 $this->config->getProjectAbsolutePath() . '/composer.json' // Factory::getComposerFile();
             )
         );
+        /** @var ComposerJsonArray $projectComposerJsonArray */
         $projectComposerJsonArray = $projectComposerJson->read();
         $composer = (new Factory())->createComposer(new NullIO(), $projectComposerJsonArray);
         $installationManager = $composer->getInstallationManager();
