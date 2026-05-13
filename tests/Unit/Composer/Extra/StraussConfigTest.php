@@ -11,6 +11,7 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
 use Composer\Factory;
 use Composer\IO\NullIO;
+use Composer\Package\Version\VersionGuesser;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,6 +22,19 @@ use Symfony\Component\Console\Input\InputOption;
  */
 class StraussConfigTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /**
+         * Tests are passing individually but failing when run as a group. Let's avoid running the path where it fails.
+         *
+         * {@see VersionGuesser::guessVersion()} can be short circuited in {@see Platform::isInputCompletionProcess()}.
+         * `$_SERVER['argv'][1] = '_complete'`
+         */
+        array_splice($_SERVER['argv'], 1, 0, '_complete');
+    }
+
     protected function getInput(string $cli): InputInterface
     {
 
