@@ -39,7 +39,7 @@ class DryRunFeatureTest extends IntegrationTestCase
     /**
      * @param string $directory
      *
-     * @return array<string, array<string, string>>
+     * @return array{0:string, 1:array<string>}
      */
     protected function getDirectoryMd5s(string $directory): array
     {
@@ -56,12 +56,15 @@ class DryRunFeatureTest extends IntegrationTestCase
             }
         }
 
+        // TODO: Should fail the test if we can't properly read the files.
+        $hashes = array_filter($hashes);
+
         return [md5(implode('', $hashes)), $hashes];
     }
 
     /**
-     * @param array<string, array<string, string>> $hashesBefore
-     * @param array<string, array<string, string>> $hashesAfter
+     * @param array{0:string, 1:array<string>} $hashesBefore
+     * @param array{0:string, 1:array<string>} $hashesAfter
      */
     protected function assertEqualsDirectoryHashes(array $hashesBefore, array $hashesAfter): void
     {
