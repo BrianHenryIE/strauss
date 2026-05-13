@@ -132,7 +132,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return $this->getClass($fqdnName)
             ?? $this->getInterface($fqdnName)
             ?? $this->getTrait($fqdnName)
+            ?? $this->getEnum($fqdnName)
             ?? $this->getFunction($fqdnName)
+            ?? $this->getConst($fqdnName)
             ?? $this->getNamespace($fqdnName)
             ?? $this->getNamespaceSymbolByString($fqdnName);
     }
