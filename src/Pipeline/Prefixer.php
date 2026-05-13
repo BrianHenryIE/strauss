@@ -464,6 +464,15 @@ class Prefixer
         return $positions;
     }
 
+
+    protected function checkPregError(): void
+    {
+        $matchingError = preg_last_error();
+        if (0 !== $matchingError) {
+            throw new Exception(preg_last_error_msg());
+        }
+    }
+
     /**
      * @param array<\PhpParser\Node\Stmt> $ast
      *
@@ -716,6 +725,7 @@ class Prefixer
      * @param DiscoveredSymbol $symbol
      *
      * @return string
+     * @throws Exception
      */
     protected function replaceSingleClassnameInString(string $contents, DiscoveredSymbol $symbol, bool $requireSurroundingQuotes = true): string
     {
@@ -819,7 +829,11 @@ class Prefixer
             return implode('', $capture);
         };
 
-        return preg_replace_callback($pattern, $replacement, $contents);
+        $result = preg_replace_callback($pattern, $replacement, $contents);
+
+        $this->checkPregError();
+
+        return $result;
     }
 
     /**
