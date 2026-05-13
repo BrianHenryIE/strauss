@@ -96,7 +96,7 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "classmap_prefix": "BrianHenryIE_Strauss_",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true
@@ -112,7 +112,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "classmap_prefix": "BrianHenryIE_Strauss_",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true,
@@ -183,7 +183,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true
         }
@@ -204,7 +204,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true,
             "include_root_autoload": true
@@ -251,7 +251,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
 
-        $targetString = '\'BrianHenryIE\\\\Strauss\\\\\' => array($baseDir . \'/src\'),';
+        $targetString = '\'BrianHenryIE\\\\TestStrauss\\\\\' => array($baseDir . \'/src\'),';
         $vendorAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_psr4.php');
         $vendorPrefixedAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_psr4.php');
 
@@ -276,7 +276,7 @@ EOD;
     "name": "brianhenryie/dump-autoload-feature-test",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\Strauss\\": "src/"
+            "BrianHenryIE\\TestStrauss\\": "src/"
         }
     },
     "require": {
@@ -284,7 +284,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true
         }
@@ -297,7 +297,7 @@ EOD;
     "name": "brianhenryie/dump-autoload-feature-test",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\Strauss\\": "src/"
+            "BrianHenryIE\\TestStrauss\\": "src/"
         }
     },
     "require": {
@@ -305,7 +305,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true,
             "include_root_autoload": true
@@ -319,7 +319,7 @@ EOD;
     "name": "brianhenryie/dump-autoload-feature-test",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\Strauss\\": "src/"
+            "BrianHenryIE\\TestStrauss\\": "src/"
         }
     },
     "require": {
@@ -327,7 +327,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true,
             "include_root_autoload": false
@@ -379,7 +379,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "packages": [
                 "wordpress/mcp-adapter"
@@ -411,7 +411,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
-        $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\WP\\\\MCP\\\\Abilities\\\\DiscoverAbilitiesAbility', $vendorAutoloadFilesPhpString);
+        $this->assertStringContainsString('BrianHenryIE\\\\TestStrauss\\\\WP\\\\MCP\\\\Abilities\\\\DiscoverAbilitiesAbility', $vendorAutoloadFilesPhpString);
 
         exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; require __DIR__ . \'/vendor-prefixed/wordpress/mcp-adapter/mcp-adapter.php\';" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);

@@ -57,7 +57,7 @@ class StraussConfigTest extends TestCase
   "extra": {
     "strauss": {
       "target_directory": "/target_directory/",
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "packages": [
         "pimple/pimple"
@@ -96,7 +96,7 @@ EOD;
             $sut->getAbsoluteTargetDirectory()
         );
 
-        $this->assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("BrianHenryIE\\TestStrauss", $sut->getNamespacePrefix());
 
         $this->assertEqualsRN('BrianHenryIE_Strauss_', $sut->getClassmapPrefix());
 
@@ -123,7 +123,7 @@ EOD;
   "extra": {
     "strauss": {
       "target_directory": "/target_directory/",
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "packages": [
         "pimple/pimple"
@@ -182,7 +182,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "exclude_prefix_packages": [
         "psr/container"
@@ -233,7 +233,7 @@ EOD;
 
   "autoload": {
     "psr-4": {
-      "BrianHenryIE\\Strauss\\": "src"
+      "BrianHenryIE\\TestStrauss\\": "src"
     }
   }
 }
@@ -250,7 +250,7 @@ EOD;
 
         $sut = new StraussConfig($composer);
 
-        $this->assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("BrianHenryIE\\TestStrauss", $sut->getNamespacePrefix());
     }
 
     /**
@@ -268,7 +268,7 @@ EOD;
 
   "autoload": {
     "psr-0": {
-      "BrianHenryIE\\Strauss\\": "lib/"
+      "BrianHenryIE\\TestStrauss\\": "lib/"
     }
   }
 }
@@ -285,7 +285,7 @@ EOD;
 
         $sut = new StraussConfig($composer);
 
-        $this->assertEqualsRN("BrianHenryIE\\Strauss", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("BrianHenryIE\\TestStrauss", $sut->getNamespacePrefix());
     }
 
     /**
@@ -298,7 +298,7 @@ EOD;
 
         $composerJson = <<<'EOD'
 {
-  "name": "brianhenryie/strauss-config-test",
+  "name": "brianhenryie/teststrauss-config-test",
   "version": "1.0.0",
   "require": {
     "league/container": "*"
@@ -317,7 +317,7 @@ EOD;
 
         $sut = new StraussConfig($composer);
 
-        $this->assertEqualsRN("Brianhenryie\\Strauss_Config_Test", $sut->getNamespacePrefix());
+        $this->assertEqualsRN("Brianhenryie\\Teststrauss_Config_Test", $sut->getNamespacePrefix());
     }
 
     /**
@@ -336,7 +336,7 @@ EOD;
 
   "autoload": {
     "psr-4": {
-      "BrianHenryIE\\Strauss\\": "src"
+      "BrianHenryIE\\TestStrauss\\": "src"
     }
   }
 }
@@ -353,7 +353,7 @@ EOD;
 
         $sut = new StraussConfig($composer);
 
-        $this->assertEqualsRN("BrianHenryIE_Strauss_", $sut->getClassmapPrefix());
+        $this->assertEqualsRN("BrianHenryIE_TestStrauss_", $sut->getClassmapPrefix());
     }
 
     /**
@@ -372,7 +372,7 @@ EOD;
 
   "autoload": {
     "psr-0": {
-      "BrianHenryIE\\Strauss\\": "lib/"
+      "BrianHenryIE\\TestStrauss\\": "lib/"
     }
   }
 }
@@ -389,7 +389,7 @@ EOD;
 
         $sut = new StraussConfig($composer);
 
-        $this->assertEqualsRN("BrianHenryIE_Strauss_", $sut->getClassmapPrefix());
+        $this->assertEqualsRN("BrianHenryIE_TestStrauss_", $sut->getClassmapPrefix());
     }
 
     /**
@@ -440,7 +440,7 @@ EOD;
   "extra": {
     "strauss": {
       "target_directory": "/target_directory/",
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "packages": [
         "pimple/pimple"
@@ -620,7 +620,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "exclude_prefix_packages": [
         "psr/container"
@@ -754,7 +754,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\"
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
   }
  }
 }
@@ -786,7 +786,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "include_modified_date": false
   }
  }
@@ -815,7 +815,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\"
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
   }
  }
 }
@@ -843,7 +843,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "include_author": false
   }
  }
@@ -871,7 +871,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "delete_vendor_packages": true
   }
  }
@@ -900,7 +900,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "delete_vendor_packages": true,
    "update_call_sites": true
   }
@@ -929,7 +929,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "delete_vendor_packages": true,
    "update_call_sites": false
   }
@@ -960,7 +960,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "delete_vendor_packages": true,
    "update_call_sites": [ "src", "templates" ]
   }
@@ -991,7 +991,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "delete_vendor_packages": true,
    "update_call_sites": false
   }
@@ -1023,7 +1023,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "delete_vendor_packages": true,
    "update_call_sites": true
   }
@@ -1057,7 +1057,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "delete_vendor_packages": true,
    "update_call_sites": false
   }
@@ -1089,7 +1089,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "functions_prefix": "brianhenryie_strauss_"
   }
  }
@@ -1118,7 +1118,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "functions_prefix": false
   }
  }
@@ -1148,7 +1148,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "classmap_prefix": "brianhenryie_strauss_function_prefix_not_set_"
   }
  }
@@ -1200,7 +1200,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\"
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
   }
  }
 }
@@ -1222,7 +1222,7 @@ EOD;
 {
  "extra":{
   "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
    "optimize_autoloader": false
   }
  }

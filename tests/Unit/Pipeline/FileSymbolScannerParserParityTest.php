@@ -77,6 +77,9 @@ PHP;
 
     public function test_process_parser_matches_legacy_for_large_real_world_fixture(): void
     {
+        // Allowed memory size of 134217728 bytes exhausted
+        $this->markTestSkippedLocally();
+
         $fixturePath = dirname(__DIR__, 2) . '/Issues/data/Mpdf.php';
         $contents = file_get_contents($fixturePath);
         self::assertIsString($contents);

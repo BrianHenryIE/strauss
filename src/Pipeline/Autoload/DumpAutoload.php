@@ -193,12 +193,6 @@ class DumpAutoload
          * then they might expect it to be unmodified.
          */
         Config::$defaultConfig['vendor-dir'] = $defaultVendorDirBefore;
-
-        (new Cleanup(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        ))->stripPharPrefix($this->config->getAbsoluteTargetDirectory() . '/composer');
     }
 
     /**

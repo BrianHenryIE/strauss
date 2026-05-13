@@ -29,7 +29,7 @@ class ReplacerIntegrationTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_"
     },
     "google/apiclient-services": [
@@ -76,7 +76,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": false
     }
@@ -334,7 +334,7 @@ EOD;
     "name": "brianhenryie/test-replace-namespace-string",
     "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
     }
   }
 }
@@ -356,7 +356,7 @@ JSON;
         $updatedFile = $this->getFileSystem()->read($absoluteTargetDir . '/composer/autoload_real.php');
 
         $this->assertStringNotContainsString("if ('Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
-        $this->assertStringContainsString("if ('BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
+        $this->assertStringContainsString("if ('BrianHenryIE\\TestStrauss\\Composer\\Autoload\\ClassLoader' === \$class) {", $updatedFile);
     }
 
     /**
@@ -372,7 +372,7 @@ JSON;
     },
     "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
     }
   }
 }
@@ -390,7 +390,7 @@ JSON;
         $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/justinrainbow/json-schema/src/JsonSchema/Constraints/Factory.php');
 
         $this->assertStringNotContainsString("'array' => 'JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
-        $this->assertStringContainsString("'array' => 'BrianHenryIE\Strauss\JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
+        $this->assertStringContainsString("'array' => 'BrianHenryIE\TestStrauss\JsonSchema\Constraints\CollectionConstraint'", $updatedFile);
     }
 
     /**
@@ -444,7 +444,7 @@ JSON;
     "extra": {
         "strauss": {
             "target_directory": "vendor",
-            "namespace_prefix": "BrianHenryIE\\Strauss\\"
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
         }
     }
 }
@@ -488,7 +488,7 @@ EOD;
     "extra": {
         "strauss": {
             "target_directory": "vendor",
-            "namespace_prefix": "BrianHenryIE\\Strauss\\"
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
         }
     }
 }
@@ -506,6 +506,6 @@ EOD;
         // vendor/react/promise/src/Internal/RejectedPromise.php
         $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/react/promise/src/Internal/RejectedPromise.php');
         $this->assertStringNotContainsString('use function React\Promise\resolve;', $autoloadGeneratorString);
-        $this->assertStringContainsString('use function BrianHenryIE\Strauss\React\Promise\resolve;', $autoloadGeneratorString);
+        $this->assertStringContainsString('use function BrianHenryIE\TestStrauss\React\Promise\resolve;', $autoloadGeneratorString);
     }
 }

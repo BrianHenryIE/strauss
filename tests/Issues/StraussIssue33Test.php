@@ -39,7 +39,7 @@ class StraussIssue33Test extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss_Backtrack_Limit_Exhausted\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss_Backtrack_Limit_Exhausted\\",
       "target_directory": "/strauss/",
       "classmap_prefix": "BH_Strauss_Backtrack_Limit_Exhausted_"
     }
@@ -66,6 +66,8 @@ EOD;
      */
     public function test_unit_backtrack_limit_exhausted(): void
     {
+        $this->markTestSkippedLocally();
+
         $contents = $this->getFileSystem()->read(__DIR__.'/data/Mpdf.php');
 
         $originalClassname = 'WP_Dependency_Installer';

@@ -58,7 +58,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "exclude_from_prefix": {
 		      "namespaces": [
 		        "WpOrg\\Requests"
@@ -126,7 +126,7 @@ EOD;
     "extra": {
         "strauss": {
             "target_directory": "vendor",
-            "namespace_prefix": "BrianHenryIE\\Strauss\\Vendor\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\Vendor\\",
             "exclude_from_prefix": {
                 "file_patterns": [
                     "#ClassLoader.php#"
@@ -147,12 +147,12 @@ EOD;
         assert($exitCode === 0, $output);
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassLoader.php');
-        $this->assertStringNotContainsString('namespace BrianHenryIE\\Strauss\\Vendor\\Composer\\Autoload;', $phpString);
+        $this->assertStringNotContainsString('namespace BrianHenryIE\\TestStrauss\\Vendor\\Composer\\Autoload;', $phpString);
         $this->assertStringContainsString('namespace Composer\\Autoload;', $phpString);
 
         // vendor/composer/composer/src/Composer/Autoload/ClassMapGenerator.php
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassMapGenerator.php');
-        $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\Vendor\\Composer\\Autoload;', $phpString);
+        $this->assertStringContainsString('namespace BrianHenryIE\\TestStrauss\\Vendor\\Composer\\Autoload;', $phpString);
         $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
     }
 }

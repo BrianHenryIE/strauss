@@ -77,7 +77,7 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $originalNamespace = 'Google\\Http';
-        $replacement = 'BrianHenryIE\\Strauss\\Google\\Http';
+        $replacement = 'BrianHenryIE\\TestStrauss\\Google\\Http';
 
         $filesystem = $this->getInMemoryFileSystem();
 
@@ -107,7 +107,7 @@ EOD;
 
         $result = $filesystem->read($file->getTargetAbsolutePath());
 
-        $expected = 'use BrianHenryIE\\Strauss\\Google\\Http\\Batch;';
+        $expected = 'use BrianHenryIE\\TestStrauss\\Google\\Http\\Batch;';
 
         $this->assertStringNotContainsString($expected, $result);
     }
@@ -130,7 +130,7 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $originalNamespace = 'Google\\Http';
-        $replacement = 'BrianHenryIE\\Strauss\\Google\\Http';
+        $replacement = 'BrianHenryIE\\TestStrauss\\Google\\Http';
 
         $filesystem = $this->getInMemoryFileSystem();
 
@@ -159,7 +159,7 @@ EOD;
 
         $result = $filesystem->read($file->getTargetAbsolutePath());
 
-        $expected = 'use BrianHenryIE\\Strauss\\Google\\Http\\Batch;';
+        $expected = 'use BrianHenryIE\\TestStrauss\\Google\\Http\\Batch;';
 
         $this->assertStringContainsString($expected, $result);
     }
@@ -1347,7 +1347,7 @@ EOD;
         );
 
         $namespaceSymbol = new NamespaceSymbol('Carbon_Fields', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\Carbon_Fields');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\TestStrauss\\Carbon_Fields');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -1369,10 +1369,10 @@ EOD;
     public function testNamespacedStaticIsPrefixed(): void
     {
         $contents = '		\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable();';
-        $expected = '		\\BrianHenryIE\\Strauss\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable();';
+        $expected = '		\\BrianHenryIE\\TestStrauss\\Carbon_Fields\\Carbon_Fields::service( \'legacy_storage\' )->enable();';
 
         $originalNamespace = 'Carbon_Fields';
-        $replacement = 'BrianHenryIE\\Strauss\\Carbon_Fields';
+        $replacement = 'BrianHenryIE\\TestStrauss\\Carbon_Fields';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -1577,7 +1577,7 @@ EOD;
     {
 
         $contents = 'use chillerlan\\QRCode\\{QRCode, QRCodeException};';
-        $expected = 'use BrianHenryIE\\Strauss\\chillerlan\\QRCode\\{QRCode, QRCodeException};';
+        $expected = 'use BrianHenryIE\\TestStrauss\\chillerlan\\QRCode\\{QRCode, QRCodeException};';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -1593,7 +1593,7 @@ EOD;
         );
 
         $namespaceSymbol = new NamespaceSymbol('chillerlan\\QRCode', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\chillerlan\\QRCode');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\TestStrauss\\chillerlan\\QRCode');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -4309,7 +4309,7 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
 
         $namespaceSymbol = new NamespaceSymbol('Composer', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Strauss\\Vendor\\Composer');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\TestStrauss\\Vendor\\Composer');
         $discoveredSymbols->add($namespaceSymbol);
 
         $classSymbol = new ClassSymbol('Composer\\Factory', $file, false, $namespaceSymbol);
@@ -4347,7 +4347,7 @@ EOD;
 //        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
         $config->expects('isTargetDirectoryVendor')->andReturnFalse();
         $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
-        $config->allows('getNamespacePrefix')->andReturn('BrianHenryIE\\StraussTest\\');
+        $config->allows('getNamespacePrefix')->andReturn('BrianHenryIE\\TestStraussTest\\');
 
         $file = new File(
             'vendor/package/name/src/file.php',
@@ -4486,7 +4486,7 @@ EOD;
         $config = Mockery::mock(PrefixerConfigInterface::class);
         $config->expects('isTargetDirectoryVendor')->andReturnFalse()->times(2);
         $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
-        $config->allows('getNamespacePrefix')->andReturn('BrianHenryIE\\StraussTest\\');
+        $config->allows('getNamespacePrefix')->andReturn('BrianHenryIE\\TestStraussTest\\');
 
         $file = new File(
             'vendor/composer/composer/src/Composer/Autoload/ClassLoader.php',

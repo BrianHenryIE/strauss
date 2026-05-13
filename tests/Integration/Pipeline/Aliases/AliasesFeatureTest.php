@@ -36,7 +36,7 @@ class AliasesFeatureTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "delete_vendor_files": true
     }
   }
@@ -83,7 +83,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "delete_vendor_files": true
     }
   }
@@ -103,7 +103,7 @@ EOD;
         $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
 
         $this->assertStringNotContainsString('return \\WP_Forge\\Helpers\\dataGet(...func_get_args());', $autoloadAliasesPhpString);
-        $this->assertStringContainsString('return \\BrianHenryIE\\Strauss\\WP_Forge\\Helpers\\dataGet(...func_get_args());', $autoloadAliasesPhpString);
+        $this->assertStringContainsString('return \\BrianHenryIE\\TestStrauss\\WP_Forge\\Helpers\\dataGet(...func_get_args());', $autoloadAliasesPhpString);
     }
 
     public function test_non_namespaced_files_alias(): void
@@ -116,7 +116,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "function_prefix": "brianhenryie_strauss_",
       "delete_vendor_files": true
     }
@@ -154,7 +154,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "function_prefix": false,
       "delete_vendor_files": true
     }
@@ -204,7 +204,7 @@ EOD;
   "extra": {
     "strauss": {
       "target_directory": "vendor",
-      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
     }
   }
 }
@@ -221,6 +221,6 @@ EOD;
 
         $autoloadAliasesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
 
-        $this->assertStringNotContainsString('BrianHenryIE\\\\Strauss\\\\DeepCopy\\\\BrianHenryIE\\\\Strauss\\\\DeepCopy', $autoloadAliasesPhpString);
+        $this->assertStringNotContainsString('BrianHenryIE\\\\TestStrauss\\\\DeepCopy\\\\BrianHenryIE\\\\TestStrauss\\\\DeepCopy', $autoloadAliasesPhpString);
     }
 }

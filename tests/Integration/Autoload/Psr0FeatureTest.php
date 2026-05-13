@@ -23,7 +23,7 @@ class Psr0FeatureTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
     }
   }
 }
@@ -69,7 +69,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "Global_Prefix_"
     }
   },

@@ -93,7 +93,7 @@ class StraussIssue146Test extends IntegrationTestCase
 //            "composer/composer" => "*",
 //        ];
         $composerJsonArray['extra']['strauss']['target_directory'] = "vendor";
-        $composerJsonArray['extra']['strauss']['namespace_prefix'] = "BrianHenryIE\\StraussTest\\";
+        $composerJsonArray['extra']['strauss']['namespace_prefix'] = "BrianHenryIE\\TestStrauss\\";
         file_put_contents($this->testsWorkingDir . '/composer.json', json_encode($composerJsonArray, JSON_PRETTY_PRINT));
 
         exec('composer install --no-dev --no-scripts');
@@ -110,7 +110,7 @@ class StraussIssue146Test extends IntegrationTestCase
          */
         $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
         $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
-        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\StraussTest\Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
+        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
 
         /**
          * @see vendor/composer/autoload_real.php
@@ -119,7 +119,7 @@ class StraussIssue146Test extends IntegrationTestCase
          */
         $autoloadRealPhpString = file_get_contents($this->testsWorkingDir .'/vendor/composer/autoload_real.php');
         $this->assertStringNotContainsString('new \\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString);
-        $this->assertStringContainsString('new \\BrianHenryIE\\StraussTest\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
+        $this->assertStringContainsString('new \\BrianHenryIE\\TestStrauss\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
 
         /**
          * Return type was being treated as a namespace and prefixed.
@@ -141,7 +141,7 @@ class StraussIssue146Test extends IntegrationTestCase
          */
         $php_string = file_get_contents($this->testsWorkingDir . '/vendor/symfony/console/Application.php');
         $this->assertStringNotContainsString('namespace Symfony\Component\Console;', $php_string);
-        $this->assertStringContainsString('namespace BrianHenryIE\StraussTest\Symfony\Component\Console;', $php_string);
+        $this->assertStringContainsString('namespace BrianHenryIE\TestStrauss\Symfony\Component\Console;', $php_string);
 
         /**
          * @see \Composer\Autoload\AutoloadGenerator
@@ -151,7 +151,7 @@ class StraussIssue146Test extends IntegrationTestCase
          */
         $php_string = file_get_contents($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
         $this->assertStringNotContainsString('use Composer\IO\IOInterface;', $php_string);
-        $this->assertStringContainsString('use BrianHenryIE\StraussTest\Composer\IO\IOInterface;', $php_string);
+        $this->assertStringContainsString('use BrianHenryIE\TestStrauss\Composer\IO\IOInterface;', $php_string);
     }
 
     public function test_prefix_own_classes_for_test(): void

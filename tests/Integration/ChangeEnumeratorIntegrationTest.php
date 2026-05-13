@@ -23,7 +23,7 @@ class ChangeEnumeratorIntegrationTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_"
     }
   }
@@ -60,7 +60,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
 			"exclude_from_copy": {
                 "packages": [
                     "rmccue/requests"
@@ -86,7 +86,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/art4/requests-psr18-adapter/v1-compat/autoload.php');
-        $this->assertStringNotContainsString("class_exists('BrianHenryIE\\Strauss\\WpOrg\\Requests\\Requests')", $phpString);
+        $this->assertStringNotContainsString("class_exists('BrianHenryIE\\TestStrauss\\WpOrg\\Requests\\Requests')", $phpString);
         $this->assertStringContainsString("class_exists('WpOrg\\Requests\\Requests')", $phpString);
     }
 }

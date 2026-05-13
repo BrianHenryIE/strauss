@@ -14,6 +14,7 @@ use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGeneratorFactory;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
@@ -102,5 +103,11 @@ class Autoload
             ),
             new ComposerAutoloadGeneratorFactory()
         ))->generatedPrefixedAutoloader();
+
+        (new Cleanup(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        ))->stripPharPrefix($this->config->getAbsoluteTargetDirectory() . '/composer');
     }
 }
