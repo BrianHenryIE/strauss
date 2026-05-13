@@ -260,14 +260,10 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
     /**
      * Check are we running on Windows, whose symlink behaviour differs.
-     *
-     * TODO: Consider using `PHP_OS_FAMILY` instead.
-     *
-     * @see https://www.php.net/manual/en/reserved.constants.php#constant.php-os
      */
     protected function isWindowsOS(): bool
     {
-        return false !== strpos('WIN', constant('PHP_OS'));
+        return Platform::isWindows();
     }
 
     /**
