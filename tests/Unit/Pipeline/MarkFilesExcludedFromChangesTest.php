@@ -39,9 +39,6 @@ class MarkFilesExcludedFromChangesTest extends TestCase
     /**
      * A file whose vendor-relative path matches a configured pattern should have setDoUpdate(false) called.
      *
-     * Note: File::setDoUpdate() has a bug — it ignores its argument and always sets doUpdate to true.
-     * As a result, getDoUpdate() === true is the observable indicator that setDoUpdate was called.
-     *
      * @covers ::scanDiscoveredFiles
      * @covers ::fileMatchesFilePattern
      * @covers ::preparePattern
@@ -62,7 +59,7 @@ class MarkFilesExcludedFromChangesTest extends TestCase
 
         $sut->scanDiscoveredFiles($discoveredFiles);
 
-        $this->assertNotTrue($file->getDoUpdate());
+        $this->assertFalse($file->getDoUpdate());
     }
 
     /**
