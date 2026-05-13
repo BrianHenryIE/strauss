@@ -1182,7 +1182,7 @@ EOD;
         );
 
         $namespaceSymbol = new NamespaceSymbol('Mpdf', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Mpdf');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Mpdf');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -1200,7 +1200,7 @@ EOD;
     {
 
         $contents = 'class BarcodeException extends \Mpdf\MpdfException {}';
-        $expected = 'class BarcodeException extends \BrianHenryIE\Strauss\Mpdf\MpdfException {}';
+        $expected = 'class BarcodeException extends \BrianHenryIE\TestStrauss\Mpdf\MpdfException {}';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -1216,7 +1216,7 @@ EOD;
         );
 
         $namespaceSymbol = new NamespaceSymbol('Mpdf', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Mpdf');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Mpdf');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -1239,7 +1239,7 @@ EOD;
     {
 
         $contents = '$ioc->register( new \Carbon_Fields\Provider\Container_Condition_Provider() );';
-        $expected = '$ioc->register( new \BrianHenryIE\Strauss\Carbon_Fields\Provider\Container_Condition_Provider() );';
+        $expected = '$ioc->register( new \BrianHenryIE\TestStrauss\Carbon_Fields\Provider\Container_Condition_Provider() );';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -1255,7 +1255,7 @@ EOD;
         );
 
         $namespaceSymbol = new NamespaceSymbol('Carbon_Fields\Provider', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Carbon_Fields\Provider');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Carbon_Fields\Provider');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -1285,12 +1285,12 @@ EOD;
 EOD;
         $expected = <<<'EOD'
 /**
- * @method static \BrianHenryIE\Strauss\Carbon_Fields\Container\Comment_Meta_Container';
+ * @method static \BrianHenryIE\TestStrauss\Carbon_Fields\Container\Comment_Meta_Container';
  */
 EOD;
 
         $originalNamespace = 'Carbon_Fields\Container';
-        $replacement = 'BrianHenryIE\Strauss\Carbon_Fields\Container';
+        $replacement = 'BrianHenryIE\TestStrauss\Carbon_Fields\Container';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -1332,7 +1332,7 @@ EOD;
     {
 
         $contents = 'return \Carbon_Fields\Carbon_Fields::resolve();';
-        $expected = 'return \BrianHenryIE\Strauss\Carbon_Fields\Carbon_Fields::resolve();';
+        $expected = 'return \BrianHenryIE\TestStrauss\Carbon_Fields\Carbon_Fields::resolve();';
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4286,9 +4286,9 @@ class Factory
 }
 EOD;
 
-        // public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\Strauss\Vendor\Composer
+        // public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\TestStrauss\Vendor\Composer
         $expected = <<<'EOD'
-namespace BrianHenryIE\Strauss\Vendor\Composer;
+namespace BrianHenryIE\TestStrauss\Vendor\Composer;
 
 class Factory
 {
@@ -4382,7 +4382,7 @@ EOD;
     {
         $contents = <<<'EOD'
 <?php
-namespace BrianHenryIE\Strauss\Console;
+namespace BrianHenryIE\TestStrauss\Console;
 
 use Symfony\Component\Console\Application as BaseApplication;
 
@@ -4393,9 +4393,9 @@ EOD;
 
         $expected = <<<'EOD'
 <?php
-namespace BrianHenryIE\Strauss\Console;
+namespace BrianHenryIE\TestStrauss\Console;
 
-use BrianHenryIE\Strauss\Vendor\Symfony\Component\Console\Application as BaseApplication;
+use BrianHenryIE\TestStrauss\Vendor\Symfony\Component\Console\Application as BaseApplication;
 
 class Application extends BaseApplication
 {
@@ -4417,7 +4417,7 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
 
         $namespaceSymbol = new NamespaceSymbol('Symfony\Component\Console', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Vendor\Symfony\Component\Console');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Vendor\Symfony\Component\Console');
         $discoveredSymbols->add($namespaceSymbol);
 
         $classSymbol = new ClassSymbol('Symfony\Component\Console\Application', $file, false, $namespaceSymbol);
@@ -4478,7 +4478,7 @@ EOD;
         $expected2 = <<<'EOD'
 <?php declare(strict_types=1);
 
-namespace BrianHenryIE\Strauss\Composer\Autoload;
+namespace BrianHenryIE\TestStrauss\Composer\Autoload;
 
 class AutoloadGenerator {}
 EOD;
@@ -4505,11 +4505,11 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
 
         $namespaceSymbol = new NamespaceSymbol('Composer\Autoload');
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Composer\Autoload');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Composer\Autoload');
         $discoveredSymbols->add($namespaceSymbol);
 
 //        $namespaceSymbol = new NamespaceSymbol('Composer', $file);
-//        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Composer');
+//        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Composer');
 //        $discoveredSymbols->add($namespaceSymbol);
 
         $classSymbol = new ClassSymbol('Composer\Autoload\AutoloadGenerator', $file, false, $namespaceSymbol);
@@ -4547,7 +4547,7 @@ EOD;
 
         $expected = <<<'EOD'
 <?php
-use BrianHenryIE\Strauss\MyPackageNamespace\Namespace;
+use BrianHenryIE\TestStrauss\MyPackageNamespace\Namespace;
 
 return 'whatever';
 EOD;
@@ -4567,7 +4567,7 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
 
         $namespaceSymbol = new NamespaceSymbol('MyPackageNamespace\Namespace', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\MyPackageNamespace\Namespace');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\MyPackageNamespace\Namespace');
         $discoveredSymbols->add($namespaceSymbol);
 
         $filesystem = $this->getInMemoryFileSystem();
@@ -4709,7 +4709,7 @@ EOD;
         $file->setDoPrefix(false);
 
         $namespaceSymbol = new NamespaceSymbol('Composer\Autoload', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Composer\Autoload');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Composer\Autoload');
 
         $classSymbol = new ClassSymbol('ClassLoader', $file, false, $namespaceSymbol);
 
@@ -4730,6 +4730,6 @@ EOD;
         $result = $filesystem->read($file->getTargetAbsolutePath());
 
         $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $result);
-        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\Strauss\Composer\Autoload\ClassLoader\\0";', $result);
+        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $result);
     }
 }

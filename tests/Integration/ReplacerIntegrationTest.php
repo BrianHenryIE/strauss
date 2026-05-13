@@ -62,7 +62,7 @@ EOD;
 
         $updatedFile = $this->getFileSystem()->read($absoluteTargetDir . '/google/apiclient/src/Client.php');
 
-        self::assertStringContainsString('use BrianHenryIE\Strauss\Google\AccessToken\Revoke;', $updatedFile);
+        self::assertStringContainsString('use BrianHenryIE\TestStrauss\Google\AccessToken\Revoke;', $updatedFile);
     }
 
     public function testReplaceClass(): void
@@ -461,7 +461,7 @@ EOD;
 
         $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
         $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
-        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\Strauss\Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
+        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassLoader.php');
         $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
