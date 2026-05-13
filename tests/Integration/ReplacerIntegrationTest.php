@@ -470,11 +470,11 @@ EOD;
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassLoader.php');
         $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
-        $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\Composer\\Autoload;', $phpString);
+        $this->assertStringContainsString('namespace BrianHenryIE\\TestStrauss\\Composer\\Autoload;', $phpString);
 
         // vendor/composer/composer/src/Composer/Autoload/ClassMapGenerator.php
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/ClassMapGenerator.php');
-        $this->assertStringContainsString('namespace BrianHenryIE\\Strauss\\Composer\\Autoload;', $phpString);
+        $this->assertStringContainsString('namespace BrianHenryIE\\TestStrauss\\Composer\\Autoload;', $phpString);
         $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
     }
     /**
