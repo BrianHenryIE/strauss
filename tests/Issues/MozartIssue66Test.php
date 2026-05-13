@@ -33,6 +33,12 @@ class MozartIssue66Test extends IntegrationTestCase
      */
     public function testFilesAutoloaderIsUsed(): void
     {
+        /**
+         * Skipping Prefixing in strauss/php-di/php-di/src/Compiler/Template.php
+         *
+         * @see https://github.com/PHP-DI/PHP-DI/blob/6.4/src/Compiler/Template.php
+         */
+        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {

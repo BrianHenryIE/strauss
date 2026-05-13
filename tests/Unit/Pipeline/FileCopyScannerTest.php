@@ -43,9 +43,10 @@ class FileCopyScannerTest extends TestCase
         $config->expects('isTargetDirectoryVendor')->atLeast()->once()->andReturnFalse();
         $config->expects('getExcludePackagesFromCopy')->andReturns([]);
         $config->expects('isDeleteVendorFiles')->andReturnFalse();
+        $config->expects('getExcludeNamespacesFromCopy')->andReturns([]);
         $config->expects('getExcludeFilePatternsFromCopy')->andReturns([$regexPattern]);
 
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getFileSystem();
 
         $sut = new FileCopyScanner($config, $filesystem, $this->getLogger());
         $sut->scanFiles($discoveredFiles);

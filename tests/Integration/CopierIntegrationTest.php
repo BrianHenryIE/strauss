@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Copier;
@@ -32,7 +33,7 @@ class CopierIntegrationTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": false
     }
@@ -67,7 +68,7 @@ EOD;
             $this->getFileSystem(),
             $this->getLogger()
         );
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
 
         $fileCopyScanner = new FileCopyScanner($config, $this->getFileSystem());
         $fileCopyScanner->scanFiles($files);
@@ -106,7 +107,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": false
     }
@@ -141,7 +142,7 @@ EOD;
             $this->getFileSystem(),
             $this->getLogger()
         );
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
 
         (new FileCopyScanner($config, $this->getFileSystem()))->scanFiles($files);
 

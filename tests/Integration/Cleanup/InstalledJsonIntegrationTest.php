@@ -25,7 +25,7 @@ class InstalledJsonIntegrationTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "delete_vendor_packages": true
     }
   }
@@ -46,7 +46,7 @@ EOD;
         $vendorInstalledJsonStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
         $vendorPrefixedInstalledJsonPsr4PhpStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
 
-        $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
+        $this->assertStringContainsString('BrianHenryIE\\\\TestStrauss\\\\chillerlan\\\\Settings\\\\', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
         $this->assertStringNotContainsString('"chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
     }
 
@@ -62,7 +62,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "target_directory": "vendor"
     }
   }
@@ -80,7 +80,7 @@ EOD;
 
         $vendorInstalledJsonStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
 
-        $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
+        $this->assertStringContainsString('BrianHenryIE\\\\TestStrauss\\\\chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
         $this->assertStringNotContainsString('"chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
     }
 
@@ -94,7 +94,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "delete_vendor_packages": false,
             "delete_vendor_files": false,
             "target_directory": "vendor-prefixed"
@@ -117,10 +117,10 @@ EOD;
         $vendorInstalledJsonStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
         $vendorPrefixedInstalledJsonPsr4PhpStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
 
-        $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
+        $this->assertStringContainsString('BrianHenryIE\\\\TestStrauss\\\\chillerlan\\\\Settings\\\\', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
 
         // Since we're not deleting the original files, don't change their vendor/composer/installed.json entries
-        $this->assertStringNotContainsString('BrianHenryIE\\\\Strauss\\\\chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
+        $this->assertStringNotContainsString('BrianHenryIE\\\\TestStrauss\\\\chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
         $this->assertStringContainsString('"chillerlan\\\\Settings\\\\', $vendorInstalledJsonStringAfter);
     }
 
@@ -139,7 +139,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "delete_vendor_packages": true
     }
   },
@@ -204,6 +204,6 @@ EOD;
         $vendorPrefixedInstalledJsonPsr4PhpStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json');
 
         $this->assertStringNotContainsString('"": "src/"', $vendorInstalledJsonStringAfter);
-        $this->assertStringContainsString('"BrianHenryIE\\\\Strauss\\\\": "src/"', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
+        $this->assertStringContainsString('"BrianHenryIE\\\\TestStrauss\\\\": "src/"', $vendorPrefixedInstalledJsonPsr4PhpStringAfter);
     }
 }

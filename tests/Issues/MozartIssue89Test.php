@@ -54,7 +54,7 @@ class MozartIssue89Test extends IntegrationTestCase
      *
      * @test
      */
-    public function it_moves_each_file_once_per_namespace()
+    public function it_moves_each_file_once_per_namespace(): void
     {
         $this->markTestSkippedOnPhpVersionBelow('7.1');
         $this->markTestSkippedOnPhpVersionAbove('7.4');
@@ -67,8 +67,8 @@ class MozartIssue89Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_"
+			"namespace_prefix": "BrianHenryIE\\M89\\",
+			"classmap_prefix": "BrianHenryIE_M89_"
 		}
 	}
 }

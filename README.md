@@ -222,14 +222,18 @@ The remainder is empty:
 
 - `constant_prefix` is for `define( "A_CONSTANT", value );` -> `define( "MY_PREFIX_A_CONSTANT", value );`. If it is empty, constants are not prefixed (this may change to an inferred value).
 - `override_autoload` a dictionary, keyed with the package names, of autoload settings to replace those in the original packages' `composer.json` `autoload` property.
-- `exclude_from_prefix` / [`file_patterns`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L92-L96)
 - `exclude_from_copy`
   - [`packages`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/FileEnumerator.php#L77-L79) array of package names to be skipped
   - [`namespaces`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/FileEnumerator.php#L95-L97) array of namespaces to skip (exact match from the package autoload keys)
   - [`file_patterns`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/FileEnumerator.php#L133-L137) array of regex patterns to check filenames against (including vendor relative path) where Strauss will skip that file if there is a match
-- `exclude_from_prefix`
-  - [`packages`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L86-L90) array of package names to exclude from prefixing.
+- `exclude_from_prefix` Symbols defined in these files etc. will not be renamed. NB: where they are used _will_ be updated
+  - [`file_patterns`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L92-L96)
+  - [`packages`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L86-L90) array of package names to exclude from prefixing
   - [`namespaces`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L177-L181) array of exact match namespaces to exclude (i.e. not substring/parent namespaces)
+- `exclude_files_from_update` no changes will be made in files matching these 
+    - `file_patterns`
+    - `packages`
+    - `namespaces`
 - `exclude_constants` – same shape as `exclude_from_prefix`, but applies only to constants (e.g. from `define()` or `const`). Use to avoid prefixing runtime constants like `WP_PLUGIN_DIR`, `ABSPATH`.
   - `packages` array of package names whose constants are not prefixed
   - `namespaces` array of namespaces (prefix match) whose constants are not prefixed

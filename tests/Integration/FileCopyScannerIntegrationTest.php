@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -41,7 +42,7 @@ class FileCopyScannerIntegrationTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": false
     }
@@ -77,7 +78,7 @@ EOD;
             $this->getLogger()
         );
 
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
         foreach ($files->getFiles() as $file) {
             $file->setDoPrefix($file->isPhpFile());
         }
@@ -110,7 +111,7 @@ EOD;
         self::assertNotEmpty($classes, 'Discovered classes should not be empty after scanning google/apiclient');
         self::assertNotEmpty($namespaces, 'Discovered namespaces should not be empty after scanning google/apiclient');
 
-        self::assertContains('Google_Task_Composer', $classes);
+        self::assertArrayHasKey('Google_Task_Composer', $classes->toArray());
     }
 
     /**
@@ -129,7 +130,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true,
 	        "exclude_from_copy": {

@@ -27,7 +27,7 @@ class StraussIssue136Test extends IntegrationTestCase
   "name": "strauss/issue136",
   "autoload": {
     "psr-4": {
-      "BrianHenryIE\\Strauss\\": "src"
+      "BrianHenryIE\\S136\\": "src"
     }
   },
   "require": {

@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\CopierConfigInterface;
+use BrianHenryIE\Strauss\Config\MarkFilesExcludedFromChangesConfigInterface;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
@@ -22,6 +23,7 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
+use Composer\Util\Platform;
 use Exception;
 use InvalidArgumentException;
 use JsonMapper\Enums\TextNotation;
@@ -37,6 +39,7 @@ class StraussConfig implements
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     CopierConfigInterface,
+    MarkFilesExcludedFromChangesConfigInterface,
     MarkSymbolsForRenamingConfigInterface,
     FileSymbolScannerConfigInterface,
     FileEnumeratorConfig,
@@ -136,6 +139,13 @@ class StraussConfig implements
     protected array $excludeFromCopy = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
 
     /**
+     * 'exclude_files_from_update' in composer/extra config. Make no changes to these files.
+     *
+     * @var array{packages: string[], namespaces: string[], file_patterns: string[]}
+     */
+    protected array $excludeFilesFromUpdates = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
+
+    /**
      * @var array{packages: string[], namespaces: string[], file_patterns: string[]}
      */
     protected array $excludeFromPrefix = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
@@ -219,7 +229,7 @@ class StraussConfig implements
      */
     public function __construct(?Composer $composer = null)
     {
-        $normalizer = FileSystem::makePathNormalizer(getcwd());
+        $normalizer = FileSystem::makePathNormalizer(Platform::getcwd());
         if (isset($composer)) {
             $composerDir = $composer->getConfig()->getConfigSource()->getName();
             // Composer factory accepts a file or directory.
@@ -227,7 +237,7 @@ class StraussConfig implements
                 ? dirname($composerDir) : $composerDir;
             $this->projectAbsolutePath = $normalizer->normalizePath($composerDir);
         } else {
-            $this->projectAbsolutePath = $normalizer->normalizePath(getcwd());
+            $this->projectAbsolutePath = $normalizer->normalizePath(Platform::getcwd());
         }
 
         $configExtraSettings = null;
@@ -264,6 +274,10 @@ class StraussConfig implements
 
             $rename->addMapping(StraussConfig::class, 'constant_prefix', 'constantsPrefix');
 
+            // Handle misspelling.
+            $rename->addMapping(StraussConfig::class, 'exclude_files_from_update', 'excludeFilesFromUpdates');
+            $rename->addMapping(StraussConfig::class, 'exclude_files_from_updates', 'excludeFilesFromUpdates');
+
             $mapper->unshift($rename);
             $mapper->push(new CaseConversion(TextNotation::UNDERSCORE(), TextNotation::CAMEL_CASE()));
 
@@ -294,27 +308,37 @@ class StraussConfig implements
             }
         }
 
+        // When no classmapPrefix is set, infer it from the psr-4 autoload key.
+        // TODO: we don't want to use the first psr-4 key, we want to use the shortest?
         if (! isset($this->classmapPrefix)) {
-            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4'])) {
+            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4']) && !empty($composer->getPackage()->getAutoload()['psr-4'])) {
                 $autoloadKey = array_key_first($composer->getPackage()->getAutoload()['psr-4']);
                 $classmapPrefix = str_replace("\\", "_", $autoloadKey);
                 $this->setClassmapPrefix($classmapPrefix);
-            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0'])) {
+            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0']) && !empty($composer->getPackage()->getAutoload()['psr-0'])) {
                 $autoloadKey = array_key_first($composer->getPackage()->getAutoload()['psr-0']);
                 $classmapPrefix = str_replace("\\", "_", $autoloadKey);
                 $this->setClassmapPrefix($classmapPrefix);
             } elseif (isset($composer) && '__root__' !== $composer->getPackage()->getName()) {
                 $packageName = $composer->getPackage()->getName();
-                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $packageName);
+                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $packageName) ?? (function () {
+                    throw new \Exception(preg_last_error_msg(), preg_last_error());
+                })();
                 $classmapPrefix = str_replace('/', '\\', $classmapPrefix);
-                // Uppercase the first letter of each word.
+                // Uppercase the first letter of each word. ~`ucfirst()`.
                 $classmapPrefix = preg_replace_callback('/(?<=^|_|\\\\)[a-z]/', function ($match) {
                     return strtoupper($match[0]);
-                }, $classmapPrefix);
+                }, $classmapPrefix) ?? (function () {
+                    throw new \Exception(preg_last_error_msg(), preg_last_error());
+                })();
                 $classmapPrefix = str_replace("\\", "_", $classmapPrefix);
                 $this->setClassmapPrefix($classmapPrefix);
-            } elseif (isset($this->namespacePrefix)) {
-                $classmapPrefix = preg_replace('/[^\w\/]+/', '_', $this->getNamespacePrefix()) ?? str_replace('\\', '_', $this->getNamespacePrefix());
+            } elseif ($this->getNamespacePrefix()) {
+                $classmapPrefix = preg_replace(
+                    '/[^\w\/]+/',
+                    '_',
+                    $this->getNamespacePrefix()
+                ) ?? str_replace('\\', '_', $this->getNamespacePrefix());
                 $classmapPrefix = rtrim($classmapPrefix, '_') . '_';
                 $this->setClassmapPrefix($classmapPrefix);
             }
@@ -557,6 +581,44 @@ class StraussConfig implements
     public function getExcludeFilePatternsFromCopy(): array
     {
         return $this->excludeFromCopy['file_patterns'] ?? array();
+    }
+
+
+    /**
+     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>} $excludeFilesFromUpdates
+     */
+    public function setExcludeFilesFromUpdates(array $excludeFilesFromUpdates): void
+    {
+        foreach (array( 'packages', 'namespaces', 'file_patterns' ) as $key) {
+            if (isset($excludeFilesFromUpdates[$key])) {
+                $this->excludeFilesFromUpdates[$key] = $excludeFilesFromUpdates[$key];
+            }
+        }
+    }
+
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFilesFromUpdatePackages(): array
+    {
+        return $this->excludeFilesFromUpdates['packages'] ?? array();
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFileFromUpdateNamespaces(): array
+    {
+        return $this->excludeFilesFromUpdates['namespaces'] ?? array();
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFilesFromUpdateFilePatterns(): array
+    {
+        return $this->excludeFilesFromUpdates['file_patterns'] ?? array();
     }
 
     /**
@@ -915,7 +977,7 @@ class StraussConfig implements
 
         if ($input->hasOption('dry-run') && $input->getOption('dry-run') !== false) {
             // If we're here, the parameter was passed in the CLI command.
-            $this->dryRun = empty($input->getOption('dry-run')) || (bool)filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $this->dryRun = empty($input->getOption('dry-run')) || filter_var($input->getOption('dry-run'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
     }
 

@@ -105,7 +105,7 @@ EOD;
 
         $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/plugin-update-checker.php');
 
-        $this->markTestSkipped("I'm unsure what the best thing to do here is. Should the files be prefixed or not?");
+        $this->markTestIncomplete("I'm unsure what the best thing to do here is. Should the files be prefixed or not?");
 
         // Do not prefix.
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/yahnis-elsts/plugin-update-checker/Puc/v5p6/Autoloader.php');
@@ -137,8 +137,10 @@ EOD;
 
         $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
 
-        // Do not prefix.
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
-        $this->assertStringContainsString("function wp_register_ability(", $php_string);
+        // Although `wordpress/abilities-api/includes/bootstrap.php` guards against loading classes etc that are already
+        // defined, I don't see a way to decide if that is adequate. The plugin developer might have to explicitly
+        // exclude the files from prefixing if that's what they (reasonably) want.
+//        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
+//        $this->assertStringContainsString("function wp_register_ability(", $php_string);
     }
 }

@@ -17,6 +17,7 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\LicenserConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -31,8 +32,7 @@ class Licenser
 {
     use LoggerAwareTrait;
 
-    /** @var ComposerPackage[]  */
-    protected array $dependencies;
+    protected DependenciesCollection $dependencies;
 
     // The author of the current project who is running Strauss to make the changes to the required libraries.
     protected string $author;
@@ -59,12 +59,12 @@ class Licenser
     /**
      * Licenser constructor.
      *
-     * @param ComposerPackage[] $dependencies Whose folders are searched for existing license.txt files.
+     * @param DependenciesCollection $dependencies Whose folders are searched for existing license.txt files.
      * @param string $author To add to each modified file's header
      */
     public function __construct(
         LicenserConfigInterface $config,
-        array            $dependencies,
+        DependenciesCollection  $dependencies,
         string           $author,
         FileSystem       $filesystem,
         ?LoggerInterface $logger = null
@@ -142,6 +142,10 @@ class Licenser
         /** @var ComposerPackage $dependency */
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
+            // Meta packages.
+            if (is_null($packagePath)) {
+                continue;
+            }
             $packagePath = $this->filesystem->normalizePath($packagePath);
 
             if (!$packagePath) {
@@ -208,7 +212,9 @@ class Licenser
             );
 
             if ($updatedContents !== $contents) {
-                $this->logger->info("Adding change declaration to {$filepath}");
+                $this->logger->info("Adding change declaration to {filepath}", [
+                    'filepath' => $filepath
+                ]);
                 $this->filesystem->write($filepath, $updatedContents);
             }
         }
@@ -313,9 +319,7 @@ class Licenser
 
             $commentEnd =  rtrim(rtrim($lineStart, ' '), '*').'*/';
 
-            $replaceWith = $matches[1] . $matches[2] . $appendString . $commentEnd;
-
-            return $replaceWith;
+            return $matches[1] . $matches[2] . $appendString . $commentEnd;
         };
 
         // If it's a simple case where there is no existing header, add the existing license.

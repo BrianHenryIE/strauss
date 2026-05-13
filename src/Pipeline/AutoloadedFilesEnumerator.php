@@ -6,12 +6,16 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Composer\ClassMapGenerator\ClassMapGenerator;
 use League\Flysystem\FilesystemException;
+use PhpParser\NodeFinder;
+use PhpParser\ParserFactory;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+use SplFileInfo;
 
 class AutoloadedFilesEnumerator
 {
@@ -30,10 +34,7 @@ class AutoloadedFilesEnumerator
         $this->setLogger($logger);
     }
 
-    /**
-     * @param ComposerPackage[] $dependencies
-     */
-    public function scanForAutoloadedFiles(array $dependencies): void
+    public function scanForAutoloadedFiles(DependenciesCollection $dependencies): void
     {
         foreach ($dependencies as $dependency) {
             $this->scanPackage($dependency);
@@ -48,10 +49,15 @@ class AutoloadedFilesEnumerator
     {
         $this->logger->debug('AutoloadFileEnumerator::scanPackage() {packageName}', [ 'packageName' => $dependency->getPackageName() ]);
 
-        $this->logger->info("Scanning for autoloaded files in package {packageName}", ['packageName' => $dependency->getPackageName()]);
+        // Meta packages.
+        if (is_null($dependency->getPackageAbsolutePath())) {
+            return;
+        }
+
+        $this->logger->info("Scanning for autoloaded files in package {packageName}", [ 'packageName' => $dependency->getPackageName() ]);
 
         $dependencyAutoloadKey = $dependency->getAutoload();
-        $excludeFromClassmap = isset($dependencyAutoloadKey['exclude_from_classmap']) ? $dependencyAutoloadKey['exclude_from_classmap'] : [];
+        $excludeFromClassmap   = isset($dependencyAutoloadKey['exclude_from_classmap']) ? $dependencyAutoloadKey['exclude_from_classmap'] : [];
 
         /**
          * Where $dependency->autoload is ~
@@ -64,12 +70,10 @@ class AutoloadedFilesEnumerator
             return 'exclude-from-classmap' !== $type;
         }, ARRAY_FILTER_USE_KEY);
 
-        $dependencyPackageAbsolutePath = $this->filesystem->makeAbsolute($dependency->getPackageAbsolutePath());
+        $dependencyPackageAbsolutePath   = $this->filesystem->makeAbsolute($dependency->getPackageAbsolutePath());
         $fsDependencyPackageAbsolutePath = $this->filesystem->makeAbsolute($dependencyPackageAbsolutePath);
 
-        $classMapGenerator = new ClassMapGenerator();
-
-        $excluded = null;
+        $excluded     = null;
         $autoloadType = 'classmap';
 
         // Used in Composer `ClassMapGenerator::scanPaths()`.
@@ -78,17 +82,19 @@ class AutoloadedFilesEnumerator
             $excludeFromClassmap
         );
 
-        foreach ($autoloaders as $type => $value) {
+        foreach ($autoloaders as $autoloaderType => $value) {
             // Might have to switch/case here.
+
+            $classMapGenerator = new ClassMapGenerator();
 
             /** @var ?string $namespace */
             $namespace = null;
 
-            switch ($type) {
+            switch ($autoloaderType) {
                 case 'files':
-                    $filesAbsolutePaths = array_map(
+                    $filesAbsolutePaths   = array_map(
                         fn(string $path) => $dependencyPackageAbsolutePath . '/' . $path,
-                        (array)$value
+                        (array) $value
                     );
                     $filesAutoloaderFiles = $this->filesystem->findAllFilesAbsolutePaths($filesAbsolutePaths, true);
                     foreach ($filesAutoloaderFiles as $filePackageAbsolutePath) {
@@ -96,28 +102,31 @@ class AutoloadedFilesEnumerator
                             $dependencyPackageAbsolutePath,
                             $filePackageAbsolutePath
                         );
-                        $file = $dependency->getFile(FileSystem::normalizeDirSeparator($filePackageRelativePath));
-                        if (!$file) {
+                        $file                    = $dependency->getFile(FileSystem::normalizeDirSeparator($filePackageRelativePath));
+                        if (! $file) {
                             $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
                                 'relativePath' => $filePackageRelativePath,
-                                'packageName' => $dependency->getPackageName(),
+                                'packageName'  => $dependency->getPackageName(),
                             ]);
                         } else {
-                            $file->setIsAutoloaded(true);
+                            $file->addAutoloaderType('files');
                             $file->setDoPrefix(true);
                         }
+
+                        $visited = [];
+                        $this->markIncludedFilesRecursive($filePackageAbsolutePath, $dependency, $dependencyPackageAbsolutePath, $visited);
                     }
                     break;
                 case 'classmap':
                     $autoloadKeyPaths = array_map(
                         fn(string $path) => $dependencyPackageAbsolutePath . '/' . ltrim($path, '/'),
-                        (array)$value
+                        (array) $value
                     );
                     foreach ($autoloadKeyPaths as $autoloadKeyPath) {
-                        if (!$this->filesystem->exists($autoloadKeyPath)) {
+                        if (! $this->filesystem->exists($autoloadKeyPath)) {
                             $this->logger->warning(
                                 "Skipping non-existent autoload path in {packageName}: {path}",
-                                ['packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath]
+                                [ 'packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath ]
                             );
                             continue;
                         }
@@ -129,31 +138,36 @@ class AutoloadedFilesEnumerator
                             $excludedDirs,
                         );
                     }
-
+                    $this->processClassmapFiles($classMapGenerator, $dependency, $autoloaderType);
                     break;
                 case 'psr-0':
                 case 'psr-4':
-                    foreach ((array)$value as $namespace => $namespaceRelativePaths) {
+                    foreach ((array) $value as $namespace => $namespaceRelativePaths) {
                         $psrPaths = array_map(
                             fn(string $path) => $dependencyPackageAbsolutePath . '/' . ltrim($path, '/'),
-                            (array)$namespaceRelativePaths
+                            (array) $namespaceRelativePaths
                         );
 
                         foreach ($psrPaths as $autoloadKeyPath) {
-                            if (!$this->filesystem->exists($autoloadKeyPath)) {
+                            if (! $this->filesystem->exists($autoloadKeyPath)) {
                                 $this->logger->warning(
                                     "Skipping non-existent autoload path in {packageName}: {path}",
-                                    ['packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath]
+                                    [ 'packageName' => $dependency->getPackageName(), 'path' => $autoloadKeyPath ]
                                 );
                                 continue;
                             }
+                            $absolutePath = $this->filesystem->makeAbsolute($autoloadKeyPath);
+                            if (str_starts_with($absolutePath, 'mem://')) {
+                                $absolutePath = new SplFileInfo($absolutePath);
+                            }
                             $classMapGenerator->scanPaths(
-                                $this->filesystem->makeAbsolute($autoloadKeyPath),
+                                $absolutePath,
                                 $excluded,
                                 $autoloadType,
                                 $namespace,
                                 $excludedDirs,
                             );
+                            $this->processClassmapFiles($classMapGenerator, $dependency, $autoloaderType);
                         }
                     }
                     break;
@@ -163,11 +177,112 @@ class AutoloadedFilesEnumerator
                     break;
             }
         }
+    }
 
+    /**
+     * @param string $absoluteFilePath
+     * @param ComposerPackage $dependency
+     * @param string $packageAbsolutePath
+     * @param array<string,bool> $visited
+     *
+     * @return void
+     * @throws FilesystemException
+     */
+    private function markIncludedFilesRecursive(
+        string $absoluteFilePath,
+        ComposerPackage $dependency,
+        string $packageAbsolutePath,
+        array &$visited
+    ): void {
+        if (isset($visited[$absoluteFilePath])) {
+            return;
+        }
+        $visited[$absoluteFilePath] = true;
+
+        if (!$this->filesystem->exists($absoluteFilePath)) {
+            return;
+        }
+
+        $contents = $this->filesystem->read($absoluteFilePath);
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        try {
+            $ast = $parser->parse($contents);
+        } catch (\PhpParser\Error $e) {
+            $this->logger->warning('Could not parse {file}: {message}', [
+                'file' => $absoluteFilePath, 'message' => $e->getMessage(),
+            ]);
+            return;
+        }
+
+        $nodeFinder = new NodeFinder();
+        $includeNodes = $nodeFinder->findInstanceOf($ast, \PhpParser\Node\Expr\Include_::class);
+        $includingDir = dirname($absoluteFilePath);
+
+        foreach ($includeNodes as $node) {
+            $resolvedPath = $this->resolveIncludePath($node->expr, $includingDir);
+            if ($resolvedPath === null) {
+                $this->logger->debug('Cannot statically resolve include expression in {file}', [
+                    'file' => $absoluteFilePath,
+                ]);
+                continue;
+            }
+
+            if (!str_starts_with($resolvedPath, $packageAbsolutePath)) {
+                continue;
+            }
+
+            $relPath = $this->filesystem->getRelativePath($packageAbsolutePath, $resolvedPath);
+            $file = $dependency->getFile(FileSystem::normalizeDirSeparator($relPath));
+            if ($file) {
+                $file->addAutoloaderType('files');
+                $file->setDoPrefix(true);
+            }
+
+            $this->markIncludedFilesRecursive($resolvedPath, $dependency, $packageAbsolutePath, $visited);
+        }
+    }
+
+    private function resolveIncludePath(\PhpParser\Node\Expr $expr, string $includingDir): ?string
+    {
+        if ($expr instanceof \PhpParser\Node\Scalar\String_) {
+            $path = $expr->value;
+            return str_starts_with($path, '/') ? $path : $includingDir . '/' . $path;
+        }
+
+        if ($expr instanceof \PhpParser\Node\Expr\BinaryOp\Concat) {
+            $left = $expr->left;
+            $right = $expr->right;
+
+            $base = null;
+            if ($left instanceof \PhpParser\Node\Scalar\MagicConst\Dir) {
+                $base = $includingDir;
+            } elseif ($left instanceof \PhpParser\Node\Expr\FuncCall
+                && $left->name instanceof \PhpParser\Node\Name
+                && strtolower((string) $left->name) === 'dirname'
+            ) {
+                $base = $includingDir;
+            }
+
+            if ($base !== null && $right instanceof \PhpParser\Node\Scalar\String_) {
+                return $base . $right->value;
+            }
+        }
+
+        return null;
+    }
+
+    protected function processClassmapFiles(ClassMapGenerator $classMapGenerator, ComposerPackage $dependency, string $autoloaderType): void
+    {
         $classMap = $classMapGenerator->getClassMap();
         $classMapPaths = $classMap->getMap();
         foreach ($classMapPaths as $fileAbsolutePath) {
-            $relativePath = $this->filesystem->getRelativePath($dependency->getPackageAbsolutePath(), $fileAbsolutePath);
+            /**
+             * This will never be null because we have been looking inside this path!
+             *
+             * @var string $packageAbsolutePath
+             */
+            $packageAbsolutePath = $dependency->getPackageAbsolutePath();
+            $relativePath = $this->filesystem->getRelativePath($packageAbsolutePath, $fileAbsolutePath);
             $file = $dependency->getFile($relativePath);
             if (!$file) {
                 $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
@@ -175,8 +290,13 @@ class AutoloadedFilesEnumerator
                     'packageName' => $dependency->getPackageName(),
                 ]);
             } else {
-                $file->setIsAutoloaded(true);
+                /**
+                 * We are assuming at this point that we will rename all autoloaded PHP files. Rules will be applied later.
+                 *
+                 * @see MarkSymbolsForRenaming
+                 */
                 $file->setDoPrefix(true);
+                $file->addAutoloaderType($autoloaderType);
             }
         }
     }

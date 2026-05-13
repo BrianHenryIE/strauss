@@ -1,8 +1,8 @@
 # phpstan analyse --memory-limit=-1 --level 8 --verbose
 # phpstan analyse --memory-limit=-1 --level max --generate-baseline
 
-includes:
-    - phpstan-baseline.neon
+#includes:
+#    - phpstan-baseline.neon
 
 parameters:
 

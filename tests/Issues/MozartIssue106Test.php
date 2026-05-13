@@ -24,7 +24,7 @@ class MozartIssue106Test extends IntegrationTestCase
         /**
          * @see https://github.com/BrianHenryIE/strauss/commit/1bd20b75a4e6b5c07a428c04e8b9e514034b6b5c
          */
-        self::markTestSkipped('Polyfills are no longer prefixed.');
+        self::markTestIncomplete('Polyfills are no longer prefixed.');
 
         $composerJsonString = <<<'EOD'
 {
@@ -35,8 +35,8 @@ class MozartIssue106Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_"
+			"namespace_prefix": "BrianHenryIE\\M106\\",
+			"classmap_prefix": "BrianHenryIE_M106_"
 		}
 	}
 }
@@ -54,9 +54,9 @@ EOD;
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php');
 
         // Confirm problem is gone.
-        self::assertStringNotContainsString('class BrianHenryIE_Strauss_BrianHenryIE_Strauss_Normalizer extends', $php_string, 'Double prefixing problem still present.');
+        self::assertStringNotContainsString('class BrianHenryIE_M106_BrianHenryIE_Strauss_Normalizer extends', $php_string, 'Double prefixing problem still present.');
 
         // Confirm solution is correct.
-        self::assertStringContainsString('class BrianHenryIE_Strauss_Normalizer extends', $php_string, 'Class name not properly prefixed.');
+        self::assertStringContainsString('class BrianHenryIE_M106_Normalizer extends', $php_string, 'Class name not properly prefixed.');
     }
 }

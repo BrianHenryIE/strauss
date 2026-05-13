@@ -5,7 +5,7 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
@@ -20,6 +20,8 @@ use Composer\Json\JsonFile;
 use Composer\Repository\InstalledFilesystemRepository;
 use Exception;
 use League\Flysystem\FilesystemException;
+use League\Flysystem\StorageAttributes;
+use Phar;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Seld\JsonLint\ParsingException;
@@ -31,7 +33,7 @@ class Cleanup
 {
     use LoggerAwareTrait;
 
-    protected Filesystem $filesystem;
+    protected FileSystem $filesystem;
 
     protected bool $isDeleteVendorFiles;
     protected bool $isDeleteVendorPackages;
@@ -40,7 +42,7 @@ class Cleanup
 
     public function __construct(
         CleanupConfigInterface $config,
-        Filesystem $filesystem,
+        FileSystem $filesystem,
         LoggerInterface $logger
     ) {
         $this->config = $config;
@@ -56,11 +58,9 @@ class Cleanup
      * Maybe delete the source files that were copied (depending on config),
      * then delete empty directories.
      *
-     * @param array<string,ComposerPackage> $flatDependencyTree
-     *
      * @throws FilesystemException
      */
-    public function deleteFiles(array $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
+    public function deleteFiles(DependenciesCollection $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
     {
         if (!$this->isDeleteVendorPackages && !$this->isDeleteVendorFiles) {
             $this->logger->info('No cleanup required.');
@@ -80,11 +80,11 @@ class Cleanup
         $this->deleteEmptyDirectories($discoveredFiles->getFiles());
     }
 
-    /** @param array<string,ComposerPackage> $flatDependencyTree
+    /**
      * @throws Exception
      * @throws FilesystemException
      */
-    public function cleanupVendorInstalledJson(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    public function cleanupVendorInstalledJson(DependenciesCollection $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         $installedJson = new InstalledJson(
             $this->config,
@@ -131,7 +131,7 @@ class Cleanup
             )
         );
         $projectComposerJsonArray = $projectComposerJson->read();
-        $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
+        $composer = (new Factory())->createComposer(new NullIO(), $projectComposerJsonArray);
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
         $config = $composer->getConfig();
@@ -164,6 +164,48 @@ class Cleanup
             $composer->getLocker(),
             $strictAmbiguous
         );
+
+        $this->stripPharPrefix($this->config->getAbsoluteVendorDirectory() . '/composer');
+    }
+
+    /**
+     * Composer classes are prefixed inside the Phar causing the output of dump-autoload when run inside Strauss
+     * to contain references to `BrianHenryIE\Strauss`, remove them.
+     *
+     * @throws FilesystemException
+     */
+    public function stripPharPrefix(string $composerDirectoryPath): void
+    {
+        if (!Phar::running()) {
+            return;
+        }
+
+        $this->logger->info('Stripping BrianHenryIE\\Strauss from vendor*/composer/*.php files');
+
+        $filesToProcess = [
+            'autoload_real.php',
+            'autoload_static.php',
+            'autoload_classmap.php',
+            'ClassLoader.php'
+        ];
+
+        /** @var StorageAttributes|array{path:string} $composerFile */
+        foreach ($this->filesystem->listContents($composerDirectoryPath) as $composerFile) {
+            if (!in_array(basename($composerFile['path']), $filesToProcess, true)) {
+                continue;
+            }
+
+            $fileContents = $this->filesystem->read($composerFile['path']);
+            /** @var string $updated */
+            $updated = preg_replace('/\\\\?BrianHenryIE\\\\{1,2}Strauss\\\\{1,2}/', '', $fileContents) ?? (function () {
+                throw new \Exception(preg_last_error_msg(), preg_last_error());
+            })();
+            if ($fileContents === $updated) {
+                continue;
+            }
+            $this->filesystem->write($composerFile['path'], $updated);
+            $this->logger->debug('Updated: {path}', ['path' => $composerFile['path']]);
+        }
     }
 
     /**
@@ -243,10 +285,9 @@ class Cleanup
     }
 
     /**
-     * @param array<string,ComposerPackage> $flatDependencyTree
      * @throws FilesystemException
      */
-    protected function doIsDeleteVendorPackages(array $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
+    protected function doIsDeleteVendorPackages(DependenciesCollection $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
     {
         $this->logger->info('Deleting original vendor packages.');
 
@@ -270,14 +311,20 @@ class Cleanup
                 continue;
             }
 
-            // Normal package.
-            $this->logger->info('Deleting ' . $package->getPackageAbsolutePath());
+            // Meta packages.
+            $packageAbsolutePath = $package->getPackageAbsolutePath();
+            if (is_null($packageAbsolutePath)) {
+                continue;
+            }
 
-            $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
+            // Normal package.
+            $this->logger->info('Deleting ' . $packageAbsolutePath);
+
+            $this->filesystem->deleteDirectory($packageAbsolutePath);
 
             $package->setDidDelete(true);
 
-            $packageParentDir = dirname($package->getPackageAbsolutePath());
+            $packageParentDir = dirname($packageAbsolutePath);
             if ($this->filesystem->isDirectoryEmpty($packageParentDir)) {
                 $this->logger->info('Deleting empty directory ' . $packageParentDir);
                 $this->filesystem->deleteDirectory($packageParentDir);

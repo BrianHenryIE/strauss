@@ -4,6 +4,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Util\Platform;
@@ -12,6 +13,7 @@ use Composer\Util\Platform;
  * Class CleanupIntegrationTest
  * @package BrianHenryIE\Strauss\Tests\Integration
  * @coversNothing
+ * @phpstan-import-type InstalledJsonArray from InstalledJson
  */
 class CleanupIntegrationTest extends IntegrationTestCase
 {
@@ -25,10 +27,10 @@ class CleanupIntegrationTest extends IntegrationTestCase
             file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);
             exec('composer install', $output, $exitCode);
             $this->assertEquals(0, $exitCode, implode(PHP_EOL, $output));
-            $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
+            $composer = (new Factory())->createComposer(new NullIO(), $this->testsWorkingDir . '/composer.json');
             $config = new StraussConfig($composer);
             $filesystem = $this->getFileSystem();
-            $cleanup = new Cleanup($config, $filesystem, $this->logger);
+            $cleanup = new Cleanup($config, $filesystem, $this->getLogger());
             $cleanup->rebuildVendorAutoloader();
             $autoloadRealPath = $this->testsWorkingDir . '/vendor/composer/autoload_real.php';
             $this->assertFileExists($autoloadRealPath);
@@ -56,7 +58,7 @@ class CleanupIntegrationTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_packages": true
     }
@@ -71,7 +73,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_packages": true,
       "optimize_autoloader": false
@@ -98,7 +100,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_packages": true
     }
@@ -117,6 +119,7 @@ EOD;
         $this->assertSame(0, $exitCode);
 
         $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/installed.json');
+        /** @var InstalledJsonArray $installedJson */
         $installedJson = json_decode($installedJsonFile, true);
         $entry = array_reduce($installedJson['packages'], function ($carry, $item) {
             if ($item['name'] === 'symfony/polyfill-php80') {

@@ -8,11 +8,13 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGeneratorFactory;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Exception;
@@ -50,7 +52,7 @@ class Autoload
     public function __construct(
         StraussConfig $config,
         array $discoveredFilesAutoloaders,
-        Filesystem $filesystem,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->config = $config;
@@ -60,12 +62,12 @@ class Autoload
     }
 
     /**
-     * @param array<string,ComposerPackage> $flatDependencyTree
+     * @param DependenciesCollection $flatDependencyTree
      * @throws FilesystemException
      * @throws ParsingException
      * @throws Exception
      */
-    public function generate(array $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
+    public function generate(DependenciesCollection $flatDependencyTree, DiscoveredSymbols $discoveredSymbols): void
     {
         if (!$this->config->isClassmapOutput()) {
             $this->logger->debug('Not generating autoload.php because classmap output is disabled.');
@@ -101,5 +103,11 @@ class Autoload
             ),
             new ComposerAutoloadGeneratorFactory()
         ))->generatedPrefixedAutoloader();
+
+        (new Cleanup(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        ))->stripPharPrefix($this->config->getAbsoluteTargetDirectory() . '/composer');
     }
 }

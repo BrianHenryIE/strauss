@@ -29,7 +29,7 @@ class StraussIssue37Test extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\S34\\",
       "classmap_prefix": "BH_Strauss_"
     }
   }

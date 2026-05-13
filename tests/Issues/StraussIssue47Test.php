@@ -25,6 +25,13 @@ class StraussIssue47Test extends IntegrationTestCase
      */
     public function test_double_namespace(): void
     {
+        /**
+         * Skipping Prefixing in strauss/dragon-public/framework/resources/views/Fields/Redirect.php due to parse error.
+         * Template.
+         *
+         * @see https://gitlab.com/dragon-public/framework/-/blob/1.3.16/resources/views/Fields/Redirect.php?ref_type=tags
+         */
+        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {
@@ -86,6 +93,15 @@ EOD;
      */
     public function test_double_namespace_dont_copy_dependencies(): void
     {
+        /**
+         * Skipping Prefixing in strauss/dragon-public/framework/resources/views/Fields/MediaImage.php due to parse error.
+         * Template.
+         *
+         * @see https://gitlab.com/dragon-public/framework/-/blob/1.3.16/resources/views/Fields/MediaImage.php?ref_type=tags
+         */
+        $this->expectWarningLogs();
+
+
         $composerJsonString = <<<'EOD'
 {
     "name": "brianhenryie/double-namespace-47",
@@ -172,6 +188,13 @@ EOD;
      */
     public function test_double_namespace_only_file_copied(): void
     {
+        /**
+         * Skipping Prefixing in strauss/dragon-public/framework/resources/views/Fields/MediaImage.php due to parse error.
+         * Template.
+         *
+         * @see https://gitlab.com/dragon-public/framework/-/blob/1.3.16/resources/views/Fields/MediaImage.php?ref_type=tags
+         */
+        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {

@@ -19,10 +19,10 @@ class CopierTest extends TestCase
      */
     public function test_file_is_copied(): void
     {
-        $filesystem = $this->getReadOnlyFileSystem();
+        $filesystem = $this->getFileSystem();
 
-        $sourceDir = 'mem://source';
-        $targetDir = 'mem://target';
+        $sourceDir = 'source';
+        $targetDir = 'target';
 
         $filepath = $sourceDir . '/file.php';
         $filesystem->write($filepath, 'test');
@@ -55,7 +55,7 @@ class CopierTest extends TestCase
      */
     public function test_file_is_skipped(): void
     {
-        $filesystem = $this->getReadOnlyFileSystem();
+        $filesystem = $this->getFileSystem();
 
         $sourceDir = 'mem://source';
         $targetDir = 'mem://target';
@@ -90,7 +90,9 @@ class CopierTest extends TestCase
      */
     public function test_file_not_found(): void
     {
-        $filesystem = $this->getReadOnlyFileSystem();
+        $this->expectWarningLogs();
+
+        $filesystem = $this->getFileSystem();
 
         $sourceDir = 'mem://source';
         $targetDir = 'mem://target';
@@ -116,7 +118,7 @@ class CopierTest extends TestCase
 
     public function testCreateDirectory(): void
     {
-        $filesystem = $this->getReadOnlyFileSystem();
+        $filesystem = $this->getFileSystem();
 
         $sourceDir = 'source';
         $targetDir = 'target';

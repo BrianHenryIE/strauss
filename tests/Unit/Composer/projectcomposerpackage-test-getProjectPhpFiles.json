@@ -2,7 +2,7 @@
   "name": "brianhenryie/strauss-config-test",
   "autoload": {
     "psr-4": {
-      "BrianHenryIE\\Strauss\\": ["src","includes"]
+      "BrianHenryIE\\TestStrauss\\": ["src","includes"]
     },
     "classmap": [
       "classes"

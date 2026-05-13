@@ -21,7 +21,7 @@ class ChangeEnumeratorTest extends TestCase
     public function testFunctionReplacement(): void
     {
         /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
-        $config = Mockery::mock(\BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface::class);
+        $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
         $config->expects('getClassmapPrefix')->andReturn('Class_Prefix_');
         $config->expects('getFunctionsPrefix')->andReturn('functions_prefix_')->atLeast()->once();
 
@@ -42,7 +42,7 @@ class ChangeEnumeratorTest extends TestCase
 
         $this->assertEquals(
             'functions_prefix_myFunction',
-            $symbol->getReplacement()
+            $symbol->getLocalReplacement()
         );
     }
 }

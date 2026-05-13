@@ -19,16 +19,14 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use Composer\Factory;
+use Composer\Util\Platform;
 use Exception;
-use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
 {
-    use LoggerAwareTrait;
-
     /**
      * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
      *
@@ -90,7 +88,11 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
     {
         $this->logger->notice('Loading package...');
 
-        $this->projectComposerPackage = new ProjectComposerPackage($this->workingDir . '/' . Factory::getComposerFile());
+        $this->projectComposerPackage = new ProjectComposerPackage(
+            $this->filesystem->makeAbsolute(
+                $this->workingDir . '/' . Factory::getComposerFile()
+            )
+        );
     }
 
     protected function loadConfigFromComposerJson(): void
@@ -99,6 +101,6 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
 
         $this->config = $this->projectComposerPackage->getStraussConfig();
         $config = new StraussConfig();
-        $config->setProjectAbsolutePath(getcwd());
+        $config->setProjectAbsolutePath(Platform::getcwd());
     }
 }
