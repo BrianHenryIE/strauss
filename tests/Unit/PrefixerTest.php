@@ -20,8 +20,8 @@ use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use Mockery;
-use PhpParser\ParserFactory;
-use Symfony\Component\Console\Application as BaseApplication;
+use Mockery\LegacyMockInterface;
+use Mockery\MockInterface;
 
 /**
  * Class ReplacerTest
@@ -32,7 +32,7 @@ class PrefixerTest extends TestCase
 {
 
     /**
-     * @return PrefixerConfigInterface|(PrefixerConfigInterface&Mockery\MockInterface&object&Mockery\LegacyMockInterface)|(Mockery\MockInterface&object&Mockery\LegacyMockInterface)
+     * @return PrefixerConfigInterface&MockInterface&LegacyMockInterface
      */
     protected function getMockConfig()
     {
@@ -41,22 +41,6 @@ class PrefixerTest extends TestCase
         $config->shouldReceive('getNamespacePrefix')->andReturn('Prefixer\\Test\\');
         $config->shouldReceive('getConstantsPrefix')->andReturn('Prefixer_Test_');
         return $config;
-    }
-
-    protected function getAst(string $contents): array
-    {
-
-        $parseContent = $contents;
-        if (stripos(ltrim($contents), '<?') !== 0) {
-            $phpOpenerLen = strlen("<?php\n");
-            $parseContent = "<?php\n" . $contents;
-        }
-
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
-
-        $ast = $parser->parse($parseContent);
-
-        return $ast;
     }
 
     public function testNamespaceReplacer(): void
@@ -4720,7 +4704,7 @@ EOD;
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write(
             $file->getTargetAbsolutePath(),
-            file_get_contents(getcwd() . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php')
+            file_get_contents(getcwd() . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php') ?: ''
         );
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());

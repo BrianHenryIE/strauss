@@ -80,8 +80,7 @@ class Prefixer
 
     /**
      * @param DiscoveredSymbols $discoveredSymbols
-     * ///param array<string,array{dependency:ComposerPackage,sourceAbsoluteFilepath:string,targetRelativeFilepath:string}> $phpFileArrays
-     * @param array<string, FileBase> $files
+     * @param array<FileBase> $files
      *
      * @throws FilesystemException
      * @throws FilesystemException
