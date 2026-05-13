@@ -163,7 +163,6 @@ EOD;
         $composerPackageMock->expects('addFile')->once();
         $composerPackageMock->allows('getPackageName')->andReturn('package/name');
 
-        /** @var array<string,ComposerPackage> $flatDependencyTree*/
         $flatDependencyTree = new DependenciesCollection(['psr/container'=> $composerPackageMock]);
 
         $file = new FileWithDependency(
@@ -400,7 +399,6 @@ EOD;
         $composerPackageMock->shouldReceive('didDelete')->andReturnFalse();
         $composerPackageMock->allows('getPackageName')->andReturn('package/name');
 
-        /** @var array<string,ComposerPackage> $flatDependencyTree */
         $flatDependencyTree = new DependenciesCollection(['psr/log' => $composerPackageMock]);
 
         $discoveredSymbols = new DiscoveredSymbols();

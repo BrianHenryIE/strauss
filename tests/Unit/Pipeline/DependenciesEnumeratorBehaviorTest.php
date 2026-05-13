@@ -166,6 +166,7 @@ class DependenciesEnumeratorBehaviorTest extends IntegrationTestCase
     }
 
     /**
+     * @param string[] $seedPackages
      * @throws FilesystemException
      */
     private function runEnumerator(string $testsWorkingDir, array $seedPackages): DependenciesCollection

@@ -15,6 +15,7 @@ use League\Flysystem\PathNormalizer;
 use League\Flysystem\Visibility;
 use League\Flysystem\WhitespacePathNormalizer;
 use League\MimeTypeDetection\MimeTypeDetector;
+use stdClass;
 
 /**
  * @covers \BrianHenryIE\Strauss\Helpers\FlysystemAdapterBackCompatTrait
@@ -27,7 +28,7 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
     {
         parent::setUp();
 
-        $this->flysystemVersion = InstalledVersions::getVersion('league/flysystem');
+        $this->flysystemVersion = InstalledVersions::getVersion('league/flysystem') ?: '0.0.0';
     }
 
     /**
@@ -49,7 +50,10 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
      */
     public function test_adapter_is_only_used_when_genuine_implementation_absent(): void
     {
-        $usedTraitImplementation = new \stdClass();
+        /**
+         * @var stdClass{calledDirectoryExists: bool} $usedTraitImplementation
+         */
+        $usedTraitImplementation = new stdClass();
         $usedTraitImplementation->calledDirectoryExists = false;
 
         $sut = new class($usedTraitImplementation) extends \League\Flysystem\InMemory\InMemoryFilesystemAdapter
@@ -57,9 +61,13 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
         {
             use FlysystemAdapterBackCompatTrait;
 
-            protected $usedTraitImplementation;
+            /** @var stdClass{calledDirectoryExists: bool} $usedTraitImplementation */
+            protected stdClass $usedTraitImplementation;
 
-            public function __construct($usedTraitImplementation, string $defaultVisibility = Visibility::PUBLIC, MimeTypeDetector $mimeTypeDetector = null)
+            /**
+             * @param stdClass $usedTraitImplementation
+             */
+            public function __construct(stdClass $usedTraitImplementation, string $defaultVisibility = Visibility::PUBLIC, MimeTypeDetector $mimeTypeDetector = null)
             {
                 parent::__construct($defaultVisibility, $mimeTypeDetector);
 

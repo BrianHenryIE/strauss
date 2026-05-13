@@ -12,6 +12,8 @@ use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
+use Mockery\LegacyMockInterface;
+use Mockery\MockInterface;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
@@ -27,7 +29,7 @@ class FileSymbolScannerTest extends TestCase
     // Multiple namespaces.
 
     /**
-     * @return File|(File&Mockery\MockInterface&object&Mockery\LegacyMockInterface)|(Mockery\MockInterface&object&Mockery\LegacyMockInterface)
+     * @return File&MockInterface&LegacyMockInterface
      */
     protected function getFile(bool $expectAddDiscoveredSymbol = true)
     {

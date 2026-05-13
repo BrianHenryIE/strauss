@@ -2,16 +2,16 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
-use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Mockery;
+use Mockery\LegacyMockInterface;
+use Mockery\MockInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -26,6 +26,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
      */
     public function testGeneratedPrefixedAutoloader(): void
     {
+        /** @var AutoloadConfigInterface&PrefixerConfigInterface&FileEnumeratorConfig&MockInterface&LegacyMockInterface $config */
         $config = Mockery::mock(
             AutoloadConfigInterface::class,
             PrefixerConfigInterface::class,
@@ -78,6 +79,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
      */
     public function test_create_installed_versions_files(): void
     {
+        /** @var AutoloadConfigInterface&PrefixerConfigInterface&FileEnumeratorConfig&MockInterface&LegacyMockInterface $config */
         $config = Mockery::mock(
             AutoloadConfigInterface::class,
             PrefixerConfigInterface::class,

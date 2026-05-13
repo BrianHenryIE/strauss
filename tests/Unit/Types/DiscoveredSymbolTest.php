@@ -6,10 +6,10 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\TestCase;
-use Mockery;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Types\DiscoveredSymbol
+ * @phpstan-import-type ComposerJsonArray from ComposerPackage
  */
 class DiscoveredSymbolTest extends TestCase
 {
@@ -82,6 +82,7 @@ class DiscoveredSymbolTest extends TestCase
     public function testFilterDuplicatePackages(): void
     {
         $composerJson = $this->getFixturesFilesystem()->read(__DIR__ . '/../Composer/projectcomposerpackage-test-1.json');
+        /** @var ComposerJsonArray $composerJsonArray */
         $composerJsonArray = json_decode($composerJson, true);
         $dependency = ComposerPackage::fromComposerJsonArray($composerJsonArray);
 

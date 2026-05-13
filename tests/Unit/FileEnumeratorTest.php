@@ -40,7 +40,6 @@ class FileEnumeratorTest extends TestCase
         $dependency->allows('getPackageName')->andReturn('test/package');
         $dependency->expects('getPackageAbsolutePath')->andReturn('path/to/project/vendor/package');
 
-        /** @var ComposerPackage[] $dependencies */
         $dependencies = new DependenciesCollection([$dependency]);
 
         $result = $sut->compileFileListForDependencies($dependencies);

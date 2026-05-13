@@ -19,16 +19,20 @@ class MarkFilesExcludedFromChangesTest extends TestCase
     /**
      * Helper to build a config mock. Note: the source calls `getExcludeFilePatternsFromPrefixing()`
      * rather than the interface-defined `getExcludeFilesFromUpdateFilePatterns()`.
+     *
+     * @param string[] $excludeFilePatterns
+     * @param string[] $excludeNamespaces
+     * @param string[] $excludePackages
      */
     private function createConfigMock(
-        array $filePatterns = [],
-        array $namespaces = [],
-        array $packages = []
+        array $excludeFilePatterns = [],
+        array $excludeNamespaces = [],
+        array $excludePackages = []
     ): MarkFilesExcludedFromChangesConfigInterface {
         $config = Mockery::mock(MarkFilesExcludedFromChangesConfigInterface::class);
-        $config->shouldReceive('getExcludeFilesFromUpdateFilePatterns')->andReturn($filePatterns);
-        $config->shouldReceive('getExcludeFileFromUpdateNamespaces')->andReturn($namespaces);
-        $config->shouldReceive('getExcludeFilesFromUpdatePackages')->andReturn($packages);
+        $config->shouldReceive('getExcludeFilesFromUpdateFilePatterns')->andReturn($excludeFilePatterns);
+        $config->shouldReceive('getExcludeFileFromUpdateNamespaces')->andReturn($excludeNamespaces);
+        $config->shouldReceive('getExcludeFilesFromUpdatePackages')->andReturn($excludePackages);
         return $config;
     }
 

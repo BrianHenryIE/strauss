@@ -6,6 +6,8 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\InputInterface;
@@ -35,7 +37,11 @@ class DependenciesCommandTest extends TestCase
                 FileSystem $filesystem,
                 LoggerInterface $logger
             ) {
-                $this->logger = $logger;
+                $this->logger = (function () use ($logger) {
+                    $monoLogger = new Logger(__CLASS__);
+                    $monoLogger->pushHandler(new PsrHandler($logger));
+                    return $monoLogger;
+                })();
                 $this->filesystem = $filesystem;
                 $this->workingDir = sys_get_temp_dir();
 
