@@ -5,7 +5,6 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
@@ -21,6 +20,7 @@ use Composer\Json\JsonFile;
 use Composer\Repository\InstalledFilesystemRepository;
 use Exception;
 use League\Flysystem\FilesystemException;
+use Phar;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Seld\JsonLint\ParsingException;
@@ -163,6 +163,46 @@ class Cleanup
             $composer->getLocker(),
             $strictAmbiguous
         );
+
+        $this->stripPharPrefix($this->config->getAbsoluteVendorDirectory() . '/composer');
+    }
+
+    /**
+     * Composer classes are prefixed inside the Phar causing the output of dump-autoload when run inside Strauss
+     * to contain references to `BrianHenryIE\Strauss`, remove them.
+     *
+     * @throws FilesystemException
+     */
+    public function stripPharPrefix(string $composerDirectoryPath): void
+    {
+        if (!Phar::running()) {
+            return;
+        }
+
+        $this->logger->info('Stripping BrianHenryIE\\Strauss from vendor*/composer/*.php files');
+
+        $filesToProcess = [
+            'autoload_real.php',
+            'autoload_static.php',
+            'autoload_classmap.php',
+            'ClassLoader.php'
+        ];
+
+        foreach ($this->filesystem->listContents($composerDirectoryPath) as $composerFile) {
+            if (!in_array(basename($composerFile['path']), $filesToProcess, true)) {
+                continue;
+            }
+
+            $fileContents = $this->filesystem->read($composerFile['path']);
+            $updated = preg_replace('/\\\\?BrianHenryIE\\\\{1,2}Strauss\\\\{1,2}/', '', $fileContents) ?? (function () {
+                throw new \Exception(preg_last_error_msg(), preg_last_error());
+            })();
+            if ($fileContents === $updated) {
+                continue;
+            }
+            $this->filesystem->write($composerFile['path'], $updated);
+            $this->logger->debug('Updated: {path}', ['path' => $composerFile['path']]);
+        }
     }
 
     /**

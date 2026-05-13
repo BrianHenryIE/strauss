@@ -9,6 +9,7 @@ use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
@@ -192,6 +193,12 @@ class DumpAutoload
          * then they might expect it to be unmodified.
          */
         Config::$defaultConfig['vendor-dir'] = $defaultVendorDirBefore;
+
+        (new Cleanup(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        ))->stripPharPrefix($this->config->getAbsoluteTargetDirectory() . '/composer');
     }
 
     /**
