@@ -477,6 +477,7 @@ EOD;
         $this->assertStringContainsString('namespace BrianHenryIE\\TestStrauss\\Composer\\Autoload;', $phpString);
         $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
     }
+
     /**
      *
      */
