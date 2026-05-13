@@ -9,6 +9,7 @@ use JsonException;
 
 /**
  * @covers \BrianHenryIE\Strauss\Composer\ComposerPackage
+ * @phpstan-import-type ComposerJsonArray from ComposerPackage
  */
 class ComposerPackageFactoryParityTest extends TestCase
 {
@@ -48,6 +49,7 @@ class ComposerPackageFactoryParityTest extends TestCase
     {
         $raw = file_get_contents($fixturePath);
         self::assertIsString($raw);
+        /** @var ComposerJsonArray $json */
         $json = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
 
         $factory = new Factory();
