@@ -7,7 +7,6 @@ use League\Flysystem\Config;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\Visibility;
 use Mockery;
-use League\Flysystem\FileSystem as FlysystemFileSystem;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter

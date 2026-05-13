@@ -33,7 +33,7 @@ class MozartIssue129Test extends TestCase
      *
      * @dataProvider pairTestDataProvider
      */
-    public function test_test($phpString, $expected)
+    public function test_test(string $phpString, string $expected): void
     {
         $config = $this->createMock(StraussConfig::class);
 
@@ -66,7 +66,10 @@ class MozartIssue129Test extends TestCase
         $this->assertEqualsRN($expected, $result);
     }
 
-    public static function pairTestDataProvider()
+    /**
+     * @return array<array{0:string, 1:string}>
+     */
+    public static function pairTestDataProvider(): array
     {
         $fromTo = [];
 

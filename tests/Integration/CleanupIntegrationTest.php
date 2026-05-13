@@ -4,6 +4,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Util\Platform;
@@ -12,6 +13,7 @@ use Composer\Util\Platform;
  * Class CleanupIntegrationTest
  * @package BrianHenryIE\Strauss\Tests\Integration
  * @coversNothing
+ * @phpstan-import-type InstalledJsonArray from InstalledJson
  */
 class CleanupIntegrationTest extends IntegrationTestCase
 {
@@ -117,6 +119,7 @@ EOD;
         $this->assertSame(0, $exitCode);
 
         $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/installed.json');
+        /** @var InstalledJsonArray $installedJson */
         $installedJson = json_decode($installedJsonFile, true);
         $entry = array_reduce($installedJson['packages'], function ($carry, $item) {
             if ($item['name'] === 'symfony/polyfill-php80') {

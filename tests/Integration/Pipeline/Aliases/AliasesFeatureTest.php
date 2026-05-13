@@ -128,7 +128,7 @@ EOD;
 
         $normalizedPath = $this->getFileSystem()->normalizePath($this->testsWorkingDir . '/composer.json');
 
-        $directoryContents = implode(', ', glob($this->testsWorkingDir));
+        $directoryContents = implode(', ', glob($this->testsWorkingDir) ?: []);
         $this->assertFileExists($this->testsWorkingDir . '/composer.json', 'Flysystem did not write: ' . $this->testsWorkingDir . '/composer.json (normalized '.$normalizedPath.'), directory contains: ' . $directoryContents);
 
         chdir($this->testsWorkingDir);
