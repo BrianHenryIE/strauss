@@ -17,7 +17,7 @@
     "license": "MIT",
     "require": {
         "ext-json": "*",
-        "brianhenryie/simple-php-code-parser": "^0.15.3",
+        "brianhenryie/simple-php-code-parser": "^0.15.4",
         "composer-runtime-api": "^2.0",
         "composer/class-map-generator": "^1.6.0",
         "composer/composer": "^2.6.0",
