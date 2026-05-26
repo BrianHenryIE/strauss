@@ -31,10 +31,17 @@ class RelativeFilepathLogProcessor implements ProcessorInterface
 
         foreach ($context as $key => $val) {
             if (false !== stripos($key, 'path') && is_string($val)) {
-                $record['context'][$key] = $this->fileSystem->getProjectRelativePath($val);
+                if ($this->isAbsolutePath($val)) {
+                    $record['context'][ $key ] = $this->fileSystem->getProjectRelativePath($val);
+                }
             }
         }
 
         return $record;
+    }
+
+    protected function isAbsolutePath(string $path): bool
+    {
+        return 0 !== strpos($path, '..');
     }
 }

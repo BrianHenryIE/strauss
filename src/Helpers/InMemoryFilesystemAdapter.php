@@ -2,12 +2,29 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter as LeagueInMemoryFilesystemAdapter;
+use League\Flysystem\PathNormalizer;
+use League\Flysystem\WhitespacePathNormalizer;
 
-class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter
+class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter implements FlysystemBackCompatTraitInterface
 {
+    use FlysystemBackCompatTrait;
+
+    protected PathNormalizer $normalizer;
+
+    /**
+     * @see FlysystemBackCompatTrait::directoryExists()
+     */
+    public function getNormalizer(): PathNormalizer
+    {
+        if (!isset($this->normalizer)) {
+            $this->normalizer = new StripProtocolPathNormalizer(['mem'], new WhitespacePathNormalizer());
+        }
+        return $this->normalizer;
+    }
 
     public function visibility(string $path): FileAttributes
     {

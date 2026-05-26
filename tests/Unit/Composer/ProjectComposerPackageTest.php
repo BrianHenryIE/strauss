@@ -3,15 +3,18 @@
 namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\TestCase;
-use Symfony\Component\Console\Input\InputInterface;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Composer\ProjectComposerPackage
  */
 class ProjectComposerPackageTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->createWorkingDir();
+    }
 
     /**
      * A simple test to check the getters all work.
@@ -21,7 +24,9 @@ class ProjectComposerPackageTest extends TestCase
 
         $testFile = __DIR__ . '/projectcomposerpackage-test-1.json';
 
-        $composer = new ProjectComposerPackage($testFile);
+        copy($testFile, $this->testsWorkingDir . 'composer.json');
+
+        $composer = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $config = $composer->getStraussConfig();
 
@@ -36,7 +41,9 @@ class ProjectComposerPackageTest extends TestCase
 
         $testFile = __DIR__ . '/projectcomposerpackage-test-getProjectPhpFiles.json';
 
-        $composer = new ProjectComposerPackage($testFile);
+        copy($testFile, $this->testsWorkingDir . 'composer.json');
+
+        $composer = new ProjectComposerPackage($this->testsWorkingDir . 'composer.json');
 
         $phpFiles = $composer->getFlatAutoloadKey();
 

@@ -717,7 +717,7 @@ EOD;
 
         exec('composer install');
 
-        $exitCode = $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output, '--debug');
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify relative path works

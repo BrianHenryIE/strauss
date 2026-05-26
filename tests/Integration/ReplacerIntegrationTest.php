@@ -5,8 +5,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
- * Class ReplacerIntegrationTest
- * @package BrianHenryIE\Strauss\Tests\Integration
+ * @see \BrianHenryIE\Strauss\Console\Commands\ReplaceCommand
  * @coversNothing
  */
 class ReplacerIntegrationTest extends IntegrationTestCase
@@ -316,7 +315,7 @@ EOD;
          */
         $expectedTargetFilePath = $this->testsWorkingDir . '/project/vendor-prefixed/brianhenryie/pdf-helpers/src/MpdfCrop.php';
 
-        $exitCode = $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output, '--debug');
         $this->assertEquals(0, $exitCode, $output);
 
         $this->assertFileExistsInFileSystem($expectedTargetFilePath);

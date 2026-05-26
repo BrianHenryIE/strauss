@@ -1816,7 +1816,7 @@ class ClientResolver
             if (($args['endpoint_discovery'] instanceof \Aws\EndpointDiscovery\Configuration
                 && $args['endpoint_discovery']->isEnabled())
             ) {
-            
+
             }
 	}
 }
@@ -1832,7 +1832,7 @@ class ClientResolver
             if (($args['endpoint_discovery'] instanceof \Company\Project\Aws\EndpointDiscovery\Configuration
                 && $args['endpoint_discovery']->isEnabled())
             ) {
-            
+
             }
 	}
 }
@@ -1970,7 +1970,7 @@ $value = append_config($myArray);
 // callable
 call_user_func('append_config', $myArray);
 call_user_func_array(
-	'append_config', 
+	'append_config',
 	$myArray
 );
 forward_static_call('append_config', $myArray);
@@ -1998,7 +1998,7 @@ $value = myprefix_append_config($myArray);
 // callable
 call_user_func('myprefix_append_config', $myArray);
 call_user_func_array(
-	'myprefix_append_config', 
+	'myprefix_append_config',
 	$myArray
 );
 forward_static_call('myprefix_append_config', $myArray);
@@ -2224,7 +2224,7 @@ class BlockMacros extends MacroSet
 
 	public static function install(Latte\Compiler $compiler): void
 	{
-		
+
 	}
 }
 EOD;
@@ -2241,7 +2241,7 @@ class BlockMacros extends MacroSet
 
 	public static function install(\Strauss\Test\Latte\Compiler $compiler): void
 	{
-		
+
 	}
 }
 EOD;

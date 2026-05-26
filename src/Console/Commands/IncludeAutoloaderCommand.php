@@ -15,6 +15,7 @@
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use Composer\Factory;
@@ -97,5 +98,7 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
         $this->logger->notice('Loading composer.json config...');
 
         $this->config = $this->projectComposerPackage->getStraussConfig();
+        $config = new StraussConfig();
+        $config->setProjectAbsolutePath(getcwd());
     }
 }

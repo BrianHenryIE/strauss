@@ -203,7 +203,7 @@ class MarkSymbolsForRenaming
     {
         /** @var File $file */
         foreach ($files as $file) {
-            $absoluteFilePath = $file->getAbsoluteTargetPath();
+            $absoluteFilePath = $file->getTargetAbsolutePath();
             if (empty($absoluteFilePath)) {
                 // root namespace is in a fake file.
                 continue;
@@ -257,7 +257,7 @@ class MarkSymbolsForRenaming
     {
         /** @var File $file */
         foreach ($files as $file) {
-            $absoluteFilePath = $file->getAbsoluteTargetPath();
+            $absoluteFilePath = $file->getTargetAbsolutePath();
             if (empty($absoluteFilePath)) {
                 continue;
             }

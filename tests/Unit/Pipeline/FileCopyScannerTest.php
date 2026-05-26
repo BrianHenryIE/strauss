@@ -3,10 +3,8 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Config\CopierConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\TestCase;
 use Mockery;
@@ -34,7 +32,8 @@ class FileCopyScannerTest extends TestCase
         $file = new FileWithDependency(
             $dependency,
             $vendorRelativePath,
-            'path/to/project/vendor/my/package/file.php'
+            'path/to/project/vendor/my/package/file.php',
+            'path/to/project/vendor-prefixed/my/package/file.php'
         );
 
         $discoveredFiles = new DiscoveredFiles();

@@ -91,7 +91,7 @@ EOD;
           "symfony/deprecation-contracts"
           ]
        }
-    },   
+    },
 	"google/apiclient-services": [
 	  "Calendar"
 	]

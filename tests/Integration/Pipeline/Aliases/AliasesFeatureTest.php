@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
+ * @see Aliases
  */
 class AliasesFeatureTest extends IntegrationTestCase
 {

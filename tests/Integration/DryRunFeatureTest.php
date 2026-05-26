@@ -1,5 +1,18 @@
 <?php
 
+/**
+ * @see \Elazar\Flystream\StreamWrapper::stream_open()
+ * needs `if (strpbrk($mode, 'r+') !== false && $mode !== 'w+') {`
+ */
+
+/**
+ * @see \Composer\Autoload\AutoloadGenerator
+ * This line creates the directory on the real filesystem
+ * $packageMap = $this->buildPackageMap($installationManager, $rootPackage, $localRepo->getCanonicalPackages());
+ *
+ * Probably able to address it if every filepath is changed to use a stream wrapper.
+ */
+
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
@@ -183,7 +196,7 @@ EOD;
      *
      * @see Autoload::generateClassmap()
      */
-    public function testGenerateAutoload():void
+    public function testGenerateAutoload(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -223,6 +236,8 @@ EOD;
      * Composer
      *
      * @see InstalledJson::cleanupVendorInstalledJson()
+     *
+     * php -d allow_url_include=on -r "include 'vendor/autoload.php'; PHPUnit\TextUI\Command::main();" -- --filter=test_composer_files_not_modified
      */
     public function test_composer_files_not_modified(): void
     {
