@@ -13,15 +13,14 @@ use Composer\Autoload\AutoloadGenerator;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @see DumpAutoload
  */
 class DumpAutoloadFeatureTest extends IntegrationTestCase
 {
-    /**
-     * @dataProvider provider_optimize_autoloader_for_prefixed_autoload_real
-     */
+    #[DataProvider('provider_optimize_autoloader_for_prefixed_autoload_real')]
     public function test_optimize_autoloader_for_prefixed_autoload_real(string $composerJsonString, bool $expectAuthoritative): void
     {
         try {
@@ -115,8 +114,8 @@ EOD;
      * @param string $composerJsonString Contents of the composer.json file.
      * @param bool   $includeRootAutoload Whether the root autoload should be included in the vendor-prefixed autoloader.
      *
-     * @dataProvider provider_fix_double_loading_of_files_autoloaders
      */
+    #[DataProvider('provider_fix_double_loading_of_files_autoloaders')]
     public function test_fix_double_loading_of_files_autoloaders(string $composerJsonString, bool $includeRootAutoload): void
     {
         mkdir($this->testsWorkingDir . '/src');
@@ -207,8 +206,8 @@ EOD;
      * @param string $composerJsonString  Contents of the composer.json file.
      * @param bool   $expectRootAutoload  Whether autoload classes are expected in the vendor-prefixed autoloader.
      *
-     * @dataProvider provider_option_include_root_autoload
      */
+    #[DataProvider('provider_option_include_root_autoload')]
     public function test_option_include_root_autoload(string $composerJsonString, bool $expectRootAutoload): void
     {
         mkdir($this->testsWorkingDir . '/src');

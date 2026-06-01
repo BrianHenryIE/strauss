@@ -17,6 +17,7 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use PHPUnit\Framework\Attributes\DataProvider;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
@@ -29,9 +30,8 @@ class MozartIssue129Test extends TestCase
 
     /**
      * @author BrianHenryIE
-     *
-     * @dataProvider pairTestDataProvider
      */
+    #[DataProvider('pairTestDataProvider')]
     public function test_test($phpString, $expected)
     {
 
