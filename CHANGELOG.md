@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.27.3 June 2025
+
+* Dependency: Update `composer/composer`
+
 ## 0.27.2 April 2025
 
 * Fix: over-eager cleanup – preserve vendor autoload entries for `exclude_from_copy` packages
