@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 
 class RelativeFilepathLogProcessor implements ProcessorInterface
@@ -25,16 +26,16 @@ class RelativeFilepathLogProcessor implements ProcessorInterface
      * relative to the project root.
      *
      */
-    public function __invoke(array $record): array
+    public function __invoke(LogRecord $record): LogRecord
     {
-        $context = $record['context'];
+        $context = $record->context;
 
         foreach ($context as $key => $val) {
             if (false !== stripos($key, 'path') && is_string($val)) {
-                $record['context'][$key] = $this->fileSystem->getProjectRelativePath($val);
+                $context[$key] = $this->fileSystem->getProjectRelativePath($val);
             }
         }
 
-        return $record;
+        return $record->with(context: $context);
     }
 }

@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -24,9 +25,7 @@ class StraussIssue183Test extends IntegrationTestCase
         ];
     }
 
-    /**
-     * @dataProvider \BrianHenryIE\Strauss\Tests\Issues\StraussIssue183Test::bootstrapDataProvider
-     */
+    #[DataProvider('bootstrapDataProvider')]
     public function test_bootstrap(string $targetDirectoryJsonLine)
     {
         $straussAbsoluteDir = dirname(__DIR__, 2);

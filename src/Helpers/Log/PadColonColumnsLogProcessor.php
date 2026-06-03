@@ -9,24 +9,17 @@
 
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
-use DateTimeInterface;
+use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 
-/**
- * @phpstan-type MonologRecordArray array{message: string, context: array<string,mixed>, level: 100|200|250|300|400|500|550|600, level_name: 'ALERT'|'CRITICAL'|'DEBUG'|'EMERGENCY'|'ERROR'|'INFO'|'NOTICE'|'WARNING', channel: string, datetime: DateTimeInterface, extra: array<mixed>}
- */
 class PadColonColumnsLogProcessor implements ProcessorInterface
 {
     /** @var int $padLength */
     protected int $padLength = 0;
 
-    /**
-     * @param MonologRecordArray $record
-     * @return MonologRecordArray
-     */
-    public function __invoke(array $record): array
+    public function __invoke(LogRecord $record): LogRecord
     {
-        $message = $record['message'];
+        $message = $record->message;
 
         $messageParts = explode(':::', $message, 2);
 
@@ -41,9 +34,7 @@ class PadColonColumnsLogProcessor implements ProcessorInterface
 
         $messageParts[0] = $this->pad($messageParts[0], $this->padLength);
 
-        $record['message'] = implode('', $messageParts);
-
-        return $record;
+        return $record->with(message: implode('', $messageParts));
     }
 
     private function pad(string $text, int $padLength): string
