@@ -14,6 +14,13 @@ parameters:
         - src
         - bin/strauss
 
+    scanFiles:
+        - tests/CustomIntegrationTestAssertionsTrait.php
+        - tests/CustomUnitTestAssertionsTrait.php
+        - tests/IntegrationTestCase.php
+        - tests/MarkTestsSkippedTrait.php
+        - tests/TestCase.php
+
     ignoreErrors:
         -
             message: '#Property.*excludePackages is unused#'
