@@ -3,6 +3,8 @@
  * @see \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
  */
 
+declare(strict_types=1);
+
 namespace BrianHenryIE\Strauss\Types;
 
 use ArrayAccess;

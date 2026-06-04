@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * A namespace, class, interface or trait discovered in the project.
  */

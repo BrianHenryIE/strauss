@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * This is used so NamespaceSymbol doesn't have a namespace property itself.
  * Objects/classes inheriting from this could just be in the global namespace.
