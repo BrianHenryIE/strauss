@@ -107,6 +107,6 @@ class DiscoveredSymbolsTest extends TestCase
         $this->assertCount(1, $result);
         /** @var NamespacedSymbol $firstResult */
         $firstResult = array_pop($result);
-        $this->assertEquals('myClass', $firstResult->getOriginalSymbol());
+        $this->assertEquals('myClass', $firstResult->getOriginalFqdnName());
     }
 }

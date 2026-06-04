@@ -33,7 +33,7 @@ class NamespacedSymbol extends DiscoveredSymbol
 
     public function getOriginalFqdnName(): string
     {
-        return $this->namespace->getOriginalSymbol() . '\\' . $this->getOriginalLocalName();
+        return $this->namespace->getOriginalFqdnName() . '\\' . $this->getOriginalLocalName();
     }
 
     public function getFqdnReplacement(): string
@@ -50,7 +50,7 @@ class NamespacedSymbol extends DiscoveredSymbol
 
     public function getNamespaceName(): string
     {
-        return $this->namespace->getOriginalSymbol();
+        return $this->namespace->getOriginalFqdnName();
     }
 
     /**

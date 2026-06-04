@@ -16,7 +16,7 @@ class DiscoveredSymbolTest extends TestCase
 
     /**
      * @covers ::__construct
-     * @covers ::getOriginalSymbol
+     * @covers ::getOriginalFqdnName
      */
     public function testCreate(): void
     {
@@ -28,7 +28,7 @@ class DiscoveredSymbolTest extends TestCase
 
         $sut = new ClassSymbol('MyClass', $file);
 
-        $this->assertEquals('MyClass', $sut->getOriginalSymbol());
+        $this->assertEquals('MyClass', $sut->getOriginalFqdnName());
     }
 
     /**

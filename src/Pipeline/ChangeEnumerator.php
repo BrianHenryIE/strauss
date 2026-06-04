@@ -45,7 +45,7 @@ class ChangeEnumerator
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
 
                 if (in_array(
-                    $symbol->getOriginalSymbol(),
+                    $symbol->getOriginalFqdnName(),
                     $this->config->getExcludeNamespacesFromPrefixing(),
                     true
                 )) {
@@ -70,7 +70,7 @@ class ChangeEnumerator
                     $strippedSymbol = preg_replace(
                         $stripPattern,
                         '$2',
-                        $symbol->getOriginalSymbol()
+                        $symbol->getOriginalFqdnName()
                     ) ?? (function () {
                         throw new \Exception(preg_last_error_msg(), preg_last_error());
                     })();
@@ -84,17 +84,17 @@ class ChangeEnumerator
                     $prefixed = preg_replace(
                         $namespaceReplacementPattern,
                         $replacement,
-                        $symbol->getOriginalSymbol()
+                        $symbol->getOriginalFqdnName()
                     ) ?? (function () {
                         throw new \Exception(preg_last_error_msg(), preg_last_error());
                     })();
 
-                    if ($prefixed !== $symbol->getOriginalSymbol()) {
+                    if ($prefixed !== $symbol->getOriginalFqdnName()) {
                         $symbol->setLocalReplacement($prefixed);
                         continue 2;
                     }
                 }
-                $this->logger->debug("Namespace {$symbol->getOriginalSymbol()} not changed.");
+                $this->logger->debug("Namespace {$symbol->getOriginalFqdnName()} not changed.");
             }
         }
 
@@ -109,7 +109,7 @@ class ChangeEnumerator
 
         /** @var NamespacedSymbol $symbol */
         foreach ($classesTraitsInterfaces as $symbol) {
-            if (str_starts_with($symbol->getOriginalSymbol(), $classmapPrefix)) {
+            if (str_starts_with($symbol->getOriginalFqdnName(), $classmapPrefix)) {
                 // Already prefixed / second scan.
                 continue;
             }
@@ -127,9 +127,9 @@ class ChangeEnumerator
                 if (isset($discoveredNamespaces[$symbol->getNamespaceName()])) {
                     $newNamespace = $discoveredNamespaces[$symbol->getNamespaceName()];
                     $replacement = $this->determineNamespaceReplacement(
-                        $newNamespace->getOriginalSymbol(),
+                        $newNamespace->getOriginalFqdnName(),
                         $newNamespace->getLocalReplacement(),
-                        $symbol->getOriginalSymbol()
+                        $symbol->getOriginalFqdnName()
                     );
 
                     $symbol->setLocalReplacement($replacement);
@@ -139,7 +139,7 @@ class ChangeEnumerator
             } else {
                 // Global class.
                 // Don't double-prefix classnames.
-                if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
+                if (str_starts_with($symbol->getOriginalFqdnName(), $this->config->getClassmapPrefix())) {
                     continue;
                 }
 
@@ -156,7 +156,7 @@ class ChangeEnumerator
                 continue;
             }
             $functionPrefix = $this->config->getFunctionsPrefix();
-            if (empty($functionPrefix) || str_starts_with($symbol->getOriginalSymbol(), $functionPrefix)) {
+            if (empty($functionPrefix) || str_starts_with($symbol->getOriginalFqdnName(), $functionPrefix)) {
                 continue;
             }
             $this->globalOrPsr0($symbol, $functionPrefix, $discoveredSymbols);
@@ -177,21 +177,21 @@ class ChangeEnumerator
             $underscoredOriginalNamespace = str_replace('\\', '_', $psr0Namespace->getOriginalLocalName());
             $underscoredNewNamespace = str_replace('\\', '_', $psr0Namespace->getReplacementFqdnName());
 
-            $classnameParts = explode('_', $symbol->getOriginalSymbol());
+            $classnameParts = explode('_', $symbol->getOriginalFqdnName());
             $classname = array_pop($classnameParts);
             $originalNamespace = implode('_', $classnameParts);
 
             // Still global
             if (empty($originalNamespace)) {
-                $replacement = $globalPrefix . $symbol->getOriginalSymbol();
+                $replacement = $globalPrefix . $symbol->getOriginalFqdnName();
                 $symbol->setLocalReplacement($replacement);
             } else {
-                $unnamespacedClass = preg_replace('#^' . $underscoredOriginalNamespace . '#', '', $symbol->getOriginalSymbol());
+                $unnamespacedClass = preg_replace('#^' . $underscoredOriginalNamespace . '#', '', $symbol->getOriginalFqdnName());
                 $replacementPsr0Classname = trim($underscoredNewNamespace . $unnamespacedClass, '_');
                 $symbol->setLocalReplacement($replacementPsr0Classname);
             }
         } else {
-            $replacement = $globalPrefix . $symbol->getOriginalSymbol();
+            $replacement = $globalPrefix . $symbol->getOriginalFqdnName();
             $symbol->setLocalReplacement($replacement);
         }
     }

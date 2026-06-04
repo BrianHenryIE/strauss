@@ -122,7 +122,7 @@ class MarkSymbolsForRenaming
         return $this->isExcludeFromPrefixPackage($symbol->getPackageName())
             || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles())
             || ( $symbol instanceof NamespacedSymbol && $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName()))
-            || ( $symbol instanceof NamespaceSymbol && $this->isExcludeFromPrefixNamespace($symbol->getOriginalSymbol()));
+            || ( $symbol instanceof NamespaceSymbol && $this->isExcludeFromPrefixNamespace($symbol->getOriginalFqdnName()));
     }
 
     /**
@@ -239,7 +239,7 @@ class MarkSymbolsForRenaming
         return $this->isExcludeConstantsPackage($symbol->getPackageName())
             || $this->isExcludeConstantsNamespace($symbol->getNamespaceName())
             || $this->isExcludedConstantsFilePattern($symbol->getSourceFiles())
-            || $this->isExcludeConstantName($symbol->getOriginalSymbol());
+            || $this->isExcludeConstantName($symbol->getOriginalFqdnName());
     }
 
     protected function isExcludeConstantsPackage(?string $packageName): bool

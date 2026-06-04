@@ -177,7 +177,7 @@ class Aliases
             foreach ($symbolsByNamespace['\\'] as $symbol) {
                 $aliasesPhpString = '';
 
-                $originalLocalSymbol = $symbol->getOriginalSymbol();
+                $originalLocalSymbol = $symbol->getOriginalFqdnName();
                 $replacementSymbol   = $symbol->getLocalReplacement();
 
                 if ($originalLocalSymbol === $replacementSymbol) {
@@ -243,7 +243,7 @@ class Aliases
                 $namespacedOriginalSymbol = $symbol->getNamespaceName() . '\\' . $unNamespacedOriginalSymbol;
 
                 $replacementSymbol = str_replace(
-                    $namespaceSymbol->getOriginalSymbol(),
+                    $namespaceSymbol->getOriginalFqdnName(),
                     $namespaceSymbol->getLocalReplacement(),
                     $namespacedOriginalSymbol
                 );

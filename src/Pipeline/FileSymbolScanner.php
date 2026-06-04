@@ -94,7 +94,7 @@ class FileSymbolScanner
 
     protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
     {
-        if (in_array($symbol->getOriginalSymbol(), $this->getBuiltIns())) {
+        if (in_array($symbol->getOriginalFqdnName(), $this->getBuiltIns())) {
             $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
                 'symbolName' => $symbol->getOriginalLocalName(),
             ]);
@@ -107,10 +107,10 @@ class FileSymbolScanner
             $file->getDependency()->addDiscoveredSymbol($symbol);
         }
 
-        $level = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? 'debug' : 'info';
-        $newText = in_array($symbol->getOriginalSymbol(), $this->loggedSymbols) ? '' : 'new ';
+        $level = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? 'debug' : 'info';
+        $newText = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? '' : 'new ';
 
-        $this->loggedSymbols[] = $symbol->getOriginalSymbol();
+        $this->loggedSymbols[] = $symbol->getOriginalFqdnName();
 
         $this->logger->log(
             $level,
@@ -119,7 +119,7 @@ class FileSymbolScanner
                 $newText,
                 // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
                 strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
-                $symbol->getOriginalSymbol()
+                $symbol->getOriginalFqdnName()
             )
         );
     }

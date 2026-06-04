@@ -17,6 +17,6 @@ class NamespaceSymbol extends DiscoveredSymbol
 
     public function isChangedNamespace(): bool
     {
-        return $this->getLocalReplacement() !== $this->getOriginalSymbol();
+        return $this->getLocalReplacement() !== $this->getOriginalFqdnName();
     }
 }

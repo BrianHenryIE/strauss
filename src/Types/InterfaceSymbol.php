@@ -61,7 +61,7 @@ class InterfaceSymbol extends NamespacedSymbol implements AutoloadAliasInterface
         return array (
             'type' => 'interface',
             'interfacename' => $this->getOriginalLocalName(),
-            'namespace' => $this->namespace->getOriginalSymbol(),
+            'namespace' => $this->namespace->getOriginalFqdnName(),
             'extends' => [$this->getReplacementFqdnName()] + $this->getExtends(),
         );
     }

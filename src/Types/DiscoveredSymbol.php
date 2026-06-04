@@ -67,7 +67,10 @@ abstract class DiscoveredSymbol
 
     abstract public function isGlobal(): bool;
 
-    public function getOriginalSymbol(): string
+    /**
+     * TODO: Document does this contain or ltrim the leading slash.
+     */
+    public function getOriginalFqdnName(): string
     {
         return $this->fqdnOriginalSymbol;
     }
@@ -171,7 +174,7 @@ abstract class DiscoveredSymbol
 
     public function __toString(): string
     {
-        return $this->getOriginalSymbol();
+        return $this->getOriginalFqdnName();
     }
 
     public function addDependency(\BrianHenryIE\Strauss\Composer\ComposerPackage $package): void

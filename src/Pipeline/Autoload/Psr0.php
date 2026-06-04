@@ -80,7 +80,7 @@ class Psr0
                     // It doesn't matter here whether we are using actual namespaces or underscored classnames, the target directoru still changes.
 
                     $originalNamespaceString    = $this->filesystem->normalizePath(
-                        $packageRelativeNamespacePath . '/' . $namespaceSymbol->getOriginalSymbol()
+                        $packageRelativeNamespacePath . '/' . $namespaceSymbol->getOriginalFqdnName()
                     );
                     $replacementNamespaceString = $this->filesystem->normalizePath(
                         $packageRelativeNamespacePath . '/' . $namespaceSymbol->getReplacementFqdnName()

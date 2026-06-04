@@ -130,7 +130,7 @@ class FileCopyScanner
         }
         /** @var string[] $namespaceStringsInFile */
         $namespaceStringsInFile = array_map(
-            fn(DiscoveredSymbol $symbol): string => $symbol->getOriginalSymbol(),
+            fn(DiscoveredSymbol $symbol): string => $symbol->getOriginalFqdnName(),
             $file->getDiscoveredSymbols()->getNamespaces()->notGlobal()->toArray()
         );
         foreach ($this->config->getExcludeNamespacesFromCopy() as $excludedNamespaceString) {

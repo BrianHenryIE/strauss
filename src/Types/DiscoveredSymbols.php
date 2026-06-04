@@ -68,22 +68,22 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
             case NamespaceSymbol::class:
                 // Fall-through.
             case Psr0NamespaceSymbol::class:
-                $this->types[self::NAMESPACE_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                $this->types[self::NAMESPACE_SYMBOL][$symbol->getOriginalFqdnName()] = $symbol;
                 return;
             case ConstantSymbol::class:
-                $this->types[self::CONST_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                $this->types[self::CONST_SYMBOL][$symbol->getOriginalFqdnName()] = $symbol;
                 return;
             case ClassSymbol::class:
-                $this->types[self::CLASS_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                $this->types[self::CLASS_SYMBOL][$symbol->getOriginalFqdnName()] = $symbol;
                 return;
             case FunctionSymbol::class:
-                $this->types[self::FUNCTION_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                $this->types[self::FUNCTION_SYMBOL][$symbol->getOriginalFqdnName()] = $symbol;
                 return;
             case InterfaceSymbol::class:
-                $this->types[self::INTERFACE_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                $this->types[self::INTERFACE_SYMBOL][$symbol->getOriginalFqdnName()] = $symbol;
                 return;
             case TraitSymbol::class:
-                $this->types[self::TRAIT_SYMBOL][$symbol->getOriginalSymbol()] = $symbol;
+                $this->types[self::TRAIT_SYMBOL][$symbol->getOriginalFqdnName()] = $symbol;
                 return;
             default:
                 throw new InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
@@ -95,17 +95,17 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     {
         switch (get_class($symbol)) {
             case NamespaceSymbol::class:
-                return isset($this->types[self::NAMESPACE_SYMBOL][$symbol->getOriginalSymbol()]);
+                return isset($this->types[self::NAMESPACE_SYMBOL][$symbol->getOriginalFqdnName()]);
             case ConstantSymbol::class:
-                return isset($this->types[self::CONST_SYMBOL][$symbol->getOriginalSymbol()]);
+                return isset($this->types[self::CONST_SYMBOL][$symbol->getOriginalFqdnName()]);
             case ClassSymbol::class:
-                return isset($this->types[self::CLASS_SYMBOL][$symbol->getOriginalSymbol()]);
+                return isset($this->types[self::CLASS_SYMBOL][$symbol->getOriginalFqdnName()]);
             case FunctionSymbol::class:
-                return isset($this->types[self::FUNCTION_SYMBOL][$symbol->getOriginalSymbol()]);
+                return isset($this->types[self::FUNCTION_SYMBOL][$symbol->getOriginalFqdnName()]);
             case InterfaceSymbol::class:
-                return isset($this->types[self::INTERFACE_SYMBOL][$symbol->getOriginalSymbol()]);
+                return isset($this->types[self::INTERFACE_SYMBOL][$symbol->getOriginalFqdnName()]);
             case TraitSymbol::class:
-                return isset($this->types[self::TRAIT_SYMBOL][$symbol->getOriginalSymbol()]);
+                return isset($this->types[self::TRAIT_SYMBOL][$symbol->getOriginalFqdnName()]);
             default:
                 throw new InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
         }
@@ -251,7 +251,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return new DiscoveredSymbols(
             array_filter(
                 $this->toArray(),
-                fn(DiscoveredSymbol $symbol) => $symbol->isDoRename() && $symbol->getOriginalSymbol() !== $symbol->getReplacementFqdnName()
+                fn(DiscoveredSymbol $symbol) => $symbol->isDoRename() && $symbol->getOriginalFqdnName() !== $symbol->getReplacementFqdnName()
             )
         );
     }
@@ -324,7 +324,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param string $offset
+     * @param DiscoveredSymbol $offset
      *
      * @return bool
      */
@@ -332,7 +332,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     public function offsetExists($offset)
     {
         /**
-         * TODO: use spl array and accept DiscoveredSymol as the array key.
+         * TODO: use spl array and accept DiscoveredSymbol as the array key.
          *
          * @see https://stackoverflow.com/questions/4642980/can-i-use-an-instantiated-object-as-an-array-key
          */

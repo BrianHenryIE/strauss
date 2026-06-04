@@ -404,7 +404,7 @@ class Prefixer
         /** @var NamespacedSymbol $symbol */
         foreach ($discoveredSymbols->getNamespacedSymbols()->getToRename()->notGlobal()->toArray() as $symbol) {
             $ns = $symbol->getNamespace();
-            $original = rtrim($ns->getOriginalSymbol(), '\\');
+            $original = rtrim($ns->getOriginalFqdnName(), '\\');
             $replacement = rtrim($ns->getReplacementFqdnName(), '\\');
             $activeNamespaces[$original] = $replacement;
         }
@@ -482,10 +482,10 @@ class Prefixer
         $symbolMap = [];
 //        foreach ($namespaceChanges->getNamespaces()->notGlobal() as $symbol) {
         foreach ($namespaces->getToRename() as $symbol) {
-            if (isset($symbolMap[rtrim($symbol->getOriginalSymbol(), '\\')])) {
+            if (isset($symbolMap[rtrim($symbol->getOriginalFqdnName(), '\\')])) {
                 throw new Exception('losing data');
             }
-            $symbolMap[rtrim($symbol->getOriginalSymbol(), '\\')] = $symbol;
+            $symbolMap[rtrim($symbol->getOriginalFqdnName(), '\\')] = $symbol;
         }
         uksort($symbolMap, fn($a, $b) => strlen($b) - strlen($a));
 
@@ -686,7 +686,7 @@ class Prefixer
     {
         $positions = [];
 
-        $searchStr = '\\' . $globalSymbol->getOriginalSymbol();
+        $searchStr = '\\' . $globalSymbol->getOriginalFqdnName();
         $searchLen = strlen($searchStr);
 
         $commentText = $comment->getText();
@@ -731,7 +731,7 @@ class Prefixer
             if ($symbol->isGlobal()) {
                 return $contents;
             }
-            $originalSymbolString = $symbol->getOriginalSymbol();
+            $originalSymbolString = $symbol->getOriginalFqdnName();
             $replacementSymbolString = $symbol->getReplacementFqdnName();
 
             // E.g. `My\Namespace\$var` is used in some libraries.
@@ -1021,7 +1021,7 @@ class Prefixer
 
         foreach ($originalConstants as $constant) {
 //            $contents = $this->replaceConstant($contents, $constant, $prefix . $constant);
-            $contents = $this->replaceConstant($contents, $constant->getOriginalSymbol(), $constant->getReplacementFqdnName());
+            $contents = $this->replaceConstant($contents, $constant->getOriginalFqdnName(), $constant->getReplacementFqdnName());
         }
 
         return $contents;
@@ -1144,7 +1144,7 @@ class Prefixer
             foreach ($namespacedSymbols as $symbol) {
                 $replacement = $symbol->getReplacementFqdnName();
 //                $docSearchStr = '\\' . $symbol->getOriginalSymbol();
-                $docSearchStr = $symbol->getOriginalSymbol();
+                $docSearchStr = $symbol->getOriginalFqdnName();
                 $docSearchLen = strlen($docSearchStr);
                 // For global symbols (no \ in name), also treat \ as a boundary character
                 // so \GlobalClass is left to findGlobalSymbolPositionInComment.
