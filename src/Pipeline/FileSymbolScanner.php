@@ -219,7 +219,7 @@ class FileSymbolScanner
                 }
                 $functionSymbol = $this->discoveredSymbols->getFunction($functionName);
                 if (is_null($functionSymbol)) {
-                    $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceSymbol);
+                    $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceSymbol, $package);
                     $this->add($functionSymbol);
                 }
                 $functionSymbol->addSourceFile($file);
