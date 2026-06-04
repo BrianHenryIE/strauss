@@ -392,14 +392,13 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     public function notGlobal(): self
     {
+        /** @var DiscoveredSymbol[] $all */
         $all = [];
         /**
-         * @var string $type
          * @var array<string, DiscoveredSymbol> $types
          */
-        foreach ($this->types as $type => $types) {
+        foreach ($this->types as $types) {
             /**
-             * @var string $index
              * @var DiscoveredSymbol $symbol
              */
             foreach ($types as $symbol) {
