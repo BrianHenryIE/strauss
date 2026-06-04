@@ -1027,9 +1027,16 @@ class Prefixer
         return $contents;
     }
 
+    /**
+     * TODO: Use php-parser for this.
+     */
     protected function replaceConstant(string $contents, string $originalConstant, string $replacementConstant): string
     {
-        return str_replace($originalConstant, $replacementConstant, $contents);
+        return preg_replace(
+            '/([^A-Z0-9_])('.$originalConstant.')([^A-Z0-9_])/',
+            '$1'.$replacementConstant.'$3',
+            $contents
+        );
     }
 
     /**

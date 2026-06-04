@@ -1478,10 +1478,14 @@ EOD;
 
 define('FPDF_VERSION', '1.83');
 
-define('ANOTHER_CONSTANT', '1.83');
+define('ANOTHER_CONSTANT', '/path/to/something');
 
 class FPDF
-{}
+{
+  public function whatever() {
+    include ANOTHER_CONSTANT . '/file.php';
+  }
+}
 EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
@@ -1504,8 +1508,9 @@ EOD;
 
         $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
 
-        $this->assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
-        $this->assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
+        $this->assertStringContainsString("define('BHMP_FPDF_VERSION', '1.83');", $result);
+        $this->assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '/path/to/something');", $result);
+        $this->assertStringContainsString("include BHMP_ANOTHER_CONSTANT . '/file.php';", $result);
     }
 
     public function testStaticFunctionCallOfNamespacedClassIsPrefixed(): void
