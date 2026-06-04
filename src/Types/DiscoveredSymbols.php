@@ -9,9 +9,11 @@ namespace BrianHenryIE\Strauss\Types;
 
 use ArrayAccess;
 use ArrayIterator;
+use BadMethodCallException;
 use Countable;
 use InvalidArgumentException;
 use IteratorAggregate;
+use ReturnTypeWillChange;
 use Traversable;
 
 /**
@@ -380,7 +382,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     /**
      * @return Traversable<DiscoveredSymbol>
      */
-    #[\ReturnTypeWillChange]
+    #[ReturnTypeWillChange]
     public function getIterator()
     {
         return new ArrayIterator($this->toArray());
@@ -391,7 +393,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      *
      * @return bool
      */
-    #[\ReturnTypeWillChange]
+    #[ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         // Fixing this breaks tests.
@@ -404,7 +406,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      *
      * @return DiscoveredSymbol|null
      */
-    #[\ReturnTypeWillChange]
+    #[ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->toArray()[$offset] ?? null;
@@ -416,10 +418,10 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      *
      * @return void
      */
-    #[\ReturnTypeWillChange]
+    #[ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
-        throw new \BadMethodCallException();
+        throw new BadMethodCallException();
     }
 
     /**
@@ -427,10 +429,10 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      *
      * @return void
      */
-    #[\ReturnTypeWillChange]
+    #[ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
-        throw new \BadMethodCallException();
+        throw new BadMethodCallException();
     }
 
     /**
@@ -438,7 +440,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      *
      * @return int
      */
-    #[\ReturnTypeWillChange]
+    #[ReturnTypeWillChange]
     public function count()
     {
         return array_reduce(
