@@ -351,8 +351,7 @@ class Prefixer
     protected function findPositionsOfUsesOfNamespacedConstants(DiscoveredSymbols $symbols, array $ast): array
     {
         $namespaceSymbols = $symbols->getNamespaces();
-        $namespaceSymbolsArray = $namespaceSymbols->toArray();
-        if (empty($namespaceSymbolsArray)) {
+        if (count($namespaceSymbols) === 0) {
             return [];
         }
 
@@ -368,12 +367,17 @@ class Prefixer
         foreach ($constFetches as $fetch) {
             $full = $fetch->name->toString();
             $parts = explode('\\', $full);
-            $namespace = $parts[0] ?? null;
+            $local = array_pop($parts);
+            if (empty($parts)) {
+                // not namespaced;
+                continue;
+            }
+            $namespaceName = implode('\\', $parts);
+            $namespace = $namespaceSymbols->get($namespaceName);
 
-            if ($namespace && isset($namespaceSymbolsArray[$namespace])) {
-                $replacementNamespace = $namespaceSymbolsArray[$namespace]->getLocalReplacement();
-                $parts[0] = $replacementNamespace;
-                $newName = '\\' . implode('\\', $parts);
+            if ($namespace) {
+                $replacementNamespace = $namespace->getLocalReplacement();
+                $newName = '\\' . $replacementNamespace . '\\' . $local;
 
                 $positions[] = [
                     'start' => $fetch->name->getStartFilePos(),
