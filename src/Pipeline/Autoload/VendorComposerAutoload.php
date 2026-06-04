@@ -6,7 +6,7 @@
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use JsonException;
 use League\Flysystem\FilesystemException;

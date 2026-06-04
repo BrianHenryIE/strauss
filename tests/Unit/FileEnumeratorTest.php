@@ -13,7 +13,7 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use Mockery;
 

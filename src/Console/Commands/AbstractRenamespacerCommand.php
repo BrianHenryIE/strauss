@@ -8,26 +8,26 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter;
+use BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter;
-use BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
+use League\Flysystem\Config;
 use League\Flysystem\PathPrefixer;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
-use League\Flysystem\Config;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class AbstractRenamespacerCommand extends Command
 {

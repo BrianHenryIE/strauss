@@ -14,7 +14,7 @@
 namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Types\AutoloadAliasInterface;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;

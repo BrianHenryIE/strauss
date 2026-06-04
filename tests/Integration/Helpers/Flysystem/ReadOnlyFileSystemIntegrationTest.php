@@ -1,6 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use League\Flysystem\Config;
@@ -9,7 +9,7 @@ use League\Flysystem\Visibility;
 use Mockery;
 
 /**
- * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter
+ * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter
  */
 class ReadOnlyFileSystemIntegrationTest extends IntegrationTestCase
 {

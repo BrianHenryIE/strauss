@@ -3,18 +3,11 @@
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
-use BrianHenryIE\Strauss\Files\FileBase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
-use BrianHenryIE\Strauss\Types\ClassSymbol;
-use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\Autoload\AutoloadGenerator;
 use Composer\Config;
 use Composer\Factory;

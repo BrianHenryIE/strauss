@@ -5,7 +5,7 @@
  * @see \League\Flysystem\FilesystemAdapter
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;

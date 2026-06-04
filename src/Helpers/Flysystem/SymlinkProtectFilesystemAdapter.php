@@ -40,7 +40,7 @@
  * @see \League\Flysystem\Local\LocalFilesystemAdapter::listContents()
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use Composer\Util\Platform;
 use League\Flysystem\Config;
@@ -65,7 +65,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     /**
      * Converts flysystem relative paths to filesystem absolute paths.
      *
-     * @var \BrianHenryIE\Strauss\Helpers\PathPrefixerInterface|\League\Flysystem\PathPrefixer
+     * @var \BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixerInterface|\League\Flysystem\PathPrefixer
      */
     protected $pathPrefixer;
 

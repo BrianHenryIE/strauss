@@ -9,13 +9,10 @@ use ArrayIterator;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
-use BrianHenryIE\Strauss\TestCase;
-use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\WhitespacePathNormalizer;
 use Mockery;
 

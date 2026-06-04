@@ -3,7 +3,7 @@
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 
 class FileWithDependency extends File implements HasDependency
 {

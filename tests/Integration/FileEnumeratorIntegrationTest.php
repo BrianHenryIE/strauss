@@ -6,10 +6,8 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Mockery;
 
 /**

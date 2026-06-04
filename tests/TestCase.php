@@ -6,11 +6,11 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\InMemoryFilesystemAdapter;
+use BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer;
+use BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use BrianHenryIE\Strauss\Helpers\PathPrefixer;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystemAdapter;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\ServiceLocator;

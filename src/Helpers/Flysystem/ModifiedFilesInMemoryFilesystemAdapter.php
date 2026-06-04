@@ -4,7 +4,7 @@
  *
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 class ModifiedFilesInMemoryFilesystemAdapter extends InMemoryFilesystemAdapter
 {

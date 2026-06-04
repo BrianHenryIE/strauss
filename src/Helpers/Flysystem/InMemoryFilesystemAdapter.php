@@ -1,6 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;

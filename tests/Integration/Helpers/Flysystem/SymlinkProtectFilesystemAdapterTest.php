@@ -3,12 +3,12 @@
  * Delete operations to symlinks should be changed to unlink.
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
- * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\SymlinkProtectFilesystemAdapter
+ * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter
  */
 class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
 {

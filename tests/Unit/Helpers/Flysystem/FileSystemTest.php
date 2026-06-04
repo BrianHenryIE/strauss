@@ -1,6 +1,6 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use BrianHenryIE\Strauss\TestCase;
 use Composer\Util\Platform;
@@ -10,7 +10,7 @@ use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
- * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\FileSystem
+ * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem
  */
 class FileSystemTest extends TestCase
 {

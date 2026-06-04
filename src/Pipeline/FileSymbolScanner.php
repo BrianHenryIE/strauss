@@ -7,12 +7,20 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
+use BrianHenryIE\SimplePhpParser\Model\PHPClass;
+use BrianHenryIE\SimplePhpParser\Model\PHPConst;
+use BrianHenryIE\SimplePhpParser\Model\PHPFunction;
+use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserContainer;
+use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserErrorHandler;
+use BrianHenryIE\SimplePhpParser\Parsers\Helper\Utils;
+use BrianHenryIE\SimplePhpParser\Parsers\PhpCodeParser;
+use BrianHenryIE\SimplePhpParser\Parsers\Visitors\ASTVisitor;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Helpers\ParserErrorException;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
@@ -23,9 +31,6 @@ use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use League\Flysystem\FilesystemException;
-use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserContainer;
-use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserErrorHandler;
-use BrianHenryIE\SimplePhpParser\Parsers\Helper\Utils;
 use PhpParser\Node;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
@@ -33,11 +38,6 @@ use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use BrianHenryIE\SimplePhpParser\Model\PHPClass;
-use BrianHenryIE\SimplePhpParser\Model\PHPConst;
-use BrianHenryIE\SimplePhpParser\Model\PHPFunction;
-use BrianHenryIE\SimplePhpParser\Parsers\PhpCodeParser;
-use BrianHenryIE\SimplePhpParser\Parsers\Visitors\ASTVisitor;
 
 class FileSymbolScanner
 {

@@ -20,7 +20,7 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\LicenserConfigInterface;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\StorageAttributes;

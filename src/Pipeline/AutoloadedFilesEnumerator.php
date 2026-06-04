@@ -8,7 +8,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Composer\ClassMapGenerator\ClassMapGenerator;
 use League\Flysystem\FilesystemException;
 use PhpParser\NodeFinder;

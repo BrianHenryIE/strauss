@@ -7,7 +7,7 @@
  * `composer require league/flysystem:"^2 || ^3"
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use Composer\InstalledVersions;
 use League\Flysystem\Config;
@@ -18,7 +18,7 @@ use League\MimeTypeDetection\MimeTypeDetector;
 use stdClass;
 
 /**
- * @covers \BrianHenryIE\Strauss\Helpers\FlysystemAdapterBackCompatTrait
+ * @covers \BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemAdapterBackCompatTrait
  */
 class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
 {
@@ -46,7 +46,7 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
      *
      * @see \League\Flysystem\InMemory\InMemoryFilesystemAdapter::directoryExists
      *
-     * @covers \BrianHenryIE\Strauss\Helpers\FlysystemAdapterBackCompatTrait::directoryExists()
+     * @covers \BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemAdapterBackCompatTrait::directoryExists()
      */
     public function test_adapter_is_only_used_when_genuine_implementation_absent(): void
     {
@@ -91,7 +91,7 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
     }
 
     /**
-     * @covers \BrianHenryIE\Strauss\Helpers\FlysystemAdapterBackCompatTrait::directoryExistsImplementation()
+     * @covers \BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemAdapterBackCompatTrait::directoryExistsImplementation()
      */
     public function test_implementation(): void
     {

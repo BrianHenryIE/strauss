@@ -6,7 +6,7 @@
 namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Composer\Factory;
 use Composer\IO\NullIO;
 

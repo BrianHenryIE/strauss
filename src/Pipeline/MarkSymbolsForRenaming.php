@@ -8,17 +8,15 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
-use BrianHenryIE\Strauss\Types\Psr0NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 

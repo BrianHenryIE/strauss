@@ -6,7 +6,7 @@
  * @see https://github.com/thephpleague/flysystem/issues/599
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use Composer\Util\Platform;
 use Elazar\Flystream\StripProtocolPathNormalizer;

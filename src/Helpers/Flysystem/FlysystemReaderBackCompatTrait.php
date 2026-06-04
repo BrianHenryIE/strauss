@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `FilesystemReader` interface v3 introduced `::directoryExists()` and `::has()`.
  *
@@ -15,7 +16,7 @@
  * @see FlysystemAdapterBackCompatTrait
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 /**
  * @mixin FlysystemReaderBackCompatTraitInterface

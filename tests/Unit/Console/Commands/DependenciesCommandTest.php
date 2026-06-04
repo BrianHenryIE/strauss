@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;

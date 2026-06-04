@@ -6,7 +6,7 @@
  * cached so they appear to have been successful but are not actually written to disk.
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use BadMethodCallException;
 use Exception;

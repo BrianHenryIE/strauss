@@ -4,12 +4,12 @@
  *
  * If a variable that is being replaced as the term 'path' in it, the path will be made relative to workingdir.
  *
- * @see \BrianHenryIE\Strauss\Helpers\FileSystem::getProjectRelativePath()
+ * @see \BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::getProjectRelativePath()
  */
 
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Monolog\Processor\ProcessorInterface;
 
 class RelativeFilepathLogProcessor implements ProcessorInterface

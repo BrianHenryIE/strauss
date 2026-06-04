@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Composer\Util\Platform;
 
 trait CustomUnitTestAssertionsTrait

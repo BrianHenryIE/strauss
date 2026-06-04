@@ -11,7 +11,7 @@
  * @see https://github.com/thephpleague/flysystem/blob/3.x/src/Local/LocalFilesystemAdapter.php#L346-L351
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;

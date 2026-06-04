@@ -1,12 +1,11 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
- * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\FileSystem
+ * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem
  */
 class FileSystemIntegrationTest extends IntegrationTestCase
 {

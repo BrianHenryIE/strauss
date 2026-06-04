@@ -5,7 +5,7 @@
  * @see League\Flysystem\PathPrefixer
  */
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 interface PathPrefixerInterface
 {

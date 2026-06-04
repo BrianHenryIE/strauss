@@ -16,10 +16,9 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\CleanupConfigInterface;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Composer\Json\JsonFile;
 use Composer\Json\JsonValidationException;

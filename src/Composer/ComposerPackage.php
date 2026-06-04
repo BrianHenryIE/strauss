@@ -9,10 +9,9 @@ namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\PartialComposer;

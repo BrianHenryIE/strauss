@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use function rtrim;
 use function strlen;
