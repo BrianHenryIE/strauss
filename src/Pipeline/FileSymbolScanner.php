@@ -348,7 +348,7 @@ class FileSymbolScanner
 
         $classSymbol = $this->discoveredSymbols->getClass($fqdnClassname);
         if (is_null($classSymbol)) {
-            $classSymbol = new ClassSymbol($fqdnClassname, $file, $isAbstract, $namespace, $extends, $interfaces);
+            $classSymbol = new ClassSymbol($fqdnClassname, $file, $namespace, $isAbstract, $extends, $interfaces);
             $this->add($classSymbol, $file);
         }
         $classSymbol->addSourceFile($file);

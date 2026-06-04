@@ -25,7 +25,7 @@ class DiscoveredSymbolsTest extends TestCase
             'vendor-prefixed/path/to/file.php',
         );
 
-        $symbol = new FunctionSymbol('myFunction', $file);
+        $symbol = new FunctionSymbol('myFunction', $file, new NamespaceSymbol('\\'));
 
         $sut->add($symbol);
 
@@ -80,7 +80,7 @@ class DiscoveredSymbolsTest extends TestCase
         );
 
         $sut->add(new NamespaceSymbol('myNamespace'));
-        $sut->add(new ClassSymbol('myClass', $file));
+        $sut->add(new ClassSymbol('myClass', $file, new NamespaceSymbol('\\'), false));
 
         // The two added plus global namespace.
         $this->assertCount(2, $sut->toArray());
@@ -100,7 +100,7 @@ class DiscoveredSymbolsTest extends TestCase
         );
 
         $sut->add(new NamespaceSymbol('myNamespace'));
-        $sut->add(new ClassSymbol('myClass', $file));
+        $sut->add(new ClassSymbol('myClass', $file, new NamespaceSymbol('\\'), false));
 
         $result = $sut->getNamespacedSymbols()->toArray();
 

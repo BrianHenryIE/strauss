@@ -7,6 +7,7 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
 use Mockery\MockInterface;
 
@@ -34,7 +35,8 @@ class ChangeEnumeratorTest extends TestCase
                 '/path/to/file.php',
                 'file.php',
                 '/destination-path/to/file.php'
-            )
+            ),
+            new NamespaceSymbol('\\')
         );
         $discoveredSymbols->add($symbol);
 

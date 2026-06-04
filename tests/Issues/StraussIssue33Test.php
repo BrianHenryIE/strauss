@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
 
 /**
@@ -89,7 +90,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();

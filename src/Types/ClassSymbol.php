@@ -20,16 +20,16 @@ class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     /**
      * @param string $fqdnClassname
      * @param FileBase $sourceFile
-     * @param bool $isAbstract
      * @param ?NamespaceSymbol $namespace
+     * @param bool $isAbstract
      * @param ?string $extends
      * @param string[] $interfaces
      */
     public function __construct(
         string $fqdnClassname,
         FileBase $sourceFile,
+        NamespaceSymbol $namespace,
         bool $isAbstract = false,
-        ?NamespaceSymbol $namespace = null,
         ?string $extends = null,
         array $interfaces = []
     ) {

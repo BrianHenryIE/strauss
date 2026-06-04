@@ -80,7 +80,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement($replacement);
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Google\Http\Batch', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Google\Http\Batch', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
         $classSymbol->setDoRename(false);
 
@@ -130,7 +130,7 @@ EOD;
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
 
-        $classSymbol = new ClassSymbol('Google\Http\Batch', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Google\Http\Batch', $file, $namespaceSymbol);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -189,7 +189,7 @@ EOD;
         );
         $file->setDoPrefix(true);
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -231,7 +231,7 @@ EOD;
         );
         $file->setDoPrefix(true);
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -265,7 +265,7 @@ EOD;
         );
         $file->setDoPrefix(true);
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'), true);
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -299,7 +299,7 @@ EOD;
         );
         $file->setDoPrefix(true);
 
-        $interfaceSymbol = new InterfaceSymbol($originalName, $file);
+        $interfaceSymbol = new InterfaceSymbol($originalName, $file, new NamespaceSymbol('\\'));
         $interfaceSymbol->setLocalReplacement($globalPrefix . $originalName);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -333,7 +333,7 @@ EOD;
         );
         $file->setDoPrefix(true);
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -367,7 +367,7 @@ EOD;
         );
         $file->setDoPrefix(true);
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -454,7 +454,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -489,7 +489,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -559,7 +559,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -612,7 +612,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -692,7 +692,7 @@ EOD;
         $namespaceSymbol2 = new NamespaceSymbol($originalNamespace2, $file);
         $namespaceSymbol2->setLocalReplacement($replacement);
 
-        $classSymbol = new ClassSymbol('Test\\Test', $file, false, $namespaceSymbol2);
+        $classSymbol = new ClassSymbol('Test\\Test', $file, $namespaceSymbol2);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol1);
@@ -853,7 +853,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('My\\Mozart\\Prefix\\Chicken');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Chicken\Egg', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Chicken\Egg', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
@@ -895,7 +895,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement($replacement);
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Symfony\Polyfill\Mbstring', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Symfony\Polyfill\Mbstring', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
@@ -971,7 +971,7 @@ EOD;
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
 
-        $classSymbol = new ClassSymbol('Strauss\\Test\\Classname', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Strauss\\Test\\Classname', $file, $namespaceSymbol);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -1010,7 +1010,7 @@ EOD;
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
 
-        $classSymbol = new ClassSymbol('Strauss\\Test\\Classname', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Strauss\\Test\\Classname', $file, $namespaceSymbol);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -1295,7 +1295,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement($replacement);
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Carbon_Fields\Container\Comment_Meta_Container', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Carbon_Fields\Container\Comment_Meta_Container', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
@@ -1452,7 +1452,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -1501,7 +1501,7 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols();
         $constants = array('FPDF_VERSION', 'ANOTHER_CONSTANT');
         foreach ($constants as $constant) {
-            $constantSymbol = new ConstantSymbol($constant, $file);
+            $constantSymbol = new ConstantSymbol($constant, $file, new NamespaceSymbol('\\'));
             $constantSymbol->setLocalReplacement('BHMP_'.$constant);
             $discoveredSymbols->add($constantSymbol);
         }
@@ -1764,7 +1764,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('StraussTest\\ST');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('ST\StraussTestClass', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('ST\StraussTestClass', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
@@ -2375,7 +2375,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -2421,7 +2421,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -2467,7 +2467,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -2518,7 +2518,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -2557,7 +2557,7 @@ EOD;
         );
 
         $discoveredSymbols = new DiscoveredSymbols();
-        $classSymbol = new ClassSymbol('Normalizer', $file);
+        $classSymbol = new ClassSymbol('Normalizer', $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement('Normalizer_Test_Normalizer');
         $discoveredSymbols->add($classSymbol);
 
@@ -2784,7 +2784,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('StraussTest\\Aws');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Aws\Endpoint\UseDualstackEndpoint\Configurations', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Aws\Endpoint\UseDualstackEndpoint\Configurations', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $functionSymbol = new FunctionSymbol('Aws\boolean_value', $file, $namespaceSymbol);
@@ -2902,7 +2902,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('StraussTest\WPGraphQL\Registry\Utils');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('WPGraphQL', $file2);
+        $classSymbol = new ClassSymbol('WPGraphQL', $file2, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement('StraussTest_WPGraphQL');
         $discoveredSymbols->add($classSymbol);
 
@@ -2955,7 +2955,7 @@ EOD;
         $providerNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Provider');
         $discoveredSymbols->add($providerNamespaceSymbol);
 
-        $classSymbol = new ClassSymbol('League\\OAuth2\\Client\\Provider\\MyClass', $file, false, $providerNamespaceSymbol);
+        $classSymbol = new ClassSymbol('League\\OAuth2\\Client\\Provider\\MyClass', $file, $providerNamespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $toolNamespaceSymbol = new NamespaceSymbol('League\\OAuth2\\Client\\Tool');
@@ -3024,7 +3024,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -3096,7 +3096,7 @@ EOD;
         $namespaceSymbol2 = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol2->setLocalReplacement($replacement);
 
-        $classSymbol = new ClassSymbol('Aws\\ClientResolver', $file, false, $namespaceSymbol2);
+        $classSymbol = new ClassSymbol('Aws\\ClientResolver', $file, $namespaceSymbol2);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -3238,7 +3238,7 @@ EOD;
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $classSymbol = new ClassSymbol($originalClassname, $file);
+        $classSymbol = new ClassSymbol($originalClassname, $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement($classnamePrefix . $originalClassname);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -3318,7 +3318,7 @@ EOD;
 
         $symbols = new DiscoveredSymbols();
 
-        $symbol = new FunctionSymbol('append_config', $file);
+        $symbol = new FunctionSymbol('append_config', $file, new NamespaceSymbol('\\'));
         $symbol->setLocalReplacement('myprefix_append_config');
         $symbols->add($symbol);
 
@@ -3409,7 +3409,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\GuzzleHttp');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('GuzzleHttp\\BodySummarizer', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('GuzzleHttp\\BodySummarizer', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -3473,17 +3473,17 @@ EOD;
         $namespaceSymbol->setLocalReplacement('Strauss\Test\Latte\Macros');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Latte\Macros\BlockMacros', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Macros\BlockMacros', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $namespaceSymbol = new NamespaceSymbol('Latte', $file);
         $namespaceSymbol->setLocalReplacement('Strauss\Test\Latte');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Latte\Macros\Compiler', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Macros\Compiler', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
-        $classSymbol = new ClassSymbol('Latte', $file, false);
+        $classSymbol = new ClassSymbol('Latte', $file, new NamespaceSymbol('\\'));
         $classSymbol->setLocalReplacement('BH_Latte');
         $discoveredSymbols->add($classSymbol);
 
@@ -3554,7 +3554,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Latte\Macros\BlockMacros', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Macros\BlockMacros', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -3615,10 +3615,10 @@ EOD;
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Latte\Macros\MacroSet', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Macros\MacroSet', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
-        $classSymbol = new ClassSymbol('Latte\Compiler', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Compiler', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -3681,7 +3681,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Latte\Macros\MacroSet', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Macros\MacroSet', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -3784,7 +3784,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Latte\Runtime\Filters', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Runtime\Filters', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -3852,7 +3852,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Latte\Tools\Linter', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Tools\Linter', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -3944,7 +3944,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('Strauss\\Test\\Latte');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Latte\Tools\Linter', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Latte\Tools\Linter', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -4024,7 +4024,7 @@ EOD;
         $namespaceSymbol = new NamespaceSymbol($originalNamespace, $file);
         $namespaceSymbol->setLocalReplacement($replacement);
 
-        $classSymbol = new ClassSymbol("FontLib\\Table\\Type\\Table", $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol("FontLib\\Table\\Type\\Table", $file, $namespaceSymbol);
 
         $secondNamespaceSymbol = new NamespaceSymbol($secondOriginalNamespace, $file);
         $secondNamespaceSymbol->setLocalReplacement($secondReplacement);
@@ -4104,7 +4104,7 @@ EOD;
 
         $symbols = new DiscoveredSymbols();
 
-        $symbol = new FunctionSymbol('my_function', $file);
+        $symbol = new FunctionSymbol('my_function', $file, new NamespaceSymbol('\\'));
         $symbol->setLocalReplacement('myprefix_my_function');
 
         $symbols->add($symbol);
@@ -4170,7 +4170,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement($replacement);
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Prefix\Strauss\Carbon_Fields\Container\User_Meta_Container', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Prefix\Strauss\Carbon_Fields\Container\User_Meta_Container', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $filesystem->write($file->getTargetAbsolutePath(), $contents);
@@ -4253,7 +4253,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('CommonsBooking\\Geocoder');
         $symbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Geocoder\StatefulGeocoder', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Geocoder\StatefulGeocoder', $file, $namespaceSymbol);
         $symbols->add($classSymbol);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
@@ -4301,7 +4301,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\\TestStrauss\\Vendor\\Composer');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Composer\\Factory', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Composer\\Factory', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $filesystem = $this->getInMemoryFileSystem();
@@ -4351,7 +4351,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('MyProject\Dependencies\Composer\Autoload');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('ClassLoader', $file);
+        $classSymbol = new ClassSymbol('ClassLoader', $file, new NamespaceSymbol('\\'));
         $classSymbol->setDoRename(false);
         $discoveredSymbols->add($classSymbol);
 
@@ -4409,7 +4409,7 @@ EOD;
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Vendor\Symfony\Component\Console');
         $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Symfony\Component\Console\Application', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Symfony\Component\Console\Application', $file, $namespaceSymbol);
         $discoveredSymbols->add($classSymbol);
 
         $filesystem = $this->getInMemoryFileSystem();
@@ -4501,11 +4501,11 @@ EOD;
 //        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Composer');
 //        $discoveredSymbols->add($namespaceSymbol);
 
-        $classSymbol = new ClassSymbol('Composer\Autoload\AutoloadGenerator', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Composer\Autoload\AutoloadGenerator', $file, $namespaceSymbol);
         $classSymbol->setDoRename(true);
         $discoveredSymbols->add($classSymbol);
 
-        $classSymbol = new ClassSymbol('Composer\Autoload\ClassLoader', $file2, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('Composer\Autoload\ClassLoader', $file2, $namespaceSymbol);
         $classSymbol->setDoRename(false);
         $discoveredSymbols->add($classSymbol);
 
@@ -4614,8 +4614,8 @@ EOD;
         $nsComposerIO = new NamespaceSymbol('Composer\IO', $file);
         $nsComposerIO->setLocalReplacement('Prefixed\Composer\IO');
 
-        $classConfig = new ClassSymbol('Composer\Config', $file, false, $nsComposer);
-        $classIOInterface = new ClassSymbol('Composer\IO\IOInterface', $file, false, $nsComposerIO);
+        $classConfig = new ClassSymbol('Composer\Config', $file, $nsComposer);
+        $classIOInterface = new ClassSymbol('Composer\IO\IOInterface', $file, $nsComposerIO);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($nsComposer);
@@ -4672,7 +4672,7 @@ EOD;
         $nsRegistryUtils = new NamespaceSymbol('WPGraphQL\Registry\Utils', $file);
         $nsRegistryUtils->setLocalReplacement('MyProject\Dependencies\WPGraphQL\Registry\Utils');
 
-        $classWPGraphQL = new ClassSymbol('WPGraphQL', $file);
+        $classWPGraphQL = new ClassSymbol('WPGraphQL', $file, new NamespaceSymbol('\\'));
         $classWPGraphQL->setLocalReplacement('Prefix_WPGraphQL');
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -4702,7 +4702,7 @@ EOD;
         $namespaceSymbol = new NamespaceSymbol('Composer\Autoload', $file);
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Composer\Autoload');
 
-        $classSymbol = new ClassSymbol('ClassLoader', $file, false, $namespaceSymbol);
+        $classSymbol = new ClassSymbol('ClassLoader', $file, $namespaceSymbol);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);

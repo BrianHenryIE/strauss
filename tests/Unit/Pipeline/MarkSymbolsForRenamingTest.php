@@ -159,7 +159,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         );
         $file->addAutoloader('classmap');
 
-        $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file);
+        $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file, new NamespaceSymbol('\\'));
 
         $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 

@@ -1253,15 +1253,15 @@ class Prefixer
             $discoveredSymbols->add($namespaceSymbol);
         }
 
+        $globalNamespace = new NamespaceSymbol('\\');
         foreach ($classMap->getMap() as $fqdnClass => $absolutePath) {
             $namespace = $discoveredSymbols->getNamespace(
                 $this->getNamespaceFromFqdn($fqdnClass) ?? '\\'
-            );
+            ) ?? $globalNamespace;
             $classLoaderSymbol = new ClassSymbol(
                 $fqdnClass,
-                $composerFiles[basename($absolutePath)],
-                false,
-                $namespace
+                $composerFiles[ basename($absolutePath) ],
+                $namespace,
             );
             $discoveredSymbols->add($classLoaderSymbol);
         }

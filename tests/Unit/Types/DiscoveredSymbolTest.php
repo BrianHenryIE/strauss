@@ -26,7 +26,7 @@ class DiscoveredSymbolTest extends TestCase
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $sut = new ClassSymbol('MyClass', $file);
+        $sut = new ClassSymbol('MyClass', $file, new NamespaceSymbol('\\'));
 
         $this->assertEquals('MyClass', $sut->getOriginalFqdnName());
     }
@@ -49,7 +49,7 @@ class DiscoveredSymbolTest extends TestCase
             'vendor-prefixed/package2/name/src/file2.php',
         );
 
-        $sut = new ClassSymbol('MyClass', $file1);
+        $sut = new ClassSymbol('MyClass', $file1, new NamespaceSymbol('\\'));
         $sut->addSourceFile($file2);
 
         $result = $sut->getSourceFiles();
@@ -69,7 +69,7 @@ class DiscoveredSymbolTest extends TestCase
             'vendor-prefixed/package/name/src/file.php',
         );
 
-        $sut = new ClassSymbol('MyClass', $file);
+        $sut = new ClassSymbol('MyClass', $file, new NamespaceSymbol('\\'));
 
         $sut->setLocalReplacement('MyClassRenamed');
 
@@ -100,7 +100,7 @@ class DiscoveredSymbolTest extends TestCase
             'vendor-prefixed/path/to/file2.php',
         );
 
-        $classSymbol = new ClassSymbol('myClass', $file1);
+        $classSymbol = new ClassSymbol('myClass', $file1, new NamespaceSymbol('\\'));
         $classSymbol->addSourceFile($file2);
 
         $this->assertCount(1, $classSymbol->getPackages());
