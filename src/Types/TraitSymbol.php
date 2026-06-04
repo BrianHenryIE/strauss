@@ -43,6 +43,19 @@ class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     }
 
     /**
+     * In `autoload_aliases.php`, we create aliases for the old trait name by creating a trait for them and `use`ing
+     * the renamed trait.
+     *
+     * ```
+     * trait OriginalName {
+     *     use UpdatedName;
+     * }
+     * ```
+     *
+     * This contains all the methods of the trait and can be used in dev dependencies without renaming their call sites.
+     *
+     * @see AliasAutoloader::traitTemplate()
+     *
      * @return TraitAliasArray
      */
     public function getAutoloadAliasArray(): array

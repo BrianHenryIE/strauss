@@ -43,6 +43,17 @@ class InterfaceSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     }
 
     /**
+     * In `autoload_aliases.php`, interfaces work by extending the new interface:
+     *
+     * ```
+     * namespace OldNamespace;
+     * interface OriginalInterfaceName extends ReplacementFqdn\InterfaceName {}
+     * ```
+     *
+     * With this, dev dependencies can continue to use the old fqdn interface without updating their call sites.
+     *
+     * @see AliasAutoloader::interfaceTemplate()
+     *
      * @return InterfaceAliasArray
      */
     public function getAutoloadAliasArray(): array
