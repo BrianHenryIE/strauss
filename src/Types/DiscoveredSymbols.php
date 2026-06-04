@@ -62,6 +62,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      */
     public function add(DiscoveredSymbol $symbol): void
     {
+        // get_class() is intentional: instanceof would match subclasses (e.g. Psr0NamespaceSymbol instanceof NamespaceSymbol),
+        // routing them to the wrong bucket. Each concrete type must be listed explicitly.
         switch (get_class($symbol)) {
             case NamespaceSymbol::class:
                 // Fall-through.
