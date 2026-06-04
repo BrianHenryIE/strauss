@@ -20,6 +20,7 @@ use Exception;
 use League\Flysystem\FilesystemException;
 use PhpParser\Comment;
 use PhpParser\Comment\Doc;
+use PhpParser\Error;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ConstFetch;
@@ -241,7 +242,7 @@ class Prefixer
             ]);
             $ast = $parser->parse($parseContent);
 //                $ast = $parser->parse($parseContent, $errorHandler);
-        } catch (\Exception $e) {
+        } catch (Error $e) {
             // This happens in template files, E.g `x.blade.php`.
             $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: " . $e->getMessage(), [
                 'filePath' => $fileAbsolutePath ?? 'file',
