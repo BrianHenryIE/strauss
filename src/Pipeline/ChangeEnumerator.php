@@ -191,7 +191,7 @@ class ChangeEnumerator
                 $symbol->setLocalReplacement($replacementPsr0Classname);
             }
         } else {
-            $replacement = $globalPrefix . $symbol->getOriginalFqdnName();
+            $replacement = $globalPrefix . ltrim($symbol->getOriginalFqdnName(), '\\');
             $symbol->setLocalReplacement($replacement);
         }
     }
