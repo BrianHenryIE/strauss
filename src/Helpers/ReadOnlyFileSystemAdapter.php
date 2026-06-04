@@ -280,6 +280,9 @@ class ReadOnlyFileSystemAdapter implements FilesystemAdapter, FlysystemAdapterBa
         );
     }
 
+    /**
+     * @see FilesystemAdapter::fileSize()
+     */
     public function fileSize(string $path): FileAttributes
     {
         $path = $this->pathNormalizer->normalizePath($path);
@@ -292,7 +295,7 @@ class ReadOnlyFileSystemAdapter implements FilesystemAdapter, FlysystemAdapterBa
             case ($this->delegateFilesystemAdapter->fileExists($path)):
                 return  $this->delegateFilesystemAdapter->fileSize($path);
             default:
-                throw UnableToReadFile::fromLocation($path);
+                throw UnableToRetrieveMetadata::fileSize($path);
         }
     }
 
