@@ -120,7 +120,9 @@ abstract class DiscoveredSymbol
 
     public function getOriginalLocalName(): string
     {
-        return array_reverse(explode('\\', $this->fqdnOriginalSymbol))[0];
+        $fqdnParts = explode('\\', $this->fqdnOriginalSymbol);
+        $localSymbol = array_pop($fqdnParts);
+        return $localSymbol;
     }
 
     public function setDoRename(bool $doRename): void
