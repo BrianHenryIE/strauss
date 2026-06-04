@@ -329,6 +329,11 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     #[ReturnTypeWillChange]
     public function offsetExists($offset)
     {
+        /**
+         * TODO: use spl array and accept DiscoveredSymol as the array key.
+         *
+         * @see https://stackoverflow.com/questions/4642980/can-i-use-an-instantiated-object-as-an-array-key
+         */
         // Fixing this breaks tests.
         return in_array($offset, $this->toArray(), true);
         // return array_key_exists($offset, $this->toArray());
