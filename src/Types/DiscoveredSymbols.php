@@ -289,7 +289,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      */
     public function toArray(): array
     {
-        unset($this->types[self::NAMESPACE_SYMBOL]['\\']);
+        // TODO: Can this lose data with common array keys? Check does the count of the sum of all arrays still equal the count of what is being returned.
         return array_merge(...array_values($this->types));
     }
 
