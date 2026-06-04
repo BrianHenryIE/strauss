@@ -209,10 +209,10 @@ class FileSystemTest extends TestCase
             ]
         );
 
-        // __DIR__ is tests/Unit/Helpers
-        // dirname(__DIR__) is tests/Unit
-        // So __DIR__ . '/../Helpers' resolves to the same directory
-        $pathWithRelativeSegment = __DIR__ . '/../Helpers';
+        // __DIR__ is tests/Unit/Helpers/Flysystem
+        // dirname(__DIR__) is Unit/Helpers
+        // So __DIR__ . '/../Flysystem' resolves to the same directory
+        $pathWithRelativeSegment = __DIR__ . '/../Flysystem';
 
         // This should return true - the directory exists, just expressed with ../
         $this->assertTrue(
@@ -237,9 +237,9 @@ class FileSystemTest extends TestCase
             ]
         );
 
-        // __DIR__ is tests/Unit/Helpers
-        // Going up twice (../../) then back to Unit/Helpers should resolve to the same path
-        $pathWithMultipleRelativeSegments = __DIR__ . '/../../Unit/Helpers';
+        // __DIR__ is tests/Unit/Helpers/Flysystem
+        // Going up twice (../../) then back to Helpers/Flysystem should resolve to the same path
+        $pathWithMultipleRelativeSegments = __DIR__ . '/../../Helpers/Flysystem';
 
         $this->assertTrue(
             $sut->directoryExists($pathWithMultipleRelativeSegments),
