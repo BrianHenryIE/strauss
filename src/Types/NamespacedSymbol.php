@@ -17,30 +17,35 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 
 class NamespacedSymbol extends DiscoveredSymbol
 {
-
     protected NamespaceSymbol $namespace;
 
     public function __construct(
         string $fqdnSymbol,
         FileBase $sourceFile,
-        ?NamespaceSymbol $namespace = null,
+        NamespaceSymbol $namespace,
         ?ComposerPackage $composerPackage = null
     ) {
-        parent::__construct($fqdnSymbol, $sourceFile, $composerPackage);
+        $this->namespace = $namespace;
 
-        $this->namespace = $namespace ?? new NamespaceSymbol('\\');
+        parent::__construct($fqdnSymbol, $sourceFile, $composerPackage);
     }
 
     public function getOriginalFqdnName(): string
     {
-        return $this->namespace->getOriginalFqdnName() . '\\' . $this->getOriginalLocalName();
+        return $this->namespace->isGlobal()
+             ? $this->getOriginalLocalName()
+             : $this->namespace->getOriginalFqdnName() . '\\' . $this->getOriginalLocalName();
     }
 
     public function getFqdnReplacement(): string
     {
-        return $this->isDoRename()
-            ? trim($this->namespace->getLocalReplacement() . '\\' . $this->getLocalReplacement(), '\\')
-            : $this->fqdnOriginalSymbol;
+        if (!$this->isDoRename()) {
+            return $this->getOriginalFqdnName();
+        }
+
+        return $this->getNamespace()->isGlobal()
+            ? $this->getLocalReplacement()
+            : trim($this->namespace->getLocalReplacement() . '\\' . $this->getOriginalLocalName(), '\\');
     }
 
     public function getNamespace(): NamespaceSymbol
