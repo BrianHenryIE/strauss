@@ -401,7 +401,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     {
         return array_reduce(
             $this->types,
-            fn(int $count, array $item) => $count += count($item),
+            fn(int $carry, array $item) => $carry + count($item),
             0
         );
     }
