@@ -106,7 +106,7 @@ EOD;
 
         $classes = $discoveredSymbols->getDiscoveredClasses();
 
-        $namespaces = $discoveredSymbols->getDiscoveredNamespaces();
+        $namespaces = $discoveredSymbols->getNamespaces();
 
         self::assertNotEmpty($classes, 'Discovered classes should not be empty after scanning google/apiclient');
         self::assertNotEmpty($namespaces, 'Discovered namespaces should not be empty after scanning google/apiclient');

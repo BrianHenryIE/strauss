@@ -216,7 +216,7 @@ class Prefixer
     {
         $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
 
-//        $namespacesChanges = $discoveredSymbols->getDiscoveredNamespaces()->getToRename();
+//        $namespacesChanges = $discoveredSymbols->getNamespaces()->getToRename();
         $constants = $discoveredSymbols->getDiscoveredConstants()->getToRename();
         $functionsToRename = $discoveredSymbols->getDiscoveredFunctions()->getToRename();
 
@@ -350,7 +350,7 @@ class Prefixer
      */
     protected function findPositionsOfUsesOfNamespacedConstants(DiscoveredSymbols $symbols, array $ast): array
     {
-        $namespaceSymbols = $symbols->getDiscoveredNamespaces();
+        $namespaceSymbols = $symbols->getNamespaces();
         $namespaceSymbolsArray = $namespaceSymbols->toArray();
         if (empty($namespaceSymbolsArray)) {
             return [];

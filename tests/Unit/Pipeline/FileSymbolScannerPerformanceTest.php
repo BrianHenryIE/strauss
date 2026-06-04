@@ -64,8 +64,8 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('FirstNs', $result->getDiscoveredNamespaces()->toArray());
-        $this->assertArrayHasKey('SecondNs', $result->getDiscoveredNamespaces()->toArray());
+        $this->assertArrayHasKey('FirstNs', $result->getNamespaces()->toArray());
+        $this->assertArrayHasKey('SecondNs', $result->getNamespaces()->toArray());
         $this->assertContains('FirstGlobal', $result->getDiscoveredClasses()->originalLocalNames());
         $this->assertContains('SecondGlobal', $result->getDiscoveredClasses()->originalLocalNames());
     }
@@ -83,7 +83,7 @@ EOD;
 
         $result = $this->scanContentForSymbols($contents);
 
-        $this->assertCount(0, $result->getDiscoveredNamespaces()->notGlobal());
+        $this->assertCount(0, $result->getNamespaces()->notGlobal());
         $this->assertArrayHasKey('keep_global', $result->getDiscoveredFunctions()->toArray());
     }
 
@@ -100,8 +100,8 @@ EOD;
 
         $result = $this->scanContentForSymbols($contents);
 
-        $this->assertArrayHasKey('Demo', $result->getDiscoveredNamespaces()->toArray());
-        $this->assertArrayNotHasKey('strlen', $result->getDiscoveredNamespaces()->toArray());
+        $this->assertArrayHasKey('Demo', $result->getNamespaces()->toArray());
+        $this->assertArrayNotHasKey('strlen', $result->getNamespaces()->toArray());
         $this->assertArrayHasKey('Demo\\read_length', $result->getDiscoveredFunctions()->toArray());
     }
 
@@ -121,10 +121,10 @@ EOD;
         $result = $this->scanContentForSymbols($contents);
 
         foreach ($expectedNamespaces as $namespace) {
-            $this->assertArrayHasKey($namespace, $result->getDiscoveredNamespaces()->toArray());
+            $this->assertArrayHasKey($namespace, $result->getNamespaces()->toArray());
         }
         foreach ($absentNamespaces as $namespace) {
-            $this->assertArrayNotHasKey($namespace, $result->getDiscoveredNamespaces()->toArray());
+            $this->assertArrayNotHasKey($namespace, $result->getNamespaces()->toArray());
         }
         foreach ($expectedFunctions as $function) {
             $this->assertArrayHasKey($function, $result->getDiscoveredFunctions()->toArray());

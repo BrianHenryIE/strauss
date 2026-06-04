@@ -33,7 +33,7 @@ class ChangeEnumerator
 
     public function determineReplacements(DiscoveredSymbols $discoveredSymbols): void
     {
-        $discoveredNamespaces = $discoveredSymbols->getDiscoveredNamespaces();
+        $discoveredNamespaces = $discoveredSymbols->getNamespaces();
 
         foreach ($discoveredNamespaces as $symbol) {
             if (!$symbol->isDoRename()) {

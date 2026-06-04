@@ -207,29 +207,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return new DiscoveredSymbols($this->types[self::CLASS_SYMBOL]);
     }
 
-    /**
-     * TODO: Order by longest string first. (or instead, record classnames with their namespaces)
-     */
-    public function getDiscoveredNamespaces(): DiscoveredSymbols
-    {
-        $discoveredNamespaceReplacements = [];
-
-        // When running subsequent times, try to discover the original namespaces.
-        // This is naive: it will not work where namespace replacement patterns have been used.
-        foreach ($this->getNamespaces() as $namespaceSymbol) {
-            $discoveredNamespaceReplacements[ $namespaceSymbol->getOriginalSymbol() ] = $namespaceSymbol;
-        }
-
-        uksort($discoveredNamespaceReplacements, function ($a, $b) {
-            return strlen($a) <=> strlen($b);
-        });
-
-        // TODO: should this stay, since it should have a list of relevant files in it.
-        unset($discoveredNamespaceReplacements['\\']);
-
-        return new DiscoveredSymbols($discoveredNamespaceReplacements);
-    }
-
     public function getDiscoveredClasses(?string $classmapPrefix = ''): DiscoveredSymbols
     {
         $discoveredClasses = $this->getGlobalClassesInterfacesTraits()->toArray();

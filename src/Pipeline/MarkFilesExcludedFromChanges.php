@@ -80,7 +80,7 @@ class MarkFilesExcludedFromChanges
     protected function fileMatchesNamespace(FileBase $file): bool
     {
         $matchingNamespaces = array_intersect(
-            $file->getDiscoveredSymbols()->getDiscoveredNamespaces()->toArray(),
+            $file->getDiscoveredSymbols()->getNamespaces()->toArray(),
             $this->config->getExcludeFileFromUpdateNamespaces()
         );
 

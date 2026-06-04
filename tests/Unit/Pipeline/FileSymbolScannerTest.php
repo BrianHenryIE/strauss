@@ -81,8 +81,7 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getDiscoveredNamespaces()->toArray());
-//        $this->assertContains('Prefix\MyNamespace', $sut->getDiscoveredNamespaces());
+        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getNamespaces()->toArray());
 
         $this->assertNotContains('MyClass', $discoveredSymbols->getDiscoveredClasses());
     }
@@ -154,7 +153,7 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getDiscoveredNamespaces()->toArray());
+        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getNamespaces()->toArray());
 
         $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
     }
@@ -194,7 +193,7 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getDiscoveredNamespaces()->toArray());
+        $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getNamespaces()->toArray());
 
         $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
         $this->assertArrayNotHasKey('MyOtherClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
@@ -256,7 +255,7 @@ EOD;
             self::fail('Should not throw an exception');
         }
 
-        $this->assertCount(0, $discoveredSymbols->getDiscoveredNamespaces()->notGlobal());
+        $this->assertCount(0, $discoveredSymbols->getNamespaces()->notGlobal());
     }
 
     /**
@@ -599,7 +598,7 @@ EOD;
         $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
         $result = $sut->findInFiles($files);
 
-        $this->assertCount(0, $result->getDiscoveredNamespaces()->notGlobal());
+        $this->assertCount(0, $result->getNamespaces()->notGlobal());
     }
 
     /**
@@ -633,7 +632,7 @@ EOD;
         $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
         $result = $sut->findInFiles($files);
 
-        $this->assertCount(0, $result->getDiscoveredNamespaces()->notGlobal());
+        $this->assertCount(0, $result->getNamespaces()->notGlobal());
     }
 
     /**
@@ -671,9 +670,7 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('BrianHenryIE\PdfHelpers', $result->getDiscoveredNamespaces()->toArray());
-//        $this->assertContains('BrianHenryIE\Prefix\PdfHelpers', $fileScanner->getDiscoveredNamespaces());
-//        $this->assertNotContains('BrianHenryIE\Prefix\BrianHenryIE\PdfHelpers', $fileScanner->getDiscoveredNamespaces());
+        $this->assertArrayHasKey('BrianHenryIE\PdfHelpers', $result->getNamespaces()->toArray());
     }
 
     /**
@@ -815,7 +812,7 @@ EOD;
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayNotHasKey('WPGraphQL', $result->getDiscoveredNamespaces()->toArray());
+        $this->assertArrayNotHasKey('WPGraphQL', $result->getNamespaces()->toArray());
         $this->assertArrayHasKey('WPGraphQL', $result->getDiscoveredClasses()->toArray());
     }
 
