@@ -11,6 +11,7 @@ use ArrayAccess;
 use ArrayIterator;
 use BadMethodCallException;
 use Countable;
+use Exception;
 use InvalidArgumentException;
 use IteratorAggregate;
 use ReturnTypeWillChange;
@@ -129,7 +130,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
                 $found
             );
             // E.g. an interface and class have the same name.
-            throw new \Exception('multiple symbols with the same name: ' . implode(', ', $names));
+            throw new Exception('multiple symbols with the same name: ' . implode(', ', $names));
         }
 
         return $this->getClass($fqdnName)
@@ -324,21 +325,27 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param DiscoveredSymbol $offset
+     * @param int|string $offset
      *
      * @return bool
      */
     #[ReturnTypeWillChange]
     public function offsetExists($offset)
     {
-        /**
-         * TODO: use spl array and accept DiscoveredSymbol as the array key.
-         *
-         * @see https://stackoverflow.com/questions/4642980/can-i-use-an-instantiated-object-as-an-array-key
-         */
-        // Fixing this breaks tests.
-        return in_array($offset, $this->toArray(), true);
-        // return array_key_exists($offset, $this->toArray());
+        $found = [];
+        foreach ($this->types as $type => $symbols) {
+            if (isset($symbols[$offset])) {
+                $found[] = $type;
+            }
+        }
+        switch (count($found)) {
+            case 0:
+                return false;
+            case 1:
+                return true;
+            default:
+                throw new Exception("Symbol $offset found as: " . implode(', ', $found) . ", unable to return with confidence.");
+        }
     }
 
     /**
@@ -349,6 +356,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     #[ReturnTypeWillChange]
     public function offsetGet($offset)
     {
+        // This will throw an exception if there are duplicates.
+        $this->offsetExists($offset);
         return $this->toArray()[$offset] ?? null;
     }
 
