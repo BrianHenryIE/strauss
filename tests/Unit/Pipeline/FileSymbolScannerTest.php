@@ -1036,4 +1036,49 @@ EOD;
 
         $this->assertEmpty($result->getDiscoveredClasses()->toArray());
     }
+
+    /**
+     * It was finding an empty constant.
+     * `thecodingmachine/safe/generated/8.4/misc.php`
+     *
+     * @covers ::findInFiles
+     */
+    public function test_no_constant(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace Safe;
+
+use Safe\Exceptions\MiscException;
+
+function define(string $constant_name, $value, bool $case_insensitive = false): void
+{
+    error_clear_last();
+    $safeResult = \define($constant_name, $value, $case_insensitive);
+    if ($safeResult === false) {
+        throw MiscException::createFromPhpError();
+    }
+}
+
+EOD;
+
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
+        $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+        $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
+
+        $file = $this->getFile();
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $result = $sut->findInFiles($discoveredFiles);
+
+        $this->assertCount(0, $result->getConstants());
+    }
 }

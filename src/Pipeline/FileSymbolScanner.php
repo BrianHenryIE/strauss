@@ -229,6 +229,9 @@ class FileSymbolScanner
             /** @var PHPConst[] $phpConstants */
             $phpConstants = $phpCode->getConstants();
             foreach ($phpConstants as $constantName => $constant) {
+                if (empty(trim($constantName, '\\'))) {
+                    continue;
+                }
                 $constantSymbol = $this->discoveredSymbols->getConst($constantName);
                 if (is_null($constantSymbol)) {
                     $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceSymbol);
