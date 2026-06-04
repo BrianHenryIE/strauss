@@ -164,6 +164,10 @@ class FileSymbolScanner
 
             $this->logger->info("Scanning file:::" . $relativeFilePath);
             $this->find(
+                /**
+                 * "one unreadable file cancels scanning of all remaining files with no per-file error handling."
+                 * I think this is desirable, since we just ran the file list a moment ago, if something is unreadable, that's a show stopper.
+                 */
                 $this->filesystem->read($file->getSourcePath()),
                 $file,
                 $file instanceof FileWithDependency ? $file->getDependency() : null
