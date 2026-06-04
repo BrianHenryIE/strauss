@@ -77,7 +77,7 @@ class Psr0
                         continue;
                     }
 
-                    // It doesn't matter here whether we are using actual namespaces or underscored classnames, the target directoru still changes.
+                    // It doesn't matter here whether we are using actual namespaces or underscored classnames, the target directory still changes.
 
                     $originalNamespaceString    = $this->filesystem->normalizePath(
                         $packageRelativeNamespacePath . '/' . $namespaceSymbol->getOriginalFqdnName()
