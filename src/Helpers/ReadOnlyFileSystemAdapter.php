@@ -284,19 +284,16 @@ class ReadOnlyFileSystemAdapter implements FilesystemAdapter, FlysystemAdapterBa
     {
         $path = $this->pathNormalizer->normalizePath($path);
 
-        $filesize = 0;
-
-        if ($this->inMemoryFiles->fileExists($path)) {
-            $filesize = $this->inMemoryFiles->fileSize($path);
-        } elseif ($this->delegateFilesystemAdapter->fileExists($path)) {
-            $filesize = $this->delegateFilesystemAdapter->fileSize($path);
+        switch (true) {
+            case ($this->deletedFiles->fileExists($path)):
+                return $this->deletedFiles->fileSize($path);
+            case ($this->inMemoryFiles->fileExists($path)):
+                return $this->inMemoryFiles->fileSize($path);
+            case ($this->delegateFilesystemAdapter->fileExists($path)):
+                return  $this->delegateFilesystemAdapter->fileSize($path);
+            default:
+                throw UnableToReadFile::fromLocation($path);
         }
-
-        if ($filesize instanceof FileAttributes) {
-            return $filesize;
-        }
-
-        return new FileAttributes($path, $filesize);
     }
 
     /**
