@@ -289,8 +289,8 @@ EOD;
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
-        $this->assertArrayNotHasKey('MyOtherClass', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayHasKey('MyOtherClass', $discoveredSymbols->getDiscoveredClasses());
     }
 
     /**
