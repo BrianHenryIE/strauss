@@ -408,6 +408,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     public function notGlobal(): self
     {
+        $all = [];
         /**
          * @var string $type
          * @var array<string, DiscoveredSymbol> $types
@@ -417,16 +418,12 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
              * @var string $index
              * @var DiscoveredSymbol $symbol
              */
-            foreach ($types as $index => $symbol) {
-                if ($symbol->isGlobal()) {
-                    /**
-                     * TODO: figure this out eventually, it's not important.
-                     * @phpstan-ignore assign.propertyType
-                     */
-                    unset($this->types[$type][$index]);
+            foreach ($types as $symbol) {
+                if (!$symbol->isGlobal()) {
+                    $all[] = $symbol;
                 }
             }
         }
-        return $this;
+        return new self($all);
     }
 }
