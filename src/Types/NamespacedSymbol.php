@@ -37,12 +37,14 @@ class NamespacedSymbol extends DiscoveredSymbol
              : $this->namespace->getOriginalFqdnName() . '\\' . $this->getOriginalLocalName();
     }
 
-    public function getFqdnReplacement(): string
+    /**
+     * Defaults to the original until otherwise set.
+     */
+    public function getReplacementFqdnName(): string
     {
         if (!$this->isDoRename()) {
-            return $this->getOriginalFqdnName();
+            return $this->fqdnOriginalSymbol;
         }
-
         return $this->getNamespace()->isGlobal()
             ? $this->getLocalReplacement()
             : trim($this->namespace->getLocalReplacement() . '\\' . $this->getOriginalLocalName(), '\\');
@@ -56,20 +58,6 @@ class NamespacedSymbol extends DiscoveredSymbol
     public function getNamespaceName(): string
     {
         return $this->namespace->getOriginalFqdnName();
-    }
-
-    /**
-     * Defaults to the original until otherwise set.
-     */
-    public function getReplacementFqdnName(): string
-    {
-        if (!$this->isDoRename()) {
-            return $this->fqdnOriginalSymbol;
-        }
-        if (!$this->namespace->isGlobal()) {
-            return $this->namespace->getReplacementFqdnName() . '\\' . ($this->localReplacement ?? $this->localOriginalSymbol);
-        }
-        return  $this->localReplacement ?? $this->localOriginalSymbol;
     }
 
     public function isDoRename(): bool

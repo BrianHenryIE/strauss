@@ -769,7 +769,7 @@ class Prefixer
             }
         } elseif ($symbol instanceof NamespacedSymbol) {
             $originalSymbolString = $symbol->getOriginalFqdnName();
-            $replacementSymbolString = $symbol->getFqdnReplacement();
+            $replacementSymbolString = $symbol->getReplacementFqdnName();
             $alsoSearchForStaticProperty = true;
         } else {
             throw new Exception('I dont think we can reach here');
@@ -1059,7 +1059,7 @@ class Prefixer
                 $positions[] = [
                     'start'       => $func->name->getStartFilePos(),
                     'end'         => $func->name->getEndFilePos() + 1,
-                    'replacement' => $functionSymbol->getFqdnReplacement(),
+                    'replacement' => $functionSymbol->getReplacementFqdnName(),
                 ];
             }
         }
@@ -1075,7 +1075,7 @@ class Prefixer
             $functionSymbol = $discoveredSymbols->getFunction($call->name->toString());
             if ($functionSymbol) {
                 if (str_contains($call->name->toString(), '\\')) {
-                    $replacement = '\\' . $functionSymbol->getFqdnReplacement();
+                    $replacement = '\\' . $functionSymbol->getReplacementFqdnName();
                 } else {
                     $replacement = $functionSymbol->getLocalReplacement();
                 }
@@ -1108,7 +1108,7 @@ class Prefixer
                 $positions[] = [
                     'start'       => $call->args[0]->value->getStartFilePos() + 1, // do not change quotes
                     'end'         => $call->args[0]->value->getEndFilePos(),
-                    'replacement' => $discoveredSymbols->getFunction($call->args[0]->value->value)->getFqdnReplacement(),
+                    'replacement' => $discoveredSymbols->getFunction($call->args[0]->value->value)->getReplacementFqdnName(),
                 ];
             }
         }
