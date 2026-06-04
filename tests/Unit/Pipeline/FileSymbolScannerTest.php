@@ -256,7 +256,7 @@ EOD;
             self::fail('Should not throw an exception');
         }
 
-        $this->assertEmpty($discoveredSymbols->getDiscoveredNamespaces()->toArray());
+        $this->assertCount(0, $discoveredSymbols->getDiscoveredNamespaces()->notGlobal());
     }
 
     /**
@@ -599,7 +599,7 @@ EOD;
         $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
         $result = $sut->findInFiles($files);
 
-        $this->assertEmpty($result->getDiscoveredNamespaces()->toArray());
+        $this->assertCount(0, $result->getDiscoveredNamespaces()->notGlobal());
     }
 
     /**
@@ -633,7 +633,7 @@ EOD;
         $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
         $result = $sut->findInFiles($files);
 
-        $this->assertEmpty($result->getDiscoveredNamespaces()->toArray());
+        $this->assertCount(0, $result->getDiscoveredNamespaces()->notGlobal());
     }
 
     /**

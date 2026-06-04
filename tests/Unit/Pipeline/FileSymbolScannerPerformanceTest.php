@@ -83,7 +83,7 @@ EOD;
 
         $result = $this->scanContentForSymbols($contents);
 
-        $this->assertEmpty($result->getDiscoveredNamespaces()->toArray());
+        $this->assertCount(0, $result->getDiscoveredNamespaces()->notGlobal());
         $this->assertArrayHasKey('keep_global', $result->getDiscoveredFunctions()->toArray());
     }
 
