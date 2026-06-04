@@ -4682,8 +4682,10 @@ EOD;
 
     public function tests_autoload_generator_classloader_null_character(): void
     {
-
-        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+        $config->allows('isTargetDirectoryVendor')->andReturnFalse();
+        $config->allows('getConstantsPrefix')->andReturn('BHTEST_');
+        $config->expects('getNamespacePrefix')->andReturn('BH\\Test\\');
 
         $file = new File(
             'vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
