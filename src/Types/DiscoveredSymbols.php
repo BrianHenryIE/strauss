@@ -48,9 +48,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      */
     public function __construct(array $symbols = [])
     {
-        if (empty($symbols)) {
-            $this->types[self::NAMESPACE_SYMBOL]['\\'] = NamespaceSymbol::global();
-        }
         foreach ($symbols as $symbol) {
             $this->add($symbol);
         }

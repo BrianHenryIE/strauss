@@ -28,7 +28,7 @@ class NamespacedSymbol extends DiscoveredSymbol
     ) {
         parent::__construct($fqdnSymbol, $sourceFile, $composerPackage);
 
-        $this->namespace = $namespace ?? NamespaceSymbol::global();
+        $this->namespace = $namespace ?? new NamespaceSymbol('\\');
     }
 
     public function getOriginalFqdnName(): string
