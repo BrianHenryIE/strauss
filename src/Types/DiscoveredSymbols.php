@@ -252,39 +252,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return $this->getConstants();
     }
 
-    /**
-     * Constant names that should be prefixed (symbol has isDoRename()).
-     */
-    public function getDiscoveredConstantChanges(?string $constantsPrefix = ''): DiscoveredSymbols
-    {
-        /** @var ConstantSymbol[] $constantsToRename */
-        $constantsToRename = array_filter(
-            $this->getConstants()->toArray(),
-            fn(DiscoveredSymbol $symbol): bool => ($symbol instanceof ConstantSymbol) && $symbol->isDoRename()
-        );
-        return new DiscoveredSymbols(
-            array_filter(
-                $constantsToRename,
-                function (ConstantSymbol $replacement) use ($constantsPrefix) {
-                    return empty($constantsPrefix) || ! str_starts_with($replacement->getLocalReplacement(), $constantsPrefix);
-                }
-            )
-        );
-    }
-
     public function getDiscoveredFunctions(): DiscoveredSymbols
     {
         return new DiscoveredSymbols($this->types[self::FUNCTION_SYMBOL]);
-    }
-
-    public function getDiscoveredFunctionChanges(): DiscoveredSymbols
-    {
-        return new DiscoveredSymbols(
-            array_filter(
-                $this->getDiscoveredFunctions()->toArray(),
-                fn(DiscoveredSymbol $discoveredFunction) => ($discoveredFunction instanceof FunctionSymbol) && $discoveredFunction->isDoRename()
-            )
-        );
     }
 
     public function getDiscoveredTraits(): DiscoveredSymbols
@@ -295,20 +265,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     public function getDiscoveredInterfaces(): DiscoveredSymbols
     {
         return new DiscoveredSymbols($this->types[self::INTERFACE_SYMBOL]);
-    }
-
-    /**
-     * Get all discovered symbols that are classes, interfaces, or traits, i.e. only those that are autoloadable.
-     */
-    public function getClassmapSymbols(): DiscoveredSymbols
-    {
-        return new DiscoveredSymbols(
-            array_merge(
-                $this->getGlobalClassesInterfacesTraits()->toArray(),
-                $this->getDiscoveredInterfaces()->toArray(),
-                $this->getDiscoveredTraits()->toArray(),
-            )
-        );
     }
 
     public function getToRename(): DiscoveredSymbols
