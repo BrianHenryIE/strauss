@@ -189,7 +189,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             $realpath = realpath($absoluteFilesystemPath);
             if ($realpath === false) {
 //                return $this->getSymlinkInPath(dirname($absoluteFilesystemPath));
-                throw new \Exception('symlink error');
+                throw new RuntimeException('symlink error');
             }
             $this->recordSymlink($absoluteFilesystemPath, $realpath);
             return $absoluteFilesystemPath;
@@ -250,16 +250,12 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $this->logger->notice('Deleting symlink at ' . $fullPath . ' (points to ' . realpath($fullPath) . ')');
 
         if ($this->isWindowsOS()) {
-            rmdir($fullPath);
+            $success = rmdir($fullPath);
         } else {
-            unlink($fullPath);
+            $success = unlink($fullPath);
         }
 
-        $success = !method_exists($this, 'directoryExists')
-            ? !$this->fileExists($path)
-            : !$this->fileExists($path) && !$this->directoryExists($path);
-
-        return $success;
+        return $success && (false === realpath($fullPath));
     }
 
     /**
@@ -298,7 +294,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        $symlinkDetails = $this->getSymlinkDetails($symlink);
+        $symlinkDetails = $this->getSymlinkDetails($this->pathPrefixer->stripPrefix($symlink));
 
         switch ($this->linkHandling) {
             case LocalFilesystemAdapter::SKIP_LINKS:
@@ -329,13 +325,16 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     {
         $path = $this->normalizer->normalizePath($path);
 
-        $symlinkDetails = $this->getSymlinkDetails($path);
-        $isSymlinked = !empty($symlinkDetails);
 
-        if (!$isSymlinked) {
+        $absoluteFilesystemPath = $this->pathPrefixer->prefixPath($path);
+        $symlink = $this->getSymlinkInPath($absoluteFilesystemPath);
+
+        if (!$symlink) {
             parent::writeStream($path, $contents, $config);
             return;
         }
+
+        $symlinkDetails = $this->getSymlinkDetails($symlink);
 
         switch ($this->linkHandling) {
             case LocalFilesystemAdapter::SKIP_LINKS:
@@ -420,7 +419,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
                     $didRemove = $this->removeSymlink($path);
 
                     if (!$didRemove) {
-                        UnableToDeleteFile::atLocation($path, 'symlink target: ' . $symlinkDetails->getSymlinkTargetRealpathAbsoluteFilesystemPath());
+                        throw UnableToDeleteFile::atLocation($path, 'symlink target: ' . $symlinkDetails->symlinkTargetRealpathAbsoluteFilesystemPath);
                     }
                     return;
                 } else {
@@ -464,7 +463,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             $didRemove = $this->removeSymlink($path);
 
             if (!$didRemove) {
-                UnableToDeleteFile::atLocation($path, 'symlink');
+                throw UnableToDeleteFile::atLocation($path, 'symlink');
             }
             return;
         }
@@ -529,7 +528,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
                 return;
             case SymlinkProtectFilesystemAdapter::THROW_LINKS:
             default:
-                UnableToCreateDirectory::atLocation($path, 'symlink');
+                throw UnableToCreateDirectory::atLocation($path, 'symlink');
         }
     }
 
@@ -581,19 +580,22 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             }
         }
 
+        // TODO: improve this message.
         $logMessage = '';
         $logContext = [
             'source' => $source,
             'destination' => $destination,
         ];
         if ($isSourceSymlinked) {
+            $logMessage .= 'Source symlinked. ';
             $logContext['sourceSymlinked'] = $sourceSymlinkDetails;
         }
         if ($isDestinationSymlinked) {
+            $logMessage .= 'Destination symlinked.';
             $logContext['destinationSymlinked'] = $destinationSymlinkDetails;
         }
         if ($isSourceSymlinked || $isDestinationSymlinked) {
-            $this->logger->warning($logMessage, $logContext);
+            $this->logger->warning(trim($logMessage), $logContext);
         }
 
         parent::move($source, $destination, $config);
@@ -619,6 +621,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
                     throw SymbolicLinkEncountered::atLocation($source);
                 case SymlinkProtectFilesystemAdapter::WARN_LINKS:
                 case SymlinkProtectFilesystemAdapter::THROW_LINKS:
+                    // We do not throw here because THROW_LINKS only applies for write operations – it allows reading.
                 default:
                     break;
             }
@@ -776,7 +779,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         $iterator = $deep ? $this->parentListDirectoryRecursively($location) : $this->parentListDirectory($location);
 
         foreach ($iterator as $fileInfo) {
-            $symlinkDetails = $this->getSymlinkDetails($path);
+            $symlinkDetails = $this->getSymlinkDetails($fileInfo->getPathname());
             $isSymlinked = !empty($symlinkDetails);
 
             if ($isSymlinked) {
