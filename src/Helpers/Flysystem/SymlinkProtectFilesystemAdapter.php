@@ -49,6 +49,14 @@ use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
+use League\Flysystem\UnableToCopyFile;
+use League\Flysystem\UnableToCreateDirectory;
+use League\Flysystem\UnableToDeleteDirectory;
+use League\Flysystem\UnableToDeleteFile;
+use League\Flysystem\UnableToMoveFile;
+use League\Flysystem\UnableToReadFile;
+use League\Flysystem\UnableToSetVisibility;
+use League\Flysystem\UnableToWriteFile;
 use League\Flysystem\UnixVisibility\VisibilityConverter;
 use League\MimeTypeDetection\MimeTypeDetector;
 use Psr\Log\LoggerAwareTrait;
@@ -257,7 +265,6 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             : !$this->fileExists($path) && !$this->directoryExists($path);
     }
 
-
     /**
      * Check are we running on Windows, whose symlink behaviour differs.
      */
@@ -293,14 +300,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        $this->logger->warning(
-            'File is/is under a symlinked path.',
-            [
-                'symlink' => $symlink,
-                'method' => __METHOD__,
-                'args' =>func_get_args()
-            ]
-        );
+        throw UnableToWriteFile::atLocation($path, 'symlink');
     }
 
     /**
@@ -322,14 +322,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        $this->logger->warning(
-            'File is/is under a symlinked path.',
-            [
-                'symlink' => $symlink,
-                'method' => __METHOD__,
-                'args' =>func_get_args()
-            ]
-        );
+        throw UnableToWriteFile::atLocation($path, 'symlink');
     }
 
     public function setVisibility(string $path, string $visibility): void
@@ -348,14 +341,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        $this->logger->warning(
-            'File is/is under a symlinked path.',
-            [
-                'symlink' => $symlink,
-                'method' => __METHOD__,
-                'args' =>func_get_args()
-            ]
-        );
+        throw UnableToSetVisibility::atLocation($path, 'symlink');
     }
 
     public function delete(string $path): void
@@ -391,14 +377,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        $this->logger->error(
-            'File is under a symlinked path.',
-            [
-                'symlink' => $symlink,
-                'method' => __METHOD__,
-                'args' =>func_get_args()
-            ]
-        );
+        UnableToDeleteFile::atLocation($path, 'symlink');
     }
 
     public function deleteDirectory(string $path): void
@@ -434,14 +413,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        $this->logger->error(
-            'Directory is under a symlinked path.',
-            [
-                'symlink' => $symlinkPath,
-                'method' => __METHOD__,
-                'args' =>func_get_args()
-            ]
-        );
+        UnableToDeleteDirectory::atLocation($path, 'symlink');
     }
 
     public function createDirectory(string $path, Config $config): void
@@ -460,14 +432,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        $this->logger->warning(
-            'Attempted to create directory under a symlinked path.',
-            [
-                'symlink' => $symlink,
-                'method' => __METHOD__,
-                'args' =>func_get_args()
-            ]
-        );
+        UnableToCreateDirectory::atLocation($path, 'symlink');
     }
 
     public function move(string $source, string $destination, Config $config): void
@@ -488,17 +453,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        $this->logger->warning(
-            'Attempted to move file/directory under a symlinked path.',
-            [
-                'source' => $source,
-                'sourceSymlink' => $sourceSymlink,
-                'destination' => $destination,
-                'destinationSymlink' => $destinationSymlink,
-                'method' => __METHOD__,
-                'args' =>func_get_args()
-            ]
-        );
+        throw UnableToMoveFile::fromLocationTo($source, $destination);
     }
 
     public function copy(string $source, string $destination, Config $config): void
@@ -518,14 +473,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        $this->logger->warning(
-            'Attempted to move file/directory under a symlinked path.',
-            [
-                'symlink' => $symlink,
-                'method' => __METHOD__,
-                'args' => func_get_args()
-            ]
-        );
+        throw UnableToCopyFile::fromLocationTo($source, $destination);
     }
 
     public function fileExists(string $path): bool
