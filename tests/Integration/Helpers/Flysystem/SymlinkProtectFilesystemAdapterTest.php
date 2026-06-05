@@ -6,13 +6,17 @@
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use League\Flysystem\UnableToDeleteDirectory;
+use League\Flysystem\UnableToDeleteFile;
+use League\Flysystem\UnableToWriteFile;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter
  */
 class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
 {
-    protected FileSystem $filesystem;
+    protected FileSystem $filesystemThrow;
+    protected FileSystem $filesystemWarn;
 
     public function setUp(): void
     {
@@ -25,15 +29,35 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
         // aka /fakedir/file.txt
         symlink($this->testsWorkingDir . '/realdir', $this->testsWorkingDir . '/fakedir');
 
-        $sut = new SymlinkProtectFilesystemAdapter(
+        $sutThrow = new SymlinkProtectFilesystemAdapter(
             FileSystem::getFsRoot($this->testsWorkingDir),
             null,
             null,
-            $this->getTestLogger()
+            $this->getTestLogger(),
+            null,
+            LOCK_EX,
+            SymlinkProtectFilesystemAdapter::THROW_LINKS,
         );
 
-        $this->filesystem = new FileSystem(
-            $sut,
+        $sutWarn = new SymlinkProtectFilesystemAdapter(
+            FileSystem::getFsRoot($this->testsWorkingDir),
+            null,
+            null,
+            $this->getTestLogger(),
+            null,
+            LOCK_EX,
+            SymlinkProtectFilesystemAdapter::WARN_LINKS,
+        );
+
+        $this->filesystemThrow = new FileSystem(
+            $sutThrow,
+            [],
+            FileSystem::makePathNormalizer($this->testsWorkingDir),
+            null,
+            $this->testsWorkingDir,
+        );
+        $this->filesystemWarn = new FileSystem(
+            $sutWarn,
             [],
             FileSystem::makePathNormalizer($this->testsWorkingDir),
             null,
@@ -58,7 +82,7 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
      */
     public function test_delete_symlinked_directory(): void
     {
-        $this->filesystem->deleteDirectory($this->testsWorkingDir . '/fakedir');
+        $this->filesystemWarn->deleteDirectory($this->testsWorkingDir . '/fakedir');
 
         $this->assertTrue($this->getTestLogger()->hasNoticeRecords());
 
@@ -67,53 +91,65 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
 
     /**
      * When deleting a directory inside a symlinked directory
-     * An error should be logged
+     * An UnableToDeleteDirectory exception should be thrown
      * And the symlink should not be deleted
      */
     public function test_delete_directory_in_symlinked_directory(): void
     {
-        $this->expectErrorLogs();
+        $this->expectException(UnableToDeleteDirectory::class);
 
-        $this->filesystem->deleteDirectory($this->testsWorkingDir . '/fakedir/subdir');
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
-
-        $this->assertDirectoryExists($this->testsWorkingDir . '/fakedir');
+        $this->filesystemThrow->deleteDirectory($this->testsWorkingDir . '/fakedir/subdir');
     }
 
     /**
      * When deleting a file inside a symlinked directory
-     * An error should be logged
+     * An UnableToDeleteFile exception should be thrown
      * And the target file should not be deleted
-     * And the symlink should not be deleted
      */
     public function test_delete_file_in_symlinked_directory(): void
     {
-        $this->expectErrorLogs();
+        $this->expectException(UnableToDeleteFile::class);
 
-        $this->filesystem->delete($this->testsWorkingDir . '/fakedir/file.txt');
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
-
-        $this->assertFileExists($this->testsWorkingDir . '/realdir/file.txt');
-        $this->assertFileExists($this->testsWorkingDir . '/fakedir/file.txt');
-        $this->assertDirectoryExists($this->testsWorkingDir . '/realdir');
+        $this->filesystemThrow->delete($this->testsWorkingDir . '/fakedir/file.txt');
     }
 
     /**
      * When writing a file inside a symlinked directory
-     * A warning should be logged
+     * An UnableToWriteFile exception should be thrown
      * And the target file should not be written to
      */
     public function test_write_file_in_symlinked_directory(): void
     {
-        $this->expectWarningLogs();
+        $this->expectException(UnableToWriteFile::class);
 
-        $this->filesystem->write($this->testsWorkingDir . '/fakedir/file2.txt', 'test');
+        $this->filesystemThrow->write($this->testsWorkingDir . '/fakedir/file2.txt', 'test');
+    }
 
-        $this->assertTrue($this->getTestLogger()->hasWarningRecords());
+    /**
+     * A sibling directory whose name starts with a symlink's name should not be treated as inside the symlink.
+     * E.g. symlink "lib" should not block writes to "library".
+     *
+     * Regression test for false-positive in str_starts_with() prefix check.
+     */
+    public function test_sibling_directory_not_treated_as_inside_symlink(): void
+    {
+        // Set up: "lib" is a symlink, "library" is a real sibling directory.
+        mkdir($this->testsWorkingDir . '/reallib');
+        symlink($this->testsWorkingDir . '/reallib', $this->testsWorkingDir . '/lib');
+        mkdir($this->testsWorkingDir . '/library');
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . '/realdir/file2.txt');
-        $this->assertFileDoesNotExist($this->testsWorkingDir . '/fakedir/file2.txt');
+        // Trigger symlink detection so "lib" is recorded in symlinkRealPaths cache.
+        try {
+            $this->filesystemThrow->write($this->testsWorkingDir . '/lib/blocked.txt', 'blocked');
+            $this->fail('Expected UnableToWriteFile for symlinked path');
+        } catch (UnableToWriteFile $e) {
+            // expected
+        }
+
+        // Writing to sibling "library" must not be blocked by the "lib" symlink record.
+        $this->filesystemThrow->write($this->testsWorkingDir . '/library/allowed.txt', 'allowed');
+
+        $this->assertFileExists($this->testsWorkingDir . '/library/allowed.txt');
+        $this->assertFileDoesNotExist($this->testsWorkingDir . '/reallib/blocked.txt');
     }
 }
