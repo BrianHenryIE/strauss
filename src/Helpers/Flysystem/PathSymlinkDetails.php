@@ -1,6 +1,6 @@
 <?php
 /**
- * Immutable POJO with some convenience functions
+ * POJO with some convenience functions.
  */
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
@@ -9,12 +9,30 @@ namespace BrianHenryIE\Strauss\Helpers\Flysystem;
  */
 class PathSymlinkDetails
 {
+    /**
+     * The path that was queried.
+     */
+    public string $flysystemPath;
 
-    protected string $flysystemPath;
-    protected string $absoluteFilesystemPath;
-    protected string $targetAbsoluteFilesystemPath;
-    protected string $symlinkAbsoluteFilesystemPath;
-    protected string $symlinkTargetRealpathAbsoluteFilesystemPath;
+    /**
+     * The path-prefixed absolute path on the filesystem.
+     */
+    public string $absoluteFilesystemPath;
+
+    /**
+     * The `realpath()` for the queried path.
+     */
+    public string $targetAbsoluteFilesystemPath;
+
+    /**
+     * The symlink, potentially a parent directory, which is the root of the virtual file/directory.
+     */
+    public string $symlinkAbsoluteFilesystemPath;
+
+    /**
+     * The symlink's target.
+     */
+    public string $symlinkTargetRealpathAbsoluteFilesystemPath;
 
     public function __construct(
         string $flysystemPath,
@@ -28,54 +46,6 @@ class PathSymlinkDetails
         $this->targetAbsoluteFilesystemPath = $targetAbsoluteFilesystemPath;
         $this->symlinkAbsoluteFilesystemPath = $symlinkAbsoluteFilesystemPath;
         $this->symlinkTargetRealpathAbsoluteFilesystemPath = $symlinkTargetRealpathAbsoluteFilesystemPath;
-    }
-
-    /**
-     * The path that was queried.
-     */
-    public function getFlysystemPath(): string
-    {
-        return $this->flysystemPath;
-    }
-
-    /**
-     * The path-prefixed absolute path on the filesystem.
-     */
-    public function getAbsoluteFilesystemPath(): string
-    {
-        return $this->absoluteFilesystemPath;
-    }
-
-    /**
-     * The `realpath()` for the queried path.
-     */
-    public function getTargetAbsoluteFilesystemPath(): string
-    {
-        return $this->targetAbsoluteFilesystemPath;
-    }
-
-    /**
-     * The symlink, potentially a parent directory, which is the root of the virtual file/directory.
-     */
-    public function getSymlinkAbsoluteFilesystemPath(): string
-    {
-        return $this->symlinkAbsoluteFilesystemPath;
-    }
-
-    /**
-     * The symlink's target.
-     */
-    public function getSymlinkTargetRealpathAbsoluteFilesystemPath(): string
-    {
-        return $this->symlinkTargetRealpathAbsoluteFilesystemPath;
-    }
-
-    /**
-     * @return PathSymlinkDetailsArray
-     */
-    public function toArray(): array
-    {
-        return get_object_vars($this);
     }
 
     /**
