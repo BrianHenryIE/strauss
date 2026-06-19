@@ -45,7 +45,7 @@ jobs:
             core.setOutput('tag', tagName);
 
       - name: Git checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.resolve_release_tag.outputs.tag }}
 
