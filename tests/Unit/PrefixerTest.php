@@ -906,6 +906,83 @@ EOD;
         self::assertStringNotContainsString('PREFIX_FILTER_VALIDATE_BOOLEAN', $result);
     }
 
+    public function testReplaceConstantsWithLeadingCommentBeforePhpTag(): void
+    {
+        $contents = <<<'EOD'
+/*******************************************************************************
+ * License header
+ ******************************************************************************/
+
+<?php
+
+define('MY_CONSTANT', 'value');
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config->method('getConstantsPrefix')->willReturn('PREFIX_');
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add(new ConstantSymbol('MY_CONSTANT', $file));
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString("define('PREFIX_MY_CONSTANT', 'value');", $result);
+        self::assertStringNotContainsString("<?php\n<?php", $result);
+    }
+
+    public function testReplaceConstantFallbackDoesNotCorruptPrefixSupersetConstant(): void
+    {
+        $contents = 'FILTER_VALIDATE_BOOLEAN; FILTER_VALIDATE_BOOL;';
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $method = new \ReflectionMethod(Prefixer::class, 'replaceConstant');
+        $method->setAccessible(true);
+        $result = $method->invoke(
+            $replacer,
+            $contents,
+            'FILTER_VALIDATE_BOOL',
+            'PREFIX_FILTER_VALIDATE_BOOL'
+        );
+
+        self::assertSame(
+            'FILTER_VALIDATE_BOOLEAN; PREFIX_FILTER_VALIDATE_BOOL;',
+            $result
+        );
+    }
+
+    public function testReplaceConstantPrefixesFullyQualifiedGlobalConstant(): void
+    {
+        $contents = <<<'EOD'
+<?php
+define('MY_CONSTANT', 1);
+$value = \MY_CONSTANT;
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config->method('getConstantsPrefix')->willReturn('PREFIX_');
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add(new ConstantSymbol('MY_CONSTANT', $file));
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString("define('PREFIX_MY_CONSTANT', 1);", $result);
+        self::assertStringContainsString('$value = \\PREFIX_MY_CONSTANT;', $result);
+        self::assertStringNotContainsString('\\MY_CONSTANT', $result);
+    }
+
     public function testStaticFunctionCallOfNamespacedClassIsPrefixed(): void
     {
 

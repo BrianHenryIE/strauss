@@ -503,7 +503,7 @@ class Prefixer
             return $contents;
         }
 
-        $needsPhpTag = !preg_match('/^\s*<\?php/', ltrim($contents));
+        $needsPhpTag = false === strpos($contents, '<?php');
         $parseContents = $needsPhpTag ? "<?php\n" . $contents : $contents;
 
         $nodeFinder = new NodeFinder();
@@ -513,7 +513,11 @@ class Prefixer
         } catch (\PhpParser\Error $e) {
             $this->logger->warning("Skipping ::replaceConstant() AST replacement due to parse error: " . $e->getMessage());
 
-            return str_replace($originalConstant, $replacementConstant, $contents);
+            return preg_replace(
+                '/\b' . preg_quote($originalConstant, '/') . '\b/',
+                $replacementConstant,
+                $contents
+            );
         }
 
         if (null === $ast) {
@@ -527,13 +531,15 @@ class Prefixer
         foreach ($constFetches as $fetch) {
             if (
                 $fetch->name instanceof Name
-                && !$fetch->name->isFullyQualified()
+                && (!$fetch->name->isFullyQualified() || 1 === count($fetch->name->getParts()))
                 && $fetch->name->toString() === $originalConstant
             ) {
                 $positions[] = [
                     'start' => $fetch->name->getStartFilePos(),
                     'end' => $fetch->name->getEndFilePos() + 1,
-                    'replacement' => $replacementConstant,
+                    'replacement' => $fetch->name->isFullyQualified()
+                        ? '\\' . $replacementConstant
+                        : $replacementConstant,
                 ];
             }
         }
