@@ -869,6 +869,43 @@ EOD;
         self::assertStringContainsString("define('BHMP_ANOTHER_CONSTANT', '1.83');", $result);
     }
 
+    /**
+     * Prefixing a shorter constant name must not corrupt longer constant names that share a prefix.
+     */
+    public function testReplaceConstantDoesNotCorruptPrefixSupersetConstant(): void
+    {
+        $contents = <<<'EOD'
+<?php
+if (!defined('FILTER_VALIDATE_BOOL') && defined('FILTER_VALIDATE_BOOLEAN')) {
+    define('FILTER_VALIDATE_BOOL', \FILTER_VALIDATE_BOOLEAN);
+}
+use const FILTER_VALIDATE_BOOL;
+
+$enabled = filter_var($input, FILTER_VALIDATE_BOOL);
+$other = filter_var($input, FILTER_VALIDATE_BOOLEAN);
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config->method('getConstantsPrefix')->willReturn('PREFIX_');
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = Mockery::mock(File::class);
+        $file->shouldReceive('addDiscoveredSymbol');
+        $file->shouldReceive('getSourcePath');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $constant = new ConstantSymbol('FILTER_VALIDATE_BOOL', $file);
+        $discoveredSymbols->add($constant);
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents);
+
+        self::assertStringContainsString("define('PREFIX_FILTER_VALIDATE_BOOL', \\FILTER_VALIDATE_BOOLEAN);", $result);
+        self::assertStringContainsString('use const PREFIX_FILTER_VALIDATE_BOOL;', $result);
+        self::assertStringContainsString('filter_var($input, PREFIX_FILTER_VALIDATE_BOOL)', $result);
+        self::assertStringContainsString('filter_var($input, FILTER_VALIDATE_BOOLEAN)', $result);
+        self::assertStringNotContainsString('PREFIX_FILTER_VALIDATE_BOOLEAN', $result);
+    }
+
     public function testStaticFunctionCallOfNamespacedClassIsPrefixed(): void
     {
 

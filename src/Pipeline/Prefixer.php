@@ -21,7 +21,9 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\Use_;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
@@ -486,6 +488,7 @@ class Prefixer
      */
     protected function replaceConstants(string $contents, array $originalConstants, string $prefix): string
     {
+        usort($originalConstants, fn($a, $b) => strlen($b) <=> strlen($a));
 
         foreach ($originalConstants as $constant) {
             $contents = $this->replaceConstant($contents, $constant, $prefix . $constant);
@@ -496,7 +499,129 @@ class Prefixer
 
     protected function replaceConstant(string $contents, string $originalConstant, string $replacementConstant): string
     {
-        return str_replace($originalConstant, $replacementConstant, $contents);
+        if ($originalConstant === $replacementConstant) {
+            return $contents;
+        }
+
+        $needsPhpTag = !preg_match('/^\s*<\?php/', ltrim($contents));
+        $parseContents = $needsPhpTag ? "<?php\n" . $contents : $contents;
+
+        $nodeFinder = new NodeFinder();
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        try {
+            $ast = $parser->parse($parseContents);
+        } catch (\PhpParser\Error $e) {
+            $this->logger->warning("Skipping ::replaceConstant() AST replacement due to parse error: " . $e->getMessage());
+
+            return str_replace($originalConstant, $replacementConstant, $contents);
+        }
+
+        if (null === $ast) {
+            return $contents;
+        }
+
+        $positions = [];
+
+        /** @var ConstFetch[] $constFetches */
+        $constFetches = $nodeFinder->findInstanceOf($ast, ConstFetch::class);
+        foreach ($constFetches as $fetch) {
+            if (
+                $fetch->name instanceof Name
+                && !$fetch->name->isFullyQualified()
+                && $fetch->name->toString() === $originalConstant
+            ) {
+                $positions[] = [
+                    'start' => $fetch->name->getStartFilePos(),
+                    'end' => $fetch->name->getEndFilePos() + 1,
+                    'replacement' => $replacementConstant,
+                ];
+            }
+        }
+
+        /** @var Use_[] $uses */
+        $uses = $nodeFinder->findInstanceOf($ast, Use_::class);
+        foreach ($uses as $use) {
+            if (Use_::TYPE_CONSTANT !== $use->type) {
+                continue;
+            }
+
+            foreach ($use->uses as $useItem) {
+                if ($useItem->name->toString() !== $originalConstant) {
+                    continue;
+                }
+
+                $positions[] = [
+                    'start' => $useItem->name->getStartFilePos(),
+                    'end' => $useItem->name->getEndFilePos() + 1,
+                    'replacement' => $replacementConstant,
+                ];
+            }
+        }
+
+        /** @var Const_[] $constDeclarations */
+        $constDeclarations = $nodeFinder->findInstanceOf($ast, Const_::class);
+        foreach ($constDeclarations as $constDeclaration) {
+            foreach ($constDeclaration->consts as $const) {
+                if ($const->name->toString() === $originalConstant) {
+                    $positions[] = [
+                        'start' => $const->name->getStartFilePos(),
+                        'end' => $const->name->getEndFilePos() + 1,
+                        'replacement' => $replacementConstant,
+                    ];
+                }
+            }
+        }
+
+        $functionsUsingConstantName = [
+            'define',
+            'defined',
+        ];
+
+        /** @var FuncCall[] $funcCalls */
+        $funcCalls = $nodeFinder->findInstanceOf($ast, FuncCall::class);
+        foreach ($funcCalls as $call) {
+            if (
+                !$call->name instanceof Name
+                || !in_array($call->name->toString(), $functionsUsingConstantName, true)
+                || !isset($call->args[0])
+                || !$call->args[0] instanceof Arg
+                || !$call->args[0]->value instanceof String_
+            ) {
+                continue;
+            }
+
+            $stringNode = $call->args[0]->value;
+            if ($stringNode->value !== $originalConstant) {
+                continue;
+            }
+
+            $positions[] = [
+                'start' => $stringNode->getStartFilePos() + 1,
+                'end' => $stringNode->getEndFilePos(),
+                'replacement' => $replacementConstant,
+            ];
+        }
+
+        if (empty($positions)) {
+            return $contents;
+        }
+
+        usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
+
+        foreach ($positions as $pos) {
+            $parseContents = substr_replace(
+                $parseContents,
+                $pos['replacement'],
+                $pos['start'],
+                $pos['end'] - $pos['start']
+            );
+        }
+
+        if ($needsPhpTag) {
+            return substr($parseContents, strlen("<?php\n"));
+        }
+
+        return $parseContents;
     }
 
     protected function replaceFunctions(string $contents, FunctionSymbol $functionSymbol): string
