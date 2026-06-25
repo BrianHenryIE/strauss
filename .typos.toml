@@ -11,6 +11,12 @@ extend-ignore-re = [
     "ComposerAutoloaderInit[0-9a-f]+",
 ]
 
+[type.release-workflow]
+extend-glob = ["release.yml"]
+[type.release-workflow.extend-words]
+# GPG fingerprint record field (gpg --with-colons output)
+"fpr" = "fpr"
+
 [default.extend-identifiers]
 # Typos
 "Github" = "GitHub"
