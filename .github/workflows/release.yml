@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Resolve release tag
         id: resolve_release_tag
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -45,7 +45,7 @@ jobs:
             core.setOutput('tag', tagName);
 
       - name: Git checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.resolve_release_tag.outputs.tag }}
 

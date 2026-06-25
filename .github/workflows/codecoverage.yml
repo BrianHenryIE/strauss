@@ -50,19 +50,19 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:v2, phive
+          tools: composer:v2
           extensions: fileinfo, gd
           coverage: ${{ matrix.php == env.COVERAGE_PHP_VERSION && 'xdebug' || 'none' }}
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           # Value already defaults to true, but `persist-credentials` is required to push new commits to the repository.
           persist-credentials: true
 
       - name: Checkout GitHub Pages branch for code coverage report
         if: ${{ matrix.php == env.COVERAGE_PHP_VERSION }}
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: gh-pages
           path: gh-pages
@@ -70,39 +70,11 @@ jobs:
       # TODO: merge master into this branch and run tests against what master will become, not just the isolated branch.
       # NB: how would that affect tj-actions/changed-files?
 
-      - name: Install Phive tools
-        if: ${{ github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.author_association == 'OWNER' }} # secrets are not available to users without write access
-        # Keys taken from `phive status`
-        # `phive status | grep -oE '[A-F0-9]{16}' | tr '\n' ',' | sed 's/,$//'`
-        # sed -i "s|^\s*phive install --trust-gpg-keys .*| phive install --trust-gpg-keys $(phive status | grep -oE '[A-F0-9]{16}' | paste -sd,)|" .github/workflows/phpstan.yml
-        run: |
-          phive install --trust-gpg-keys A9DB489A9190DE9B,4AA394086372C20A
-          phive status
-        env:
-          # We need to be authenticated to skip GitHub rate limits
-          # Generate a key at: https://github.com/settings/tokens, "classic"
-          # Approve the 2FA notification on your phone (I presume/hope)
-          # "Note" what it is for, I use ~PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 etc.
-          # Choose "Expiration", "Custom"
-          # For "Select Date", the Expiration date can only be set ~364 days ahead
-          # No scopes are needed, scroll down and click "Generate Token"
-          # Copied the displayed key
-          # Visit https://github.com/your/repo/settings/secrets/actions
-          # Click "New repository secret" and fill it in
-          # Do the same at https://github.com/your/repo/settings/secrets/dependabot
-          #
-          # Fix for rate limited GitHub API requests. See https://github.com/phar-io/phive/issues/384#issuecomment-1337064012
-          GITHUB_AUTH_TOKEN: ${{ secrets.PHIVE_GH_RATE_LIMIT_BRIANHENRY_EXPIRES_DEC182026 }}
-
-      - name: Install Phive tools (unauthenticated)
-        # secrets are not available to users without write access
-        if: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' }}
-        run: |
-          phive install --trust-gpg-keys A9DB489A9190DE9B,4AA394086372C20A
-          phive status
-
       - name: Install PHP dependencies
         run: composer update --prefer-dist --verbose
+
+      - name: Install php-codecoverage-markdown for report
+        run: composer require --dev brianhenryie/php-codecoverage-markdown
 
       - name: Print composer.lock (for debug)
         run: cat composer.lock
