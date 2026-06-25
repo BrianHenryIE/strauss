@@ -73,6 +73,9 @@ jobs:
       - name: Install PHP dependencies
         run: composer update --prefer-dist --verbose
 
+      - name: Install php-codecoverage-markdown for report
+        run: composer require --dev brianhenryie/php-codecoverage-markdown
+
       - name: Print composer.lock (for debug)
         run: cat composer.lock
 
