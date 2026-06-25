@@ -56,6 +56,9 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
         $usedTraitImplementation = new stdClass();
         $usedTraitImplementation->calledDirectoryExists = false;
 
+        set_error_handler(function () {
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         $sut = new class($usedTraitImplementation) extends \League\Flysystem\InMemory\InMemoryFilesystemAdapter
                            implements FlysystemAdapterBackCompatTraitInterface
         {
@@ -67,7 +70,7 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
             /**
              * @param stdClass $usedTraitImplementation
              */
-            public function __construct(stdClass $usedTraitImplementation, string $defaultVisibility = Visibility::PUBLIC, MimeTypeDetector $mimeTypeDetector = null)
+            public function __construct(stdClass $usedTraitImplementation, string $defaultVisibility = Visibility::PUBLIC, ?MimeTypeDetector $mimeTypeDetector = null)
             {
                 parent::__construct($defaultVisibility, $mimeTypeDetector);
 
@@ -80,6 +83,8 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
                 return $path;
             }
         };
+
+        restore_error_handler();
 
         $sut->directoryExists('foo');
 

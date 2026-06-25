@@ -55,9 +55,14 @@ class IntegrationTestCase extends TestCase
 
         $this->envBeforeTest = $_ENV;
 
+        set_error_handler(function () {
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         $this->testsWorkingDir = FileSystem::normalizeDirSeparator(
             sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'))
         );
+
+        restore_error_handler();
 
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
@@ -317,6 +322,9 @@ class IntegrationTestCase extends TestCase
     protected function getFileSystem(): Filesystem
     {
         if (! isset($this->localFileSystem)) {
+            set_error_handler(function () {
+            }, E_DEPRECATED | E_USER_DEPRECATED);
+
             $localFsLocation = FileSystem::getFsRoot($this->testsWorkingDir);
             $pathNormalizer  = Filesystem::makePathNormalizer($this->testsWorkingDir);
             $pathPrefixer    = new PathPrefixer($localFsLocation, DIRECTORY_SEPARATOR);
@@ -335,6 +343,8 @@ class IntegrationTestCase extends TestCase
                 $localFsLocation,
                 $this->testsWorkingDir
             );
+
+            restore_error_handler();
         }
         return $this->localFileSystem;
     }
