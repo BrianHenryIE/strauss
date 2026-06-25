@@ -122,6 +122,13 @@ abstract class AbstractRenamespacerCommand extends Command
             DIRECTORY_SEPARATOR
         );
 
+        /**
+         * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
+         * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
+         */
+        set_error_handler(function () {
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         // Extends `LocalFilesystemAdapter`.
         $localFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
             $localFsLocation,
@@ -140,6 +147,8 @@ abstract class AbstractRenamespacerCommand extends Command
             $localFsLocation,
             $workingDir,
         );
+
+        restore_error_handler();
 
         $this->workingDir = $this->filesystem->normalizePath($workingDir);
 
@@ -166,6 +175,13 @@ abstract class AbstractRenamespacerCommand extends Command
         }
 
         if ($this->config->isDryRun()) {
+            /**
+             * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
+             * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
+             */
+            set_error_handler(function () {
+            }, E_DEPRECATED | E_USER_DEPRECATED);
+
             $this->filesystem->setAdapter(
                 new ReadOnlyFileSystemAdapter(
                     $this->filesystem->getAdapter(),
@@ -173,6 +189,8 @@ abstract class AbstractRenamespacerCommand extends Command
                 )
             );
             $this->filesystem->setLocalFsLocation('mem://');
+
+            restore_error_handler();
 
             /** @var FilesystemRegistry $registry */
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);

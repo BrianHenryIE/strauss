@@ -21,6 +21,11 @@ class StraussIssue188Test extends IntegrationTestCase
         $composerJsonString = <<<'EOD'
 {
   "name": "issue/188",
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
+  },
   "require": {
     "guzzlehttp/guzzle": "7.9"
   },

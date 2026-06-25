@@ -200,29 +200,37 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         return $this->filesystem;
     }
-//
-//    protected function getNewFileSystem(string $workingDir = '/'): FileSystem
+
+//    protected function getNewFileSystem(): Filesystem
 //    {
-//        $testsWorkingDir = $this->testsWorkingDir ?? getcwd();
-//        $normalizer = FileSystem::makePathNormalizer('/');
+//        set_error_handler(function () {
+//        }, E_DEPRECATED | E_USER_DEPRECATED);
 //
+//        try {
+//            $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
 //
-//        $localFilesystemAdapter = new LocalFilesystemAdapter(
-//            FileSystem::getFsRoot($testsWorkingDir),
-//            null,
-//            LOCK_EX,
-//            LocalFilesystemAdapter::SKIP_LINKS
-//        );
+//            $localFilesystemAdapter = new LocalFilesystemAdapter(
+//                FileSystem::getFsRoot($workingDir),
+//                null,
+//                LOCK_EX,
+//                LocalFilesystemAdapter::SKIP_LINKS
+//            );
 //
-//        return new FileSystem(
-//            $localFilesystemAdapter,
-//            [
-//                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-//            ],
-//            $normalizer,
-//            null,
-//            $testsWorkingDir
-//        );
+//            $filesystem = new FileSystem(
+//                new FlysystemFileSystem(
+//                    $localFilesystemAdapter,
+//                    [
+//                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+//                    ],
+//                    Filesystem::makePathNormalizer($workingDir)
+//                ),
+//                $workingDir
+//            );
+//        } finally {
+//            restore_error_handler();
+//        }
+//
+//        return $filesystem;
 //    }
 
     /**
@@ -239,6 +247,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
+        set_error_handler(function () {
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         $normalizer = FileSystem::makePathNormalizer('mem://');
 
         $inMemoryFilesystem = new InMemoryFilesystemAdapter();
@@ -274,6 +285,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
         }
 
         $registry->register('mem', $filesystem);
+
+        restore_error_handler();
 
         return $filesystem;
     }

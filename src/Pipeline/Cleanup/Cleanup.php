@@ -134,7 +134,14 @@ class Cleanup
         );
         /** @var ComposerJsonArray $projectComposerJsonArray */
         $projectComposerJsonArray = $projectComposerJson->read();
-        $composer = (new Factory())->createComposer(new NullIO(), $projectComposerJsonArray);
+        if (!isset($projectComposerJsonArray['require'])) {
+            $projectComposerJsonArray['require'] = [];
+        }
+        // Composer only autoloads packages reachable from root requirements.
+        foreach ($this->config->getExcludePackagesFromCopy() as $packageName) {
+            $projectComposerJsonArray['require'][$packageName] ??= '*';
+        }
+        $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
         $config = $composer->getConfig();

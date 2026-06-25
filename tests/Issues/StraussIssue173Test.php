@@ -40,6 +40,9 @@ class StraussIssue173Test extends IntegrationTestCase
     "allow-plugins": {
       "composer/installers": true
     },
+    "audit": {
+      "block-insecure": false
+    },
     "classmap-authoritative": true,
     "optimize-autoloader": true,
     "sort-packages": true,

@@ -33,7 +33,7 @@ jobs:
     name: PHP tests ${{ matrix.php }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
@@ -55,18 +55,14 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --verbose
 
-      - name: Run previously workflows' failed tests first
-        uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
-        with:
-          phpunit-command: vendor/bin/phpunit
-          max-runs: 1
-        env:
-          RENAMESPACER_LOG: "debug"
+      - name: Print installed dependencies
+        run: composer show
 
       - name: Run previously workflows' failed tests first
         uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
         with:
           phpunit-command: vendor/bin/phpunit
+          max-runs: 1
         env:
           RENAMESPACER_LOG: "debug"
 
@@ -100,7 +96,7 @@ jobs:
     name: Spelling
     steps:
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Search for misspellings
         uses: crate-ci/typos@master
@@ -110,7 +106,7 @@ jobs:
     name: Lint project files
     steps:
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
