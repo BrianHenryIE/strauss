@@ -503,7 +503,7 @@ class Prefixer
             return $contents;
         }
 
-        $needsPhpTag = false === strpos($contents, '<?php');
+        $needsPhpTag = false === stripos($contents, '<?php');
         $parseContents = $needsPhpTag ? "<?php\n" . $contents : $contents;
 
         $nodeFinder = new NodeFinder();
