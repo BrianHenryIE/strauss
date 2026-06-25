@@ -32,6 +32,14 @@ trait FlysystemBackCompatTrait
             }
         }
 
+        /**
+         * Flysystem is ignoring symlinks.
+         * A better implementation of this fix is done in another branch which will be merged in #278.
+         */
+        if (is_dir("/$location")) {
+            return true;
+        }
+
         return false;
     }
 
