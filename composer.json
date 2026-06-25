@@ -21,7 +21,7 @@
         "brianhenryie/simple-php-code-parser": "^0.15.3",
         "composer/class-map-generator": "^1.6.0",
         "composer/composer": "^2.10",
-        "elazar/flystream": "^0.5.0|^1",
+        "elazar/flystream": "^0.6.0 || ^1.4.0",
         "json-mapper/json-mapper": "^2.0.0",
         "league/flysystem": "^2.1|^3.0",
         "league/flysystem-memory": "*",
