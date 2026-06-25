@@ -11,6 +11,7 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
@@ -222,6 +223,16 @@ class Prefixer
         $constants = $discoveredSymbols->getDiscoveredConstants()->getToRename();
         $functionsToRename = $discoveredSymbols->getDiscoveredFunctions()->getToRename();
 
+        $openingString = '';
+
+        // If the document contains PHP but does not begin with the PHP opener.
+        if (stristr($contents, "<?") && stripos($contents, "?>") !== 0) {
+            $parts = explode('<?', $contents, 2);
+            $openingString = $parts[0];
+            $contents = '<?'.$parts[1];
+            unset($parts);
+        }
+
         // Prepend <?php if absent so php-parser treats the content as PHP code rather
         // than inline HTML. The offset is subtracted from all collected positions below.
         $phpOpenerLen = 0;
@@ -248,14 +259,14 @@ class Prefixer
             $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: " . $e->getMessage(), [
                 'filePath' => $fileAbsolutePath ?? 'file',
             ]);
-            return $contents;
+            return $openingString.$contents;
         }
 
         if (is_null($ast)) {
             $this->logger->warning("AST parse failed for {filePath}, returning.", [
                 'filePath' => $fileAbsolutePath ?? 'file',
             ]);
-            return $contents;
+            return $openingString.$contents;
         }
 
         $positions = array_merge(
@@ -342,7 +353,7 @@ class Prefixer
             $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
         }
 
-        return $contents;
+        return $openingString.$contents;
     }
 
     /**
@@ -1025,7 +1036,7 @@ class Prefixer
     protected function replaceConstants(string $contents, DiscoveredSymbols $originalConstants, string $prefix): string
     {
         $originalConstantsArray = $originalConstants->toArray();
-        usort($originalConstantsArray, fn($a, $b) => strlen($b) <=> strlen($a));
+        usort($originalConstantsArray, fn(ConstantSymbol $a, ConstantSymbol $b) => strlen($b->getOriginalLocalName()) <=> strlen($a->getOriginalLocalName()));
 
         foreach ($originalConstantsArray as $constant) {
 //            $contents = $this->replaceConstant($contents, $constant, $prefix . $constant);
@@ -1075,8 +1086,7 @@ class Prefixer
         /** @var ConstFetch[] $constFetches */
         $constFetches = $nodeFinder->findInstanceOf($ast, ConstFetch::class);
         foreach ($constFetches as $fetch) {
-            if (
-                $fetch->name instanceof Name
+            if ($fetch->name instanceof Name
                 && (!$fetch->name->isFullyQualified() || 1 === count($fetch->name->getParts()))
                 && $fetch->name->toString() === $originalConstant
             ) {
@@ -1132,8 +1142,7 @@ class Prefixer
         /** @var FuncCall[] $funcCalls */
         $funcCalls = $nodeFinder->findInstanceOf($ast, FuncCall::class);
         foreach ($funcCalls as $call) {
-            if (
-                !$call->name instanceof Name
+            if (!$call->name instanceof Name
                 || !in_array($call->name->toString(), $functionsUsingConstantName, true)
                 || !isset($call->args[0])
                 || !$call->args[0] instanceof Arg

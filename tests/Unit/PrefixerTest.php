@@ -1536,12 +1536,16 @@ EOD;
         $file = Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
         $file->shouldReceive('getSourcePath');
+        $file->shouldReceive('getVendorRelativePath');
+        $file->shouldReceive('getTargetAbsolutePath');
 
         $discoveredSymbols = new DiscoveredSymbols();
-        $constant = new ConstantSymbol('FILTER_VALIDATE_BOOL', $file);
-        $discoveredSymbols->add($constant);
+        $globalNamespace = new NamespaceSymbol('\\', $file);
+        $constantSymbol = new ConstantSymbol('FILTER_VALIDATE_BOOL', $file, $globalNamespace);
+        $constantSymbol->setLocalReplacement('PREFIX_FILTER_VALIDATE_BOOL');
+        $discoveredSymbols->add($constantSymbol);
 
-        $result = $replacer->replaceInString($discoveredSymbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
 
         self::assertStringContainsString("define('PREFIX_FILTER_VALIDATE_BOOL', \\FILTER_VALIDATE_BOOLEAN);", $result);
         self::assertStringContainsString('use const PREFIX_FILTER_VALIDATE_BOOL;', $result);
@@ -1550,11 +1554,15 @@ EOD;
         self::assertStringNotContainsString('PREFIX_FILTER_VALIDATE_BOOLEAN', $result);
     }
 
+    /**
+     * @covers ::replaceConstants
+     * @covers ::replaceConstant
+     */
     public function testReplaceConstantsWithLeadingCommentBeforePhpTag(): void
     {
         $contents = <<<'EOD'
 /*******************************************************************************
- * License header
+ * HTML / License header / text before PHP opening
  ******************************************************************************/
 
 <?php
@@ -1569,11 +1577,16 @@ EOD;
         $file = Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
         $file->shouldReceive('getSourcePath');
+        $file->shouldReceive('getVendorRelativePath');
+        $file->shouldReceive('getTargetAbsolutePath');
 
+        $globalNamespace = new NamespaceSymbol('\\', $file);
         $discoveredSymbols = new DiscoveredSymbols();
-        $discoveredSymbols->add(new ConstantSymbol('MY_CONSTANT', $file));
+        $constantSymbol = new ConstantSymbol('MY_CONSTANT', $file, $globalNamespace);
+        $constantSymbol->setLocalReplacement('PREFIX_MY_CONSTANT');
+        $discoveredSymbols->add($constantSymbol);
 
-        $result = $replacer->replaceInString($discoveredSymbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
 
         self::assertStringContainsString("define('PREFIX_MY_CONSTANT', 'value');", $result);
         self::assertStringNotContainsString("<?php\n<?php", $result);
@@ -1616,11 +1629,16 @@ EOD;
         $file = Mockery::mock(File::class);
         $file->shouldReceive('addDiscoveredSymbol');
         $file->shouldReceive('getSourcePath');
+        $file->shouldReceive('getVendorRelativePath');
+        $file->shouldReceive('getTargetAbsolutePath');
 
+        $globalNamespace = new NamespaceSymbol('\\', $file);
         $discoveredSymbols = new DiscoveredSymbols();
-        $discoveredSymbols->add(new ConstantSymbol('MY_CONSTANT', $file));
+        $constantSymbol = new ConstantSymbol('MY_CONSTANT', $file, $globalNamespace);
+        $constantSymbol->setLocalReplacement('PREFIX_MY_CONSTANT');
+        $discoveredSymbols->add($constantSymbol);
 
-        $result = $replacer->replaceInString($discoveredSymbols, $contents);
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
 
         self::assertStringContainsString("define('PREFIX_MY_CONSTANT', 1);", $result);
         self::assertStringContainsString('$value = \\PREFIX_MY_CONSTANT;', $result);
