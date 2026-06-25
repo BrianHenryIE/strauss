@@ -96,6 +96,13 @@ abstract class AbstractRenamespacerCommand extends Command
         }
 
         if ($this->config->isDryRun()) {
+            /**
+             * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
+             * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
+             */
+            set_error_handler(function () {
+            }, E_DEPRECATED | E_USER_DEPRECATED);
+
             $this->filesystem =
                 new FileSystem(
                     new ReadOnlyFileSystem(
@@ -104,6 +111,8 @@ abstract class AbstractRenamespacerCommand extends Command
                     ),
                     $this->workingDir
                 );
+
+            restore_error_handler();
 
             /** @var FilesystemRegistry $registry */
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
@@ -135,6 +144,13 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->workingDir = getcwd() . '';
 
         if (!isset($this->filesystem)) {
+            /**
+             * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
+             * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
+             */
+            set_error_handler(function () {
+            }, E_DEPRECATED | E_USER_DEPRECATED);
+
             $localFilesystemAdapter = new LocalFilesystemAdapter(
                 FileSystem::getFsRoot($this->workingDir),
                 null,
@@ -152,6 +168,8 @@ abstract class AbstractRenamespacerCommand extends Command
                 ),
                 $this->workingDir
             );
+
+            restore_error_handler();
         }
 
         if (method_exists($this, 'setLogger')) {

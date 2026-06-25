@@ -943,7 +943,7 @@ EOD;
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
         $method = new \ReflectionMethod(Prefixer::class, 'replaceConstant');
-        $method->setAccessible(true);
+        PHP_VERSION_ID < 80100 && $method->setAccessible(true);
         $result = $method->invoke(
             $replacer,
             $contents,

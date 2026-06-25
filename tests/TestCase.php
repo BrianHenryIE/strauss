@@ -86,6 +86,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewFileSystem(): Filesystem
     {
+        set_error_handler(function () {
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
 
         $localFilesystemAdapter = new LocalFilesystemAdapter(
@@ -95,7 +98,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             LocalFilesystemAdapter::SKIP_LINKS
         );
 
-        return new FileSystem(
+	    $filesystem = new FileSystem(
             new FlysystemFileSystem(
                 $localFilesystemAdapter,
                 [
@@ -105,6 +108,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
             ),
             $workingDir
         );
+
+        restore_error_handler();
+
+		return $filesystem;
     }
 
     /**
@@ -121,6 +128,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
+        set_error_handler(function () {
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         $inMemoryFilesystem = new InMemoryFilesystemAdapter();
 
         $normalizer = FileSystem::makePathNormalizer('/');
@@ -153,6 +163,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
         } catch (\Exception $e) {
             $registry->register('mem', $filesystem);
         }
+
+        restore_error_handler();
 
         return $filesystem;
     }
