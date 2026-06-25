@@ -58,6 +58,9 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --verbose
 
+      - name: Print installed dependencies
+        run: composer show
+
       - name: Run previously workflows' failed tests first
         uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
         with:
