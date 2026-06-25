@@ -151,25 +151,27 @@ abstract class AbstractRenamespacerCommand extends Command
             set_error_handler(function () {
             }, E_DEPRECATED | E_USER_DEPRECATED);
 
-            $localFilesystemAdapter = new LocalFilesystemAdapter(
-                FileSystem::getFsRoot($this->workingDir),
-                null,
-                LOCK_EX,
-                LocalFilesystemAdapter::SKIP_LINKS
-            );
+            try {
+                $localFilesystemAdapter = new LocalFilesystemAdapter(
+                    FileSystem::getFsRoot($this->workingDir),
+                    null,
+                    LOCK_EX,
+                    LocalFilesystemAdapter::SKIP_LINKS
+                );
 
-            $this->filesystem = new FileSystem(
-                new \League\Flysystem\Filesystem(
-                    $localFilesystemAdapter,
-                    [
-                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ],
-                    Filesystem::makePathNormalizer($this->workingDir)
-                ),
-                $this->workingDir
-            );
-
-            restore_error_handler();
+                $this->filesystem = new FileSystem(
+                    new \League\Flysystem\Filesystem(
+                        $localFilesystemAdapter,
+                        [
+                            Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                        ],
+                        Filesystem::makePathNormalizer($this->workingDir)
+                    ),
+                    $this->workingDir
+                );
+            } finally {
+                restore_error_handler();
+            }
         }
 
         if (method_exists($this, 'setLogger')) {
