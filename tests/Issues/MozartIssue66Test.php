@@ -38,7 +38,7 @@ class MozartIssue66Test extends IntegrationTestCase
          *
          * @see https://github.com/PHP-DI/PHP-DI/blob/6.4/src/Compiler/Template.php
          */
-        $this->expectWarningLogs();
+//        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {

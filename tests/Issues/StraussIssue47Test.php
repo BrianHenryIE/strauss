@@ -31,7 +31,8 @@ class StraussIssue47Test extends IntegrationTestCase
          *
          * @see https://gitlab.com/dragon-public/framework/-/blob/1.3.16/resources/views/Fields/Redirect.php?ref_type=tags
          */
-        $this->expectWarningLogs();
+        // Changed in e1cad171441b829e6ac3625b62167885e07032a1.
+        // $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {
@@ -194,7 +195,8 @@ EOD;
          *
          * @see https://gitlab.com/dragon-public/framework/-/blob/1.3.16/resources/views/Fields/MediaImage.php?ref_type=tags
          */
-        $this->expectWarningLogs();
+        // Changed in e1cad171441b829e6ac3625b62167885e07032a1.
+        // $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {
