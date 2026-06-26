@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for /home/runner/work/strauss/strauss/src/Helpers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../_css/bootstrap.min.css?v=9.2.32" rel="stylesheet" type="text/css">
+  <link href="../../_css/nv.d3.min.css?v=9.2.32" rel="stylesheet" type="text/css">
+  <link href="../../_css/style.css?v=9.2.32" rel="stylesheet" type="text/css">
+  <link href="../../_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="../../index.html">/home/runner/work/strauss/strauss</a></li>
+         <li class="breadcrumb-item"><a href="../index.html">src</a></li>
+         <li class="breadcrumb-item"><a href="index.html">Helpers</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Flysystem/PathSymlinkDetails.php.html#10">BrianHenryIE\Strauss\Helpers\Flysystem\PathSymlinkDetails</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#66">BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Log/PadColonColumnsLogProcessor.php.html#18">BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ParserErrorException.php.html#7">BrianHenryIE\Strauss\Helpers\ParserErrorException</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FlysystemReaderBackCompatTrait.php.html#26">BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemReaderBackCompatTrait</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#31">BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter</a></td><td class="text-right">5%</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#11">BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer</a></td><td class="text-right">46%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#24">BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem</a></td><td class="text-right">55%</td></tr>
+       <tr><td><a href="Flysystem/InMemoryFilesystemAdapter.php.html#12">BrianHenryIE\Strauss\Helpers\Flysystem\InMemoryFilesystemAdapter</a></td><td class="text-right">83%</td></tr>
+       <tr><td><a href="Flysystem/FlysystemAdapterBackCompatTrait.php.html#25">BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemAdapterBackCompatTrait</a></td><td class="text-right">88%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#66">BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter</a></td><td class="text-right">15006</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#31">BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter</a></td><td class="text-right">3271</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#24">BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem</a></td><td class="text-right">220</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#11">BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer</a></td><td class="text-right">29</td></tr>
+       <tr><td><a href="Flysystem/FlysystemReaderBackCompatTrait.php.html#26">BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemReaderBackCompatTrait</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Log/PadColonColumnsLogProcessor.php.html#18">BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor</a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/InMemoryFilesystemAdapter.php.html#12">BrianHenryIE\Strauss\Helpers\Flysystem\InMemoryFilesystemAdapter</a></td><td class="text-right">11</td></tr>
+       <tr><td><a href="Flysystem/FlysystemAdapterBackCompatTrait.php.html#25">BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemAdapterBackCompatTrait</a></td><td class="text-right">11</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Flysystem/FileSystem.php.html#124"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::getAdapter">getAdapter</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#231"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::getSymlinks">getSymlinks</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#360"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::setVisibility">setVisibility</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#324"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::writeStream">writeStream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#285"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::write">write</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#274"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::normalizePath">normalizePath</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#266"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::isWindowsOS">isWindowsOS</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#246"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::removeSymlink">removeSymlink</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#221"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::isSymlinked">isSymlinked</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#443"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::deleteDirectory">deleteDirectory</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#201"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::recordSymlink">recordSymlink</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#177"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::getSymlinkInPath">getSymlinkInPath</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#138"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::getSymlinkDetails">getSymlinkDetails</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#116"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#395"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::normalizePath">normalizePath</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#390"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::getNormalizer">getNormalizer</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#393"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::delete">delete</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#497"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::createDirectory">createDirectory</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#135"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::setAdapter">setAdapter</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#769"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::listContents">listContents</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ParserErrorException.php.html#26"><abbr title="BrianHenryIE\Strauss\Helpers\ParserErrorException::getParserErrorHandler">getParserErrorHandler</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ParserErrorException.php.html#9"><abbr title="BrianHenryIE\Strauss\Helpers\ParserErrorException::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Log/PadColonColumnsLogProcessor.php.html#49"><abbr title="BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor::pad">pad</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Log/PadColonColumnsLogProcessor.php.html#27"><abbr title="BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor::__invoke">__invoke</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#836"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::parentListDirectory">parentListDirectory</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#821"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::parentListDirectoryRecursively">parentListDirectoryRecursively</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#745"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::fileSize">fileSize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#535"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::move">move</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#733"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::lastModified">lastModified</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#721"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::mimeType">mimeType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#709"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::visibility">visibility</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#697"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::readStream">readStream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#682"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::read">read</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#667"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::fileExists">fileExists</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#604"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::copy">copy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#359"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::directoryExistsIn">directoryExistsIn</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#340"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::directoryExists">directoryExists</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#319"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::visibility">visibility</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#73"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::write">write</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#161"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::findAllFilesAbsolutePaths">findAllFilesAbsolutePaths</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#282"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::isSymlinked">isSymlinked</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#308"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::isSubDirOf">isSubDirOf</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#321"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::prefixPath">prefixPath</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#377"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::isDirectoryEmpty">isDirectoryEmpty</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#393"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::setLocalFsLocation">setLocalFsLocation</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/InMemoryFilesystemAdapter.php.html#21"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\InMemoryFilesystemAdapter::normalizePath">normalizePath</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#43"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer::stripPrefix">stripPrefix</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#49"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer::stripDirectoryPrefix">stripDirectoryPrefix</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#54"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer::prefixDirectoryPath">prefixDirectoryPath</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/PathSymlinkDetails.php.html#37"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathSymlinkDetails::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/PathSymlinkDetails.php.html#54"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathSymlinkDetails::isSymlink">isSymlink</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#310"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::setVisibility">setVisibility</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#58"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::fileExists">fileExists</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#53"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::getAdapter">getAdapter</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#91"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::writeStream">writeStream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#106"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::rewindStream">rewindStream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#305"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::mimeType">mimeType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#286"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::fileSize">fileSize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#269"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::lastModified">lastModified</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#255"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::getAttributes">getAttributes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#229"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::copy">copy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#217"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::move">move</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#177"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::listContents">listContents</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#165"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::createDirectory">createDirectory</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#153"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::deleteDirectory">deleteDirectory</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#139"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::delete">delete</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#126"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::readStream">readStream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FlysystemReaderBackCompatTrait.php.html#36"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemReaderBackCompatTrait::has">has</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#238"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::getRelativePath">getRelativePath</abbr></a></td><td class="text-right">60%</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#36"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer::prefixPath">prefixPath</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#113"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::read">read</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="Flysystem/FlysystemAdapterBackCompatTrait.php.html#34"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemAdapterBackCompatTrait::directoryExists">directoryExists</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="Flysystem/StripFsRootPathNormalizer.php.html#21"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\StripFsRootPathNormalizer::__construct">__construct</abbr></a></td><td class="text-right">80%</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#23"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer::__construct">__construct</abbr></a></td><td class="text-right">83%</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#197"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::getAttributes">getAttributes</abbr></a></td><td class="text-right">85%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#535"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::move">move</abbr></a></td><td class="text-right">342</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#604"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::copy">copy</abbr></a></td><td class="text-right">210</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#769"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::listContents">listContents</abbr></a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#443"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::deleteDirectory">deleteDirectory</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#393"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::delete">delete</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#497"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::createDirectory">createDirectory</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#360"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::setVisibility">setVisibility</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#324"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::writeStream">writeStream</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#285"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::write">write</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#319"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::visibility">visibility</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#177"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::getSymlinkInPath">getSymlinkInPath</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#286"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::fileSize">fileSize</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#177"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::listContents">listContents</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#138"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::getSymlinkDetails">getSymlinkDetails</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#359"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::directoryExistsIn">directoryExistsIn</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#229"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::copy">copy</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Flysystem/FlysystemReaderBackCompatTrait.php.html#36"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemReaderBackCompatTrait::has">has</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#161"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::findAllFilesAbsolutePaths">findAllFilesAbsolutePaths</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#282"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::isSymlinked">isSymlinked</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#139"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::delete">delete</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#73"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::write">write</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#836"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::parentListDirectory">parentListDirectory</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#377"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::isDirectoryEmpty">isDirectoryEmpty</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#54"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer::prefixDirectoryPath">prefixDirectoryPath</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#58"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::fileExists">fileExists</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#246"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::removeSymlink">removeSymlink</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#91"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::writeStream">writeStream</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#340"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::directoryExists">directoryExists</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#126"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::readStream">readStream</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#106"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::rewindStream">rewindStream</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#255"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::getAttributes">getAttributes</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#238"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::getRelativePath">getRelativePath</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#124"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::getAdapter">getAdapter</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#135"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::setAdapter">setAdapter</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Log/PadColonColumnsLogProcessor.php.html#27"><abbr title="BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor::__invoke">__invoke</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Flysystem/InMemoryFilesystemAdapter.php.html#21"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\InMemoryFilesystemAdapter::normalizePath">normalizePath</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#116"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::__construct">__construct</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#165"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::createDirectory">createDirectory</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Flysystem/SymlinkProtectFilesystemAdapter.php.html#201"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter::recordSymlink">recordSymlink</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#23"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer::__construct">__construct</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="Flysystem/FileSystem.php.html#197"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::getAttributes">getAttributes</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="Flysystem/ReadOnlyFileSystemAdapter.php.html#113"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter::read">read</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="Flysystem/FlysystemAdapterBackCompatTrait.php.html#34"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\FlysystemAdapterBackCompatTrait::directoryExists">directoryExists</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="Flysystem/StripFsRootPathNormalizer.php.html#21"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\StripFsRootPathNormalizer::__construct">__construct</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="Flysystem/PathPrefixer.php.html#36"><abbr title="BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer::prefixPath">prefixPath</abbr></a></td><td class="text-right">2</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 9.2.32</a> using <a href="https://secure.php.net/" target="_top">PHP 7.4.33</a> and <a href="https://phpunit.de/">PHPUnit 9.6.34</a> at Fri Jun 26 2:29:15 UTC 2026.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="../../_js/jquery.min.js?v=9.2.32" type="text/javascript"></script>
+  <script src="../../_js/d3.min.js?v=9.2.32" type="text/javascript"></script>
+  <script src="../../_js/nv.d3.min.js?v=9.2.32" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([5,1,0,0,0,1,1,0,0,2,1,4], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([68,0,0,0,0,0,0,4,0,3,2,20], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[100,0,"<a href=\"Flysystem\/DeletedFilesInMemoryFilesystemAdapter.php.html#8\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\DeletedFilesInMemoryFilesystemAdapter<\/a>"],[55.73770491803278,45,"<a href=\"Flysystem\/FileSystem.php.html#24\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem<\/a>"],[83.33333333333334,11,"<a href=\"Flysystem\/InMemoryFilesystemAdapter.php.html#12\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\InMemoryFilesystemAdapter<\/a>"],[100,0,"<a href=\"Flysystem\/ModifiedFilesInMemoryFilesystemAdapter.php.html#9\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ModifiedFilesInMemoryFilesystemAdapter<\/a>"],[46.666666666666664,11,"<a href=\"Flysystem\/PathPrefixer.php.html#11\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\PathPrefixer<\/a>"],[0,2,"<a href=\"Flysystem\/PathSymlinkDetails.php.html#10\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\PathSymlinkDetails<\/a>"],[5.839416058394161,62,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#31\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter<\/a>"],[94.28571428571428,5,"<a href=\"Flysystem\/StripFsRootPathNormalizer.php.html#9\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\StripFsRootPathNormalizer<\/a>"],[0,122,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#66\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter<\/a>"],[0,3,"<a href=\"Log\/PadColonColumnsLogProcessor.php.html#18\">BrianHenryIE\\Strauss\\Helpers\\Log\\PadColonColumnsLogProcessor<\/a>"],[100,7,"<a href=\"Log\/RelativeFilepathLogProcessor.php.html#15\">BrianHenryIE\\Strauss\\Helpers\\Log\\RelativeFilepathLogProcessor<\/a>"],[100,5,"<a href=\"NamespaceSort.php.html#8\">BrianHenryIE\\Strauss\\Helpers\\NamespaceSort<\/a>"],[0,2,"<a href=\"ParserErrorException.php.html#7\">BrianHenryIE\\Strauss\\Helpers\\ParserErrorException<\/a>"],[88.88888888888889,11,"<a href=\"Flysystem\/FlysystemAdapterBackCompatTrait.php.html#25\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FlysystemAdapterBackCompatTrait<\/a>"],[0,4,"<a href=\"Flysystem\/FlysystemReaderBackCompatTrait.php.html#26\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FlysystemReaderBackCompatTrait<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[100,1,"<a href=\"Flysystem\/FileSystem.php.html#67\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::__construct<\/a>"],[100,2,"<a href=\"Flysystem\/FileSystem.php.html#93\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::getFsRoot<\/a>"],[100,1,"<a href=\"Flysystem\/FileSystem.php.html#102\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::makePathNormalizer<\/a>"],[0,2,"<a href=\"Flysystem\/FileSystem.php.html#124\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::getAdapter<\/a>"],[0,2,"<a href=\"Flysystem\/FileSystem.php.html#135\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::setAdapter<\/a>"],[100,3,"<a href=\"Flysystem\/FileSystem.php.html#148\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::normalizeDirSeparator<\/a>"],[0,4,"<a href=\"Flysystem\/FileSystem.php.html#161\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::findAllFilesAbsolutePaths<\/a>"],[85.71428571428571,4,"<a href=\"Flysystem\/FileSystem.php.html#197\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::getAttributes<\/a>"],[100,3,"<a href=\"Flysystem\/FileSystem.php.html#221\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::exists<\/a>"],[60,5,"<a href=\"Flysystem\/FileSystem.php.html#238\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::getRelativePath<\/a>"],[100,1,"<a href=\"Flysystem\/FileSystem.php.html#264\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::getProjectRelativePath<\/a>"],[0,4,"<a href=\"Flysystem\/FileSystem.php.html#282\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::isSymlinked<\/a>"],[0,1,"<a href=\"Flysystem\/FileSystem.php.html#308\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::isSubDirOf<\/a>"],[100,1,"<a href=\"Flysystem\/FileSystem.php.html#316\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::normalizePath<\/a>"],[0,1,"<a href=\"Flysystem\/FileSystem.php.html#321\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::prefixPath<\/a>"],[100,6,"<a href=\"Flysystem\/FileSystem.php.html#338\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::makeAbsolute<\/a>"],[0,3,"<a href=\"Flysystem\/FileSystem.php.html#377\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::isDirectoryEmpty<\/a>"],[0,1,"<a href=\"Flysystem\/FileSystem.php.html#393\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FileSystem::setLocalFsLocation<\/a>"],[0,2,"<a href=\"Flysystem\/InMemoryFilesystemAdapter.php.html#21\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\InMemoryFilesystemAdapter::normalizePath<\/a>"],[100,2,"<a href=\"Flysystem\/InMemoryFilesystemAdapter.php.html#29\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\InMemoryFilesystemAdapter::visibility<\/a>"],[100,2,"<a href=\"Flysystem\/InMemoryFilesystemAdapter.php.html#45\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\InMemoryFilesystemAdapter::lastModified<\/a>"],[100,1,"<a href=\"Flysystem\/InMemoryFilesystemAdapter.php.html#55\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\InMemoryFilesystemAdapter::copy<\/a>"],[100,2,"<a href=\"Flysystem\/InMemoryFilesystemAdapter.php.html#65\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\InMemoryFilesystemAdapter::write<\/a>"],[100,2,"<a href=\"Flysystem\/InMemoryFilesystemAdapter.php.html#75\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\InMemoryFilesystemAdapter::createDirectories<\/a>"],[83.33333333333334,4,"<a href=\"Flysystem\/PathPrefixer.php.html#23\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\PathPrefixer::__construct<\/a>"],[66.66666666666666,2,"<a href=\"Flysystem\/PathPrefixer.php.html#36\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\PathPrefixer::prefixPath<\/a>"],[0,1,"<a href=\"Flysystem\/PathPrefixer.php.html#43\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\PathPrefixer::stripPrefix<\/a>"],[0,1,"<a href=\"Flysystem\/PathPrefixer.php.html#49\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\PathPrefixer::stripDirectoryPrefix<\/a>"],[0,3,"<a href=\"Flysystem\/PathPrefixer.php.html#54\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\PathPrefixer::prefixDirectoryPath<\/a>"],[0,1,"<a href=\"Flysystem\/PathSymlinkDetails.php.html#37\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\PathSymlinkDetails::__construct<\/a>"],[0,1,"<a href=\"Flysystem\/PathSymlinkDetails.php.html#54\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\PathSymlinkDetails::isSymlink<\/a>"],[100,1,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#41\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::__construct<\/a>"],[0,1,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#53\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::getAdapter<\/a>"],[0,3,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#58\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::fileExists<\/a>"],[0,3,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#73\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::write<\/a>"],[0,3,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#91\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::writeStream<\/a>"],[0,3,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#106\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::rewindStream<\/a>"],[66.66666666666666,3,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#113\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::read<\/a>"],[0,3,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#126\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::readStream<\/a>"],[0,3,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#139\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::delete<\/a>"],[0,1,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#153\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::deleteDirectory<\/a>"],[0,2,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#165\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::createDirectory<\/a>"],[0,4,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#177\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::listContents<\/a>"],[0,1,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#217\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::move<\/a>"],[0,4,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#229\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::copy<\/a>"],[0,3,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#255\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::getAttributes<\/a>"],[0,1,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#269\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::lastModified<\/a>"],[0,5,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#286\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::fileSize<\/a>"],[0,1,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#305\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::mimeType<\/a>"],[0,1,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#310\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::setVisibility<\/a>"],[0,7,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#319\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::visibility<\/a>"],[0,3,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#340\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::directoryExists<\/a>"],[0,4,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#359\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::directoryExistsIn<\/a>"],[0,1,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#390\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::getNormalizer<\/a>"],[0,1,"<a href=\"Flysystem\/ReadOnlyFileSystemAdapter.php.html#395\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\ReadOnlyFileSystemAdapter::normalizePath<\/a>"],[80,3,"<a href=\"Flysystem\/StripFsRootPathNormalizer.php.html#21\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\StripFsRootPathNormalizer::__construct<\/a>"],[96.66666666666667,2,"<a href=\"Flysystem\/StripFsRootPathNormalizer.php.html#32\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\StripFsRootPathNormalizer::normalizePath<\/a>"],[0,2,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#116\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::__construct<\/a>"],[0,4,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#138\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::getSymlinkDetails<\/a>"],[0,6,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#177\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::getSymlinkInPath<\/a>"],[0,2,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#201\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::recordSymlink<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#221\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::isSymlinked<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#231\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::getSymlinks<\/a>"],[0,3,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#246\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::removeSymlink<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#266\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::isWindowsOS<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#274\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::normalizePath<\/a>"],[0,7,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#285\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::write<\/a>"],[0,7,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#324\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::writeStream<\/a>"],[0,7,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#360\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::setVisibility<\/a>"],[0,9,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#393\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::delete<\/a>"],[0,9,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#443\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::deleteDirectory<\/a>"],[0,7,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#497\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::createDirectory<\/a>"],[0,18,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#535\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::move<\/a>"],[0,14,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#604\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::copy<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#667\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::fileExists<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#682\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::read<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#697\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::readStream<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#709\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::visibility<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#721\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::mimeType<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#733\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::lastModified<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#745\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::fileSize<\/a>"],[0,12,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#769\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::listContents<\/a>"],[0,1,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#821\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::parentListDirectoryRecursively<\/a>"],[0,3,"<a href=\"Flysystem\/SymlinkProtectFilesystemAdapter.php.html#836\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\SymlinkProtectFilesystemAdapter::parentListDirectory<\/a>"],[0,2,"<a href=\"Log\/PadColonColumnsLogProcessor.php.html#27\">BrianHenryIE\\Strauss\\Helpers\\Log\\PadColonColumnsLogProcessor::__invoke<\/a>"],[0,1,"<a href=\"Log\/PadColonColumnsLogProcessor.php.html#49\">BrianHenryIE\\Strauss\\Helpers\\Log\\PadColonColumnsLogProcessor::pad<\/a>"],[100,1,"<a href=\"Log\/RelativeFilepathLogProcessor.php.html#19\">BrianHenryIE\\Strauss\\Helpers\\Log\\RelativeFilepathLogProcessor::__construct<\/a>"],[100,5,"<a href=\"Log\/RelativeFilepathLogProcessor.php.html#30\">BrianHenryIE\\Strauss\\Helpers\\Log\\RelativeFilepathLogProcessor::__invoke<\/a>"],[100,1,"<a href=\"Log\/RelativeFilepathLogProcessor.php.html#45\">BrianHenryIE\\Strauss\\Helpers\\Log\\RelativeFilepathLogProcessor::isAbsolutePath<\/a>"],[100,1,"<a href=\"NamespaceSort.php.html#16\">BrianHenryIE\\Strauss\\Helpers\\NamespaceSort::__construct<\/a>"],[100,2,"<a href=\"NamespaceSort.php.html#21\">BrianHenryIE\\Strauss\\Helpers\\NamespaceSort::__invoke<\/a>"],[100,2,"<a href=\"NamespaceSort.php.html#31\">BrianHenryIE\\Strauss\\Helpers\\NamespaceSort::sort<\/a>"],[0,1,"<a href=\"ParserErrorException.php.html#9\">BrianHenryIE\\Strauss\\Helpers\\ParserErrorException::__construct<\/a>"],[0,1,"<a href=\"ParserErrorException.php.html#26\">BrianHenryIE\\Strauss\\Helpers\\ParserErrorException::getParserErrorHandler<\/a>"],[66.66666666666666,3,"<a href=\"Flysystem\/FlysystemAdapterBackCompatTrait.php.html#34\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FlysystemAdapterBackCompatTrait::directoryExists<\/a>"],[93.33333333333333,8,"<a href=\"Flysystem\/FlysystemAdapterBackCompatTrait.php.html#53\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FlysystemAdapterBackCompatTrait::directoryExistsImplementation<\/a>"],[0,4,"<a href=\"Flysystem\/FlysystemReaderBackCompatTrait.php.html#36\">BrianHenryIE\\Strauss\\Helpers\\Flysystem\\FlysystemReaderBackCompatTrait::has<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>
