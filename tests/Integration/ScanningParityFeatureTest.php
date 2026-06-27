@@ -149,7 +149,11 @@ JSON;
 
         $this->assertContains('MyPrefix_GlobalClass', $this->getClassNames($globalsOutput));
         $this->assertContains('myprefix_global_helper', $this->getFunctionDeclarationNames($globalsOutput));
-        $this->assertContains('MYPREFIX_GLOBAL_CONST', $this->getConstantDeclarationNames($globalsOutput));
+        $this->assertContains(
+            'MYPREFIX_GLOBAL_CONST',
+            $this->getConstantDeclarationNames($globalsOutput),
+            "Actual array: ['" . implode("', '", $this->getConstantDeclarationNames($globalsOutput)) . "']."
+        );
 
         $this->assertSame(['MyPrefix\\LocalScan'], $this->getNamespaces($consumerOutput));
         $this->assertContains('MyPrefix_GlobalClass', $this->getNewClassNames($consumerOutput));
