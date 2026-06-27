@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.28.0 June 2026
+
+* Add: Respect `.gitignore`, `.gitattributes` and exclude `.git` in symlinked packages
+
 ## 0.27.4 June 2026
 
 * Fix: don't delete `installed.json` autoload key for symlinked packages
