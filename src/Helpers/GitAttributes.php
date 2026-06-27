@@ -14,6 +14,7 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use League\Flysystem\FilesystemException;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 
 class GitAttributes
 {
