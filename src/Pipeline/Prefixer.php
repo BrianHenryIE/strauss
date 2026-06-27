@@ -529,8 +529,7 @@ class Prefixer
         /** @var ConstFetch[] $constFetches */
         $constFetches = $nodeFinder->findInstanceOf($ast, ConstFetch::class);
         foreach ($constFetches as $fetch) {
-            if (
-                $fetch->name instanceof Name
+            if ($fetch->name instanceof Name
                 && (!$fetch->name->isFullyQualified() || 1 === count($fetch->name->getParts()))
                 && $fetch->name->toString() === $originalConstant
             ) {
@@ -586,8 +585,7 @@ class Prefixer
         /** @var FuncCall[] $funcCalls */
         $funcCalls = $nodeFinder->findInstanceOf($ast, FuncCall::class);
         foreach ($funcCalls as $call) {
-            if (
-                !$call->name instanceof Name
+            if (!$call->name instanceof Name
                 || !in_array($call->name->toString(), $functionsUsingConstantName, true)
                 || !isset($call->args[0])
                 || !$call->args[0] instanceof Arg
