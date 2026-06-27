@@ -100,7 +100,7 @@ EOD;
          *
          * @see https://gitlab.com/dragon-public/framework/-/blob/1.3.16/resources/views/Fields/MediaImage.php?ref_type=tags
          */
-//        $this->expectWarningLogs();
+        $this->expectWarningLogs();
 
 
         $composerJsonString = <<<'EOD'
