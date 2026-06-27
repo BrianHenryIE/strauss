@@ -209,6 +209,12 @@ class StraussConfig implements
     protected bool $optimizeAutoloader = true;
 
     /**
+     * Should `.git`, `.gitignore`-matched and `.gitattributes export-ignore` files be skipped when
+     * enumerating each package's files (mimicking `git archive` / Composer dist behaviour)?
+     */
+    protected bool $excludeGitFiles = true;
+
+    /**
      * Read any existing Mozart config.
      * Overwrite it with any Strauss config.
      * Provide sensible defaults.
@@ -698,6 +704,22 @@ class StraussConfig implements
     public function setDeleteVendorPackages(bool $deleteVendorPackages): void
     {
         $this->deleteVendorPackages = $deleteVendorPackages;
+    }
+
+    /**
+     * Should exclude `.git` directory and read and follow `.gitignore` and `.gitattributes` files. Mostly relevant for local symlinked packages.
+     */
+    public function getExcludeGitFiles(): bool
+    {
+        return $this->excludeGitFiles;
+    }
+
+    /**
+     * Should Strauss read and respect `.gitignore` and `.gitattributes` files and exclude `.git` directory. Packagist packages have already respected these.
+     */
+    public function setExcludeGitFiles(bool $excludeGitFiles): void
+    {
+        $this->excludeGitFiles = $excludeGitFiles;
     }
 
     /**
