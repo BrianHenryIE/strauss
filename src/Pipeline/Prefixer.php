@@ -1146,11 +1146,11 @@ class Prefixer
         ];
 
         /** @var FuncCall[] $funcCalls */
-        $funcCalls = $nodeFinder->findInstanceOf( $ast, FuncCall::class );
-        foreach ( $funcCalls as $call ) {
-            if ( ! $call->name instanceof Name
-                 || ! in_array( $call->name->toString(), $functionsUsingConstantName, true )
-                 || ! isset( $call->args[0] )
+        $funcCalls = $nodeFinder->findInstanceOf($ast, FuncCall::class);
+        foreach ($funcCalls as $call) {
+            if (! $call->name instanceof Name
+                 || ! in_array($call->name->toString(), $functionsUsingConstantName, true)
+                 || ! isset($call->args[0])
                  || ! $call->args[0] instanceof Arg
                  || ! $call->args[0]->value instanceof String_
             ) {
@@ -1158,7 +1158,7 @@ class Prefixer
             }
 
             $stringNode = $call->args[0]->value;
-            if ( $stringNode->value !== $originalConstant ) {
+            if ($stringNode->value !== $originalConstant) {
                 continue;
             }
 
