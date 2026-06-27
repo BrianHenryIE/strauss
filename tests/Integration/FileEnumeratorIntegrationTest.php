@@ -60,6 +60,7 @@ EOD;
 
         $config = $this->createStub(StraussConfig::class);
         $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
+        $config->method('getExcludeGitFiles')->willReturn(false);
 
         $fileEnumerator = new FileEnumerator(
             $config,
