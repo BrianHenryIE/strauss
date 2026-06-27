@@ -163,7 +163,8 @@ class ComposerPackage
         $vendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
         if (file_exists($vendorAbsoluteDirectoryPath . '/' . $this->packageName)) {
             $this->relativePath = $this->packageName;
-            $this->packageAbsolutePath = $pathNormalizer->normalizePath(realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
+            $checkPackageAbsolutePath = $vendorAbsoluteDirectoryPath . '/' . $this->packageName;
+            $this->packageAbsolutePath = $pathNormalizer->normalizePath(realpath($checkPackageAbsolutePath) ?: $checkPackageAbsolutePath);
         // If the package is symlinked, the path will be outside the working directory.
         } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
             $this->relativePath = $output_array[1];

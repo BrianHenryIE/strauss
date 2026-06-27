@@ -100,7 +100,8 @@ abstract class AbstractRenamespacerCommand extends Command
              * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
              * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
              */
-            set_error_handler(function () {
+            set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+                return true;
             }, E_DEPRECATED | E_USER_DEPRECATED);
 
             $this->filesystem =
@@ -148,7 +149,8 @@ abstract class AbstractRenamespacerCommand extends Command
              * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
              * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
              */
-            set_error_handler(function () {
+            set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+                return true;
             }, E_DEPRECATED | E_USER_DEPRECATED);
 
             try {

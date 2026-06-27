@@ -62,7 +62,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
 
     public static function getFsRoot(?string $path = null): string
     {
-        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?? getcwd(), $output_array)) {
+        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?: getcwd(), $output_array)) {
             return strtoupper($output_array[1]);
         }
         return '/';
@@ -77,8 +77,8 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
             new StripFsRootPathNormalizer(
                 [
                     FileSystem::getFsRoot($workingDir),
-                    Filesystem::getFsRoot(),
-                    Filesystem::normalizeDirSeparator(FileSystem::getFsRoot()),
+                    FileSystem::getFsRoot(),
+                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                     'c:\\',
                     'c:/',
                 ]
@@ -96,7 +96,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      *
      * @param string|false|null $path
      */
-    public static function normalizeDirSeparator($path, $slashTo = '/'): string
+    public static function normalizeDirSeparator($path, string $slashTo = '/'): string
     {
         $slashFrom = $slashTo === '/' ? '\\' : '/';
 
