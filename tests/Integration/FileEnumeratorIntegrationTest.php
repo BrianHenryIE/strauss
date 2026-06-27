@@ -70,6 +70,7 @@ EOD;
         $config->shouldReceive('getProjectAbsolutePath')->andReturn(
             $this->pathNormalizer->normalizePath($this->testsWorkingDir)
         );
+        $config->expects('getExcludeGitFiles')->willReturn(false);
 
         $fileEnumerator = new FileEnumerator(
             $config,

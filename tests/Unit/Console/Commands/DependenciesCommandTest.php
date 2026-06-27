@@ -26,11 +26,11 @@ class DependenciesCommandTest extends TestCase
     ):DependenciesCommand {
 
         return new class(
-                $inputInterfaceMock ?? $this->createMock(InputInterface::class),
-                $outputInterfaceMock ?? $this->createMock(ConsoleOutputInterface::class),
-                $fileSystem ?? $this->getInMemoryFileSystem(),
-                $logger ?? new ColorLogger()
-            ) extends DependenciesCommand {
+            $inputInterfaceMock ?? $this->createMock(InputInterface::class),
+            $outputInterfaceMock ?? $this->createMock(ConsoleOutputInterface::class),
+            $fileSystem ?? $this->getInMemoryFileSystem(),
+            $logger ?? new ColorLogger()
+        ) extends DependenciesCommand {
             public function __construct(
                 InputInterface $inputInterfaceMock,
                 ConsoleOutputInterface $outputInterfaceMock,

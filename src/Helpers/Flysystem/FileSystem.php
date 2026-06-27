@@ -93,6 +93,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer,
     public static function getFsRoot(string $path): string
     {
         if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path, $output_array)) {
+//        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?: getcwd(), $output_array)) {
             return strtoupper($output_array[1]);
         }
         // Relative path.
@@ -111,6 +112,9 @@ class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer,
                     str_replace('/', '\\', FileSystem::getFsRoot($workingDir)),
                     FileSystem::getFsRoot(Platform::getcwd()),
                     FileSystem::normalizeDirSeparator(FileSystem::getFsRoot(Platform::getcwd())),
+//                    FileSystem::getFsRoot($workingDir),
+//                    FileSystem::getFsRoot(),
+//                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                     'c:\\',
                     'c:/',
                 ]

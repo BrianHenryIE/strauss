@@ -1238,4 +1238,49 @@ EOD;
             unlink($tmpfname);
         }
     }
+
+    public function test_exclude_git_files_default_true(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\"
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerExtraStraussJson);
+            $composer = Factory::create(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertTrue($sut->getExcludeGitFiles());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
+
+    public function test_exclude_git_files_false(): void
+    {
+        $composerExtraStraussJson = <<<'EOD'
+{
+ "extra":{
+  "strauss": {
+   "namespace_prefix": "BrianHenryIE\\Strauss\\",
+   "exclude_git_files": false
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerExtraStraussJson);
+            $composer = Factory::create(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertFalse($sut->getExcludeGitFiles());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
 }

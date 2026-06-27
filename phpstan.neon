@@ -34,3 +34,7 @@ parameters:
         -   # Allow skipping tests
             identifier: deadCode.unreachable
             path: tests
+
+        -   # RandomException existing only in newer league/flysystem
+            identifier: throws.notThrowable
+            path: src/Pipeline/Autoload/DumpAutoload.php
