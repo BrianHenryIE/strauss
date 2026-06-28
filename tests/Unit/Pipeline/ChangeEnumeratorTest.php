@@ -4,12 +4,10 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
 use Mockery\MockInterface;
 
@@ -24,21 +22,30 @@ class ChangeEnumeratorTest extends TestCase
     public function testFunctionReplacement(): void
     {
         /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
-        $config = Mockery::mock(\BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface::class);
+        $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
         $config->expects('getClassmapPrefix')->andReturn('Class_Prefix_');
         $config->expects('getFunctionsPrefix')->andReturn('functions_prefix_')->atLeast()->once();
+        $config->allows('getConstantsPrefix')->andReturnNull();
 
         $sut = new ChangeEnumerator($config, $this->getTestLogger());
 
         $discoveredSymbols = new DiscoveredSymbols();
-        $symbol = new FunctionSymbol('myFunction', new File('/path/to/file.php', 'file.php'));
+        $symbol = new FunctionSymbol(
+            'myFunction',
+            new File(
+                '/path/to/file.php',
+                'file.php',
+                '/destination-path/to/file.php'
+            ),
+            new NamespaceSymbol('\\')
+        );
         $discoveredSymbols->add($symbol);
 
         $sut->determineReplacements($discoveredSymbols);
 
         $this->assertEquals(
             'functions_prefix_myFunction',
-            $symbol->getReplacement()
+            $symbol->getLocalReplacement()
         );
     }
 }

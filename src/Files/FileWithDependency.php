@@ -3,7 +3,7 @@
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 
 class FileWithDependency extends File implements HasDependency
 {
@@ -25,21 +25,26 @@ class FileWithDependency extends File implements HasDependency
      */
     protected array $autoloaderTypes = [];
 
-    public function __construct(ComposerPackage $dependency, string $vendorRelativePath, string $sourceAbsolutePath)
-    {
-        parent::__construct($sourceAbsolutePath, $vendorRelativePath);
+    public function __construct(
+        ComposerPackage $dependency,
+        string $vendorRelativePath,
+        string $sourceAbsolutePath,
+        string $targetAbsolutePath
+    ) {
+        parent::__construct($sourceAbsolutePath, $vendorRelativePath, $targetAbsolutePath);
+
+        $this->dependency = $dependency;
 
         /** @var string $packageAbsolutePath */
         $packageAbsolutePath = $dependency->getPackageAbsolutePath();
 
-        $this->vendorRelativePath = ltrim($vendorRelativePath, '/\\');
+        $this->vendorRelativePath = $vendorRelativePath;
+
         $this->packageRelativePath = str_replace(
             FileSystem::normalizeDirSeparator($packageAbsolutePath),
             '',
             FileSystem::normalizeDirSeparator($sourceAbsolutePath)
         );
-
-        $this->dependency         = $dependency;
 
         // Set this to null so we query the package's `isDelete` setting.
         $this->doDelete = null;
@@ -78,5 +83,50 @@ class FileWithDependency extends File implements HasDependency
     public function isDoDelete(): bool
     {
         return $this->doDelete ?? $this->dependency->isDoDelete();
+    }
+
+    public function addAutoloaderType(string $autoloaderType): void
+    {
+        $this->autoloaderTypes[$autoloaderType] = $autoloaderType;
+    }
+
+    /**
+     * @param string[] $autoloaderTypes
+     */
+    public function setAutoloaderTypes(array $autoloaderTypes): void
+    {
+        $this->autoloaderTypes = $autoloaderTypes;
+    }
+
+    /**
+     * @return string[] The autoloader types that this file is loaded under.
+     */
+    public function getAutoloaderTypes(): array
+    {
+        return $this->autoloaderTypes;
+    }
+    public function isPsr0(): bool
+    {
+        return in_array('psr-0', $this->autoloaderTypes);
+    }
+
+    public function isAutoloaded(): bool
+    {
+        if ($this->dependency->hasPsr0()) {
+            /**
+             * This is checked by {@see ComposerPackage::hasPsr0()}.
+             * @phpstan-ignore offsetAccess.notFound
+             */
+            foreach ($this->getDependency()->getAutoload()['psr-0'] as $autoloadPackageRelativePath) {
+                if (str_starts_with(
+                    trim($this->packageRelativePath, '\\/'),
+                    trim($autoloadPackageRelativePath, '\\/')
+                )) {
+                    return true;
+                }
+            }
+        }
+
+        return !empty($this->autoloaderTypes);
     }
 }

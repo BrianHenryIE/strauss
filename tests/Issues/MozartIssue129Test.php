@@ -14,10 +14,11 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 
 /**
  * Class MozartIssue129Test
@@ -32,24 +33,44 @@ class MozartIssue129Test extends TestCase
      *
      * @dataProvider pairTestDataProvider
      */
-    public function test_test($phpString, $expected)
+    public function test_test(string $phpString, string $expected): void
     {
-
         $config = $this->createMock(StraussConfig::class);
+
+        $filesystem = $this->getInMemoryFileSystem();
 
         $original = 'Example\Sdk\Endpoints';
         $replacement = 'Strauss\Example\Sdk\Endpoints';
 
-        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+        $namespaceSymbol = new NamespaceSymbol($original);
+        $namespaceSymbol->setDoRename(true);
+        $namespaceSymbol->setLocalReplacement($replacement);
 
-        $result = $replacer->replaceNamespace($phpString, $original, $replacement);
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
 
-        self::assertEqualsRN($expected, $result);
+        $file = new File(
+            'sourceAbsolutePath.php',
+            'vendorRelativePath.php',
+            'targetAbsolutePath.php'
+        );
+
+        $replacer = new Prefixer($config, $filesystem);
+
+        $filesystem->write($file->getTargetAbsolutePath(), $phpString);
+
+        $replacer->replaceInFiles($discoveredSymbols, [$file]);
+
+        $result = $filesystem->read($file->getTargetAbsolutePath());
+
+        $this->assertEqualsRN($expected, $result);
     }
 
-    public static function pairTestDataProvider()
+    /**
+     * @return array<array{0:string, 1:string}>
+     */
+    public static function pairTestDataProvider(): array
     {
-
         $fromTo = [];
 
         $contents = <<<'EOD'

@@ -7,7 +7,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 /**
  * @phpstan-import-type ClassAliasArray from AutoloadAliasInterface
  */
-class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
+class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
 {
     protected ?string $extends;
     protected bool $isAbstract;
@@ -20,16 +20,16 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
     /**
      * @param string $fqdnClassname
      * @param FileBase $sourceFile
+     * @param ?NamespaceSymbol $namespace
      * @param bool $isAbstract
-     * @param string $namespace
      * @param ?string $extends
      * @param string[] $interfaces
      */
     public function __construct(
         string $fqdnClassname,
         FileBase $sourceFile,
+        NamespaceSymbol $namespace,
         bool $isAbstract = false,
-        string $namespace = '\\',
         ?string $extends = null,
         array $interfaces = []
     ) {
@@ -58,21 +58,17 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return $this->isAbstract;
     }
 
-    public function getOriginalSymbolStripPrefix(string $class_prefix): string
-    {
-        $fqdnOriginalSymbol = $this->fqdnOriginalSymbol;
-
-        while (str_starts_with($fqdnOriginalSymbol, $class_prefix) && $class_prefix !== $fqdnOriginalSymbol) {
-            $fqdnOriginalSymbol = preg_replace('/^'.preg_quote($class_prefix).'/', '', $fqdnOriginalSymbol);
-            if (is_null($fqdnOriginalSymbol)) {
-                return $this->fqdnOriginalSymbol;
-            }
-        }
-
-        return $fqdnOriginalSymbol;
-    }
-
     /**
+     * In `autoload_aliases.php`, we create aliases for the old class name by creating a class that extends the renamed
+     * class. This makes the original methods available via the original classname to dev dependencies without updating
+     * their call sites.
+     *
+     * ```
+     * class OriginalName extends NewName {}
+     * ```
+     *
+     * @see AliasAutoloader::classTemplate()
+     *
      * @return ClassAliasArray
      */
     public function getAutoloadAliasArray(): array
@@ -81,8 +77,8 @@ class ClassSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
             'type' => 'class',
             'classname' => $this->getOriginalLocalName(),
             'isabstract' => $this->isAbstract,
-            'namespace' => $this->namespace,
-            'extends' => $this->getReplacement(),
+            'namespace' => $this->namespace->getOriginalFqdnName(),
+            'extends' => $this->getReplacementFqdnName(),
             'implements' => $this->interfaces,
         );
     }

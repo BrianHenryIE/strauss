@@ -3,11 +3,12 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
+use Mockery;
 
 /**
  * Class FileEnumeratorIntegrationTest
@@ -33,7 +34,7 @@ class FileEnumeratorIntegrationTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": false
     }
@@ -52,15 +53,24 @@ EOD;
         // Only one because we haven't run "flat dependency list".
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor'));
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $workingDir = $this->testsWorkingDir;
-        $vendorDir = 'vendor';
 
-        $config = $this->createStub(StraussConfig::class);
-        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
-        $config->method('getExcludeGitFiles')->willReturn(false);
+        $config = Mockery::mock(StraussConfig::class);
+        $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn(
+            $this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor')
+        );
+        $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn(
+            $this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor-prefixed')
+        );
+        $config->shouldReceive('getProjectAbsolutePath')->andReturn(
+            $this->pathNormalizer->normalizePath($this->testsWorkingDir)
+        );
+        $config->expects('getExcludeGitFiles')->andReturnFalse();
 
         $fileEnumerator = new FileEnumerator(
             $config,
@@ -68,9 +78,9 @@ EOD;
             $this->getLogger()
         );
 
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
 
-        $filePath = $this->getFileSystem()->makeAbsolute($this->getFileSystem()->normalizePath($workingDir . '/vendor/' . 'google/apiclient/src/aliases.php'));
+        $filePath = $this->getFileSystem()->normalizePath($workingDir . '/vendor/google/apiclient/src/aliases.php');
         $this->assertNotNull(
             $files->getFile($filePath),
             'File ' . $filePath . ' should be in $files array'
@@ -89,7 +99,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\"
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
     }
   }
 }

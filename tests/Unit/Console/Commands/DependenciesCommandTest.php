@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,7 +18,6 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
  */
 class DependenciesCommandTest extends TestCase
 {
-
     protected function getSut(
         ?InputInterface $inputInterfaceMock = null,
         ?ConsoleOutputInterface $outputInterfaceMock = null,
@@ -36,7 +37,11 @@ class DependenciesCommandTest extends TestCase
                 FileSystem $filesystem,
                 LoggerInterface $logger
             ) {
-                $this->logger = $logger;
+                $this->logger = (function () use ($logger) {
+                    $monoLogger = new Logger(__CLASS__);
+                    $monoLogger->pushHandler(new PsrHandler($logger));
+                    return $monoLogger;
+                })();
                 $this->filesystem = $filesystem;
                 $this->workingDir = sys_get_temp_dir();
 
@@ -143,6 +148,9 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
+        $outputInterfaceMock->expects($this->exactly(0))
+                            ->method('getErrorOutput')
+                            ->willReturn($outputInterfaceMock);
 
         $logger = new ColorLogger();
 
@@ -181,6 +189,9 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
+        $outputInterfaceMock->expects($this->exactly(0))
+                            ->method('getErrorOutput')
+                            ->willReturn($outputInterfaceMock);
 
         $logger = new ColorLogger();
 
@@ -219,6 +230,9 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
+        $outputInterfaceMock->expects($this->exactly(0))
+                            ->method('getErrorOutput')
+                            ->willReturn($outputInterfaceMock);
 
         $logger = new ColorLogger();
 

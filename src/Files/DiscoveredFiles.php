@@ -2,10 +2,31 @@
 
 namespace BrianHenryIE\Strauss\Files;
 
-class DiscoveredFiles
+use ArrayAccess;
+use ArrayIterator;
+use BadMethodCallException;
+use Countable;
+use IteratorAggregate;
+use Traversable;
+
+/**
+ * @implements IteratorAggregate<string, FileBase>
+ * @implements ArrayAccess<string, FileBase>
+ */
+class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
 {
     /** @var array<string,FileBase|File|FileWithDependency> */
     protected array $files = [];
+
+    /**
+     * @param FileBase[] $files
+     */
+    public function __construct(array $files = [])
+    {
+        foreach ($files as $file) {
+            $this->files[ $file->getSourcePath()] = $file;
+        }
+    }
 
     public function add(FileBase $file): void
     {
@@ -33,5 +54,68 @@ class DiscoveredFiles
     public function sort(): void
     {
         ksort($this->files);
+    }
+
+    /**
+     * @return Traversable<FileBase>
+     */
+    #[\ReturnTypeWillChange]
+    public function getIterator()
+    {
+        return new ArrayIterator($this->files);
+    }
+
+    /**
+     * @param string $offset Absolute path.
+     *
+     * @return bool
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetExists($offset)
+    {
+        return array_key_exists($offset, $this->files);
+    }
+
+    /**
+     * @param string $offset Absolute path.
+     *
+     * @return ?FileBase
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetGet($offset)
+    {
+        return $this->files[$offset] ?? null;
+    }
+
+    #[\ReturnTypeWillChange]
+    public function offsetSet($offset, $value)
+    {
+        throw new BadMethodCallException();
+    }
+
+    #[\ReturnTypeWillChange]
+    public function offsetUnset($offset)
+    {
+        throw new BadMethodCallException();
+    }
+
+    /**
+     * @return int
+     */
+    #[\ReturnTypeWillChange]
+    public function count()
+    {
+        return count($this->files);
+    }
+
+    /**
+     * @return FileWithDependency[]
+     */
+    public function getPsr0(): array
+    {
+        return array_filter(
+            $this->files,
+            fn(FileBase $file) => $file instanceof FileWithDependency && $file->isPsr0()
+        );
     }
 }

@@ -6,11 +6,12 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Helpers\GitAttributes;
 use Inmarelibero\GitIgnoreChecker\Exception\GitIgnoreCherkerException;
 use Inmarelibero\GitIgnoreChecker\GitIgnoreChecker;
@@ -24,7 +25,7 @@ class FileEnumerator
 
     protected FileEnumeratorConfig $config;
 
-    protected Filesystem $filesystem;
+    protected FileSystem $filesystem;
 
     protected DiscoveredFiles $discoveredFiles;
 
@@ -46,16 +47,26 @@ class FileEnumerator
     }
 
     /**
-     * @param ComposerPackage[] $dependencies
+     * @param DependenciesCollection $flatDependencies
+     *
      * @throws FilesystemException
      */
-    public function compileFileListForDependencies(array $dependencies): DiscoveredFiles
+    public function compileFileListForDependencies(DependenciesCollection $flatDependencies): DiscoveredFiles
     {
-        foreach ($dependencies as $dependency) {
+        /** @var ComposerPackage $dependency */
+        foreach ($flatDependencies as $dependency) {
             $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
-            /** @var string $dependencyPackageAbsolutePath */
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
+            // Meta packages.
+            if (is_null($dependencyPackageAbsolutePath)) {
+                continue;
+            }
             $this->compileFileListForPaths([$dependencyPackageAbsolutePath], $dependency);
+//            $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths([$dependencyPackageAbsolutePath]);
+//
+//            foreach ($absoluteFilePaths as $sourceAbsolutePath) {
+//                $this->addFile($sourceAbsolutePath, $dependency);
+//            }
         }
 
         $this->discoveredFiles->sort();
@@ -207,8 +218,6 @@ class FileEnumerator
             return;
         }
 
-        $isOutsideProjectDir = 0 !== strpos($sourceAbsoluteFilepath, $this->config->getAbsoluteVendorDirectory());
-
         if ($dependency) {
             $vendorRelativePath = $this->filesystem->getRelativePath(
                 $this->config->getAbsoluteVendorDirectory(),
@@ -230,31 +239,40 @@ class FileEnumerator
                 ?? new FileWithDependency(
                     $dependency,
                     FileSystem::normalizeDirSeparator($vendorRelativePath),
-                    FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath)
+                    $this->filesystem->normalizePath($sourceAbsoluteFilepath),
+                    $this->config->getAbsoluteTargetDirectory(). '/' . $vendorRelativePath
                 );
 
+//            $f->setTargetAbsolutePath($this->config->getAbsoluteTargetDirectory() . '/' . $vendorRelativePath);
+
             $autoloaderType && $f->addAutoloader($autoloaderType);
-            $f->setDoDelete($isOutsideProjectDir);
+
+//            if ($isOutsideProjectDir) {
+//                $f->setDoDelete(false);
+//            }
         } else {
             $vendorRelativePath = $this->filesystem->getRelativePath(
                 str_starts_with($sourceAbsoluteFilepath, $this->config->getAbsoluteVendorDirectory()) ? $this->config->getAbsoluteVendorDirectory() : $this->config->getAbsoluteTargetDirectory(),
                 $sourceAbsoluteFilepath,
             );
 
+            $targetAbsolutePath = $this->config->getAbsoluteTargetDirectory() . '/' . $vendorRelativePath;
+
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
                  ?? new File(
                      FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath),
-                     $vendorRelativePath
+                     $vendorRelativePath,
+                     $targetAbsolutePath
                  );
         }
 
         $this->discoveredFiles->add($f);
 
-        $relativeFilePath =
+        $vendorRelativeFilePath =
             $this->filesystem->getRelativePath(
-                dirname($this->config->getAbsoluteVendorDirectory()),
-                $f->getAbsoluteTargetPath()
+                $this->config->getProjectAbsolutePath(),
+                $f->getSourcePath()
             );
-        $this->logger->info("Found file " . $relativeFilePath);
+        $this->logger->info("Found file " . $vendorRelativeFilePath);
     }
 }

@@ -36,7 +36,7 @@ class StraussIssue81Test extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "Strauss\\Alias\\",
+      "namespace_prefix": "Issue\\I81\\",
       "delete_vendor_packages": true
     }
   },
@@ -58,7 +58,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 new \Psr\Log\NullLogger();
 
-new \Strauss\Alias\Psr\Log\NullLogger();
+new \Issue\I81\Psr\Log\NullLogger();
 
 return 0;
 
@@ -78,7 +78,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/autoload_aliases.php');
-        $this->assertStringContainsString("'extends' => 'Strauss\\\\Alias\\\\Psr\\\\Log\\\\NullLogger'", $phpString);
+        $this->assertStringContainsString("'extends' => 'Issue\\\\I81\\\\Psr\\\\Log\\\\NullLogger'", $phpString);
 
         exec('composer dump-autoload');
 
@@ -89,7 +89,8 @@ EOD;
         //#0 {main}
         //thrown in /private/var/folders/sh/cygymmqn36714790jj3r33200000gn/T/strausstestdir/file1.php on line 8
 
-        $this->assertEmpty($output, implode(PHP_EOL, $output));
+        $outputString = implode(PHP_EOL, $output);
+        $this->assertEmpty($output, $outputString);
         $this->assertEquals(0, $return_var);
     }
 

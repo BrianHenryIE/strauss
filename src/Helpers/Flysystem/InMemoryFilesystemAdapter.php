@@ -1,13 +1,30 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
+use Elazar\Flystream\StripProtocolPathNormalizer;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter as LeagueInMemoryFilesystemAdapter;
+use League\Flysystem\PathNormalizer;
+use League\Flysystem\WhitespacePathNormalizer;
 
-class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter
+class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter implements FlysystemAdapterBackCompatTraitInterface
 {
+    use FlysystemAdapterBackCompatTrait;
+
+    protected PathNormalizer $normalizer;
+
+    /**
+     * @see FlysystemReaderBackCompatTrait::directoryExists()
+     */
+    public function normalizePath(string $path): string
+    {
+        if (!isset($this->normalizer)) {
+            $this->normalizer = new StripProtocolPathNormalizer(['mem'], new WhitespacePathNormalizer());
+        }
+        return $this->normalizer->normalizePath($path);
+    }
 
     public function visibility(string $path): FileAttributes
     {
@@ -42,6 +59,9 @@ class InMemoryFilesystemAdapter extends LeagueInMemoryFilesystemAdapter
         parent::copy($source, $destination, $config);
     }
 
+    /**
+     * @see \League\Flysystem\FilesystemAdapter::write()
+     */
     public function write(string $path, string $contents, Config $config): void
     {
         // Make sure there is a directory for the file to be written to.

@@ -6,9 +6,12 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use Composer\Factory;
+use Composer\Util\Platform;
 use Exception;
 use JsonException;
 use League\Flysystem\FilesystemException;
@@ -17,6 +20,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
+ * @phpstan-import-type InstalledJsonArray from InstalledJson
  * @phpstan-import-type ComposerJsonArray from ComposerPackage
  * @phpstan-import-type AutoloadKeyArray from ComposerPackage
  */
@@ -36,8 +40,8 @@ class DependenciesEnumerator
         'php-http/client-implementation'
     );
 
-    /** @var array<string, ComposerPackage> */
-    protected array $flatDependencyTree = array();
+    /** @var array<string,ComposerPackage> */
+    protected array $flatDependencyArray = [];
 
     /**
      * Record the files autoloaders for later use in building our own autoloader.
@@ -72,15 +76,23 @@ class DependenciesEnumerator
     }
 
     /**
-     * @return array<string, ComposerPackage> Packages indexed by package name.
      * @throws Exception
      * @throws FilesystemException
      */
-    public function getAllDependencies(): array
+    public function getAllDependencies(): DeepDependenciesCollection
     {
         $this->recursiveGetAllDependencies($this->requiredPackageNames);
 
-        return $this->flatDependencyTree;
+        foreach ($this->flatDependencyArray as $composerPackage) {
+            foreach ($composerPackage->getRequiresNames() as $requiresName) {
+                // The package would be missing if it is in `provides`.
+                if (isset($this->flatDependencyArray[$requiresName])) {
+                    $composerPackage->addDependency($this->flatDependencyArray[$requiresName]);
+                }
+            }
+        }
+
+        return new DeepDependenciesCollection($this->flatDependencyArray);
     }
 
     /**
@@ -93,9 +105,23 @@ class DependenciesEnumerator
     {
         $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
 
+        $installedJsonPath = $this->filesystem->makeAbsolute(
+            sprintf(
+                "%s/composer/installed.json",
+                $this->config->getAbsoluteVendorDirectory()
+            )
+        );
+        $installedJsonTxt = $this->filesystem->read($installedJsonPath);
+        /** @var InstalledJsonArray $installedJson */
+        $installedJson = json_decode($installedJsonTxt, true);
+        $installedJsonPackages = [];
+        foreach ($installedJson['packages'] as $package) {
+            $installedJsonPackages[$package['name']] = $package;
+        }
+
         foreach ($requiredPackageNames as $requiredPackageName) {
             // Avoid infinite recursion.
-            if (isset($this->flatDependencyTree[$requiredPackageName])) {
+            if (isset($this->flatDependencyArray[$requiredPackageName])) {
                 continue;
             }
 
@@ -116,16 +142,25 @@ class DependenciesEnumerator
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
             if ($this->filesystem->fileExists($packageComposerFile)) {
-                $this->logger->debug('Loading ComposerPackage::fromFile ' . $packageComposerFile);
+                $this->logger->debug('Loading ComposerPackage::fromFile {packageComposerFilePath}', [
+                    'packageComposerFilePath' => $packageComposerFile,
+                ]);
 
                 $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
+                $requiredComposerPackage->setRealpath(
+                    $this->filesystem->normalizePath(
+                        Platform::realpath(
+                            $this->filesystem->makeAbsolute($packageComposerFile)
+                        )
+                    )
+                );
             } else {
                 // Some packages download with NO `composer.json`! E.g. woocommerce/action-scheduler.
                 // Some packages download to a different directory than the package name.
                 $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock: ' . $packageComposerFile);
 
                 // TODO: These (.json, .lock) should be read once and reused.
-                $composerJsonString = $this->filesystem->read($this->config->getProjectDirectory() . '/' . Factory::getComposerFile());
+                $composerJsonString = $this->filesystem->read($this->config->getProjectAbsolutePath() . '/' . Factory::getComposerFile());
                 /** @var ComposerJsonArray $composerJson */
                 $composerJson       = json_decode($composerJsonString, true, 512, JSON_THROW_ON_ERROR);
 
@@ -134,7 +169,7 @@ class DependenciesEnumerator
                     continue;
                 }
 
-                $composerLockPath = $this->config->getProjectDirectory() . '/' . Factory::getLockFile(Factory::getComposerFile());
+                $composerLockPath = $this->config->getProjectAbsolutePath() . '/' . Factory::getLockFile(Factory::getComposerFile());
                 $composerLockString     = $this->filesystem->read($composerLockPath);
                 /** @var null|array{packages:array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray}} $composerLockJsonArray */
                 $composerLockJsonArray           = json_decode($composerLockString, true);
@@ -159,6 +194,10 @@ class DependenciesEnumerator
                     continue;
                 }
 
+                $this->logger->info('Found {requiredPackageName} in composer.lock.', [
+                    'requiredPackageName' => $requiredPackageName,
+                ]);
+
                 if (!isset($requiredPackageComposerJson['autoload'])
                     && empty($requiredPackageComposerJson['require'])
                     && (!isset($requiredPackageComposerJson['type']) || $requiredPackageComposerJson['type'] != 'metapackage')
@@ -169,11 +208,37 @@ class DependenciesEnumerator
                     continue;
                 }
 
+                $projectVendorAbsoluteDir = $this->config->getAbsoluteVendorDirectory();
+
                 $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
             }
 
+            if (isset($installedJsonPackages[$requiredPackageName])
+                && is_null($requiredComposerPackage->getRealPath())
+                && $installedJsonPackages[$requiredPackageName]['dist']['type'] === 'path') {
+                $installedPackage = $installedJsonPackages[$requiredPackageName];
+                $path = $installedPackage['dist']['url'];
+
+                $packageRealPath = $this->filesystem->normalizePath(
+                    Platform::realpath(
+                        $this->filesystem->makeAbsolute(
+                            $this->config->getProjectAbsolutePath() . '/'.  $path
+                        )
+                    )
+                );
+                $requiredComposerPackage->setRealpath(
+                    $packageRealPath
+                );
+            }
+            unset($installedPackage);
+            $requiredComposerPackage->setProjectVendorDirectory(
+                $this->filesystem->normalizePath(
+                    $this->config->getAbsoluteVendorDirectory()
+                )
+            );
+
             $this->logger->info('Analysing package ' . $requiredComposerPackage->getPackageName());
-            $this->flatDependencyTree[$requiredComposerPackage->getPackageName()] = $requiredComposerPackage;
+            $this->flatDependencyArray[$requiredComposerPackage->getPackageName()] = $requiredComposerPackage;
 
             $nextRequiredPackageNames = $requiredComposerPackage->getRequiresNames();
 
@@ -185,7 +250,7 @@ class DependenciesEnumerator
                 continue;
             }
 
-            $newPackages = array_diff($nextRequiredPackageNames, array_keys($this->flatDependencyTree));
+            $newPackages = array_diff($nextRequiredPackageNames, array_keys($this->flatDependencyArray));
 
             $newPackagesString = implode(', ', $newPackages);
             if (!empty($newPackagesString)) {
@@ -211,7 +276,7 @@ class DependenciesEnumerator
     public function getAllFilesAutoloaders(): array
     {
         $filesAutoloaders = array();
-        foreach ($this->flatDependencyTree as $packageName => $composerPackage) {
+        foreach ($this->flatDependencyArray as $packageName => $composerPackage) {
             if (isset($composerPackage->getAutoload()['files'])) {
                 $filesAutoloaders[$packageName] = $composerPackage->getAutoload()['files'];
             }
@@ -225,9 +290,7 @@ class DependenciesEnumerator
     protected function removeVirtualPackagesFilter(string $requiredPackageName): bool
     {
         return ! (
-            0 === strpos($requiredPackageName, 'ext')
-            // E.g. `php`, `php-64bit`.
-            || (0 === strpos($requiredPackageName, 'php') && false === strpos($requiredPackageName, '/'))
+            ComposerPackage::isPlatformPackageName($requiredPackageName, true)
             || in_array($requiredPackageName, $this->virtualPackages)
         );
     }

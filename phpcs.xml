@@ -2,6 +2,7 @@
 <!--suppress XmlUnboundNsPrefix -->
 <ruleset name="strauss">
     <description>Coding standard ruleset based on the PSR-2 coding standard.</description>
+    <arg value="s"/> <!-- Show sniff error codes in all reports. -->
     <rule ref="PSR2">
         <exclude name="Generic.Files.LineLength.TooLong"/>
     </rule>

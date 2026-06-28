@@ -27,7 +27,7 @@ class StraussIssue136Test extends IntegrationTestCase
   "name": "strauss/issue136",
   "autoload": {
     "psr-4": {
-      "BrianHenryIE\\Strauss\\": "src"
+      "BrianHenryIE\\S136\\": "src"
     }
   },
   "require": {
@@ -51,7 +51,7 @@ class Whatever {
 
 	public function execute(): void {
 		$var = new \Symfony\Component\VarDumper\VarDumper();
-	} 
+	}
 }
 EOD;
 
@@ -64,7 +64,7 @@ class Whatever {
 
 	public function execute(): void {
 		$var = new \Symfony\Component\VarDumper\VarDumper();
-	} 
+	}
 }
 EOD;
 

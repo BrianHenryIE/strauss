@@ -2,13 +2,8 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
-use Elazar\Flystream\FilesystemRegistry;
-use League\Flysystem\Config;
-use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use Psr\Log\Test\TestLogger;
 
 /**
@@ -16,25 +11,12 @@ use Psr\Log\Test\TestLogger;
  */
 class AutoloadTest extends TestCase
 {
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-        /** @var FilesystemRegistry $registry */
-        $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
-
-        if ($registry->has('mem')) {
-            $registry->unregister('mem');
-        }
-    }
-
     /**
      * @covers ::generateClassmap
      */
     public function testGenerateClassmap(): void
     {
-        $this->markTestSkipped('TODO: move to VendorComposerAutoloadTest');
+        $this->markTestIncomplete('TODO: move to VendorComposerAutoloadTest');
 
         $config = \Mockery::mock(AutoloadConfigInterface::class);
         $config->expects('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed')->once();
@@ -75,7 +57,7 @@ class AutoloadTest extends TestCase
      */
     public function testGenerateClassmapParentRelativeDir(): void
     {
-        $this->markTestSkipped('TODO: move to VendorComposerAutoloadTest');
+        $this->markTestIncomplete('TODO: move to VendorComposerAutoloadTest');
 
         $config = \Mockery::mock(AutoloadConfigInterface::class);
         $config->expects('getAbsoluteTargetDirectory')->andReturn('../vendor-prefixed')->once();
@@ -114,7 +96,7 @@ class AutoloadTest extends TestCase
      */
     public function testGenerateFilesAutoloader(): void
     {
-        $this->markTestSkipped('TODO: move to VendorComposerAutoloadTest');
+        $this->markTestIncomplete('TODO: move to VendorComposerAutoloadTest');
 
         $config = \Mockery::mock(AutoloadConfigInterface::class);
         $config->expects('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed')->once();

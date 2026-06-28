@@ -15,21 +15,27 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "license": "MIT",
+    "repositories": {
+        "composer/composer": {
+            "type": "vcs",
+            "url": "https://github.com/brianhenryie/composer"
+        }
+    },
     "require": {
         "ext-json": "*",
         "composer-runtime-api": "^2.0",
         "brianhenryie/simple-php-code-parser": "^0.15.6",
         "composer/class-map-generator": "^1.7.3",
-        "composer/composer": "^2.10",
+        "composer/composer": "dev-main#b97360e21ed21d5b9ede6e0bc829ee056d752889",
         "elazar/flystream": "^0.6.0 || ^1.4.0",
         "inmarelibero/gitignore-checker": "^1.0",
         "json-mapper/json-mapper": "^2.0.0",
         "league/flysystem": "^2.5.0 || ^3.35.1",
-        "league/flysystem-memory": "*",
+        "league/flysystem-memory": "^2.0.6 || ^3.31.0",
         "monolog/monolog": "^2.10",
         "nikic/php-parser": "^5.7.0",
-        "symfony/console": "^4|^5|^6|^7",
-        "symfony/finder": "^4|^5|^6|^7"
+        "symfony/console": "^4 || ^5 || ^6 || ^7",
+        "symfony/finder": "^4 || ^5 || ^6 || ^7"
     },
     "autoload": {
         "psr-4": {
@@ -54,6 +60,8 @@
     },
     "require-dev": {
         "php": "^7.4|^8.0",
+        "ext-json": "*",
+        "ext-zip": "*",
         "brianhenryie/color-logger": "*",
         "clue/phar-composer": "^1.4",
         "jaschilz/php-coverage-badger": "^2.0",
@@ -61,9 +69,17 @@
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^1.10",
         "phpstan/phpstan-mockery": "^1.1",
+        "phpstan/phpstan-phpunit": "^1.4",
         "phpunit/phpcov": "*",
         "phpunit/phpunit": "^9|^10",
         "squizlabs/php_codesniffer": "^4.0"
+    },
+    "extra": {
+      "strauss": {
+          "namespace_prefix": "BrianHenryIE\\Strauss\\",
+          "target_directory": "vendor",
+          "updateCallSites": true
+      }
     },
     "conflict": {
       "json-mapper/json-mapper": "2.23.0 | 2.24.0"
@@ -79,6 +95,9 @@
         "analyze-changes": [
           "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpstan analyse --memory-limit=-1 $updated_files --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
         ],
+        "analyze-changes-recent": [
+          "updated_files=$(echo $(git diff --name-only `git rev-parse HEAD~4` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpstan analyse --memory-limit=-1 $updated_files --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
+        ],
         "analyze-changes-strict": [
           "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then echo \"Found: $updated_files\"; phpstan analyse --memory-limit=-1 $updated_files --level max --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
         ],
@@ -86,18 +105,21 @@
           "phpcs || true",
           "@analyze"
         ],
-        "cs-fix": [
-          "phpcbf || true",
-          "phpcs || true",
-          "@analyze"
-        ],
         "cs-changes": [
           "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
           "@analyze-changes"
         ],
+        "cs-changes-recent": [
+          "updated_files=$(echo $(git diff --name-only `git rev-parse HEAD~4` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
+          "@analyze-changes-recent"
+        ],
         "cs-changes-strict": [
           "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpcbf $updated_files || true; phpcs $updated_files || true; else echo \"No modified php files.\"; fi;",
           "@analyze-changes-strict"
+        ],
+        "cs-fix": [
+            "phpcbf || true",
+            "@cs"
         ],
         "install-phive-dependencies": [
             "if [ -z \"$(command -v phive)\" ]; then echo \"Phive is not installed. Run 'brew install gpg phive' or see https://phar.io/.\"; exit 1; fi;",
@@ -107,25 +129,10 @@
             "Composer\\Config::disableProcessTimeout",
             "phpunit --stop-on-failure --order-by=random"
         ],
-        "test-changes": [
-            "if [ -z \"$(command -v ./tools/php-diff-test)\" ]; then echo \"Please install 'php-diff-test' with 'phive install'.\"; exit 1; fi;",
-            "if [ \"$XDEBUG_MODE\" != \"coverage\" ]; then echo 'Run with XDEBUG_MODE=coverage composer test-changes'; exit 1; fi;",
-            "phpunit --filter=\"$(./tools/php-diff-test filter --input-files tests/_reports/php.cov --granularity=line)\" --coverage-text;"
-        ],
-        "test-changes-report": [
-            "if [ -z \"$(command -v ./tools/php-diff-test)\" ]; then echo \"Please install 'php-diff-test' with 'phive install'.\"; exit 1; fi;",
-            "if [ -z \"$(command -v ./tools/phpcov)\" ]; then echo \"Please install 'phpcov' with 'phive install'.\"; exit 1; fi;",
-            "if [ \"$XDEBUG_MODE\" != \"coverage\" ]; then echo 'Run with XDEBUG_MODE=coverage composer test-changes-report'; exit 1; fi;",
-            "if [ -d \"tests/_reports/diff\" ]; then rm -rf tests/_reports/diff; fi;",
-            "phpunit --filter=\"$(./tools/php-diff-test filter --input-files tests/_reports/php.cov --granularity file)\" --coverage-text --coverage-php tests/_reports/diff/php.cov -d memory_limit=-1;",
-            "./tools/php-diff-test coverage --input-files tests/_reports/diff/php.cov --output-file tests/_reports/diff/php.cov;",
-            "./tools/phpcov merge tests/_reports/diff --html tests/_reports/diff/html;",
-            "open tests/_reports/diff/html/index.html"
-        ],
         "test-coverage": [
             "Composer\\Config::disableProcessTimeout",
             "if [ \"$XDEBUG_MODE\" != \"coverage\" ]; then echo \"Run with 'XDEBUG_MODE=coverage composer test-coverage'\"; exit 1; fi;",
-            "phpunit ./tests/Unit --coverage-text --coverage-clover tests/_reports/partial/unitclover.xml --coverage-php tests/_reports/partial/unitphp.cov -d memory_limit=-1 --order-by=random",
+            "phpunit ./tests/Unit --coverage-text --coverage-clover tests/_reports/partial/unitclover.xml --coverage-php tests/_reports/partial/unitphp.cov --coverage-html tests/_reports/html -d memory_limit=-1 --order-by=random",
             "phpcov merge --clover tests/_reports/clover.xml --html tests/_reports/html tests/_reports/partial;",
             "php-coverage-badger tests/_reports/clover.xml .github/coverage.svg",
             "if [ $(command -v ./tools/phpcov) ]; then git diff master...head > /tmp/master.diff; ./tools/phpcov patch-coverage --path-prefix $(pwd) ./tests/_reports/php.cov /tmp/master.diff || true; fi;",
@@ -144,6 +151,9 @@
         "sort-packages": true,
         "allow-plugins": {
             "phpstan/extension-installer": true
+        },
+        "platform": {
+            "php": "7.4"
         }
     }
 }

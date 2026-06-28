@@ -2,12 +2,14 @@
 /**
  * A logger that changes file paths to be relative to the project directory.
  *
- * @see \BrianHenryIE\Strauss\Helpers\FileSystem::getProjectRelativePath()
+ * If a variable that is being replaced as the term 'path' in it, the path will be made relative to workingdir.
+ *
+ * @see \BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::getProjectRelativePath()
  */
 
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Monolog\Processor\ProcessorInterface;
 
 class RelativeFilepathLogProcessor implements ProcessorInterface
@@ -31,10 +33,17 @@ class RelativeFilepathLogProcessor implements ProcessorInterface
 
         foreach ($context as $key => $val) {
             if (false !== stripos($key, 'path') && is_string($val)) {
-                $record['context'][$key] = $this->fileSystem->getProjectRelativePath($val);
+                if ($this->isAbsolutePath($val)) {
+                    $record['context'][ $key ] = $this->fileSystem->getProjectRelativePath($val);
+                }
             }
         }
 
         return $record;
+    }
+
+    protected function isAbsolutePath(string $path): bool
+    {
+        return 0 !== strpos($path, '..');
     }
 }

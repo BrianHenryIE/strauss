@@ -1,0 +1,112 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * This is used so NamespaceSymbol doesn't have a namespace property itself.
+ * Objects/classes inheriting from this could just be in the global namespace.
+ *
+ * @package brianhenryie/strauss
+ */
+
+namespace BrianHenryIE\Strauss\Types;
+
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Files\FileBase;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
+
+class NamespacedSymbol extends DiscoveredSymbol
+{
+    protected NamespaceSymbol $namespace;
+
+    public function __construct(
+        string $fqdnSymbol,
+        FileBase $sourceFile,
+        NamespaceSymbol $namespace,
+        ?ComposerPackage $composerPackage = null
+    ) {
+        $this->namespace = $namespace;
+
+        parent::__construct($fqdnSymbol, $sourceFile, $composerPackage);
+    }
+
+    public function getOriginalFqdnName(): string
+    {
+        return $this->namespace->isGlobal()
+             ? $this->getOriginalLocalName()
+             : $this->namespace->getOriginalFqdnName() . '\\' . $this->getOriginalLocalName();
+    }
+
+    /**
+     * Defaults to the original until otherwise set.
+     */
+    public function getReplacementFqdnName(): string
+    {
+        if (!$this->isDoRename()) {
+            return $this->fqdnOriginalSymbol;
+        }
+        return $this->getNamespace()->isGlobal()
+            ? $this->getLocalReplacement()
+            : trim($this->namespace->getLocalReplacement() . '\\' . $this->getOriginalLocalName(), '\\');
+    }
+
+    public function getNamespace(): NamespaceSymbol
+    {
+        return $this->namespace;
+    }
+
+    public function getNamespaceName(): string
+    {
+        return $this->namespace->getOriginalFqdnName();
+    }
+
+    public function isDoRename(): bool
+    {
+        return parent::isDoRename()
+               && // If it has a non-global namespace, ensure that should be renamed.
+               ($this->namespace->isGlobal() || $this->namespace->isDoRename());
+    }
+
+    public function isGlobal(): bool
+    {
+        return $this->namespace->isGlobal();
+    }
+
+    public function isPsr0Autoloaded(): bool
+    {
+        return (bool) $this->getPsr0NamespaceString();
+    }
+
+    public function getPsr0NamespaceString(): ?string
+    {
+        /** @var ComposerPackage $dependency */
+        foreach ($this->dependencies as $dependency) {
+            if (! $dependency->isPsr0Autoloaded()) {
+                continue;
+            }
+            foreach ($this->getSourceFiles() as $file) {
+                if (! ( $file instanceof FileWithDependency )) {
+                    continue;
+                }
+                if ($file->getDependency()->getPackageName() === $dependency->getPackageName()) {
+                    /**
+                     * This is verified in {@see ComposerPackage::isPsr0Autoloaded()}.
+                     *
+                     * @var string $psr0namespace
+                     * @var string|string[] $autoloadPackageRelativePath
+                     * @phpstan-ignore offsetAccess.notFound
+                     */
+                    foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePath) {
+                        if (str_starts_with(
+                            trim($file->getPackageRelativePath(), '\\/'),
+                            trim($autoloadPackageRelativePath, '\\/')
+                        )) {
+                            return $psr0namespace;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+}

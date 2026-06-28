@@ -19,12 +19,10 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
-use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -62,7 +60,9 @@ class FileCopyScanner
             if ($file instanceof FileWithDependency) {
                 if ($this->isPackageExcluded($file->getDependency())) {
                     $copy = false;
-                    $this->logger->debug("File {$file->getSourcePath()} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.");
+                    $this->logger->debug("File {sourcePath} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.", [
+                        'sourcePath' => $file->getSourcePath(),
+                    ]);
                 }
             }
 
@@ -74,11 +74,11 @@ class FileCopyScanner
                 $copy = false;
             }
 
-            if ($copy) {
+//            if ($copy) {
 //                $this->logger->debug("Marking file {relativeFilePath} to be copied.", [
 //                    'relativeFilePath' => $this->filesystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $file->getSourcePath()),
 //                ]);
-            }
+//            }
 
             $file->setDoCopy($copy);
 
@@ -86,7 +86,7 @@ class FileCopyScanner
                 $target = $file instanceof FileWithDependency
                     ?  $this->config->getAbsoluteTargetDirectory() . '/' . $file->getDependency()->getRelativePath() . '/'. $file->getPackageRelativePath()
                     : $file->getSourcePath();
-                $file->setAbsoluteTargetPath(FileSystem::normalizeDirSeparator($target));
+                $file->setTargetAbsolutePath(FileSystem::normalizeDirSeparator($target));
             }
 
             $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->filesystem->isSymlinked($file->getSourcePath());
@@ -124,20 +124,30 @@ class FileCopyScanner
 
     protected function isNamespaceExcluded(FileBase $file): bool
     {
-        /** @var DiscoveredSymbol $symbol */
-        foreach ($file->getDiscoveredSymbols() as $symbol) {
-            if (!($symbol instanceof NamespaceSymbol)) {
-                continue;
-            }
-            foreach ($this->config->getExcludeNamespacesFromCopy() as $namespace) {
-                $namespace = rtrim($namespace, '\\');
-                if (in_array($file->getSourcePath(), array_keys($symbol->getSourceFiles()), true)
-                    // TODO: case insensitive check. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
-                    && str_starts_with($symbol->getOriginalSymbol(), $namespace)
-                ) {
-                    $this->logger->debug("File {$file->getSourcePath()} will not be copied because namespace {$namespace} is excluded from copy.");
-                    return true;
-                }
+        if (!$file->isPhpFile()) {
+            return false;
+        }
+        /** @var string[] $namespaceStringsInFile */
+        $namespaceStringsInFile = array_map(
+            fn(DiscoveredSymbol $symbol): string => $symbol->getOriginalFqdnName(),
+            $file->getDiscoveredSymbols()->getNamespaces()->notGlobal()->toArray()
+        );
+        foreach ($this->config->getExcludeNamespacesFromCopy() as $excludedNamespaceString) {
+            $excludedNamespaceString = rtrim($excludedNamespaceString, '\\');
+
+            /** @var string[] $excludedNamespaceStringsInFile */
+            $excludedNamespaceStringsInFile = array_reduce(
+                $namespaceStringsInFile,
+                // TODO: use case insensitive check instead. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
+                fn(array $carry, string $namespaceString) => str_starts_with($namespaceString, $excludedNamespaceString)
+                        ? array_merge($carry, [$namespaceString]) : $carry,
+                []
+            );
+            if (!empty($excludedNamespaceStringsInFile)) {
+                $this->logger->debug("File {sourcePath} will not be copied because namespace {$excludedNamespaceString} is excluded from copy.", [
+                    'sourcePath' => $file->getSourcePath(),
+                ]);
+                return true;
             }
         }
         return false;
@@ -157,7 +167,9 @@ class FileCopyScanner
         foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
             $escapedPattern = $this->preparePattern($pattern);
             if (1 === preg_match($escapedPattern, $path)) {
-                $this->logger->debug("File {$path} will not be copied because it matches pattern {$pattern}.");
+                $this->logger->debug("File {path} will not be copied because it matches pattern {$pattern}.", [
+                    'path' => $path
+                ]);
                 return true;
             }
         }

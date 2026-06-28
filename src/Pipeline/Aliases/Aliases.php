@@ -14,11 +14,12 @@
 namespace BrianHenryIE\Strauss\Pipeline\Aliases;
 
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Types\AutoloadAliasInterface;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -70,6 +71,9 @@ class Aliases
             throw new RuntimeException('Expected file not found at: ' . __DIR__ . '/autoload_aliases.template.php');
         }
 
+        /**
+         * `// FunctionsAndConstants` serves as a placeholder in the template which we replace with the code.
+         */
         $template = str_replace(
             '// FunctionsAndConstants',
             $globalFunctionsString,
@@ -91,8 +95,6 @@ class Aliases
 
     public function writeAliasesFileForSymbols(DiscoveredSymbols $symbols): void
     {
-//        $modifiedSymbols = $this->getModifiedSymbols($symbols);
-
         $outputFilepath = $this->getAliasFilepath();
 
         $fileString = $this->buildStringOfAliases($symbols, basename($outputFilepath));
@@ -111,49 +113,6 @@ class Aliases
         );
     }
 
-    protected function getModifiedSymbols(DiscoveredSymbols $symbols): DiscoveredSymbols
-    {
-        $modifiedSymbols = new DiscoveredSymbols();
-        foreach ($symbols->getAll() as $symbol) {
-            if ($symbol->getOriginalSymbol() !== $symbol->getReplacement()) {
-                $modifiedSymbols->add($symbol);
-            }
-            if ($symbol instanceof FunctionSymbol) {
-                $functionNamespace = $symbols->getNamespaceSymbolByString($symbol->getNamespace());
-                $isFunctionHasChangedNamespace = $functionNamespace->isChangedNamespace();
-
-                if ($isFunctionHasChangedNamespace || $symbol->getOriginalSymbol() !== $symbol->getReplacement()
-                ) {
-                    $modifiedSymbols->add($symbol);
-                }
-            }
-        }
-        return $modifiedSymbols;
-    }
-
-    /**
-     * @param array<string,string> $classmap FQDN classname : absolute file path.
-     */
-    protected function registerAutoloader(array $classmap): void
-    {
-
-        // Need to autoload the classes for reflection to work (this is maybe just an issue during tests).
-        spl_autoload_register(function (string $class) use ($classmap) {
-            if (isset($classmap[$class])) {
-                $this->logger->debug("Autoloading $class from {$classmap[$class]}");
-                try {
-                    include_once $classmap[$class];
-                } catch (\Throwable $e) {
-                    if (false !== strpos($e->getMessage(), 'PHPUnit')) {
-                        $this->logger->warning("Error autoloading $class from {$classmap[$class]}: " . $e->getMessage());
-                    } else {
-                        $this->logger->error("Error autoloading $class from {$classmap[$class]}: " . $e->getMessage());
-                    }
-                }
-            }
-        });
-    }
-
     protected function buildStringOfAliases(DiscoveredSymbols $modifiedSymbols, string $outputFilename): string
     {
         // TODO: When target !== vendor, there should be a test here to ensure the target autoloader is included, with instructions to add it.
@@ -162,9 +121,7 @@ class Aliases
 
         $aliasesArray = $this->getAliasesArray($modifiedSymbols);
 
-        $autoloadAliasesFileString = $this->getTemplate($aliasesArray, $autoloadAliasesFunctionsString);
-
-        return $autoloadAliasesFileString;
+        return $this->getTemplate($aliasesArray, $autoloadAliasesFunctionsString);
     }
 
     /**
@@ -175,8 +132,8 @@ class Aliases
     {
         $result = [];
 
-        foreach ($symbols->getAll() as $originalSymbolFqdn => $symbol) {
-            if ($symbol->getOriginalSymbol() === $symbol->getReplacement()) {
+        foreach ($symbols->toArray() as $originalSymbolFqdn => $symbol) {
+            if (!$symbol->isDoRename()) {
                 continue;
             }
             if (!($symbol instanceof AutoloadAliasInterface)) {
@@ -197,10 +154,10 @@ class Aliases
         $symbolsByNamespace = ['\\' => []];
         foreach ($modifiedSymbols as $symbol) {
             if ($symbol instanceof FunctionSymbol) {
-                if (!isset($symbolsByNamespace[$symbol->getNamespace()])) {
-                    $symbolsByNamespace[$symbol->getNamespace()] = [];
+                if (!isset($symbolsByNamespace[$symbol->getNamespaceName()])) {
+                    $symbolsByNamespace[$symbol->getNamespaceName()] = [];
                 }
-                $symbolsByNamespace[$symbol->getNamespace()][] = $symbol;
+                $symbolsByNamespace[$symbol->getNamespaceName()][] = $symbol;
             }
             /**
              * "define() will define constants exactly as specified.  So, if you want to define a constant in a
@@ -220,8 +177,8 @@ class Aliases
             foreach ($symbolsByNamespace['\\'] as $symbol) {
                 $aliasesPhpString = '';
 
-                $originalLocalSymbol = $symbol->getOriginalSymbol();
-                $replacementSymbol   = $symbol->getReplacement();
+                $originalLocalSymbol = $symbol->getOriginalFqdnName();
+                $replacementSymbol   = $symbol->getLocalReplacement();
 
                 if ($originalLocalSymbol === $replacementSymbol) {
                     continue;
@@ -242,8 +199,8 @@ class Aliases
                         // Does it matter since all references to use the constant should have been updated to the new name anyway.
                         // TODO: global `const`.
                         $aliasesPhpString = <<<EOD
-        if(!defined('$originalLocalSymbol') && defined('$replacementSymbol')) { 
-            define('$originalLocalSymbol', $replacementSymbol); 
+        if(!defined('$originalLocalSymbol') && defined('$replacementSymbol')) {
+            define('$originalLocalSymbol', $replacementSymbol);
         }
         EOD;
                         break;
@@ -271,7 +228,8 @@ class Aliases
             foreach ($symbols as $symbol) {
                 $originalLocalSymbol = $symbol->getOriginalLocalName();
 
-                $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespace());
+                /** @var NamespaceSymbol $namespaceSymbol */
+                $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespaceName());
 
                 if (!($symbol instanceof FunctionSymbol
                    &&
@@ -281,12 +239,12 @@ class Aliases
                     continue;
                 }
 
-                $unNamespacedOriginalSymbol = trim(str_replace($symbol->getNamespace(), '', $originalLocalSymbol), '\\');
-                $namespacedOriginalSymbol = $symbol->getNamespace() . '\\' . $unNamespacedOriginalSymbol;
+                $unNamespacedOriginalSymbol = trim(str_replace($symbol->getNamespaceName(), '', $originalLocalSymbol), '\\');
+                $namespacedOriginalSymbol = $symbol->getNamespaceName() . '\\' . $unNamespacedOriginalSymbol;
 
                 $replacementSymbol = str_replace(
-                    $namespaceSymbol->getOriginalSymbol(),
-                    $namespaceSymbol->getReplacement(),
+                    $namespaceSymbol->getOriginalFqdnName(),
+                    $namespaceSymbol->getLocalReplacement(),
                     $namespacedOriginalSymbol
                 );
 
@@ -316,12 +274,17 @@ class Aliases
         string $namespacedReplacementFunction
     ): string {
         $namespacedOriginalFunction = '\\\\' . trim($namespacedOriginalFunction, '\\');
-        $namespacedOriginalFunction = preg_replace('/\\\\+/', '\\\\\\\\', $namespacedOriginalFunction);
+        $namespacedOriginalFunction = preg_replace('/\\\\+/', '\\\\\\\\', $namespacedOriginalFunction) ?? (function () {
+            throw new \Exception(preg_last_error_msg(), preg_last_error());
+        })();
 
         $localOriginalFunction = array_reverse(explode('\\', $namespacedOriginalFunction))[0];
 
         $namespacedReplacementFunction = '\\' . trim($namespacedReplacementFunction, '\\');
-        $namespacedReplacementFunction = preg_replace('/\\\\+/', '\\', $namespacedReplacementFunction);
+        $namespacedReplacementFunction = preg_replace('/\\\\+/', '\\', $namespacedReplacementFunction)
+                                         ?? (function () {
+                                             throw new \Exception(preg_last_error_msg(), preg_last_error());
+                                         })();
 
         return <<<EOD
                     if(!function_exists('$namespacedOriginalFunction')){
