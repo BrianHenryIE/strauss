@@ -226,7 +226,6 @@ class Prefixer
         $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
 
 //        $namespacesChanges = $discoveredSymbols->getNamespaces()->getToRename();
-        $constants = $discoveredSymbols->getDiscoveredConstants()->getToRename();
         $functionsToRename = $discoveredSymbols->getDiscoveredFunctions()->getToRename();
 
         $openingString = '';
@@ -313,7 +312,7 @@ class Prefixer
 
         // TODO: Use AST.
         if (!is_null($this->config->getConstantsPrefix())) {
-            $contents = $this->replaceConstants($contents, $constants, $this->config->getConstantsPrefix());
+            $contents = $this->replaceConstants($contents, $discoveredSymbols);
         }
 
         // The following are for replacing symbols inside strings.
@@ -1039,9 +1038,9 @@ class Prefixer
     /**
      * TODO: This should be split and brought to FileScanner.
      */
-    protected function replaceConstants(string $contents, DiscoveredSymbols $originalConstants, string $prefix): string
+    protected function replaceConstants(string $contents, DiscoveredSymbols $discoveredSymbols): string
     {
-        $originalConstantsArray = $originalConstants->toArray();
+        $originalConstantsArray = $discoveredSymbols->getConstants()->toArray();
         usort($originalConstantsArray, fn(ConstantSymbol $a, ConstantSymbol $b) => strlen($b->getOriginalLocalName()) <=> strlen($a->getOriginalLocalName()));
 
         foreach ($originalConstantsArray as $constant) {

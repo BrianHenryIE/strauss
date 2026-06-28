@@ -9,6 +9,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
@@ -100,52 +101,53 @@ class ChangeEnumerator
 
         $classmapPrefix = $this->config->getClassmapPrefix();
 
-
         $classesTraitsInterfaces = array_merge(
             $discoveredSymbols->getDiscoveredTraits()->toArray(),
             $discoveredSymbols->getDiscoveredInterfaces()->toArray(),
             $discoveredSymbols->getAllClasses()->toArray()
         );
 
-        /** @var NamespacedSymbol $symbol */
-        foreach ($classesTraitsInterfaces as $symbol) {
-            if (str_starts_with($symbol->getOriginalFqdnName(), $classmapPrefix)) {
-                // Already prefixed / second scan.
-                continue;
-            }
-
-            if (!$symbol->isDoRename()) {
-                continue;
-            }
-
-            if (empty($classmapPrefix)) {
-                continue;
-            }
-
-            // If we're a namespaced class, apply the fqdnchange.
-            if (!$symbol->getNamespace()->isGlobal()) {
-                if (isset($discoveredNamespaces[$symbol->getNamespaceName()])) {
-                    $newNamespace = $discoveredNamespaces[$symbol->getNamespaceName()];
-                    $replacement = $this->determineNamespaceReplacement(
-                        $newNamespace->getOriginalFqdnName(),
-                        $newNamespace->getLocalReplacement(),
-                        $symbol->getOriginalFqdnName()
-                    );
-
-                    $symbol->setLocalReplacement($replacement);
-
-                    unset($newNamespace, $replacement);
-                }
-            } else {
-                // Global class.
-                // Don't double-prefix classnames.
-                if (str_starts_with($symbol->getOriginalFqdnName(), $this->config->getClassmapPrefix())) {
+        if (!empty($classmapPrefix)) {
+            /** @var NamespacedSymbol $symbol */
+            foreach ($classesTraitsInterfaces as $symbol) {
+                if (str_starts_with($symbol->getOriginalFqdnName(), $classmapPrefix)) {
+                    // Already prefixed / second scan.
                     continue;
                 }
 
-                $this->globalOrPsr0($symbol, $classmapPrefix, $discoveredSymbols);
+                if (! $symbol->isDoRename()) {
+                    unset($symbol);
+                    continue;
+                }
+
+                // If we're a namespaced class, apply the fqdnchange.
+                if (! $symbol->getNamespace()->isGlobal()) {
+                    if (isset($discoveredNamespaces[ $symbol->getNamespaceName() ])) {
+                        $newNamespace = $discoveredNamespaces[ $symbol->getNamespaceName() ];
+                        $replacement  = $this->determineNamespaceReplacement(
+                            $newNamespace->getOriginalFqdnName(),
+                            $newNamespace->getLocalReplacement(),
+                            $symbol->getOriginalFqdnName()
+                        );
+
+                        $symbol->setLocalReplacement($replacement);
+
+                        unset($newNamespace, $replacement);
+                    }
+                } else {
+                    // Global class.
+                    // Don't double-prefix classnames.
+                    if (str_starts_with($symbol->getOriginalFqdnName(), $this->config->getClassmapPrefix())) {
+                        continue;
+                    }
+
+                    $this->globalOrPsr0($symbol, $classmapPrefix, $discoveredSymbols);
+                }
+
+                unset($symbol);
             }
         }
+        unset($classmapPrefix, $classesTraitsInterfaces);
 
         $functionsSymbols = $discoveredSymbols->getDiscoveredFunctions();
 
@@ -160,6 +162,16 @@ class ChangeEnumerator
                 continue;
             }
             $this->globalOrPsr0($symbol, $functionPrefix, $discoveredSymbols);
+
+            unset($symbol);
+        }
+        unset($functionsSymbols);
+
+        if ($this->config->getConstantsPrefix()) {
+            $constantPrefix = $this->config->getConstantsPrefix();
+            foreach ($discoveredSymbols->getConstants() as $constantSymbol) {
+                $constantSymbol->setLocalReplacement($constantPrefix . $constantSymbol->getOriginalLocalName());
+            }
         }
     }
 

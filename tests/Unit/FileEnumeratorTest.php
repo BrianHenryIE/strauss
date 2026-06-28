@@ -60,6 +60,7 @@ class FileEnumeratorTest extends TestCase
         $config->allows('getProjectAbsolutePath')->andReturn('/project');
         $config->allows('getAbsoluteVendorDirectory')->andReturn('/project/vendor');
         $config->allows('getAbsoluteTargetDirectory')->andReturn('/project/vendor-prefixed');
+        $config->allows('getExcludeGitFiles')->andReturnFalse();
 
         $filesystem = Mockery::mock(FileSystem::class);
         $filesystem->expects('findAllFilesAbsolutePaths')
@@ -118,6 +119,7 @@ class FileEnumeratorTest extends TestCase
         $config->allows('getProjectAbsolutePath')->andReturn('mem://project');
         $config->allows('getAbsoluteVendorDirectory')->andReturn('mem://project/vendor');
         $config->allows('getAbsoluteTargetDirectory')->andReturn('mem://project/vendor-prefixed');
+        $config->allows('getExcludeGitFiles')->andReturnFalse();
 
         $dependencyForDependencies = $this->mockDependency(
             'vendor/vendor-a',

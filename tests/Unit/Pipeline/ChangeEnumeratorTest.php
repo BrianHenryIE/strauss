@@ -25,6 +25,7 @@ class ChangeEnumeratorTest extends TestCase
         $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
         $config->expects('getClassmapPrefix')->andReturn('Class_Prefix_');
         $config->expects('getFunctionsPrefix')->andReturn('functions_prefix_')->atLeast()->once();
+        $config->allows('getConstantsPrefix')->andReturnNull();
 
         $sut = new ChangeEnumerator($config, $this->getTestLogger());
 
