@@ -82,7 +82,7 @@ class GitFilesFeatureTest extends IntegrationTestCase
     private function createConfig(bool $excludeGitFiles): StraussConfig
     {
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getExcludeGitFiles')->willReturn($excludeGitFiles);
+        $config->method('isExcludeGitFiles')->willReturn($excludeGitFiles);
         $config->method('getAbsoluteVendorDirectory')->willReturn($this->testsWorkingDir);
         $config->method('getAbsoluteTargetDirectory')->willReturn($this->testsWorkingDir . '/vendor-prefixed');
         return $config;

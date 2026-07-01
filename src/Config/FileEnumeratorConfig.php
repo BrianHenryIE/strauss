@@ -24,5 +24,5 @@ interface FileEnumeratorConfig
      * Whether to skip `.git`, `.gitignore`-matched and `.gitattributes`.`[].export-ignore` files when
      * enumerating each package's files.
      */
-    public function getExcludeGitFiles(): bool;
+    public function isExcludeGitFiles(): bool;
 }
