@@ -68,7 +68,19 @@ class FileEnumerator
      */
     public function compileFileListForPaths(array $paths, ?ComposerPackage $dependency = null): DiscoveredFiles
     {
-        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths($paths);
+        // First get the files in the root of the path.
+        $directoryListingByPath = [];
+        foreach ($paths as $path) {
+            $directoryListingByPath[$path] = $this->filesystem->findAllFilesAbsolutePaths([$path], false, false);
+        }
+
+        if ($this->config->isExcludeGitFiles()) {
+            foreach ($directoryListingByPath as $path => $files) {
+                $directoryListingByPath[$path] = $this->excludeGitFiles($paths, $files);
+            }
+        }
+
+        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths(...array_values($directoryListingByPath));
 
         if ($this->config->isExcludeGitFiles()) {
             $absoluteFilePaths = $this->excludeGitFiles($paths, $absoluteFilePaths);
