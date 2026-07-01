@@ -28,7 +28,7 @@ class FileEnumeratorTest extends TestCase
     public function test_file_does_not_exist(): void
     {
         $config = Mockery::mock(FileEnumeratorConfig::class);
-        $config->allows('getExcludeGitFiles')->andReturnFalse();
+        $config->allows('isExcludeGitFiles')->andReturnFalse();
         $filesystem = $this->getInMemoryFileSystem();
         $logger = $this->getLogger();
 

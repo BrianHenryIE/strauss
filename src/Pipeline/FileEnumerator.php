@@ -70,7 +70,7 @@ class FileEnumerator
     {
         $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths($paths);
 
-        if ($this->config->getExcludeGitFiles()) {
+        if ($this->config->isExcludeGitFiles()) {
             $absoluteFilePaths = $this->excludeGitFiles($paths, $absoluteFilePaths);
         }
 
