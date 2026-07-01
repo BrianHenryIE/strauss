@@ -62,7 +62,7 @@
         "phpstan/phpstan": "^1.10",
         "phpstan/phpstan-mockery": "^1.1",
         "phpunit/phpcov": "*",
-        "phpunit/phpunit": "^9|^10",
+        "phpunit/phpunit": "^13.2.2",
         "squizlabs/php_codesniffer": "^4.0"
     },
     "conflict": {
