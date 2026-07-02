@@ -80,7 +80,7 @@ class FileEnumerator
             // `$path` here is from the array of paths the method was called with, it is each `$files` entry we need,
             // to check, to avoid wasting time getting directory listings for excluded directories.
             foreach ($directoryListingByPath as $path => $files) {
-                $directoryListingByPath[$path] = $this->excludeGitFiles($paths, $files);
+                $directoryListingByPath[$path] = $this->excludeGitFiles([$path], $files);
             }
         }
 
