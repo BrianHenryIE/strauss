@@ -70,15 +70,15 @@ class FileEnumerator
         array $paths,
         ?ComposerPackage $dependency = null
     ): DiscoveredFiles {
-        // First get the files in the root of the path.
+        // First, shallowly list each path's top-level entries (files and directories, non-recursive).
         $directoryListingByPath = [];
         foreach ($paths as $path) {
             $directoryListingByPath[$path] = $this->filesystem->findAllFilesAbsolutePaths([$path], false, false);
         }
 
         if ($this->config->isExcludeGitFiles()) {
-            // `$path` here is from the array of paths the method was called with, it is each `$files` entry we need,
-            // to check, to avoid wasting time getting directory listings for excluded directories.
+            // Apply the Git exclusion rules to each path's top-level entries before recursing, so we
+            // never deep-list (descend into) directories that Git would exclude, e.g. `.git`.
             foreach ($directoryListingByPath as $path => $files) {
                 $directoryListingByPath[$path] = $this->excludeGitFiles([$path], $files);
             }
