@@ -66,8 +66,10 @@ class FileEnumerator
      * @param string[] $paths
      * @throws FilesystemException
      */
-    public function compileFileListForPaths(array $paths, ?ComposerPackage $dependency = null): DiscoveredFiles
-    {
+    public function compileFileListForPaths(
+        array $paths,
+        ?ComposerPackage $dependency = null
+    ): DiscoveredFiles {
         // First get the files in the root of the path.
         $directoryListingByPath = [];
         foreach ($paths as $path) {
@@ -75,12 +77,14 @@ class FileEnumerator
         }
 
         if ($this->config->isExcludeGitFiles()) {
+            // `$path` here is from the array of paths the method was called with, it is each `$files` entry we need,
+            // to check, to avoid wasting time getting directory listings for excluded directories.
             foreach ($directoryListingByPath as $path => $files) {
                 $directoryListingByPath[$path] = $this->excludeGitFiles($paths, $files);
             }
         }
 
-        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths(...array_values($directoryListingByPath));
+        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths(array_merge(...array_values($directoryListingByPath)));
 
         if ($this->config->isExcludeGitFiles()) {
             $absoluteFilePaths = $this->excludeGitFiles($paths, $absoluteFilePaths);
