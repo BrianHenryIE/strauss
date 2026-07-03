@@ -136,7 +136,8 @@ class FileEnumerator
                     $repositories[$normalizedBasePath][ 'gitignore'] = $gitIgnoreChecker;
                 } catch (GitIgnoreCherkerException $e) {
                     // e.g. when the path is not on the local filesystem (in-memory tests).
-                    $this->logger->debug("Could not read .gitignore at {path}: {message}", [
+                    // The user explicitly enabled Git exclusion, so surface the failure to honour it.
+                    $this->logger->warning("Could not read .gitignore at {path}: {message}", [
                         'path' => $normalizedBasePath,
                         'message' => $e->getMessage(),
                     ]);
@@ -188,7 +189,7 @@ class FileEnumerator
                         return true;
                     }
                 } catch (GitIgnoreCherkerException $e) {
-                    $this->logger->debug("Could not check .gitignore for {path}: {message}", [
+                    $this->logger->warning("Could not check .gitignore for {path}: {message}", [
                         'path' => $sourceAbsolutePath,
                         'message' => $e->getMessage(),
                     ]);
