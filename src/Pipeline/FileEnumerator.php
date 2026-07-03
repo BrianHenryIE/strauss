@@ -120,6 +120,13 @@ class FileEnumerator
 
             $normalizedBasePath = rtrim(FileSystem::normalizeDirSeparator($basePath), '/');
 
+            // A `.git` directory is never part of the distributed package, so its presence alone is
+            // enough to enable pruning – even without a `.gitignore`/`.gitattributes`. Registering the
+            // base path here ensures `isGitExcluded()` runs its `.git` check for it.
+            if ($this->filesystem->directoryExists($normalizedBasePath . '/.git')) {
+                $repositories[$normalizedBasePath] ??= [];
+            }
+
             if ($this->filesystem->fileExists($normalizedBasePath . '/.gitignore')) {
                 try {
                     /**

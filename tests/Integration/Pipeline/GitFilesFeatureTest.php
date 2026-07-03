@@ -134,6 +134,30 @@ class GitFilesFeatureTest extends IntegrationTestCase
     }
 
     /**
+     * The `.git` directory is never part of a distributed package, so it must be excluded whenever the
+     * flag is enabled – even for a package that has no `.gitignore`/`.gitattributes` to otherwise
+     * trigger Git processing.
+     */
+    public function test_git_directory_is_excluded_without_gitignore_or_gitattributes(): void
+    {
+        $packageDir = $this->testsWorkingDir . '/package-no-dotfiles';
+        $filesystem = $this->getFileSystem();
+        $filesystem->write($packageDir . '/src/Real.php', '<?php // keep');
+        $filesystem->write($packageDir . '/.git/config', '[core]');
+
+        $fileEnumerator = new FileEnumerator(
+            $this->createConfig(true),
+            $this->getFileSystem(),
+            $this->getLogger()
+        );
+
+        $files = $fileEnumerator->compileFileListForPaths([$packageDir]);
+
+        $this->assertDiscoveredContains($files, 'package-no-dotfiles/src/Real.php');
+        $this->assertDiscoveredNotContains($files, '.git/config');
+    }
+
+    /**
      * The performance optimisation prunes Git-excluded top-level entries (`.git`, the `.gitignore`d
      * `build/`, the `export-ignore`d `tests/`) from a shallow listing *before* recursing, so those
      * directories are never deep-listed.
