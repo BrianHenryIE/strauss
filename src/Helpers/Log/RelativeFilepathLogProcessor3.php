@@ -8,7 +8,6 @@
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use CommunityHive\App\Illuminate\Support\Facades\Log;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 
