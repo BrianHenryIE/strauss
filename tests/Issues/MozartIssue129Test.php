@@ -33,7 +33,7 @@ class MozartIssue129Test extends TestCase
      *
      * @dataProvider pairTestDataProvider
      */
-	#[DataProvider('pairTestDataProvider')]
+    #[DataProvider('pairTestDataProvider')]
     public function test_test($phpString, $expected)
     {
 

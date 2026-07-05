@@ -19,7 +19,7 @@ class CleanupIntegrationTest extends IntegrationTestCase
     /**
      * @dataProvider provider_optimize_autoloader_for_vendor_autoload_real
      */
-	#[DataProvider('provider_optimize_autoloader_for_vendor_autoload_real')]
+    #[DataProvider('provider_optimize_autoloader_for_vendor_autoload_real')]
     public function test_optimize_autoloader_for_vendor_autoload_real(string $composerJsonString, bool $expectAuthoritative): void
     {
         try {
