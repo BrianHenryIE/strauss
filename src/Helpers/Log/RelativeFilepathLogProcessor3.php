@@ -28,15 +28,17 @@ class RelativeFilepathLogProcessor3 implements ProcessorInterface
      */
     public function __invoke(LogRecord $record): LogRecord
     {
-        $recordArray = (array) $record;
 
-        $context = $recordArray['context'];
+        $context = $record->context;
 
+		$updated = false;
         foreach ($context as $key => $val) {
             if (false !== stripos($key, 'path') && is_string($val)) {
-                $recordArray['context'][$key] = $this->fileSystem->getProjectRelativePath($val);
+	            $context[$key] = $this->fileSystem->getProjectRelativePath($val);
+				$updated = true;
             }
         }
-        return new LogRecord(...$recordArray);
+
+	    return $updated ? $record->with(...['context' => $context]) : $record;
     }
 }
