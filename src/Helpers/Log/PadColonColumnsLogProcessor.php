@@ -18,6 +18,6 @@ class PadColonColumnsLogProcessor
                 : new PadColonColumnsLogProcessor3();
         }
 
-        throw new \Exception('Failed to get monolog verions');
+        throw new \Exception('Failed to get monolog version');
     }
 }

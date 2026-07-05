@@ -19,6 +19,6 @@ class RelativeFilepathLogProcessor
                 : new RelativeFilepathLogProcessor3($fileSystem);
         }
 
-        throw new \Exception('Failed to get monolog verions');
+        throw new \Exception('Failed to get monolog version');
     }
 }
