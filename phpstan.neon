@@ -14,6 +14,12 @@ parameters:
         - src
         - bin/strauss
 
+    excludePaths:
+        # Monolog 2 is installed at PHP 7.4, the Monolog 3 implementation can not be understood.
+        # Parameter #1 $record (Monolog\LogRecord) of ::__invoke() is not contravariant with parameter #1 $record (array) of method Monolog\Processor\ProcessorInterface::__invoke().
+        - src/Helpers/Log/PadColonColumnsLogProcessor3.php
+        - src/Helpers/Log/RelativeFilepathLogProcessor3.php
+
     ignoreErrors:
         -
             message: '#Property.*excludePackages is unused#'
