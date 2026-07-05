@@ -289,6 +289,7 @@ I don't have a strong opinion on these. I began using Mozart because it was easy
 * [tschallacka/wordpress-composer-plugin-builder](https://github.com/tschallacka/wordpress-composer-plugin-builder)
 * [Interfacelab/namespacer](https://github.com/Interfacelab/namespacer)
 * [PHP-Prefixer](https://github.com/PHP-Prefixer) SaaS!
+* [veronalabs/wp-scoper](https://github.com/veronalabs/wp-scoper)
 
 ### Interesting
 
