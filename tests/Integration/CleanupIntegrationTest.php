@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Util\Platform;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Class CleanupIntegrationTest
@@ -20,6 +21,7 @@ class CleanupIntegrationTest extends IntegrationTestCase
     /**
      * @dataProvider provider_optimize_autoloader_for_vendor_autoload_real
      */
+	#[DataProvider('provider_optimize_autoloader_for_vendor_autoload_real')]
     public function test_optimize_autoloader_for_vendor_autoload_real(string $composerJsonString, bool $expectAuthoritative): void
     {
         try {

@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\Strauss\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\NamespaceSort
@@ -62,6 +63,7 @@ class NamespaceSortTest extends TestCase
      * @param bool $order Longest (false)/shortest (true))
      * @param string $expectedFirst After sorting, the first element in the array should be this
      */
+	#[DataProvider('namespaceSortDataProvider')]
     public function testNamespaceSort(array $inputs, bool $order, string $expectedFirst)
     {
 

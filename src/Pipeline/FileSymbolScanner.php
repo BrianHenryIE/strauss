@@ -194,6 +194,7 @@ class FileSymbolScanner
                 ]);
                 continue;
             }
+            $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
 
             /** @var PHPClass[] $phpClasses */
             $phpClasses = $phpCode->getClasses();
@@ -456,6 +457,14 @@ class FileSymbolScanner
     {
         $parserContainer = new ParserContainer();
         $visitor = new ASTVisitor($parserContainer);
+
+        /**
+         * PhpUnit error "Test code or tested code removed error handlers other than its own" caused by the
+         * code parser removing an error handler. TODO: Fix this in the library then remove this line.
+         *
+         * @see PhpCodeParser::getPhpFiles()
+         */
+        set_error_handler(function (){ return true; });
 
         $result = PhpCodeParser::process($contents, null, $parserContainer, $visitor);
         if ($result instanceof ParserErrorHandler) {

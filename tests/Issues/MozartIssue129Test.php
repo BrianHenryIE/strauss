@@ -15,10 +15,13 @@ namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Class MozartIssue129Test
@@ -33,6 +36,7 @@ class MozartIssue129Test extends TestCase
      *
      * @dataProvider pairTestDataProvider
      */
+	#[DataProvider('pairTestDataProvider')]
     public function test_test(string $phpString, string $expected): void
     {
         $config = $this->createMock(StraussConfig::class);
