@@ -3,7 +3,6 @@
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use CommunityHive\App\Symfony\Component\Config\Util\Exception\XmlParsingException;
 use Composer\InstalledVersions;
 use Monolog\Processor\ProcessorInterface;
 
