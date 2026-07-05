@@ -709,7 +709,7 @@ class StraussConfig implements
     /**
      * Should exclude `.git` directory and read and follow `.gitignore` and `.gitattributes` files. Mostly relevant for local symlinked packages.
      */
-    public function getExcludeGitFiles(): bool
+    public function isExcludeGitFiles(): bool
     {
         return $this->excludeGitFiles;
     }

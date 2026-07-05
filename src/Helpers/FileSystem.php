@@ -109,8 +109,11 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      * @return string[]
      * @throws FilesystemException
      */
-    public function findAllFilesAbsolutePaths(array $fileAndDirPaths, bool $excludeDirectories = false): array
-    {
+    public function findAllFilesAbsolutePaths(
+        array $fileAndDirPaths,
+        bool $excludeDirectories = false,
+        bool $deep = FilesystemReader::LIST_DEEP
+    ): array {
         $files = [];
 
         foreach ($fileAndDirPaths as $path) {
@@ -121,7 +124,7 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
 
             $directoryListing = $this->listContents(
                 $path,
-                FilesystemReader::LIST_DEEP
+                $deep
             );
 
             /** @var FileAttributes[] $fileAttributesArray */
