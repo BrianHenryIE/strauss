@@ -1255,7 +1255,7 @@ EOD;
             file_put_contents($tmpfname, $composerExtraStraussJson);
             $composer = Factory::create(new NullIO(), $tmpfname);
             $sut = new StraussConfig($composer);
-            $this->assertTrue($sut->getExcludeGitFiles());
+            $this->assertTrue($sut->isExcludeGitFiles());
         } finally {
             unlink($tmpfname);
         }
@@ -1278,7 +1278,7 @@ EOD;
             file_put_contents($tmpfname, $composerExtraStraussJson);
             $composer = Factory::create(new NullIO(), $tmpfname);
             $sut = new StraussConfig($composer);
-            $this->assertFalse($sut->getExcludeGitFiles());
+            $this->assertFalse($sut->isExcludeGitFiles());
         } finally {
             unlink($tmpfname);
         }

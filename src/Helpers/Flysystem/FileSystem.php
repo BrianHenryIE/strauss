@@ -162,8 +162,11 @@ class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer,
      * @return string[]
      * @throws FilesystemException
      */
-    public function findAllFilesAbsolutePaths(array $fileAndDirPaths, bool $excludeDirectories = false): array
-    {
+    public function findAllFilesAbsolutePaths(
+        array $fileAndDirPaths,
+        bool $excludeDirectories = false,
+        bool $deep = FilesystemReader::LIST_DEEP
+    ): array {
         $files = [];
 
         foreach ($fileAndDirPaths as $path) {
@@ -174,7 +177,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer,
 
             $directoryListing = $this->listContents(
                 $path,
-                FilesystemReader::LIST_DEEP
+                $deep
             );
 
             /** @var FileAttributes[] $fileAttributesArray */

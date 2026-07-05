@@ -32,7 +32,7 @@ class FileEnumeratorTest extends TestCase
         $this->expectWarningLogs();
 
         $config = Mockery::mock(FileEnumeratorConfig::class);
-        $config->allows('getExcludeGitFiles')->andReturnFalse();
+        $config->allows('isExcludeGitFiles')->andReturnFalse();
 
         $filesystem = $this->getInMemoryFileSystem();
 

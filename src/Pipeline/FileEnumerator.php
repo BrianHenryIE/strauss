@@ -77,11 +77,27 @@ class FileEnumerator
      * @param string[] $paths
      * @throws FilesystemException
      */
-    public function compileFileListForPaths(array $paths, ?ComposerPackage $dependency = null): DiscoveredFiles
-    {
-        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths($paths);
+    public function compileFileListForPaths(
+        array $paths,
+        ?ComposerPackage $dependency = null
+    ): DiscoveredFiles {
+        // First, shallowly list each path's top-level entries (files and directories, non-recursive).
+        $directoryListingByPath = [];
+        foreach ($paths as $path) {
+            $directoryListingByPath[$path] = $this->filesystem->findAllFilesAbsolutePaths([$path], false, false);
+        }
 
-        if ($this->config->getExcludeGitFiles()) {
+        if ($this->config->isExcludeGitFiles()) {
+            // Apply the Git exclusion rules to each path's top-level entries before recursing, so we
+            // never deep-list (descend into) directories that Git would exclude, e.g. `.git`.
+            foreach ($directoryListingByPath as $path => $files) {
+                $directoryListingByPath[$path] = $this->excludeGitFiles([$path], $files);
+            }
+        }
+
+        $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths(array_merge(...array_values($directoryListingByPath)));
+
+        if ($this->config->isExcludeGitFiles()) {
             $absoluteFilePaths = $this->excludeGitFiles($paths, $absoluteFilePaths);
         }
 
@@ -115,6 +131,13 @@ class FileEnumerator
 
             $normalizedBasePath = rtrim(FileSystem::normalizeDirSeparator($basePath), '/');
 
+            // A `.git` directory is never part of the distributed package, so its presence alone is
+            // enough to enable pruning – even without a `.gitignore`/`.gitattributes`. Registering the
+            // base path here ensures `isGitExcluded()` runs its `.git` check for it.
+            if ($this->filesystem->directoryExists($normalizedBasePath . '/.git')) {
+                $repositories[$normalizedBasePath] ??= [];
+            }
+
             if ($this->filesystem->fileExists($normalizedBasePath . '/.gitignore')) {
                 try {
                     /**
@@ -124,7 +147,8 @@ class FileEnumerator
                     $repositories[$normalizedBasePath][ 'gitignore'] = $gitIgnoreChecker;
                 } catch (GitIgnoreCherkerException $e) {
                     // e.g. when the path is not on the local filesystem (in-memory tests).
-                    $this->logger->debug("Could not read .gitignore at {path}: {message}", [
+                    // The user explicitly enabled Git exclusion, so surface the failure to honour it.
+                    $this->logger->warning("Could not read .gitignore at {path}: {message}", [
                         'path' => $normalizedBasePath,
                         'message' => $e->getMessage(),
                     ]);
@@ -176,7 +200,7 @@ class FileEnumerator
                         return true;
                     }
                 } catch (GitIgnoreCherkerException $e) {
-                    $this->logger->debug("Could not check .gitignore for {path}: {message}", [
+                    $this->logger->warning("Could not check .gitignore for {path}: {message}", [
                         'path' => $sourceAbsolutePath,
                         'message' => $e->getMessage(),
                     ]);

@@ -71,6 +71,7 @@ EOD;
             $this->pathNormalizer->normalizePath($this->testsWorkingDir)
         );
         $config->expects('getExcludeGitFiles')->andReturnFalse();
+        $config->expects('isExcludeGitFiles')->andReturnFalse();
 
         $fileEnumerator = new FileEnumerator(
             $config,
