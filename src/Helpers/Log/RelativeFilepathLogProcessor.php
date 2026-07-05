@@ -1,40 +1,24 @@
 <?php
-/**
- * A logger that changes file paths to be relative to the project directory.
- *
- * @see \BrianHenryIE\Strauss\Helpers\FileSystem::getProjectRelativePath()
- */
 
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
 use BrianHenryIE\Strauss\Helpers\FileSystem;
+use CommunityHive\App\Symfony\Component\Config\Util\Exception\XmlParsingException;
+use Composer\InstalledVersions;
 use Monolog\Processor\ProcessorInterface;
 
-class RelativeFilepathLogProcessor implements ProcessorInterface
+class RelativeFilepathLogProcessor
 {
-    protected FileSystem $fileSystem;
 
-    public function __construct(
-        FileSystem $fileSystem
-    ) {
-        $this->fileSystem = $fileSystem;
-    }
-
-    /**
-     * Checks all context values for keys containing 'path' modifies their values to be
-     * relative to the project root.
-     *
-     */
-    public function __invoke(array $record): array
+    public static function make(FileSystem $fileSystem): ProcessorInterface
     {
-        $context = $record['context'];
-
-        foreach ($context as $key => $val) {
-            if (false !== stripos($key, 'path') && is_string($val)) {
-                $record['context'][$key] = $this->fileSystem->getProjectRelativePath($val);
-            }
+        if (1 === preg_match('/^\D*(\d+)/', InstalledVersions::getVersion('monolog/monolog'), $matches)) {
+            $majorVersion = (int) $matches[1];
+            return 2 === $majorVersion
+                ? new RelativeFilepathLogProcessor2($fileSystem)
+                : new RelativeFilepathLogProcessor3($fileSystem);
         }
 
-        return $record;
+        throw new \Exception('Failed to get monolog verions');
     }
 }
