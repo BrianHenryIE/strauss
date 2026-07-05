@@ -1,49 +1,17 @@
 <?php
-/**
- * A logger that changes file paths to be relative to the project directory.
- *
- * If a variable that is being replaced as the term 'path' in it, the path will be made relative to workingdir.
- *
- * @see \BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem::getProjectRelativePath()
- */
 
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
-use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Monolog\Processor\ProcessorInterface;
 
-class RelativeFilepathLogProcessor implements ProcessorInterface
+class RelativeFilepathLogProcessor
 {
-    protected FileSystem $fileSystem;
 
-    public function __construct(
-        FileSystem $fileSystem
-    ) {
-        $this->fileSystem = $fileSystem;
-    }
-
-    /**
-     * Checks all context values for keys containing 'path' modifies their values to be
-     * relative to the project root.
-     *
-     */
-    public function __invoke(array $record): array
+    public static function make(FileSystem $fileSystem): ProcessorInterface
     {
-        $context = $record['context'];
-
-        foreach ($context as $key => $val) {
-            if (false !== stripos($key, 'path') && is_string($val)) {
-                if ($this->isAbsolutePath($val)) {
-                    $record['context'][ $key ] = $this->fileSystem->getProjectRelativePath($val);
-                }
-            }
-        }
-
-        return $record;
-    }
-
-    protected function isAbsolutePath(string $path): bool
-    {
-        return 0 !== strpos($path, '..');
+        return \Monolog\Logger::API === 2
+                ? new RelativeFilepathLogProcessor2($fileSystem)
+                : new RelativeFilepathLogProcessor3($fileSystem);
     }
 }

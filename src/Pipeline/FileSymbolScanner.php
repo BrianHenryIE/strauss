@@ -196,6 +196,18 @@ class FileSymbolScanner
             }
             $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
 
+            PhpCodeParser::$classExistsAutoload = false;
+            /**
+             * PhpUnit error "Test code or tested code removed error handlers other than its own" caused by the
+             * code parser removing an error handler. TODO: Fix this in the library then remove this line.
+             *
+             * @see PhpCodeParser::getPhpFiles()
+             */
+            set_error_handler(function () {
+                return true;
+            });
+            $phpCode = PhpCodeParser::getFromString($contents);
+
             /** @var PHPClass[] $phpClasses */
             $phpClasses = $phpCode->getClasses();
             foreach ($phpClasses as $fqdnClassname => $class) {

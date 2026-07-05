@@ -161,9 +161,9 @@ abstract class AbstractRenamespacerCommand extends Command
     protected function configureLogger(Logger $logger, InputInterface $input, OutputInterface $output): void
     {
         $logger->pushProcessor(new PsrLogMessageProcessor());
-        $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
-        $logger->pushProcessor(new PadColonColumnsLogProcessor());
-        $logger->pushHandler(new PsrHandler($this->getConsoleLogger($input, $output)));
+        $logger->pushProcessor(RelativeFilepathLogProcessor::make($this->filesystem));
+        $logger->pushProcessor(PadColonColumnsLogProcessor::make());
+        $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
     }
 
     public function setLogger(LoggerInterface $logger): void
