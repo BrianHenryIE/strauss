@@ -10,14 +10,8 @@ class PadColonColumnsLogProcessor
 
     public static function make(): ProcessorInterface
     {
-
-        if (1 === preg_match('/^\D*(\d+)/', InstalledVersions::getVersion('monolog/monolog'), $matches)) {
-            $majorVersion = (int) $matches[1];
-            return 2 === $majorVersion
+        return \Monolog\Logger::API === 2
                 ? new PadColonColumnsLogProcessor2()
                 : new PadColonColumnsLogProcessor3();
-        }
-
-        throw new \Exception('Failed to get monolog version');
     }
 }
