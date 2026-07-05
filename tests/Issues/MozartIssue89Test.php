@@ -51,10 +51,8 @@ class MozartIssue89Test extends IntegrationTestCase
      *  }
      *
      * @see https://github.com/coenjacobs/mozart/issues/89
-     *
-     * @test
      */
-    public function it_moves_each_file_once_per_namespace()
+    public function test_it_moves_each_file_once_per_namespace()
     {
         $this->markTestSkippedOnPhpVersionBelow('7.1');
         $this->markTestSkippedOnPhpVersionAbove('7.4');
