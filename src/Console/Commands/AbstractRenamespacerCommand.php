@@ -129,8 +129,8 @@ abstract class AbstractRenamespacerCommand extends Command
 
         $logger = new Logger('logger');
         $logger->pushProcessor(new PsrLogMessageProcessor());
-        $logger->pushProcessor(new RelativeFilepathLogProcessor($this->filesystem));
-        $logger->pushProcessor(new PadColonColumnsLogProcessor());
+        $logger->pushProcessor(RelativeFilepathLogProcessor::make($this->filesystem));
+        $logger->pushProcessor(PadColonColumnsLogProcessor::make());
         $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
         $this->setLogger($logger);
 

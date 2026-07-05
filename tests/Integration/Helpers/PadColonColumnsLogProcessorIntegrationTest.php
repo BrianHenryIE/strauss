@@ -15,7 +15,7 @@ class PadColonColumnsLogProcessorIntegrationTest extends TestCase
         $colorLogger = new ColorLogger();
 
         $logger = new Logger('logger');
-        $logger->pushProcessor(new PadColonColumnsLogProcessor());
+        $logger->pushProcessor(PadColonColumnsLogProcessor::make());
         $logger->pushHandler(new PsrHandler($colorLogger));
 
         $logger->info('Brian:::was here');

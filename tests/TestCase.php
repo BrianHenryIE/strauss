@@ -201,7 +201,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         $logger = new Logger('logger');
         $logger->pushProcessor(new PsrLogMessageProcessor());
-        $logger->pushProcessor(new RelativeFilepathLogProcessor($this->getInMemoryFileSystem()));
+        $logger->pushProcessor(RelativeFilepathLogProcessor::make($this->getInMemoryFileSystem()));
         $logger->pushHandler(new PsrHandler($this->getTestLogger()));
 
         return $logger;
