@@ -36,7 +36,7 @@ class MozartIssue129Test extends TestCase
      *
      * @dataProvider pairTestDataProvider
      */
-	#[DataProvider('pairTestDataProvider')]
+    #[DataProvider('pairTestDataProvider')]
     public function test_test(string $phpString, string $expected): void
     {
         $config = $this->createMock(StraussConfig::class);

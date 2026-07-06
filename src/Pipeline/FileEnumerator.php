@@ -100,7 +100,6 @@ class FileEnumerator
         if ($this->config->isExcludeGitFiles()) {
             $absoluteFilePaths = $this->excludeGitFiles($paths, $absoluteFilePaths);
         }
-
         foreach ($absoluteFilePaths as $sourceAbsolutePath) {
             $this->addFile($sourceAbsolutePath, $dependency);
         }

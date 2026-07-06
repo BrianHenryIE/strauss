@@ -40,7 +40,7 @@ class PadColonColumnsLogProcessor3 implements ProcessorInterface
 
         $messageParts[0] = $this->pad($messageParts[0], $this->padLength);
 
-	    return $record->with(...['message'=> implode('', $messageParts)]);
+        return $record->with(...['message'=> implode('', $messageParts)]);
     }
 
     private function pad(string $text, int $padLength): string

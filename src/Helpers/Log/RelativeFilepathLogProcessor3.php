@@ -31,14 +31,14 @@ class RelativeFilepathLogProcessor3 implements ProcessorInterface
 
         $context = $record->context;
 
-		$updated = false;
+        $updated = false;
         foreach ($context as $key => $val) {
             if (false !== stripos($key, 'path') && is_string($val)) {
-	            $context[$key] = $this->fileSystem->getProjectRelativePath($val);
-				$updated = true;
+                $context[$key] = $this->fileSystem->getProjectRelativePath($val);
+                $updated = true;
             }
         }
 
-	    return $updated ? $record->with(...['context' => $context]) : $record;
+        return $updated ? $record->with(...['context' => $context]) : $record;
     }
 }
