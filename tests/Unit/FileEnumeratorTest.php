@@ -62,18 +62,31 @@ class FileEnumeratorTest extends TestCase
         $config->allows('getAbsoluteTargetDirectory')->andReturn('/project/vendor-prefixed');
         $config->allows('isExcludeGitFiles')->andReturnFalse();
 
+        set_error_handler(function () {
+            return true;
+        });
         $filesystem = Mockery::mock(FileSystem::class);
-        $filesystem->expects('findAllFilesAbsolutePaths')
-            ->with(['/project/vendor/vendor-b'])
-            ->andReturn(
+        restore_error_handler();
+
+        // `compileFileListForPaths()` scans in two phases per package: first a shallow,
+        // non-recursive listing of the package's top-level entries, then a deep listing over
+        // those entries. With two dependencies that is four calls, in this order:
+        $filesystem->allows('findAllFilesAbsolutePaths')->andReturnValues(
+            [
+                // vendor-b: shallow top-level listing, then deep listing.
+                ['/project/vendor/vendor-b/src'],
                 [
                     '/project/vendor/vendor-b/src/Z.php',
                     '/project/vendor/vendor-b/src/B.php',
-                ]
-            );
-        $filesystem->expects('findAllFilesAbsolutePaths')
-            ->with(['/project/vendor/vendor-a'])
-            ->andReturn(['/project/vendor/vendor-a/src/A.php']);
+                ],
+                // vendor-a: shallow top-level listing, then deep listing.
+                ['/project/vendor/vendor-a/src'],
+                [
+                    '/project/vendor/vendor-a/src/A.php',
+                ],
+            ]
+        );
+
         $filesystem->allows('directoryExists')->andReturnFalse();
         $filesystem->allows('fileExists')->andReturnTrue();
         $filesystem->allows('getRelativePath')->andReturnArg(1);
