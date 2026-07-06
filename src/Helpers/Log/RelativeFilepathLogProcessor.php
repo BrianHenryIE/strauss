@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Helpers\Log;
 
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Monolog\Processor\ProcessorInterface;
 
 class RelativeFilepathLogProcessor
