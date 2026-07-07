@@ -14,8 +14,11 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use Exception;
 use League\Flysystem\StorageAttributes;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -104,19 +107,16 @@ class IntegrationTestCase extends TestCase
                 unset($paramsSplit[0]);
                 break;
             default:
-                $strauss = new DependenciesCommand();
+                $strauss = new class() extends  DependenciesCommand {
+					public LoggerInterface $testLogger;
+					protected function getLogger( InputInterface $input, OutputInterface $output ): LoggerInterface {
+						return $this->testLogger;
+					}
+                };
+				$strauss->testLogger = $this->getLogger();
         }
 
-        $strauss->setLogger($this->getLogger());
-
-        // TODO: I don't know what I did to break the previous colorlogger output so this is just a crutch.
-        $output = new class() extends BufferedOutput {
-            protected function doWrite(string $message, bool $newline)
-            {
-                parent::doWrite($message, $newline);
-                echo $message . PHP_EOL;
-            }
-        };
+        $output = new BufferedOutput();
 
         foreach (array_filter(explode(' ', $env)) as $pair) {
             $kv = explode('=', $pair);
