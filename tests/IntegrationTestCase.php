@@ -86,9 +86,30 @@ class IntegrationTestCase extends TestCase
     {
         if (file_exists($this->projectDir . '/strauss.phar')) {
             // TODO add xdebug to the command
-            exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+
+            // When STRAUSS_FAIL_ON_DEPRECATION is set (in CI, when testing the phar under
+            // newer PHP versions), surface PHP deprecation notices and fail the test if the
+            // subprocess emitted any. `exec()` captures stdout only, so stderr – where PHP
+            // prints `Deprecated:` notices – is redirected to its own file and inspected.
+            $failOnDeprecation = (bool) getenv('STRAUSS_FAIL_ON_DEPRECATION');
+            $phpFlags = $failOnDeprecation ? '-d error_reporting=E_ALL -d display_errors=stderr ' : '';
+            $stderrFile = tempnam(sys_get_temp_dir(), 'strauss-phar-stderr');
+
+            exec($env . ' php ' . $phpFlags . $this->projectDir . '/strauss.phar ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
+
+            $stderr = (string) file_get_contents($stderrFile);
+            @unlink($stderrFile);
+            if ($stderr !== '') {
+                echo $stderr;
+            }
+
+            // strauss legitimately logs to stderr, so only fail on PHP deprecation notices.
+            if ($failOnDeprecation && preg_match('/(?:PHP )?Deprecated:/', $stderr)) {
+                $this->fail('strauss.phar emitted a PHP deprecation notice:' . PHP_EOL . $stderr);
+            }
+
             return $return_var;
         }
 
