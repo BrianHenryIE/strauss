@@ -108,12 +108,13 @@ class IntegrationTestCase extends TestCase
                 break;
             default:
                 $strauss = new class() extends  DependenciesCommand {
-					public LoggerInterface $testLogger;
-					protected function getLogger( InputInterface $input, OutputInterface $output ): LoggerInterface {
-						return $this->testLogger;
-					}
+                    public LoggerInterface $testLogger;
+                    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+                    {
+                        return $this->testLogger;
+                    }
                 };
-				$strauss->testLogger = $this->getLogger();
+                $strauss->testLogger = $this->getLogger();
         }
 
         $output = new BufferedOutput();
