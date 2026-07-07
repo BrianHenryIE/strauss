@@ -14,6 +14,7 @@ use Elazar\Flystream\FilesystemRegistry;
 use Exception;
 use League\Flysystem\StorageAttributes;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -155,6 +156,11 @@ class IntegrationTestCase extends TestCase
         }
 
         $inputInterface = new ArgvInput($argv);
+
+        // Real invocations run inside an Application, which supplies Symfony's global options
+        // (e.g. the `--silent` option added in symfony/console 7.2). Attach one so in-process
+        // test runs mirror the CLI and can bind those options.
+        $strauss->setApplication(new Application());
 
         $result = $strauss->run($inputInterface, $output);
 

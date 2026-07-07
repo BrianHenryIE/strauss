@@ -75,10 +75,12 @@ abstract class AbstractRenamespacerCommand extends Command
             false
         );
 
-        /** @var string $installedSymfonyVersion */
+        // symfony/console 7.2 added a global `--silent` option to every command. Only register our own
+        // `--silent`/`-s` on older versions, otherwise the definitions collide with
+        // "An option named 'silent' already exists." when the application definition is merged.
         $installedSymfonyVersion = InstalledVersions::getVersion('symfony/console');
 
-        if (!$this->getDefinition()->hasOption('silent')) {
+        if ($installedSymfonyVersion === null || version_compare($installedSymfonyVersion, '7.2', '<')) {
             $this->addOption(
                 'silent',
                 's',
