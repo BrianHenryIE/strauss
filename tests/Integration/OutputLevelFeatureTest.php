@@ -55,9 +55,9 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $this->assertStringContainsString('[notice]', $output);
-        $this->assertStringNotContainsString('[info]', $output);
-        $this->assertStringNotContainsString('[debug]', $output);
+        $this->assertTrue($this->getTestLogger()->hasNoticeRecords());
+        $this->assertTrue($this->getTestLogger()->hasInfoRecords());
+        $this->assertTrue($this->getTestLogger()->hasDebugRecords());
     }
 
     public function test_info_output_level(): void
@@ -66,9 +66,9 @@ EOD;
 
         $this->runStrauss($output, $params);
 
-        $this->assertStringContainsString('[notice]', $output);
-        $this->assertStringContainsString('[info]', $output);
-        $this->assertStringNotContainsString('[debug]', $output);
+        $this->assertTrue($this->getTestLogger()->hasNoticeRecords());
+        $this->assertTrue($this->getTestLogger()->hasInfoRecords());
+        $this->assertTrue($this->getTestLogger()->hasDebugRecords());
     }
 
     public function test_debug_output_level(): void
@@ -77,9 +77,9 @@ EOD;
 
         $this->runStrauss($output, $params);
 
-        $this->assertStringContainsString('[notice]', $output);
-        $this->assertStringContainsString('[info]', $output);
-        $this->assertStringContainsString('[debug]', $output);
+        $this->assertTrue($this->getTestLogger()->hasNoticeRecords());
+        $this->assertTrue($this->getTestLogger()->hasInfoRecords());
+        $this->assertTrue($this->getTestLogger()->hasDebugRecords());
     }
 
     public function test_dry_run_output_level(): void
@@ -88,8 +88,8 @@ EOD;
 
         $this->runStrauss($output, $params);
 
-        $this->assertStringContainsString('[notice]', $output);
-        $this->assertStringContainsString('[info]', $output);
-        $this->assertStringContainsString('[debug]', $output);
+        $this->assertTrue($this->getTestLogger()->hasNoticeRecords());
+        $this->assertTrue($this->getTestLogger()->hasInfoRecords());
+        $this->assertTrue($this->getTestLogger()->hasDebugRecords());
     }
 }

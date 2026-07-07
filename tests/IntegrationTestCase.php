@@ -7,7 +7,6 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
@@ -46,8 +45,6 @@ class IntegrationTestCase extends TestCase
         $this->testsWorkingDir = FileSystem::normalizeDirSeparator(
             sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'))
         );
-
-        $this->logger = new ColorLogger();
 
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;

@@ -44,6 +44,11 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertStringContainsString('Skipping non-existent autoload path in', $output);
+        $this->assertTrue(
+            $this->getTestLogger()->hasWarningThatContains(
+                'Skipping non-existent autoload path in'
+            ),
+            'Expected output not found.'
+        );
     }
 }
