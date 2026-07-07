@@ -30,7 +30,6 @@ class StripFsRootPathNormalizer implements PathNormalizer
 
     public function normalizePath(string $path): string
     {
-
         $fsRoots = array_unique(
             $this->fsRoots ??
                   [
@@ -56,12 +55,12 @@ class StripFsRootPathNormalizer implements PathNormalizer
                 $fsRoots
             )
         ) . ')';
-        $path   = preg_replace("#" . $pattern . "#i", '', $path);
+        $regexedPath   = preg_replace("#" . $pattern . "#i", '', $path);
 
         if ($this->delegateNormalizer !== null) {
-            $path = $this->delegateNormalizer->normalizePath($path);
+            $delegateNormalizedPath = $this->delegateNormalizer->normalizePath($regexedPath);
         }
 
-        return $path;
+        return $delegateNormalizedPath;
     }
 }
