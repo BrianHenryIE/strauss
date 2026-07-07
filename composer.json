@@ -28,7 +28,7 @@
         "league/flysystem-memory": "*",
         "monolog/monolog": "^2.11 || ^3.10",
         "nikic/php-parser": "^5.7.0",
-        "symfony/console": "^4|^5|^6|^7",
+        "symfony/console": "^4 || ^5 || ^6 || ^7",
         "symfony/finder": "^4 || ^5 || ^6 || ^7 || ^8"
     },
     "autoload": {
@@ -53,14 +53,13 @@
         ]
     },
     "require-dev": {
-        "php": "^7.4|^8.0",
+        "php": "^7.4 || ^8.0",
         "brianhenryie/color-logger": "*",
-        "clue/phar-composer": "^1.4",
-        "jaschilz/php-coverage-badger": "^2.0",
         "mockery/mockery": "^1.6",
-        "phpstan/extension-installer": "^1.4",
-        "phpstan/phpstan": "^1.10",
-        "phpstan/phpstan-mockery": "^1.1",
+        "phpstan/extension-installer": "*",
+        "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-mockery": "^2.0",
+        "phpstan/phpstan-phpunit": "*",
         "phpunit/phpcov": "*",
         "phpunit/phpunit": "^9 || ^10 || ^11 || ^12 || ^13",
         "squizlabs/php_codesniffer": "^4.0"
