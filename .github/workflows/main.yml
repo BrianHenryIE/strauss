@@ -57,13 +57,15 @@ jobs:
         with:
           name: strauss.phar
           path: strauss.phar
+          # Upload the .phar as-is rather than wrapped in a .zip (upload-artifact v7+).
+          archive: false
 
       - name: Add phar to PR comment
         uses: mshick/add-pr-comment@v3
         if: ${{ github.event_name == 'pull_request' }}
         with:
           message-id: strauss-phar
-          message: ${{ format('[strauss.phar.zip]({0}) @ {1} {2} `composer require brianhenryie/strauss:"dev-master#{1}" --dev`', steps.artifact-upload-step.outputs.artifact-url, github.event.pull_request.head.sha, '\n') }}
+          message: ${{ format('[strauss.phar]({0}) @ {1} {2} `composer require brianhenryie/strauss:"dev-master#{1}" --dev`', steps.artifact-upload-step.outputs.artifact-url, github.event.pull_request.head.sha, '\n') }}
         continue-on-error: true
 
   tests:
