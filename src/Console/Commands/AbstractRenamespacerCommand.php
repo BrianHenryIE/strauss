@@ -78,7 +78,7 @@ abstract class AbstractRenamespacerCommand extends Command
         /** @var string $installedSymfonyVersion */
         $installedSymfonyVersion = InstalledVersions::getVersion('symfony/console');
 
-        if (version_compare($installedSymfonyVersion, '7.2', '<')) {
+        if (!$this->getDefinition()->hasOption('silent')) {
             $this->addOption(
                 'silent',
                 's',
