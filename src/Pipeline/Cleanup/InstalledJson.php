@@ -87,7 +87,7 @@ class InstalledJson
             'targetPath' => $target
         ]);
 
-        $this->logger->debug($this->filesystem->read($this->config->getAbsoluteTargetDirectory() . '/composer/installed.json'));
+//        $this->logger->debug($this->filesystem->read($this->config->getAbsoluteTargetDirectory() . '/composer/installed.json'));
     }
 
     /**
