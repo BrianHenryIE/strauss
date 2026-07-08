@@ -133,7 +133,10 @@ jobs:
         run: vendor/bin/phpunit --order-by=random ${{ steps.phpunit.outputs.flags }}
 
       - name: Download phar built under PHP 7.4
-        uses: actions/download-artifact@v7
+        # v8+ detects the artifact's Content-Type and skips unzipping; required
+        # because the phar is uploaded unzipped (upload-artifact `archive: false`).
+        # v7 tries to unzip the raw phar and fails ("Unable to download and extract").
+        uses: actions/download-artifact@v8
         with:
           name: strauss.phar
           path: .
