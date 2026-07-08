@@ -18,6 +18,9 @@ class StraussIssue215Test extends IntegrationTestCase
 {
     public function test_all_files_are_copied(): void
     {
+		// Constant SUNFUNCS_RET_STRING is deprecated.
+		$this->markTestSkippedOnPhpVersionEqualOrAbove('8.4');
+
         $packageComposerJson = <<<'EOD'
 {   
 	"name": "test/package-with-version-file",
