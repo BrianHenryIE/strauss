@@ -186,7 +186,7 @@ abstract class AbstractRenamespacerCommand extends Command
         }
 
         if (method_exists($this, 'setLogger')) {
-            $this->setLogger($this->getPsrLogger($input, $output));
+            $this->setLogger($this->getMonologLogger($input, $output));
         }
     }
 
