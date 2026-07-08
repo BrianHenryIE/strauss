@@ -213,9 +213,9 @@ class GitFilesFeatureTest extends IntegrationTestCase
         // reads exactly the same files, differing only in that it records the listContents() calls.
         $reflection = new \ReflectionObject($realFilesystem);
         $flysystemProperty = $reflection->getProperty('flysystem');
-        $flysystemProperty->setAccessible(true);
+        PHP_VERSION_ID < 80100 && $flysystemProperty->setAccessible(true);
         $workingDirProperty = $reflection->getProperty('workingDir');
-        $workingDirProperty->setAccessible(true);
+        PHP_VERSION_ID < 80100 && $workingDirProperty->setAccessible(true);
 
         return new ListContentsSpyFileSystem(
             $flysystemProperty->getValue($realFilesystem),
