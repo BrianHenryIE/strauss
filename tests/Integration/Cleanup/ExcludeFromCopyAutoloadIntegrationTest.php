@@ -57,7 +57,7 @@ class ExcludeFromCopyAutoloadIntegrationTest extends IntegrationTestCase
 
         $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
         $config = new StraussConfig($composer);
-        $cleanup = new Cleanup($config, $this->getFileSystem(), $this->logger);
+        $cleanup = new Cleanup($config, $this->getFileSystem(), $this->getLogger());
         $cleanup->rebuildVendorAutoloader();
 
         $autoloadFilesPhp = $this->readFile($this->testsWorkingDir . '/vendor/composer/autoload_files.php');
