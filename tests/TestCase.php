@@ -187,6 +187,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     /**
      * Use this method when passing the logger to a class constructor.
+     *
+     * @return LoggerInterface&Logger
      */
     protected function getLogger(): LoggerInterface
     {

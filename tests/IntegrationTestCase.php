@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use Exception;
 use League\Flysystem\StorageAttributes;
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -127,13 +128,13 @@ class IntegrationTestCase extends TestCase
                 break;
             default:
                 $strauss = new class() extends  DependenciesCommand {
-                    public LoggerInterface $testLogger;
-                    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+                    public Logger $monologLogger;
+                    protected function getMonologLogger(InputInterface $input, OutputInterface $output): Logger
                     {
-                        return $this->testLogger;
+                        return $this->monologLogger;
                     }
                 };
-                $strauss->testLogger = $this->getLogger();
+                $strauss->monologLogger = $this->getLogger();
         }
 
         $output = new BufferedOutput();

@@ -129,14 +129,21 @@ abstract class AbstractRenamespacerCommand extends Command
             }
         }
 
+        $this->setLogger(
+            $this->getMonologLogger($input, $output)
+        );
+
+        return Command::SUCCESS;
+    }
+
+    protected function getMonologLogger(InputInterface $input, OutputInterface $output): Logger
+    {
         $logger = new Logger('logger');
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(RelativeFilepathLogProcessor::make($this->filesystem));
         $logger->pushProcessor(PadColonColumnsLogProcessor::make());
-        $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
-        $this->setLogger($logger);
-
-        return Command::SUCCESS;
+        $logger->pushHandler(new PsrHandler($this->getPsrLogger($input, $output)));
+        return $logger;
     }
 
     /**
@@ -179,14 +186,14 @@ abstract class AbstractRenamespacerCommand extends Command
         }
 
         if (method_exists($this, 'setLogger')) {
-            $this->setLogger($this->getLogger($input, $output));
+            $this->setLogger($this->getPsrLogger($input, $output));
         }
     }
 
     /**
      * Build a logger honoring optional --info/--debug/--silent flags if present.
      */
-    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+    protected function getPsrLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         // If a subclass has a config and it is a dry-run, increase verbosity
         $isDryRun = property_exists($this, 'config') && isset($this->config) && method_exists($this->config, 'isDryRun') && $this->config->isDryRun();
