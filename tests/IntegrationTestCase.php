@@ -55,10 +55,8 @@ class IntegrationTestCase extends TestCase
         // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
         // we set breakpoints, we can easily browse the files.
         if ($this->isPhpStormRunning()) {
-            $this->testsWorkingDir = getcwd() . '/teststempdir';
-        }
-
-        if (file_exists($this->testsWorkingDir)) {
+	        $this->testsWorkingDir = getcwd() . '/teststempdir/' . substr(uniqid(), 4);
+        } elseif (file_exists($this->testsWorkingDir)) {
             $this->deleteDir($this->testsWorkingDir);
         }
 
