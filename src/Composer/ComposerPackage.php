@@ -243,7 +243,7 @@ class ComposerPackage
     {
         // Unset PHP, ext-*.
         $removePhpExt = function ($element) {
-            return !( 0 === strpos($element, 'ext') || 'php' === $element );
+            return !( 0 === strpos($element, 'ext') || 'php' === $element || 'composer-runtime-api' === $element );
         };
 
         return array_filter($this->requiresNames, $removePhpExt);
