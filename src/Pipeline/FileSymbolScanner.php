@@ -138,7 +138,8 @@ class FileSymbolScanner
              * @see PhpCodeParser::getPhpFiles()
              */
             set_error_handler(function () {
-                return true;
+				// phpdocumentor/reflection-docblock/src/DocBlock/Tags/Method.php on line 102
+                return false;
             });
             $phpCode = PhpCodeParser::getFromString($contents);
 
