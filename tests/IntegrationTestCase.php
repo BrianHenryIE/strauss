@@ -98,6 +98,7 @@ class IntegrationTestCase extends TestCase
             // prints `Deprecated:` notices – is redirected to its own file and inspected.
             $failOnDeprecation = (bool) getenv('STRAUSS_FAIL_ON_DEPRECATION');
             $phpFlags = $failOnDeprecation ? '-d error_reporting=E_ALL -d display_errors=stderr ' : '';
+            $phpFlags .= ' -d memory_limit=2048M ';
             $stderrFile = tempnam(sys_get_temp_dir(), 'strauss-phar-stderr');
 
             exec($env . ' php ' . $phpFlags . $this->projectDir . '/strauss.phar ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
