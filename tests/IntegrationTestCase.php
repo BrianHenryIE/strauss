@@ -285,10 +285,16 @@ class IntegrationTestCase extends TestCase
         $testPhpVersionConstraintMatch = version_compare(phpversion(), $php_version, $operator);
         $systemPhpVersionConstraintMatch = version_compare($system_php_version, $php_version, $operator);
 
+        $versionMessage = sprintf(
+            '[test:%s, system:%s] ',
+            phpversion(),
+            $system_php_version
+        );
+
         if ($testPhpVersionConstraintMatch || $systemPhpVersionConstraintMatch) {
             empty($message)
-                ? $this->markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
-                : $this->markTestSkipped($message);
+                ? $this->markTestSkipped($versionMessage . "Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
+                : $this->markTestSkipped($versionMessage . $message);
         }
     }
 
