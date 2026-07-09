@@ -31,7 +31,21 @@ class StraussIssue114Test extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "Company\\Project\\"
+      "namespace_prefix": "Company\\Project\\",
+      "exclude_from_copy": [
+         "aws/aws-crt-php",
+         "guzzlehttp/guzzle",
+         "guzzlehttp/promises",
+         "guzzlehttp/psr7",
+         "mtdowling/jmespath.php",
+         "psr/http-client",
+         "psr/http-factory",
+         "psr/http-message",
+         "ralouphie/getallheaders",
+         "symfony/deprecation-contracts",
+         "symfony/polyfill-mbstring",
+         "symfony/polyfill-php80"
+      ]
     },
     "aws/aws-sdk-php": [
         "S3"
