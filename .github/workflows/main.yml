@@ -116,14 +116,13 @@ jobs:
         # PHPUnit 9 (resolved under PHP 7.4 / 8.0) lacks --fail-on-deprecation
         # and --fail-on-notice; only 10+ supports them. Detect the installed
         # version rather than inferring it from the PHP matrix version.
-        # PHPUnit 9's --fail-on-warning produces too many Composer related
-        # warnings, so PHPUnit 9 runs with no extra flags.
+        # Most `--fail-on-warning`s are  Composer related warnings.
         run: |
           PHPUNIT_MAJOR=$(vendor/bin/phpunit --version | grep -oE '[0-9]+' | head -n1)
           echo "Installed PHPUnit major version: $PHPUNIT_MAJOR"
           if [ "$PHPUNIT_MAJOR" -ge 10 ]; then
             echo "flags=--fail-on-deprecation --fail-on-notice" >> "$GITHUB_OUTPUT"
-            echo "phar_flags=--fail-on-deprecation --fail-on-notice --fail-on-warning" >> "$GITHUB_OUTPUT"
+            echo "phar_flags=--fail-on-deprecation --fail-on-notice" >> "$GITHUB_OUTPUT"
           else
             echo "flags=" >> "$GITHUB_OUTPUT"
             echo "phar_flags=" >> "$GITHUB_OUTPUT"
