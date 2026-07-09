@@ -82,9 +82,14 @@ class IntegrationTestCase extends TestCase
         return false;
     }
 
+    protected function isTestingPhar(): bool
+    {
+        return file_exists($this->projectDir . '/strauss.phar');
+    }
+
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
     {
-        if (file_exists($this->projectDir . '/strauss.phar')) {
+        if ($this->isTestingPhar()) {
             // TODO add xdebug to the command
 
             // When STRAUSS_FAIL_ON_DEPRECATION is set (in CI, when testing the phar under
