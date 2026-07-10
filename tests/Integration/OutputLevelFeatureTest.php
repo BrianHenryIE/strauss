@@ -90,8 +90,11 @@ EOD;
 
         if (!$this->isTestingWithPhar()) {
             $this->assertStringContainsString('[notice]', $output);
-            $this->assertStringNotContainsString('[info]', $output);
-            $this->assertStringNotContainsString('[debug]', $output);
+            // When re-running failed tests in GitHub Actions, we set `RENAMESPACER_LOG=debug` for all tests.
+            if (getenv('RENAMESPACER_LOG') !== 'debug' && getenv('RENAMESPACER_LOG') !== 'info') {
+                $this->assertStringNotContainsString('[info]', $output);
+                $this->assertStringNotContainsString('[debug]', $output);
+            }
         } else {
             $this->expectNotToPerformAssertions();
         }
@@ -105,7 +108,11 @@ EOD;
 
         $this->assertStringContainsString('[notice]', $output);
         $this->assertStringContainsString('[info]', $output);
-        $this->assertStringNotContainsString('[debug]', $output);
+
+        // When re-running failed tests in GitHub Actions, we set `RENAMESPACER_LOG=debug` for all tests.
+        if (getenv('RENAMESPACER_LOG') !== 'debug') {
+            $this->assertStringNotContainsString('[debug]', $output);
+        }
     }
 
     public function test_debug_output_level(): void
