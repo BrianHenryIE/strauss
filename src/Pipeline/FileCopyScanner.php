@@ -166,11 +166,22 @@ class FileCopyScanner
 
         foreach ($this->config->getExcludeFilePatternsFromCopy() as $pattern) {
             $escapedPattern = $this->preparePattern($pattern);
-            if (1 === preg_match($escapedPattern, $path)) {
+            $match = preg_match($escapedPattern, $path);
+            if (1 === $match) {
                 $this->logger->debug("File {path} will not be copied because it matches pattern {$pattern}.", [
                     'path' => $path
                 ]);
                 return true;
+            }
+            if (false === $match) {
+                throw new \Exception(
+                    sprintf(
+                        'Regex pattern %s resulted in error %s %s',
+                        $pattern,
+                        preg_last_error(),
+                        preg_last_error_msg()
+                    )
+                );
             }
         }
         return false;
