@@ -108,18 +108,25 @@ class TestCase extends \PHPUnit\Framework\TestCase
         // When testing with the phar we're not able to set the logger.
         if (!$this->isTestingWithPhar()) {
             /**
-             * @param array{level:string, message:string, context:array} $record
+             * @param string $level
              *
-             * @return string
+             * @return string[]
              */
-            $recordMessages = function (array $record): string {
-                return $record['message'];
+            $levelMessages = function (string $level): array {
+                if (!isset($this->getTestLogger()->recordsByLevel['error'])) {
+                    return array();
+                }
+                return array_map(
+                    /** @param array{level:string, message:string, context:array} $record */
+                    fn(array $record) => $record['message'],
+                    $this->getTestLogger()->recordsByLevel['error']
+                );
             };
 
             if ($this->allowErrorLogs === false) {
                 $this->assertFalse(
                     $this->getTestLogger()->hasErrorRecords(),
-                    "Unexpected TestLogger::hasErrorRecords() logged: \"" . implode("\",\n\"", array_map($recordMessages, $this->getTestLogger()->recordsByLevel['error'])) . '"'
+                    "Unexpected TestLogger::hasErrorRecords() logged: \"" . implode("\",\n\"", $levelMessages('error')) . '"'
                 );
             } else {
                 $this->assertTrue($this->getTestLogger()->hasErrorRecords(), "Expected TestLogger::hasErrorRecords() but there were none.");
@@ -127,7 +134,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             if ($this->allowWarningLogs === false) {
                 $this->assertFalse(
                     $this->getTestLogger()->hasWarningRecords(),
-                    "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode("\",\n\"", array_map($recordMessages, $this->getTestLogger()->recordsByLevel['warning'])) . '"'
+                    "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode("\",\n\"", $levelMessages('warning')) . '"'
                 );
             } else {
                 $this->assertTrue($this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none.");
