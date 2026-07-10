@@ -151,9 +151,6 @@
         "sort-packages": true,
         "allow-plugins": {
             "phpstan/extension-installer": true
-        },
-        "platform": {
-            "php": "7.4"
         }
     }
 }

@@ -14,6 +14,7 @@ use Psr\Log\NullLogger;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson
+ * @phpstan-import-type InstalledJsonPackageArray from InstalledJson
  */
 class InstalledJsonTest extends \BrianHenryIE\Strauss\TestCase
 {
@@ -428,6 +429,7 @@ EOD;
         $this->assertIsArray($installedJsonArray['packages']);
 
         return array_values(array_filter(array_map(
+            /** @var InstalledJsonPackageArray[] $package */
             static fn(array $package): ?string => $package['name'] ?? null,
             $installedJsonArray['packages']
         )));

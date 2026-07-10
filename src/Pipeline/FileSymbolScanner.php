@@ -476,7 +476,9 @@ class FileSymbolScanner
          *
          * @see PhpCodeParser::getPhpFiles()
          */
-        set_error_handler(function (){ return true; });
+        set_error_handler(function () {
+            return true;
+        });
 
         $result = PhpCodeParser::process($contents, null, $parserContainer, $visitor);
         if ($result instanceof ParserErrorHandler) {

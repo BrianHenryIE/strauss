@@ -77,7 +77,7 @@ class DiscoveredSymbolTest extends TestCase
     }
 
     /**
-     * @covers ::getPackages()
+     * @covers ClassSymbol::getPackages()
      */
     public function testFilterDuplicatePackages(): void
     {

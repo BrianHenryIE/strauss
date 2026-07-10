@@ -13,7 +13,7 @@ class StripFsRootPathNormalizer implements PathNormalizer
      */
     private ?array $fsRoots;
 
-    private ?PathNormalizer $delegateNormalizer;
+    private PathNormalizer $delegateNormalizer;
 
     /**
      * @param string|string[]|null $fsRoots
@@ -61,9 +61,7 @@ class StripFsRootPathNormalizer implements PathNormalizer
                     throw new \Exception(preg_last_error_msg(), preg_last_error());
                   })();
 
-        if ($this->delegateNormalizer !== null) {
-            $path = $this->delegateNormalizer->normalizePath($path);
-        }
+        $path = $this->delegateNormalizer->normalizePath($path);
 
         return $path;
     }

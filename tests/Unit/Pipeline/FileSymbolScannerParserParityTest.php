@@ -302,6 +302,7 @@ PHP,
         $interfaces = [];
         foreach ($symbols->getDiscoveredInterfaces() as $name => $interfaceSymbol) {
             assert($interfaceSymbol instanceof InterfaceSymbol);
+            /** @var string[] $extends */
             $extends = $interfaceSymbol->getExtends();
             sort($extends);
             $interfaces[$name] = [
@@ -314,6 +315,7 @@ PHP,
         $traits = [];
         foreach ($symbols->getDiscoveredTraits() as $name => $traitSymbol) {
             assert($traitSymbol instanceof TraitSymbol);
+            /** @var string[] $uses */
             $uses = $traitSymbol->getUses();
             sort($uses);
             $traits[$name] = [
