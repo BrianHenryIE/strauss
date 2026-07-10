@@ -110,7 +110,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             if ($this->allowErrorLogs === false) {
                 $this->assertFalse(
                     $this->getTestLogger()->hasErrorRecords(),
-                    "Unexpected TestLogger::hasErrorRecords() logged: \"" . implode("\",\n\"", $this->getTestLogger()->recordsByLevel['error']) . '"'
+                    "Unexpected TestLogger::hasErrorRecords() logged: \"" . implode("\",\n\"", (array) $this->getTestLogger()->recordsByLevel['error']) . '"'
                 );
             } else {
                 $this->assertTrue($this->getTestLogger()->hasErrorRecords(), "Expected TestLogger::hasErrorRecords() but there were none.");
@@ -118,7 +118,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             if ($this->allowWarningLogs === false) {
                 $this->assertFalse(
                     $this->getTestLogger()->hasWarningRecords(),
-                    "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode("\",\n\"", $this->getTestLogger()->recordsByLevel['warning']) . '"'
+                    "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode("\",\n\"", (array) $this->getTestLogger()->recordsByLevel['warning']) . '"'
                 );
             } else {
                 $this->assertTrue($this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none.");
