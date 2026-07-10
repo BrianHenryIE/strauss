@@ -113,13 +113,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
              * @return string[]
              */
             $levelMessages = function (string $level): array {
-                if (!isset($this->getTestLogger()->recordsByLevel['error'])) {
+                if (!isset($this->getTestLogger()->recordsByLevel[$level])) {
                     return array();
                 }
                 return array_map(
                     /** @param array{level:string, message:string, context:array} $record */
                     fn(array $record) => $record['message'],
-                    $this->getTestLogger()->recordsByLevel['error']
+                    $this->getTestLogger()->recordsByLevel[$level]
                 );
             };
 
