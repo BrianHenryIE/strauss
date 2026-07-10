@@ -23,6 +23,7 @@ namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Pipeline\Copier;
+use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 
 /**
  * @see Copier
@@ -810,6 +811,8 @@ EOD;
      * Expected: Early exit with error message printed
      * Configuration: "exclude_from_copy": { "file_patterns": ["/invalid[regex/"] }
      * Validates: Error handling in FileCopyScanner.php:83 preg_match
+     *
+     * @see FileCopyScanner::isFilePathExcluded()
      */
     public function test_invalid_regex_pattern_handling(): void
     {
