@@ -29,6 +29,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
+use const _PHPStan_8c66d8255\__;
 
 /**
  * Class IntegrationTestCase
@@ -335,14 +336,24 @@ class IntegrationTestCase extends TestCase
                 LOCK_EX,
                 LocalfilesystemAdapter::SKIP_LINKS
             );
-            $this->localFileSystem = new FileSystem(
+            $this->localFileSystem = new class (
                 $localFileSystemAdapter,
                 [],
                 $pathNormalizer,
                 $pathPrefixer,
                 $localFsLocation,
                 $this->testsWorkingDir
-            );
+            )
+            extends FileSystem {
+                /** @var array<int, array{location: string, deep: bool}> */
+                public array $listContentsCalls = [];
+                public function listContents(string $location, bool $deep = self::LIST_SHALLOW): \League\Flysystem\DirectoryListing
+                {
+                    $this->listContentsCalls[] = ['location' => $location, 'deep' => $deep];
+
+                    return parent::listContents($location, $deep);
+                }
+            };
 
             restore_error_handler();
         }
