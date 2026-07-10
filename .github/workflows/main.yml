@@ -58,7 +58,8 @@ jobs:
       - name: Print installed dependencies
         run: composer show
 
-      - name: Run previously workflows' failed tests first
+      - name: Run previous workflows' failed tests first
+        id: failed_tests
         uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
         with:
           phpunit-command: vendor/bin/phpunit
@@ -66,8 +67,10 @@ jobs:
         env:
           RENAMESPACER_LOG: "debug"
 
-      - name: Run tests
-        run: vendor/bin/phpunit --order-by=random
+      - name: Run all tests (except previous failures)
+        env:
+          FILTER: ${{ steps.failed_tests.outputs.filter-inverse || '.*' }}
+        run: vendor/bin/phpunit --filter "$FILTER" --order-by=random
 
       - name: Build phar
         run:
