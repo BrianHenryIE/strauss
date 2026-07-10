@@ -107,10 +107,19 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         // When testing with the phar we're not able to set the logger.
         if (!$this->isTestingWithPhar()) {
+            /**
+             * @param array{level:string, message:string, context:array} $record
+             *
+             * @return string
+             */
+            $recordMessages = function (array $record): string {
+                return $record['message'];
+            };
+
             if ($this->allowErrorLogs === false) {
                 $this->assertFalse(
                     $this->getTestLogger()->hasErrorRecords(),
-                    "Unexpected TestLogger::hasErrorRecords() logged: \"" . implode("\",\n\"", (array) $this->getTestLogger()->recordsByLevel['error']) . '"'
+                    "Unexpected TestLogger::hasErrorRecords() logged: \"" . implode("\",\n\"", array_map($recordMessages, $this->getTestLogger()->recordsByLevel['error'])) . '"'
                 );
             } else {
                 $this->assertTrue($this->getTestLogger()->hasErrorRecords(), "Expected TestLogger::hasErrorRecords() but there were none.");
@@ -118,7 +127,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             if ($this->allowWarningLogs === false) {
                 $this->assertFalse(
                     $this->getTestLogger()->hasWarningRecords(),
-                    "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode("\",\n\"", (array) $this->getTestLogger()->recordsByLevel['warning']) . '"'
+                    "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode("\",\n\"", array_map($recordMessages, $this->getTestLogger()->recordsByLevel['warning'])) . '"'
                 );
             } else {
                 $this->assertTrue($this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none.");
