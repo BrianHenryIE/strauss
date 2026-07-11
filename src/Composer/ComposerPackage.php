@@ -334,6 +334,7 @@ class ComposerPackage
     {
         return 0 === strpos($packageName, 'ext')
             || 'php' === $packageName
+            || 'composer-runtime-api' === $packageName
             || (
                 $includePhpVariants
                 && 0 === strpos($packageName, 'php')

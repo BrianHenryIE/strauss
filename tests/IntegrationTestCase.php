@@ -24,6 +24,9 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\StorageAttributes;
 use SplFileInfo;
 use Symfony\Component\Console\Exception\ExceptionInterface;
+use Monolog\Logger;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -73,9 +76,7 @@ class IntegrationTestCase extends TestCase
         // we set breakpoints, we can easily browse the files.
         if ($this->isPhpStormRunning()) {
             $this->testsWorkingDir = getcwd() . '/teststempdir/' . substr(uniqid(), 4);
-        }
-
-        if (file_exists($this->testsWorkingDir)) {
+        } elseif (file_exists($this->testsWorkingDir)) {
             $this->deleteDir($this->testsWorkingDir);
         }
 
@@ -103,11 +104,14 @@ class IntegrationTestCase extends TestCase
         return false;
     }
 
-    /**
-     * @throws ExceptionInterface
-     */
+    protected function isTestingPhar(): bool
+    {
+        return file_exists($this->projectDir . '/strauss.phar');
+    }
+
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
     {
+        if ($this->isTestingPhar()) {
         /**
          * Let's try enable passing an environmental variable so we can get better logs in GitHub Actions.
          *
@@ -126,9 +130,31 @@ class IntegrationTestCase extends TestCase
                 $params .= ' --' . (empty($envLogLevel) ? 'info' : $envLogLevel);
             }
             // TODO add xdebug to the command
-            exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params .' 2>&1', $output, $return_var);
+
+            // When STRAUSS_FAIL_ON_DEPRECATION is set (in CI, when testing the phar under
+            // newer PHP versions), surface PHP deprecation notices and fail the test if the
+            // subprocess emitted any. `exec()` captures stdout only, so stderr – where PHP
+            // prints `Deprecated:` notices – is redirected to its own file and inspected.
+            $failOnDeprecation = (bool) getenv('STRAUSS_FAIL_ON_DEPRECATION');
+            $phpFlags = $failOnDeprecation ? '-d error_reporting=E_ALL -d display_errors=stderr ' : '';
+            $phpFlags .= ' -d memory_limit=2048M ';
+            $stderrFile = tempnam(sys_get_temp_dir(), 'strauss-phar-stderr');
+
+            exec($env . ' php ' . $phpFlags . $this->projectDir . '/strauss.phar ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
+
+            $stderr = (string) file_get_contents($stderrFile);
+            @unlink($stderrFile);
+            if ($stderr !== '') {
+                echo $stderr;
+            }
+
+            // strauss legitimately logs to stderr, so only fail on PHP deprecation notices.
+            if ($failOnDeprecation && preg_match('/(?:PHP )?Deprecated:/', $stderr)) {
+                $this->fail('strauss.phar emitted a PHP deprecation notice:' . PHP_EOL . $stderr);
+            }
+
             return $return_var;
         }
 
@@ -144,36 +170,17 @@ class IntegrationTestCase extends TestCase
                 unset($paramsSplit[0]);
                 break;
             default:
-                $strauss = new class($this) extends DependenciesCommand {
-                    protected IntegrationTestCase $integrationTestCase;
-
-                    public function __construct(
-                        IntegrationTestCase $integrationTestCase,
-                        ?string $name = null
-                    ) {
-                        $this->integrationTestCase = $integrationTestCase;
-                        parent::__construct($name);
-                    }
-
-                    protected function initialize(InputInterface $input, OutputInterface $output): void
+                $strauss = new class() extends  DependenciesCommand {
+                    public Logger $monologLogger;
+                    protected function getMonologLogger(InputInterface $input, OutputInterface $output): Logger
                     {
-                        parent::initialize($input, $output);
-                        $this->setLogger($this->integrationTestCase->getTestLogger());
+                        return $this->monologLogger;
                     }
                 };
+                $strauss->monologLogger = $this->getLogger();
         }
 
-        // TODO: I don't know what I did to break the previous colorlogger output so this is just a crutch.
-        $output = new class() extends BufferedOutput {
-            /**
-             * @return void
-             */
-            protected function doWrite(string $message, bool $newline)
-            {
-                parent::doWrite($message, $newline);
-                echo $message . PHP_EOL;
-            }
-        };
+        $output = new BufferedOutput();
 
         foreach (array_filter(explode(' ', $env)) as $pair) {
             $kv = explode('=', $pair);
@@ -187,6 +194,11 @@ class IntegrationTestCase extends TestCase
         }
 
         $inputInterface = new ArgvInput($argv);
+
+        // Real invocations run inside an Application, which supplies Symfony's global options
+        // (e.g. the `--silent` option added in symfony/console 7.2). Attach one so in-process
+        // test runs mirror the CLI and can bind those options.
+        $strauss->setApplication(new Application());
 
         $result = $strauss->run($inputInterface, $output);
 

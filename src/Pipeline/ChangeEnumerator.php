@@ -107,45 +107,40 @@ class ChangeEnumerator
             $discoveredSymbols->getAllClasses()->toArray()
         );
 
-        if (!empty($classmapPrefix)) {
-            /** @var NamespacedSymbol $symbol */
-            foreach ($classesTraitsInterfaces as $symbol) {
-                if (str_starts_with($symbol->getOriginalFqdnName(), $classmapPrefix)) {
-                    // Already prefixed / second scan.
-                    continue;
-                }
-
-                if (! $symbol->isDoRename()) {
-                    unset($symbol);
-                    continue;
-                }
-
-                // If we're a namespaced class, apply the fqdnchange.
-                if (! $symbol->getNamespace()->isGlobal()) {
-                    if (isset($discoveredNamespaces[ $symbol->getNamespaceName() ])) {
-                        $newNamespace = $discoveredNamespaces[ $symbol->getNamespaceName() ];
-                        $replacement  = $this->determineNamespaceReplacement(
-                            $newNamespace->getOriginalFqdnName(),
-                            $newNamespace->getLocalReplacement(),
-                            $symbol->getOriginalFqdnName()
-                        );
+        /** @var NamespacedSymbol $symbol */
+        foreach ($classesTraitsInterfaces as $symbol) {
+            // If we're a namespaced class/interface/trait, apply the fqdnchange.
+            if ($symbol->getNamespace() !== '\\') {
+                if (isset($discoveredNamespaces[ $symbol->getNamespace() ])) {
+                    /** @var NamespaceSymbol $newNamespace */
+                    $newNamespace = $discoveredNamespaces[ $symbol->getNamespace() ];
+                    $replacement  = $this->determineNamespaceReplacement(
+                        $newNamespace->getOriginalSymbol(),
+                        $newNamespace->getReplacement(),
+                        $symbol->getOriginalSymbol()
+                    );
 
                         $symbol->setLocalReplacement($replacement);
 
-                        unset($newNamespace, $replacement);
-                    }
-                } else {
-                    // Global class.
-                    // Don't double-prefix classnames.
-                    if (str_starts_with($symbol->getOriginalFqdnName(), $this->config->getClassmapPrefix())) {
-                        continue;
-                    }
-
-                    $this->globalOrPsr0($symbol, $classmapPrefix, $discoveredSymbols);
+                    unset($newNamespace, $replacement);
                 }
-
-                unset($symbol);
+                continue;
             }
+
+            // If there is no global prefix to set, continue.
+            if (!$classmapPrefix) {
+                continue;
+            }
+
+            // If the classname/interfacename/traitname already appears to begin with the prefix, skip.
+            if (str_starts_with($symbol->getOriginalSymbol(), $classmapPrefix) && $symbol->getOriginalSymbol() !== $classmapPrefix) {
+                // Already prefixed / second scan.
+                continue;
+            }
+
+            // Prefix global class.
+            $replacement = $classmapPrefix . $symbol->getOriginalSymbol();
+            $symbol->setReplacement($replacement);
         }
         unset($classmapPrefix, $classesTraitsInterfaces);
 

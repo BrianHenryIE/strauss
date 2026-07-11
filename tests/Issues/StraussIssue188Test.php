@@ -56,6 +56,8 @@ EOD;
      */
     public function test_issue_188_extends(): void
     {
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.6');
+
         $this->markTestSkippedLocally();
 
         $composerJsonString = <<<'EOD'

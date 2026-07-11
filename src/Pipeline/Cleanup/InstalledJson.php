@@ -86,8 +86,6 @@ class InstalledJson
             'sourcePath' => $source,
             'targetPath' => $target
         ]);
-
-        $this->logger->debug($this->filesystem->read($this->config->getAbsoluteTargetDirectory() . '/composer/installed.json'));
     }
 
     /**
@@ -489,11 +487,6 @@ class InstalledJson
          */
         $installedJsonArray = $installedJsonFile->read();
 
-//        $this->logger->debug(
-//            '{installedJsonFilePath} before: {installedJsonArray}',
-//            ['installedJsonFilePath' => $installedJsonFile->getPath(), 'installedJsonArray' => json_encode($installedJsonArray)]
-//        );
-
         $installedJsonArray = $this->updatePackagePaths(
             $installedJsonArray,
             $flatDependencyTree,
@@ -521,8 +514,6 @@ class InstalledJson
         $installedJsonArray = $this->reindexPackagesList($installedJsonArray);
         $installedJsonArray['dev'] = false;
         $installedJsonArray['dev-package-names'] = [];
-
-//        $this->logger->debug('Installed.json after: ' . json_encode($installedJsonArray));
 
         $this->logger->info('Writing installed.json to ' . $targetDir);
 

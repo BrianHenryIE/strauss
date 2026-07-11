@@ -59,6 +59,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $filesystem->write('project/vendor-prefixed/composer/installed.json', json_encode([]));
         $filesystem->write('project/vendor-prefixed/composer/ClassLoader.php', '<?php');
 
+        $logger = $this->getLogger();
         $prefixer = Mockery::mock(Prefixer::class);
 
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
@@ -85,6 +86,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             PrefixerConfigInterface::class,
             FileEnumeratorConfig::class
         );
+//        $filesystem = $this->getInMemoryFileSystem();
         $filesystem = $this->getFileSystem();
         $logger = $this->getLogger();
 

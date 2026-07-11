@@ -81,6 +81,9 @@ abstract class AbstractRenamespacerCommand extends Command
             false
         );
 
+        // symfony/console 7.2 added a global `--silent` option to every command. Only register our own
+        // `--silent`/`-s` on older versions, otherwise the definitions collide with
+        // "An option named 'silent' already exists." when the application definition is merged.
         /**
          * When run via. `strauss.phar`, classes such as `InstalledVersions` are prefixed, but when installed
          * via Composer, the unprefixed version is used.
@@ -91,7 +94,7 @@ abstract class AbstractRenamespacerCommand extends Command
             ? \BrianHenryIE\Strauss\Composer\InstalledVersions::getVersion('symfony/console')
             : \Composer\InstalledVersions::getVersion('symfony/console');
 
-        if (version_compare($installedSymfonyVersion, '7.2', '<')) {
+        if ($installedSymfonyVersion === null || version_compare($installedSymfonyVersion, '7.2', '<')) {
             $this->addOption(
                 'silent',
                 's',
@@ -158,6 +161,52 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->configureLogger($logger, $input, $output);
     }
 
+
+    /**
+     * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
+     */
+//    protected function initialize(InputInterface $input, OutputInterface $output): void
+//    {
+//        $this->workingDir = getcwd() . '';
+//
+//        if (!isset($this->filesystem)) {
+//            /**
+//             * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
+//             * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
+//             */
+//            set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+//                return true;
+//            }, E_DEPRECATED | E_USER_DEPRECATED);
+//
+//            try {
+//                $localFilesystemAdapter = new LocalFilesystemAdapter(
+//                    FileSystem::getFsRoot($this->workingDir),
+//                    null,
+//                    LOCK_EX,
+//                    LocalFilesystemAdapter::SKIP_LINKS
+//                );
+//
+//                $this->filesystem = new FileSystem(
+//                    new \League\Flysystem\Filesystem(
+//                        $localFilesystemAdapter,
+//                        [
+//                            Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+//                        ],
+//                        Filesystem::makePathNormalizer($this->workingDir)
+//                    ),
+//                    $this->workingDir
+//                );
+//            } finally {
+//                restore_error_handler();
+//            }
+//        }
+//
+//        if (method_exists($this, 'setLogger')) {
+//            $this->setLogger($this->getMonologLogger($input, $output));
+//        }
+//    }
+
+
     protected function configureLogger(Logger $logger, InputInterface $input, OutputInterface $output): void
     {
         $logger->pushProcessor(new PsrLogMessageProcessor());
@@ -206,18 +255,32 @@ abstract class AbstractRenamespacerCommand extends Command
             } catch (\Exception $e) {
                 $registry->register('mem', $this->filesystem);
             }
-
-            $this->logger->reset();
-            $this->configureLogger($this->logger, $input, $output);
         }
 
+//            $this->logger->reset();
+//            $this->configureLogger($this->logger, $input, $output);
+            $this->setLogger(
+                $this->getMonologLogger($input, $output)
+            );
+
         return Command::SUCCESS;
+    }
+
+    protected function getMonologLogger(InputInterface $input, OutputInterface $output): Logger
+    {
+        $logger = new Logger('logger');
+        $logger->pushProcessor(new PsrLogMessageProcessor());
+        $logger->pushProcessor(RelativeFilepathLogProcessor::make($this->filesystem));
+        $logger->pushProcessor(PadColonColumnsLogProcessor::make());
+        $logger->pushHandler(new PsrHandler($this->getPsrLogger($input, $output)));
+        return $logger;
     }
 
     /**
      * Build a logger honoring optional --info/--debug/--silent flags if present.
      */
-    protected function getConsoleLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+    protected function getPsrLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+//    protected function getConsoleLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         // If a subclass has a config and it is a dry-run, increase verbosity
         $isDryRun = isset($this->config) && $this->config->isDryRun();

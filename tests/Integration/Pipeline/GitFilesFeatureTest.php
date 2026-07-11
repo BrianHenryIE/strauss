@@ -212,10 +212,12 @@ class GitFilesFeatureTest extends IntegrationTestCase
         // Reuse the real filesystem's underlying Flysystem operator and working directory so the spy
         // reads exactly the same files, differing only in that it records the listContents() calls.
         $reflection = new \ReflectionObject($realFilesystem);
+        $flysystemProperty = $reflection->getProperty('flysystem');
+        PHP_VERSION_ID < 80100 && $flysystemProperty->setAccessible(true);
         $flysystemProperty = $reflection->getProperty('adapter');
-        $flysystemProperty->setAccessible(true);
+        PHP_VERSION_ID < 80100 && $flysystemProperty->setAccessible(true);
         $workingDirProperty = $reflection->getProperty('workingDir');
-        $workingDirProperty->setAccessible(true);
+        PHP_VERSION_ID < 80100 && $workingDirProperty->setAccessible(true);
 
         return new ListContentsSpyFileSystem(
             $flysystemProperty->getValue($realFilesystem),

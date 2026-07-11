@@ -56,13 +56,13 @@ class StripFsRootPathNormalizer implements PathNormalizer
                 $fsRoots
             )
         ) . ')';
-        $path   = preg_replace("#" . $pattern . "#i", '', $path)
+        $regexedPath   = preg_replace("#" . $pattern . "#i", '', $path)
                   ?? (function () {
                     throw new \Exception(preg_last_error_msg(), preg_last_error());
                   })();
 
-        $path = $this->delegateNormalizer->normalizePath($path);
+        $delegateNormalizedPath = $this->delegateNormalizer->normalizePath($regexedPath);
 
-        return $path;
+        return $delegateNormalizedPath;
     }
 }

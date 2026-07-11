@@ -1,0 +1,29 @@
+name: Spelling
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+concurrency:
+  # Cancel previous runs of this workflow if they are testing the same branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  spelling:
+    runs-on: ubuntu-latest
+    name: Spelling
+    steps:
+
+      - uses: actions/checkout@v7
+
+      - name: Search for misspellings
+        uses: crate-ci/typos@master
