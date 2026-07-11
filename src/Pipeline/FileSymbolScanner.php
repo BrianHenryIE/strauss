@@ -184,19 +184,6 @@ class FileSymbolScanner
 
         foreach ($namespaces as $namespaceName => $contents) {
             $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
-            try {
-                $phpCode = $this->parsePhpCode($contents);
-            } catch (ParserErrorException $e) {
-                $this->logger->warning('Failed to parse namespace {namespaceName} in file {filePath} with error: {errorMessage}', [
-                    'namespaceName' => $namespaceName,
-                    'filePath' => $file->getSourcePath(),
-                    'errorMessage' => $e->getMessage(),
-                ]);
-                continue;
-            }
-            $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
-
-            PhpCodeParser::$classExistsAutoload = false;
 
             /**
              * Swallow the `E_USER_DEPRECATED` notices triggered while the parser reads docblocks.
@@ -239,9 +226,18 @@ class FileSymbolScanner
 
             try {
                 $phpCode = PhpCodeParser::getFromString($contents);
+            } catch (ParserErrorException $e) {
+                $this->logger->warning('Failed to parse namespace {namespaceName} in file {filePath} with error: {errorMessage}', [
+                    'namespaceName' => $namespaceName,
+                    'filePath' => $file->getSourcePath(),
+                    'errorMessage' => $e->getMessage(),
+                ]);
+                continue;
             } finally {
                 restore_error_handler();
             }
+
+            PhpCodeParser::$classExistsAutoload = false;
 
             /** @var PHPClass[] $phpClasses */
             $phpClasses = $phpCode->getClasses();
