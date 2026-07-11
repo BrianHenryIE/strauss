@@ -157,62 +157,6 @@ abstract class AbstractRenamespacerCommand extends Command
         }
 
         $this->workingDir = $this->filesystem->normalizePath($workingDir);
-
-        $this->configureLogger($logger, $input, $output);
-    }
-
-
-    /**
-     * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
-     */
-//    protected function initialize(InputInterface $input, OutputInterface $output): void
-//    {
-//        $this->workingDir = getcwd() . '';
-//
-//        if (!isset($this->filesystem)) {
-//            /**
-//             * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
-//             * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
-//             */
-//            set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-//                return true;
-//            }, E_DEPRECATED | E_USER_DEPRECATED);
-//
-//            try {
-//                $localFilesystemAdapter = new LocalFilesystemAdapter(
-//                    FileSystem::getFsRoot($this->workingDir),
-//                    null,
-//                    LOCK_EX,
-//                    LocalFilesystemAdapter::SKIP_LINKS
-//                );
-//
-//                $this->filesystem = new FileSystem(
-//                    new \League\Flysystem\Filesystem(
-//                        $localFilesystemAdapter,
-//                        [
-//                            Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-//                        ],
-//                        Filesystem::makePathNormalizer($this->workingDir)
-//                    ),
-//                    $this->workingDir
-//                );
-//            } finally {
-//                restore_error_handler();
-//            }
-//        }
-//
-//        if (method_exists($this, 'setLogger')) {
-//            $this->setLogger($this->getMonologLogger($input, $output));
-//        }
-//    }
-
-
-    protected function configureLogger(Logger $logger, InputInterface $input, OutputInterface $output): void
-    {
-        $logger->pushProcessor(new PsrLogMessageProcessor());
-        $logger->pushProcessor(RelativeFilepathLogProcessor::make($this->filesystem));
-        $logger->pushProcessor(PadColonColumnsLogProcessor::make());
-        $logger->pushHandler(new PsrHandler($this->getConsoleLogger($input, $output)));
     }
 
     public function setLogger(LoggerInterface $logger): void
@@ -259,9 +203,9 @@ abstract class AbstractRenamespacerCommand extends Command
 
 //            $this->logger->reset();
 //            $this->configureLogger($this->logger, $input, $output);
-            $this->setLogger(
-                $this->getMonologLogger($input, $output)
-            );
+        $this->setLogger(
+            $this->getMonologLogger($input, $output)
+        );
 
         return Command::SUCCESS;
     }
