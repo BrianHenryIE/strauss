@@ -71,16 +71,16 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
+        // Composer could not find the config file: /path/to/composer.json
+        // To initialize a project, please create a composer.json file. See https://getcomposer.org/basic-usage
+        $this->expectErrorLogs();
+
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
-            null,
+            $this->getFileSystem(),
             $this->getLogger()
         );
-
-        // Composer could not find the config file: /path/to/composer.json
-        // To initialize a project, please create a composer.json file. See https://getcomposer.org/basic-usage
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -108,14 +108,14 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
+        $this->expectErrorLogs();
+
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -147,14 +147,14 @@ class DependenciesCommandTest extends TestCase
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
+        $this->expectErrorLogs();
+
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -186,14 +186,14 @@ class DependenciesCommandTest extends TestCase
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
+        $this->expectErrorLogs();
+
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -225,14 +225,14 @@ class DependenciesCommandTest extends TestCase
                             ->method('getErrorOutput')
                             ->willReturn($outputInterfaceMock);
 
+        $this->expectErrorLogs();
+
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -263,13 +263,13 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
+        $this->expectErrorLogs();
+
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 }
