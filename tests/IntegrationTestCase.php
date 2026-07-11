@@ -111,7 +111,7 @@ class IntegrationTestCase extends TestCase
 
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
     {
-        if ($this->isTestingPhar()) {
+
         /**
          * Let's try enable passing an environmental variable so we can get better logs in GitHub Actions.
          *
@@ -119,8 +119,7 @@ class IntegrationTestCase extends TestCase
          */
         // todo: lowercase
         $envLogLevel = trim(getenv('RENAMESPACER_LOG') ?: '', '-');
-
-        if ($this->isPhar()) {
+        if ($this->isTestingPhar()) {
             if (! array_reduce(
                 ['--quiet','--warning','--info','--debug','--dry-run'],
                 fn(bool $carry, string $level) => $carry || str_contains($params, $level),
