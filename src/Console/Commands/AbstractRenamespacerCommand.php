@@ -222,9 +222,10 @@ abstract class AbstractRenamespacerCommand extends Command
 
     /**
      * Build a logger honoring optional --info/--debug/--silent flags if present.
+     *
+     * TODO: maybe this should be called ~`::getConsoleLogger()`.
      */
     protected function getPsrLogger(InputInterface $input, OutputInterface $output): LoggerInterface
-//    protected function getConsoleLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         // If a subclass has a config and it is a dry-run, increase verbosity
         $isDryRun = isset($this->config) && $this->config->isDryRun();
