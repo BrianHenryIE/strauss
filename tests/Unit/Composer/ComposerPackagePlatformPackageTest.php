@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @covers \BrianHenryIE\Strauss\Composer\ComposerPackage
@@ -35,6 +36,7 @@ class ComposerPackagePlatformPackageTest extends TestCase
     /**
      * @dataProvider platformPackageNameProvider
      */
+    #[DataProvider('platformPackageNameProvider')]
     public function test_is_platform_package_name(string $packageName, bool $includePhpVariants, bool $expected): void
     {
         self::assertSame($expected, ComposerPackage::isPlatformPackageName($packageName, $includePhpVariants));

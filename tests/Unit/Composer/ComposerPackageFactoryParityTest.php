@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\TestCase;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use JsonException;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @covers \BrianHenryIE\Strauss\Composer\ComposerPackage
@@ -27,7 +28,8 @@ class ComposerPackageFactoryParityTest extends TestCase
 
     /**
      * @dataProvider fixtureProvider
-     */
+         */
+    #[DataProvider('fixtureProvider')]
     public function test_from_file_matches_legacy_factory_create(string $fixturePath): void
     {
         $legacyComposer = (new Factory())->createComposer(new NullIO(), $fixturePath, true);
@@ -45,6 +47,7 @@ class ComposerPackageFactoryParityTest extends TestCase
      * @dataProvider fixtureProvider
      * @throws JsonException
      */
+    #[DataProvider('fixtureProvider')]
     public function test_from_composer_json_array_matches_full_load_behavior(string $fixturePath): void
     {
         $raw = file_get_contents($fixturePath);

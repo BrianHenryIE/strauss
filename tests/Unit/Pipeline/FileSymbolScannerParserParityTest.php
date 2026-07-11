@@ -19,6 +19,7 @@ use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use Mockery;
 use Mockery\MockInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @covers \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
@@ -90,6 +91,7 @@ PHP;
     /**
      * @dataProvider edgeCaseProvider
      */
+    #[DataProvider('edgeCaseProvider')]
     public function test_process_parser_matches_legacy_for_edge_cases(string $contents, string $sourcePath): void
     {
         $this->assertScannerParity($contents, $sourcePath);
