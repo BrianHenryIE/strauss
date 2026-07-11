@@ -131,16 +131,51 @@ class FileSymbolScanner
             $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
 
             PhpCodeParser::$classExistsAutoload = false;
+
             /**
-             * PhpUnit error "Test code or tested code removed error handlers other than its own" caused by the
-             * code parser removing an error handler. TODO: Fix this in the library then remove this line.
+             * Swallow the `E_USER_DEPRECATED` notices triggered while the parser reads docblocks.
+             *
+             * `phpdocumentor/reflection-docblock` 5.x emits deprecations from its own
+             * `DocBlock\Tags\Method` factory when parsing `@method` tags (e.g. in the PayPal SDK
+             * scanned by {@see \BrianHenryIE\Strauss\Tests\Issues\MozartIssue13Test}):
+             *
+             *   phpdocumentor/reflection-docblock/src/DocBlock/Tags/Method.php:102
+             *     "Create using static factory is deprecated, this method should not be called directly[...]"
+             *   phpdocumentor/reflection-docblock/src/DocBlock/Tags/Method.php:342
+             *     "Create method parameters via legacy format is deprecated[...]"
+             *
+             * It is a transitive dependency pinned to 5.x by `brianhenryie/simple-php-code-parser`
+             * (~5.3) and `json-mapper/json-mapper` (^5.6), so it cannot be upgraded past the
+             * deprecation. The notice originates entirely within third-party code parsing
+             * third-party code — nothing Strauss can change at the call site — so it is swallowed
+             * here. Left unhandled it fails CI under PHPUnit 10's `--fail-on-deprecation` (the
+             * `E_DEPRECATED | E_USER_DEPRECATED` mask means Strauss's own deprecations still surface).
+             *
+             * Two handlers are pushed because `PhpCodeParser::getPhpFiles()` calls
+             * `restore_error_handler()` once internally, before it parses the docblocks. That
+             * internal call removes the inner, sacrificial handler, leaving the outer
+             * deprecation-swallowing handler active while the docblocks are actually parsed. It also
+             * keeps the handler stack balanced, avoiding PHPUnit's risky-test warning "Test code or
+             * tested code removed error handlers other than its own".
              *
              * @see PhpCodeParser::getPhpFiles()
              */
-            set_error_handler(function () {
-                return true;
+            set_error_handler(
+                function (int $errNo, string $errStr, string $errFile, int $errLine): bool {
+                    return true;
+                },
+                E_DEPRECATED | E_USER_DEPRECATED
+            );
+            // Sacrificial handler; removed by PhpCodeParser::getPhpFiles()'s internal restore_error_handler().
+            set_error_handler(function (): bool {
+                return false;
             });
-            $phpCode = PhpCodeParser::getFromString($contents);
+
+            try {
+                $phpCode = PhpCodeParser::getFromString($contents);
+            } finally {
+                restore_error_handler();
+            }
 
             /** @var PHPClass[] $phpClasses */
             $phpClasses = $phpCode->getClasses();

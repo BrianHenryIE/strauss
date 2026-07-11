@@ -75,10 +75,12 @@ abstract class AbstractRenamespacerCommand extends Command
             false
         );
 
-        /** @var string $installedSymfonyVersion */
+        // symfony/console 7.2 added a global `--silent` option to every command. Only register our own
+        // `--silent`/`-s` on older versions, otherwise the definitions collide with
+        // "An option named 'silent' already exists." when the application definition is merged.
         $installedSymfonyVersion = InstalledVersions::getVersion('symfony/console');
 
-        if (version_compare($installedSymfonyVersion, '7.2', '<')) {
+        if ($installedSymfonyVersion === null || version_compare($installedSymfonyVersion, '7.2', '<')) {
             $this->addOption(
                 'silent',
                 's',
@@ -127,14 +129,21 @@ abstract class AbstractRenamespacerCommand extends Command
             }
         }
 
+        $this->setLogger(
+            $this->getMonologLogger($input, $output)
+        );
+
+        return Command::SUCCESS;
+    }
+
+    protected function getMonologLogger(InputInterface $input, OutputInterface $output): Logger
+    {
         $logger = new Logger('logger');
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(RelativeFilepathLogProcessor::make($this->filesystem));
         $logger->pushProcessor(PadColonColumnsLogProcessor::make());
-        $logger->pushHandler(new PsrHandler($this->getLogger($input, $output)));
-        $this->setLogger($logger);
-
-        return Command::SUCCESS;
+        $logger->pushHandler(new PsrHandler($this->getPsrLogger($input, $output)));
+        return $logger;
     }
 
     /**
@@ -177,14 +186,14 @@ abstract class AbstractRenamespacerCommand extends Command
         }
 
         if (method_exists($this, 'setLogger')) {
-            $this->setLogger($this->getLogger($input, $output));
+            $this->setLogger($this->getMonologLogger($input, $output));
         }
     }
 
     /**
      * Build a logger honoring optional --info/--debug/--silent flags if present.
      */
-    protected function getLogger(InputInterface $input, OutputInterface $output): LoggerInterface
+    protected function getPsrLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         // If a subclass has a config and it is a dry-run, increase verbosity
         $isDryRun = property_exists($this, 'config') && isset($this->config) && method_exists($this->config, 'isDryRun') && $this->config->isDryRun();

@@ -27,9 +27,9 @@
         "league/flysystem": "^2.5.0 || ^3.35.1",
         "league/flysystem-memory": "*",
         "monolog/monolog": "^2.11 || ^3.10",
-        "nikic/php-parser": "^5.7.0",
-        "symfony/console": "^4|^5|^6|^7",
-        "symfony/finder": "^4|^5|^6|^7"
+        "nikic/php-parser": "^5.8.0",
+        "symfony/console": "^4 || ^5 || ^6 || ^7",
+        "symfony/finder": "^4 || ^5 || ^6 || ^7 || ^8"
     },
     "autoload": {
         "psr-4": {
@@ -53,14 +53,13 @@
         ]
     },
     "require-dev": {
-        "php": "^7.4|^8.0",
+        "php": "^7.4 || ^8.0",
         "brianhenryie/color-logger": "*",
-        "clue/phar-composer": "^1.4",
-        "jaschilz/php-coverage-badger": "^2.0",
         "mockery/mockery": "^1.6",
-        "phpstan/extension-installer": "^1.4",
-        "phpstan/phpstan": "^1.10",
-        "phpstan/phpstan-mockery": "^1.1",
+        "phpstan/extension-installer": "*",
+        "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-mockery": "^2.0",
+        "phpstan/phpstan-phpunit": "*",
         "phpunit/phpcov": "*",
         "phpunit/phpunit": "^9 || ^10 || ^11 || ^12 || ^13",
         "squizlabs/php_codesniffer": "^4.0"
@@ -127,7 +126,6 @@
             "if [ \"$XDEBUG_MODE\" != \"coverage\" ]; then echo \"Run with 'XDEBUG_MODE=coverage composer test-coverage'\"; exit 1; fi;",
             "phpunit ./tests/Unit --coverage-text --coverage-clover tests/_reports/partial/unitclover.xml --coverage-php tests/_reports/partial/unitphp.cov -d memory_limit=-1 --order-by=random",
             "phpcov merge --clover tests/_reports/clover.xml --html tests/_reports/html tests/_reports/partial;",
-            "php-coverage-badger tests/_reports/clover.xml .github/coverage.svg",
             "if [ $(command -v ./tools/phpcov) ]; then git diff master...head > /tmp/master.diff; ./tools/phpcov patch-coverage --path-prefix $(pwd) ./tests/_reports/php.cov /tmp/master.diff || true; fi;",
             "# Run 'open ./tests/_reports/html/index.html' to view report."
         ]

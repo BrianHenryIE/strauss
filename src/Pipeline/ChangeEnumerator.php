@@ -95,28 +95,13 @@ class ChangeEnumerator
             $discoveredSymbols->getAllClasses()
         );
 
+
         foreach ($classesTraitsInterfaces as $symbol) {
-            if (str_starts_with($symbol->getOriginalSymbol(), $classmapPrefix)) {
-                // Already prefixed / second scan.
-                continue;
-            }
-
-            if ($symbol->getNamespace() === '\\') {
-                if ($symbol instanceof ClassSymbol) {
-                    // Don't double-prefix classnames.
-                    if (str_starts_with($symbol->getOriginalSymbol(), $this->config->getClassmapPrefix())) {
-                        continue;
-                    }
-
-                    $symbol->setReplacement($this->config->getClassmapPrefix() . $symbol->getOriginalSymbol());
-                }
-            }
-
-            // If we're a namespaced class, apply the fqdnchange.
+            // If we're a namespaced class/interface/trait, apply the fqdnchange.
             if ($symbol->getNamespace() !== '\\') {
-                if (isset($discoveredNamespaces[$symbol->getNamespace()])) {
-                    $newNamespace = $discoveredNamespaces[$symbol->getNamespace()];
-                    $replacement = $this->determineNamespaceReplacement(
+                if (isset($discoveredNamespaces[ $symbol->getNamespace() ])) {
+                    $newNamespace = $discoveredNamespaces[ $symbol->getNamespace() ];
+                    $replacement  = $this->determineNamespaceReplacement(
                         $newNamespace->getOriginalSymbol(),
                         $newNamespace->getReplacement(),
                         $symbol->getOriginalSymbol()
@@ -127,11 +112,22 @@ class ChangeEnumerator
                     unset($newNamespace, $replacement);
                 }
                 continue;
-            } else {
-                // Global class.
-                $replacement = $classmapPrefix . $symbol->getOriginalSymbol();
-                $symbol->setReplacement($replacement);
             }
+
+            // If there is no global prefix to set, continue.
+            if (!$classmapPrefix) {
+                continue;
+            }
+
+            // If the classname/interfacename/traitname already appears to begin with the prefix, skip.
+            if (str_starts_with($symbol->getOriginalSymbol(), $classmapPrefix) && $symbol->getOriginalSymbol() !== $classmapPrefix) {
+                // Already prefixed / second scan.
+                continue;
+            }
+
+            // Prefix global class.
+            $replacement = $classmapPrefix . $symbol->getOriginalSymbol();
+            $symbol->setReplacement($replacement);
         }
 
         $functionsSymbols = $discoveredSymbols->getDiscoveredFunctions();

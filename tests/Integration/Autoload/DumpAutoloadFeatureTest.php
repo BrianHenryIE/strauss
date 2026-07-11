@@ -51,7 +51,21 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
             $config->setPackagesToCopy(['psr/log' => $psrLogPackage]);
             $config->setPackagesToPrefix(['psr/log' => $psrLogPackage]);
             $filesystem = $this->getFileSystem();
-            $dumpAutoload = new DumpAutoload($config, $filesystem, $this->logger, new Prefixer($config, $filesystem, $this->logger), new FileEnumerator($config, $filesystem, $this->logger));
+            $dumpAutoload = new DumpAutoload(
+                $config,
+                $filesystem,
+                $this->getLogger(),
+                new Prefixer(
+                    $config,
+                    $filesystem,
+                    $this->getLogger()
+                ),
+                new FileEnumerator(
+                    $config,
+                    $filesystem,
+                    $this->getLogger()
+                )
+            );
             $dumpAutoload->generatedPrefixedAutoloader();
             $autoloadRealPath = $this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php';
             $this->assertFileExists($autoloadRealPath);

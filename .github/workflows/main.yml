@@ -1,4 +1,4 @@
-name: Lint and test
+name: Test
 
 on:
   push:
@@ -26,10 +26,53 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Build the phar once, under the lowest supported PHP version, matching how it
+  # is distributed. The same artifact is then tested under every PHP version by
+  # the `tests` job below.
+  build-phar:
+    runs-on: ubuntu-latest
+    name: Build phar (PHP 7.4)
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer:v2
+          extensions: fileinfo, gd, zip
+
+      - name: Debugging
+        run: |
+          php --version
+          php -m
+          composer --version
+
+      - name: Build phar
+        run:
+          ./scripts/createphar.sh
+
+      - uses: actions/upload-artifact@v7
+        id: artifact-upload-step
+        with:
+          name: strauss.phar
+          path: strauss.phar
+          # Upload the .phar as-is rather than wrapped in a .zip (upload-artifact v7+).
+          archive: false
+
+      - name: Add phar to PR comment
+        uses: mshick/add-pr-comment@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          message-id: strauss-phar
+          message: ${{ format('[strauss.phar]({0}) @ {1} {2} `composer require brianhenryie/strauss:"dev-master#{1}" --dev`', steps.artifact-upload-step.outputs.artifact-url, github.event.pull_request.head.sha, '\n') }}
+        continue-on-error: true
+
   tests:
+    needs: build-phar
     strategy:
       matrix:
-        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', '8.6']
         os: [ubuntu-latest]
 #        os: [ubuntu-latest, windows-latest]
       fail-fast: false
@@ -68,71 +111,38 @@ jobs:
         env:
           RENAMESPACER_LOG: "debug"
 
+      - name: Determine PHPUnit fail-on flags
+        id: phpunit
+        # PHPUnit 9 (resolved under PHP 7.4 / 8.0) lacks --fail-on-deprecation
+        # and --fail-on-notice; only 10+ supports them. Detect the installed
+        # version rather than inferring it from the PHP matrix version.
+        # Most `--fail-on-warning`s are  Composer related warnings.
+        run: |
+          PHPUNIT_MAJOR=$(vendor/bin/phpunit --version | grep -oE '[0-9]+' | head -n1)
+          echo "Installed PHPUnit major version: $PHPUNIT_MAJOR"
+          if [ "$PHPUNIT_MAJOR" -ge 10 ]; then
+            echo "flags=--fail-on-deprecation --fail-on-notice" >> "$GITHUB_OUTPUT"
+            echo "phar_flags=--fail-on-deprecation --fail-on-notice" >> "$GITHUB_OUTPUT"
+          else
+            echo "flags=" >> "$GITHUB_OUTPUT"
+            echo "phar_flags=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run tests
-        run: vendor/bin/phpunit --order-by=random
+        run: vendor/bin/phpunit --order-by=random ${{ steps.phpunit.outputs.flags }}
 
-      - name: Build phar
-        run:
-          ./scripts/createphar.sh
-
-      - uses: actions/upload-artifact@v7
-        if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
-        id: artifact-upload-step
+      - name: Download phar built under PHP 7.4
+        # v8+ detects the artifact's Content-Type and skips unzipping; required
+        # because the phar is uploaded unzipped (upload-artifact `archive: false`).
+        # v7 tries to unzip the raw phar and fails ("Unable to download and extract").
+        uses: actions/download-artifact@v8
         with:
           name: strauss.phar
-          path: strauss.phar
+          path: .
 
-      - name: Add phar to PR comment
-        uses: mshick/add-pr-comment@v3
-        if: ${{ matrix.php == '7.4' && github.event_name == 'pull_request' }}
-        with:
-          message-id: strauss-phar
-          message: ${{ format('[strauss.phar.zip]({0}) @ {1} {2} `composer require brianhenryie/strauss:"dev-master#{1}" --dev`', steps.artifact-upload-step.outputs.artifact-url, github.event.pull_request.head.sha, '\n') }}
-        continue-on-error: true
-
+      # `tests/IntegrationTestCase.php` runs `strauss.phar` (via `exec()`) instead
+      # of the source when the file is present in the project root.
       - name: Run tests with strauss.phar
-        run: vendor/bin/phpunit
-
-  spelling:
-    runs-on: ubuntu-latest
-    name: Spelling
-    steps:
-
-      - uses: actions/checkout@v7
-
-      - name: Search for misspellings
-        uses: crate-ci/typos@master
-
-  lint:
-    runs-on: ubuntu-latest
-    name: Lint project files
-    steps:
-
-      - uses: actions/checkout@v7
-
-      - name: Install PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '7.4'
-          tools: composer:v2, cs2pr
-          extensions: fileinfo, gd
-
-      - name: Debugging
-        run: |
-          php --version
-          php -m
-          composer --version
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-
-      - name: Run validate
-        run: |
-          vendor/bin/phpcbf || true
-          vendor/bin/phpcs -q -n --report=checkstyle | cs2pr
-
-      - name: Commit PHPCBF changes
-        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }} # only commit on pushes to master
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "🤖 PHPCBF"
+        run: vendor/bin/phpunit ${{ steps.phpunit.outputs.phar_flags }}
+        env:
+          STRAUSS_FAIL_ON_DEPRECATION: 1

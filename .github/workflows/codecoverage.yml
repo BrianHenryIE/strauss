@@ -76,8 +76,8 @@ jobs:
       - name: Install php-codecoverage-markdown for report
         run: composer require --dev brianhenryie/php-codecoverage-markdown
 
-      - name: Print composer.lock (for debug)
-        run: cat composer.lock
+      - name: Print installed dependencies
+        run: composer show
 
       - name: Run tests without coverage
         if: ${{ matrix.php != env.COVERAGE_PHP_VERSION }}

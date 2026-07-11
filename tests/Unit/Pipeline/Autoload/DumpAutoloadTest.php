@@ -2,7 +2,6 @@
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
@@ -62,8 +61,8 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $filesystem->write('project/vendor/composer/installed.json', json_encode([
             ]));
 
-        $logger = new ColorLogger();
 
+        $logger = $this->getLogger();
         $prefixer = Mockery::mock(Prefixer::class);
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
 
@@ -86,8 +85,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             FileEnumeratorConfig::class
         );
         $filesystem = $this->getInMemoryFileSystem();
-//      $logger = new ColorLogger();
-        $logger = new NullLogger();
+        $logger = $this->getLogger();
 
         $config->expects('isDryRun')->times(1)->andReturn(true);
         $config->expects('getAbsoluteVendorDirectory')->times(2)->andReturn('mem://project/vendor');

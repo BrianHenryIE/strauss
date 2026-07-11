@@ -3,11 +3,9 @@ declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use Psr\Log\LoggerInterface;
-use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 
@@ -21,14 +19,14 @@ class DependenciesCommandTest extends TestCase
         ?InputInterface $inputInterfaceMock = null,
         ?ConsoleOutputInterface $outputInterfaceMock = null,
         ?FileSystem $fileSystem = null,
-        ?TestLogger $logger = null
+        $logger = null
     ):DependenciesCommand {
 
         return new class(
             $inputInterfaceMock ?? $this->createMock(InputInterface::class),
             $outputInterfaceMock ?? $this->createMock(ConsoleOutputInterface::class),
             $fileSystem ?? $this->getInMemoryFileSystem(),
-            $logger ?? new ColorLogger()
+            $logger ?? $this->getLogger()
         ) extends DependenciesCommand {
             public function __construct(
                 InputInterface $inputInterfaceMock,
@@ -67,18 +65,16 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
-        $logger = new ColorLogger();
-
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
-            $logger
+            $this->getLogger()
         );
 
         // Composer could not find the config file: /path/to/composer.json
         // To initialize a project, please create a composer.json file. See https://getcomposer.org/basic-usage
-        $this->assertTrue($logger->hasErrorRecords());
+        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -106,16 +102,14 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
-        $logger = new ColorLogger();
-
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
-            $logger
+            $this->getLogger()
         );
 
-        $this->assertTrue($logger->hasErrorRecords());
+        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -144,16 +138,14 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
-        $logger = new ColorLogger();
-
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
-            $logger
+            $this->getLogger()
         );
 
-        $this->assertTrue($logger->hasErrorRecords());
+        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -182,16 +174,14 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
-        $logger = new ColorLogger();
-
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
-            $logger
+            $this->getLogger()
         );
 
-        $this->assertTrue($logger->hasErrorRecords());
+        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -220,16 +210,14 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
-        $logger = new ColorLogger();
-
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
-            $logger
+            $this->getLogger()
         );
 
-        $this->assertTrue($logger->hasErrorRecords());
+        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -260,15 +248,13 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
-        $logger = new ColorLogger();
-
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
-            $logger
+            $this->getLogger()
         );
 
-        $this->assertTrue($logger->hasErrorRecords());
+        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 }

@@ -57,7 +57,7 @@ class ExcludeFromCopyAutoloadIntegrationTest extends IntegrationTestCase
 
         $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
         $config = new StraussConfig($composer);
-        $cleanup = new Cleanup($config, $this->getFileSystem(), $this->logger);
+        $cleanup = new Cleanup($config, $this->getFileSystem(), $this->getLogger());
         $cleanup->rebuildVendorAutoloader();
 
         $autoloadFilesPhp = $this->readFile($this->testsWorkingDir . '/vendor/composer/autoload_files.php');
@@ -244,17 +244,15 @@ PHP,
 
     private function writeFile(string $path, string $contents): void
     {
-        $directory = dirname($path);
-        if (!is_dir($directory)) {
-            mkdir($directory, 0777, true);
-        }
-
-        file_put_contents($path, $contents);
+        $this->getFileSystem()->write(
+            $path,
+            $contents
+        );
     }
 
     private function readFile(string $path): string
     {
-        $contents = file_get_contents($path);
+        $contents = $this->getFileSystem()->read($path);
         $this->assertIsString($contents);
 
         return $contents;

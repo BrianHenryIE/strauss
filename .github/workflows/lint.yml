@@ -1,0 +1,61 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - '**.php'
+      - 'phpcs.xml'
+      - '.github/workflows/lint.yml'
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+    branches:
+      - master
+      - main
+    paths:
+      - '**.php'
+      - 'phpcs.xml'
+      - '.github/workflows/lint.yml'
+  workflow_dispatch:
+
+concurrency:
+  # Cancel previous runs of this workflow if they are testing the same branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint project files
+    steps:
+
+      - uses: actions/checkout@v7
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer:v2, cs2pr
+          extensions: fileinfo, gd
+
+      - name: Debugging
+        run: |
+          php --version
+          php -m
+          composer --version
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run validate
+        run: |
+          vendor/bin/phpcbf || true
+          vendor/bin/phpcs -q -n --report=checkstyle | cs2pr
+
+      - name: Commit PHPCBF changes
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }} # only commit on pushes to master
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "🤖 PHPCBF"

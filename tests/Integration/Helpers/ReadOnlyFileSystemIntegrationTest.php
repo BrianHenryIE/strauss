@@ -4,7 +4,7 @@ namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\FileSystem as FlysystemFileSystem;
+use League\Flysystem\Filesystem as FlysystemFileSystem;
 
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem

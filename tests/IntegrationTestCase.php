@@ -7,15 +7,19 @@
 
 namespace BrianHenryIE\Strauss;
 
-use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Elazar\Flystream\FilesystemRegistry;
 use Exception;
 use League\Flysystem\StorageAttributes;
+use Monolog\Logger;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -44,8 +48,6 @@ class IntegrationTestCase extends TestCase
             sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'))
         );
 
-        $this->logger = new ColorLogger();
-
         if ('Darwin' === PHP_OS) {
             $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
         }
@@ -53,10 +55,8 @@ class IntegrationTestCase extends TestCase
         // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
         // we set breakpoints, we can easily browse the files.
         if ($this->isPhpStormRunning()) {
-            $this->testsWorkingDir = getcwd() . '/teststempdir';
-        }
-
-        if (file_exists($this->testsWorkingDir)) {
+            $this->testsWorkingDir = getcwd() . '/teststempdir/' . substr(uniqid(), 4);
+        } elseif (file_exists($this->testsWorkingDir)) {
             $this->deleteDir($this->testsWorkingDir);
         }
 
@@ -82,13 +82,40 @@ class IntegrationTestCase extends TestCase
         return false;
     }
 
+    protected function isTestingPhar(): bool
+    {
+        return file_exists($this->projectDir . '/strauss.phar');
+    }
+
     protected function runStrauss(?string &$allOutput = null, string $params = '', string $env = ''): int
     {
-        if (file_exists($this->projectDir . '/strauss.phar')) {
+        if ($this->isTestingPhar()) {
             // TODO add xdebug to the command
-            exec($env . ' php ' . $this->projectDir . '/strauss.phar ' . $params, $output, $return_var);
+
+            // When STRAUSS_FAIL_ON_DEPRECATION is set (in CI, when testing the phar under
+            // newer PHP versions), surface PHP deprecation notices and fail the test if the
+            // subprocess emitted any. `exec()` captures stdout only, so stderr – where PHP
+            // prints `Deprecated:` notices – is redirected to its own file and inspected.
+            $failOnDeprecation = (bool) getenv('STRAUSS_FAIL_ON_DEPRECATION');
+            $phpFlags = $failOnDeprecation ? '-d error_reporting=E_ALL -d display_errors=stderr ' : '';
+            $phpFlags .= ' -d memory_limit=2048M ';
+            $stderrFile = tempnam(sys_get_temp_dir(), 'strauss-phar-stderr');
+
+            exec($env . ' php ' . $phpFlags . $this->projectDir . '/strauss.phar ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
+
+            $stderr = (string) file_get_contents($stderrFile);
+            @unlink($stderrFile);
+            if ($stderr !== '') {
+                echo $stderr;
+            }
+
+            // strauss legitimately logs to stderr, so only fail on PHP deprecation notices.
+            if ($failOnDeprecation && preg_match('/(?:PHP )?Deprecated:/', $stderr)) {
+                $this->fail('strauss.phar emitted a PHP deprecation notice:' . PHP_EOL . $stderr);
+            }
+
             return $return_var;
         }
 
@@ -104,19 +131,17 @@ class IntegrationTestCase extends TestCase
                 unset($paramsSplit[0]);
                 break;
             default:
-                $strauss = new DependenciesCommand();
+                $strauss = new class() extends  DependenciesCommand {
+                    public Logger $monologLogger;
+                    protected function getMonologLogger(InputInterface $input, OutputInterface $output): Logger
+                    {
+                        return $this->monologLogger;
+                    }
+                };
+                $strauss->monologLogger = $this->getLogger();
         }
 
-        $strauss->setLogger($this->getLogger());
-
-        // TODO: I don't know what I did to break the previous colorlogger output so this is just a crutch.
-        $output = new class() extends BufferedOutput {
-            protected function doWrite(string $message, bool $newline)
-            {
-                parent::doWrite($message, $newline);
-                echo $message . PHP_EOL;
-            }
-        };
+        $output = new BufferedOutput();
 
         foreach (array_filter(explode(' ', $env)) as $pair) {
             $kv = explode('=', $pair);
@@ -136,6 +161,11 @@ class IntegrationTestCase extends TestCase
         }
 
         $inputInterface = new ArgvInput($argv);
+
+        // Real invocations run inside an Application, which supplies Symfony's global options
+        // (e.g. the `--silent` option added in symfony/console 7.2). Attach one so in-process
+        // test runs mirror the CLI and can bind those options.
+        $strauss->setApplication(new Application());
 
         $result = $strauss->run($inputInterface, $output);
 
@@ -255,10 +285,16 @@ class IntegrationTestCase extends TestCase
         $testPhpVersionConstraintMatch = version_compare(phpversion(), $php_version, $operator);
         $systemPhpVersionConstraintMatch = version_compare($system_php_version, $php_version, $operator);
 
+        $versionMessage = sprintf(
+            '[test:%s, system:%s] ',
+            phpversion(),
+            $system_php_version
+        );
+
         if ($testPhpVersionConstraintMatch || $systemPhpVersionConstraintMatch) {
             empty($message)
-                ? $this->markTestSkipped("Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
-                : $this->markTestSkipped($message);
+                ? $this->markTestSkipped($versionMessage . "Package specified for test cannot run on PHP $operator $php_version. Running PHPUnit with PHP " . phpversion() . ', on system PHP ' . $system_php_version)
+                : $this->markTestSkipped($versionMessage . $message);
         }
     }
 

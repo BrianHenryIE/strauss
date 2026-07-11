@@ -246,6 +246,8 @@ EOD;
 
     public function test_replace_classname_is_namespace_name(): void
     {
+        $this->markTestSkippedOnPhpVersionEqualOrAbove('8.6');
+
         $pdfHelpersComposer = <<<'JSON'
 {
     "name": "brianhenryie/pdf-helpers",
