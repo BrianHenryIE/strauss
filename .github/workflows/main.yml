@@ -101,15 +101,6 @@ jobs:
       - name: Print installed dependencies
         run: composer show
 
-      - name: Run previous workflows' failed tests first
-        id: failed_tests
-        uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
-        with:
-          phpunit-command: vendor/bin/phpunit
-          max-runs: 1
-        env:
-          RENAMESPACER_LOG: "debug"
-
       - name: Determine PHPUnit fail-on flags
         id: phpunit
         # PHPUnit 9 (resolved under PHP 7.4 / 8.0) lacks --fail-on-deprecation
@@ -127,6 +118,15 @@ jobs:
             echo "phar_flags=" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Run previous workflows' failed tests first
+        id: failed_tests
+        uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
+        with:
+          phpunit-command: vendor/bin/phpunit
+          phpunit-args: ${{ steps.phpunit.outputs.flags }}
+          max-runs: 1
+        env:
+          RENAMESPACER_LOG: "debug"
 
       - name: Run all tests (except previous failures)
         env:
