@@ -168,7 +168,7 @@ abstract class DiscoveredSymbol
         $symbolName = $this->fqdnOriginalSymbol;
 
         while (str_starts_with($symbolName, $classPrefix) && trim($classPrefix, '_') !== trim($symbolName, '_')) {
-            $symbolName = preg_replace('/^'.preg_quote($classPrefix) . '/', '', $symbolName) ?? $symbolName;
+            $symbolName = preg_replace('/^'.preg_quote($classPrefix, '/') . '/', '', $symbolName) ?? $symbolName;
         }
 
         return trim($symbolName, '_');
