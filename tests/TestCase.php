@@ -56,7 +56,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     public bool $allowErrorLogs = false;
 
-    public bool $allowWarningLogs = false;
+    public ?bool $allowWarningLogs = false;
 
     protected function setUp(): void
     {
@@ -131,13 +131,15 @@ class TestCase extends \PHPUnit\Framework\TestCase
             } else {
                 $this->assertTrue($this->getTestLogger()->hasErrorRecords(), "Expected TestLogger::hasErrorRecords() but there were none.");
             }
-            if ($this->allowWarningLogs === false) {
-                $this->assertFalse(
-                    $this->getTestLogger()->hasWarningRecords(),
-                    "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode("\",\n\"", $levelMessages('warning')) . '"'
-                );
-            } else {
-                $this->assertTrue($this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none.");
+            if(null !== $this->allowWarningLogs) {
+                if ( $this->allowWarningLogs === false ) {
+                    $this->assertFalse(
+                        $this->getTestLogger()->hasWarningRecords(),
+                        "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode( "\",\n\"", $levelMessages( 'warning' ) ) . '"'
+                    );
+                } else {
+                    $this->assertTrue( $this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none." );
+                }
             }
         }
 
@@ -151,6 +153,14 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected function expectWarningLogs(): void
     {
         $this->allowWarningLogs = true;
+    }
+
+    /**
+     * When we care neither have some been logged nor when none have been logged.
+     */
+    protected function ignoreWarningLogs(): void
+    {
+        $this->allowWarningLogs = null;
     }
 
     protected function expectErrorLogs(): void
