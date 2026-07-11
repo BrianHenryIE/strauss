@@ -110,17 +110,18 @@ class ChangeEnumerator
         /** @var NamespacedSymbol $symbol */
         foreach ($classesTraitsInterfaces as $symbol) {
             // If we're a namespaced class/interface/trait, apply the fqdnchange.
-            if ($symbol->getNamespace() !== '\\') {
-                if (isset($discoveredNamespaces[ $symbol->getNamespace() ])) {
+            if (!$symbol->getNamespace()->isGlobal()) {
+                if ($discoveredNamespaces->has($symbol->getNamespace())) {
+//                if (isset($discoveredNamespaces[ $symbol->getNamespace() ])) {
                     /** @var NamespaceSymbol $newNamespace */
-                    $newNamespace = $discoveredNamespaces[ $symbol->getNamespace() ];
+                    $newNamespace = $discoveredNamespaces->get($symbol->getNamespace()->getOriginalFqdnName());
                     $replacement  = $this->determineNamespaceReplacement(
-                        $newNamespace->getOriginalSymbol(),
-                        $newNamespace->getReplacement(),
-                        $symbol->getOriginalSymbol()
+                        $newNamespace->getOriginalFqdnName(),
+                        $newNamespace->getReplacementFqdnName(),
+                        $symbol->getOriginalFqdnName()
                     );
 
-                        $symbol->setLocalReplacement($replacement);
+                    $symbol->setLocalReplacement($replacement);
 
                     unset($newNamespace, $replacement);
                 }
@@ -133,14 +134,14 @@ class ChangeEnumerator
             }
 
             // If the classname/interfacename/traitname already appears to begin with the prefix, skip.
-            if (str_starts_with($symbol->getOriginalSymbol(), $classmapPrefix) && $symbol->getOriginalSymbol() !== $classmapPrefix) {
+            if (str_starts_with($symbol->getOriginalFqdnName(), $classmapPrefix) && $symbol->getOriginalFqdnName() !== $classmapPrefix) {
                 // Already prefixed / second scan.
                 continue;
             }
 
             // Prefix global class.
-            $replacement = $classmapPrefix . $symbol->getOriginalSymbol();
-            $symbol->setReplacement($replacement);
+            $replacement = $classmapPrefix . $symbol->getOriginalFqdnName();
+            $symbol->setLocalReplacement($replacement);
         }
         unset($classmapPrefix, $classesTraitsInterfaces);
 
