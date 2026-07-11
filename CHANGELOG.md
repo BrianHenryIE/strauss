@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.28.1 July 2026
+
+* Update packages
+* Allow all versions of PHPUnit 9+
+* Allow Monolog v2 || v3
+* Increase CI matrix PHP versions to PHP 8.6
+* Mute more deprecations
+* Performance: improve compiling file list for local symlinked paths by respecting `.gitignore`, `.gitattribute` and skipping `.git` directory
+
 ## 0.28.0 June 2026
 
 * Add: Respect `.gitignore`, `.gitattributes` and exclude `.git` in symlinked packages
