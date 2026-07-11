@@ -96,6 +96,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     {
         switch (get_class($symbol)) {
             case NamespaceSymbol::class:
+            case Psr0NamespaceSymbol::class:
                 return isset($this->types[self::NAMESPACE_SYMBOL][$symbol->getOriginalFqdnName()]);
             case ConstantSymbol::class:
                 return isset($this->types[self::CONST_SYMBOL][$symbol->getOriginalFqdnName()]);
