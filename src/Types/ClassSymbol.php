@@ -20,7 +20,7 @@ class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     /**
      * @param string $fqdnClassname
      * @param FileBase $sourceFile
-     * @param ?NamespaceSymbol $namespace
+     * @param NamespaceSymbol $namespace
      * @param bool $isAbstract
      * @param ?string $extends
      * @param string[] $interfaces
