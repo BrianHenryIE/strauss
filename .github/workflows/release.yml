@@ -65,13 +65,6 @@ jobs:
         run: |
           find bin -name 'strauss' -exec sed -i "s/}, '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*');/}, '$CURRENT_RELEASE');/" {} +
 
-      - name: Commit updated README.md
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          branch: master
-          file_pattern: "bin/strauss"
-          commit_message: "🤖 Update version number in bin"
-
       - name: Create .phar
         run: ./scripts/createphar.sh
 
@@ -214,3 +207,11 @@ jobs:
             strauss.phar.asc
           gzip: false
           allow_override: true
+
+      - name: Commit updated `bin/strauss`
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          branch: master
+          file_pattern: "bin/strauss"
+          commit_message: "🤖 Update version number in bin"
+        continue-on-error: true
