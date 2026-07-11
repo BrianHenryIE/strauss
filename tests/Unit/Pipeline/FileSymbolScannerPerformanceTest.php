@@ -111,6 +111,7 @@ EOD;
      * @param string[] $absentNamespaces
      * @param string[] $expectedFunctions
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('namespaceTokenContextProvider')]
     public function test_namespace_token_detection_ignores_non_declaration_contexts(
         string $contents,
         array $expectedNamespaces,
