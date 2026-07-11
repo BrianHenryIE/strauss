@@ -110,11 +110,11 @@ abstract class AbstractRenamespacerCommand extends Command
      */
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->flatDependencyTree = new DependenciesCollection([]);
+        // Instantiate the monolog logger early, reconfigure it later.
+        $logger = new Logger('logger');
+        $this->logger = $logger;
 
-        $this->setLogger(
-            $this->getMonologLogger($input, $output)
-        );
+        $this->flatDependencyTree = new DependenciesCollection([]);
 
         /**
          * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
@@ -165,6 +165,11 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->logger->pushHandler(new PsrHandler($logger));
     }
 
+    public function configureLogger(LoggerInterface $logger): void
+    {
+        $this->logger->pushHandler(new PsrHandler($logger));
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!isset($this->config)) {
@@ -202,23 +207,29 @@ abstract class AbstractRenamespacerCommand extends Command
             }
         }
 
-//            $this->logger->reset();
-//            $this->configureLogger($this->logger, $input, $output);
-        $this->setLogger(
-            $this->getMonologLogger($input, $output)
-        );
+        $this->logger = $this->getMonologLogger($input, $output);
 
         return Command::SUCCESS;
     }
 
     protected function getMonologLogger(InputInterface $input, OutputInterface $output): Logger
     {
-        $logger = new Logger('logger');
+        $logger = $this->logger instanceof Logger
+            ? $this->logger
+            : new Logger('logger');
+
+        $this->configureMonologLogger($logger, $input, $output);
+
+        return $logger;
+    }
+
+    protected function configureMonologLogger(Logger $logger, InputInterface $input, OutputInterface $output): void
+    {
+        $logger->reset();
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(RelativeFilepathLogProcessor::make($this->filesystem));
         $logger->pushProcessor(PadColonColumnsLogProcessor::make());
         $logger->pushHandler(new PsrHandler($this->getPsrLogger($input, $output)));
-        return $logger;
     }
 
     /**
