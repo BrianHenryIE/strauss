@@ -33,11 +33,33 @@
 
 ## 0.27.1 April 2026
 
+* Fix: duplicated classmap prefix
+* Fix: allow non-existent autoload paths
+* Fix: do not delete symlinked packages in `exclude_from_copy`
+* Fix: use path relative to vendor in regexes in `exclude_from_copy`.`file_patterns`
+
 ## 0.27.0 March 2026
+
+* Fix: only replace constants that are marked for renaming (isDoRename)
+* Fix: omit excluded packages in target `installed.json`
+* Fix: preserve vendor `installed.json` entries for `exclude_from_copy` packages
+* Add: support for excluding constants from prefixing
+* Add: `optimize_autoloader` with backward-compatible config interface handling
 
 ## 0.26.5 February 2026
 
+* Fix: incorrectly prefixing `final class StatefulGeocoder implements Geocoder` -> `final class StatefulGeocoder implements BrianHenryIE\Geocoder`
+* Dev: move IntegrationTestCase base class from `tests/integration/util` to `tests`
+
 ## 0.26.4 January 2026
+
+* Fix: leading forward slash breaking Windows paths
+* Fix: normalize paths before directoryExists check
+* Fix: packages in `exclude_from_copy` incorrectly deleted when `delete_vendor_packages` is enabled
+* Fix: Symbols from `exclude_from_copy`.`packages` are still prefixed
+* Fix: mapping from documented singular `constant_prefix` key to plural setting
+* CI: add Claude Code PR review workflow
+* CI: small changes
 
 ## 0.26.3 December 2025
 
