@@ -111,6 +111,7 @@ class FileSymbolScanner
         $newText = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? '' : 'new ';
 
         $this->loggedSymbols[] = $symbol->getOriginalFqdnName();
+//        $this->loggedSymbols[$symbol->getOriginalFqdnName()] = true;
 
         $this->logger->log(
             $level,
