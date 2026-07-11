@@ -7,7 +7,7 @@
 * Allow Monolog v2 || v3
 * Increase CI matrix PHP versions to PHP 8.6
 * Mute more deprecations
-* Performance: improve compiling file list for local symlinked paths by respecting `.gitignore`, `.gitattribute` and skipping `.git` directory
+* Performance: improve compiling file list for local symlinked paths when processing `.gitignore` and `.gitattribute`
 
 ## 0.28.0 June 2026
 
@@ -19,7 +19,7 @@
 * Fix: mute deprecation warnings
 * Fix: constant prefix substring collisions
 * Fix: failing CI due to Phive
-* CI: Only install `brianhenryie/simple-php-code-parser` in CI
+* CI: Only install `brianhenryie/php-codecoverage-markdown` in CI
 * CI: Add `composer show` in matrix to display installed versions
 
 ## 0.27.3 June 2026
