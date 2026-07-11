@@ -70,7 +70,7 @@ EOD;
   "extra": {
     "strauss": {
       "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "Global_Prefix_"
+      "classmap_prefix": "BrianHenryIE_TestStrauss_"
     }
   },
   "config": {
