@@ -131,14 +131,14 @@ class TestCase extends \PHPUnit\Framework\TestCase
             } else {
                 $this->assertTrue($this->getTestLogger()->hasErrorRecords(), "Expected TestLogger::hasErrorRecords() but there were none.");
             }
-            if(null !== $this->allowWarningLogs) {
-                if ( $this->allowWarningLogs === false ) {
+            if (null !== $this->allowWarningLogs) {
+                if ($this->allowWarningLogs === false) {
                     $this->assertFalse(
                         $this->getTestLogger()->hasWarningRecords(),
-                        "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode( "\",\n\"", $levelMessages( 'warning' ) ) . '"'
+                        "Unexpected TestLogger::hasWarningRecords() logged: \"" . implode("\",\n\"", $levelMessages('warning')) . '"'
                     );
                 } else {
-                    $this->assertTrue( $this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none." );
+                    $this->assertTrue($this->getTestLogger()->hasWarningRecords(), "Expected TestLogger::hasWarningRecords() but there were none.");
                 }
             }
         }
