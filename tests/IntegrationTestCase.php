@@ -126,7 +126,7 @@ class IntegrationTestCase extends TestCase
                 false
             )) {
                 // Printing logs is slow.
-                $params .= ' --' . (empty($envLogLevel) ? 'info' : $envLogLevel);
+                $params .= (empty($envLogLevel) ? '' : ' --' . $envLogLevel);
             }
             // TODO add xdebug to the command
 
