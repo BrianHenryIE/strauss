@@ -112,8 +112,17 @@ abstract class AbstractRenamespacerCommand extends Command
     {
         $this->flatDependencyTree = new DependenciesCollection([]);
 
-        $logger = new Logger('logger');
-        $this->logger = $logger;
+        $this->setLogger(
+            $this->getMonologLogger($input, $output)
+        );
+
+        /**
+         * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
+         * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
+         */
+        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
 
         $workingDir      = Platform::getcwd();
         $localFsLocation = FileSystem::getFsRoot($workingDir);
@@ -125,21 +134,13 @@ abstract class AbstractRenamespacerCommand extends Command
             DIRECTORY_SEPARATOR
         );
 
-        /**
-         * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
-         * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
-         */
-        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-            return true;
-        }, E_DEPRECATED | E_USER_DEPRECATED);
-
         try {
         // Extends `LocalFilesystemAdapter`.
             $localFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
                 $localFsLocation,
                 $pathNormalizer,
                 $pathPrefixer,
-                $logger
+                $this->logger
             );
 
             $this->filesystem = new FileSystem(
