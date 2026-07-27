@@ -3,13 +3,13 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
+use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Config;
+use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\Filesystem as FlysystemFileSystem;
 use Mockery;
@@ -74,7 +74,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
-    protected function getFileSystem(): Filesystem
+    protected function getFileSystem(): FileSystem
     {
 
         if (! isset($this->filesystem)) {
@@ -84,7 +84,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $this->filesystem;
     }
 
-    protected function getNewFileSystem(): Filesystem
+    protected function getNewFileSystem(): FileSystem
     {
         set_error_handler(function () {
         }, E_DEPRECATED | E_USER_DEPRECATED);
@@ -121,7 +121,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getInMemoryFileSystem(): FileSystem
     {
-        if (! isset($inMemoryFilesystem)) {
+        if (! isset($this->inMemoryFilesystem)) {
             $this->inMemoryFilesystem = $this->getNewInMemoryFileSystem();
         }
 
@@ -133,25 +133,23 @@ class TestCase extends \PHPUnit\Framework\TestCase
         set_error_handler(function () {
         }, E_DEPRECATED | E_USER_DEPRECATED);
 
-        $inMemoryFilesystem = new InMemoryFilesystemAdapter();
+        $inMemoryFilesystemAdapter = new InMemoryFilesystemAdapter();
 
-        $normalizer = FileSystem::makePathNormalizer('/');
+        $normalizer = Filesystem::makePathNormalizer('mem://');
 
-        $leagueFilesystem = new FlysystemFileSystem(
-            $inMemoryFilesystem,
-            [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ],
-            $normalizer
-        );
-
-        $readonlyFilesystem = new ReadOnlyFileSystem(
-            $leagueFilesystem,
-            Filesystem::makePathNormalizer(getcwd())
+        $readonlyFilesystemAdapter = new ReadOnlyFileSystemAdapter(
+            $inMemoryFilesystemAdapter,
+            Filesystem::makePathNormalizer('mem://')
         );
 
         $filesystem = new FileSystem(
-            $readonlyFilesystem,
+            new FlysystemFileSystem(
+                $readonlyFilesystemAdapter,
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
+                $normalizer
+            ),
             'mem://',
             'mem://'
         );
@@ -175,8 +173,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::tearDown();
 
-        /** @var FilesystemRegistry $registry */
         try {
+            /** @var FilesystemRegistry $registry */
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
             $registry->unregister('mem');
         } catch (\Exception $e) {
