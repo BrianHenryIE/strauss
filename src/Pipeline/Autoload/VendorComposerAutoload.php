@@ -32,7 +32,7 @@ class VendorComposerAutoload
 
     public function __construct(
         AutoloadConfigInterface $config,
-        Filesystem             $filesystem,
+        FileSystem             $filesystem,
         LoggerInterface        $logger
     ) {
         $this->config = $config;
