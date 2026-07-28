@@ -23,7 +23,20 @@ class FileCopyScannerTest extends TestCase
         $vendorRelativePath = 'my/package/file.php';
         $regexPattern = "~^([^/]*?/){2}file.php~";
 
+	    /**
+	     * PHP 8.6: "Returning a value from a constructor is deprecated".
+	     * But it doesn't look like there is a value being returned.
+	     *
+	     * @see Prefixer
+	     * @see FileEnumerator
+	     * @see Mockery\Loader\EvalLoader
+	     */
+	    set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+		    return true;
+	    }, E_DEPRECATED | E_USER_DEPRECATED);
         $dependency = Mockery::mock(ComposerPackage::class);
+		restore_error_handler();
+
         $dependency->expects('getPackageAbsolutePath')->andReturn('path/to/project/vendor/my/package');
         $dependency->expects('addFile');
         $dependency->expects('getPackageName')->andReturn('my/package');
