@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.28.2 
+
+* Extract ReadOnlyFileSystem to brianhenryie/bh-php-flysystem-readonly package
+
 ## 0.28.1 July 2026
 
 * Update packages

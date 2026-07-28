@@ -5,12 +5,12 @@
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
+use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use Composer\InstalledVersions;
 use Elazar\Flystream\FilesystemRegistry;
 use Monolog\Handler\PsrHandler;
@@ -34,6 +34,8 @@ abstract class AbstractRenamespacerCommand extends Command
 
     /** No trailing slash */
     protected string $workingDir;
+
+    protected LocalFilesystemAdapter $localFilesystemAdapter;
 
     /** @var FileSystem */
     protected Filesystem $filesystem;
@@ -106,14 +108,16 @@ abstract class AbstractRenamespacerCommand extends Command
                 return true;
             }, E_DEPRECATED | E_USER_DEPRECATED);
 
-            $this->filesystem =
-                new FileSystem(
-                    new ReadOnlyFileSystem(
-                        $this->filesystem,
+
+            $this->filesystem = new FileSystem(
+                new \League\Flysystem\Filesystem(
+                    new ReadOnlyFileSystemAdapter(
+                        $this->localFilesystemAdapter,
                         Filesystem::makePathNormalizer($this->workingDir)
-                    ),
-                    $this->workingDir
-                );
+                    )
+                ),
+                $this->workingDir
+            );
 
             restore_error_handler();
 
@@ -163,7 +167,7 @@ abstract class AbstractRenamespacerCommand extends Command
             }, E_DEPRECATED | E_USER_DEPRECATED);
 
             try {
-                $localFilesystemAdapter = new LocalFilesystemAdapter(
+                $this->localFilesystemAdapter = new LocalFilesystemAdapter(
                     FileSystem::getFsRoot($this->workingDir),
                     null,
                     LOCK_EX,
@@ -172,7 +176,7 @@ abstract class AbstractRenamespacerCommand extends Command
 
                 $this->filesystem = new FileSystem(
                     new \League\Flysystem\Filesystem(
-                        $localFilesystemAdapter,
+                        $this->localFilesystemAdapter,
                         [
                             Config::OPTION_DIRECTORY_VISIBILITY => 'public',
                         ],

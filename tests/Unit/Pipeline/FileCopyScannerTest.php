@@ -26,6 +26,7 @@ class FileCopyScannerTest extends TestCase
         $regexPattern = "~^([^/]*?/){2}file.php~";
 
         $dependency = Mockery::mock(ComposerPackage::class);
+
         $dependency->expects('getPackageAbsolutePath')->andReturn('path/to/project/vendor/my/package');
         $dependency->expects('addFile');
         $dependency->expects('getPackageName')->andReturn('my/package');

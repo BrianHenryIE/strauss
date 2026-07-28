@@ -49,7 +49,7 @@ class Autoload
     public function __construct(
         StraussConfig $config,
         array $discoveredFilesAutoloaders,
-        Filesystem $filesystem,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->config = $config;

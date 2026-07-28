@@ -11,6 +11,8 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
+ *
+ * @see InstalledJson::cleanTargetDirInstalledJson()
  */
 class StraussIssue289Test extends IntegrationTestCase
 {
@@ -66,10 +68,9 @@ EOD;
         chdir($this->testsWorkingDir . '/project');
         exec('composer install');
 
-        $installed_json_package_autoload = function (): array {
-            $installed_before_string = file_get_contents($this->testsWorkingDir . '/project/vendor/composer/installed.json');
+        $installed_json_package_autoload = function (string $package_name): array {
+            $installed_before_string = $this->getFileSystem()->read($this->testsWorkingDir . '/project/vendor/composer/installed.json');
             $installed_json          = json_decode($installed_before_string, true, 512, JSON_THROW_ON_ERROR);
-            $package_name            = "strauss/symlinked-package";
             $package_json            = array_values(array_filter(
                 $installed_json['packages'],
                 fn(array $package) => $package['name'] === $package_name
@@ -77,11 +78,13 @@ EOD;
             return $package_json[0]['autoload'] ?? [];
         };
 
-        $this->assertNotEmpty($installed_json_package_autoload());
+        $before = $installed_json_package_autoload("strauss/symlinked-package");
+        $this->assertNotEmpty($before);
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertNotEmpty($installed_json_package_autoload());
+        $after = $installed_json_package_autoload("strauss/symlinked-package");
+        $this->assertNotEmpty($after, 'Autoload keys before: ["' . implode('", "', array_keys($before)) . '"], after: ["' . implode('", "', array_keys($after)) . '"].');
     }
 }

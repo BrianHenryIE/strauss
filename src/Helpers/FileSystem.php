@@ -10,22 +10,28 @@
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+use BrianHenryIE\FlysystemReadOnly\FlysystemAdapterBackCompatTraitInterface;
+use BrianHenryIE\FlysystemReadOnly\FlysystemReaderBackCompatTrait;
+use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
+use League\Flysystem\Filesystem as LeagueFilesystem;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 
-class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, PathNormalizer
+class FileSystem implements FilesystemOperator, FlysystemAdapterBackCompatTraitInterface, PathNormalizer
 {
-    use FlysystemBackCompatTrait;
+    use FlysystemReaderBackCompatTrait {
+        FlysystemReaderBackCompatTrait::directoryExists as traitDirectoryExists;
+    }
 
-    protected FilesystemOperator $flysystem;
+    protected LeagueFilesystem $flysystem;
 
     protected PathNormalizer $normalizer;
 
@@ -39,12 +45,12 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
      *
      * TODO: Check are any of these methods unused
      *
-     * @param FilesystemOperator $flysystem
+     * @param LeagueFilesystem $flysystem
      * @param string $workingDir
      * @param ?string $flysystemRoot In practice we always use the root of the drive which can be inferred from workingDir but that's not strictly required.
      */
     public function __construct(
-        FilesystemOperator $flysystem,
+        LeagueFilesystem $flysystem,
         string $workingDir,
         ?string $flysystemRoot = null
     ) {
@@ -432,7 +438,10 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
 
         $prefixed = $this->pathPrefixer->prefixPath($this->normalizePath($path));
 
-        if ($this->flysystem instanceof ReadOnlyFileSystem) {
+        $leagueFilesystemAdapterProperty = new \ReflectionProperty($this->flysystem, 'adapter');
+        PHP_VERSION_ID < 80100 && $leagueFilesystemAdapterProperty->setAccessible(true);
+
+        if ($leagueFilesystemAdapterProperty->getValue($this->flysystem) instanceof ReadOnlyFileSystemAdapter) {
             return str_replace(':/', '://', $prefixed);
         }
 
@@ -457,5 +466,17 @@ class FileSystem implements FilesystemOperator, FlysystemBackCompatInterface, Pa
         }
 
         return empty($fsList);
+    }
+
+    /**
+     * Flysystem is ignoring symlinks.
+     * A better implementation of this fix is done in another branch which will be merged in #278.
+     *
+     * This `is_dir()` approach is bound to break the {@see ReadOnlyFileSystemAdapter} / `--dry-run` sometimes.
+     * The change in #278 changes LocalFileSystemAdapter to follow symlinks.
+     */
+    public function directoryExists(string $path): bool
+    {
+        return $this->traitDirectoryExists($path) || is_dir("/$path");
     }
 }

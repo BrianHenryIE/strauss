@@ -189,6 +189,7 @@ EOD;
 
         $projectReplace = Mockery::mock(Prefixer::class);
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
+
         $fileEnumerator->expects('compileFileListForPaths')->once()->andReturn(new DiscoveredFiles());
         $config->expects('getNamespacePrefix')->times(2)->andReturn('DumpAutoload\\');
         $projectReplace->expects('replaceInProjectFiles')->once();
@@ -211,7 +212,9 @@ EOD;
         $config = Mockery::mock(AutoloadConfigInterface::class);
         $filesystem = $this->getFileSystem();
         $logger = new NullLogger();
+
         $prefixer = Mockery::mock(Prefixer::class);
+
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
 
         $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator) extends DumpAutoload {

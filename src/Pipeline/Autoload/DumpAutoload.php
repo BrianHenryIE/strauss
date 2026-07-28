@@ -39,7 +39,7 @@ class DumpAutoload
 
     public function __construct(
         AutoloadConfigInterface $config,
-        Filesystem $filesystem,
+        FileSystem $filesystem,
         LoggerInterface $logger,
         Prefixer $projectReplace,
         FileEnumerator $fileEnumerator

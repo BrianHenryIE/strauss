@@ -3,13 +3,13 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
+use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Helpers\FileSystem;
-use BrianHenryIE\Strauss\Helpers\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use BrianHenryIE\Strauss\Helpers\ReadOnlyFileSystem;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Config;
+use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\Filesystem as FlysystemFileSystem;
 use Mockery;
@@ -34,6 +34,29 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected FileSystem $filesystem;
 
     protected FileSystem $inMemoryFilesystem;
+
+    protected $previous_error_handler;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /**
+         * PHP 8.6: "Returning a value from a constructor is deprecated".
+         * But it doesn't look like there is a value being returned.
+         *
+         * @see Mockery\Loader\EvalLoader
+         */
+        $this->previous_error_handler = set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            if ('Returning a value from a constructor is deprecated' === $errstr) {
+                debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
+                return true;
+            }
+            return is_callable($this->previous_error_handler)
+                ? call_user_func_array($this->previous_error_handler, func_get_args())
+                : false;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+    }
 
     public static function assertEqualsRN($expected, $actual, string $message = ''): void
     {
@@ -74,7 +97,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return trim($string);
     }
 
-    protected function getFileSystem(): Filesystem
+    protected function getFileSystem(): FileSystem
     {
 
         if (! isset($this->filesystem)) {
@@ -84,7 +107,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $this->filesystem;
     }
 
-    protected function getNewFileSystem(): Filesystem
+    protected function getNewFileSystem(): FileSystem
     {
         set_error_handler(function () {
         }, E_DEPRECATED | E_USER_DEPRECATED);
@@ -121,7 +144,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getInMemoryFileSystem(): FileSystem
     {
-        if (! isset($inMemoryFilesystem)) {
+        if (! isset($this->inMemoryFilesystem)) {
             $this->inMemoryFilesystem = $this->getNewInMemoryFileSystem();
         }
 
@@ -133,25 +156,23 @@ class TestCase extends \PHPUnit\Framework\TestCase
         set_error_handler(function () {
         }, E_DEPRECATED | E_USER_DEPRECATED);
 
-        $inMemoryFilesystem = new InMemoryFilesystemAdapter();
+        $inMemoryFilesystemAdapter = new InMemoryFilesystemAdapter();
 
-        $normalizer = FileSystem::makePathNormalizer('/');
+        $normalizer = Filesystem::makePathNormalizer('mem://');
 
-        $leagueFilesystem = new FlysystemFileSystem(
-            $inMemoryFilesystem,
-            [
-                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-            ],
-            $normalizer
-        );
-
-        $readonlyFilesystem = new ReadOnlyFileSystem(
-            $leagueFilesystem,
-            Filesystem::makePathNormalizer(getcwd())
+        $readonlyFilesystemAdapter = new ReadOnlyFileSystemAdapter(
+            $inMemoryFilesystemAdapter,
+            Filesystem::makePathNormalizer('mem://')
         );
 
         $filesystem = new FileSystem(
-            $readonlyFilesystem,
+            new FlysystemFileSystem(
+                $readonlyFilesystemAdapter,
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
+                $normalizer
+            ),
             'mem://',
             'mem://'
         );
@@ -175,8 +196,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::tearDown();
 
-        /** @var FilesystemRegistry $registry */
+        restore_error_handler();
+
         try {
+            /** @var FilesystemRegistry $registry */
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
             $registry->unregister('mem');
         } catch (\Exception $e) {
