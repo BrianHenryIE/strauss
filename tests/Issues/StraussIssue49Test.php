@@ -18,20 +18,19 @@ class StraussIssue49Test extends IntegrationTestCase
      */
     public function test_local_symlinked_repositories_fail(): void
     {
-        $this->markTestSkippedOnPhpVersionBelow('8.0.0');
 
         $composerJsonString = <<<'EOD'
 {
   "name": "brianhenryie/strauss-local-symlinked-repositories-fail",
   "minimum-stability": "dev",
   "repositories": {
-    "brianhenryie/bh-wp-logger": {
+    "brianhenryie/symlinked": {
         "type": "path",
-        "url": "../bh-wp-logger"
+        "url": "../symlinked"
     }
   },
   "require": {
-    "brianhenryie/bh-wp-logger": "dev-master"
+    "brianhenryie/symlinked": "dev-master"
   },
   "extra": {
     "strauss": {
@@ -43,15 +42,26 @@ class StraussIssue49Test extends IntegrationTestCase
 }
 EOD;
 
-        // 1. Git clone brianhenryie/bh-wp-logger into the temp dir.
+        $symlinkedComposerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/symlinked",
+  "autoload": {
+    "classmap": [
+      "src"
+    ]
+  }
+}
+EOD;
+
         chdir($this->testsWorkingDir);
 
-        exec('git clone https://github.com/BrianHenryIE/bh-wp-logger.git');
-        chdir($this->testsWorkingDir.'/bh-wp-logger');
-
-        mkdir($this->testsWorkingDir . '/project');
+        $this->getFileSystem()->createDirectory($this->testsWorkingDir . '/symlinked');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/symlinked/composer.json', $symlinkedComposerJsonString);
+        $this->getFileSystem()->createDirectory($this->testsWorkingDir . '/symlinked/src');
+        $this->getFileSystem()->write($this->testsWorkingDir . '/symlinked/src/file.php', '<?php ');
 
         // 2. Create the project composer.json in a subdir (one level).
+        $this->getFileSystem()->createDirectory($this->testsWorkingDir . '/project');
         $this->getFileSystem()->write($this->testsWorkingDir . '/project/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir.'/project');
