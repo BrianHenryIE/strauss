@@ -30,7 +30,7 @@ class StraussIssue49Test extends IntegrationTestCase
     }
   },
   "require": {
-    "brianhenryie/symlinked": "dev-master"
+    "brianhenryie/symlinked": "*"
   },
   "extra": {
     "strauss": {
