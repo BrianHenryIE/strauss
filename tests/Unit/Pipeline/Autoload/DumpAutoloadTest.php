@@ -187,21 +187,8 @@ EOD;
         ];
         $config->expects('getPackagesToCopy')->once()->andReturn($packagesToCopy);
 
-        /**
-         * PHP 8.6: "Returning a value from a constructor is deprecated".
-         * But it doesn't look like there is a value being returned.
-         *
-         * @see Prefixer
-         * @see FileEnumerator
-         * @see Mockery\Loader\EvalLoader
-         */
-        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-            return true;
-        }, E_DEPRECATED | E_USER_DEPRECATED);
-
         $projectReplace = Mockery::mock(Prefixer::class);
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
-        restore_error_handler();
 
         $fileEnumerator->expects('compileFileListForPaths')->once()->andReturn(new DiscoveredFiles());
         $config->expects('getNamespacePrefix')->times(2)->andReturn('DumpAutoload\\');
@@ -226,22 +213,9 @@ EOD;
         $filesystem = $this->getFileSystem();
         $logger = new NullLogger();
 
-        /**
-         * PHP 8.6: "Returning a value from a constructor is deprecated".
-         * But it doesn't look like there is a value being returned.
-         *
-         * @see FileEnumerator
-         * @see Prefixer::__construct
-         * @see Mockery\Loader\EvalLoader
-         */
-        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-            return true;
-        }, E_DEPRECATED | E_USER_DEPRECATED);
-
         $prefixer = Mockery::mock(Prefixer::class);
 
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
-        restore_error_handler();
 
         $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator) extends DumpAutoload {
             public function optimizeEnabledForTest(): bool

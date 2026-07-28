@@ -35,6 +35,29 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected FileSystem $inMemoryFilesystem;
 
+    protected $previous_error_handler;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /**
+         * PHP 8.6: "Returning a value from a constructor is deprecated".
+         * But it doesn't look like there is a value being returned.
+         *
+         * @see Mockery\Loader\EvalLoader
+         */
+        $this->previous_error_handler = set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            if ('Returning a value from a constructor is deprecated' === $errstr) {
+                debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
+                return true;
+            }
+            return is_callable($this->previous_error_handler)
+                ? call_user_func_array($this->previous_error_handler, func_get_args())
+                : false;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+    }
+
     public static function assertEqualsRN($expected, $actual, string $message = ''): void
     {
         if (is_string($expected) && is_string($actual)) {
@@ -172,6 +195,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected function tearDown(): void
     {
         parent::tearDown();
+
+        restore_error_handler();
 
         try {
             /** @var FilesystemRegistry $registry */

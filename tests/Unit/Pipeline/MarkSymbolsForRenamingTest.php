@@ -28,18 +28,6 @@ class MarkSymbolsForRenamingTest extends TestCase
      */
     public function testExcludedPackageSymbolsNotMarkedForRenaming(): void
     {
-        /**
-         * PHP 8.6: "Returning a value from a constructor is deprecated".
-         * But it doesn't look like there is a value being returned.
-         *
-         * @see ComposerPackage
-         * @see FileSystem
-         * @see Mockery\Loader\EvalLoader
-         */
-        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-            return true;
-        }, E_DEPRECATED | E_USER_DEPRECATED);
-
         $package = Mockery::mock(ComposerPackage::class);
         $package->shouldReceive('getPackageName')->andReturn('psr/log');
 
@@ -57,7 +45,6 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('isTargetDirectoryVendor')->andReturnFalse();
 
         $filesystem = Mockery::mock(FileSystem::class);
-        restore_error_handler();
 
         $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
 
@@ -84,18 +71,6 @@ class MarkSymbolsForRenamingTest extends TestCase
      */
     public function testNonExcludedPackageSymbolsStillMarkedForRenaming(): void
     {
-        /**
-         * PHP 8.6: "Returning a value from a constructor is deprecated".
-         * But it doesn't look like there is a value being returned.
-         *
-         * @see ComposerPackage
-         * @see FileSystem
-         * @see Mockery\Loader\EvalLoader
-         */
-        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-            return true;
-        }, E_DEPRECATED | E_USER_DEPRECATED);
-
         $package = Mockery::mock(ComposerPackage::class);
         $package->shouldReceive('getPackageName')->andReturn('monolog/monolog');
 
@@ -113,7 +88,6 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('isTargetDirectoryVendor')->andReturnFalse();
 
         $filesystem = Mockery::mock(FileSystem::class);
-        restore_error_handler();
 
         $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
 
@@ -139,18 +113,6 @@ class MarkSymbolsForRenamingTest extends TestCase
      */
     public function testExcludeConstantsByNameNotMarkedForRenaming(): void
     {
-        /**
-         * PHP 8.6: "Returning a value from a constructor is deprecated".
-         * But it doesn't look like there is a value being returned.
-         *
-         * @see ComposerPackage
-         * @see FileSystem
-         * @see Mockery\Loader\EvalLoader
-         */
-        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-            return true;
-        }, E_DEPRECATED | E_USER_DEPRECATED);
-
         $package = Mockery::mock(ComposerPackage::class);
         $package->shouldReceive('getPackageName')->andReturn('some/package');
 
@@ -168,7 +130,6 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('isTargetDirectoryVendor')->andReturnFalse();
 
         $filesystem = Mockery::mock(FileSystem::class);
-        restore_error_handler();
 
         $sut = new MarkSymbolsForRenaming($config, $filesystem, $this->getTestLogger());
 
