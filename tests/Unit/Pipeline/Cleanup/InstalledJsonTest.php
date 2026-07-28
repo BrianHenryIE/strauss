@@ -155,6 +155,19 @@ EOD;
             new NullLogger()
         );
 
+        /**
+         * PHP 8.6: "Returning a value from a constructor is deprecated".
+         * But it doesn't look like there is a value being returned.
+         *
+         * @see ComposerPackage
+         * @see FileWithDependency
+         * @see Mockery\Loader\EvalLoader
+         */
+        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
+
         /** @var ComposerPackage|MockInterface $composerPackageMock */
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
         $composerPackageMock->expects('didDelete')->once()->andReturnFalse();
@@ -163,6 +176,7 @@ EOD;
         $flatDependencyTree = ['psr/container'=> $composerPackageMock];
 
         $file = Mockery::mock(FileWithDependency::class);
+        restore_error_handler();
         $file->expects('getSourcePath')->andReturn('vendor/psr/container/src/ContainerInterface.php');
         $file->expects('addDiscoveredSymbol');
 

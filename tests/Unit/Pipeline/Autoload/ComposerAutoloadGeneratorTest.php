@@ -17,7 +17,20 @@ class ComposerAutoloadGeneratorTest extends \BrianHenryIE\Strauss\TestCase
      */
     public function testGetFileIdentifier(): void
     {
+        /**
+         * PHP 8.6: "Returning a value from a constructor is deprecated".
+         * But it doesn't look like there is a value being returned.
+         *
+         * @see EventDispatcher
+         * @see Mockery\Loader\EvalLoader
+         */
+        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         $eventDispatcher = Mockery::mock(EventDispatcher::class);
+
+        restore_error_handler();
 
         $package = Mockery::mock(PackageInterface::class);
         $package->expects('getAutoload')->times(10)->andReturn(

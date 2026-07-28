@@ -211,7 +211,22 @@ EOD;
         $config = Mockery::mock(AutoloadConfigInterface::class);
         $filesystem = $this->getFileSystem();
         $logger = new NullLogger();
+
+        /**
+         * PHP 8.6: "Returning a value from a constructor is deprecated".
+         * But it doesn't look like there is a value being returned.
+         *
+         * @see Prefixer::__construct
+         * @see Mockery\Loader\EvalLoader
+         */
+        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         $prefixer = Mockery::mock(Prefixer::class);
+
+        restore_error_handler();
+
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
 
         $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator) extends DumpAutoload {
