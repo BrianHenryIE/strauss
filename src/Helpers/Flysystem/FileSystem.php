@@ -9,7 +9,6 @@
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use Composer\Util\Platform;
-use BrianHenryIE\FlysystemReadOnly\FlysystemAdapterBackCompatTraitInterface;
 use BrianHenryIE\FlysystemReadOnly\FlysystemReaderBackCompatTrait;
 use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use Elazar\Flystream\StripProtocolPathNormalizer;
@@ -18,7 +17,6 @@ use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
-use League\Flysystem\FilesystemOperator;
 use League\Flysystem\Filesystem as LeagueFilesystem;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -26,7 +24,7 @@ use League\Flysystem\PathNormalizer;
 use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 
-class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer, PathPrefixerInterface, FlysystemReaderBackCompatTraitInterface
+class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixerInterface, FlysystemReaderBackCompatTraitInterface
 {
     use FlysystemReaderBackCompatTrait;
 //    use FlysystemReaderBackCompatTrait {
@@ -34,7 +32,7 @@ class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer,
 //    }
 
     /**
-     * @see \League\Flysystem\Filesystem::$pathNormalizer
+     * @see LeagueFilesystem::$pathNormalizer
      */
     protected PathNormalizer $pathNormalizer;
 
@@ -183,6 +181,9 @@ class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer,
                 continue;
             }
 
+            /**
+             * @see \League\Flysystem\Filesystem::listContents()
+             */
             $directoryListing = $this->listContents(
                 $path,
                 $deep
@@ -216,8 +217,11 @@ class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer,
 
         $absolutePath = $this->normalizePath($absolutePath);
 
-        // Unsupported symbolic link encountered at location //home
-        // \League\Flysystem\SymbolicLinkEncountered
+        /**
+         * Unsupported symbolic link encountered at location //home
+         * \League\Flysystem\SymbolicLinkEncountered
+         * @see \League\Flysystem\Filesystem::listContents()
+         */
         $dirList = $this->listContents($fileDirectory)->toArray();
         foreach ($dirList as $file) { // TODO: use the generator.
             if ($file->path() === $absolutePath) {
