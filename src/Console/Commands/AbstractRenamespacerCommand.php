@@ -5,14 +5,15 @@
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
+use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
-use BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
+use Composer\InstalledVersions;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Config;
@@ -39,8 +40,8 @@ abstract class AbstractRenamespacerCommand extends Command
     /** No trailing slash */
     protected string $workingDir;
 
-    /** @var FileSystem */
-    protected Filesystem $filesystem;
+    protected FileSystem $filesystem;
+
     protected ProjectComposerPackage $projectComposerPackage;
 
     protected StraussConfig $config;
@@ -127,7 +128,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $workingDir      = Platform::getcwd();
         $localFsLocation = FileSystem::getFsRoot($workingDir);
 
-        $pathNormalizer = Filesystem::makePathNormalizer($localFsLocation);
+        $pathNormalizer = FileSystem::makePathNormalizer($localFsLocation);
 
         $pathPrefixer = new PathPrefixer(
             $localFsLocation,
@@ -188,7 +189,7 @@ abstract class AbstractRenamespacerCommand extends Command
             $this->filesystem->setAdapter(
                 new ReadOnlyFileSystemAdapter(
                     $this->filesystem->getAdapter(),
-                    Filesystem::makePathNormalizer($this->workingDir)
+                    FileSystem::makePathNormalizer($this->workingDir)
                 )
             );
             $this->filesystem->setLocalFsLocation('mem://');

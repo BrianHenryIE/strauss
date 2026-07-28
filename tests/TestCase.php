@@ -7,15 +7,15 @@ namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
-use BrianHenryIE\Strauss\Helpers\Flysystem\InMemoryFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer;
-use BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter;
+use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\ServiceLocator;
 use Exception;
 use League\Flysystem\Config;
+use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
 use Mockery;
@@ -233,7 +233,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $this->filesystem;
     }
 
-//    protected function getNewFileSystem(): Filesystem
+//    protected function getNewFileSystem(): FileSystem
 //    {
 //        set_error_handler(function () {
 //        }, E_DEPRECATED | E_USER_DEPRECATED);
@@ -284,12 +284,12 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         $normalizer = FileSystem::makePathNormalizer('mem://');
 
-        $inMemoryFilesystem = new InMemoryFilesystemAdapter();
+        $inMemoryFilesystemAdapter = new InMemoryFilesystemAdapter();
 
         $pathPrefixer = new PathPrefixer('mem://', '/');
 
         $filesystem = new FileSystem(
-            $inMemoryFilesystem,
+            $inMemoryFilesystemAdapter,
             [
                 Config::OPTION_DIRECTORY_VISIBILITY => 'public',
             ],

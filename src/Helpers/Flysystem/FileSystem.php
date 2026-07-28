@@ -9,12 +9,17 @@
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use Composer\Util\Platform;
+use BrianHenryIE\FlysystemReadOnly\FlysystemAdapterBackCompatTraitInterface;
+use BrianHenryIE\FlysystemReadOnly\FlysystemReaderBackCompatTrait;
+use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
+use League\Flysystem\Filesystem as LeagueFilesystem;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
@@ -24,6 +29,9 @@ use League\Flysystem\StorageAttributes;
 class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer, PathPrefixerInterface, FlysystemReaderBackCompatTraitInterface
 {
     use FlysystemReaderBackCompatTrait;
+//    use FlysystemReaderBackCompatTrait {
+//        FlysystemReaderBackCompatTrait::directoryExists as traitDirectoryExists;
+//    }
 
     /**
      * @see \League\Flysystem\Filesystem::$pathNormalizer
@@ -401,4 +409,16 @@ class FileSystem extends \League\Flysystem\Filesystem implements PathNormalizer,
     {
         $this->localFsLocation = $string;
     }
+
+    /**
+     * Flysystem is ignoring symlinks.
+     * A better implementation of this fix is done in another branch which will be merged in #278.
+     *
+     * This `is_dir()` approach is bound to break the {@see ReadOnlyFileSystemAdapter} / `--dry-run` sometimes.
+     * The change in #278 changes LocalFileSystemAdapter to follow symlinks.
+     */
+//    public function directoryExists(string $path): bool
+//    {
+//        return $this->traitDirectoryExists($path) || is_dir("/$path");
+//    }
 }

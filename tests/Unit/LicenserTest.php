@@ -37,6 +37,19 @@ class LicenserTest extends TestCase
 
         $dependencies = new DependenciesCollection([$dependency]);
 
+        /**
+         * PHP 8.6: "Returning a value from a constructor is deprecated".
+         * But it doesn't look like there is a value being returned.
+         *
+         * @see FileSystem
+         * @see FileAttributes
+         * @see DirectoryAttributes
+         * @see Mockery\Loader\EvalLoader
+         */
+        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         $filesystemMock = Mockery::mock(FileSystem::class);
 
         $file = Mockery::mock(FileAttributes::class);
@@ -51,6 +64,7 @@ class LicenserTest extends TestCase
 //        $directory->expects('isFile')->andReturn(false);
 //        // directories should be skipped before accessing path
 //        $directory->shouldNotReceive('path');
+        restore_error_handler();
 
         $finderArrayIterator = new ArrayIterator(array(
             $file,

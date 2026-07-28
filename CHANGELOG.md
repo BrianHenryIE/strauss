@@ -9,6 +9,10 @@
 * Fix `exclude_from_prefix` – namespace was updating in class that matched file pattern
 * Use `php-parser` more widely
 
+## 0.28.2 
+
+* Extract ReadOnlyFileSystem to brianhenryie/bh-php-flysystem-readonly package
+
 ## 0.28.1 July 2026
 
 * Update packages
