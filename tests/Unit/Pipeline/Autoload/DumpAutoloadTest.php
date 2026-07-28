@@ -216,6 +216,7 @@ EOD;
          * PHP 8.6: "Returning a value from a constructor is deprecated".
          * But it doesn't look like there is a value being returned.
          *
+         * @see FileEnumerator
          * @see Prefixer::__construct
          * @see Mockery\Loader\EvalLoader
          */
@@ -225,9 +226,8 @@ EOD;
 
         $prefixer = Mockery::mock(Prefixer::class);
 
-        restore_error_handler();
-
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
+        restore_error_handler();
 
         $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator) extends DumpAutoload {
             public function optimizeEnabledForTest(): bool

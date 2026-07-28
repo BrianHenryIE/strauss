@@ -18,7 +18,18 @@ class FileWithDependencyTest extends TestCase
      */
     public function test_is_do_delete(): void
     {
+        /**
+         * PHP 8.6: "Returning a value from a constructor is deprecated".
+         * But it doesn't look like there is a value being returned.
+         *
+         * @see ComposerPackage
+         * @see Mockery\Loader\EvalLoader
+         */
+        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
         $dependency = Mockery::mock(ComposerPackage::class)->makePartial();
+        restore_error_handler();
         $dependency->expects('isDoDelete')->once()->andReturnTrue();
         $dependency->allows('getPackageAbsolutePath')->andReturn('absolute/path/to/project/vendor/company/package');
 
