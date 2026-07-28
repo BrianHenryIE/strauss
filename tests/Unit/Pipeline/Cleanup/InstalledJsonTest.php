@@ -157,19 +157,6 @@ EOD;
             new NullLogger()
         );
 
-        /**
-         * PHP 8.6: "Returning a value from a constructor is deprecated".
-         * But it doesn't look like there is a value being returned.
-         *
-         * @see ComposerPackage
-         * @see FileWithDependency
-         * @see Mockery\Loader\EvalLoader
-         */
-        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-            return true;
-        }, E_DEPRECATED | E_USER_DEPRECATED);
-
-
         /** @var ComposerPackage|MockInterface $composerPackageMock */
         $composerPackageMock = Mockery::mock(ComposerPackage::class);
         $composerPackageMock->allows('didDelete')->andReturnFalse();
@@ -185,7 +172,6 @@ EOD;
             'vendor/package/name/src/file.php',
             'vendor/psr/container/src/ContainerInterface.php',
         );
-        restore_error_handler();
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);

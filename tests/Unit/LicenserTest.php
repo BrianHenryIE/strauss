@@ -64,7 +64,6 @@ class LicenserTest extends TestCase
 //        $directory->expects('isFile')->andReturn(false);
 //        // directories should be skipped before accessing path
 //        $directory->shouldNotReceive('path');
-        restore_error_handler();
 
         $finderArrayIterator = new ArrayIterator(array(
             $file,
