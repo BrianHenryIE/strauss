@@ -3,14 +3,18 @@
 # chmod +x scripts/createphar.sh
 # ./scripts/createphar.sh
 
+echo "Delete previous artifacts";
 rm -rf build
 rm strauss.phar
 
+echo "composer install";
 composer install --no-dev
 
+echo "Download phar-composer";
 # TODO: in GitHub Actions, ideally this will be downloaded by setup-php action, but will be saved in a different directory so check it is in $PATH.
 wget -O phar-composer.phar https://github.com/clue/phar-composer/releases/download/v1.4.0/phar-composer-1.4.0.phar
 
+echo "Copy files to build directory";
 mkdir build
 cp -R vendor build/vendor
 cp -R src build/src
@@ -22,6 +26,7 @@ cp CHANGELOG.md build
 
 cd build;
 
+echo "Delete known unwanted files";
 # Ala `.gitattributes` see #254.
 
 rm -rf vendor/elazar/flystream/tests
@@ -38,6 +43,7 @@ rm "vendor/json-mapper/json-mapper/.*"
 rm vendor/json-mapper/json-mapper/*.dist
 rm vendor/json-mapper/json-mapper/*.xml
 
+echo "Run strauss --info";
 ../bin/strauss --info;
 
 # TODO: This doesn't seem to be generated at all
@@ -73,15 +79,20 @@ echo
 # Removes changes to `vendor/composer/autoload_real.php` etc.
 composer dump-autoload --classmap-authoritative;
 
+echo "Run strauss prefix-vendor-autoload";
 ../bin/strauss prefix-vendor-autoload;
 
 cd ..;
 
+echo "Run phar-composer.phar build";
 php -d phar.readonly=off phar-composer.phar build ./build/
 
 # TODO: don't bother if we're running in GitHub Actions.
 rm phar-composer.phar
 rm -rf build
+
+echo "Run composer install";
 composer install
 
+echo "Check strauss.phar version";
 php strauss.phar --version
