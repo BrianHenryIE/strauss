@@ -15,19 +15,13 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "license": "MIT",
-    "repositories": {
-        "composer/composer": {
-            "type": "vcs",
-            "url": "https://github.com/brianhenryie/composer"
-        }
-    },
     "require": {
         "ext-json": "*",
         "composer-runtime-api": "^2.0",
         "brianhenryie/bh-php-flysystem-readonly": "^1.0",
         "brianhenryie/simple-php-code-parser": "^0.15.6",
         "composer/class-map-generator": "^1.7.3",
-        "composer/composer": "dev-main#b97360e21ed21d5b9ede6e0bc829ee056d752889",
+        "composer/composer": "^2.10",
         "elazar/flystream": "^0.6.0 || ^1.4.0",
         "inmarelibero/gitignore-checker": "^1.0",
         "json-mapper/json-mapper": "^2.0.0",

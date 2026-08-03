@@ -92,7 +92,7 @@ EOD;
         $this->assertContains('pimple/pimple', $sut->getPackages());
 
         $this->assertEqualsPaths(
-            $projectDir . '/target_directory/',
+            $this->getFileSystem()->normalizePath($this->getFileSystem()->makeAbsolute($projectDir . '/target_directory/')),
             $sut->getAbsoluteTargetDirectory()
         );
 
@@ -214,7 +214,10 @@ EOD;
 
         $sut = new StraussConfig($composer);
 
-        $this->assertEqualsPaths($projectDir . '/vendor-prefixed/', $sut->getAbsoluteTargetDirectory());
+        $this->assertEqualsPaths(
+            $this->getFileSystem()->normalizePath($this->getFileSystem()->makeAbsolute($projectDir . '/vendor-prefixed/')),
+            $sut->getAbsoluteTargetDirectory()
+        );
     }
 
     /**
@@ -698,7 +701,10 @@ EOD;
 
         $this->assertContains('pimple/pimple', $sut->getPackages());
 
-        $this->assertEqualsPaths($projectDir . '/dep_directory', $sut->getAbsoluteTargetDirectory());
+        $this->assertEqualsPaths(
+            $this->getFileSystem()->normalizePath($this->getFileSystem()->makeAbsolute($projectDir . '/dep_directory/')),
+            $sut->getAbsoluteTargetDirectory()
+        );
 
         $this->assertEqualsRN("My_Mozart_Config", $sut->getNamespacePrefix());
 

@@ -57,8 +57,10 @@ class CopierTest extends TestCase
     {
         $filesystem = $this->getFileSystem();
 
-        $sourceDir = 'mem://source';
-        $targetDir = 'mem://target';
+//        $sourceDir = 'mem://source';
+//        $targetDir = 'mem://target';
+        $sourceDir = $this->testsWorkingDir . '/source';
+        $targetDir = $this->testsWorkingDir . '/target';
 
         $filepath = $sourceDir . '/file.php';
         $filesystem->write($filepath, 'test');
@@ -94,8 +96,10 @@ class CopierTest extends TestCase
 
         $filesystem = $this->getFileSystem();
 
-        $sourceDir = 'mem://source';
-        $targetDir = 'mem://target';
+//        $sourceDir = 'mem://source';
+//        $targetDir = 'mem://target';
+        $sourceDir = $this->testsWorkingDir . '/source';
+        $targetDir = $this->testsWorkingDir . '/target';
 
         $filepath = $sourceDir . '/file.php';
 

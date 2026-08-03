@@ -123,6 +123,8 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
                 //                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                     'c:\\',
                     'c:/',
+                    'd:\\',
+                    'd:/',
                 ]
             )
         );
@@ -262,7 +264,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
         $fromDirectoryParts = array_filter(explode('/', $fromAbsoluteDirectory));
         $toPathParts = array_filter(explode('/', $toAbsolutePath));
         foreach ($fromDirectoryParts as $key => $part) {
-            if ($part === $toPathParts[$key]) {
+            if (isset($toPathParts[$key]) && $part === $toPathParts[$key]) {
                 unset($toPathParts[$key]);
                 unset($fromDirectoryParts[$key]);
             } else {
@@ -356,6 +358,19 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      */
     public function makeAbsolute(string $path): string
     {
+        // Strip scheme:
+        $schemlessPath = preg_replace('/^[a-zA-Z]+:\/\//', '$1', $path);
+
+        if (0 === stripos($schemlessPath, self::normalizeDirSeparator($this->localFsLocation))) {
+            return $schemlessPath;
+        }
+
+        $normalSchemlessPath = $this->normalizePath($schemlessPath);
+
+        $prefixedNormalSchemlessPath = $this->prefixPath($normalSchemlessPath);
+
+        return $prefixedNormalSchemlessPath;
+
         $fsRoot = self::getFsRoot($this->localFsLocation);
 
         // If this is already prefixed with the drive(fs) root.
@@ -375,13 +390,18 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
             return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
         }
 
-//        if ($this->getAdapter() instanceof InMemoryFilesystemAdapter || $this->getAdapter() instanceof ReadOnlyFileSystem) {
-        if (\Composer\Util\Filesystem::isStreamWrapperPath($this->localFsLocation)) {
+        /**
+         * TODO: Replace with `\Composer\Util\Filesystem::isStreamWrapperPath()` when Composer PR merged.
+         *
+         * @see https://github.com/composer/composer/pull/12396
+         */
+        if (1 === preg_match('/^[a-zA-Z]+:\/\//', $this->localFsLocation) && ! str_starts_with($this->localFsLocation, 'file://')) {
             return $this->localFsLocation . $path;
         }
 
         $prefixed = $this->prefixPath($this->normalizePath($path));
 
+//        if ($this->getAdapter() instanceof InMemoryFilesystemAdapter || $this->getAdapter() instanceof ReadOnlyFileSystem) {
 //        if ($this->flysystemAdapter instanceof ReadOnlyFileSystem) {
 //            return str_replace(':/', '://', $prefixed);
 //        }

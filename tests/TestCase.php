@@ -54,6 +54,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected FileSystem $filesystem;
 
+    protected string $testsWorkingDir;
+
     public bool $allowErrorLogs = false;
 
     public ?bool $allowWarningLogs = false;
@@ -246,6 +248,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getFileSystem(): FileSystem
     {
+        /**
+         * TODO: Only needed until we can use an in memory filesystem for tests.
+         *
+         * @see https://github.com/composer/composer/pull/12396
+         */
+        return $this->getTestsWorkingDirectoryFileSystem();
+
         if (! isset($this->filesystem)) {
             $this->filesystem = $this->getInMemoryFileSystem();
         }
@@ -253,37 +262,69 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $this->filesystem;
     }
 
-//    protected function getNewFileSystem(): FileSystem
-//    {
-//        set_error_handler(function () {
-//        }, E_DEPRECATED | E_USER_DEPRECATED);
-//
-//        try {
-//            $workingDir = isset($this->testsWorkingDir) ? $this->testsWorkingDir : getcwd();
-//
-//            $localFilesystemAdapter = new LocalFilesystemAdapter(
-//                FileSystem::getFsRoot($workingDir),
-//                null,
-//                LOCK_EX,
-//                LocalFilesystemAdapter::SKIP_LINKS
-//            );
-//
-//            $filesystem = new FileSystem(
-//                new FlysystemFileSystem(
-//                    $localFilesystemAdapter,
-//                    [
-//                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-//                    ],
-//                    Filesystem::makePathNormalizer($workingDir)
-//                ),
-//                $workingDir
-//            );
-//        } finally {
-//            restore_error_handler();
-//        }
-//
-//        return $filesystem;
-//    }
+    /**
+     * TODO: Only needed until we can use an in memory filesystem for tests.
+     *
+     * @see https://github.com/composer/composer/pull/12396
+     */
+    protected function createTestsTempDir(): void
+    {
+
+        $this->testsWorkingDir = FileSystem::normalizeDirSeparator(
+            sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'))
+        );
+
+        if ('Darwin' === PHP_OS) {
+            $this->testsWorkingDir = '/private' . $this->testsWorkingDir;
+        }
+
+        // If we're running the tests in PhpStorm, set the temp directory to a project subdirectory, so when
+        // we set breakpoints, we can easily browse the files.
+        if ($this->isPhpStormRunning()) {
+            $this->testsWorkingDir = getcwd() . '/teststempdir/' . substr(uniqid(), 4);
+        }
+    }
+
+    /**
+     * TODO: Only needed until we can use an in memory filesystem for tests.
+     *
+     * @see https://github.com/composer/composer/pull/12396
+     */
+    protected function getTestsWorkingDirectoryFileSystem(): FileSystem
+    {
+        set_error_handler(function () {
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
+        if (!isset($this->testsWorkingDir)) {
+            $this->createTestsTempDir();
+        }
+
+        try {
+            $workingDir = $this->testsWorkingDir;
+
+            $localFilesystemAdapter = new LocalFilesystemAdapter(
+                $workingDir,
+                null,
+                LOCK_EX,
+                LocalFilesystemAdapter::SKIP_LINKS
+            );
+
+            $filesystem = new FileSystem(
+                $localFilesystemAdapter,
+                [
+                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                    ],
+                Filesystem::makePathNormalizer($workingDir),
+                null,
+                $workingDir,
+                $workingDir
+            );
+        } finally {
+            restore_error_handler();
+        }
+
+        return $filesystem;
+    }
 
     /**
      * Get an in-memory filesystem.

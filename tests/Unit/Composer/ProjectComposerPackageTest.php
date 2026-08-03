@@ -20,7 +20,9 @@ class ProjectComposerPackageTest extends TestCase
             $this->getFixturesFilesystem()->read(__DIR__ . '/projectcomposerpackage-test-1.json')
         );
 
-        $composer = new ProjectComposerPackage('mem://project/composer.json');
+        $composer = new ProjectComposerPackage(
+            $this->getFileSystem()->makeAbsolute('mem://project/composer.json')
+        );
 
         $config = $composer->getStraussConfig();
 
@@ -40,7 +42,7 @@ class ProjectComposerPackageTest extends TestCase
         );
 
         $composer = new ProjectComposerPackage(
-            'mem://project/composer.json'
+            $this->getFileSystem()->makeAbsolute('mem://project/composer.json')
         );
 
         $phpFiles = $composer->getFlatAutoloadKey();

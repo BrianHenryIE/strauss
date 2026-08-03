@@ -42,7 +42,9 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $config->expects('getPackagesToPrefix')->atLeast()->once()->andReturn([]);
         $config->expects('isIncludeRootAutoload')->atLeast()->once()->andReturnFalse();
 
-        $config->expects('getAbsoluteVendorDirectory')->times(1)->andReturn('project/vendor');
+        $config->expects('getAbsoluteVendorDirectory')->atLeast()->once()->andReturn('project/vendor');
+
+        $config->expects('getPackagesToCopy')->once()->andReturn([]);
 
         /** @var FileSystem $filesystem */
         $filesystem = $this->getFileSystem();
@@ -58,6 +60,10 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
 
         $filesystem->write('project/vendor-prefixed/composer/installed.json', json_encode([]));
         $filesystem->write('project/vendor-prefixed/composer/ClassLoader.php', '<?php');
+
+        $filesystem->write('project/vendor/composer/installed.json', json_encode([]));
+        $filesystem->write('project/vendor/composer/InstalledVersions.php', '<?php');
+        $filesystem->write('project/vendor/composer/installed.php', "<?php return array('versions' => array());");
 
         $logger = $this->getLogger();
         $prefixer = Mockery::mock(Prefixer::class);

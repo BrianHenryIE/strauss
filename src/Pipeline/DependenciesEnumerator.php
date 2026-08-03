@@ -146,7 +146,15 @@ class DependenciesEnumerator
                     'packageComposerFilePath' => $packageComposerFile,
                 ]);
 
-                $requiredComposerPackage = ComposerPackage::fromFile($packageComposerFile, $overrideAutoload);
+                /**
+                 * TODO: Calling `::makeAbsolute()` should be unnecessary when Composer PR merged.
+                 *
+                 * @see https://github.com/composer/composer/pull/12396
+                 */
+                $requiredComposerPackage = ComposerPackage::fromFile(
+                    $this->filesystem->makeAbsolute($packageComposerFile),
+                    $overrideAutoload
+                );
                 $requiredComposerPackage->setRealpath(
                     $this->filesystem->normalizePath(
                         Platform::realpath(
