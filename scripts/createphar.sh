@@ -94,5 +94,5 @@ rm -rf build
 echo "Run composer install";
 composer install
 
-echo "Check strauss.phar version";
+echo "Smoke test strauss.phar (print version)";
 php strauss.phar --version
