@@ -3645,7 +3645,7 @@ EOD;
 
         self::assertSame($contents, $result);
         self::assertTrue(
-            $this->getTestLogger()->hasWarningThatContains('Skipping Prefixing in file due to parse error'),
+            $this->getTestLogger()->hasWarningThatMatches('/Skipping Prefixing in .*file due to parse error/'),
             'Expected warning log containing "Skipping Prefixing in file due to parse error'
         );
     }
@@ -3686,7 +3686,7 @@ EOD;
 
         self::assertSame($contents, $result);
         self::assertTrue(
-            $this->getTestLogger()->hasWarningThatContains('Skipping Prefixing in file due to parse error: Syntax error, unexpected \'{\', expecting T_VARIABLE on line 2'),
+            $this->getTestLogger()->hasWarningThatMatches("/Skipping Prefixing in .*file due to parse error: Syntax error, unexpected '\{', expecting T_VARIABLE on line 2/"),
             'Expected warning log containing "Skipping Prefixing in file due to parse error: Syntax error, unexpected \'{\', expecting T_VARIABLE on line 2".'
         );
     }
