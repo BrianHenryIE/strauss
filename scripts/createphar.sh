@@ -43,6 +43,9 @@ rm "vendor/json-mapper/json-mapper/.*"
 rm vendor/json-mapper/json-mapper/*.dist
 rm vendor/json-mapper/json-mapper/*.xml
 
+rm -rf vendor/pimple/pimple/src/Pimple/Tests
+rm -rf vendor/inmarelibero/gitignore-checker/tests
+
 echo "Run strauss --info";
 ../bin/strauss --info;
 
