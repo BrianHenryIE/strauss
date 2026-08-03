@@ -612,22 +612,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
         $aliases->writeAliasesFileForSymbols($this->discoveredSymbols);
 
-        spl_autoload_register(
-            function (string $class) {
-                // Inside the `.phar` [Composer's] classes are prefixed.
-                $prefix = 'BrianHenryIE\\Strauss\\';
-                // When the autoloader is being queried for an already-prefixed class, this autoloader cannot help.
-                if (0 === strpos($class, $prefix)) {
-                    return;
-                }
-                $prefixed =  $prefix . $class;
-                // If the `.phar` does contain a prefixed class matching the missing classname, add an alias.
-                if (class_exists($prefixed) || interface_exists($prefixed) || trait_exists($prefixed)) {
-                    class_alias($prefixed, $class);
-                }
-            }
-        );
-
         $vendorComposerAutoload = new VendorComposerAutoload(
             $this->config,
             $this->filesystem,
