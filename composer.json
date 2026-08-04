@@ -30,7 +30,7 @@
         "monolog/monolog": "^2.11 || ^3.10",
         "nikic/php-parser": "^5.8.0",
         "symfony/console": "^4 || ^5 || ^6 || ^7",
-        "symfony/finder": "^4 || ^5 || ^6 || ^7 || ^8"
+        "symfony/finder": "^8.1.1"
     },
     "autoload": {
         "psr-4": {
