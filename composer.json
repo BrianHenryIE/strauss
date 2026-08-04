@@ -19,7 +19,7 @@
         "ext-json": "*",
         "composer-runtime-api": "^2.0",
         "brianhenryie/bh-php-flysystem-readonly": "^1.0",
-        "brianhenryie/simple-php-code-parser": "^0.15.6",
+        "brianhenryie/simple-php-code-parser": "^0.16",
         "composer/class-map-generator": "^1.7.3",
         "composer/composer": "^2.10",
         "elazar/flystream": "^0.6.0 || ^1.4.0",
