@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\EnumSymbol;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -261,5 +262,119 @@ namespace Bar {
 }
 EOD;
         $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
+    }
+
+    /**
+     * Enums cannot be aliased with an `extends` shim (they are final), so the generated array entry carries the
+     * `concrete` replacement FQDN for a `class_alias()` call in the AliasAutoloader.
+     *
+     * This test only inspects the generated file's contents so runs on all PHP versions.
+     */
+    public function test_enum_in_aliases_array(): void
+    {
+        $config = Mockery::mock(AliasesConfigInterface::class);
+        $config->expects('getAbsoluteVendorDirectory')->times(1)->andReturn('vendor');
+        $config->expects('getNamespacePrefix')->times(1)->andReturn('Baz\\');
+
+        $fileSystem = $this->getInMemoryFileSystem();
+
+        $sut = new Aliases(
+            $config,
+            $fileSystem,
+            $this->getLogger()
+        );
+
+        $symbols = new DiscoveredSymbols();
+
+        $file = new File(
+            'vendor/foo/bar/status.php',
+            'foo/bar/status.php',
+            'vendor-prefixed/foo/bar/status.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol(
+            'Foo\\Bar',
+            $file
+        );
+        $namespaceSymbol->setLocalReplacement('Baz\\Foo\\Bar');
+
+        $enumSymbol = new EnumSymbol('Foo\\Bar\\Status', $file, $namespaceSymbol, 'string');
+        $symbols->add($enumSymbol);
+
+        $sut->writeAliasesFileForSymbols($symbols);
+
+        $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
+
+        $expected = <<<'EOD'
+'Foo\\Bar\\Status' =>
+	array (
+		'type' => 'enum',
+		'enumname' => 'Status',
+		'namespace' => 'Foo\\Bar',
+		'concrete' => 'Baz\\Foo\\Bar\\Status',
+),
+EOD;
+
+        $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
+
+        $this->assertStringContainsString("case 'enum':", $result);
+        $this->assertStringContainsString('class_alias', $result);
+    }
+
+    /**
+     * Include the generated aliases file and check the original enum name is a true alias of the renamed enum:
+     * case identity (`===`), `instanceof`, and `::from()` all resolve through `class_alias()`.
+     */
+    public function test_enum_alias_loads(): void
+    {
+        // Runtime-only version check: this test includes enum code in-process but never shells out,
+        // so the system PHP version (also checked by markTestSkippedOnPhpVersionBelow()) is irrelevant.
+        if (PHP_VERSION_ID < 80100) {
+            $this->markTestSkipped('Enums require PHP >= 8.1');
+        }
+
+        $fileSystem = $this->getFileSystem();
+
+        // The renamed ("concrete") enum. PHP 8.1 syntax, so only ever included on PHP >= 8.1.
+        $prefixedEnumFile = 'vendor-prefixed/enum-alias-test/status.php';
+        $fileSystem->write(
+            $prefixedEnumFile,
+            '<?php namespace EnumAliasTestPrefix\\EnumAliasTest; enum Status: string { case Ready = \'ready\'; case Done = \'done\'; }'
+        );
+        include $fileSystem->makeAbsolute($prefixedEnumFile);
+
+        $config = Mockery::mock(AliasesConfigInterface::class);
+        $config->expects('getAbsoluteVendorDirectory')->times(1)->andReturn('vendor');
+        $config->expects('getNamespacePrefix')->times(1)->andReturn('EnumAliasTestPrefix\\');
+
+        $sut = new Aliases(
+            $config,
+            $fileSystem,
+            $this->getLogger()
+        );
+
+        $symbols = new DiscoveredSymbols();
+
+        $file = new File(
+            'vendor/enum-alias-test/status.php',
+            'enum-alias-test/status.php',
+            'vendor-prefixed/enum-alias-test/status.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('EnumAliasTest', $file);
+        $namespaceSymbol->setLocalReplacement('EnumAliasTestPrefix\\EnumAliasTest');
+
+        $enumSymbol = new EnumSymbol('EnumAliasTest\\Status', $file, $namespaceSymbol, 'string');
+        $symbols->add($enumSymbol);
+
+        $sut->writeAliasesFileForSymbols($symbols);
+
+        include $fileSystem->makeAbsolute('vendor/composer/autoload_aliases.php');
+
+        // Referencing the original name triggers the AliasAutoloader, whose `class_alias()` call aliases it
+        // to the already-loaded renamed enum.
+        $this->assertTrue(\EnumAliasTest\Status::Ready === \EnumAliasTestPrefix\EnumAliasTest\Status::Ready);
+        $this->assertSame('done', \EnumAliasTest\Status::from('done')->value);
+        $this->assertInstanceOf(\EnumAliasTestPrefix\EnumAliasTest\Status::class, \EnumAliasTest\Status::Ready);
     }
 }

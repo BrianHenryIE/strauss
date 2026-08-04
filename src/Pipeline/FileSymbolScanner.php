@@ -26,6 +26,7 @@ use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\EnumSymbol;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -49,6 +50,7 @@ class FileSymbolScanner
     private const SYMBOL_LOG_TYPES = [
         ClassSymbol::class => 'class',
         ConstantSymbol::class => 'constant',
+        EnumSymbol::class => 'enum',
         FunctionSymbol::class => 'function',
         InterfaceSymbol::class => 'interface',
         NamespaceSymbol::class => 'namespace',
@@ -312,7 +314,19 @@ class FileSymbolScanner
                 $traitSymbol->setDoRename($file->isDoPrefix());
             }
 
-            // TODO: enum.
+            $phpEnums = $phpCode->getEnums();
+            foreach ($phpEnums as $enumName => $enum) {
+                if ($this->isBuiltInSymbol($enumName)) {
+                    continue;
+                }
+                $enumSymbol = $this->discoveredSymbols->getEnum($enumName);
+                if (is_null($enumSymbol)) {
+                    $enumSymbol = new EnumSymbol($enumName, $file, $namespaceSymbol, $enum->backingType, $enum->interfaces);
+                    $this->add($enumSymbol, $file);
+                }
+                $enumSymbol->addSourceFile($file);
+                $enumSymbol->setDoRename($file->isDoPrefix());
+            }
         }
     }
 

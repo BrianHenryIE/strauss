@@ -952,6 +952,7 @@ class Prefixer
                        $globalClassesInterfacesTraitsToRename->getClass($node->name->name)
                        || $globalClassesInterfacesTraitsToRename->getInterface($node->name->name)
                        || $globalClassesInterfacesTraitsToRename->getTrait($node->name->name)
+                       || $globalClassesInterfacesTraitsToRename->getEnum($node->name->name)
                    );
         });
         foreach ($classLike as $node) {
@@ -1019,9 +1020,9 @@ class Prefixer
                 $nodeNameString = $nodeNameString ?? $node->toString();
                 return $discoveredSymbols->getClass($nodeNameString)
                        ?? $discoveredSymbols->getInterface($nodeNameString)
-                          ?? $discoveredSymbols->getTrait($nodeNameString);
+                          ?? $discoveredSymbols->getTrait($nodeNameString)
+                             ?? $discoveredSymbols->getEnum($nodeNameString);
             default:
-                // TODO: enums.
                 return null;
         }
     }

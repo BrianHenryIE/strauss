@@ -17,6 +17,7 @@ use BrianHenryIE\Strauss\Tests\PhpAstAssertions;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\EnumSymbol;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -5216,5 +5217,347 @@ EOD;
 
         $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $result);
         $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $result);
+    }
+
+    /**
+     * (a) A namespaced enum declaration's namespace is replaced; the enum body (cases, backing type) is untouched.
+     *
+     * @covers ::replaceInString
+     */
+    public function testItReplacesNamespacedEnumDeclarationNamespace(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace Company\Project;
+
+enum Status: string implements HasLabel
+{
+    case Ready = 'ready';
+    case Done = 'done';
+}
+EOD;
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(true);
+
+        $namespaceSymbol = new NamespaceSymbol('Company\Project', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Company\Project');
+
+        $enumSymbol = new EnumSymbol('Company\Project\Status', $file, $namespaceSymbol, 'string');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($enumSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertStringContainsString('namespace BrianHenryIE\TestStrauss\Company\Project;', $result);
+        $this->assertStringContainsString('enum Status: string implements HasLabel', $result);
+        $this->assertStringContainsString("case Ready = 'ready';", $result);
+        $this->assertSame(['Status'], $this->getEnumNames($result));
+    }
+
+    /**
+     * (b) A `use` import of a namespaced enum in a consuming file is rewritten.
+     *
+     * @covers ::replaceInString
+     */
+    public function testItReplacesUseStatementOfNamespacedEnum(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace Company\Consumer;
+
+use Company\Project\Status;
+
+class Consumer
+{
+    public function isDone(Status $status): bool
+    {
+        return $status === Status::Done;
+    }
+}
+EOD;
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(true);
+
+        $namespaceSymbol = new NamespaceSymbol('Company\Project', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Company\Project');
+
+        $enumSymbol = new EnumSymbol('Company\Project\Status', $file, $namespaceSymbol, 'string');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($enumSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertStringContainsString('use BrianHenryIE\TestStrauss\Company\Project\Status;', $result);
+        // Local references are resolved by the (unchanged local) import.
+        $this->assertStringContainsString('Status $status', $result);
+        $this->assertStringContainsString('Status::Done', $result);
+    }
+
+    /**
+     * (c) A group `use` whose prefix namespace contains an enum is rewritten.
+     *
+     * @covers ::replaceInString
+     */
+    public function testItReplacesGroupUseContainingEnum(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace Company\Consumer;
+
+use Company\Project\{Status, Widget};
+
+class Consumer
+{
+}
+EOD;
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(true);
+
+        $namespaceSymbol = new NamespaceSymbol('Company\Project', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Company\Project');
+
+        $enumSymbol = new EnumSymbol('Company\Project\Status', $file, $namespaceSymbol, 'string');
+        $classSymbol = new ClassSymbol('Company\Project\Widget', $file, $namespaceSymbol);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($enumSymbol);
+        $discoveredSymbols->add($classSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertStringContainsString('use BrianHenryIE\TestStrauss\Company\Project\{Status, Widget};', $result);
+    }
+
+    /**
+     * (d) A global enum declaration is renamed with the classmap prefix.
+     *
+     * @covers ::findGlobalSymbolsPositionsInAst
+     */
+    public function testItReplacesGlobalEnumDeclaration(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+enum GlobalSuit: int
+{
+    case Hearts = 1;
+    case Spades = 2;
+}
+EOD;
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(true);
+
+        $enumSymbol = new EnumSymbol('GlobalSuit', $file, new NamespaceSymbol('\\'), 'int');
+        $enumSymbol->setLocalReplacement('Prefixer_Test_GlobalSuit');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($enumSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertStringContainsString('enum Prefixer_Test_GlobalSuit: int', $result);
+        $this->assertStringContainsString('case Hearts = 1;', $result);
+        $this->assertSame(['Prefixer_Test_GlobalSuit'], $this->getEnumNames($result));
+    }
+
+    /**
+     * (e) References to a renamed global enum — static access, instanceof, type hint — are rewritten.
+     *
+     * @covers ::getGlobalSymbolForNode
+     */
+    public function testItReplacesGlobalEnumReferences(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+class SuitConsumer
+{
+    public function isHearts(GlobalSuit $suit): bool
+    {
+        $default = GlobalSuit::Hearts;
+        if ($suit instanceof GlobalSuit) {
+            return $suit === $default;
+        }
+        return false;
+    }
+}
+EOD;
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(true);
+
+        $enumSymbol = new EnumSymbol('GlobalSuit', $file, new NamespaceSymbol('\\'), 'int');
+        $enumSymbol->setLocalReplacement('Prefixer_Test_GlobalSuit');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($enumSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertStringContainsString('Prefixer_Test_GlobalSuit $suit', $result);
+        $this->assertStringContainsString('Prefixer_Test_GlobalSuit::Hearts', $result);
+        $this->assertStringContainsString('instanceof Prefixer_Test_GlobalSuit', $result);
+        $this->assertStringNotContainsString(' GlobalSuit', $result);
+    }
+
+    /**
+     * (f) An enum implementing a renamed global interface has the `implements` reference rewritten,
+     *     including inside `match` arms referencing the enum's own cases via `self`.
+     *
+     * @covers ::replaceInString
+     */
+    public function testItReplacesInterfaceImplementedByGlobalEnum(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+enum GlobalSuit: int implements SuitInterface
+{
+    case Hearts = 1;
+    case Spades = 2;
+
+    public function color(): string
+    {
+        return match($this) {
+            self::Hearts => 'red',
+            self::Spades => 'black',
+        };
+    }
+}
+EOD;
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(true);
+
+        $enumSymbol = new EnumSymbol('GlobalSuit', $file, new NamespaceSymbol('\\'), 'int', ['SuitInterface']);
+        $enumSymbol->setLocalReplacement('Prefixer_Test_GlobalSuit');
+
+        $interfaceSymbol = new InterfaceSymbol('SuitInterface', $file, new NamespaceSymbol('\\'));
+        $interfaceSymbol->setLocalReplacement('Prefixer_Test_SuitInterface');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($enumSymbol);
+        $discoveredSymbols->add($interfaceSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertStringContainsString('enum Prefixer_Test_GlobalSuit: int implements Prefixer_Test_SuitInterface', $result);
+        // `self::` references and case declarations are untouched.
+        $this->assertStringContainsString("self::Hearts => 'red',", $result);
+        $this->assertStringContainsString('case Hearts = 1;', $result);
+    }
+
+    /**
+     * (g) A `match` over a namespaced enum's cases in a consuming file: only the enum name changes via the
+     *     import; case names are untouched.
+     *
+     * @covers ::replaceInString
+     */
+    public function testItReplacesEnumUsedInMatch(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace Company\Consumer;
+
+use Company\Project\Status;
+
+class Reporter
+{
+    public function report(Status $status): string
+    {
+        return match($status) {
+            Status::Ready => 'ready',
+            Status::Done => 'done',
+        };
+    }
+}
+EOD;
+
+        $config = $this->getMockConfig();
+
+        $sut = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+        $file->setDoPrefix(true);
+
+        $namespaceSymbol = new NamespaceSymbol('Company\Project', $file);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Company\Project');
+
+        $enumSymbol = new EnumSymbol('Company\Project\Status', $file, $namespaceSymbol, 'string');
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespaceSymbol);
+        $discoveredSymbols->add($enumSymbol);
+
+        $result = $sut->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertStringContainsString('use BrianHenryIE\TestStrauss\Company\Project\Status;', $result);
+        $this->assertStringContainsString("Status::Ready => 'ready',", $result);
+        $this->assertStringContainsString("Status::Done => 'done',", $result);
     }
 }

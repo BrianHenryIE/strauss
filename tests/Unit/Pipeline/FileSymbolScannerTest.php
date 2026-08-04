@@ -10,6 +10,7 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\EnumSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
 use Mockery\LegacyMockInterface;
@@ -1080,5 +1081,101 @@ EOD;
         $result = $sut->findInFiles($discoveredFiles);
 
         $this->assertCount(0, $result->getConstants());
+    }
+
+    /**
+     * @covers ::findInFiles
+     */
+    public function testEnumDiscovery(): void
+    {
+        $contents = <<<'EOD'
+<?php
+namespace My\NS;
+
+interface HasLabel {}
+
+enum Status: string implements HasLabel {
+    const DEFAULT_REGEX = '/^(ready|done)$/';
+
+    case Ready = 'ready';
+    case Done = 'done';
+
+    public function label(): string {
+        return ucfirst($this->value);
+    }
+}
+
+enum Direction {
+    case Up;
+    case Down;
+}
+EOD;
+
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
+        $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
+
+        $file = $this->getFile();
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $result = $sut->findInFiles($discoveredFiles);
+
+        $statusEnum = $result->getEnum('My\NS\Status');
+        $this->assertInstanceOf(EnumSymbol::class, $statusEnum);
+        $this->assertSame('string', $statusEnum->getBackingType());
+        $this->assertContains('My\NS\HasLabel', $statusEnum->getInterfaces());
+        $this->assertTrue($statusEnum->isDoRename());
+
+        $directionEnum = $result->getEnum('My\NS\Direction');
+        $this->assertInstanceOf(EnumSymbol::class, $directionEnum);
+        $this->assertNull($directionEnum->getBackingType());
+
+        // Enums are not classes.
+        $this->assertNull($result->getClass('My\NS\Status'));
+
+        // The enum's constant and cases must not leak as global constants.
+        $this->assertCount(0, $result->getConstants());
+    }
+
+    /**
+     * @covers ::findInFiles
+     */
+    public function testGlobalEnumDiscovery(): void
+    {
+        $contents = <<<'EOD'
+<?php
+enum GlobalSuit: int {
+    case Hearts = 1;
+    case Spades = 2;
+}
+EOD;
+
+        $filesystemReaderMock = Mockery::mock(FileSystem::class);
+        $filesystemReaderMock->expects('read')->once()->andReturn($contents);
+        $filesystemReaderMock->expects('getRelativePath')->once()->andReturnArg(1);
+
+        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
+
+        $file = $this->getFile();
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
+
+        $result = $sut->findInFiles($discoveredFiles);
+
+        $globalEnum = $result->getEnum('GlobalSuit');
+        $this->assertInstanceOf(EnumSymbol::class, $globalEnum);
+        $this->assertSame('int', $globalEnum->getBackingType());
+        $this->assertTrue($globalEnum->isGlobal());
     }
 }
