@@ -94,7 +94,6 @@ class StraussIssue146Test extends IntegrationTestCase
 //        ];
         $composerJsonArray['extra']['strauss']['target_directory'] = "vendor";
         $composerJsonArray['extra']['strauss']['namespace_prefix'] = "BrianHenryIE\\TestStrauss\\";
-        $composerJsonArray['extra']['strauss']['exclude_from_prefix']['packages'] = ['symfony/polyfill-php84'];
         file_put_contents($this->testsWorkingDir . '/composer.json', json_encode($composerJsonArray, JSON_PRETTY_PRINT));
 
         exec('composer install --no-dev --no-scripts');

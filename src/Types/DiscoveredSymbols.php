@@ -34,7 +34,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     /**
      * All discovered symbols, grouped by type, indexed by original name.
      *
-     * @var array{'NAMESPACE':array<string,NamespaceSymbol>, 'CONST':array<string,ConstantSymbol>, 'CLASS':array<string,ClassSymbol>, 'FUNCTION':array<string,FunctionSymbol>, 'TRAIT':array<string,TraitSymbol>, 'INTERFACE':array<string,InterfaceSymbol>, 'ENUM':array<string,NamespacedSymbol>}
+     * @var array{'NAMESPACE':array<string,NamespaceSymbol>, 'CONST':array<string,ConstantSymbol>, 'CLASS':array<string,ClassSymbol>, 'FUNCTION':array<string,FunctionSymbol>, 'TRAIT':array<string,TraitSymbol>, 'INTERFACE':array<string,InterfaceSymbol>, 'ENUM':array<string,EnumSymbol>}
      */
     protected array $types = [
         self::CLASS_SYMBOL => [],
@@ -86,6 +86,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
             case TraitSymbol::class:
                 $this->types[self::TRAIT_SYMBOL][$symbol->getOriginalFqdnName()] = $symbol;
                 return;
+            case EnumSymbol::class:
+                $this->types[self::ENUM_SYMBOL][$symbol->getOriginalFqdnName()] = $symbol;
+                return;
             default:
                 throw new InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
         }
@@ -108,6 +111,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
                 return isset($this->types[self::INTERFACE_SYMBOL][$symbol->getOriginalFqdnName()]);
             case TraitSymbol::class:
                 return isset($this->types[self::TRAIT_SYMBOL][$symbol->getOriginalFqdnName()]);
+            case EnumSymbol::class:
+                return isset($this->types[self::ENUM_SYMBOL][$symbol->getOriginalFqdnName()]);
             default:
                 throw new InvalidArgumentException('Unknown symbol type: ' . get_class($symbol));
         }
@@ -248,6 +253,11 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return new DiscoveredSymbols($this->types[self::INTERFACE_SYMBOL]);
     }
 
+    public function getDiscoveredEnums(): DiscoveredSymbols
+    {
+        return new DiscoveredSymbols($this->types[self::ENUM_SYMBOL]);
+    }
+
     public function getToRename(): DiscoveredSymbols
     {
         return new DiscoveredSymbols(
@@ -283,7 +293,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     {
         return $this->types[self::INTERFACE_SYMBOL][$interface] ?? null;
     }
-    public function getEnum(string $enumName): ?NamespacedSymbol
+    public function getEnum(string $enumName): ?EnumSymbol
     {
         return $this->types[self::ENUM_SYMBOL][$enumName] ?? null;
     }

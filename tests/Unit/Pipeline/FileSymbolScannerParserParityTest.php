@@ -15,6 +15,7 @@ use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\EnumSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use Mockery;
@@ -213,7 +214,51 @@ readonly class Holder {
 PHP,
                 '/tmp/edge-enum-readonly.php',
             ],
+            'global_enum_presence' => [
+                <<<'PHP'
+<?php
+enum GlobalSuit {
+    case Hearts;
+    case Spades;
+}
+PHP,
+                '/tmp/edge-global-enum.php',
+            ],
         ];
+    }
+
+    /**
+     * The `enum_and_readonly_class_presence` parity case previously passed vacuously because neither scanner
+     * discovered enums at all. Assert positively that enums are discovered.
+     */
+    public function test_enums_are_discovered(): void
+    {
+        $contents = <<<'PHP'
+<?php
+namespace Edge\Seven;
+interface HasLabel {}
+enum Status: string implements HasLabel {
+    case READY = 'ready';
+}
+PHP;
+
+        foreach ([LegacyGetFromStringScanner::class, ScannerHarness::class] as $scannerClass) {
+            $scanner = $this->newScanner($scannerClass);
+            $symbols = $scanner->scanString(
+                $contents,
+                new File(
+                    '/tmp/positive-enum.php',
+                    'positive-enum.php',
+                    '/tmp/positive-enum.php'
+                )
+            );
+
+            $enumSymbol = $symbols->getEnum('Edge\Seven\Status');
+            $this->assertInstanceOf(EnumSymbol::class, $enumSymbol, "$scannerClass did not discover the enum.");
+            $this->assertSame('string', $enumSymbol->getBackingType());
+            $this->assertContains('Edge\Seven\HasLabel', $enumSymbol->getInterfaces());
+            $this->assertNull($symbols->getClass('Edge\Seven\Status'));
+        }
     }
 
     private function assertScannerParity(string $contents, string $sourcePath): void
@@ -272,7 +317,8 @@ PHP,
      *     functions: array<int,string>,
      *     constants: array<int,string>,
      *     interfaces: array<string,array{namespace:?string,extends:array<int,string>}>,
-     *     traits: array<string,array{namespace:?string,uses:array<int,string>}>
+     *     traits: array<string,array{namespace:?string,uses:array<int,string>}>,
+     *     enums: array<string,array{namespace:?string,backingType:?string,interfaces:array<int,string>}>
      * }
      */
     private function snapshotSymbols(DiscoveredSymbols $symbols): array
@@ -327,6 +373,20 @@ PHP,
         }
         ksort($traits);
 
+        $enums = [];
+        foreach ($symbols->getDiscoveredEnums() as $name => $enumSymbol) {
+            assert($enumSymbol instanceof EnumSymbol);
+            /** @var string[] $enumInterfaces */
+            $enumInterfaces = $enumSymbol->getInterfaces();
+            sort($enumInterfaces);
+            $enums[$name] = [
+                'namespace' => $enumSymbol->getNamespace(),
+                'backingType' => $enumSymbol->getBackingType(),
+                'interfaces' => $enumInterfaces,
+            ];
+        }
+        ksort($enums);
+
         return [
             'namespaces' => $namespaces,
             'classes' => $classes,
@@ -334,6 +394,7 @@ PHP,
             'constants' => $constants,
             'interfaces' => $interfaces,
             'traits' => $traits,
+            'enums' => $enums,
         ];
     }
 }

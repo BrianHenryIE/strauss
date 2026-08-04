@@ -12,7 +12,8 @@ namespace BrianHenryIE\Strauss {
      * @phpstan-type ClassAliasArray array{'type':'class',isabstract:bool,classname:string,namespace?:string,extends:string,implements:array<string>}
      * @phpstan-type InterfaceAliasArray array{'type':'interface',interfacename:string,namespace?:string,extends:array<string>}
      * @phpstan-type TraitAliasArray array{'type':'trait',traitname:string,namespace?:string,use:array<string>}
-     * @phpstan-type AutoloadAliasArray array<string,ClassAliasArray|InterfaceAliasArray|TraitAliasArray>
+     * @phpstan-type EnumAliasArray array{'type':'enum',enumname:string,namespace?:string,concrete:string}
+     * @phpstan-type AutoloadAliasArray array<string,ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray>
      */
     class AliasAutoloader
     {
@@ -56,6 +57,16 @@ namespace BrianHenryIE\Strauss {
                         $this->traitTemplate(
                             $this->autoloadAliases[$class]
                         )
+                    );
+                    break;
+                case 'enum':
+                    // Enums are final so cannot be aliased with an `extends` shim like classes are; `class_alias()`
+                    // makes the original name a true alias of the renamed enum, preserving case identity (`===`),
+                    // `instanceof`, `match` arms and `::from()`. Enums require PHP 8.1, but this only executes when
+                    // an enum is autoloaded by its original name, i.e. on a runtime already using enums.
+                    \class_alias(
+                        $this->autoloadAliases[$class]['concrete'],
+                        $class
                     );
                     break;
                 default:

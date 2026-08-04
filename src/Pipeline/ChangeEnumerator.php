@@ -104,6 +104,7 @@ class ChangeEnumerator
         $classesTraitsInterfaces = array_merge(
             $discoveredSymbols->getDiscoveredTraits()->toArray(),
             $discoveredSymbols->getDiscoveredInterfaces()->toArray(),
+            $discoveredSymbols->getDiscoveredEnums()->toArray(),
             $discoveredSymbols->getAllClasses()->toArray()
         );
 
