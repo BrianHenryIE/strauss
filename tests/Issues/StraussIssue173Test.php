@@ -46,7 +46,10 @@ class StraussIssue173Test extends IntegrationTestCase
     },
     "classmap-authoritative": true,
     "optimize-autoloader": true,
-    "sort-packages": true
+    "sort-packages": true,
+    "audit": {
+      "block-insecure": false
+    }
   },
   "extra": {
     "strauss": {

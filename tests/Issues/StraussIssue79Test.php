@@ -29,7 +29,13 @@ class StraussIssue79Test extends IntegrationTestCase
   "extra": {
     "strauss": {
       "namespace_prefix": "BrianHenryIE\\Issue79\\",
-      "classmap_prefix": "BH_Strauss_Issue79_"
+      "classmap_prefix": "BH_Strauss_Issue79_",
+      "exclude_from_copy": {
+        "file_patterns": [
+          "#\/tests\/#",
+          "#^symfony\/#"
+        ]
+      }
     }
   }
 }

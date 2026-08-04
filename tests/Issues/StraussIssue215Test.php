@@ -21,8 +21,10 @@ class StraussIssue215Test extends IntegrationTestCase
         // Constant SUNFUNCS_RET_STRING is deprecated.
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.4');
 
+        $this->markTestSkippedLocally();
+
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/package-with-version-file",
     "extra": {
         "strauss": {

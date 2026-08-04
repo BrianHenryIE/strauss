@@ -3,7 +3,11 @@
 namespace BrianHenryIE\Strauss\Config;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 
+/**
+ * @see StraussConfig
+ */
 interface ChangeEnumeratorConfigInterface
 {
     /**
@@ -39,4 +43,6 @@ interface ChangeEnumeratorConfigInterface
      * The prefix to use for global functions. Null if none should be used.
      */
     public function getFunctionsPrefix(): ?string;
+
+    public function getConstantsPrefix(): ?string;
 }

@@ -23,7 +23,7 @@ class ChangeEnumeratorIntegrationTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_"
     }
   }
@@ -36,7 +36,8 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/wordpress/mcp-adapter/includes/Transport/Infrastructure/SessionManager.php');
         $this->assertStringNotContainsString(' = brianhenryie_strauss_wp_generate_uuid4(', $phpString);
@@ -52,14 +53,14 @@ EOD;
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.5.0');
 
         $packageComposerJson = <<<'EOD'
-{   
+{
 	"name": "test/namespaced-files-not-in-autoloader",
 	 "require": {
         "art4/requests-psr18-adapter": "1.3.0"
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
 			"exclude_from_copy": {
                 "packages": [
                     "rmccue/requests"
@@ -81,10 +82,11 @@ EOD;
 
         exec('composer install');
 
-        $this->runStrauss();
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/art4/requests-psr18-adapter/v1-compat/autoload.php');
-        $this->assertStringNotContainsString("class_exists('BrianHenryIE\\Strauss\\WpOrg\\Requests\\Requests')", $phpString);
+        $this->assertStringNotContainsString("class_exists('BrianHenryIE\\TestStrauss\\WpOrg\\Requests\\Requests')", $phpString);
         $this->assertStringContainsString("class_exists('WpOrg\\Requests\\Requests')", $phpString);
     }
 }

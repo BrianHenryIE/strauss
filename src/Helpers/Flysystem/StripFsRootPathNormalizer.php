@@ -1,7 +1,8 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
+use Composer\Util\Platform;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\WhitespacePathNormalizer;
 
@@ -12,7 +13,7 @@ class StripFsRootPathNormalizer implements PathNormalizer
      */
     private ?array $fsRoots;
 
-    private ?PathNormalizer $delegateNormalizer;
+    private PathNormalizer $delegateNormalizer;
 
     /**
      * @param string|string[]|null $fsRoots
@@ -33,8 +34,8 @@ class StripFsRootPathNormalizer implements PathNormalizer
         $fsRoots = array_unique(
             $this->fsRoots ??
                   [
-                      FileSystem::getFsRoot(),
-                      FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
+                      FileSystem::getFsRoot(Platform::getCwd()),
+                      FileSystem::normalizeDirSeparator(FileSystem::getFsRoot(Platform::getCwd())),
                       'c:\\',
                       'c:/',
                    ]
@@ -55,11 +56,12 @@ class StripFsRootPathNormalizer implements PathNormalizer
                 $fsRoots
             )
         ) . ')';
-        $regexedPath   = preg_replace("#" . $pattern . "#i", '', $path);
+        $regexedPath   = preg_replace("#" . $pattern . "#i", '', $path)
+                  ?? (function () {
+                    throw new \Exception(preg_last_error_msg(), preg_last_error());
+                  })();
 
-        if ($this->delegateNormalizer !== null) {
-            $delegateNormalizedPath = $this->delegateNormalizer->normalizePath($regexedPath);
-        }
+        $delegateNormalizedPath = $this->delegateNormalizer->normalizePath($regexedPath);
 
         return $delegateNormalizedPath;
     }

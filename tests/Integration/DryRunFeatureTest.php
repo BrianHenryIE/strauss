@@ -1,5 +1,18 @@
 <?php
 
+/**
+ * @see \Elazar\Flystream\StreamWrapper::stream_open()
+ * needs `if (strpbrk($mode, 'r+') !== false && $mode !== 'w+') {`
+ */
+
+/**
+ * @see \Composer\Autoload\AutoloadGenerator
+ * This line creates the directory on the real filesystem
+ * $packageMap = $this->buildPackageMap($installationManager, $rootPackage, $localRepo->getCanonicalPackages());
+ *
+ * Probably able to address it if every filepath is changed to use a stream wrapper.
+ */
+
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
@@ -23,6 +36,11 @@ class DryRunFeatureTest extends IntegrationTestCase
         $this->assertFalse($config->isDryRun());
     }
 
+    /**
+     * @param string $directory
+     *
+     * @return array{0:string, 1:array<string>}
+     */
     protected function getDirectoryMd5s(string $directory): array
     {
         $files = new \RecursiveIteratorIterator(
@@ -38,9 +56,16 @@ class DryRunFeatureTest extends IntegrationTestCase
             }
         }
 
+        // TODO: Should fail the test if we can't properly read the files.
+        $hashes = array_filter($hashes);
+
         return [md5(implode('', $hashes)), $hashes];
     }
 
+    /**
+     * @param array{0:string, 1:array<string>} $hashesBefore
+     * @param array{0:string, 1:array<string>} $hashesAfter
+     */
     protected function assertEqualsDirectoryHashes(array $hashesBefore, array $hashesAfter): void
     {
         if ($hashesBefore[0] === $hashesAfter[0]) {
@@ -69,7 +94,7 @@ class DryRunFeatureTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": true,
       "dry_run": true
@@ -110,7 +135,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": true
     }
@@ -153,7 +178,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": true,
       "dry_run": true
@@ -183,7 +208,7 @@ EOD;
      *
      * @see Autoload::generateClassmap()
      */
-    public function testGenerateAutoload():void
+    public function testGenerateAutoload(): void
     {
         $composerJsonString = <<<'EOD'
 {
@@ -193,7 +218,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_packages": true,
       "dry_run": true
@@ -223,6 +248,8 @@ EOD;
      * Composer
      *
      * @see InstalledJson::cleanupVendorInstalledJson()
+     *
+     * php -d allow_url_include=on -r "include 'vendor/autoload.php'; PHPUnit\TextUI\Command::main();" -- --filter=test_composer_files_not_modified
      */
     public function test_composer_files_not_modified(): void
     {
@@ -234,7 +261,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_packages": true,
       "dry_run": true

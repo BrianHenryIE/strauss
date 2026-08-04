@@ -22,8 +22,12 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Copier;
+use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 
 /**
+ * @see Copier
+ * @see FileCopyScanner
  * @package BrianHenryIE\Strauss\Tests\Integration
  * @coversNothing
  */
@@ -678,7 +682,7 @@ EOD;
     {
         // This test is complex to set up reliably across different systems
         // so we'll mark it as skipped for now but provide the test structure
-        $this->markTestSkipped('Symlink test requires complex setup - implementation depends on system symlink support');
+        $this->markTestIncomplete('Symlink test requires complex setup - implementation depends on system symlink support');
 
         // The test would verify:
         // 1. Symlinked files are detected by FileCopyScanner.php:101
@@ -717,7 +721,7 @@ EOD;
 
         exec('composer install');
 
-        $exitCode = $this->runStrauss($output);
+        $exitCode = $this->runStrauss($output, '--debug');
         $this->assertEquals(0, $exitCode, $output);
 
         // Verify relative path works
@@ -807,9 +811,16 @@ EOD;
      * Expected: Early exit with error message printed
      * Configuration: "exclude_from_copy": { "file_patterns": ["/invalid[regex/"] }
      * Validates: Error handling in FileCopyScanner.php:83 preg_match
+     *
+     * @see FileCopyScanner::isFilePathExcluded()
      */
     public function test_invalid_regex_pattern_handling(): void
     {
+        /**
+         * preg_match(): Compilation failed: missing terminating ] for character class at offset 13 in /Users/brianhenry/Sites/strauss/strauss/src/Pipeline/FileCopyScanner.php 170
+         */
+        $this->expectErrorLogs();
+
         $composerJsonString = <<<'EOD'
 {
   "name": "test/copier-invalid-regex",

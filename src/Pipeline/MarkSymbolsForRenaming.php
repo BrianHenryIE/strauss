@@ -11,10 +11,11 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -43,8 +44,10 @@ class MarkSymbolsForRenaming
         foreach ($allSymbols as $symbol) {
             // $this->config->getFlatDependencyTree
             // TODO: This is probably incorrect. If a file is conditionally loaded, it still needs its namespace updated.
-            if (!$this->fileIsAutoloaded($symbol)) {
-//                $this->logger->debug()
+            if (!$this->symbolIsAutoloaded($symbol)) {
+//                $this->logger->notice('Excluding {symbol} from renaming... because...', [
+//                    'symbol' => $symbol->getOriginalLocalName(),
+//                ]);
                 $symbol->setDoRename(false);
                 continue;
             }
@@ -71,8 +74,14 @@ class MarkSymbolsForRenaming
 //                    $symbol->setDoRename(false);
 //                }
 //            }
+            /**
+             * I'm not sure what this was added for, but psr-0 namespaces that are found when scanning autoload
+             * keys are used to check do files exist under that directory.
+             */
             if (!$this->config->isTargetDirectoryVendor()
-                && !$this->isSymbolFoundInFileThatIsCopied($symbol)) {
+                && !$this->isSymbolFoundInFileThatIsCopied($symbol)
+                && !($symbol instanceof NamespaceSymbol)
+            ) {
                 $symbol->setDoRename(false);
             }
         }
@@ -84,7 +93,7 @@ class MarkSymbolsForRenaming
      * There are packages where a class may be defined in two different files and they are conditionally loaded.
      * TODO: How best to handle this scenario?
      */
-    protected function fileIsAutoloaded(DiscoveredSymbol $symbol): bool
+    protected function symbolIsAutoloaded(DiscoveredSymbol $symbol): bool
     {
         // The same namespace symbols are found in lots of files so this test isn't useful.
         if ($symbol instanceof NamespaceSymbol) {
@@ -109,8 +118,9 @@ class MarkSymbolsForRenaming
     protected function excludeFromPrefix(DiscoveredSymbol $symbol): bool
     {
         return $this->isExcludeFromPrefixPackage($symbol->getPackageName())
-            || $this->isExcludeFromPrefixNamespace($symbol->getNamespace())
-            || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles());
+            || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles())
+            || ( $symbol instanceof NamespacedSymbol && $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName()))
+            || ( $symbol instanceof NamespaceSymbol && $this->isExcludeFromPrefixNamespace($symbol->getOriginalFqdnName()));
     }
 
     /**
@@ -203,7 +213,7 @@ class MarkSymbolsForRenaming
     {
         /** @var File $file */
         foreach ($files as $file) {
-            $absoluteFilePath = $file->getAbsoluteTargetPath();
+            $absoluteFilePath = $file->getTargetAbsolutePath();
             if (empty($absoluteFilePath)) {
                 // root namespace is in a fake file.
                 continue;
@@ -211,6 +221,7 @@ class MarkSymbolsForRenaming
             $vendorRelativePath = $file->getVendorRelativePath();
             foreach ($this->config->getExcludeFilePatternsFromPrefixing() as $excludeFilePattern) {
                 if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
+                    $file->setDoPrefix(false);
                     return true;
                 }
             }
@@ -224,9 +235,9 @@ class MarkSymbolsForRenaming
     protected function isExcludeConstants(ConstantSymbol $symbol): bool
     {
         return $this->isExcludeConstantsPackage($symbol->getPackageName())
-            || $this->isExcludeConstantsNamespace($symbol->getNamespace())
+            || $this->isExcludeConstantsNamespace($symbol->getNamespaceName())
             || $this->isExcludedConstantsFilePattern($symbol->getSourceFiles())
-            || $this->isExcludeConstantName($symbol->getOriginalSymbol());
+            || $this->isExcludeConstantName($symbol->getOriginalFqdnName());
     }
 
     protected function isExcludeConstantsPackage(?string $packageName): bool
@@ -257,7 +268,7 @@ class MarkSymbolsForRenaming
     {
         /** @var File $file */
         foreach ($files as $file) {
-            $absoluteFilePath = $file->getAbsoluteTargetPath();
+            $absoluteFilePath = $file->getTargetAbsolutePath();
             if (empty($absoluteFilePath)) {
                 continue;
             }

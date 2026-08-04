@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\ColorLogger\ColorLogger;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -14,7 +17,6 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
  */
 class DependenciesCommandTest extends TestCase
 {
-
     protected function getSut(
         ?InputInterface $inputInterfaceMock = null,
         ?ConsoleOutputInterface $outputInterfaceMock = null,
@@ -34,7 +36,11 @@ class DependenciesCommandTest extends TestCase
                 FileSystem $filesystem,
                 LoggerInterface $logger
             ) {
-                $this->logger = $logger;
+                $this->logger = (function () use ($logger) {
+                    $monoLogger = new Logger(__CLASS__);
+                    $monoLogger->pushHandler(new PsrHandler($logger));
+                    return $monoLogger;
+                })();
                 $this->filesystem = $filesystem;
                 $this->workingDir = sys_get_temp_dir();
 
@@ -65,16 +71,16 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
+        // Composer could not find the config file: /path/to/composer.json
+        // To initialize a project, please create a composer.json file. See https://getcomposer.org/basic-usage
+        $this->expectErrorLogs();
+
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
-            null,
+            $this->getFileSystem(),
             $this->getLogger()
         );
-
-        // Composer could not find the config file: /path/to/composer.json
-        // To initialize a project, please create a composer.json file. See https://getcomposer.org/basic-usage
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -102,14 +108,14 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
+        $this->expectErrorLogs();
+
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -137,6 +143,11 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
+        $outputInterfaceMock->expects($this->exactly(0))
+                            ->method('getErrorOutput')
+                            ->willReturn($outputInterfaceMock);
+
+        $this->expectErrorLogs();
 
         $this->getSut(
             $inputInterfaceMock,
@@ -144,8 +155,6 @@ class DependenciesCommandTest extends TestCase
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -173,6 +182,11 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
+        $outputInterfaceMock->expects($this->exactly(0))
+                            ->method('getErrorOutput')
+                            ->willReturn($outputInterfaceMock);
+
+        $this->expectErrorLogs();
 
         $this->getSut(
             $inputInterfaceMock,
@@ -180,8 +194,6 @@ class DependenciesCommandTest extends TestCase
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -209,6 +221,11 @@ class DependenciesCommandTest extends TestCase
                             ->willReturn(PHP_INT_MAX);
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
+        $outputInterfaceMock->expects($this->exactly(0))
+                            ->method('getErrorOutput')
+                            ->willReturn($outputInterfaceMock);
+
+        $this->expectErrorLogs();
 
         $this->getSut(
             $inputInterfaceMock,
@@ -216,8 +233,6 @@ class DependenciesCommandTest extends TestCase
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 
     /**
@@ -248,13 +263,13 @@ class DependenciesCommandTest extends TestCase
         $outputInterfaceMock->expects($this->any())
                             ->method('writeln');
 
+        $this->expectErrorLogs();
+
         $this->getSut(
             $inputInterfaceMock,
             $outputInterfaceMock,
             null,
             $this->getLogger()
         );
-
-        $this->assertTrue($this->getTestLogger()->hasErrorRecords());
     }
 }

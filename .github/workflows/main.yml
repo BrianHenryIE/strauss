@@ -11,9 +11,6 @@ on:
       - '.github/workflows/main.yml'
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
-    branches:
-      - master
-      - main
     paths:
       - '**.php'
       - 'composer.json'
@@ -22,7 +19,7 @@ on:
 
 concurrency:
   # Cancel previous runs of this workflow if they are testing the same branch
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ (github.event_name == 'pull_request' && github.head_ref) || github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -85,7 +82,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:v2
+          tools: composer:v2, clue/phar-composer
           extensions: fileinfo, gd, zip
 
       - name: Setup problem matcher for PHPUnit
@@ -104,13 +101,6 @@ jobs:
       - name: Print installed dependencies
         run: composer show
 
-      - name: Run previously workflows' failed tests first
-        uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
-        with:
-          phpunit-command: vendor/bin/phpunit
-        env:
-          RENAMESPACER_LOG: "debug"
-
       - name: Determine PHPUnit fail-on flags
         id: phpunit
         # PHPUnit 9 (resolved under PHP 7.4 / 8.0) lacks --fail-on-deprecation
@@ -128,8 +118,20 @@ jobs:
             echo "phar_flags=" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run tests
-        run: vendor/bin/phpunit --order-by=random ${{ steps.phpunit.outputs.flags }}
+      - name: Run previous workflows' failed tests first
+        id: failed_tests
+        uses: BrianHenryIE/bh-phpunit-failed-tests-action@main
+        with:
+          phpunit-command: vendor/bin/phpunit
+          phpunit-args: ${{ steps.phpunit.outputs.flags }}
+          max-runs: 1
+        env:
+          RENAMESPACER_LOG: "debug"
+
+      - name: Run all tests (except previous failures)
+        env:
+          FILTER: ${{ steps.failed_tests.outputs.filter-inverse || '.*' }}
+        run: vendor/bin/phpunit --filter "$FILTER" --order-by=random  ${{ steps.phpunit.outputs.flags }}
 
       - name: Download phar built under PHP 7.4
         # v8+ detects the artifact's Content-Type and skips unzipping; required

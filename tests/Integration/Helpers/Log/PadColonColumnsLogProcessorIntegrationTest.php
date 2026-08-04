@@ -1,9 +1,8 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Log;
 
 use BrianHenryIE\ColorLogger\ColorLogger;
-use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\TestCase;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;

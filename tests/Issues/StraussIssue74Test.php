@@ -18,7 +18,7 @@ class StraussIssue74Test extends IntegrationTestCase
 
     public function test_prefix_global_function(): void
     {
-        $this->markTestSkipped('slow');
+        $this->markTestSkippedLocally('slow');
 
         $composerJsonString = <<<'EOD'
 {
@@ -55,7 +55,7 @@ EOD;
 
     public function test_twig(): void
     {
-        $this->markTestSkipped('slow');
+        $this->markTestSkippedLocally('slow');
 
         $composerJsonString = <<<'EOD'
 {
@@ -67,6 +67,11 @@ EOD;
       "target_directory": "vendor-prefixed",
       "namespace_prefix": "My\\Prefix\\",
       "classmap_prefix": "MyPrefix_"
+    }
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
     }
   }
 }

@@ -3,12 +3,14 @@
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 use stdClass;
 
@@ -31,7 +33,7 @@ class CopierIntegrationTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": false
     }
@@ -49,7 +51,9 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor'));
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
         $targetDir = $this->testsWorkingDir . '/vendor-prefixed';
@@ -64,7 +68,7 @@ EOD;
             $this->getFileSystem(),
             $this->getLogger()
         );
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
 
         $fileCopyScanner = new FileCopyScanner($config, $this->getFileSystem());
         $fileCopyScanner->scanFiles($files);
@@ -103,7 +107,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": false
     }
@@ -121,22 +125,24 @@ EOD;
 
         $dependencies = array_map(function ($element) {
             $composerFile = $this->testsWorkingDir . '/vendor/' . $element . '/composer.json';
-            return ComposerPackage::fromFile($composerFile);
+            $package = ComposerPackage::fromFile($composerFile);
+            $package->setProjectVendorDirectory($this->pathNormalizer->normalizePath($this->testsWorkingDir . '/vendor'));
+            return $package;
         }, $projectComposerPackage->getRequiresNames());
 
-        $targetDir = $this->testsWorkingDir . '/vendor-prefixed';
-        $vendorDir = $this->testsWorkingDir . '/vendor';
+        $targetVendorDir = $this->testsWorkingDir . '/vendor-prefixed';
+        $absoluteTargetVendorDir = $this->testsWorkingDir . '/vendor';
 
         $config = $this->createStub(StraussConfig::class);
-        $config->method('getAbsoluteVendorDirectory')->willReturn($vendorDir);
-        $config->method('getAbsoluteTargetDirectory')->willReturn($targetDir);
+        $config->method('getAbsoluteVendorDirectory')->willReturn($absoluteTargetVendorDir);
+        $config->method('getAbsoluteTargetDirectory')->willReturn($targetVendorDir);
 
         $fileEnumerator = new FileEnumerator(
             $config,
             $this->getFileSystem(),
             $this->getLogger()
         );
-        $files = $fileEnumerator->compileFileListForDependencies($dependencies);
+        $files = $fileEnumerator->compileFileListForDependencies(new DependenciesCollection($dependencies));
 
         (new FileCopyScanner($config, $this->getFileSystem()))->scanFiles($files);
 
@@ -144,7 +150,7 @@ EOD;
 
         $file = 'Client.php';
         $relativePath = '/google/apiclient/src/';
-        $targetPath = $targetDir . $relativePath;
+        $targetPath = $targetVendorDir . $relativePath;
         $targetFile = $targetPath . $file;
 
         $copier->prepareTarget();

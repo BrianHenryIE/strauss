@@ -16,7 +16,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\CopierConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -50,7 +50,7 @@ class Copier
         $this->logger = $logger;
         $this->filesystem = $filesystem;
     }
-    
+
     /**
      * If the target dir does not exist, create it.
      * If it already exists, delete any files we're about to copy.
@@ -70,7 +70,7 @@ class Copier
                 continue;
             }
 
-            $targetAbsoluteFilepath = $file->getAbsoluteTargetPath();
+            $targetAbsoluteFilepath = $file->getTargetAbsolutePath();
 
             if ($this->filesystem->fileExists($targetAbsoluteFilepath)) {
                 $this->logger->info('Deleting existing destination file at ' . $targetAbsoluteFilepath);
@@ -96,8 +96,9 @@ class Copier
             }
 
             $sourceAbsoluteFilepath = $file->getSourcePath();
-            $targetAbsolutePath = $file->getAbsoluteTargetPath();
+            $targetAbsolutePath = $file->getTargetAbsolutePath();
 
+            // Basically ::isDirectory().
             if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
                 $this->logger->info(
                     'Creating directory at {targetPath}',

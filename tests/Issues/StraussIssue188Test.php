@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues
@@ -31,7 +32,7 @@ class StraussIssue188Test extends IntegrationTestCase
   "extra": {
     "strauss": {
       "namespace_prefix": "Company\\PluginFramework\\"
-    }   
+    }
   }
 }
 EOD;
@@ -50,10 +51,14 @@ EOD;
         $this->assertStringContainsString("class Client implements ClientInterface, \\Company\\PluginFramework\\Psr\\Http\\Client\\ClientInterface", $php_string);
     }
 
-
+    /**
+     * Passing locally, failing on GitHub Actions.
+     */
     public function test_issue_188_extends(): void
     {
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.6');
+
+        $this->markTestSkippedLocally();
 
         $composerJsonString = <<<'EOD'
 {
@@ -63,18 +68,8 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "override_autoload": {
-        "mpdf/mpdf": {
-          "files": [
-            "data/",
-            "src/",
-            "tmp/",
-            "ttfonts"
-          ]
-        }
-      },
       "namespace_prefix": "Company\\PluginFramework\\"
-    }   
+    }
   }
 }
 EOD;
@@ -83,7 +78,10 @@ EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
-        exec('composer install --no-dev');
+        exec('php -d memory_limit=-1 $(which composer) update --no-dev -vvv');
+
+        $this->getLogger()->info('Composer install finished. Running strauss.');
+
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 

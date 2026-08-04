@@ -171,7 +171,7 @@ class GitFilesFeatureTest extends IntegrationTestCase
     {
         $packageDir = $this->createTestPackage();
 
-        $spyFilesystem = $this->getListContentsSpyFileSystem();
+        $spyFilesystem = $this->getFileSystem();
 
         $fileEnumerator = new FileEnumerator(
             $this->createConfig(true),
@@ -213,6 +213,8 @@ class GitFilesFeatureTest extends IntegrationTestCase
         // reads exactly the same files, differing only in that it records the listContents() calls.
         $reflection = new \ReflectionObject($realFilesystem);
         $flysystemProperty = $reflection->getProperty('flysystem');
+        PHP_VERSION_ID < 80100 && $flysystemProperty->setAccessible(true);
+        $flysystemProperty = $reflection->getProperty('adapter');
         PHP_VERSION_ID < 80100 && $flysystemProperty->setAccessible(true);
         $workingDirProperty = $reflection->getProperty('workingDir');
         PHP_VERSION_ID < 80100 && $workingDirProperty->setAccessible(true);

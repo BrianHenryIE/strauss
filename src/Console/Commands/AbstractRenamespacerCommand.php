@@ -6,42 +6,47 @@
 namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
 use Composer\InstalledVersions;
+use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
+use League\Flysystem\Config;
+use League\Flysystem\PathPrefixer;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
-use Psr\Log\LoggerAwareTrait;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
-use League\Flysystem\Config;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class AbstractRenamespacerCommand extends Command
 {
-    use LoggerAwareTrait;
+    /**
+     * @var LoggerInterface&Logger
+     */
+    protected $logger;
 
     /** No trailing slash */
     protected string $workingDir;
 
-    protected LocalFilesystemAdapter $localFilesystemAdapter;
+    protected FileSystem $filesystem;
 
-    /** @var FileSystem */
-    protected Filesystem $filesystem;
     protected ProjectComposerPackage $projectComposerPackage;
 
     protected StraussConfig $config;
+
+    protected DependenciesCollection $flatDependencyTree;
 
     /**
      * Set name and description, call parent class to add dry-run, verbosity options.
@@ -80,7 +85,15 @@ abstract class AbstractRenamespacerCommand extends Command
         // symfony/console 7.2 added a global `--silent` option to every command. Only register our own
         // `--silent`/`-s` on older versions, otherwise the definitions collide with
         // "An option named 'silent' already exists." when the application definition is merged.
-        $installedSymfonyVersion = InstalledVersions::getVersion('symfony/console');
+        /**
+         * When run via. `strauss.phar`, classes such as `InstalledVersions` are prefixed, but when installed
+         * via Composer, the unprefixed version is used.
+         *
+         * @var string $installedSymfonyVersion
+         */
+        $installedSymfonyVersion = class_exists(\BrianHenryIE\Strauss\Composer\InstalledVersions::class)
+            ? \BrianHenryIE\Strauss\Composer\InstalledVersions::getVersion('symfony/console')
+            : \Composer\InstalledVersions::getVersion('symfony/console');
 
         if ($installedSymfonyVersion === null || version_compare($installedSymfonyVersion, '7.2', '<')) {
             $this->addOption(
@@ -91,6 +104,71 @@ abstract class AbstractRenamespacerCommand extends Command
                 false
             );
         }
+    }
+
+    /**
+     * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
+     */
+    protected function initialize(InputInterface $input, OutputInterface $output): void
+    {
+        // Instantiate the monolog logger early, reconfigure it later.
+        $logger = new Logger('logger');
+        $this->logger = $logger;
+
+        $this->flatDependencyTree = new DependenciesCollection([]);
+
+        /**
+         * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
+         * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
+         */
+        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
+        $workingDir      = Platform::getcwd();
+        $localFsLocation = FileSystem::getFsRoot($workingDir);
+
+        $pathNormalizer = FileSystem::makePathNormalizer($localFsLocation);
+
+        $pathPrefixer = new PathPrefixer(
+            $localFsLocation,
+            DIRECTORY_SEPARATOR
+        );
+
+        try {
+        // Extends `LocalFilesystemAdapter`.
+            $localFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
+                $localFsLocation,
+                $pathNormalizer,
+                $pathPrefixer,
+                $this->logger
+            );
+
+            $this->filesystem = new FileSystem(
+                $localFilesystemAdapter,
+                [
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
+                $pathNormalizer,
+                $pathPrefixer,
+                $localFsLocation,
+                $workingDir,
+            );
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->workingDir = $this->filesystem->normalizePath($workingDir);
+    }
+
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger->pushHandler(new PsrHandler($logger));
+    }
+
+    public function configureLogger(LoggerInterface $logger): void
+    {
+        $this->logger->pushHandler(new PsrHandler($logger));
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -108,16 +186,13 @@ abstract class AbstractRenamespacerCommand extends Command
                 return true;
             }, E_DEPRECATED | E_USER_DEPRECATED);
 
-
-            $this->filesystem = new FileSystem(
-                new \League\Flysystem\Filesystem(
-                    new ReadOnlyFileSystemAdapter(
-                        $this->localFilesystemAdapter,
-                        Filesystem::makePathNormalizer($this->workingDir)
-                    )
-                ),
-                $this->workingDir
+            $this->filesystem->setAdapter(
+                new ReadOnlyFileSystemAdapter(
+                    $this->filesystem->getAdapter(),
+                    FileSystem::makePathNormalizer($this->workingDir)
+                )
             );
+            $this->filesystem->setLocalFsLocation('mem://');
 
             restore_error_handler();
 
@@ -133,74 +208,40 @@ abstract class AbstractRenamespacerCommand extends Command
             }
         }
 
-        $this->setLogger(
-            $this->getMonologLogger($input, $output)
-        );
+        $this->logger = $this->getMonologLogger($input, $output);
 
         return Command::SUCCESS;
     }
 
     protected function getMonologLogger(InputInterface $input, OutputInterface $output): Logger
     {
-        $logger = new Logger('logger');
+        $logger = $this->logger instanceof Logger
+            ? $this->logger
+            : new Logger('logger');
+
+        $this->configureMonologLogger($logger, $input, $output);
+
+        return $logger;
+    }
+
+    protected function configureMonologLogger(Logger $logger, InputInterface $input, OutputInterface $output): void
+    {
+        $logger->reset();
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(RelativeFilepathLogProcessor::make($this->filesystem));
         $logger->pushProcessor(PadColonColumnsLogProcessor::make());
         $logger->pushHandler(new PsrHandler($this->getPsrLogger($input, $output)));
-        return $logger;
-    }
-
-    /**
-     * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
-     */
-    protected function initialize(InputInterface $input, OutputInterface $output): void
-    {
-        $this->workingDir = getcwd() . '';
-
-        if (!isset($this->filesystem)) {
-            /**
-             * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
-             * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
-             */
-            set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-                return true;
-            }, E_DEPRECATED | E_USER_DEPRECATED);
-
-            try {
-                $this->localFilesystemAdapter = new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot($this->workingDir),
-                    null,
-                    LOCK_EX,
-                    LocalFilesystemAdapter::SKIP_LINKS
-                );
-
-                $this->filesystem = new FileSystem(
-                    new \League\Flysystem\Filesystem(
-                        $this->localFilesystemAdapter,
-                        [
-                            Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                        ],
-                        Filesystem::makePathNormalizer($this->workingDir)
-                    ),
-                    $this->workingDir
-                );
-            } finally {
-                restore_error_handler();
-            }
-        }
-
-        if (method_exists($this, 'setLogger')) {
-            $this->setLogger($this->getMonologLogger($input, $output));
-        }
     }
 
     /**
      * Build a logger honoring optional --info/--debug/--silent flags if present.
+     *
+     * TODO: maybe this should be called ~`::getConsoleLogger()`.
      */
     protected function getPsrLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
         // If a subclass has a config and it is a dry-run, increase verbosity
-        $isDryRun = property_exists($this, 'config') && isset($this->config) && method_exists($this->config, 'isDryRun') && $this->config->isDryRun();
+        $isDryRun = isset($this->config) && $this->config->isDryRun();
 
         // Who would want to dry-run without output?
         if (!$isDryRun && $input->hasOption('silent') && $input->getOption('silent') !== false) {
@@ -220,7 +261,6 @@ abstract class AbstractRenamespacerCommand extends Command
 
         return new ConsoleLogger($output, $logLevel);
     }
-
 
     protected function createConfig(InputInterface $input): StraussConfig
     {

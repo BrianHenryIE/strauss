@@ -4,8 +4,9 @@ namespace BrianHenryIE\Strauss\Autoload;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use BrianHenryIE\Strauss\IntegrationTestCase;
+use BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGenerator;
+use BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGeneratorFactory;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
@@ -13,6 +14,7 @@ use Composer\Autoload\AutoloadGenerator;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
@@ -45,12 +47,15 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
                 }
             }
             copy($this->testsWorkingDir . '/vendor/autoload.php', $this->testsWorkingDir . '/vendor-prefixed/autoload.php');
-            $composer = Factory::create(new NullIO(), $this->testsWorkingDir . '/composer.json');
+            $composer = (new Factory())->createComposer(new NullIO(), $this->testsWorkingDir . '/composer.json');
             $config = new StraussConfig($composer);
             $psrLogPackage = ComposerPackage::fromFile($this->testsWorkingDir . '/vendor/psr/log/composer.json');
             $config->setPackagesToCopy(['psr/log' => $psrLogPackage]);
             $config->setPackagesToPrefix(['psr/log' => $psrLogPackage]);
             $filesystem = $this->getFileSystem();
+            $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
+            $composerAutoloadGenerator = new ComposerAutoloadGenerator('projectuniquestring', $composer->getEventDispatcher());
+            $composerAutoloadGeneratorFactory->expects('get')->once()->andReturn($composerAutoloadGenerator);
             $dumpAutoload = new DumpAutoload(
                 $config,
                 $filesystem,
@@ -64,7 +69,8 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
                     $config,
                     $filesystem,
                     $this->getLogger()
-                )
+                ),
+                $composerAutoloadGeneratorFactory
             );
             $dumpAutoload->generatedPrefixedAutoloader();
             $autoloadRealPath = $this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php';
@@ -93,7 +99,7 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "classmap_prefix": "BrianHenryIE_Strauss_",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true
@@ -109,7 +115,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "classmap_prefix": "BrianHenryIE_Strauss_",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true,
@@ -181,7 +187,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true
         }
@@ -202,7 +208,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true,
             "include_root_autoload": true
@@ -250,7 +256,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert(0 === $exitCode, $output);
 
-        $targetString = '\'BrianHenryIE\\\\Strauss\\\\\' => array($baseDir . \'/src\'),';
+        $targetString = '\'BrianHenryIE\\\\TestStrauss\\\\\' => array($baseDir . \'/src\'),';
         $vendorAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_psr4.php');
         $vendorPrefixedAutoloadPsr4PhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_psr4.php');
 
@@ -275,7 +281,7 @@ EOD;
     "name": "brianhenryie/dump-autoload-feature-test",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\Strauss\\": "src/"
+            "BrianHenryIE\\TestStrauss\\": "src/"
         }
     },
     "require": {
@@ -283,7 +289,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true
         }
@@ -296,7 +302,7 @@ EOD;
     "name": "brianhenryie/dump-autoload-feature-test",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\Strauss\\": "src/"
+            "BrianHenryIE\\TestStrauss\\": "src/"
         }
     },
     "require": {
@@ -304,7 +310,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true,
             "include_root_autoload": true
@@ -318,7 +324,7 @@ EOD;
     "name": "brianhenryie/dump-autoload-feature-test",
     "autoload": {
         "psr-4": {
-            "BrianHenryIE\\Strauss\\": "src/"
+            "BrianHenryIE\\TestStrauss\\": "src/"
         }
     },
     "require": {
@@ -326,7 +332,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "delete_vendor_packages": true,
             "include_root_autoload": false
@@ -343,6 +349,8 @@ EOD;
     }
 
     /**
+     * Test passes when run individually.
+     *
      * vendor-prefixed/autoload* with setAuthoritativeClassmap aren't including the classes in classmap for indirect dependency
      *
      * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
@@ -376,7 +384,7 @@ EOD;
     },
     "extra": {
         "strauss": {
-            "namespace_prefix": "BrianHenryIE\\Strauss\\",
+            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
             "target_directory": "vendor-prefixed",
             "packages": [
                 "wordpress/mcp-adapter"
@@ -408,11 +416,48 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_classmap.php');
-        $this->assertStringContainsString('BrianHenryIE\\\\Strauss\\\\WP\\\\MCP\\\\Abilities\\\\DiscoverAbilitiesAbility', $vendorAutoloadFilesPhpString);
+        $this->assertStringContainsString('BrianHenryIE\\\\TestStrauss\\\\WP\\\\MCP\\\\Abilities\\\\DiscoverAbilitiesAbility', $vendorAutoloadFilesPhpString);
 
         exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; require __DIR__ . \'/vendor-prefixed/wordpress/mcp-adapter/mcp-adapter.php\';" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);
 
         $this->assertEquals(0, $result_code, $outputString);
+    }
+
+    /**
+     * 'Composer\Autoload\ClassLoader' should be prefixed.
+     *
+     * @see vendor/composer/autoload_real.php
+     */
+    public function testItPrefixesComposerAutoloadClasses(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "dump/autoload",
+  "require": {
+    "psr/log": "1.0"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Company\\Project\\"
+    }
+  }
+}
+EOD;
+
+        chdir($this->testsWorkingDir);
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php');
+
+        $this->assertStringNotContainsString('\'Composer\\Autoload\\ClassLoader', $phpString);
+        $this->assertStringContainsString('Company\\Project\\Composer\\Autoload\\ClassLoader', $phpString);
     }
 }

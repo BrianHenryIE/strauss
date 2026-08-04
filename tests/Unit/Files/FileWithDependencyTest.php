@@ -25,7 +25,8 @@ class FileWithDependencyTest extends TestCase
         $sut = new FileWithDependency(
             $dependency,
             'company/package/src/path/file.php',
-            'absolute/path/to/project/vendor/company/package/src/path/file.php'
+            'absolute/path/to/project/vendor/company/package/src/path/file.php',
+            'absolute/path/to/project/vendor-prefixed/company/package/src/path/file.php'
         );
 
         // Should defer to the package's `isDelete` setting.
@@ -46,6 +47,8 @@ class FileWithDependencyTest extends TestCase
      */
     public function test_handles_null_package_absolute_path(): void
     {
+        $this->markTestIncomplete('When could a file be found inside a package without a path?');
+
         $dependency = Mockery::mock(ComposerPackage::class)->makePartial();
         $dependency->allows('getPackageAbsolutePath')->andReturnNull();
 
@@ -54,7 +57,8 @@ class FileWithDependencyTest extends TestCase
         $sut = new FileWithDependency(
             $dependency,
             'company/package/src/file.php',
-            $sourceAbsolutePath
+            $sourceAbsolutePath,
+            'absolute/path/to/project/vendor-prefixed/company/package/src/file.php'
         );
 
         // When packageAbsolutePath is null, nothing is replaced, so packageRelativePath equals sourceAbsolutePath

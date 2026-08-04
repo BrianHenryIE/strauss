@@ -1,15 +1,16 @@
 <?php
 
-namespace BrianHenryIE\Strauss\Helpers;
+namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use BrianHenryIE\Strauss\TestCase;
+use Composer\Util\Platform;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
- * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\FileSystem
+ * @coversDefaultClass \BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem
  */
 class FileSystemTest extends TestCase
 {
@@ -22,15 +23,12 @@ class FileSystemTest extends TestCase
     public function testFileAttributes(): void
     {
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot()
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
-            __DIR__
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
         $result = $sut->getAttributes(__FILE__);
@@ -41,15 +39,12 @@ class FileSystemTest extends TestCase
     public function testIsDirTrue(): void
     {
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot()
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
-            __DIR__
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
         $result = $sut->directoryExists(__DIR__);
@@ -69,23 +64,23 @@ class FileSystemTest extends TestCase
     {
         // Use a Unix-style working directory to test Unix behavior
         $unixWorkingDir = '/home/user/project/';
-        
+
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot($unixWorkingDir)
-                ),
-                [
-                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ]
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot($unixWorkingDir)
             ),
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            null,
             $unixWorkingDir
         );
 
         // Simulate a path that's been through Flysystem's normalizer (no leading slash)
         $result = $sut->makeAbsolute('app/lib/composer.json');
 
-        $this->assertSame('/app/lib/composer.json', $result);
+        $this->assertSame('/home/user/project/app/lib/composer.json', $result);
     }
 
     /**
@@ -96,15 +91,15 @@ class FileSystemTest extends TestCase
     public function testMakeAbsolutePreservesWindowsDriveLetter(): void
     {
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    'c:\\'
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                'c:\\'
             ),
-            'c:\\whatever'
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            null,
+            'c:\\'
         );
 
         $result = $sut->makeAbsolute('C:/Users/dev/project/composer.json');
@@ -124,15 +119,15 @@ class FileSystemTest extends TestCase
     public function testMakeAbsolutePreservesLowercaseWindowsDriveLetter(): void
     {
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    'd:\brian'
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                'd:\\brian'
             ),
-            'd:/'
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            null,
+            'd:\\'
         );
 
         $result = $sut->makeAbsolute('d:/Work/project/composer.json');
@@ -160,15 +155,15 @@ class FileSystemTest extends TestCase
         $unixWorkingDir = '/home/user/project/';
 
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    '/'
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                '/'
             ),
-            $unixWorkingDir
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ],
+            null,
+            null,
+            '/'
         );
 
         // Input has leading slash, but Flysystem normalizer will strip it
@@ -181,15 +176,12 @@ class FileSystemTest extends TestCase
     public function testIsDirFalse(): void
     {
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot()
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
-            __DIR__
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
         $result = $sut->directoryExists(__FILE__);
@@ -209,21 +201,18 @@ class FileSystemTest extends TestCase
     public function testDirectoryExistsWithRelativePathSegments(): void
     {
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot()
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
-            __DIR__
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
-        // __DIR__ is tests/Unit/Helpers
-        // dirname(__DIR__) is tests/Unit
-        // So __DIR__ . '/../Helpers' resolves to the same directory
-        $pathWithRelativeSegment = __DIR__ . '/../Helpers';
+        // __DIR__ is tests/Unit/Helpers/Flysystem
+        // dirname(__DIR__) is Unit/Helpers
+        // So __DIR__ . '/../Flysystem' resolves to the same directory
+        $pathWithRelativeSegment = __DIR__ . '/../Flysystem';
 
         // This should return true - the directory exists, just expressed with ../
         $this->assertTrue(
@@ -240,20 +229,17 @@ class FileSystemTest extends TestCase
     public function testDirectoryExistsWithMultipleRelativeSegments(): void
     {
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot()
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
-            __DIR__
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
-        // __DIR__ is tests/Unit/Helpers
-        // Going up twice (../../) then back to Unit/Helpers should resolve to the same path
-        $pathWithMultipleRelativeSegments = __DIR__ . '/../../Unit/Helpers';
+        // __DIR__ is tests/Unit/Helpers/Flysystem
+        // Going up twice (../../) then back to Helpers/Flysystem should resolve to the same path
+        $pathWithMultipleRelativeSegments = __DIR__ . '/../../Helpers/Flysystem';
 
         $this->assertTrue(
             $sut->directoryExists($pathWithMultipleRelativeSegments),
@@ -269,15 +255,12 @@ class FileSystemTest extends TestCase
     public function testDirectoryExistsWithRelativePathSegmentsNonExistent(): void
     {
         $sut = new FileSystem(
-            new \League\Flysystem\Filesystem(
-                new LocalFilesystemAdapter(
-                    FileSystem::getFsRoot()
-                ),
-                [
-                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                ]
+            new LocalFilesystemAdapter(
+                FileSystem::getFsRoot(Platform::getCwd())
             ),
-            __DIR__
+            [
+                Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+            ]
         );
 
         // A path that normalizes to something that doesn't exist

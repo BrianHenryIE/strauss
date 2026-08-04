@@ -26,7 +26,7 @@ class OutputLevelFeatureTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_files": true
     }
@@ -61,8 +61,12 @@ EOD;
             $this->assertStringNotContainsString('[debug]', $output);
         } else {
             $this->assertTrue($this->getTestLogger()->hasNoticeRecords());
-            $this->assertTrue($this->getTestLogger()->hasInfoRecords());
-            $this->assertTrue($this->getTestLogger()->hasDebugRecords());
+
+            // When re-running failed tests in GitHub Actions, we set `RENAMESPACER_LOG=debug` for all tests.
+            if (getenv('RENAMESPACER_LOG') !== 'debug' && getenv('RENAMESPACER_LOG') !== 'info') {
+                $this->assertStringNotContainsString('[info]', $output);
+                $this->assertStringNotContainsString('[debug]', $output);
+            }
         }
     }
 
@@ -71,6 +75,7 @@ EOD;
         $params = '--info';
 
         $this->runStrauss($output, $params);
+
         if ($this->isTestingPhar()) {
             $this->assertStringContainsString('[notice]', $output);
             $this->assertStringContainsString('[info]', $output);
@@ -78,7 +83,11 @@ EOD;
         } else {
             $this->assertTrue($this->getTestLogger()->hasNoticeRecords());
             $this->assertTrue($this->getTestLogger()->hasInfoRecords());
-            $this->assertTrue($this->getTestLogger()->hasDebugRecords());
+
+            // When re-running failed tests in GitHub Actions, we set `RENAMESPACER_LOG=debug` for all tests.
+            if (getenv('RENAMESPACER_LOG') !== 'debug') {
+                $this->assertStringNotContainsString('[debug]', $output);
+            }
         }
     }
 
@@ -104,6 +113,7 @@ EOD;
         $params = '--dry-run';
 
         $this->runStrauss($output, $params);
+
         if ($this->isTestingPhar()) {
             $this->assertStringContainsString('[notice]', $output);
             $this->assertStringContainsString('[info]', $output);

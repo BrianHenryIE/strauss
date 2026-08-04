@@ -23,7 +23,7 @@ class VendorComposerAutoloadFeatureTest extends IntegrationTestCase
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_packages": true
     }
@@ -57,7 +57,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_packages": true
     }
@@ -90,7 +90,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_packages": true
     }
@@ -136,7 +136,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "delete_vendor_packages": true
     }
@@ -178,7 +178,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "target_directory": "vendor-prefixed",
       "delete_vendor_packages": false
@@ -204,7 +204,7 @@ EOD;
         );
 
         $this->assertStringNotContainsString(
-            "BrianHenryIE\\\\Strauss\\\\League\\\\Container\\\\",
+            "BrianHenryIE\\\\TestStrauss\\\\League\\\\Container\\\\",
             $composerAutoloadString
         );
     }
@@ -219,7 +219,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "target_directory": "vendor-prefixed",
       "delete_vendor_packages": true
@@ -246,7 +246,7 @@ EOD;
         );
 
         $this->assertStringNotContainsString(
-            "BrianHenryIE\\\\Strauss\\\\League\\\\Container\\\\",
+            "BrianHenryIE\\\\TestStrauss\\\\League\\\\Container\\\\",
             $composerAutoloadString
         );
     }
@@ -261,7 +261,7 @@ EOD;
   },
   "extra": {
     "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Strauss\\",
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
       "classmap_prefix": "BrianHenryIE_Strauss_",
       "target_directory": "vendor",
       "delete_vendor_packages": false
@@ -288,7 +288,7 @@ EOD;
         );
 
         $this->assertStringContainsString(
-            "BrianHenryIE\\\\Strauss\\\\League\\\\Container\\\\",
+            "BrianHenryIE\\\\TestStrauss\\\\League\\\\Container\\\\",
             $composerAutoloadString
         );
     }

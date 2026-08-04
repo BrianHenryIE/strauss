@@ -288,6 +288,8 @@ EOD;
 
     public function test_phpdoc(): void
     {
+        $this->markTestIncomplete('Deprecated: In prior regex based replacing, it was necessary to first ensure all namespaces were fqdn.');
+
         $this->markTestSkippedOnPhpVersionAbove('8.3');
 
         $composerJsonString = <<<'EOD'
@@ -354,8 +356,8 @@ EOD;
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/latte/latte/src/Latte/Runtime/Filters.php');
 
-        $this->assertStringNotContainsString('isset(StraussLatte\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(StraussLatte\Latte\Helpers::$emptyElements[$new]))', $phpString);
-        $this->assertStringContainsString('isset(\StraussLatte\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\StraussLatte\Latte\Helpers::$emptyElements[$new]))', $phpString);
+        $this->assertStringNotContainsString('isset(StraussLatte\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(StraussLatte\Latte\Helpers::$emptyElements[$new])', $phpString);
+        $this->assertStringContainsString('isset(\StraussLatte\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\StraussLatte\Latte\Helpers::$emptyElements[$new])', $phpString);
     }
 
     public function test_constructor_parameter(): void

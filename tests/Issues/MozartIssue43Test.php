@@ -26,7 +26,7 @@ class MozartIssue43Test extends IntegrationTestCase
      */
     public function testAwsSdkSucceeds(): void
     {
-        self::markTestSkipped('Very slow to run');
+        self::markTestSkippedLocally('Very slow to run');
 
         $composerJsonString = <<<'EOD'
 {
@@ -36,8 +36,8 @@ class MozartIssue43Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_",
+			"namespace_prefix": "BrianHenryIE\\M43\\",
+			"classmap_prefix": "BrianHenryIE_M43_",
 			"override_autoload": {
 				"guzzle/guzzle": {
 					"psr-4": {
@@ -65,6 +65,10 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/AWS/Common/Aws.php');
+        /**
+         * File path has changed since test was originally written – PSR-0 support moves files into subdir matching the namespace.
+         */
+//        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Aws/Common/Aws.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/BrianHenryIE/M43/Aws/Common/Aws.php');
     }
 }

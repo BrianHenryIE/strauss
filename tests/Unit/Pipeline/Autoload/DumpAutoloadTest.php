@@ -6,11 +6,12 @@ use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
-use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
 use Mockery;
+use Mockery\LegacyMockInterface;
+use Mockery\MockInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -19,32 +20,31 @@ use Psr\Log\NullLogger;
 class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
 {
     /**
+     * @covers ::__construct
      * @covers ::generatedPrefixedAutoloader
+     * @covers ::generateMainAutoloader
      */
-    public function testGeneratedPrefixedAutoloader():void
+    public function testGeneratedPrefixedAutoloader(): void
     {
-        $this->markTestSkipped('Could not read project/composer.json; probably needs the Composer PR completed');
-
+        /** @var AutoloadConfigInterface&PrefixerConfigInterface&FileEnumeratorConfig&MockInterface&LegacyMockInterface $config */
         $config = Mockery::mock(
             AutoloadConfigInterface::class,
             PrefixerConfigInterface::class,
             FileEnumeratorConfig::class
         );
         $config->expects('isDryRun')->times(2)->andReturnFalse();
-//        $config->expects('getProjectDirectory')->times(3)->andReturn('project/');
-        $config->expects('getProjectDirectory')->times(4)->andReturn('project/');
-//        $config->expects('getAbsoluteTargetDirectory')->times(2)->andReturn('project/vendor-prefixed');
-        $config->expects('getAbsoluteTargetDirectory')->times(4)->andReturn('project/vendor-prefixed');
-//        $config->expects('getNamespacePrefix')->once()->andReturn('BrianHenryIE\\Test\\');
-        $config->expects('getNamespacePrefix')->times(8)->andReturn('BrianHenryIE\\Test\\');
+        $config->expects('getProjectAbsolutePath')->times(2)->andReturn('project');
+        $config->expects('getAbsoluteTargetDirectory')->zeroOrMoreTimes()->andReturn('project/vendor-prefixed');
+        $config->expects('getRelativeTargetDirectory')->times(1)->andReturn('vendor-prefixed');
+        $config->expects('isTargetDirectoryVendor')->times(2)->andReturnFalse();
+        $config->expects('getNamespacePrefix')->times(1)->andReturn('BrianHenryIE\\Test\\');
 
-        $config->expects('getAbsoluteVendorDirectory')->times(2)->andReturn('project/vendor');
-        $config->expects('getExcludeNamespacesFromCopy')->times(2)->andReturn([]);
-        $config->expects('getExcludePackagesFromCopy')->times(2)->andReturn([]);
-        $config->expects('getExcludeFilePatternsFromCopy')->times(2)->andReturn([]);
-        $config->expects('getClassmapPrefix')->times(6)->andReturn('BrianHenryIE_Test_');
-        $config->expects('getConstantsPrefix')->times(18)->andReturn('BRIANHENRYIE_TEST_');
-        $config->expects('getExcludeNamespacesFromPrefixing')->times(6)->andReturn([]);
+        $config->expects('getPackagesToPrefix')->atLeast()->once()->andReturn([]);
+        $config->expects('isIncludeRootAutoload')->atLeast()->once()->andReturnFalse();
+
+        $config->expects('getAbsoluteVendorDirectory')->atLeast()->once()->andReturn('project/vendor');
+
+        $config->expects('getPackagesToCopy')->once()->andReturn([]);
 
         /** @var FileSystem $filesystem */
         $filesystem = $this->getFileSystem();
@@ -58,19 +58,26 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             ],
         ]));
 
-        $filesystem->write('project/vendor/composer/installed.json', json_encode([
-            ]));
+        $filesystem->write('project/vendor-prefixed/composer/installed.json', json_encode([]));
+        $filesystem->write('project/vendor-prefixed/composer/ClassLoader.php', '<?php');
 
+        $filesystem->write('project/vendor/composer/installed.json', json_encode([]));
+        $filesystem->write('project/vendor/composer/InstalledVersions.php', '<?php');
+        $filesystem->write('project/vendor/composer/installed.php', "<?php return array('versions' => array());");
 
         $logger = $this->getLogger();
         $prefixer = Mockery::mock(Prefixer::class);
+
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
 
-        $sut = new DumpAutoload($config, $filesystem, $logger, $prefixer, $fileEnumerator);
+        $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
+        $composerAutoloadGenerator = Mockery::mock(ComposerAutoloadGenerator::class)->makePartial();
+        $composerAutoloadGeneratorFactory->expects('get')->once()->andReturn($composerAutoloadGenerator);
+        $composerAutoloadGenerator->expects('dump')->once();
+
+        $sut = new DumpAutoload($config, $filesystem, $this->getLogger(), $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory);
 
         $sut->generatedPrefixedAutoloader();
-
-        $this->expectNotToPerformAssertions();
     }
 
     /**
@@ -79,18 +86,20 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
      */
     public function test_create_installed_versions_files(): void
     {
+        /** @var AutoloadConfigInterface&PrefixerConfigInterface&FileEnumeratorConfig&MockInterface&LegacyMockInterface $config */
         $config = Mockery::mock(
             AutoloadConfigInterface::class,
             PrefixerConfigInterface::class,
             FileEnumeratorConfig::class
         );
-        $filesystem = $this->getInMemoryFileSystem();
+//        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getFileSystem();
         $logger = $this->getLogger();
 
         $config->expects('isDryRun')->times(1)->andReturn(true);
         $config->expects('getAbsoluteVendorDirectory')->times(2)->andReturn('mem://project/vendor');
-        $config->expects('getAbsoluteTargetDirectory')->times(3)->andReturn('mem://project/vendor-prefixed');
-        $config->expects('isTargetDirectoryVendor')->times(2)->andReturnFalse();
+        $config->expects('getAbsoluteTargetDirectory')->zeroOrMoreTimes()->andReturn('mem://project/vendor-prefixed');
+        $config->expects('isTargetDirectoryVendor')->times(1)->andReturnFalse();
 
         $installedVersions = <<<EOD
 <?php // a core Composer file that is not unique per install.
@@ -189,16 +198,14 @@ EOD;
 
         $projectReplace = Mockery::mock(Prefixer::class);
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
-
-        $fileEnumerator->expects('compileFileListForPaths')->once()->andReturn(new DiscoveredFiles());
-        $config->expects('getNamespacePrefix')->times(2)->andReturn('DumpAutoload\\');
-        $projectReplace->expects('replaceInProjectFiles')->once();
+        $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
         $dumpAutoload = new DumpAutoload(
             $config,
             $filesystem,
             $logger,
             $projectReplace,
-            $fileEnumerator
+            $fileEnumerator,
+            $composerAutoloadGeneratorFactory
         );
         $dumpAutoload->generatedPrefixedAutoloader();
 
@@ -217,7 +224,9 @@ EOD;
 
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
 
-        $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator) extends DumpAutoload {
+        $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
+
+        $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory) extends DumpAutoload {
             public function optimizeEnabledForTest(): bool
             {
                 return $this->isOptimizeAutoloaderEnabled();
@@ -240,7 +249,9 @@ EOD;
         $prefixer = Mockery::mock(Prefixer::class);
         $fileEnumerator = Mockery::mock(FileEnumerator::class);
 
-        $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator) extends DumpAutoload {
+        $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
+
+        $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory) extends DumpAutoload {
             public function optimizeEnabledForTest(): bool
             {
                 return $this->isOptimizeAutoloaderEnabled();

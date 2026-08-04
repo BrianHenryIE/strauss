@@ -22,7 +22,7 @@ class MozartIssue90Test extends IntegrationTestCase
      */
     public function testLibpdfmergeSucceeds(): void
     {
-        $this->markTestSkipped('This fails when php-parser parses. The laptop Im writing on fails with other tests. There is still hope');
+        $this->markTestIncomplete('This fails when php-parser parses. The laptop Im writing on fails with other tests. There is still hope');
 
         // `PHP Fatal error:  Declaration of BrianHenryIE\Strauss\setasign\Fpdi\FpdfTplTrait::setPageFormat($size, $orientation) must be compatible with BrianHenryIE_Strauss_TCPDF::setPageFormat($format, $orientation = 'P') in /tmp/strausstestdir67b0184f95896/vendor-prefixed/setasign/fpdi/src/FpdfTpl.php on line 48`
         // I think this only fails on newer PHP versions where inheritance signatures are checked more strictly.
@@ -36,8 +36,8 @@ class MozartIssue90Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_"
+			"namespace_prefix": "BrianHenryIE\\M90\\",
+			"classmap_prefix": "BrianHenryIE_M90_"
 		}
 	}
 }

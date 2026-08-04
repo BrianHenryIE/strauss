@@ -38,8 +38,8 @@ class MozartIssue124Test extends IntegrationTestCase
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_"
+			"namespace_prefix": "BrianHenryIE\\M124\\",
+			"classmap_prefix": "BrianHenryIE_M124_"
 		}
 	}
 }
@@ -57,7 +57,7 @@ EOD;
         $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/mpdf/mpdf/src/Mpdf.php');
 
         // Confirm problem is gone.
-        self::assertStringNotContainsString('class BrianHenryIE\Strauss\Mpdf implements', $mpdf_php);
+        self::assertStringNotContainsString('class BrianHenryIE\M124\Mpdf implements', $mpdf_php);
 
         // Confirm solution is correct.
         self::assertStringContainsString('class Mpdf implements', $mpdf_php);
@@ -86,8 +86,8 @@ EOD;
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_"
+			"namespace_prefix": "BrianHenryIE\\M124\\",
+			"classmap_prefix": "BrianHenryIE_M124_"
 		}
 	}
 }
@@ -105,7 +105,7 @@ EOD;
         $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/mpdf/mpdf/src/Conversion/DecToOther.php');
 
         // Confirm problem is gone.
-        self::assertStringNotContainsString('public function __construct(BrianHenryIE\Strauss\Mpdf $mpdf)', $mpdf_php);
+        self::assertStringNotContainsString('public function __construct(BrianHenryIE\M124\Mpdf $mpdf)', $mpdf_php);
 
         // Confirm solution is correct.
         self::assertStringContainsString('public function __construct(Mpdf $mpdf)', $mpdf_php);
@@ -131,8 +131,8 @@ EOD;
 	},
 	"extra": {
 		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\Strauss\\",
-			"classmap_prefix": "BrianHenryIE_Strauss_"
+			"namespace_prefix": "BrianHenryIE\\M124\\",
+			"classmap_prefix": "BrianHenryIE_M124_"
 		}
 	}
 }
@@ -153,6 +153,6 @@ EOD;
         self::assertStringNotContainsString('class BarcodeException extends \Mpdf\MpdfException', $mpdf_php);
 
         // Confirm solution is correct.
-        self::assertStringContainsString('class BarcodeException extends \BrianHenryIE\Strauss\Mpdf\MpdfException', $mpdf_php);
+        self::assertStringContainsString('class BarcodeException extends \BrianHenryIE\M124\Mpdf\MpdfException', $mpdf_php);
     }
 }

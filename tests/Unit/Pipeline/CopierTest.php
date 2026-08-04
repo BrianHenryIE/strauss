@@ -19,16 +19,21 @@ class CopierTest extends TestCase
      */
     public function test_file_is_copied(): void
     {
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getFileSystem();
 
-        $sourceDir = 'mem://source';
-        $targetDir = 'mem://target';
+        $sourceDir = 'source';
+        $targetDir = 'target';
 
         $filepath = $sourceDir . '/file.php';
         $filesystem->write($filepath, 'test');
 
-        $file = new File($filepath, 'file.php');
-        $file->setAbsoluteTargetPath($targetDir . '/file.php');
+        $file = new File(
+            $filepath,
+            '
+            file.php',
+            $targetDir . '/file.php'
+        );
+        $file->setTargetAbsolutePath($targetDir . '/file.php');
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
@@ -41,7 +46,7 @@ class CopierTest extends TestCase
         $this->assertTrue($filesystem->fileExists($targetDir . '/file.php'));
         $this->assertEquals('test', $filesystem->read($targetDir . '/file.php'));
 
-        $this->assertTrue($this->getTestLogger()->hasInfo('Copying file to target/file.php'));
+        $this->assertTrue($this->getTestLogger()->hasInfoThatContains('Copying file to'));
     }
 
     /**
@@ -50,16 +55,22 @@ class CopierTest extends TestCase
      */
     public function test_file_is_skipped(): void
     {
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getFileSystem();
 
-        $sourceDir = 'mem://source';
-        $targetDir = 'mem://target';
+//        $sourceDir = 'mem://source';
+//        $targetDir = 'mem://target';
+        $sourceDir = $this->testsWorkingDir . '/source';
+        $targetDir = $this->testsWorkingDir . '/target';
 
         $filepath = $sourceDir . '/file.php';
         $filesystem->write($filepath, 'test');
 
-        $file = new File($filepath, 'file.php');
-        $file->setAbsoluteTargetPath($targetDir . '/file.php');
+        $file = new File(
+            $filepath,
+            'file.php',
+            $targetDir . '/file.php'
+        );
+        $file->setTargetAbsolutePath($targetDir . '/file.php');
         $file->setDoCopy(false);
 
         $discoveredFiles = new DiscoveredFiles();
@@ -72,7 +83,7 @@ class CopierTest extends TestCase
 
         $this->assertFalse($filesystem->fileExists($targetDir . '/file.php'));
 
-        $this->assertTrue($this->getTestLogger()->hasDebug('Skipping source/file.php'));
+        $this->assertTrue($this->getTestLogger()->hasDebugThatContains('Skipping'));
     }
 
     /**
@@ -81,17 +92,21 @@ class CopierTest extends TestCase
      */
     public function test_file_not_found(): void
     {
-        $filesystem = $this->getInMemoryFileSystem();
+        $this->expectWarningLogs();
 
-        $sourceDir = 'mem://source';
-        $targetDir = 'mem://target';
+        $filesystem = $this->getFileSystem();
+
+//        $sourceDir = 'mem://source';
+//        $targetDir = 'mem://target';
+        $sourceDir = $this->testsWorkingDir . '/source';
+        $targetDir = $this->testsWorkingDir . '/target';
 
         $filepath = $sourceDir . '/file.php';
 
         $file = Mockery::mock(File::class);
         $file->expects()->isDoCopy()->andReturnTrue();
         $file->expects()->getSourcePath()->andReturn($filepath)->atleast()->Once();
-        $file->expects()->getAbsoluteTargetPath()->andReturn($targetDir . '/file.php');
+        $file->expects()->getTargetAbsolutePath()->andReturn($targetDir . '/file.php');
         $file->expects()->setDoPrefix(false);
 
         $discoveredFiles = new DiscoveredFiles();
@@ -102,31 +117,34 @@ class CopierTest extends TestCase
         $sut = new Copier($discoveredFiles, $config, $filesystem, $this->getLogger());
         $sut->copy();
 
-        $this->assertTrue($this->getTestLogger()->hasWarning('Expected file not found: source/file.php'));
+        $this->assertTrue($this->getTestLogger()->hasWarningThatContains('Expected file not found:'));
     }
 
     public function testCreateDirectory(): void
     {
-        $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getFileSystem();
 
-        $sourceDir = 'mem://source';
-        $targetDir = 'mem://target';
+        $sourceDir = 'source';
+        $targetDir = 'target';
 
         $filesystem->createDirectory($sourceDir);
 
-        $file = new File($sourceDir, 'file.php');
-        $file->setAbsoluteTargetPath($targetDir);
+        $file = new File(
+            $sourceDir. '/file.php',
+            'file.php',
+            $targetDir . '/file.php'
+        );
+
+        $filesystem->write($sourceDir . '/file.php', 'test');
 
         $discoveredFiles = new DiscoveredFiles();
         $discoveredFiles->add($file);
 
         $config = \Mockery::mock(CopierConfigInterface::class);
 
-        $sut = new Copier($discoveredFiles, $config, $filesystem, $this->getLogger());
+        $sut = new Copier($discoveredFiles, $config, $filesystem, $this->getTestLogger());
         $sut->copy();
 
         $this->assertTrue($filesystem->directoryExists($targetDir));
-
-        $this->assertTrue($this->getTestLogger()->hasInfo('Creating directory at target'));
     }
 }

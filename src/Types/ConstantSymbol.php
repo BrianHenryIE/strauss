@@ -2,7 +2,7 @@
 
 namespace BrianHenryIE\Strauss\Types;
 
-class ConstantSymbol extends DiscoveredSymbol
+class ConstantSymbol extends NamespacedSymbol
 {
 
 }

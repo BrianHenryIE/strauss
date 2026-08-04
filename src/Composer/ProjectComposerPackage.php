@@ -6,7 +6,7 @@
 namespace BrianHenryIE\Strauss\Composer;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Helpers\FileSystem;
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Composer\Factory;
 use Composer\IO\NullIO;
 
@@ -22,7 +22,11 @@ class ProjectComposerPackage extends ComposerPackage
      */
     public function __construct(string $absolutePathFile, ?array $overrideAutoload = null)
     {
-        $composer = Factory::create(new NullIO(), $absolutePathFile, true);
+        $composer = (new Factory())->createComposer(
+            new NullIO(),
+            $absolutePathFile,
+            true
+        );
 
         parent::__construct($composer, $overrideAutoload);
 

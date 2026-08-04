@@ -24,4 +24,6 @@ interface PrefixerConfigInterface
 
     /** @return string[] */
     public function getExcludeFilePatternsFromPrefixing(): array;
+
+    public function isDryRun(): bool;
 }

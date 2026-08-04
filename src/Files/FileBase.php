@@ -3,15 +3,16 @@
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 
 interface FileBase
 {
 
     public function getSourcePath(): string;
 
-    public function getAbsoluteTargetPath(): string;
+    public function getTargetAbsolutePath(): string;
 
-    public function setAbsoluteTargetPath(string $absoluteTargetPath): void;
+    public function setTargetAbsolutePath(string $absoluteTargetPath): void;
 
     public function getVendorRelativePath(): string;
 
@@ -28,6 +29,7 @@ interface FileBase
     public function isDoPrefix(): bool;
 
     /**
+     * Used to mark files that should be deleted after moving when `delete_vendor_files` is enabled.
      * Used to mark files that are symlinked as not-to-be-deleted.
      *
      * @param bool $doDelete
@@ -47,12 +49,15 @@ interface FileBase
 
     public function getDidDelete(): bool;
 
+    public function setDoUpdate(bool $doUpdate): void;
+
+    public function getDoUpdate(): bool;
+
     public function setDidUpdate(): void;
 
     public function addDiscoveredSymbol(DiscoveredSymbol $symbol): void;
 
-    /**
-     * @return array<string, DiscoveredSymbol> The discovered symbols in the file, indexed by their original string name.
-     */
-    public function getDiscoveredSymbols(): array;
+    public function getDiscoveredSymbols(): DiscoveredSymbols;
+
+    public function getNamespaces(): DiscoveredSymbols;
 }

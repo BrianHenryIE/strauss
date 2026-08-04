@@ -8,7 +8,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 /**
  * @phpstan-import-type TraitAliasArray from AutoloadAliasInterface
  */
-class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
+class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
 {
     /**
      * @var string[]
@@ -18,18 +18,18 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
     /**
      * @param string $fqdnClassname
      * @param FileBase $sourceFile
-     * @param ?string $namespace
+     * @param ?NamespaceSymbol $namespace
      * @param ?ComposerPackage $composerPackage
      * @param ?string[] $uses
      */
     public function __construct(
         string $fqdnClassname,
         FileBase $sourceFile,
-        ?string $namespace = null,
+        ?NamespaceSymbol $namespace = null,
         ?ComposerPackage $composerPackage = null,
         ?array $uses = null
     ) {
-        parent::__construct($fqdnClassname, $sourceFile, $namespace ?? '\\', $composerPackage);
+        parent::__construct($fqdnClassname, $sourceFile, $namespace, $composerPackage);
 
         $this->uses = (array) $uses;
     }
@@ -43,6 +43,19 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
     }
 
     /**
+     * In `autoload_aliases.php`, we create aliases for the old trait name by creating a trait for them and `use`ing
+     * the renamed trait.
+     *
+     * ```
+     * trait OriginalName {
+     *     use UpdatedName;
+     * }
+     * ```
+     *
+     * This contains all the methods of the trait and can be used in dev dependencies without renaming their call sites.
+     *
+     * @see AliasAutoloader::traitTemplate()
+     *
      * @return TraitAliasArray
      */
     public function getAutoloadAliasArray(): array
@@ -50,8 +63,8 @@ class TraitSymbol extends DiscoveredSymbol implements AutoloadAliasInterface
         return array (
             'type' => 'trait',
             'traitname' => $this->getOriginalLocalName(),
-            'namespace' => $this->namespace,
-            'use' => [$this->getReplacement()],
+            'namespace' => $this->namespace->getOriginalFqdnName(),
+            'use' => [$this->getReplacementFqdnName()],
         );
     }
 }
