@@ -71,12 +71,7 @@
       "strauss": {
           "namespace_prefix": "BrianHenryIE\\Strauss\\",
           "target_directory": "vendor",
-          "updateCallSites": true,
-          "exclude_from_prefix": {
-              "packages": [
-                  "symfony/polyfill-php84"
-              ]
-          }
+          "updateCallSites": true
       }
     },
     "conflict": {
