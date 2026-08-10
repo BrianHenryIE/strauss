@@ -213,5 +213,6 @@ jobs:
         with:
           branch: master
           file_pattern: "bin/strauss"
+          before_commit_hook: "git pull"
           commit_message: "🤖 Update version number in bin"
         continue-on-error: true

@@ -136,6 +136,7 @@ jobs:
         with:
           repository: gh-pages
           branch: gh-pages
+          before_commit_hook: "git pull"
           commit_message: "🤖 Commit code coverage to gh-pages"
 
       - name: Commit code coverage badge to master/main
@@ -143,6 +144,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           file_pattern: .github/coverage.svg
+          before_commit_hook: "git pull"
           commit_message: "🤖 Commit code coverage badge"
 
       - name: Get changed files
