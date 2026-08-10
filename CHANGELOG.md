@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.29.0
+## 0.29.0 August 2026
 
 * Prefix own dependencies in phar
 * Add `exclude_files_from_update`
@@ -8,6 +8,7 @@
 * Warn when inadvertently deleting symlinked files
 * Fix `exclude_from_prefix` – namespace was updating in class that matched file pattern
 * Use `php-parser` more widely
+* Add `enum` support
 
 ## 0.28.2 
 

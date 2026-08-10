@@ -11,6 +11,7 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Const_;
+use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeFinder;
@@ -49,6 +50,19 @@ trait PhpAstAssertions
         return array_values(array_map(
             static fn(Class_ $class): string => $class->name instanceof Node\Identifier ? $class->name->toString() : '',
             array_filter($classes, static fn(Class_ $class): bool => $class->name instanceof Node\Identifier)
+        ));
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getEnumNames(string $contents): array
+    {
+        $enums = (new NodeFinder())->findInstanceOf($this->parsePhp($contents), Enum_::class);
+
+        return array_values(array_map(
+            static fn(Enum_ $enum): string => $enum->name instanceof Node\Identifier ? $enum->name->toString() : '',
+            array_filter($enums, static fn(Enum_ $enum): bool => $enum->name instanceof Node\Identifier)
         ));
     }
 

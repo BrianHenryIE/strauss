@@ -29,6 +29,7 @@ use RuntimeException;
  * @phpstan-import-type ClassAliasArray from AutoloadAliasInterface
  * @phpstan-import-type InterfaceAliasArray from AutoloadAliasInterface
  * @phpstan-import-type TraitAliasArray from AutoloadAliasInterface
+ * @phpstan-import-type EnumAliasArray from AutoloadAliasInterface
  */
 class Aliases
 {
@@ -49,7 +50,7 @@ class Aliases
     }
 
     /**
-     * @param array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray> $aliasesArray
+     * @param array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray> $aliasesArray
      * @param string|null $autoloadAliasesFunctionsString
      * @return string
      * @throws RuntimeException
@@ -125,7 +126,7 @@ class Aliases
     }
 
     /**
-     * @return array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray>
+     * @return array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray>
      * @throws FilesystemException
      */
     protected function getAliasesArray(DiscoveredSymbols $symbols): array
@@ -134,6 +135,11 @@ class Aliases
 
         foreach ($symbols->toArray() as $originalSymbolFqdn => $symbol) {
             if (!$symbol->isDoRename()) {
+                continue;
+            }
+            // E.g. a global symbol when `classmap_prefix` is disabled: aliasing an unchanged name to itself
+            // would recurse into the autoloader (`class_alias()`) or redeclare the symbol (`extends` shim).
+            if ($originalSymbolFqdn === $symbol->getReplacementFqdnName()) {
                 continue;
             }
             if (!($symbol instanceof AutoloadAliasInterface)) {

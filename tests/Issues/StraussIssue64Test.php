@@ -34,6 +34,8 @@ final class StraussIssue64Test extends IntegrationTestCase
         $exitCode = $this->runStrauss($output);
         $this->assertNotEquals(0, $exitCode);
 
+        $this->assertFileExists($symlinked_package_dir . '/src/File.php');
+
         if (!$this->isTestingWithPhar()) {
             $this->assertTrue($this->getTestLogger()->hasErrorThatContains('Symlinked package detected'), 'Should contain Symlinked package detected');
             $this->assertTrue($this->getTestLogger()->hasNoticeThatContains('COMPOSER_MIRROR_PATH_REPOS=1'), 'Should contain COMPOSER_MIRROR_PATH_REPOS=1');
