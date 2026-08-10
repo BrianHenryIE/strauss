@@ -1,6 +1,11 @@
 #!/usr/bin/env php
 <?php
 call_user_func(function ($version) {
+    // Define ABSPATH to prevent WordPress plugin files from exiting when autoloaded
+    if (!defined('ABSPATH')) {
+        define('ABSPATH', getcwd() . '/');
+    }
+    
     $autoloaders = Phar::running() === ''
         ? [
             __DIR__ . '/../../autoload.php',     // Relative path from vendor/brianhenryie/strauss/bin/strauss to vendor/autoload.php.
