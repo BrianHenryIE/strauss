@@ -8,6 +8,7 @@
 * Warn when inadvertently deleting symlinked files
 * Fix `exclude_from_prefix` – namespace was updating in class that matched file pattern
 * Use `php-parser` more widely
+* Add `enum` support
 
 ## 0.28.2 
 
