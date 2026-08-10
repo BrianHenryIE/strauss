@@ -62,8 +62,10 @@ namespace BrianHenryIE\Strauss {
                 case 'enum':
                     // Enums are final so cannot be aliased with an `extends` shim like classes are; `class_alias()`
                     // makes the original name a true alias of the renamed enum, preserving case identity (`===`),
-                    // `instanceof`, `match` arms and `::from()`. Enums require PHP 8.1, but this only executes when
-                    // an enum is autoloaded by its original name, i.e. on a runtime already using enums.
+                    // `match` arms, `::cases()`, `::from()` and `instanceof` the enum itself. Unlike the class shim,
+                    // the alias does not implement the enum's original interface names, so `instanceof` against an
+                    // original interface name is false. Enums require PHP 8.1, but this only executes when an enum
+                    // is autoloaded by its original name, i.e. on a runtime already using enums.
                     \class_alias(
                         $this->autoloadAliases[$class]['concrete'],
                         $class
