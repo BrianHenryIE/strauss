@@ -64,7 +64,7 @@
         "phpstan/phpstan-mockery": "^2.0",
         "phpstan/phpstan-phpunit": "*",
         "phpunit/phpcov": "*",
-        "phpunit/phpunit": "^9 || ^10 || ^11 || ^12 || ^13",
+        "phpunit/phpunit": "^13.3.0",
         "squizlabs/php_codesniffer": "^4.0"
     },
     "extra": {
