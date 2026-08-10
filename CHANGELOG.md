@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.29.0
+## 0.29.0 August 2026
 
 * Prefix own dependencies in phar
 * Add `exclude_files_from_update`
