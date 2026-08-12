@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.30.0
+
+We copy all files, then enumerate all files and symbols that are autoloaded, apply exclusion rules, perform renames.
+Previously all defined namespaces were assumed to be renamed, now only those that are autoloaded are.
+One odd concession is when a function is defined in a global namespace in a file with an autoloaded class, everything in the file is renamed.
+We don't want to modify classes with custom autoloaders, e.g. Action Scheduler, or polyfills for other namespaces.
+
 ## 0.29.0 August 2026
 
 * Prefix own dependencies in phar

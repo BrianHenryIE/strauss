@@ -32,7 +32,7 @@ abstract class DiscoveredSymbol
 
     protected ?string $localReplacement = null;
 
-    protected bool $doRename = true;
+    protected bool $doRename = false;
 
     // Possibly empty.
     protected DependenciesCollection $dependencies;
@@ -66,6 +66,8 @@ abstract class DiscoveredSymbol
     }
 
     abstract public function isGlobal(): bool;
+
+    abstract public function isAutoloaded(): bool;
 
     /**
      * TODO: Document does this contain or ltrim the leading slash.

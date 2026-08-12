@@ -775,7 +775,6 @@ class Prefixer
                  * @see strauss.phar/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
                  */
                 $prefixLinePrefixesArrays = [
-                    array_merge(explode("\\", $this->config->getNamespacePrefix()), ['Comp'.'oser','Autoload','ClassLoader']),
                     ['BrianHenryIE','Strauss','Comp'.'oser','Autoload','ClassLoader'],
                     ['Comp'.'oser','Autoload','ClassLoader'],
                 ];
@@ -814,7 +813,10 @@ class Prefixer
                             . str_replace('\\', '[\\\\]{1,2}', $originalSymbolString) .
                         ')(
                         '
-                      . ( $alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
+                      // This only applies to namespaces, `"My\\Namespace\\" . $var`.
+                      // The trailing-backslashes-only alternative matches namespace prefix strings compared
+                      // against FQDNs, e.g. `substr($className, 0, 16) === 'PHP_CodeSniffer\\'`.
+                      . ( $alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*|[\\\\]{1,2})?' : '' ) .
                       ( $alsoSearchForStaticProperty ? '(:{2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
                       '
                             ' . ($requireSurroundingQuotes ? '[\'"]' : '' ) .'
@@ -1334,7 +1336,7 @@ class Prefixer
         return $this->changedFiles;
     }
 
-    public function prefixComposerAutoloadFiles(string $absoluteDirectory): void
+    public function prefixComposerAutoloadFiles(string $absoluteDirectory, DiscoveredFiles $discoveredFiles): void
     {
         $this->logger->debug("Prefixing the Composer autoload files in {path}.", [
             'path' => $absoluteDirectory,
@@ -1356,8 +1358,6 @@ class Prefixer
         ];
 
         $composerFiles = [];
-
-        $discoveredFiles = new DiscoveredFiles();
 
         foreach ($composerFilePaths as $filePath) {
             if ($this->filesystem->fileExists($absoluteDirectory . '/composer/' . $filePath)) {
@@ -1402,6 +1402,7 @@ class Prefixer
             $namespaceSymbol->setLocalReplacement(
                 $this->config->getNamespacePrefix() . '\\' . preg_replace('#^(BrianHenryIE\\\\Strauss\\\\)*#', '', $namespaceString)
             );
+            $namespaceSymbol->setDoRename(true);
             $discoveredSymbols->add($namespaceSymbol);
         }
 
@@ -1415,6 +1416,7 @@ class Prefixer
                 $composerFiles[ basename($absolutePath) ],
                 $namespace,
             );
+            $classLoaderSymbol->setDoRename(true);
             $discoveredSymbols->add($classLoaderSymbol);
         }
 

@@ -67,6 +67,12 @@ class ChangeEnumerator
 
                 $namespacePrefix = $this->config->getNamespacePrefix();
                 if (! is_null($namespacePrefix)) {
+                    // This is being done elsewhere but is probably more appropriate here,
+                    // I'm worried if I change it now it will affect the directory structure.
+//                    if ($symbol instanceof Psr0NamespaceSymbol) {
+//                        $namespacePrefix = str_replace('\\', '_', rtrim($namespacePrefix, '\\')).'_' ;
+//                    }
+
                     $stripPattern   = '~^(' . preg_quote($namespacePrefix, '~') . '\\\\*)*(.*)~';
                     $strippedSymbol = preg_replace(
                         $stripPattern,

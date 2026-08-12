@@ -63,4 +63,11 @@ interface MarkSymbolsForRenamingConfigInterface
      * @return string[]
      */
     public function getExcludeConstantNames(): array;
+
+    /**
+     * All specific replacements obviously should be marked for renaming.
+     *
+     * @return array<string, string>
+     */
+    public function getNamespaceReplacementPatterns(): array;
 }

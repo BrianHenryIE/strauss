@@ -8,7 +8,7 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\IntegrationTestCase;
-use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
+use BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator;
 
 /**
  * @package BrianHenryIE\Strauss\Tests\Issues

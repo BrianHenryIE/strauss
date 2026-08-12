@@ -18,6 +18,7 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 class NamespacedSymbol extends DiscoveredSymbol
 {
     protected NamespaceSymbol $namespace;
+    protected bool $isAutoloaded = false;
 
     public function __construct(
         string $fqdnSymbol,
@@ -108,5 +109,15 @@ class NamespacedSymbol extends DiscoveredSymbol
             }
         }
         return null;
+    }
+
+    public function setIsAutoloaded(bool $true)
+    {
+        $this->isAutoloaded = $true;
+    }
+
+    public function isAutoloaded(): bool
+    {
+        return $this->isAutoloaded || $this->getNamespace()->isAutoloaded();
     }
 }

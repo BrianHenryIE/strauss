@@ -10,7 +10,7 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
+use BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
@@ -169,27 +169,32 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     {
         $this->logger->info('Determining changes...');
 
+        /**
+         * We have all files from {@see FileEnumerator::compileFileListForPaths()}, now we find what classes,
+         * interfaces, constants etc are defined in those files.
+         */
         $fileScanner = new FileSymbolScanner(
             $config,
             $this->discoveredSymbols,
             $this->filesystem
         );
-
         $fileScanner->findInFiles($this->discoveredFiles);
 
-        $autoloadFilesEnumerator = new AutoloadedFilesEnumerator(
+        // Determine which files and symbols are autoloaded by Composer.
+        $autoloadFilesEnumerator = new AutoloadedEnumerator(
             $config,
             $this->filesystem,
             $this->logger
         );
-        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree);
+        $autoloadFilesEnumerator->scanSetIsAutoloaded($this->discoveredFiles, $this->discoveredSymbols);
 
+        // Symbols defined in autoloaded files are renamed unless marked as excluded.
         $markSymbolsForRenaming = new MarkSymbolsForRenaming(
             $this->config,
             $this->filesystem,
             $this->logger
         );
-        $markSymbolsForRenaming->scanSymbols($this->discoveredSymbols);
+        $markSymbolsForRenaming->scanSetDoRename($this->discoveredSymbols);
 
         $changeEnumerator = new ChangeEnumerator(
             $config,

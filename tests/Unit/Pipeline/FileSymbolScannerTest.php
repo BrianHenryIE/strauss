@@ -1131,7 +1131,6 @@ EOD;
         $this->assertInstanceOf(EnumSymbol::class, $statusEnum);
         $this->assertSame('string', $statusEnum->getBackingType());
         $this->assertContains('My\NS\HasLabel', $statusEnum->getInterfaces());
-        $this->assertTrue($statusEnum->isDoRename());
 
         $directionEnum = $result->getEnum('My\NS\Direction');
         $this->assertInstanceOf(EnumSymbol::class, $directionEnum);

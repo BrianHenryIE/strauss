@@ -93,10 +93,17 @@ EOD;
 
         // vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Serializer.php
         // vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/Strauss/HTMLPurifier/DefinitionCache/Serializer.php
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier/DefinitionCache/Serializer.php'));
+        $expectedFilePath = '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier/DefinitionCache/Serializer.php';
+        $this->assertTrue(
+            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
+            "Expected file not found at: " . $expectedFilePath
+        );
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier/DefinitionCache/Serializer.php');
         $this->assertStringContainsString('class BrianHenryIE_TestStrauss_HTMLPurifier_DefinitionCache_Serializer', $phpString);
+
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier.func.php');
+        $this->assertStringContainsString('function brianhenryie_teststrauss_HTMLPurifier', $phpString);
 
         $installedJson = json_decode($this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json'), true);
         $this->assertEquals('BrianHenryIE_TestStrauss_HTMLPurifier', array_key_first($installedJson['packages'][0]['autoload']['psr-0']));

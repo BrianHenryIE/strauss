@@ -24,7 +24,7 @@ class MarkSymbolsForRenamingTest extends TestCase
      * This is the fix for the bug where symbols from excluded packages were still being prefixed,
      * causing references to those packages to break.
      *
-     * @covers ::scanSymbols
+     * @covers ::scanSetDoRename
      * @covers ::isExcludeFromCopyPackage
      */
     public function testExcludedPackageSymbolsNotMarkedForRenaming(): void
@@ -46,6 +46,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('vendor');
         $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed');
         $config->shouldReceive('isTargetDirectoryVendor')->andReturnFalse();
+        $config->shouldReceive('getNamespaceReplacementPatterns')->andReturn([]);
 
         $filesystem = Mockery::mock(FileSystem::class);
 
@@ -58,13 +59,15 @@ class MarkSymbolsForRenamingTest extends TestCase
             'project/vendor-prefixed/psr/log/src/LoggerInterface.php'
         );
         $symbol = new NamespaceSymbol('Psr\Log', $file);
+        $symbol->setIsAutoloaded(true);
+        $symbol->setDoRename(true);
 
         $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($symbol);
 
-        $sut->scanSymbols($discoveredSymbols);
+        $sut->scanSetDoRename($discoveredSymbols);
 
         $this->assertFalse($symbol->isDoRename(), 'Symbol from excluded package should have doRename=false');
     }
@@ -74,7 +77,7 @@ class MarkSymbolsForRenamingTest extends TestCase
      *
      * This verifies the fix doesn't break normal operation.
      *
-     * @covers ::scanSymbols
+     * @covers ::scanSetDoRename
      * @covers ::isExcludeFromCopyPackage
      */
     public function testNonExcludedPackageSymbolsStillMarkedForRenaming(): void
@@ -93,6 +96,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getExcludeConstantNames')->andReturn([]);
         $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('vendor');
         $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('vendor-prefixed');
+        $config->shouldReceive('getNamespaceReplacementPatterns')->andReturn([]);
         $config->shouldReceive('isTargetDirectoryVendor')->andReturnFalse();
 
         $filesystem = Mockery::mock(FileSystem::class);
@@ -105,13 +109,15 @@ class MarkSymbolsForRenamingTest extends TestCase
             'vendor-prefixed/monolog/monolog/src/Logger.php'
         );
         $symbol = new NamespaceSymbol('Monolog', $file);
+        $symbol->setIsAutoloaded(true);
+        $symbol->setDoRename(true);
 
         $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($symbol);
 
-        $sut->scanSymbols($discoveredSymbols);
+        $sut->scanSetDoRename($discoveredSymbols);
 
         $this->assertTrue($symbol->isDoRename(), 'Symbol from non-excluded package should remain doRename=true');
     }
@@ -119,7 +125,7 @@ class MarkSymbolsForRenamingTest extends TestCase
     /**
      * Constants listed in exclude_constants.constants should NOT be marked for renaming.
      *
-     * @covers ::scanSymbols
+     * @covers ::scanSetDoRename
      * @covers ::isExcludeConstants
      * @covers ::isExcludeConstantName
      */
@@ -140,6 +146,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('vendor');
         $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('vendor');
         $config->shouldReceive('isTargetDirectoryVendor')->andReturnFalse();
+        $config->shouldReceive('getNamespaceReplacementPatterns')->andReturn([]);
 
         $filesystem = Mockery::mock(FileSystem::class);
 
@@ -160,13 +167,15 @@ class MarkSymbolsForRenamingTest extends TestCase
         $file->addAutoloader('classmap');
 
         $symbol = new ConstantSymbol('WP_PLUGIN_DIR', $file, new NamespaceSymbol('\\'));
+        $symbol->setIsAutoloaded(true);
+        $symbol->setDoRename(true);
 
         $this->assertTrue($symbol->isDoRename(), 'Precondition: symbol starts with doRename=true');
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($symbol);
 
-        $sut->scanSymbols($discoveredSymbols);
+        $sut->scanSetDoRename($discoveredSymbols);
 
         $this->assertFalse($symbol->isDoRename(), 'Constant in exclude_constants.constants should have doRename=false');
     }

@@ -10,6 +10,8 @@ namespace BrianHenryIE\Strauss\Types;
 
 class NamespaceSymbol extends DiscoveredSymbol
 {
+    protected bool $isAutoloaded = false;
+
     public function isGlobal(): bool
     {
         return $this->fqdnOriginalSymbol === '\\';
@@ -18,5 +20,15 @@ class NamespaceSymbol extends DiscoveredSymbol
     public function isChangedNamespace(): bool
     {
         return $this->getLocalReplacement() !== $this->getOriginalFqdnName();
+    }
+
+    public function setIsAutoloaded(bool $isAutoloaded): void
+    {
+        $this->isAutoloaded = $isAutoloaded;
+    }
+
+    public function isAutoloaded(): bool
+    {
+        return $this->isAutoloaded && $this->localOriginalSymbol !== '\\';
     }
 }

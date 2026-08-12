@@ -9,6 +9,7 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use Composer\Factory;
@@ -60,7 +61,7 @@ class PrefixComposerAutoloadFilesCommand extends AbstractRenamespacerCommand
                 $this->logger
             );
 
-            $replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
+            $replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory(), new DiscoveredFiles([]));
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 

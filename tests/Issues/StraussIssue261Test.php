@@ -11,7 +11,7 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 
 /**
  * @coversNothing
- * @see AutoloadedFilesEnumerator
+ * @see AutoloadedEnumerator
  */
 class StraussIssue261Test extends IntegrationTestCase
 {

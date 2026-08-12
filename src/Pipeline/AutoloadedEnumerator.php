@@ -8,7 +8,13 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespacedSymbol;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\ClassMapGenerator\ClassMapGenerator;
 use League\Flysystem\FilesystemException;
 use PhpParser\NodeFinder;
@@ -17,7 +23,10 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use SplFileInfo;
 
-class AutoloadedFilesEnumerator
+/**
+ * @phpstan-import-type AutoloadKeyArray from ComposerPackage
+ */
+class AutoloadedEnumerator
 {
     use LoggerAwareTrait;
 
@@ -34,12 +43,196 @@ class AutoloadedFilesEnumerator
         $this->setLogger($logger);
     }
 
-    public function scanForAutoloadedFiles(DependenciesCollection $dependencies): void
+    /**
+     * If a namespace is in a `psr-0` or `psr-4` key, mark the symbol as autoloaded.
+     * If a file is in a `files` or `classmap` key, mark the file as autoloaded
+     *
+     * If a file contains a namespace that is autoloaded, mark the file as autoloaded.
+     * If a file is in a `files` or `classmap` key, mark its namespace symbol as autoloaded.
+     *
+     * @param DiscoveredFiles $discoveredFiles
+     * @param DiscoveredSymbols $discoveredSymbols
+     */
+    public function scanSetIsAutoloaded(DiscoveredFiles $discoveredFiles, DiscoveredSymbols $discoveredSymbols): void
     {
-        foreach ($dependencies as $dependency) {
-            $this->scanPackage($dependency);
+        /** @var NamespaceSymbol $namespaceSymbol */
+        foreach ($discoveredSymbols->getNamespaces() as $namespaceSymbol) {
+            if ($this->isNamespaceInPsr0Autoloader($namespaceSymbol)
+                || $this->isNamespaceInPsr4Autoloader($namespaceSymbol)) {
+                $namespaceSymbol->setIsAutoloaded(true);
+            }
+        }
+
+        foreach ($discoveredFiles as $file) {
+            if (!$file->isPhpFile()) {
+                continue;
+            }
+
+            if (!($file instanceof FileWithDependency)) {
+                continue;
+            }
+
+            foreach ($file->getDiscoveredSymbols() as $symbol) {
+                if ($symbol instanceof NamespacedSymbol) {
+                    if ($symbol->getNamespace()->isAutoloaded()
+                        || $this->isSymbolInFilesAutoloader($symbol)
+                        || $this->isSymbolInClassmapAutoloader($symbol)
+                    ) {
+                        $file->setIsAutoloaded(true);
+                        $symbol->setIsAutoloaded(true);
+                        if (!$symbol->getNamespace()->isGlobal()) {
+                            $symbol->getNamespace()->setIsAutoloaded(true);
+                        }
+                    }
+                }
+            }
+
+            if ($this->isFileInPsr0Autoloader($file)) {
+                $file->setIsAutoloaded(true);
+                foreach ($file->getDiscoveredSymbols() as $symbol) {
+                    if ($symbol instanceof NamespaceSymbol && $symbol->isGlobal()) {
+                        continue;
+                    }
+                    $symbol->setIsAutoloaded(true);
+                }
+            }
+
+            // If any symbol in a file is autoloaded, mark them all as autoloaded.
+            // E.g. twig_cycle
+            // TODO: log here so people know they're using a weird package.
+            $isAutoloadedSymbolInFile = array_reduce(
+                $file->getDiscoveredSymbols()->toArray(),
+                fn(bool $carry, DiscoveredSymbol $fileSymbol) => $carry || $fileSymbol->isAutoloaded(),
+                false
+            );
+            if ($isAutoloadedSymbolInFile) {
+                $file->setIsAutoloaded(true);
+                foreach ($file->getDiscoveredSymbols() as $fileSymbol) {
+                    $fileSymbol->setIsAutoloaded(true);
+                }
+            }
         }
     }
+
+    protected function isNamespaceInPsr0Autoloader(NamespaceSymbol $namespaceSymbol): bool
+    {
+        foreach ($namespaceSymbol->getDependencies() as $package) {
+            /** @var AutoloadKeyArray $packageAutoload */
+            $packageAutoload = $package->getAutoload();
+
+            foreach ($packageAutoload['psr-0'] ?? [] as $namespaceString => $directories) {
+                if (str_starts_with($namespaceSymbol->getOriginalFqdnName(), trim($namespaceString, '\\'))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    protected function isNamespaceInPsr4Autoloader(NamespaceSymbol $namespaceSymbol): bool
+    {
+        foreach ($namespaceSymbol->getDependencies() as $package) {
+            /** @var AutoloadKeyArray $packageAutoload */
+            $packageAutoload = $package->getAutoload();
+
+            /**
+             * @var string $namespaceString
+             * @var string|string[] $directories
+             */
+            foreach ($packageAutoload['psr-4'] ?? [] as $namespaceString => $directories) {
+                if (str_starts_with($namespaceSymbol->getOriginalFqdnName(), trim($namespaceString, '\\'))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    protected function isSymbolInFilesAutoloader(NamespacedSymbol $symbol): bool
+    {
+        foreach ($symbol->getDependencies() as $package) {
+            /** @var AutoloadKeyArray $packageAutoload */
+            $packageAutoload = $package->getAutoload();
+
+            // if a file is in a `files` list
+            if (isset($packageAutoload['files'])) {
+                $filesPaths = $packageAutoload['files'];
+                foreach ($symbol->getSourceFiles() as $symbolFile) {
+                    foreach ($filesPaths as $path) {
+                        if (str_starts_with($symbolFile->getPackageRelativePath(), $path)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    protected function isSymbolInClassmapAutoloader(NamespacedSymbol $symbol): bool
+    {
+        foreach ($symbol->getDependencies() as $package) {
+            /** @var AutoloadKeyArray $packageAutoload */
+            $packageAutoload = $package->getAutoload();
+
+            // Does the package have a `autoload`.`classmap` array at all?
+            if (!isset($packageAutoload['classmap'])) {
+                continue;
+            }
+
+            // If a file is in a `classmap` directory.
+            // TODO: are these entries strictly directories?
+            $classmapPaths = $packageAutoload['classmap'] ?? [];
+            $excludeClassmapPaths = $packageAutoload['exclude_from_classmap'] ?? [];
+            /** @var FileWithDependency $symbolFile */
+            foreach ($symbol->getSourceFiles() as $symbolFile) {
+                foreach ($classmapPaths as $path) {
+                    // TODO: Does this need `trim()`?
+                    foreach ($excludeClassmapPaths as $excludePath) {
+                        if (str_starts_with($symbolFile->getPackageRelativePath(), $excludePath)) {
+                            continue 2;
+                        }
+                    }
+
+                    // All classes etc. in the package are autoloaded.
+                    if ('.' === $path) {
+                        return true;
+                    }
+
+                    // TODO: Does this need `trim()`?
+                    if (str_starts_with($symbolFile->getPackageRelativePath(), $path)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    protected function isFileInPsr0Autoloader(FileWithDependency $file): bool
+    {
+        $package = $file->getDependency();
+        foreach ($package->getAutoload()['psr-0'] ?? [] as $namespaceString => $directories) {
+            foreach ((array) $directories as $directory) {
+                if (str_starts_with(
+                    ltrim($file->getPackageRelativePath(), '\\'),
+                    ltrim($directory, '\\')
+                )) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    //    public function scanForAutoloadedFiles(DependenciesCollection $dependencies): void
+//    {
+//        foreach ($dependencies as $dependency) {
+//            $this->scanPackage($dependency);
+//        }
+//    }
 
     /**
      * Read the autoload keys of the dependencies and marks the appropriate files to be prefixed

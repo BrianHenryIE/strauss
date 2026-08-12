@@ -13,7 +13,7 @@ use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
-use BrianHenryIE\Strauss\Pipeline\AutoloadedFilesEnumerator;
+use BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
@@ -166,8 +166,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->discoveredSymbols = new DiscoveredSymbols();
 
             $this->enumeratePsrNamespaces();
-            $this->enumerateAutoloadedFiles();
             $this->scanFilesForSymbols();
+            $this->enumerateAutoloadedFiles();
             $this->analyseFilesToCopy();
             $this->markSymbolsForRenaming();
             $this->determineChanges();
@@ -359,6 +359,9 @@ class DependenciesCommand extends AbstractRenamespacerCommand
                                 ? new Psr0NamespaceSymbol(trim($namespace, '\\'))
                                 : new NamespaceSymbol(trim($namespace, '\\'));
 
+                            $symbol->setIsAutoloaded(true);
+                            $symbol->setDoRename(true);
+
                             $this->discoveredSymbols->add($symbol);
                             $symbol->addDependency($package);
                             $package->addDiscoveredSymbol($symbol);
@@ -371,21 +374,9 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
     }
 
-    protected function enumerateAutoloadedFiles(): void
-    {
-        $this->logger->notice('Enumerating autoload files...');
-
-        $autoloadFilesEnumerator = new AutoloadedFilesEnumerator(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-        $autoloadFilesEnumerator->scanForAutoloadedFiles($this->flatDependencyTree);
-    }
-
     protected function scanFilesForSymbols(): void
     {
-        $this->logger->notice('Scanning files...');
+        $this->logger->notice('Scanning files for defined symbols...');
 
         $fileSymbolScanner = new FileSymbolScanner(
             $this->config,
@@ -397,8 +388,21 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $fileSymbolScanner->findInFiles($this->discoveredFiles);
     }
 
+    protected function enumerateAutoloadedFiles(): void
+    {
+        $this->logger->notice('Enumerating autoloaded files and symbols...');
+
+        $autoloadFilesEnumerator = new AutoloadedEnumerator(
+            $this->config,
+            $this->filesystem,
+            $this->logger
+        );
+        $autoloadFilesEnumerator->scanSetIsAutoloaded($this->discoveredFiles, $this->discoveredSymbols);
+    }
+
     protected function markSymbolsForRenaming(): void
     {
+        $this->logger->notice('Marking symbols to rename...');
 
         $markSymbolsForRenaming = new MarkSymbolsForRenaming(
             $this->config,
@@ -406,7 +410,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger
         );
 
-        $markSymbolsForRenaming->scanSymbols($this->discoveredSymbols);
+        $markSymbolsForRenaming->scanSetDoRename($this->discoveredSymbols);
     }
 
     protected function determineChanges(): void
@@ -441,7 +445,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
 
         if ($this->config->isTargetDirectoryVendor()) {
-            // PSR-0 files need to be moved.
+            // Only PSR-0 files need to be moved when target is vendor, otherwise everything is copied.
             foreach ($this->discoveredFiles->getPsr0() as $file) {
                 if ($file->getSourcePath() === $file->getTargetAbsolutePath()) {
                     continue;
@@ -624,7 +628,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     protected function prefixComposerAutoloadFiles() : void
     {
 
-        $this->replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
+        $this->replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory(), $this->discoveredFiles);
     }
 
     /**

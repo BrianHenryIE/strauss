@@ -67,6 +67,7 @@ class EnumSymbolTest extends TestCase
     {
         $namespace = new NamespaceSymbol('Foo\Bar');
         $namespace->setLocalReplacement('Prefix\Foo\Bar');
+        $namespace->setDoRename(true);
 
         $sut = new EnumSymbol(
             'Foo\Bar\Status',
@@ -75,6 +76,7 @@ class EnumSymbolTest extends TestCase
             'string',
             ['Foo\Bar\HasLabel']
         );
+        $sut->setDoRename(true);
 
         $this->assertSame(
             array(
@@ -100,6 +102,7 @@ class EnumSymbolTest extends TestCase
             $namespace
         );
         $sut->setLocalReplacement('Prefix_Status');
+        $sut->setDoRename(true);
 
         $this->assertSame(
             array(

@@ -400,6 +400,8 @@ JSON;
      *
      * @see AutoloadGenerator::getStaticFile()
      * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+     *
+     * @see Prefixer::prefixComposerAutoloadFiles()
      */
     public function test_ClassLoader(): void
     {
