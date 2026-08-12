@@ -184,6 +184,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     {
         return new DiscoveredSymbols(
             array_merge(
+                $this->types[self::CONST_SYMBOL],
+                $this->types[self::FUNCTION_SYMBOL],
                 $this->types[self::CLASS_SYMBOL],
                 $this->types[self::TRAIT_SYMBOL],
                 $this->types[self::INTERFACE_SYMBOL],

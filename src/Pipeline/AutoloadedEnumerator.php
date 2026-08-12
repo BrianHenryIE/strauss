@@ -8,6 +8,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
+use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
@@ -46,10 +47,10 @@ class AutoloadedEnumerator
 
     /**
      * If a namespace is in a `psr-0` or `psr-4` key, mark the symbol as autoloaded.
+     * If a file contains a namespace that is autoloaded, mark the file as autoloaded.
      * If a file is in a `files` or `classmap` key, mark the file as autoloaded
      *
-     * If a file contains a namespace that is autoloaded, mark the file as autoloaded.
-     * If a file is in a `files` or `classmap` key, mark its namespace symbol as autoloaded.
+     * If a file is in a `files` or `classmap` key, mark all its symbols as autoloaded.
      *
      * @param DiscoveredFiles $discoveredFiles
      * @param DiscoveredSymbols $discoveredSymbols
@@ -58,76 +59,140 @@ class AutoloadedEnumerator
     {
         /** @var NamespaceSymbol $namespaceSymbol */
         foreach ($discoveredSymbols->getNamespaces() as $namespaceSymbol) {
-            if ($this->isNamespaceInPsr0Autoloader($namespaceSymbol)
-                || $this->isNamespaceInPsr4Autoloader($namespaceSymbol)) {
-                $namespaceSymbol->setIsAutoloaded(true);
+            /**
+             * A namespace may have already been marked as autoloaded when read from the autoload key itself.
+             * I.e. some root namespaces `BrianHenryIE\\` are valid namespace but contain no symbols.
+             *
+             * @see DependenciesCommand::enumeratePsrNamespaces()
+             */
+            if ($this->isNamespaceInPsr4Autoloader($namespaceSymbol)) {
+                if (!$namespaceSymbol->isAutoloaded()) {
+                    $this->logger->info($namespaceSymbol->getPackageName() . ' ' . $namespaceSymbol->getOriginalLocalName() . ' namespace marked autoloaded by psr-4');
+                    $namespaceSymbol->setIsAutoloaded(true);
+                }
+                /** @var FileWithDependency $file */
+                foreach ($namespaceSymbol->getSourceFiles() as $file) {
+                    if (!$file->isAutoloaded()) {
+                        $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it contains autoloaded psr-4 namespace ' . $namespaceSymbol->getOriginalLocalName());
+                        $file->setIsAutoloaded(true);
+                    }
+                }
+            }
+            if ($this->isNamespaceInPsr0Autoloader($namespaceSymbol)) {
+                if (!$namespaceSymbol->isAutoloaded()) {
+                    $this->logger->info($namespaceSymbol->getOriginalLocalName() . ' namespace marked autoloaded by psr-0');
+                    $namespaceSymbol->setIsAutoloaded(true);
+                }
+
+                /** @var FileWithDependency $file */
+                foreach ($namespaceSymbol->getSourceFiles() as $file) {
+                    if (!$file->isAutoloaded()) {
+                        $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it contains autoloaded psr-0 namespace ' . $namespaceSymbol->getOriginalLocalName());
+                        $file->setIsAutoloaded(true);
+                    }
+                }
             }
         }
 
         foreach ($discoveredFiles as $file) {
-            if (!$file->isPhpFile()) {
+            if (! $file->isPhpFile()) {
                 continue;
             }
 
-            if (!($file instanceof FileWithDependency)) {
+            if (! ( $file instanceof FileWithDependency )) {
                 continue;
             }
 
-            foreach ($file->getDiscoveredSymbols() as $symbol) {
-                if ($symbol instanceof NamespacedSymbol) {
-                    if ($symbol->getNamespace()->isAutoloaded()
-                        || $this->isSymbolInFilesAutoloader($symbol)
-                        || $this->isSymbolInClassmapAutoloader($symbol)
-                    ) {
+            if (! $file->isAutoloaded() && $this->isFileInClassmapAutoloader($file)) {
+                $this->logger->info($file->getVendorRelativePath() . ' autoloaded by classmap autoloader');
+                $file->setIsAutoloaded(true);
+            }
+
+            if (! $file->isAutoloaded() && $this->isFileInFilesAutoloader($file)) {
+                $this->logger->info($file->getVendorRelativePath() . ' autoloaded by files autoloader');
+                $file->setIsAutoloaded(true);
+            }
+
+            /** @var NamespacedSymbol $namespacedSymbol */
+            if (! $file->isAutoloaded()) {
+                foreach ($file->getDiscoveredSymbols()->getNamespacedSymbols() as $namespacedSymbol) {
+                    if ($namespacedSymbol->isAutoloaded()) {
+                        $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it contains autoloaded symbol ' . $namespacedSymbol->getOriginalLocalName());
                         $file->setIsAutoloaded(true);
-                        $symbol->setIsAutoloaded(true);
-                        if (!$symbol->getNamespace()->isGlobal()) {
-                            $symbol->getNamespace()->setIsAutoloaded(true);
+                    }
+                    unset($namespacedSymbol);
+                }
+            }
+
+            if (!$file->isAutoloaded() && $this->isFileInPsr0Autoloader($file)) {
+                $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it is in a psr-0 autoloaded directory');
+                $file->setIsAutoloaded(true);
+                foreach ($file->getDiscoveredSymbols() as $symbol) {
+                    if (!$symbol->isAutoloaded()) {
+                        switch (true) {
+                            case $symbol instanceof NamespacedSymbol && $symbol->getNamespaceName() === '\\':
+                                break;
+                            case $symbol instanceof NamespacedSymbol:
+                            case $symbol instanceof NamespaceSymbol:
+                                $this->logger->info($symbol->getOriginalLocalName() . ' marked autoloaded because it is autoloaded file ' . $file->getPackageRelativePath());
+                                $symbol->setIsAutoloaded(true);
+                                break;
+                            default:
+                                throw new Exception('unimplemented');
                         }
                     }
                 }
             }
 
-            if ($this->isFileInPsr0Autoloader($file)) {
-                $file->setIsAutoloaded(true);
-                foreach ($file->getDiscoveredSymbols() as $symbol) {
-                    switch (true) {
-                        case $symbol instanceof NamespacedSymbol && $symbol->getNamespaceName() === '\\':
-                            break;
-                        case $symbol instanceof NamespacedSymbol:
-                        case $symbol instanceof NamespaceSymbol:
-                            $symbol->setIsAutoloaded(true);
-                            break;
-                        default:
-                            throw new Exception('unimplemented');
+            /** @var NamespacedSymbol $namespacedSymbol */
+            foreach ($file->getDiscoveredSymbols()->getNamespacedSymbols() as $namespacedSymbol) {
+                if (! $namespacedSymbol->isAutoloaded() && $file->isAutoloaded()) {
+                    $this->logger->info($namespacedSymbol->getOriginalLocalName() . ' marked autoloaded because it is in autoloaded file ' . $file->getPackageRelativePath());
+                    $namespacedSymbol->setIsAutoloaded(true);
+                }
+            }
+        }
+
+        // This should already be correct.
+        do {
+            $foundCount = 0;
+
+            // Mark all files a symbols is defined in as autoloaded (maybe this is the wrong terminology).
+            foreach ($discoveredSymbols->getNamespacedSymbols() as $symbol) {
+                // Already marked.
+                if ($symbol->isAutoloaded()) {
+                    continue;
+                }
+
+                /** @var FileWithDependency $file */
+                foreach ($symbol->getSourceFiles() as $file) {
+                    if (!$file->isAutoloaded()) {
+                        // Not relevant.
+                        continue;
                     }
+                    $this->logger->info($symbol->getOriginalLocalName() . ' marked autoloaded because it is in autoloaded file ' . $file->getPackageRelativePath());
+                    $symbol->setIsAutoloaded(true);
+                    $foundCount++;
                 }
             }
 
             // If any symbol in a file is autoloaded, mark them all as autoloaded.
-            // E.g. twig_cycle
-            // TODO: log here so people know they're using a weird package.
-            $isAutoloadedSymbolInFile = array_reduce(
-                $file->getDiscoveredSymbols()->toArray(),
-                fn(bool $carry, DiscoveredSymbol $fileSymbol) => $carry || $fileSymbol->isAutoloaded(),
-                false
-            );
-            if ($isAutoloadedSymbolInFile) {
-                $file->setIsAutoloaded(true);
+            foreach ($discoveredFiles as $file) {
+                // Already marked
+                if ($file->isAutoloaded()) {
+                    continue;
+                }
                 foreach ($file->getDiscoveredSymbols() as $symbol) {
-                    switch (true) {
-                        case $symbol instanceof NamespacedSymbol && $symbol->getNamespaceName() === '\\':
-                            break;
-                        case $symbol instanceof NamespacedSymbol:
-                        case $symbol instanceof NamespaceSymbol:
-                            $symbol->setIsAutoloaded(true);
-                            break;
-                        default:
-                            throw new Exception('unimplemented');
+                    if (!$symbol->isAutoloaded()) {
+                        // Not relevant.
+                        continue;
                     }
+                    $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because contains autoloaded symbol ' . $symbol->getOriginalLocalName());
+                    $file->setIsAutoloaded(true);
+                    $foundCount++;
                 }
             }
-        }
+        } while ($foundCount !== 0);
     }
 
     protected function isNamespaceInPsr0Autoloader(NamespaceSymbol $namespaceSymbol): bool
@@ -162,6 +227,59 @@ class AutoloadedEnumerator
             }
         }
 
+        return false;
+    }
+
+    protected function isFileInFilesAutoloader(FileWithDependency $file): bool
+    {
+        $package = $file->getDependency();
+        /** @var AutoloadKeyArray $packageAutoload */
+        $packageAutoload = $package->getAutoload();
+
+        // if a file is in a `files` list
+        if (isset($packageAutoload['files'])) {
+            $filesRelativePaths = $packageAutoload['files'];
+
+            foreach ($filesRelativePaths as $path) {
+                if ($file->getPackageRelativePath() === $path) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    protected function isFileInClassmapAutoloader(FileWithDependency $file): bool
+    {
+        $package = $file->getDependency();
+        /** @var AutoloadKeyArray $packageAutoload */
+        $packageAutoload = $package->getAutoload();
+
+        // if a file is in a `classmap` list
+        if (isset($packageAutoload['classmap'])) {
+            $directoryRelativePaths = $packageAutoload['classmap'];
+
+            $excludeClassmapPaths = $packageAutoload['exclude_from_classmap'] ?? [];
+
+            foreach ($directoryRelativePaths as $path) {
+                foreach ($excludeClassmapPaths as $excludePath) {
+                    if (str_starts_with($file->getPackageRelativePath(), $excludePath)) {
+                        continue 2;
+                    }
+                }
+
+                // All classes etc. in the package are autoloaded.
+                if ('.' === $path) {
+                    return true;
+                }
+
+
+                // TODO: Does this need `trim()`?
+                if (str_starts_with($file->getPackageRelativePath(), $path)) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 

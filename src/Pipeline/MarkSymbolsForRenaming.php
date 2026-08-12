@@ -102,6 +102,8 @@ class MarkSymbolsForRenaming
                 $symbol->setDoRename(false);
             }
 
+            // Where are we checking PHP built-ins?
+
             $symbol->setDoRename($doRename);
         }
     }

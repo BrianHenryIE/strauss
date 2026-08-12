@@ -113,9 +113,9 @@ class NamespacedSymbol extends DiscoveredSymbol
         return null;
     }
 
-    public function setIsAutoloaded(bool $true): void
+    public function setIsAutoloaded(bool $isAutoloaded): void
     {
-        $this->isAutoloaded = $true;
+        $this->isAutoloaded = $isAutoloaded;
     }
 
     public function isAutoloaded(): bool
