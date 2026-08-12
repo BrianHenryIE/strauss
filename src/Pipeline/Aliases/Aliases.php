@@ -81,11 +81,14 @@ class Aliases
             $template
         );
 
-        $template = str_replace(
-            'namespace BrianHenryIE\Strauss {',
-            'namespace ' . trim($namespace, '\\') . ' {',
-            $template
-        );
+        // This is almost irrelevant, since this file is just used during dev.
+        if (null !== $namespace) {
+            $template = str_replace(
+                'namespace BrianHenryIE\Strauss {',
+                'namespace ' . trim($namespace, '\\') . ' {',
+                $template
+            );
+        }
 
         return str_replace(
             'private array $autoloadAliases = [];',

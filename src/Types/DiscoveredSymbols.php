@@ -300,7 +300,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @return array<DiscoveredSymbol>
+     * @return array<string, DiscoveredSymbol> Keyed by the symbol's original fully qualified name.
      */
     public function toArray(): array
     {
