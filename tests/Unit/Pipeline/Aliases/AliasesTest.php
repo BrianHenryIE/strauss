@@ -374,9 +374,11 @@ EOD;
         );
 
         $namespaceSymbol = new NamespaceSymbol('EnumAliasTest', $file);
+        $namespaceSymbol->setDoRename(true);
         $namespaceSymbol->setLocalReplacement('EnumAliasTestPrefix\\EnumAliasTest');
 
         $enumSymbol = new EnumSymbol('EnumAliasTest\\Status', $file, $namespaceSymbol, 'string');
+        $enumSymbol->setDoRename(true);
         $symbols->add($enumSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);

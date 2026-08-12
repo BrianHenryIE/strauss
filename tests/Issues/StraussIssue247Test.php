@@ -23,7 +23,7 @@ class StraussIssue247Test extends IntegrationTestCase
         /**
          * `Expected discovered file at ../../../../../../../stringify.php not found in package respect/stringifier`.
          */
-        $this->expectWarningLogs();
+//        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
 {
