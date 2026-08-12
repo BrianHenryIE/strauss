@@ -19,8 +19,6 @@ use League\Flysystem\FilesystemException;
 
 /**
  * @mixin FlysystemAdapterBackCompatTraitInterface
- *
- * @method string normalizePath($location)
  */
 trait FlysystemAdapterBackCompatTrait
 {

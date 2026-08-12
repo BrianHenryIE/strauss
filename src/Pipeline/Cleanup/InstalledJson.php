@@ -228,6 +228,12 @@ class InstalledJson
                         // Intentionally fall through.
                     case 'psr-4':
                         foreach ($autoload as $namespace => $paths) {
+                            /**
+                             * It won't really be mixed, but it's coming from a parsed JSON file, so if another tool
+                             * like Strauss modified it, it could be out of whack.
+                             *
+                             * @var string|string[]|mixed $paths
+                             */
                             switch (true) {
                                 case is_array($paths):
                                     // e.g. [ 'psr-4' => [ 'BrianHenryIE\Project' => ['src','lib] ] ]

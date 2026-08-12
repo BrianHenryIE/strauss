@@ -204,7 +204,7 @@ class AutoloadedEnumerator
 
             // If a file is in a `classmap` directory.
             // TODO: are these entries strictly directories?
-            $classmapPaths = $packageAutoload['classmap'] ?? [];
+            $classmapPaths = $packageAutoload['classmap'];
             $excludeClassmapPaths = $packageAutoload['exclude_from_classmap'] ?? [];
             /** @var FileWithDependency $symbolFile */
             foreach ($symbol->getSourceFiles() as $symbolFile) {
@@ -281,7 +281,7 @@ class AutoloadedEnumerator
          * @see https://getcomposer.org/doc/04-schema.md#exclude-files-from-classmaps
          */
         $autoloaders = array_filter($dependencyAutoloadKey, function ($type) {
-            return 'exclude-from-classmap' !== $type;
+            return 'exclude_from_classmap' !== $type;
         }, ARRAY_FILTER_USE_KEY);
 
         $dependencyPackageAbsolutePath   = $this->filesystem->makeAbsolute($dependency->getPackageAbsolutePath());

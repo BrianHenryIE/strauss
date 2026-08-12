@@ -9,7 +9,6 @@
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use Composer\Util\Platform;
-use BrianHenryIE\FlysystemReadOnly\FlysystemReaderBackCompatTrait;
 use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
