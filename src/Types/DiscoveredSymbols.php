@@ -120,6 +120,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     public function get(string $fqdnName): ?DiscoveredSymbol
     {
+        /** @var DiscoveredSymbol[] $found */
         $found = array_reduce(
             $this->types,
             fn (array $carry, array $symbol) => isset($symbol[$fqdnName]) ? array_merge($carry, [$symbol[$fqdnName]]) : $carry,

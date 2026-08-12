@@ -199,8 +199,10 @@ class Cleanup
             'ClassLoader.php'
         ];
 
-        /** @var StorageAttributes|array{path:string} $composerFile */
+        /** @var StorageAttributes $composerFile */
         foreach ($this->filesystem->listContents($composerDirectoryPath) as $composerFile) {
+            /** @var array{path:string} $composerFile */
+
             if (!in_array(basename($composerFile['path']), $filesToProcess, true)) {
                 continue;
             }
