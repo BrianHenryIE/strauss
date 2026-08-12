@@ -412,6 +412,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     /**
      * @throws FilesystemException
      * @throws Exception
+     * @see LeagueFilesystem::listContents()
      */
     public function isDirectoryEmpty(string $dirPath): bool
     {

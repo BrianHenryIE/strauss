@@ -50,6 +50,7 @@ class MarkSymbolsForRenaming
         $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
 
         $allSymbols = $symbols->getSymbols();
+        /** @var NamespaceSymbol|NamespacedSymbol $symbol */
         foreach ($allSymbols as $symbol) {
             if ($symbol instanceof NamespaceSymbol && $symbol->getOriginalFqdnName() === '\\') {
                 continue;

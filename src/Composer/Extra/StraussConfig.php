@@ -23,6 +23,7 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
+use Composer\PartialComposer;
 use Composer\Util\Platform;
 use Exception;
 use InvalidArgumentException;
@@ -134,26 +135,26 @@ class StraussConfig implements
     /**
      * 'exclude_from_copy' in composer/extra config.
      *
-     * @var array{packages: string[], namespaces: string[], file_patterns: string[]}
+     * @var array{packages?: string[], namespaces?: string[], file_patterns?: string[]}
      */
     protected array $excludeFromCopy = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
 
     /**
      * 'exclude_files_from_update' in composer/extra config. Make no changes to these files.
      *
-     * @var array{packages: string[], namespaces: string[], file_patterns: string[]}
+     * @var array{packages?: string[], namespaces?: string[], file_patterns?: string[]}
      */
     protected array $excludeFilesFromUpdates = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
 
     /**
-     * @var array{packages: string[], namespaces: string[], file_patterns: string[]}
+     * @var array{packages?: string[], namespaces?: string[], file_patterns?: string[]}
      */
     protected array $excludeFromPrefix = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
 
     /**
      * Exclude constants from prefixing only (same shape as exclude_from_prefix).
      *
-     * @var array{packages: string[], namespaces: string[], file_patterns: string[], constants: string[]}
+     * @var array{packages?: string[], namespaces?: string[], file_patterns?: string[], constants?: string[]}
      */
     protected array $excludeConstants = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array(),'constants'=>array());
 
@@ -229,11 +230,11 @@ class StraussConfig implements
      * Overwrite it with any Strauss config.
      * Provide sensible defaults.
      *
-     * @param ?Composer $composer
+     * @param ?PartialComposer $composer
      *
      * @throws Exception
      */
-    public function __construct(?Composer $composer = null)
+    public function __construct(?PartialComposer $composer = null)
     {
         $normalizer = FileSystem::makePathNormalizer(Platform::getcwd());
         if (isset($composer)) {

@@ -53,7 +53,7 @@ class DependenciesEnumerator
     protected array $filesAutoloaders = [];
 
     /**
-     * @var array{}|array<string, array{files?:array<string>,classmap?:array<string>,"psr-4":array<string|array<string>>}> $overrideAutoload
+     * @var array{}|array<string, AutoloadKeyArray> $overrideAutoload
      */
     protected array $overrideAutoload = array();
     protected StraussConfig $config;

@@ -3,11 +3,18 @@
 namespace BrianHenryIE\Strauss\Helpers;
 
 use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserErrorHandler;
+use Exception;
+use Throwable;
 
-class ParserErrorException extends \Exception
+class ParserErrorException extends Exception
 {
-    public function __construct(ParserErrorHandler $parserErrorHandler, int $code = 0, \Throwable $previous = null)
-    {
+    protected ParserErrorHandler $parserErrorHandler;
+
+    public function __construct(
+        ParserErrorHandler $parserErrorHandler,
+        int $code = 0,
+        ?Throwable $previous = null
+    ) {
         parent::__construct(
             sprintf(
                 'Parsing failed with %d errors',

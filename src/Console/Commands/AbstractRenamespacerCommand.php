@@ -33,7 +33,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class AbstractRenamespacerCommand extends Command
 {
     /**
-     * @var LoggerInterface&Logger
+     * @var LoggerInterface|Logger
      */
     protected $logger;
 
@@ -89,7 +89,7 @@ abstract class AbstractRenamespacerCommand extends Command
          * When run via. `strauss.phar`, classes such as `InstalledVersions` are prefixed, but when installed
          * via Composer, the unprefixed version is used.
          *
-         * @var string $installedSymfonyVersion
+         * @var ?string $installedSymfonyVersion
          */
         $installedSymfonyVersion = class_exists(\BrianHenryIE\Strauss\Composer\InstalledVersions::class)
             ? \BrianHenryIE\Strauss\Composer\InstalledVersions::getVersion('symfony/console')

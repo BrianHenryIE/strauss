@@ -90,6 +90,6 @@ class ProjectComposerPackage extends ComposerPackage
                 $values[] = $value;
             }
         );
-        return $values;
+        return array_values($values);
     }
 }

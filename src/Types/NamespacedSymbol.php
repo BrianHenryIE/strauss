@@ -94,15 +94,17 @@ class NamespacedSymbol extends DiscoveredSymbol
                      * This is verified in {@see ComposerPackage::isPsr0Autoloaded()}.
                      *
                      * @var string $psr0namespace
-                     * @var string|string[] $autoloadPackageRelativePath
+                     * @var string|string[] $autoloadPackageRelativePaths
                      * @phpstan-ignore offsetAccess.notFound
                      */
-                    foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePath) {
-                        if (str_starts_with(
-                            trim($file->getPackageRelativePath(), '\\/'),
-                            trim($autoloadPackageRelativePath, '\\/')
-                        )) {
-                            return $psr0namespace;
+                    foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePaths) {
+                        foreach ((array) $autoloadPackageRelativePaths as $autoloadPackageRelativePath) {
+                            if (str_starts_with(
+                                trim($file->getPackageRelativePath(), '\\/'),
+                                trim($autoloadPackageRelativePath, '\\/')
+                            )) {
+                                return $psr0namespace;
+                            }
                         }
                     }
                 }
@@ -111,7 +113,7 @@ class NamespacedSymbol extends DiscoveredSymbol
         return null;
     }
 
-    public function setIsAutoloaded(bool $true)
+    public function setIsAutoloaded(bool $true): void
     {
         $this->isAutoloaded = $true;
     }
