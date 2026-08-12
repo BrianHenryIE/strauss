@@ -124,7 +124,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             ? \BrianHenryIE\Strauss\Composer\InstalledVersions::getVersion('symfony/console')
             : \Composer\InstalledVersions::getVersion('symfony/console');
 
-        if ($symfonyVersion && version_compare($symfonyVersion, '7.2', '<')) {
+        if (is_string($symfonyVersion) && version_compare($symfonyVersion, '7.2', '<')) {
             $this->addOption(
                 'silent',
                 's',
