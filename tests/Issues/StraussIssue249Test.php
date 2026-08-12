@@ -16,11 +16,11 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 class StraussIssue249Test extends IntegrationTestCase
 {
 
-    public function test_return_type_double_prefixed(): void
+    public function test_copy_all_freemius_files(): void
     {
 
         $composerJsonString = <<<'EOD'
-{   
+{
     "require": {
       "freemius/wordpress-sdk": "^2.13"
     },

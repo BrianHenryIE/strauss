@@ -748,7 +748,7 @@ class Prefixer
 
         if ($symbol instanceof NamespacedSymbol && $symbol->getNamespace()->isGlobal()) {
             $replacementSymbolString = $symbol->getLocalReplacement();
-            $originalSymbolString    = $symbol->getOriginalSymbolStripPrefix($this->config->getClassmapPrefix());
+            $originalSymbolString    = $symbol->getOriginalLocalName();
         } elseif ($symbol instanceof NamespaceSymbol) {
             if ($symbol->isGlobal()) {
                 return $contents;

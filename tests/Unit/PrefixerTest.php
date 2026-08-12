@@ -4059,7 +4059,6 @@ EOD;
 
         $config = Mockery::mock(PrefixerConfigInterface::class);
         $config->expects('getConstantsPrefix')->andReturn('BH_')->zeroOrMoreTimes();
-        $config->expects('getClassmapPrefix')->andReturn('BH_');
 
         $file = new File(
             'vendor/package/name/src/file.php',

@@ -92,6 +92,7 @@ class AutoloadedEnumerator
                     }
                 }
             }
+            unset($namespaceSymbol, $file);
         }
 
         foreach ($discoveredFiles as $file) {
@@ -144,13 +145,14 @@ class AutoloadedEnumerator
                 }
             }
 
-            /** @var NamespacedSymbol $namespacedSymbol */
-            foreach ($file->getDiscoveredSymbols()->getNamespacedSymbols() as $namespacedSymbol) {
-                if (! $namespacedSymbol->isAutoloaded() && $file->isAutoloaded()) {
-                    $this->logger->info($namespacedSymbol->getOriginalLocalName() . ' marked autoloaded because it is in autoloaded file ' . $file->getPackageRelativePath());
-                    $namespacedSymbol->setIsAutoloaded(true);
+            /** @var DiscoveredSymbol $symbol */
+            foreach ($file->getDiscoveredSymbols() as $symbol) {
+                if (! $symbol->isAutoloaded() && $file->isAutoloaded()) {
+                    $this->logger->info($symbol->getOriginalLocalName() . ' marked autoloaded because it is in autoloaded file ' . $file->getPackageRelativePath());
+                    $symbol->setIsAutoloaded(true);
                 }
             }
+            unset($file);
         }
 
         // This should already be correct.
