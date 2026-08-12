@@ -53,11 +53,11 @@ jobs:
           echo "level=$LEVEL" >> "$GITHUB_OUTPUT"
 
       - name: Check success
-        if: steps.run-phpstan.outcome == 'success'
+        if: ${{ steps.run-phpstan.outcome == 'success' && github.event_name != 'pull_request' }}
         run: curl -o .github/phpstan.svg https://img.shields.io/badge/PHPStan-Level%20${{ steps.phpstan-level.outputs.level}}-2a5ea7.svg
 
       - name: Check failures
-        if: steps.run-phpstan.outcome != 'success'
+        if: ${{ steps.run-phpstan.outcome != 'success' && github.event_name != 'pull_request' }}
         run: curl -o .github/phpstan.svg https://img.shields.io/badge/PHPStan-Level%20${{ steps.phpstan-level.outputs.level}}❌-lightgrey.svg
 
       # This probably needs DEPLOY_KEY set for PRs and private repos
@@ -68,3 +68,7 @@ jobs:
           file_pattern: ".github/phpstan.svg"
           before_commit_hook: "git pull"
           commit_message: "🤖 PhpStan"
+
+      - name: Fail
+        if: ${{ steps.run-phpstan.outcome != 'success' }}
+        run: exit 1
