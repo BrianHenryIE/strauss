@@ -5332,7 +5332,7 @@ EOD;
         $config = Mockery::mock(PrefixerConfigInterface::class);
         $config->allows('isTargetDirectoryVendor')->andReturnFalse();
         $config->allows('getConstantsPrefix')->andReturn('BHTEST_');
-        $config->expects('getNamespacePrefix')->andReturn('BH\\Test\\');
+//        $config->expects('getNamespacePrefix')->andReturn('BH\\Test\\');
 
         $file = new File(
             'vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
