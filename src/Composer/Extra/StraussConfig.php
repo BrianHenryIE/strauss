@@ -392,14 +392,22 @@ class StraussConfig implements
         // preg_match('~Valid(Regular)Expression~', null) === false);
 
         if (isset($configExtraSettings, $configExtraSettings->updateCallSites)) {
-            if (true === $configExtraSettings->updateCallSites) {
-                $this->updateCallSites = null;
-            } elseif (false === $configExtraSettings->updateCallSites) {
-                $this->updateCallSites = array();
-            } elseif (is_array($configExtraSettings->updateCallSites)) {
-                $this->updateCallSites = $configExtraSettings->updateCallSites;
-            } else {
-                // uh oh.
+            switch (true) {
+                case (true === $configExtraSettings->updateCallSites):
+                    $this->updateCallSites = null;
+                    break;
+                case (false === $configExtraSettings->updateCallSites):
+                    $this->updateCallSites = array();
+                    break;
+                case (is_array($configExtraSettings->updateCallSites)):
+                    // TODO: Should warn here if any values were invalid.
+                    $this->updateCallSites = array_filter(
+                        $configExtraSettings->updateCallSites,
+                        'is_string'
+                    );
+                    break;
+                default:
+                    throw new \Exception('Invalid data in composer.extra.strauss.update_call_sites');
             }
         }
     }
