@@ -16,6 +16,7 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\ClassMapGenerator\ClassMapGenerator;
+use Exception;
 use League\Flysystem\FilesystemException;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
@@ -90,10 +91,16 @@ class AutoloadedEnumerator
             if ($this->isFileInPsr0Autoloader($file)) {
                 $file->setIsAutoloaded(true);
                 foreach ($file->getDiscoveredSymbols() as $symbol) {
-                    if ($symbol instanceof NamespaceSymbol && $symbol->isGlobal()) {
-                        continue;
+                    switch (true) {
+                        case $symbol instanceof NamespacedSymbol && $symbol->getNamespaceName() === '\\':
+                            break;
+                        case $symbol instanceof NamespacedSymbol:
+                        case $symbol instanceof NamespaceSymbol:
+                            $symbol->setIsAutoloaded(true);
+                            break;
+                        default:
+                            throw new Exception('unimplemented');
                     }
-                    $symbol->setIsAutoloaded(true);
                 }
             }
 
@@ -107,8 +114,17 @@ class AutoloadedEnumerator
             );
             if ($isAutoloadedSymbolInFile) {
                 $file->setIsAutoloaded(true);
-                foreach ($file->getDiscoveredSymbols() as $fileSymbol) {
-                    $fileSymbol->setIsAutoloaded(true);
+                foreach ($file->getDiscoveredSymbols() as $symbol) {
+                    switch (true) {
+                        case $symbol instanceof NamespacedSymbol && $symbol->getNamespaceName() === '\\':
+                            break;
+                        case $symbol instanceof NamespacedSymbol:
+                        case $symbol instanceof NamespaceSymbol:
+                            $symbol->setIsAutoloaded(true);
+                            break;
+                        default:
+                            throw new Exception('unimplemented');
+                    }
                 }
             }
         }
@@ -158,6 +174,11 @@ class AutoloadedEnumerator
             // if a file is in a `files` list
             if (isset($packageAutoload['files'])) {
                 $filesPaths = $packageAutoload['files'];
+                /**
+                 * A NamespacedSymbol's files will all have a dependency.
+                 *
+                 * @var FileWithDependency $symbolFile
+                 */
                 foreach ($symbol->getSourceFiles() as $symbolFile) {
                     foreach ($filesPaths as $path) {
                         if (str_starts_with($symbolFile->getPackageRelativePath(), $path)) {
