@@ -58,6 +58,7 @@
         "ext-json": "*",
         "ext-zip": "*",
         "brianhenryie/color-logger": "*",
+        "brianhenryie/phpstan-checkstyle": "^0.1.1",
         "mockery/mockery": "^1.6",
         "phpstan/extension-installer": "*",
         "phpstan/phpstan": "^2.2",
@@ -89,13 +90,28 @@
           "phpstan analyse --level max --memory-limit=-1 --verbose"
         ],
         "analyze-changes": [
-          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpstan analyse --memory-limit=-1 $updated_files --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
-        ],
-        "analyze-changes-recent": [
-          "updated_files=$(echo $(git diff --name-only `git rev-parse HEAD~4` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then phpstan analyse --memory-limit=-1 $updated_files --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
+            "mkdir .phpstanfilter > /dev/null 2>&1 || true",
+            "git fetch origin; git diff $(git rev-parse origin/master) > .phpstanfilter/tmp.diff",
+            "phpstan analyse --memory-limit=-1 --level max --verbose --error-format=checkstyle | sponge .phpstanfilter/phpstan-checkstyle.xml",
+            "vendor/bin/prf filter-checkstyle .phpstanfilter/tmp.diff .phpstanfilter/phpstan-checkstyle.xml .phpstanfilter/phpstan-filtered-checkstyle.xml",
+            "vendor/bin/phpstan-checkstyle .phpstanfilter/phpstan-filtered-checkstyle.xml",
+            "rm -rf .phpstanfilter"
         ],
         "analyze-changes-strict": [
-          "updated_files=$(echo $(git diff --name-only `git merge-base origin/master HEAD` | grep php | tr '\\n' '\\0' | xargs -0 ls -1df 2>/dev/null)); if [ -n \"$updated_files\" ]; then echo \"Found: $updated_files\"; phpstan analyse --memory-limit=-1 $updated_files --level max --verbose || true; else echo \"No modified php files for phpstan.\"; fi;"
+            "mkdir .phpstanfilter > /dev/null 2>&1 || true",
+            "git fetch origin; git diff $(git rev-parse origin/master) > .phpstanfilter/tmp.diff",
+            "phpstan analyse --level max --memory-limit=-1 --level max --verbose --error-format=checkstyle | sponge .phpstanfilter/phpstan-checkstyle.xml",
+            "vendor/bin/prf filter-checkstyle .phpstanfilter/tmp.diff .phpstanfilter/phpstan-checkstyle.xml .phpstanfilter/phpstan-filtered-checkstyle.xml",
+            "vendor/bin/phpstan-checkstyle .phpstanfilter/phpstan-filtered-checkstyle.xml",
+            "rm -rf .phpstanfilter"
+        ],
+        "analyze-changes-recent": [
+            "mkdir .phpstanfilter > /dev/null 2>&1 || true",
+            "git fetch origin; git diff $(git rev-parse HEAD~4) > .phpstanfilter/tmp.diff",
+            "phpstan analyse --level max --memory-limit=-1 --level max --verbose --error-format=checkstyle | sponge .phpstanfilter/phpstan-checkstyle.xml",
+            "vendor/bin/prf filter-checkstyle .phpstanfilter/tmp.diff .phpstanfilter/phpstan-checkstyle.xml .phpstanfilter/phpstan-filtered-checkstyle.xml",
+            "vendor/bin/phpstan-checkstyle .phpstanfilter/phpstan-filtered-checkstyle.xml",
+            "rm -rf .phpstanfilter"
         ],
         "cs": [
           "phpcs || true",

@@ -21,3 +21,4 @@ scripts/builtins.php
 /tools
 
 /teststempdir
+/.phpstanfilter

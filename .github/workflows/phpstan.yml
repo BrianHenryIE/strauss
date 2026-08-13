@@ -105,9 +105,6 @@ jobs:
         env:
           CHECKSTYLE_FILENAME: "phpstan-checkstyle.xml"
 
-      - name: Install kamazee/pr-filter
-        run: composer require --dev kamazee/pr-filter --no-scripts
-
       - name: Generate filtered-checkstyle.xml – PHPStan errors only the modified lines in the pr diff
         if: ${{ github.event_name == 'pull_request' }}
         run: |
@@ -133,5 +130,12 @@ jobs:
       - name: Debug log filtered-checkstyle.xml
         if: ${{ failure() && github.event_name == 'pull_request' }}
         run: cat ${{ env.CHECKSTYLE_FILENAME }}
+        env:
+          CHECKSTYLE_FILENAME: "filtered-checkstyle.xml"
+
+      # On PRs, print out the xml for debug.
+      - name: Debug log filtered-checkstyle.xml
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        run: cat ${{ env.CHECKSTYLE_FILENAME }} | vendor/bin/phpstan-checkstyle
         env:
           CHECKSTYLE_FILENAME: "filtered-checkstyle.xml"
