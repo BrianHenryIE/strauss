@@ -450,10 +450,11 @@ class DependenciesCommand extends AbstractRenamespacerCommand
                 if ($file->getSourcePath() === $file->getTargetAbsolutePath()) {
                     continue;
                 }
-                $this->filesystem->copy( // TODO: change to MOVE
+                $this->filesystem->move(
                     $file->getSourcePath(),
                     $file->getTargetAbsolutePath()
                 );
+                // TODO: delete empty directories.
             }
 
             return;

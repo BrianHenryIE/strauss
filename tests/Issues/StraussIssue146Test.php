@@ -121,6 +121,20 @@ class StraussIssue146Test extends IntegrationTestCase
         $this->assertStringNotContainsString('new \\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString);
         $this->assertStringContainsString('new \\BrianHenryIE\\TestStrauss\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
 
+        // Pimple was found in the .phar still in its original location.
+        // vendor/pimple/pimple/src/Pimple/Container.php
+        // vendor/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php
+        $originalFilePath = '/vendor/pimple/pimple/src/Pimple/Container.php';
+        $this->assertTrue(
+            !$this->getFileSystem()->fileExists($this->testsWorkingDir . $originalFilePath),
+            "File should no longer exist at original: " . $originalFilePath
+        );
+        $expectedFilePath = '/vendor/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php';
+        $this->assertTrue(
+            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
+            "Expected file not found at: " . $expectedFilePath
+        );
+
         /**
          * Return type was being treated as a namespace and prefixed.
          *
