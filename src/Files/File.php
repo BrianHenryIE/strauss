@@ -49,7 +49,7 @@ class File implements FileBase
 
     protected bool $didDelete = false;
 
-    /** @var array|null Cache of php-parser parsed AST */
+    /** @var \PhpParser\Node[]|null Cache of php-parser parsed AST */
     protected ?array $ast = null;
 
     public function __construct(
@@ -203,6 +203,9 @@ class File implements FileBase
         return $this->discoveredSymbols->getNamespaces();
     }
 
+    /**
+     * @param \PhpParser\Node[]|null $ast Parsed PHP file
+     */
     public function setParsedAst(?array $ast)
     {
 //        $this->ast = $ast;
