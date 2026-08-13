@@ -138,11 +138,11 @@ class StraussIssue146Test extends IntegrationTestCase
             !$this->getFileSystem()->fileExists($this->testsWorkingDir . $originalFilePath),
             "File should no longer exist at original: " . $originalFilePath
         );
-//        $expectedFilePath = '/vendor/pimple/pimple/src/BrianHenryIE/TestStrauss/Pimple/Container.php';
-//        $this->assertTrue(
-//            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
-//            "Expected file not found at: " . $expectedFilePath
-//        );
+        $expectedFilePath = '/vendor/pimple/pimple/src/BrianHenryIE/TestStrauss/Pimple/Container.php';
+        $this->assertTrue(
+            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
+            "Expected file not found at: " . $expectedFilePath
+        );
 
         /**
          * Return type was being treated as a namespace and prefixed.
@@ -176,7 +176,7 @@ class StraussIssue146Test extends IntegrationTestCase
         $this->assertStringNotContainsString('use Composer\IO\IOInterface;', $autoloadGeneratorPhpString);
         $this->assertStringContainsString('use BrianHenryIE\TestStrauss\Composer\IO\IOInterface;', $autoloadGeneratorPhpString);
 
-        $this->assertStringContainsString('\\0BrianHenryIE\\Strauss\\Composer\\Autoload\\ClassLoader\\0', $autoloadGeneratorPhpString);
+        $this->assertStringContainsString('\\0BrianHenryIE\\TestStrauss\\Composer\\Autoload\\ClassLoader\\0', $autoloadGeneratorPhpString);
     }
 
     public function test_prefix_own_classes_for_test(): void
