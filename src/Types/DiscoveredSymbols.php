@@ -330,12 +330,18 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @return Traversable<DiscoveredSymbol>
+     * Iterates every symbol in every bucket. Unlike {@see self::toArray()}, symbols whose fqdn matches a
+     * symbol of another type (e.g. nikic/php-parser's `PhpParser\Node` is both an interface and a namespace)
+     * are not lost, so keys may repeat.
+     *
+     * @return Traversable<string, DiscoveredSymbol>
      */
     #[ReturnTypeWillChange]
     public function getIterator()
     {
-        return new ArrayIterator($this->toArray());
+        foreach ($this->types as $symbols) {
+            yield from $symbols;
+        }
     }
 
     /**

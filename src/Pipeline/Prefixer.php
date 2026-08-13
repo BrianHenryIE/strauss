@@ -257,15 +257,14 @@ class Prefixer
         $positions = [];
 
         try {
-            $existingAst = $file ? $file->getParsedAst() : null;
+            $existingAst = $file instanceof File ? $file->getParsedAst() : null;
             if (!$existingAst) {
                 $this->logger->info("Parsing AST::::{filePath}", [
                     'filePath' => $fileAbsolutePath ?? 'file',
                 ]);
 
                 $ast = $parser->parse($parseContent);
-                /** @var File $file */
-                if ($file && $ast) {
+                if ($file instanceof File && $ast) {
                     $file->setParsedAst($ast);
                 }
             } else {
@@ -510,7 +509,9 @@ class Prefixer
     protected function replaceNamespaces(array $ast, DiscoveredSymbols $discoveredSymbols, FileBase $file): array
     {
         $namespaces = $discoveredSymbols->getNamespaces();
-        $namespacedChanges = $discoveredSymbols->getNamespacedSymbols()->notGlobal();
+        // Only symbols actually being renamed: a symbol whose replacement is its original name would
+        // produce no-op positions that overwrite real replacements for the same range in the dedupe.
+        $namespacedChanges = $discoveredSymbols->getNamespacedSymbols()->getToRename()->notGlobal();
         if (count($namespaces->getToRename()) === 0) {
             return [];
         }
@@ -572,6 +573,10 @@ class Prefixer
                     'replacement' => $namespaceSymbol->getReplacementFqdnName(),
                 ];
                 $handled[$ns->name->getStartFilePos()] = true;
+                // A class-like symbol may share the namespace's fqdn (e.g. class `PhpParser\Node\Name` and
+                // namespace `PhpParser\Node\Name`); without this, the lookup below could add a second
+                // position for the same range which would overwrite this one in the last-wins dedupe.
+                continue;
             }
 
             if ($symbol = $namespacedChanges->get($nameStr)) {
