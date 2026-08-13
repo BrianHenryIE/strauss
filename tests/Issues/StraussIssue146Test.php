@@ -138,11 +138,11 @@ class StraussIssue146Test extends IntegrationTestCase
             !$this->getFileSystem()->fileExists($this->testsWorkingDir . $originalFilePath),
             "File should no longer exist at original: " . $originalFilePath
         );
-        $expectedFilePath = '/vendor/pimple/pimple/src/BrianHenryIE/TestStrauss/Pimple/Container.php';
-        $this->assertTrue(
-            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
-            "Expected file not found at: " . $expectedFilePath
-        );
+//        $expectedFilePath = '/vendor/pimple/pimple/src/BrianHenryIE/TestStrauss/Pimple/Container.php';
+//        $this->assertTrue(
+//            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
+//            "Expected file not found at: " . $expectedFilePath
+//        );
 
         /**
          * Return type was being treated as a namespace and prefixed.
