@@ -87,9 +87,11 @@ class ProjectComposerPackage extends ComposerPackage
         array_walk_recursive(
             $autoload,
             function ($value, $key) use (&$values) {
-                $values[] = $value;
+                if (is_string($value)) {
+                    $values[] = $value;
+                }
             }
         );
-        return (array) $values;
+        return $values;
     }
 }

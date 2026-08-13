@@ -114,8 +114,8 @@ class AutoloadedEnumerator
                 $file->setIsAutoloaded(true);
             }
 
-            /** @var NamespacedSymbol $namespacedSymbol */
             if (! $file->isAutoloaded()) {
+                /** @var NamespacedSymbol $namespacedSymbol */
                 foreach ($file->getDiscoveredSymbols()->getNamespacedSymbols() as $namespacedSymbol) {
                     if ($namespacedSymbol->isAutoloaded()) {
                         $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it contains autoloaded symbol ' . $namespacedSymbol->getOriginalLocalName());

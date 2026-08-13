@@ -807,9 +807,13 @@ class Prefixer
                 // `/(\$prefix = "\\0).*(Composer\\Autoload\\ClassLoader\\0";)/`
                 $pattern = "/(\\\$prefix = \\\"\\\\0).*($disguisedNamespaceString)(\\\\0\\\";)/";
 
-                $contents = preg_replace($pattern, '$1$2$3', $contents);
+                $contents = preg_replace($pattern, '$1$2$3', $contents) ?? (function () {
+                    throw new Exception(preg_last_error_msg(), preg_last_error());
+                })();
 
-                $contents = preg_replace($pattern, '$1'.$replacementSymbolString.'\\\\ClassLoader$3', $contents);
+                $contents = preg_replace($pattern, '$1'.$replacementSymbolString.'\\\\ClassLoader$3', $contents) ?? (function () {
+                    throw new Exception(preg_last_error_msg(), preg_last_error());
+                })();
             }
         } elseif ($symbol instanceof NamespacedSymbol) {
             $originalSymbolString = $symbol->getOriginalFqdnName();
@@ -1423,9 +1427,20 @@ class Prefixer
             }
             $namespaceSymbol = new NamespaceSymbol($namespaceString);
 
+            $innerPattern = ! $this->config->getNamespacePrefix() ? ''
+                : sprintf(
+                    '|(%s\\\\)',
+                    str_replace('\\', '\\\\', rtrim($this->config->getNamespacePrefix(), '\\'))
+                );
+
+            $pattern = sprintf(
+                '#^(BrianHenryIE\\\\Strauss\\\\)%s*#',
+                $innerPattern
+            );
+
             $localReplacement = $this->config->getNamespacePrefix() . '\\'
                                 . preg_replace(
-                                    '#^(BrianHenryIE\\\\Strauss\\\\)|('. str_replace('\\', '\\\\', rtrim($this->config->getNamespacePrefix(), '\\')) . '\\\\)*#',
+                                    $pattern,
                                     '',
                                     $namespaceString
                                 );

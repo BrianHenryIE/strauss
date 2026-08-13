@@ -94,6 +94,11 @@ class File implements FileBase
         return false;
     }
 
+    public function setIsAutoloaded(bool $isAutoloaded): void
+    {
+        // TODO: We really need to configure PhpStan so it knows a list of files returned from a package are `FileWithDependency`.
+    }
+
     /**
      * Should symbols discovered in this file be prefixed. (i.e. class definitions etc., not usages)
      */
@@ -206,14 +211,14 @@ class File implements FileBase
     /**
      * @param \PhpParser\Node[]|null $ast Parsed PHP file
      */
-    public function setParsedAst(?array $ast)
+    public function setParsedAst(?array $ast): void
     {
 //        $this->ast = $ast;
     }
 
     /**
      * @see \PhpParser\PhpParser
-     * @returns \PhpParser\Node[]|null
+     * @return \PhpParser\Node[]|null
      */
     public function getParsedAst(): ?array
     {

@@ -68,6 +68,7 @@ abstract class DiscoveredSymbol
     abstract public function isGlobal(): bool;
 
     abstract public function isAutoloaded(): bool;
+    abstract public function setIsAutoloaded(bool $isAutoloaded): void;
 
     /**
      * TODO: Document does this contain or ltrim the leading slash.
