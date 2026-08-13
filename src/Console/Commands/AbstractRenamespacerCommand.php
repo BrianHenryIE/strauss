@@ -13,7 +13,6 @@ use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use Composer\InstalledVersions;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Config;
