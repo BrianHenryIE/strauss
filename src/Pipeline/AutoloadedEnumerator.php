@@ -125,6 +125,14 @@ class AutoloadedEnumerator
                 }
             }
 
+            // E.g. wp-graphql's global `WPGraphQL` class in its psr-4 `src/` directory: not itself resolvable
+            // by the psr-4 rules, but part of the package's autoloaded code, and its call sites will be
+            // updated, so the symbols it declares must be renamed to match.
+            if (!$file->isAutoloaded() && $this->isFileInPsr4Autoloader($file)) {
+                $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it is in a psr-4 autoloaded directory');
+                $file->setIsAutoloaded(true);
+            }
+
             if (!$file->isAutoloaded() && $this->isFileInPsr0Autoloader($file)) {
                 $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it is in a psr-0 autoloaded directory');
                 $file->setIsAutoloaded(true);
@@ -345,6 +353,22 @@ class AutoloadedEnumerator
                     if (str_starts_with($symbolFile->getPackageRelativePath(), $path)) {
                         return true;
                     }
+                }
+            }
+        }
+        return false;
+    }
+
+    protected function isFileInPsr4Autoloader(FileWithDependency $file): bool
+    {
+        $package = $file->getDependency();
+        foreach ($package->getAutoload()['psr-4'] ?? [] as $namespaceString => $directories) {
+            foreach ((array) $directories as $directory) {
+                if (str_starts_with(
+                    ltrim($file->getPackageRelativePath(), '\\/'),
+                    ltrim($directory, '\\/')
+                )) {
+                    return true;
                 }
             }
         }
