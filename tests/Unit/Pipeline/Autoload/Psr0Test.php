@@ -68,6 +68,8 @@ class Psr0Test extends TestCase
     {
         $namespaceSymbol = new NamespaceSymbol('Pimple');
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Pimple');
+        $namespaceSymbol->setDoRename(true);
+
         $discoveredSymbols = new DiscoveredSymbols([$namespaceSymbol]);
 
         $dependency = Mockery::mock(ComposerPackage::class);

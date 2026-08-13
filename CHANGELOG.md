@@ -1,5 +1,19 @@
 # Change Log
 
+## 0.29.1
+
+* Fix: After prefixing `vendor-prefixed/composer/*`, update references to `InstalledVersions` etc. throughout project
+* Fix: Some double-prefixing in Composer files
+* CI: Fail PHPStan only for errors in modified lines
+* CI: Fail on new PHP errors during `strauss.phar` creation (allow list of known errors added)
+* Quality: Many PHPStan fixes
+* Performance: initial work to reduce AST parsing per file to once only (`File::setParsedAst()`, `::getParsedAst()`)
+
+We copy all files, then enumerate all files and symbols that are autoloaded, apply exclusion rules, perform renames.
+Previously all defined namespaces were assumed to be renamed, now only those that are autoloaded are.
+One odd concession is when a function is defined in a global namespace in a file with an autoloaded class, everything in the file is renamed.
+We don't want to modify classes with custom autoloaders, e.g. Action Scheduler, or polyfills for other namespaces.
+
 ## 0.29.0 August 2026
 
 * Prefix own dependencies in phar

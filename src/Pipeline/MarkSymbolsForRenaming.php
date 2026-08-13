@@ -38,18 +38,35 @@ class MarkSymbolsForRenaming
         $this->setLogger($logger);
     }
 
-    public function scanSymbols(DiscoveredSymbols $symbols): void
+
+    /**
+     * If a file is autoloaded, mark it to be renamed, except when there is a rule excluding it.
+     * If a namespace matches a namespace replacement pattern, then doRename needs to be set true.
+     *
+     * There are packages that have conditionally loaded classes, e.g. `art4/requests-psr18-adapter`'s `v1-compat`.
+     */
+    public function scanSetDoRename(DiscoveredSymbols $symbols): void
     {
+        $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
+
         $allSymbols = $symbols->getSymbols();
+        /** @var NamespaceSymbol|NamespacedSymbol $symbol */
         foreach ($allSymbols as $symbol) {
-            // $this->config->getFlatDependencyTree
-            // TODO: This is probably incorrect. If a file is conditionally loaded, it still needs its namespace updated.
-            if (!$this->symbolIsAutoloaded($symbol)) {
-//                $this->logger->notice('Excluding {symbol} from renaming... because...', [
-//                    'symbol' => $symbol->getOriginalLocalName(),
-//                ]);
-                $symbol->setDoRename(false);
+            if ($symbol instanceof NamespaceSymbol && $symbol->getOriginalFqdnName() === '\\') {
                 continue;
+            }
+
+            $doRename = $symbol->isAutoloaded();
+
+            foreach ($namespaceReplacementPatterns as $namespaceReplacementPatternFrom => $namespaceReplacementPatternTo) {
+                $namespaceString = $symbol instanceof NamespaceSymbol
+                    ? $symbol->getOriginalFqdnName()
+                    : $symbol->getNamespace()->getOriginalFqdnName();
+
+                if (1 === preg_match($this->preparePattern($namespaceReplacementPatternFrom), $namespaceString)) {
+                    $doRename = true;
+                    break;
+                }
             }
 
             // If the symbol's package is excluded from copy, don't prefix it
@@ -84,32 +101,11 @@ class MarkSymbolsForRenaming
             ) {
                 $symbol->setDoRename(false);
             }
+
+            // Where are we checking PHP built-ins?
+
+            $symbol->setDoRename($doRename);
         }
-    }
-
-    /**
-     * If all the files a symbol is defined in are autoloaded, prefix the symbol.
-     *
-     * There are packages where a class may be defined in two different files and they are conditionally loaded.
-     * TODO: How best to handle this scenario?
-     */
-    protected function symbolIsAutoloaded(DiscoveredSymbol $symbol): bool
-    {
-        // The same namespace symbols are found in lots of files so this test isn't useful.
-        if ($symbol instanceof NamespaceSymbol) {
-            return true;
-        }
-
-        $sourceFiles = array_filter(
-            $symbol->getSourceFiles(),
-            fn (FileBase $file) => basename($file->getVendorRelativePath()) !== 'composer.json'
-        );
-
-        return array_reduce(
-            $sourceFiles,
-            fn(bool $carry, FileBase $fileBase) => $carry && $fileBase->isAutoloaded(),
-            true
-        );
     }
 
     /**

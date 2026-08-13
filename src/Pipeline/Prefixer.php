@@ -146,11 +146,14 @@ class Prefixer
             // TODO: diff here and debug log.
             $file->setDidUpdate();
             $this->filesystem->write($file->getTargetAbsolutePath(), $updatedContents);
-            $this->logger->info("Updated contents of file: {targetAbsolutePath}", [
+            $this->logger->info("Updated contents of file::::{targetAbsolutePath}", [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
             ]);
+            // In future, we'll use string index positions and keep them current.
+            /** @var File $file */
+            $file->setParsedAst(null);
         } else {
-            $this->logger->debug("No changes to file: {targetAbsolutePath}", [
+            $this->logger->debug("No changes to file::::{targetAbsolutePath}", [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
             ]);
         }
@@ -176,7 +179,7 @@ class Prefixer
             $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
 
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
-                $this->logger->debug("is_dir() / nothing to do : {relativeFilePath}", [
+                $this->logger->debug("is_dir() / nothing to do::::{relativeFilePath}", [
                     'relativeFilePath' => $relativeFilePath
                 ]);
                 continue;
@@ -190,13 +193,13 @@ class Prefixer
                     ], true)) {
                     continue;
                 }
-                $this->logger->warning("Expected file does not exist: {relativeFilePath}", [
+                $this->logger->warning("Expected file does not exist::::{relativeFilePath}", [
                     'relativeFilePath' => $relativeFilePath
                 ]);
                 continue;
             }
 
-            $this->logger->debug("Updating contents of file (project): {fileAbsolutePath}", [
+            $this->logger->debug("Updating contents of file (project)::::{fileAbsolutePath}", [
                 'fileAbsolutePath' => $fileAbsolutePath,
             ]);
 
@@ -208,9 +211,9 @@ class Prefixer
             if ($updatedContents !== $contents) {
                 $this->changedFiles[$fileAbsolutePath] = null;
                 $this->filesystem->write($fileAbsolutePath, $updatedContents);
-                $this->logger->info('Updated contents of file: ' . $relativeFilePath);
+                $this->logger->info('Updated contents of file::::' . $relativeFilePath);
             } else {
-                $this->logger->debug('No changes to file: ' . $relativeFilePath);
+                $this->logger->debug('No changes to file::::' . $relativeFilePath);
             }
         }
     }
@@ -254,11 +257,22 @@ class Prefixer
         $positions = [];
 
         try {
-            $this->logger->debug("Parsing {filePath} AST", [
-                'filePath' => $fileAbsolutePath ?? 'file',
-            ]);
-            $ast = $parser->parse($parseContent);
-//                $ast = $parser->parse($parseContent, $errorHandler);
+            $existingAst = $file instanceof File ? $file->getParsedAst() : null;
+            if (!$existingAst) {
+                $this->logger->info("Parsing AST::::{filePath}", [
+                    'filePath' => $fileAbsolutePath ?? 'file',
+                ]);
+
+                $ast = $parser->parse($parseContent);
+                if ($file instanceof File && $ast) {
+                    $file->setParsedAst($ast);
+                }
+            } else {
+                $this->logger->debug("Using existing parsed AST for::::{filePath}", [
+                    'filePath' => $fileAbsolutePath ?? 'file',
+                ]);
+                $ast = $existingAst;
+            }
         } catch (Error $e) {
             // This happens in template files, E.g `x.blade.php`.
             $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: " . $e->getMessage(), [
@@ -495,7 +509,9 @@ class Prefixer
     protected function replaceNamespaces(array $ast, DiscoveredSymbols $discoveredSymbols, FileBase $file): array
     {
         $namespaces = $discoveredSymbols->getNamespaces();
-        $namespacedChanges = $discoveredSymbols->getNamespacedSymbols()->notGlobal();
+        // Only symbols actually being renamed: a symbol whose replacement is its original name would
+        // produce no-op positions that overwrite real replacements for the same range in the dedupe.
+        $namespacedChanges = $discoveredSymbols->getNamespacedSymbols()->getToRename()->notGlobal();
         if (count($namespaces->getToRename()) === 0) {
             return [];
         }
@@ -557,6 +573,10 @@ class Prefixer
                     'replacement' => $namespaceSymbol->getReplacementFqdnName(),
                 ];
                 $handled[$ns->name->getStartFilePos()] = true;
+                // A class-like symbol may share the namespace's fqdn (e.g. class `PhpParser\Node\Name` and
+                // namespace `PhpParser\Node\Name`); without this, the lookup below could add a second
+                // position for the same range which would overwrite this one in the last-wins dedupe.
+                continue;
             }
 
             if ($symbol = $namespacedChanges->get($nameStr)) {
@@ -748,7 +768,7 @@ class Prefixer
 
         if ($symbol instanceof NamespacedSymbol && $symbol->getNamespace()->isGlobal()) {
             $replacementSymbolString = $symbol->getLocalReplacement();
-            $originalSymbolString    = $symbol->getOriginalSymbolStripPrefix($this->config->getClassmapPrefix());
+            $originalSymbolString    = $symbol->getOriginalLocalName();
         } elseif ($symbol instanceof NamespaceSymbol) {
             if ($symbol->isGlobal()) {
                 return $contents;
@@ -770,24 +790,30 @@ class Prefixer
             if ($isComposerAutoloadNamespace && $hasComposerAutoloadNamespace) {
                 /**
                  * TODO: I'm worried that dump-autoload when running via `.phar` will include `BrianHenryIE\Strauss` prefix. I don't think I have addressed that issue here.
+                 * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\Composer\Autoload\ClassLoader\0";`
+                 * but in vendor-prefixed/composer/... of a prefixed project, it should be `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`
+                 *
+                 * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+                 * `$prefix = "\0Composer\Autoload\ClassLoader\0";`
                  *
                  * @see strauss.phar/src/Pipeline/Prefixer.php
                  * @see strauss.phar/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
                  */
-                $prefixLinePrefixesArrays = [
-                    array_merge(explode("\\", $this->config->getNamespacePrefix()), ['Comp'.'oser','Autoload','ClassLoader']),
-                    ['BrianHenryIE','Strauss','Comp'.'oser','Autoload','ClassLoader'],
-                    ['Comp'.'oser','Autoload','ClassLoader'],
-                ];
-                foreach ($prefixLinePrefixesArrays as $prefixLinePrefixArray) {
-                    $findPrefixLine = '$prefix = "\0' . implode("\\", $prefixLinePrefixArray) . '\0";';
-                    $replaceWithUpdatedPrefixLine = str_replace($originalSymbolString, $replacementSymbolString, $findPrefixLine);
-                    $replacedCount = 0;
-                    $contents = str_replace($findPrefixLine, $replaceWithUpdatedPrefixLine, $contents, $replacedCount);
-                    if ($replacedCount && $originalSymbolString !== $replacementSymbolString) {
-                        break;
-                    }
-                }
+
+                // Must be concatenated to it is not unintentionally replaced!
+                $disguisedNamespaceString = implode("\\\\", ['Comp'.'oser','Autoload','ClassLoader']);
+
+                // Reset to the original no matter has it been prefixed before.
+                // `/(\$prefix = "\\0).*(Composer\\Autoload\\ClassLoader\\0";)/`
+                $pattern = "/(\\\$prefix = \\\"\\\\0).*($disguisedNamespaceString)(\\\\0\\\";)/";
+
+                $contents = preg_replace($pattern, '$1$2$3', $contents) ?? (function () {
+                    throw new Exception(preg_last_error_msg(), preg_last_error());
+                })();
+
+                $contents = preg_replace($pattern, '$1'.$replacementSymbolString.'\\\\ClassLoader$3', $contents) ?? (function () {
+                    throw new Exception(preg_last_error_msg(), preg_last_error());
+                })();
             }
         } elseif ($symbol instanceof NamespacedSymbol) {
             $originalSymbolString = $symbol->getOriginalFqdnName();
@@ -814,7 +840,10 @@ class Prefixer
                             . str_replace('\\', '[\\\\]{1,2}', $originalSymbolString) .
                         ')(
                         '
-                      . ( $alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
+                      // This only applies to namespaces, `"My\\Namespace\\" . $var`.
+                      // The trailing-backslashes-only alternative matches namespace prefix strings compared
+                      // against FQDNs, e.g. `substr($className, 0, 16) === 'PHP_CodeSniffer\\'`.
+                      . ( $alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*|[\\\\]{1,2})?' : '' ) .
                       ( $alsoSearchForStaticProperty ? '(:{2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
                       '
                             ' . ($requireSurroundingQuotes ? '[\'"]' : '' ) .'
@@ -1334,7 +1363,7 @@ class Prefixer
         return $this->changedFiles;
     }
 
-    public function prefixComposerAutoloadFiles(string $absoluteDirectory): void
+    public function prefixComposerAutoloadFiles(string $absoluteDirectory, DiscoveredFiles $discoveredFiles): void
     {
         $this->logger->debug("Prefixing the Composer autoload files in {path}.", [
             'path' => $absoluteDirectory,
@@ -1356,8 +1385,6 @@ class Prefixer
         ];
 
         $composerFiles = [];
-
-        $discoveredFiles = new DiscoveredFiles();
 
         foreach ($composerFilePaths as $filePath) {
             if ($this->filesystem->fileExists($absoluteDirectory . '/composer/' . $filePath)) {
@@ -1399,9 +1426,28 @@ class Prefixer
                 continue;
             }
             $namespaceSymbol = new NamespaceSymbol($namespaceString);
-            $namespaceSymbol->setLocalReplacement(
-                $this->config->getNamespacePrefix() . '\\' . preg_replace('#^(BrianHenryIE\\\\Strauss\\\\)*#', '', $namespaceString)
+
+            $innerPattern = ! $this->config->getNamespacePrefix() ? ''
+                : sprintf(
+                    '|(%s\\\\)',
+                    str_replace('\\', '\\\\', rtrim($this->config->getNamespacePrefix(), '\\'))
+                );
+
+            $pattern = sprintf(
+                '#^(BrianHenryIE\\\\Strauss\\\\)%s*#',
+                $innerPattern
             );
+
+            $localReplacement = $this->config->getNamespacePrefix() . '\\'
+                                . preg_replace(
+                                    $pattern,
+                                    '',
+                                    $namespaceString
+                                );
+            $namespaceSymbol->setLocalReplacement(
+                $localReplacement
+            );
+            $namespaceSymbol->setDoRename(true);
             $discoveredSymbols->add($namespaceSymbol);
         }
 
@@ -1415,6 +1461,7 @@ class Prefixer
                 $composerFiles[ basename($absolutePath) ],
                 $namespace,
             );
+            $classLoaderSymbol->setDoRename(true);
             $discoveredSymbols->add($classLoaderSymbol);
         }
 

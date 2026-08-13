@@ -40,6 +40,8 @@ class ChangeEnumeratorTest extends TestCase
             ),
             new NamespaceSymbol('\\')
         );
+        $symbol->setDoRename(true);
+
         $discoveredSymbols->add($symbol);
 
         $sut->determineReplacements($discoveredSymbols);
@@ -77,9 +79,13 @@ class ChangeEnumeratorTest extends TestCase
         $discoveredSymbols = new DiscoveredSymbols();
 
         $namespaceSymbol = new NamespaceSymbol('My\NS', $file);
+        $namespaceSymbol->setDoRename(true);
+
         $discoveredSymbols->add($namespaceSymbol);
 
         $enumSymbol = new EnumSymbol('My\NS\Status', $file, $namespaceSymbol, 'string');
+        $enumSymbol->setDoRename(true);
+
         $discoveredSymbols->add($enumSymbol);
 
         $sut->determineReplacements($discoveredSymbols);
@@ -117,6 +123,8 @@ class ChangeEnumeratorTest extends TestCase
         $discoveredSymbols = new DiscoveredSymbols();
 
         $enumSymbol = new EnumSymbol('GlobalSuit', $file, new NamespaceSymbol('\\'));
+        $enumSymbol->setDoRename(true);
+
         $discoveredSymbols->add($enumSymbol);
 
         $sut->determineReplacements($discoveredSymbols);

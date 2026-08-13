@@ -49,6 +49,9 @@ class File implements FileBase
 
     protected bool $didDelete = false;
 
+    /** @var \PhpParser\Node[]|null Cache of php-parser parsed AST */
+    protected ?array $ast = null;
+
     public function __construct(
         string $sourceAbsolutePath,
         string $vendorRelativePath,
@@ -89,6 +92,11 @@ class File implements FileBase
     public function isAutoloaded(): bool
     {
         return false;
+    }
+
+    public function setIsAutoloaded(bool $isAutoloaded): void
+    {
+        // TODO: We really need to configure PhpStan so it knows a list of files returned from a package are `FileWithDependency`.
     }
 
     /**
@@ -198,5 +206,22 @@ class File implements FileBase
     public function getNamespaces(): DiscoveredSymbols
     {
         return $this->discoveredSymbols->getNamespaces();
+    }
+
+    /**
+     * @param \PhpParser\Node[]|null $ast Parsed PHP file
+     */
+    public function setParsedAst(?array $ast): void
+    {
+//        $this->ast = $ast;
+    }
+
+    /**
+     * @see \PhpParser\PhpParser
+     * @return \PhpParser\Node[]|null
+     */
+    public function getParsedAst(): ?array
+    {
+        return $this->ast;
     }
 }

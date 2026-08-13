@@ -175,6 +175,7 @@ EOD;
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
+        $namespaceSymbol->setDoRename(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -232,6 +233,7 @@ EOD;
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
+        $namespaceSymbol->setDoRename(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);
@@ -336,6 +338,7 @@ EOD;
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Log', $file);
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Log',);
+        $namespaceSymbol->setDoRename(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
         $discoveredSymbols->add($namespaceSymbol);

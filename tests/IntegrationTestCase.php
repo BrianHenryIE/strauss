@@ -9,10 +9,10 @@ namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
+use BrianHenryIE\Strauss\Console\Commands\PrefixComposerAutoloadFilesCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer;
-use BrianHenryIE\Strauss\Helpers\Flysystem\ReadOnlyFileSystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter;
 use Elazar\Flystream\FilesystemRegistry;
 use Elazar\Flystream\ServiceLocator;
@@ -23,16 +23,13 @@ use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\StorageAttributes;
 use SplFileInfo;
-use Symfony\Component\Console\Exception\ExceptionInterface;
 use Monolog\Logger;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
-use const _PHPStan_8c66d8255\__;
 
 /**
  * Class IntegrationTestCase
@@ -140,6 +137,7 @@ class IntegrationTestCase extends TestCase
             $stderrFile = tempnam(sys_get_temp_dir(), 'strauss-phar-stderr');
 
             exec($env . ' php ' . $phpFlags . $this->projectDir . '/strauss.phar ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
+//            exec($env . ' php ' . $phpFlags . $this->projectDir . '/build/bin/strauss ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
 
@@ -166,6 +164,10 @@ class IntegrationTestCase extends TestCase
                 break;
             case 'replace':
                 $strauss = new ReplaceCommand();
+                unset($paramsSplit[0]);
+                break;
+            case 'prefix-vendor-autoload':
+                $strauss = new PrefixComposerAutoloadFilesCommand();
                 unset($paramsSplit[0]);
                 break;
             default:

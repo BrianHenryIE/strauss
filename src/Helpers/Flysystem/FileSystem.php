@@ -9,7 +9,6 @@
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 use Composer\Util\Platform;
-use BrianHenryIE\FlysystemReadOnly\FlysystemReaderBackCompatTrait;
 use BrianHenryIE\FlysystemReadOnly\ReadOnlyFileSystemAdapter;
 use Elazar\Flystream\StripProtocolPathNormalizer;
 use Exception;
@@ -65,7 +64,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      *
      * TODO: Check are any of these methods unused
      *
-     * @param ReadOnlyFileSystemAdapter|SymlinkProtectFilesystemAdapter|LocalFilesystemAdapter|InMemoryFilesystemAdapter $adapter
+     * @param FilesystemAdapter $adapter
      * @param array{visibility?:string} $config
      * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer
      * @param PathNormalizer|null $pathNormalizer
@@ -412,6 +411,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     /**
      * @throws FilesystemException
      * @throws Exception
+     * @see LeagueFilesystem::listContents()
      */
     public function isDirectoryEmpty(string $dirPath): bool
     {

@@ -19,6 +19,7 @@ interface FileBase
     public function isPhpFile(): bool;
 
     public function isAutoloaded(): bool;
+    public function setIsAutoloaded(bool $isAutoloaded): void;
 
     public function setDoCopy(bool $doCopy): void;
 

@@ -13,7 +13,7 @@ use League\Flysystem\PathNormalizer;
 /**
  * @see FlysystemAdapterBackCompatTrait
  */
-interface FlysystemAdapterBackCompatTraitInterface
+interface FlysystemAdapterBackCompatTraitInterface extends PathNormalizer
 {
     /**
      * Implementation is provided by {@see FlysystemAdapterBackCompatTrait::directoryExists()}.
@@ -23,6 +23,8 @@ interface FlysystemAdapterBackCompatTraitInterface
     public function directoryExists(string $location): bool;
 
     /**
+     * This isn't strictly on v3 interface but is needed to implement `::directoryExists()`.
+     *
      * @see PathNormalizer
      */
     public function normalizePath(string $path): string;

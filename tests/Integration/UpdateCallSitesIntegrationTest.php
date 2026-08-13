@@ -76,6 +76,10 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
         assert($exitCode === 0);
 
+        // E.g. twig/twig/src/Extension/CoreExtension.php
+        // has `namespace Twig\Extension {}` followed by `namespace{}` with global functions defined in it.
+        // Should a global function defined in a file that is autoloaded a weird way be prefixed? I guess.
+
         $project_file_php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/file1.php');
         $this->assertStringNotContainsString('$v = twig_cycle(', $project_file_php_string);
         $this->assertStringContainsString('$v = bh_strauss_twig_cycle(', $project_file_php_string);

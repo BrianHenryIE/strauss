@@ -295,10 +295,12 @@ class Licenser
             )
             ~Ux';                          // U: Non-greedy matching, x: ignore whitespace in pattern.
 
-        $replaceInMultilineCommentFunction = function ($matches) use (
+        $replaceInMultilineCommentFunction = function (array $matches) use (
             $licenseDeclaration,
             $modifiedDeclaration
         ) {
+            /** @var array<int,string> $matches */
+
             // Find the line prefix and use it, i.e. could be none, asterisk or space-asterisk.
             $commentLines = explode("\n", $matches[2]);
 

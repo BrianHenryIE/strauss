@@ -172,7 +172,9 @@ class InstalledJson
     }
 
     /**
-     * @param InstalledJsonPackageArray $packageArray
+     * @param array{install-path: string, ...} $packageArray Typically {@see InstalledJsonPackageArray}, but only
+     *                                                       `install-path` is used, and modifying the autoload key
+     *                                                       in loops widens the inferred type beyond that alias.
      * @throws FilesystemException
      */
     protected function pathExistsInPackage(string $vendorDir, array $packageArray, string $relativePath): bool
@@ -208,54 +210,48 @@ class InstalledJson
                     'Removing package autoload key from {installedJsonPath}: {packageName}',
                     ['packageName' => $packageArray['name'],'installedJsonPath'=>$installedJsonPath]
                 );
-                $installedJsonArray['packages'][$packageIndex]['autoload'] = [];
+                $packageArray['autoload'] = [];
             }
-            foreach ($installedJsonArray['packages'][$packageIndex]['autoload'] ?? [] as $type => $autoload) {
+            foreach ($packageArray['autoload'] as $type => $autoload) {
                 switch ($type) {
                     case 'files':
                     case 'classmap':
                         // Ensure we filter the current autoload bucket and keep only existing paths
                         $filtered = array_filter(
-                            (array) $autoload,
-                            function ($relativePath) use ($vendorDir, $packageArray): bool {
-                                return is_string($relativePath) && $this->pathExistsInPackage($vendorDir, $packageArray, $relativePath);
+                            $autoload,
+                            function (string $relativePath) use ($vendorDir, $packageArray): bool {
+                                return $this->pathExistsInPackage($vendorDir, $packageArray, $relativePath);
                             }
                         );
                         // Reindex to produce a clean list of strings
-                        $installedJsonArray['packages'][$packageIndex]['autoload'][$type] = array_values($filtered);
+                        $packageArray['autoload'][$type] = array_values($filtered);
                         break;
                     case 'psr-0':
                         // Intentionally fall through.
                     case 'psr-4':
                         foreach ($autoload as $namespace => $paths) {
-                            switch (true) {
-                                case is_array($paths):
-                                    // e.g. [ 'psr-4' => [ 'BrianHenryIE\Project' => ['src','lib] ] ]
-                                    $validPaths = [];
-                                    foreach ($paths as $path) {
-                                        if ($this->pathExistsInPackage($vendorDir, $packageArray, $path)) {
-                                            $validPaths[] = $path;
-                                        } else {
-                                            $this->logger->debug('Removing non-existent path from autoload: ' . $path);
-                                        }
-                                    }
-                                    if (!empty($validPaths)) {
-                                        $installedJsonArray['packages'][$packageIndex]['autoload'][$type][$namespace] = $validPaths;
+                            if (is_array($paths)) {
+                                // e.g. [ 'psr-4' => [ 'BrianHenryIE\Project' => ['src','lib] ] ]
+                                $validPaths = [];
+                                foreach ($paths as $path) {
+                                    if ($this->pathExistsInPackage($vendorDir, $packageArray, $path)) {
+                                        $validPaths[] = $path;
                                     } else {
-                                        $this->logger->debug('Removing autoload key: ' . $type);
-                                        unset($installedJsonArray['packages'][$packageIndex]['autoload'][$type][$namespace]);
+                                        $this->logger->debug('Removing non-existent path from autoload: ' . $path);
                                     }
-                                    break;
-                                case is_string($paths):
-                                    // e.g. [ 'psr-4' => [ 'BrianHenryIE\Project' => 'src' ] ]
-                                    if (!$this->pathExistsInPackage($vendorDir, $packageArray, $paths)) {
-                                        $this->logger->debug('Removing autoload key: ' . $type . ' for ' . $paths);
-                                        unset($installedJsonArray['packages'][$packageIndex]['autoload'][$type][$namespace]);
-                                    }
-                                    break;
-                                default:
-                                    $this->logger->warning('Unexpectedly got neither a string nor array for autoload key in installed.json: ' . $type . ' ' . json_encode($paths));
-                                    break;
+                                }
+                                if (!empty($validPaths)) {
+                                    $packageArray['autoload'][$type][$namespace] = $validPaths;
+                                } else {
+                                    $this->logger->debug('Removing autoload key: ' . $type);
+                                    unset($packageArray['autoload'][$type][$namespace]);
+                                }
+                            } else {
+                                // e.g. [ 'psr-4' => [ 'BrianHenryIE\Project' => 'src' ] ]
+                                if (!$this->pathExistsInPackage($vendorDir, $packageArray, $paths)) {
+                                    $this->logger->debug('Removing autoload key: ' . $type . ' for ' . $paths);
+                                    unset($packageArray['autoload'][$type][$namespace]);
+                                }
                             }
                         }
                         break;
@@ -269,9 +265,16 @@ class InstalledJson
                         break;
                 }
             }
+            /**
+             * Writing to `autoload` via the variable `$type`/`$namespace` keys widens PHPStan's inferred type
+             * beyond the declared shape; the runtime values still match the alias.
+             *
+             * @var InstalledJsonPackageAutoloadArray $cleanedAutoload
+             */
+            $cleanedAutoload = $packageArray['autoload'];
+            $packageArray['autoload'] = $cleanedAutoload;
+            $installedJsonArray['packages'][$packageIndex] = $packageArray;
         }
-        /** @var InstalledJsonArray $installedJsonArray */
-        $installedJsonArray = $installedJsonArray;
         return $installedJsonArray;
     }
 
@@ -303,7 +306,8 @@ class InstalledJson
                     'Removing deleted package autoload key from {installedJsonPath}: {packageName}',
                     ['installedJsonPath' => $installedJsonPath, 'packageName' => $packageName]
                 );
-                $installedJsonArray['packages'][$key]['autoload'] = [];
+                $packageArray['autoload'] = [];
+                $installedJsonArray['packages'][$key] = $packageArray;
             }
         }
         return $installedJsonArray;
@@ -349,7 +353,8 @@ class InstalledJson
                     'Removing deleted package autoload key from {installedJsonPath}: {packageName}',
                     ['installedJsonPath' => $installedJsonPath, 'packageName' => $packageName]
                 );
-                $installedJsonArray['packages'][$key]['autoload'] = [];
+                $packageArray['autoload'] = [];
+                $installedJsonArray['packages'][$key] = $packageArray;
             }
         }
         return $installedJsonArray;
@@ -430,7 +435,6 @@ class InstalledJson
                             if ($type === 'psr-0' && empty($namespaceSymbol->getSourceFiles())) {
                                 $newKey = str_replace('\\', '_', $newKey);
                             }
-                            /** @phpstan-ignore offsetAccess.notFound */
                             $autoload_key[$type][$newKey] = $autoload_key[$type][$originalNamespace];
                             unset($autoload_key[$type][$originalNamespace]);
                         }
@@ -453,7 +457,15 @@ class InstalledJson
                         break;
                 }
             }
-            $installedJsonArray['packages'][$key]['autoload'] = array_filter($autoload_key);
+            /**
+             * `$autoload_key` was modified via variable keys, widening PHPStan's inferred type beyond the
+             * declared shape; the runtime values still match the alias.
+             *
+             * @var InstalledJsonPackageAutoloadArray $filteredAutoloadKey
+             */
+            $filteredAutoloadKey = array_filter($autoload_key);
+            $package['autoload'] = $filteredAutoloadKey;
+            $installedJsonArray['packages'][$key] = $package;
         }
 
         $this->logger->debug('Finished InstalledJson::updateNamespaces()');

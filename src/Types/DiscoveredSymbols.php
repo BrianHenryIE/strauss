@@ -120,6 +120,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     public function get(string $fqdnName): ?DiscoveredSymbol
     {
+        /** @var DiscoveredSymbol[] $found */
         $found = array_reduce(
             $this->types,
             fn (array $carry, array $symbol) => isset($symbol[$fqdnName]) ? array_merge($carry, [$symbol[$fqdnName]]) : $carry,
@@ -183,6 +184,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     {
         return new DiscoveredSymbols(
             array_merge(
+                $this->types[self::CONST_SYMBOL],
+                $this->types[self::FUNCTION_SYMBOL],
                 $this->types[self::CLASS_SYMBOL],
                 $this->types[self::TRAIT_SYMBOL],
                 $this->types[self::INTERFACE_SYMBOL],
@@ -299,7 +302,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @return array<DiscoveredSymbol>
+     * @return array<string, DiscoveredSymbol> Keyed by the symbol's original fully qualified name.
      */
     public function toArray(): array
     {
@@ -327,12 +330,18 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @return Traversable<DiscoveredSymbol>
+     * Iterates every symbol in every bucket. Unlike {@see self::toArray()}, symbols whose fqdn matches a
+     * symbol of another type (e.g. nikic/php-parser's `PhpParser\Node` is both an interface and a namespace)
+     * are not lost, so keys may repeat.
+     *
+     * @return Traversable<string, DiscoveredSymbol>
      */
     #[ReturnTypeWillChange]
     public function getIterator()
     {
-        return new ArrayIterator($this->toArray());
+        foreach ($this->types as $symbols) {
+            yield from $symbols;
+        }
     }
 
     /**

@@ -230,14 +230,17 @@ class DumpAutoload
 
         // This is just `<?php return array(...);`
         $installedPhpString = $this->filesystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.php');
+        /** @var array{root:array<string,string>, versions:array<string,array<string, string|array|bool>>} $installed */
         $installed = eval(str_replace('<?php', '', $installedPhpString));
 
         $targetPackages = $this->config->getPackagesToCopy();
         $targetPackagesNames = array_keys($targetPackages);
 
-        $installed['versions'] = array_filter($installed['versions'], function ($packageName) use ($targetPackagesNames) {
-            return in_array($packageName, $targetPackagesNames);
-        }, ARRAY_FILTER_USE_KEY);
+        $installed['versions'] = array_filter(
+            $installed['versions'],
+            fn (string $packageName): bool => in_array($packageName, $targetPackagesNames),
+            ARRAY_FILTER_USE_KEY
+        );
 
         $installedArrayString = var_export($installed, true);
 

@@ -775,7 +775,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        /** @var SplFileInfo[] $iterator */
+        /** @var Generator<SplFileInfo> $iterator */
         $iterator = $deep ? $this->parentListDirectoryRecursively($location) : $this->parentListDirectory($location);
 
         foreach ($iterator as $fileInfo) {

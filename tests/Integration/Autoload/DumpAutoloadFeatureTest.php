@@ -13,7 +13,6 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use Composer\Autoload\AutoloadGenerator;
 use Composer\Factory;
 use Composer\IO\NullIO;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -459,5 +458,64 @@ EOD;
 
         $this->assertStringNotContainsString('\'Composer\\Autoload\\ClassLoader', $phpString);
         $this->assertStringContainsString('Company\\Project\\Composer\\Autoload\\ClassLoader', $phpString);
+    }
+
+    /**
+     * 'Composer\InstalledVersions' is prefixed in its class but not in autoload_static
+     *
+     * @see vendor/composer/autoload_static.php
+     *
+     * @see DumpAutoload::createInstalledVersionsFiles()
+     */
+    public function testItPrefixesComposerInstalledVersionsInAutoloadStatic(): void
+    {
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "dump/autoload",
+  "require": {
+    "psr/log": "1.0"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Company\\Project\\"
+    }
+  }
+}
+EOD;
+
+        chdir($this->testsWorkingDir);
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/InstalledVersions.php');
+
+        $this->assertStringNotContainsString('namespace Composer;', $phpString);
+        $this->assertStringContainsString('namespace Company\\Project\\Composer;', $phpString);
+
+        $installedVersionsPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_static.php');
+
+        $this->assertStringNotContainsString('\'Composer\\InstalledVersions\'', $installedVersionsPhpString);
+        $this->assertStringContainsString('\'Company\\\\Project\\\\Composer\\\\InstalledVersions\'', $installedVersionsPhpString);
+
+        exec('composer dump-autoload --classmap-authoritative;');
+
+        $installedVersionsPhpStringAfterDumpAutoload = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_static.php');
+
+        $this->assertStringNotContainsString('\'Composer\\InstalledVersions\'', $installedVersionsPhpStringAfterDumpAutoload);
+        $this->assertStringContainsString('\'Company\\\\Project\\\\Composer\\\\InstalledVersions\'', $installedVersionsPhpStringAfterDumpAutoload);
+
+        $exitCode = $this->runStrauss($output, 'prefix-vendor-autoload');
+        $this->assertEquals(0, $exitCode, $output);
+
+        $installedVersionsPhpStringAfterPrefixVendorAutoload = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_static.php');
+
+        $this->assertStringNotContainsString('\'Composer\\InstalledVersions\'', $installedVersionsPhpStringAfterPrefixVendorAutoload);
+        $this->assertStringContainsString('\'Company\\\\Project\\\\Composer\\\\InstalledVersions\'', $installedVersionsPhpStringAfterPrefixVendorAutoload);
     }
 }

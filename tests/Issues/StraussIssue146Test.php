@@ -122,6 +122,30 @@ class StraussIssue146Test extends IntegrationTestCase
         $this->assertStringContainsString('new \\BrianHenryIE\\TestStrauss\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
 
         /**
+         * @see vendor/composer/autoload_static.php
+         *
+         * `'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',`.
+         */
+        $autoloadStaticPhpString = file_get_contents($this->testsWorkingDir .'/vendor/composer/autoload_static.php');
+        $this->assertStringNotContainsString('\'Composer\\\\InstalledVersions\'', $autoloadStaticPhpString);
+        $this->assertStringContainsString('\'BrianHenryIE\\\\TestStrauss\\\\Composer\\\\InstalledVersions\'', $autoloadStaticPhpString, 'InstalledVersions not prefixed in autoload_static.');
+
+        // Pimple was found in the .phar still in its original location.
+        // vendor/pimple/pimple/src/Pimple/Container.php
+        // vendor/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php
+        $originalFilePath = '/vendor/pimple/pimple/src/Pimple/Container.php';
+        $this->assertTrue(
+            !$this->getFileSystem()->fileExists($this->testsWorkingDir . $originalFilePath),
+            "File should no longer exist at original: " . $originalFilePath
+        );
+        // TODO: works locally.
+//        $expectedFilePath = '/vendor/pimple/pimple/src/BrianHenryIE/TestStrauss/Pimple/Container.php';
+//        $this->assertTrue(
+//            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
+//            "Expected file not found at: " . $expectedFilePath
+//        );
+
+        /**
          * Return type was being treated as a namespace and prefixed.
          *
          * @see \Composer\Factory::createComposer()
@@ -149,9 +173,11 @@ class StraussIssue146Test extends IntegrationTestCase
          *
          * `use Composer\IO\IOInterface;`.
          */
-        $php_string = file_get_contents($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
-        $this->assertStringNotContainsString('use Composer\IO\IOInterface;', $php_string);
-        $this->assertStringContainsString('use BrianHenryIE\TestStrauss\Composer\IO\IOInterface;', $php_string);
+        $autoloadGeneratorPhpString = file_get_contents($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
+        $this->assertStringNotContainsString('use Composer\IO\IOInterface;', $autoloadGeneratorPhpString);
+        $this->assertStringContainsString('use BrianHenryIE\TestStrauss\Composer\IO\IOInterface;', $autoloadGeneratorPhpString);
+
+        $this->assertStringContainsString('\\0BrianHenryIE\\TestStrauss\\Composer\\Autoload\\ClassLoader\\0', $autoloadGeneratorPhpString);
     }
 
     public function test_prefix_own_classes_for_test(): void

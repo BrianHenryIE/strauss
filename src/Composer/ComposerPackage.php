@@ -19,7 +19,7 @@ use Composer\Util\Platform;
 use Exception;
 
 /**
- * @phpstan-type AutoloadKeyArray array{files?:array<string>, "classmap"?:array<string>, "psr-4"?:array<string,string|array<string>>, "psr-0"?:array<string,string|array<string>>, "exclude_from_classmap"?:array<string>}
+ * @phpstan-type AutoloadKeyArray array{files?:array<string>, classmap?:array<string>, "psr-4"?:array<string,string|array<string>>, "psr-0"?:array<string,string|array<string>>, "exclude_from_classmap"?:array<string>}
  * @phpstan-type ComposerConfigArray array{vendor-dir?:string}
  * @phpstan-type ComposerJsonArray array{name?:string, type?:string, license?:string, require?:array<string,string>, autoload?:AutoloadKeyArray, config?:ComposerConfigArray, repositories?:array<mixed>, provide?:array<string,string>}
  * @see \Composer\Config::merge()

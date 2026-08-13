@@ -69,8 +69,10 @@ class AliasesTest extends TestCase
             $file
         );
         $namespaceSymbol->setLocalReplacement('Baz\\Foo\\Bar');
+        $namespaceSymbol->setDoRename(true);
 
         $classSymbol = new ClassSymbol('Foo\\Bar\\Baz', $file, $namespaceSymbol);
+        $classSymbol->setDoRename(true);
         $symbols->add($classSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -125,9 +127,13 @@ EOD;
 
         $functionSymbol = new FunctionSymbol('foo', $file, new NamespaceSymbol('\\'));
         $functionSymbol->setLocalReplacement('bar_foo');
+        $functionSymbol->setDoRename(true);
+
         $symbols->add($functionSymbol);
 
         $namespaceSymbol = new NamespaceSymbol('Foo\\Bar', $file);
+        $namespaceSymbol->setDoRename(true);
+
         $symbols->add($namespaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -174,8 +180,10 @@ EOD;
             $file
         );
         $namespaceSymbol->setLocalReplacement('Baz\\Foo\\Bar');
+        $namespaceSymbol->setDoRename(true);
 
         $interfaceSymbol = new InterfaceSymbol('Foo\\Bar\\Baz', $file, $namespaceSymbol);
+        $interfaceSymbol->setDoRename(true);
 
         $symbols->add($interfaceSymbol);
 
@@ -241,6 +249,8 @@ EOD;
 
         $namespaceSymbol = new NamespaceSymbol('Bar', $file);
         $namespaceSymbol->setLocalReplacement('Foo\\Bar');
+        $namespaceSymbol->setDoRename(true);
+
         $symbols->add($namespaceSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -297,8 +307,10 @@ EOD;
             $file
         );
         $namespaceSymbol->setLocalReplacement('Baz\\Foo\\Bar');
+        $namespaceSymbol->setDoRename(true);
 
         $enumSymbol = new EnumSymbol('Foo\\Bar\\Status', $file, $namespaceSymbol, 'string');
+        $enumSymbol->setDoRename(true);
         $symbols->add($enumSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);
@@ -362,9 +374,11 @@ EOD;
         );
 
         $namespaceSymbol = new NamespaceSymbol('EnumAliasTest', $file);
+        $namespaceSymbol->setDoRename(true);
         $namespaceSymbol->setLocalReplacement('EnumAliasTestPrefix\\EnumAliasTest');
 
         $enumSymbol = new EnumSymbol('EnumAliasTest\\Status', $file, $namespaceSymbol, 'string');
+        $enumSymbol->setDoRename(true);
         $symbols->add($enumSymbol);
 
         $sut->writeAliasesFileForSymbols($symbols);

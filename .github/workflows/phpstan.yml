@@ -15,9 +15,12 @@ jobs:
     permissions:
       contents: write
 
+    env:
+      COMPOSER_ALLOW_UNSAFE_PHAR_METADATA: 1 # "Refusing to parse a tar/phar archive on PHP < 8.0 because it is not safe to process untrusted archives on that PHP version."
+
     steps:
       - name: Checkout PR branch
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # needed for baseline comparison
 
@@ -30,18 +33,21 @@ jobs:
           coverage: none
 
       - name: Install Project Dependencies
-        run: composer install
+        run: composer install --verbose
 
-      - name: Run PHPStan (annotate all errors to max level)
+      - name: Print Project Dependencies
+        run: composer show
+
+      - name: Run PHPStan to add annotations to the code
+        continue-on-error: true
+        run: vendor/bin/phpstan analyse -c phpstan.neon --level max --memory-limit 1G --error-format=checkstyle | cs2pr
+
+      # On merge to main, fail for any error in `src`.
+      - name: Run PHPStan to add annotations to the code (main)
         id: run-phpstan
-        run: |
-          vendor/bin/phpstan analyse --memory-limit=-1  --level max -vvv --error-format=checkstyle | cs2pr
-        continue-on-error: true
-
-      - name: Run PHPStan (fail if phpstan.neon level is not met) on PRs
-        run: vendor/bin/phpstan analyse --memory-limit=-1 -vvv
-        # TODO: fail _after_ the badge is updated
-        continue-on-error: true
+        run: vendor/bin/phpstan analyse src -c phpstan.neon --memory-limit 1G
+        if: ${{ github.event_name != 'pull_request' }}
+        continue-on-error: true # Continue so we can commit the badge.
 
       - name: Get PhpStan level
         id: phpstan-level
@@ -53,18 +59,83 @@ jobs:
           echo "level=$LEVEL" >> "$GITHUB_OUTPUT"
 
       - name: Check success
-        if: steps.run-phpstan.outcome == 'success'
+        if: ${{ github.event_name != 'pull_request' && steps.run-phpstan.outcome == 'success' }}
         run: curl -o .github/phpstan.svg https://img.shields.io/badge/PHPStan-Level%20${{ steps.phpstan-level.outputs.level}}-2a5ea7.svg
 
       - name: Check failures
-        if: steps.run-phpstan.outcome != 'success'
+        if: ${{ github.event_name != 'pull_request' && steps.run-phpstan.outcome != 'success' }}
         run: curl -o .github/phpstan.svg https://img.shields.io/badge/PHPStan-Level%20${{ steps.phpstan-level.outputs.level}}❌-lightgrey.svg
 
       # This probably needs DEPLOY_KEY set for PRs and private repos
       - name: Commit README badge changes
         uses: stefanzweifel/git-auto-commit-action@v7
-        if: ${{ matrix.php == '7.4' && github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' }}
         with:
           file_pattern: ".github/phpstan.svg"
           before_commit_hook: "git pull"
           commit_message: "🤖 PhpStan"
+
+      # This outputs `steps.pr_diff.outputs.diff_filename` and `steps.pr_diff.outputs.diff_contents`.
+      - name: Get the PR diff
+        id: pr_diff
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          FILENAME="${{ env.TARGET_BRANCH_REF_NAME }}-${{ github.event.pull_request.head.sha }}.diff"
+          git fetch origin ${{ env.TARGET_BRANCH_REF_NAME }}:refs/remotes/origin/${{ env.TARGET_BRANCH_REF_NAME }}
+          git diff origin/${{ env.TARGET_BRANCH_REF_NAME }} > tmp.diff
+          mv tmp.diff $FILENAME
+          echo "diff_filename=$FILENAME" >> $GITHUB_OUTPUT
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "diff_contents<<$EOF" >> $GITHUB_OUTPUT
+          echo "$(cat $FILENAME)" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+        env:
+          TARGET_BRANCH_REF_NAME: ${{ github.event.pull_request.base.ref }}
+
+      - name: Run PHPStan at phpstan.neon level
+        if: ${{ github.event_name == 'pull_request' }}
+        continue-on-error: true
+        run: vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 1G --error-format=checkstyle > phpstan-checkstyle.xml
+
+      # On PRs, print out the xml for debug.
+      - name: Debug log phpstan-checkstyle.xml
+        continue-on-error: true
+        if: ${{ github.event_name == 'pull_request' }}
+        run: cat ${{ env.CHECKSTYLE_FILENAME }}
+        env:
+          CHECKSTYLE_FILENAME: "phpstan-checkstyle.xml"
+
+      - name: Generate filtered-checkstyle.xml – PHPStan errors only the modified lines in the pr diff
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          vendor/bin/prf filter-checkstyle ${{ env.DIFF_FILENAME }} ${{ env.CHECKSTYLE_FILENAME }} ${{ env.OUTPUT_FILENAME }} --base-path=$GITHUB_WORKSPACE
+        env:
+          DIFF_FILENAME: ${{ steps.pr_diff.outputs.diff_filename }}
+          CHECKSTYLE_FILENAME: "phpstan-checkstyle.xml"
+          OUTPUT_FILENAME: "filtered-checkstyle.xml"
+
+      # We don't really care about the annotations of cs2pr here, but we use it to fail.
+      - name: Fail if there are still PHPStan errors in modified lines
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          cat ${{ env.FILTERED_CHECKSTYLE_FILENAME }} | cs2pr
+        env:
+          FILTERED_CHECKSTYLE_FILENAME: "filtered-checkstyle.xml"
+
+#      - name: Fail
+#        if: ${{ steps.run-phpstan.outcome != 'success' }}
+#        run: exit 1
+
+      # On PRs, print out the xml for debug.
+      - name: Debug log filtered-checkstyle.xml
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        run: cat ${{ env.CHECKSTYLE_FILENAME }}
+        env:
+          CHECKSTYLE_FILENAME: "filtered-checkstyle.xml"
+
+      # On PRs, print out the xml for debug.
+      - name: Debug log filtered-checkstyle.xml
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        run: cat ${{ env.CHECKSTYLE_FILENAME }} | vendor/bin/phpstan-checkstyle
+        env:
+          CHECKSTYLE_FILENAME: "filtered-checkstyle.xml"

@@ -18,6 +18,7 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 class NamespacedSymbol extends DiscoveredSymbol
 {
     protected NamespaceSymbol $namespace;
+    protected bool $isAutoloaded = false;
 
     public function __construct(
         string $fqdnSymbol,
@@ -93,20 +94,32 @@ class NamespacedSymbol extends DiscoveredSymbol
                      * This is verified in {@see ComposerPackage::isPsr0Autoloaded()}.
                      *
                      * @var string $psr0namespace
-                     * @var string|string[] $autoloadPackageRelativePath
+                     * @var string|string[] $autoloadPackageRelativePaths
                      * @phpstan-ignore offsetAccess.notFound
                      */
-                    foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePath) {
-                        if (str_starts_with(
-                            trim($file->getPackageRelativePath(), '\\/'),
-                            trim($autoloadPackageRelativePath, '\\/')
-                        )) {
-                            return $psr0namespace;
+                    foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePaths) {
+                        foreach ((array) $autoloadPackageRelativePaths as $autoloadPackageRelativePath) {
+                            if (str_starts_with(
+                                trim($file->getPackageRelativePath(), '\\/'),
+                                trim($autoloadPackageRelativePath, '\\/')
+                            )) {
+                                return $psr0namespace;
+                            }
                         }
                     }
                 }
             }
         }
         return null;
+    }
+
+    public function setIsAutoloaded(bool $isAutoloaded): void
+    {
+        $this->isAutoloaded = $isAutoloaded;
+    }
+
+    public function isAutoloaded(): bool
+    {
+        return $this->isAutoloaded;
     }
 }

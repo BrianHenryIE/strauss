@@ -205,6 +205,7 @@ EOD;
 
     /**
      * After 0.25.0 namespaces not in psr-4 keys, i.e. only found by classmap scan, were not updated.
+     * And during 0.29.1 fixes!
      */
     public function testSimpleReplacement(): void
     {
@@ -400,6 +401,8 @@ JSON;
      *
      * @see AutoloadGenerator::getStaticFile()
      * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+     *
+     * @see Prefixer::prefixComposerAutoloadFiles()
      */
     public function test_ClassLoader(): void
     {

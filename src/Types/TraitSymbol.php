@@ -18,14 +18,14 @@ class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     /**
      * @param string $fqdnClassname
      * @param FileBase $sourceFile
-     * @param ?NamespaceSymbol $namespace
+     * @param NamespaceSymbol $namespace
      * @param ?ComposerPackage $composerPackage
      * @param ?string[] $uses
      */
     public function __construct(
         string $fqdnClassname,
         FileBase $sourceFile,
-        ?NamespaceSymbol $namespace = null,
+        NamespaceSymbol $namespace,
         ?ComposerPackage $composerPackage = null,
         ?array $uses = null
     ) {

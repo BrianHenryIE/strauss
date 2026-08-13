@@ -93,10 +93,17 @@ EOD;
 
         // vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Serializer.php
         // vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/Strauss/HTMLPurifier/DefinitionCache/Serializer.php
-        $this->assertTrue($this->getFileSystem()->fileExists($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier/DefinitionCache/Serializer.php'));
+        $expectedFilePath = '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier/DefinitionCache/Serializer.php';
+        $this->assertTrue(
+            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
+            "Expected file not found at: " . $expectedFilePath
+        );
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier/DefinitionCache/Serializer.php');
         $this->assertStringContainsString('class BrianHenryIE_TestStrauss_HTMLPurifier_DefinitionCache_Serializer', $phpString);
+
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/ezyang/htmlpurifier/library/BrianHenryIE/TestStrauss/HTMLPurifier.func.php');
+        $this->assertStringContainsString('function brianhenryie_teststrauss_HTMLPurifier', $phpString);
 
         $installedJson = json_decode($this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/installed.json'), true);
         $this->assertEquals('BrianHenryIE_TestStrauss_HTMLPurifier', array_key_first($installedJson['packages'][0]['autoload']['psr-0']));
@@ -106,5 +113,64 @@ EOD;
         exec('php -r "include __DIR__ . \'/vendor-prefixed/autoload.php\'; new BrianHenryIE_TestStrauss_HTMLPurifier_DefinitionCache_Serializer(\'type\');" 2>&1', $output, $result_code);
         $outputString = implode(PHP_EOL, $output);
         $this->assertEquals(0, $result_code, $outputString);
+    }
+
+    /**
+     * Looks like files were copied but not moved.
+     *
+     * When installing `pimple/pimple` "v3.6.2" in `autoload_static.php` there were unprefixed files.
+     */
+    public function test_pimple_files_are_moved(): void
+    {
+        $composerJsonString = <<<'EOD'
+{
+  "name": "psr/feature0",
+  "require": {
+    "pimple/pimple": "3.6.2"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+      "classmap_prefix": "BrianHenryIE_TestStrauss_",
+      "target_directory": "vendor"
+    }
+  },
+  "config": {
+    "platform": {
+        "php": "7.4"
+    }
+  }
+}
+EOD;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+
+        $autoloadStaticPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_static.php');
+        $this->assertStringNotContainsString('\'Pimple\\\\Container\'', $autoloadStaticPhpString);
+        $this->assertStringContainsString('\'BrianHenryIE\\\\TestStrauss\\\\Pimple\\\\Container\'', $autoloadStaticPhpString);
+
+
+        // vendor/pimple/pimple/src/Pimple/Container.php
+        // vendor/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php
+        $originalFilePath = '/vendor/pimple/pimple/src/Pimple/Container.php';
+        $this->assertTrue(
+            !$this->getFileSystem()->fileExists($this->testsWorkingDir . $originalFilePath),
+            "File should no longer exist at original: " . $originalFilePath
+        );
+
+        $expectedFilePath = '/vendor/pimple/pimple/src/BrianHenryIE/TestStrauss/Pimple/Container.php';
+        $this->assertTrue(
+            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
+            "Expected file not found at: " . $expectedFilePath
+        );
     }
 }

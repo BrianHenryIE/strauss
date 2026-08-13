@@ -13,7 +13,6 @@ use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter;
 use BrianHenryIE\Strauss\Helpers\Log\PadColonColumnsLogProcessor;
 use BrianHenryIE\Strauss\Helpers\Log\RelativeFilepathLogProcessor;
-use Composer\InstalledVersions;
 use Composer\Util\Platform;
 use Elazar\Flystream\FilesystemRegistry;
 use League\Flysystem\Config;
@@ -33,7 +32,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class AbstractRenamespacerCommand extends Command
 {
     /**
-     * @var LoggerInterface&Logger
+     * @var Logger&LoggerInterface
      */
     protected $logger;
 
@@ -89,7 +88,7 @@ abstract class AbstractRenamespacerCommand extends Command
          * When run via. `strauss.phar`, classes such as `InstalledVersions` are prefixed, but when installed
          * via Composer, the unprefixed version is used.
          *
-         * @var string $installedSymfonyVersion
+         * @var ?string $installedSymfonyVersion
          */
         $installedSymfonyVersion = class_exists(\BrianHenryIE\Strauss\Composer\InstalledVersions::class)
             ? \BrianHenryIE\Strauss\Composer\InstalledVersions::getVersion('symfony/console')

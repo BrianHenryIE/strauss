@@ -4,6 +4,7 @@ namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 
 class FileWithDependency extends File implements HasDependency
 {
@@ -24,6 +25,11 @@ class FileWithDependency extends File implements HasDependency
      * @var string[] The autoloader types that this file is included in.
      */
     protected array $autoloaderTypes = [];
+
+    protected bool $isAutoloaded = false;
+
+    // Marker so we know to move files after renaming.
+    protected bool $isPsr0 = false;
 
     public function __construct(
         ComposerPackage $dependency,
@@ -110,23 +116,13 @@ class FileWithDependency extends File implements HasDependency
         return in_array('psr-0', $this->autoloaderTypes);
     }
 
+    public function setIsAutoloaded(bool $isAutoloaded): void
+    {
+        $this->isAutoloaded = $isAutoloaded;
+    }
+
     public function isAutoloaded(): bool
     {
-        if ($this->dependency->hasPsr0()) {
-            /**
-             * This is checked by {@see ComposerPackage::hasPsr0()}.
-             * @phpstan-ignore offsetAccess.notFound
-             */
-            foreach ($this->getDependency()->getAutoload()['psr-0'] as $autoloadPackageRelativePath) {
-                if (str_starts_with(
-                    trim($this->packageRelativePath, '\\/'),
-                    trim($autoloadPackageRelativePath, '\\/')
-                )) {
-                    return true;
-                }
-            }
-        }
-
-        return !empty($this->autoloaderTypes);
+        return $this->isAutoloaded;
     }
 }

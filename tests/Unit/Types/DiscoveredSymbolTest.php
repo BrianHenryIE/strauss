@@ -70,6 +70,7 @@ class DiscoveredSymbolTest extends TestCase
         );
 
         $sut = new ClassSymbol('MyClass', $file, new NamespaceSymbol('\\'));
+        $sut->setDoRename(true);
 
         $sut->setLocalReplacement('MyClassRenamed');
 
