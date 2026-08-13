@@ -203,9 +203,9 @@ class File implements FileBase
         return $this->discoveredSymbols->getNamespaces();
     }
 
-    public function setParsedAst(array $ast)
+    public function setParsedAst(?array $ast)
     {
-        $this->ast = $ast;
+//        $this->ast = $ast;
     }
 
     /**

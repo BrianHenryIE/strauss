@@ -1582,8 +1582,8 @@ EOD;
         $file->shouldReceive('getSourcePath');
         $file->shouldReceive('getVendorRelativePath');
         $file->shouldReceive('getTargetAbsolutePath');
-        $file->shouldReceive( 'setParsedAst' );
-        $file->shouldReceive( 'getParsedAst' )->andReturnNull();
+        $file->shouldReceive('setParsedAst');
+        $file->shouldReceive('getParsedAst')->andReturnNull();
 
         $discoveredSymbols = new DiscoveredSymbols();
         $globalNamespace = new NamespaceSymbol('\\', $file);
@@ -1627,8 +1627,8 @@ EOD;
         $file->shouldReceive('getSourcePath');
         $file->shouldReceive('getVendorRelativePath');
         $file->shouldReceive('getTargetAbsolutePath');
-        $file->shouldReceive( 'setParsedAst' );
-        $file->shouldReceive( 'getParsedAst' )->andReturnNull();
+        $file->shouldReceive('setParsedAst');
+        $file->shouldReceive('getParsedAst')->andReturnNull();
 
         $globalNamespace = new NamespaceSymbol('\\', $file);
         $globalNamespace->setDoRename(true);
@@ -1683,8 +1683,8 @@ EOD;
         $file->shouldReceive('getSourcePath');
         $file->shouldReceive('getVendorRelativePath');
         $file->shouldReceive('getTargetAbsolutePath');
-        $file->shouldReceive( 'setParsedAst' );
-        $file->shouldReceive( 'getParsedAst' )->andReturnNull();
+        $file->shouldReceive('setParsedAst');
+        $file->shouldReceive('getParsedAst')->andReturnNull();
 
         $globalNamespace = new NamespaceSymbol('\\', $file);
         $globalNamespace->setDoRename(true);

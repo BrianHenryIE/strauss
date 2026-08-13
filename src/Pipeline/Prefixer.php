@@ -149,6 +149,9 @@ class Prefixer
             $this->logger->info("Updated contents of file: {targetAbsolutePath}", [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
             ]);
+            // In future, we'll use string index positions and keep them current.
+            /** @var File $file */
+            $file->setParsedAst(null);
         } else {
             $this->logger->debug("No changes to file: {targetAbsolutePath}", [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()

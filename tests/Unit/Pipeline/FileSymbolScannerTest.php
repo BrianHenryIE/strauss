@@ -47,8 +47,8 @@ class FileSymbolScannerTest extends TestCase
         $file->shouldReceive('getVendorRelativePath')->andReturn('another/path');
         $file->shouldReceive('isDoCopy')->andReturnTrue();
         $file->shouldReceive('isDoPrefix')->zeroOrMoreTimes()->andReturnTrue();
-        $file->shouldReceive( 'setParsedAst' );
-        $file->shouldReceive( 'getParsedAst' )->andReturnNull();
+        $file->shouldReceive('setParsedAst');
+        $file->shouldReceive('getParsedAst')->andReturnNull();
 
         return $file;
     }
