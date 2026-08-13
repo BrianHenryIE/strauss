@@ -46,8 +46,8 @@ rm vendor/json-mapper/json-mapper/*.xml
 rm -rf vendor/pimple/pimple/src/Pimple/Tests
 rm -rf vendor/inmarelibero/gitignore-checker/tests
 
-echo "Run strauss --info";
-../bin/strauss --info;
+echo "Run strauss --debug";
+php -d memory_limit=2G ../bin/strauss --debug
 
 # TODO: This doesn't seem to be generated at all
 # and it's definitely not being loaded right now, so not a pressing issue
@@ -57,26 +57,45 @@ echo "Run strauss --info";
 # TODO: add the number of files that are about to be checked.
 echo "Running php -l syntax check on files. Some packages, e.g. polyfills, conditionally load files with newer PHP syntax and will error."
 
-# TODO: skip known "errors"
-#Error in ./vendor/symfony/polyfill-intl-normalizer/bootstrap80.php:
-#Error in ./vendor/symfony/service-contracts/Attribute/SubscribedService.php:
-#Error in ./vendor/symfony/console/Attribute/AsCommand.php:
-#Error in ./vendor/symfony/polyfill-mbstring/bootstrap80.php:
-#Error in ./vendor/symfony/polyfill-intl-grapheme/bootstrap80.php:
-#Error in ./vendor/symfony/polyfill-intl-grapheme/bootstrap85.php:
+# Allow-list of files known to fail `php -l` on this PHP version; anything else failing is a new error.
+php_lint_allowed_errors=(
+    "./vendor/symfony/polyfill-intl-normalizer/bootstrap80.php"
+    "./vendor/symfony/polyfill-php84/bootstrap82.php"
+    "./vendor/symfony/polyfill-php84/Resources/RoundingMode.php"
+    "./vendor/symfony/polyfill-php84/Resources/Deprecated.php"
+    "./vendor/symfony/service-contracts/Attribute/SubscribedService.php"
+    "./vendor/symfony/console/Attribute/AsCommand.php"
+    "./vendor/symfony/polyfill-mbstring/bootstrap80.php"
+    "./vendor/symfony/polyfill-intl-grapheme/bootstrap80.php"
+    "./vendor/symfony/polyfill-intl-grapheme/bootstrap85.php"
+)
 
-find . -type f -name "*.php" -print | sed '/^$/d' | \
+php_lint_new_errors=()
+# `< <(find ...)` rather than `find | while` so php_lint_new_errors persists after the loop (no subshell).
 while IFS= read -r file; do
     if php -l "$file" >/dev/null 2>&1; then
         printf "."
-    else
-        echo
-        echo "Error in $file:"
-        php -l "$file"
+        continue
     fi
-done
+    if [[ " ${php_lint_allowed_errors[*]} " == *" $file "* ]]; then
+        # Known error; print "S" for skipped.
+        printf "S"
+        continue
+    fi
+    php_lint_new_errors+=("$file")
+    echo
+    echo "Error in $file:"
+    php -l "$file"
+done < <(find . -type f -name "*.php" -print | sed '/^$/d')
 # Print a blank line after.
 echo
+
+if [ ${#php_lint_new_errors[@]} -gt 0 ]; then
+    echo "php -l failed on ${#php_lint_new_errors[@]} file(s) not in the allow-list:"
+    printf '%s\n' "${php_lint_new_errors[@]}"
+    exit 1
+fi
+
 
 # Required for the autoloader to build correctly. TODO: should be done in PHP @see DumpAutoload.php.
 # Removes changes to `vendor/composer/autoload_real.php` etc.
