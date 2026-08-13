@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.30.0
+## 0.29.1
 
 * Fix: After prefixing `vendor-prefixed/composer/*`, update references to `InstalledVersions` etc. throughout project
 * Fix: Some double-prefixing in Composer files
