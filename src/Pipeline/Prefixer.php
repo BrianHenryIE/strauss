@@ -146,14 +146,14 @@ class Prefixer
             // TODO: diff here and debug log.
             $file->setDidUpdate();
             $this->filesystem->write($file->getTargetAbsolutePath(), $updatedContents);
-            $this->logger->info("Updated contents of file: {targetAbsolutePath}", [
+            $this->logger->info("Updated contents of file::::{targetAbsolutePath}", [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
             ]);
             // In future, we'll use string index positions and keep them current.
             /** @var File $file */
             $file->setParsedAst(null);
         } else {
-            $this->logger->debug("No changes to file: {targetAbsolutePath}", [
+            $this->logger->debug("No changes to file::::{targetAbsolutePath}", [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
             ]);
         }
@@ -179,7 +179,7 @@ class Prefixer
             $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
 
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
-                $this->logger->debug("is_dir() / nothing to do : {relativeFilePath}", [
+                $this->logger->debug("is_dir() / nothing to do::::{relativeFilePath}", [
                     'relativeFilePath' => $relativeFilePath
                 ]);
                 continue;
@@ -193,13 +193,13 @@ class Prefixer
                     ], true)) {
                     continue;
                 }
-                $this->logger->warning("Expected file does not exist: {relativeFilePath}", [
+                $this->logger->warning("Expected file does not exist::::{relativeFilePath}", [
                     'relativeFilePath' => $relativeFilePath
                 ]);
                 continue;
             }
 
-            $this->logger->debug("Updating contents of file (project): {fileAbsolutePath}", [
+            $this->logger->debug("Updating contents of file (project)::::{fileAbsolutePath}", [
                 'fileAbsolutePath' => $fileAbsolutePath,
             ]);
 
@@ -211,9 +211,9 @@ class Prefixer
             if ($updatedContents !== $contents) {
                 $this->changedFiles[$fileAbsolutePath] = null;
                 $this->filesystem->write($fileAbsolutePath, $updatedContents);
-                $this->logger->info('Updated contents of file: ' . $relativeFilePath);
+                $this->logger->info('Updated contents of file::::' . $relativeFilePath);
             } else {
-                $this->logger->debug('No changes to file: ' . $relativeFilePath);
+                $this->logger->debug('No changes to file::::' . $relativeFilePath);
             }
         }
     }
@@ -259,7 +259,7 @@ class Prefixer
         try {
             $existingAst = $file ? $file->getParsedAst() : null;
             if (!$existingAst) {
-                $this->logger->debug("Parsing {filePath} AST", [
+                $this->logger->info("Parsing AST::::{filePath}", [
                     'filePath' => $fileAbsolutePath ?? 'file',
                 ]);
 
@@ -269,7 +269,7 @@ class Prefixer
                     $file->setParsedAst($ast);
                 }
             } else {
-                $this->logger->debug("Using existing parsed AST for {filePath}", [
+                $this->logger->debug("Using existing parsed AST for::::{filePath}", [
                     'filePath' => $fileAbsolutePath ?? 'file',
                 ]);
                 $ast = $existingAst;
