@@ -23,6 +23,7 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload;
 use Composer\Composer;
+use Composer\Package\Link;
 use Composer\PartialComposer;
 use Composer\Util\Platform;
 use Exception;
@@ -356,7 +357,7 @@ class StraussConfig implements
 //        }
 
         if (isset($composer) && empty($this->packages)) {
-            $this->packages = array_map(function (\Composer\Package\Link $element) {
+            $this->packages = array_map(function (Link $element) {
                 return $element->getTarget();
             }, $composer->getPackage()->getRequires());
         }
