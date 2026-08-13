@@ -1417,8 +1417,15 @@ class Prefixer
                 continue;
             }
             $namespaceSymbol = new NamespaceSymbol($namespaceString);
+
+            $localReplacement = $this->config->getNamespacePrefix() . '\\'
+                                . preg_replace(
+                                    '#^(BrianHenryIE\\\\Strauss\\\\)|('. str_replace('\\', '\\\\', rtrim($this->config->getNamespacePrefix(), '\\')) . '\\\\)*#',
+                                    '',
+                                    $namespaceString
+                                );
             $namespaceSymbol->setLocalReplacement(
-                $this->config->getNamespacePrefix() . '\\' . preg_replace('#^(BrianHenryIE\\\\Strauss\\\\)*#', '', $namespaceString)
+                $localReplacement
             );
             $namespaceSymbol->setDoRename(true);
             $discoveredSymbols->add($namespaceSymbol);
