@@ -54,8 +54,9 @@ In your `composer.json`, add `strauss` to the `scripts` section:
 ```json
 "scripts": {
     "prefix-namespaces": [
-        "sh -c 'test -f ./bin/strauss.phar || curl -o bin/strauss.phar -L -C - https://github.com/BrianHenryIE/strauss/releases/latest/download/strauss.phar'",
+        "sh -c 'test -f ./bin/strauss.phar || mkdir bin && curl -o bin/strauss.phar -L -C - https://github.com/BrianHenryIE/strauss/releases/latest/download/strauss.phar'",
         "@php bin/strauss.phar",
+        "@php -d memory_limit=1G vendor/bin/strauss --info",
         "@composer dump-autoload"
     ],
     "post-install-cmd": [
