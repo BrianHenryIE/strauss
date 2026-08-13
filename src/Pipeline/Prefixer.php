@@ -770,23 +770,26 @@ class Prefixer
             if ($isComposerAutoloadNamespace && $hasComposerAutoloadNamespace) {
                 /**
                  * TODO: I'm worried that dump-autoload when running via `.phar` will include `BrianHenryIE\Strauss` prefix. I don't think I have addressed that issue here.
+                 * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\Composer\Autoload\ClassLoader\0";`
+                 * but in vendor-prefixed/composer/... of a prefixed project, it should be `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`
+                 *
+                 * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
+                 * `$prefix = "\0Composer\Autoload\ClassLoader\0";`
                  *
                  * @see strauss.phar/src/Pipeline/Prefixer.php
                  * @see strauss.phar/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
                  */
-                $prefixLinePrefixesArrays = [
-                    ['BrianHenryIE','Strauss','Comp'.'oser','Autoload','ClassLoader'],
-                    ['Comp'.'oser','Autoload','ClassLoader'],
-                ];
-                foreach ($prefixLinePrefixesArrays as $prefixLinePrefixArray) {
-                    $findPrefixLine = '$prefix = "\0' . implode("\\", $prefixLinePrefixArray) . '\0";';
-                    $replaceWithUpdatedPrefixLine = str_replace($originalSymbolString, $replacementSymbolString, $findPrefixLine);
-                    $replacedCount = 0;
-                    $contents = str_replace($findPrefixLine, $replaceWithUpdatedPrefixLine, $contents, $replacedCount);
-                    if ($replacedCount && $originalSymbolString !== $replacementSymbolString) {
-                        break;
-                    }
-                }
+
+                // Must be concatenated to it is not unintentionally replaced!
+                $disguisedNamespaceString = implode("\\\\", ['Comp'.'oser','Autoload','ClassLoader']);
+
+                // Reset to the original no matter has it been prefixed before.
+                // `/(\$prefix = "\\0).*(Composer\\Autoload\\ClassLoader\\0";)/`
+                $pattern = "/(\\\$prefix = \\\"\\\\0).*($disguisedNamespaceString)(\\\\0\\\";)/";
+
+                $contents = preg_replace($pattern, '$1$2$3', $contents);
+
+                $contents = preg_replace($pattern, '$1'.$replacementSymbolString.'\\\\ClassLoader$3', $contents);
             }
         } elseif ($symbol instanceof NamespacedSymbol) {
             $originalSymbolString = $symbol->getOriginalFqdnName();
