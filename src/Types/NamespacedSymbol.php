@@ -120,6 +120,6 @@ class NamespacedSymbol extends DiscoveredSymbol
 
     public function isAutoloaded(): bool
     {
-        return $this->isAutoloaded || $this->getNamespace()->isAutoloaded();
+        return $this->isAutoloaded;
     }
 }
