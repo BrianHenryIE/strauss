@@ -18,6 +18,7 @@ use BrianHenryIE\SimplePhpParser\Parsers\Visitors\ASTVisitor;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
@@ -229,6 +230,9 @@ class FileSymbolScanner
 
             try {
                 $phpCode = PhpCodeParser::getFromString($contents);
+
+                /** @var File $file */
+                $file->setParsedAst($phpCode->getAst());
             } catch (ParserErrorException $e) {
                 $this->logger->warning('Failed to parse namespace {namespaceName} in file {filePath} with error: {errorMessage}', [
                     'namespaceName' => $namespaceName,

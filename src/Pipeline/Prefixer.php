@@ -254,11 +254,23 @@ class Prefixer
         $positions = [];
 
         try {
-            $this->logger->debug("Parsing {filePath} AST", [
-                'filePath' => $fileAbsolutePath ?? 'file',
-            ]);
-            $ast = $parser->parse($parseContent);
-//                $ast = $parser->parse($parseContent, $errorHandler);
+            $existingAst = $file ? $file->getParsedAst() : null;
+            if (!$existingAst) {
+                $this->logger->debug("Parsing {filePath} AST", [
+                    'filePath' => $fileAbsolutePath ?? 'file',
+                ]);
+
+                $ast = $parser->parse($parseContent);
+                /** @var File $file */
+                if ($file && $ast) {
+                    $file->setParsedAst($ast);
+                }
+            } else {
+                $this->logger->debug("Using existing parsed AST for {filePath}", [
+                    'filePath' => $fileAbsolutePath ?? 'file',
+                ]);
+                $ast = $existingAst;
+            }
         } catch (Error $e) {
             // This happens in template files, E.g `x.blade.php`.
             $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: " . $e->getMessage(), [

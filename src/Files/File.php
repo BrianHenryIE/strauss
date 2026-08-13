@@ -49,6 +49,9 @@ class File implements FileBase
 
     protected bool $didDelete = false;
 
+    /** @var array|null Cache of php-parser parsed AST */
+    protected ?array $ast = null;
+
     public function __construct(
         string $sourceAbsolutePath,
         string $vendorRelativePath,
@@ -198,5 +201,19 @@ class File implements FileBase
     public function getNamespaces(): DiscoveredSymbols
     {
         return $this->discoveredSymbols->getNamespaces();
+    }
+
+    public function setParsedAst(array $ast)
+    {
+        $this->ast = $ast;
+    }
+
+    /**
+     * @see \PhpParser\PhpParser
+     * @returns \PhpParser\Node[]|null
+     */
+    public function getParsedAst(): ?array
+    {
+        return $this->ast;
     }
 }
