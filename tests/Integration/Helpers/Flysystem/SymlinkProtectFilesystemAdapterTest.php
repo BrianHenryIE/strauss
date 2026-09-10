@@ -152,4 +152,63 @@ class SymlinkProtectFilesystemAdapterTest extends IntegrationTestCase
         $this->assertFileExists($this->testsWorkingDir . '/library/allowed.txt');
         $this->assertFileDoesNotExist($this->testsWorkingDir . '/reallib/blocked.txt');
     }
+
+    /**
+     * Flysystem's `LocalFilesystemAdapter::delete()` is a no-op for missing files; this adapter must match.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/331
+     *
+     * @covers ::delete
+     */
+    public function test_delete_missing_file_does_not_throw(): void
+    {
+        $path = $this->testsWorkingDir . '/does-not-exist.txt';
+
+        $this->filesystemThrow->delete($path);
+
+        $this->assertFalse($this->filesystemThrow->fileExists($path));
+    }
+
+    /**
+     * @covers ::delete
+     */
+    public function test_delete_existing_file(): void
+    {
+        $path = $this->testsWorkingDir . '/exists.txt';
+        $this->filesystemThrow->write($path, 'contents');
+        $this->assertTrue($this->filesystemThrow->fileExists($path));
+
+        $this->filesystemThrow->delete($path);
+
+        $this->assertFalse($this->filesystemThrow->fileExists($path));
+    }
+
+    /**
+     * @see https://github.com/BrianHenryIE/strauss/issues/331
+     *
+     * @covers ::deleteDirectory
+     */
+    public function test_delete_missing_directory_does_not_throw(): void
+    {
+        $path = $this->testsWorkingDir . '/does-not-exist';
+
+        $this->filesystemThrow->deleteDirectory($path);
+
+        $this->assertFalse($this->filesystemThrow->directoryExists($path));
+    }
+
+    /**
+     * @covers ::deleteDirectory
+     */
+    public function test_delete_existing_directory(): void
+    {
+        $path = $this->testsWorkingDir . '/exists';
+        $this->filesystemThrow->createDirectory($path);
+        $this->filesystemThrow->write($path . '/file.txt', 'contents');
+        $this->assertTrue($this->filesystemThrow->directoryExists($path));
+
+        $this->filesystemThrow->deleteDirectory($path);
+
+        $this->assertFalse($this->filesystemThrow->directoryExists($path));
+    }
 }

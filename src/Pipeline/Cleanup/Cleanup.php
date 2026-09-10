@@ -361,10 +361,17 @@ class Cleanup
 
             $sourceRelativePath = $file->getSourcePath();
 
+            // E.g. when `delete_vendor_packages` is also enabled, the package directory has already been deleted.
+            if (!$this->filesystem->fileExists($sourceRelativePath)) {
+                $this->logger->debug('Already deleted ' . $sourceRelativePath);
+                $file->setDidDelete(true);
+                continue;
+            }
+
             $this->logger->info('Deleting ' . $sourceRelativePath);
 
             // TODO: is this relative or absolute?
-            $this->filesystem->delete($file->getSourcePath());
+            $this->filesystem->delete($sourceRelativePath);
 
             $file->setDidDelete(true);
         }

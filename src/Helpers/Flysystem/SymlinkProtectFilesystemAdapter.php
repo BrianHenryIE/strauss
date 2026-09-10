@@ -133,6 +133,16 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     }
 
     /**
+     * Does anything exist at the path, including a symlink whose target is missing (`file_exists()` follows links).
+     */
+    protected function pathExists(string $path): bool
+    {
+        $absoluteFilesystemPath = $this->pathPrefixer->prefixPath($path);
+
+        return file_exists($absoluteFilesystemPath) || is_link($absoluteFilesystemPath);
+    }
+
+    /**
      * @param string $path
      */
     protected function getSymlinkDetails(string $path): ?PathSymlinkDetails
@@ -394,6 +404,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     {
         $path = $this->normalizer->normalizePath($path);
 
+        // Nothing to delete. Matches {@see LocalFilesystemAdapter::delete()} which is a no-op for missing files.
+        if (!$this->pathExists($path)) {
+            return;
+        }
+
         $symlinkDetails = $this->getSymlinkDetails($path);
         $isSymlinked = !empty($symlinkDetails);
 
@@ -443,6 +458,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     public function deleteDirectory(string $path): void
     {
         $path = $this->normalizer->normalizePath($path);
+
+        // Nothing to delete. Matches {@see LocalFilesystemAdapter::deleteDirectory()} which is a no-op for missing directories.
+        if (!$this->pathExists($path)) {
+            return;
+        }
 
         $symlinkDetails = $this->getSymlinkDetails($path);
         $isSymlinked = !empty($symlinkDetails);
