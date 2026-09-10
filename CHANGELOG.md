@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.29.2 September 2026
+
+* Fix: `realpath()` failure when `delete_vendor_packages` and `delete_vendor_files` both enabled
+* Fix: prefixed `InstalledVersions` in `autoload_classmap.php`, `autoload_static.php` was incorrect
+
 ## 0.29.1
 
 * Fix: After prefixing `vendor-prefixed/composer/*`, update references to `InstalledVersions` etc. throughout project
