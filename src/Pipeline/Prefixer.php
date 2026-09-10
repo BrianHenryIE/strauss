@@ -52,6 +52,15 @@ class Prefixer
 {
     use LoggerAwareTrait;
 
+    /**
+     * The prefix Strauss applies to its own dependencies when building `strauss.phar`.
+     *
+     * Composer's autoload files are then written by Strauss's bundled, prefixed, copy of Composer, so classnames
+     * it hardcodes (e.g. `Composer\InstalledVersions`) appear with this prefix and must be stripped before applying
+     * the project's prefix.
+     */
+    const SELF_NAMESPACE_PREFIX = 'BrianHenryIE\\Strauss\\';
+
     protected PrefixerConfigInterface $config;
 
     protected FileSystem $filesystem;
@@ -1434,7 +1443,8 @@ class Prefixer
                 );
 
             $pattern = sprintf(
-                '#^(BrianHenryIE\\\\Strauss\\\\)%s*#',
+                '#^(%s)%s*#',
+                str_replace('\\', '\\\\', self::SELF_NAMESPACE_PREFIX),
                 $innerPattern
             );
 
@@ -1453,16 +1463,45 @@ class Prefixer
 
         $globalNamespace = new NamespaceSymbol('\\');
         foreach ($classMap->getMap() as $fqdnClass => $absolutePath) {
-            $namespace = $discoveredSymbols->getNamespace(
-                $this->getNamespaceFromFqdn($fqdnClass) ?? '\\'
-            ) ?? $globalNamespace;
+            $namespaceString = $this->getNamespaceFromFqdn($fqdnClass);
+            $namespace = $discoveredSymbols->getNamespace($namespaceString ?? '\\') ?? $globalNamespace;
+            $composerFile = $composerFiles[ basename($absolutePath) ];
             $classLoaderSymbol = new ClassSymbol(
                 $fqdnClass,
-                $composerFiles[ basename($absolutePath) ],
+                $composerFile,
                 $namespace,
             );
             $classLoaderSymbol->setDoRename(true);
             $discoveredSymbols->add($classLoaderSymbol);
+
+            /**
+             * When Strauss itself has been prefixed (i.e. `strauss.phar`), its bundled Composer's hardcoded
+             * `'Composer\InstalledVersions'` classmap entry has been rewritten to
+             * `'BrianHenryIE\Strauss\Composer\InstalledVersions'`, although the `InstalledVersions.php` copied into
+             * the target directory still declares `Composer\InstalledVersions`. Register the self-prefixed name too so
+             * the classmap entry is renamed to the project's prefix.
+             *
+             * @see \Composer\Autoload\AutoloadGenerator::dump() `$classMap->addClass('Composer\InstalledVersions', ...)`
+             * @see https://github.com/BrianHenryIE/strauss/issues/301
+             */
+            if (is_null($namespaceString) || str_starts_with($namespaceString, self::SELF_NAMESPACE_PREFIX)) {
+                continue;
+            }
+            $selfPrefixedNamespaceString = self::SELF_NAMESPACE_PREFIX . $namespaceString;
+            $selfPrefixedNamespace = $discoveredSymbols->getNamespace($selfPrefixedNamespaceString);
+            if (is_null($selfPrefixedNamespace)) {
+                $selfPrefixedNamespace = new NamespaceSymbol($selfPrefixedNamespaceString);
+                $selfPrefixedNamespace->setLocalReplacement($namespace->getLocalReplacement());
+                $selfPrefixedNamespace->setDoRename(true);
+                $discoveredSymbols->add($selfPrefixedNamespace);
+            }
+            $selfPrefixedClassSymbol = new ClassSymbol(
+                self::SELF_NAMESPACE_PREFIX . $fqdnClass,
+                $composerFile,
+                $selfPrefixedNamespace,
+            );
+            $selfPrefixedClassSymbol->setDoRename(true);
+            $discoveredSymbols->add($selfPrefixedClassSymbol);
         }
 
         $this->replaceInFiles($discoveredSymbols, $discoveredFiles->getFiles());
