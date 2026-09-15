@@ -5866,6 +5866,7 @@ EOD;
 
         $symbol = new FunctionSymbol('value', $file, new NamespaceSymbol('\\'));
         $symbol->setDoRename(true);
+        $symbol->setReplaceInString(false);
         $symbol->setLocalReplacement('myprefix_value');
         $symbols->add($symbol);
 

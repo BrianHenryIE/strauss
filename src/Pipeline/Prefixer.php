@@ -14,6 +14,7 @@ use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Composer\ClassMapGenerator\ClassMapGenerator;
@@ -367,16 +368,24 @@ class Prefixer
 //                'name' => $namespaceSymbol->getOriginalLocalName()
 //            ]);
 
+            if (!$namespaceSymbol->isReplaceInString()) {
+                continue;
+            }
+
             $contents = $this->replaceSingleClassnameInString($contents, $namespaceSymbol);
         }
 
-        /** @var ClassSymbol $classSymbol */
+        /** @var NamespacedSymbol $classSymbol */
         foreach ($discoveredSymbols->getNamespacedSymbols()->getToRename() as $classSymbol) {
 //            $this->logger->debug('Searching in {filename} for {type}: {name}', [
 //                'filename' => basename($fileAbsolutePath),
 //                'type' => array_reverse(explode('\\', basename(get_class($classSymbol))))[0],
 //                'name' => $classSymbol->getOriginalLocalName(),
 //            ]);
+
+            if (!$classSymbol->isReplaceInString()) {
+                continue;
+            }
 
             $contents = $this->replaceSingleClassnameInString($contents, $classSymbol);
         }
