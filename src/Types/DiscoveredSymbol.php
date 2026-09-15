@@ -174,7 +174,7 @@ abstract class DiscoveredSymbol
     }
 
     /**
-     * @deprecated This is only being called in {@see Prefixer::replaceSingleClassnameInString()}, the actual determination should be made in {@see ChangeEnumerator}.
+     * @deprecated This is only being called in {@see Prefixer::findSymbolPositionsInStrings()}, the actual determination should be made in {@see ChangeEnumerator}.
      */
     public function getOriginalSymbolStripPrefix(string $classPrefix): string
     {
