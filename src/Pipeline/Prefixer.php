@@ -337,11 +337,30 @@ class Prefixer
 //            }
             $removeDuplicatePositions[$position['start']] = $position;
         }
+        /** @var array<int, array{start:int,end:int,replacement:string}> $positions */
         $positions = $removeDuplicatePositions;
 
+        // Rebuild the string in one pass rather than calling `substr_replace()` per position, which copies the
+        // whole string each time and is quadratic for large files with many replacements.
+        // $positions is sorted descending by start, so walk backwards from the end of the file.
+        $parts = [];
+        $cursor = strlen($contents);
         foreach ($positions as $pos) {
-            $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
+            if ($pos['end'] > $cursor) {
+                $this->logger->warning('Skipping overlapping replacement in {filePath} at {start}-{end}: {replacement}', [
+                    'filePath' => $fileAbsolutePath ?? 'file',
+                    'start' => $pos['start'],
+                    'end' => $pos['end'],
+                    'replacement' => $pos['replacement'],
+                ]);
+                continue;
+            }
+            $parts[] = substr($contents, $pos['end'], $cursor - $pos['end']);
+            $parts[] = $pos['replacement'];
+            $cursor = $pos['start'];
         }
+        $parts[] = substr($contents, 0, $cursor);
+        $contents = implode('', array_reverse($parts));
 
         return $openingString.$contents;
     }
