@@ -585,7 +585,13 @@ PHP;
   "extra": {
     "strauss": {
       "namespace_prefix": "BrianHenryIE\\MyProject\\",
-      "classmap_prefix": "BrianHenryIE_MyProject_"
+      "classmap_prefix": "BrianHenryIE_MyProject_",
+      "exclude_from_string_rename": {
+        "functions": [
+          "value",
+          "when"
+        ]
+      }
     }
   }
 }

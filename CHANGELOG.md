@@ -1,6 +1,8 @@
 # Change Log
 
-* Add: exclude from string renaming
+## 0.30.0 September 2026
+
+* Add: `exclude_from_string_rename` to exclude symbols from false-positive matches in strings
 
 ## 0.29.2 September 2026
 

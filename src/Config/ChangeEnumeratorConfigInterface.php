@@ -45,4 +45,11 @@ interface ChangeEnumeratorConfigInterface
     public function getFunctionsPrefix(): ?string;
 
     public function getConstantsPrefix(): ?string;
+
+    /**
+     * Global function names which should be prefixed where called, but not where the name appears inside a string.
+     *
+     * @return string[]
+     */
+    public function getExcludeFunctionsFromStringRenaming(): array;
 }

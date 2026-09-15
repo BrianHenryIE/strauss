@@ -160,6 +160,17 @@ class StraussConfig implements
     protected array $excludeConstants = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array(),'constants'=>array());
 
     /**
+     * Symbols which should still be renamed where they are used in code, but not where they appear inside strings.
+     *
+     * E.g. a global function named `value()` should be prefixed when called, but `$array['value']` should not be changed.
+     *
+     * 'exclude_from_string_rename' in composer/extra config.
+     *
+     * @var array{functions?: string[]}
+     */
+    protected array $excludeFromStringRename = array('functions'=>array());
+
+    /**
      * An array of autoload keys to replace packages' existing autoload key.
      *
      * e.g. when
@@ -742,6 +753,24 @@ class StraussConfig implements
     public function getExcludeConstantNames(): array
     {
         return $this->excludeConstants['constants'] ?? [];
+    }
+
+    /**
+     * @param array{functions?:array<string>} $excludeFromStringRename
+     */
+    public function setExcludeFromStringRename(array $excludeFromStringRename): void
+    {
+        if (isset($excludeFromStringRename['functions'])) {
+            $this->excludeFromStringRename['functions'] = $excludeFromStringRename['functions'];
+        }
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getExcludeFunctionsFromStringRenaming(): array
+    {
+        return $this->excludeFromStringRename['functions'] ?? [];
     }
 
     /**
