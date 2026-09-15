@@ -1,5 +1,7 @@
 # Change Log
 
+* Add: exclude from string renaming
+
 ## 0.29.2 September 2026
 
 * Fix: `realpath()` failure when `delete_vendor_packages` and `delete_vendor_files` both enabled

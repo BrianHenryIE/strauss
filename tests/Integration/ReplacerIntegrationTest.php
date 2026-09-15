@@ -519,4 +519,104 @@ EOD;
         $this->assertStringNotContainsString('use function React\Promise\resolve;', $autoloadGeneratorString);
         $this->assertStringContainsString('use function BrianHenryIE\TestStrauss\React\Promise\resolve;', $autoloadGeneratorString);
     }
+
+    /**
+     * When a package defines global functions named `value()` and `when()` (e.g. illuminate/collections),
+     * Strauss should prefix the function declaration and calls, but it was also renaming every other
+     * occurrence of the bare words: `$value` variables, `'value'` array keys and words in comments.
+     *
+     * @see https://github.com/BrianHenryIE/strauss
+     */
+    public function test_prefixing_global_function_does_not_replace_bare_word_occurrences(): void
+    {
+        $helpersComposer = <<<'JSON'
+{
+    "name": "brianhenryie/global-functions",
+    "autoload": {
+        "files": ["helpers.php"]
+    }
+}
+JSON;
+
+        $helpersPhp = <<<'PHP'
+<?php
+
+if (! function_exists('value')) {
+    /**
+     * Return the default value of the given value.
+     *
+     * @param mixed $value
+     */
+    function value($value)
+    {
+        return $value;
+    }
+}
+
+if (! function_exists('when')) {
+    /**
+     * Return a value when the given condition is true.
+     */
+    function when($condition, $value)
+    {
+        return $condition ? value($value) : null;
+    }
+}
+
+function check_content_type(array $content_type): bool
+{
+    return 'text/plain' === $content_type['value'];
+}
+PHP;
+
+        $composerJsonString = <<<'EOD'
+{
+  "name": "brianhenryie/strauss",
+  "repositories": {
+    "brianhenryie/global-functions": {
+        "type": "path",
+        "url": "../global-functions"
+    }
+  },
+  "require": {
+    "brianhenryie/global-functions": "*"
+  },
+  "minimum-stability": "dev",
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "BrianHenryIE\\MyProject\\",
+      "classmap_prefix": "BrianHenryIE_MyProject_"
+    }
+  }
+}
+EOD;
+
+        mkdir($this->testsWorkingDir . '/global-functions', 0777, true);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/global-functions/composer.json', $helpersComposer);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/global-functions/helpers.php', $helpersPhp);
+
+        mkdir($this->testsWorkingDir . '/project', 0777, true);
+        $this->getFileSystem()->write($this->testsWorkingDir . '/project/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir . '/project/');
+
+        exec('composer install');
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . '/project/vendor-prefixed/brianhenryie/global-functions/helpers.php');
+
+        // The function declarations and the call should be prefixed.
+        $this->assertStringNotContainsString('function value(', $updatedFile);
+        $this->assertStringNotContainsString('function when(', $updatedFile);
+
+        // But variables, array keys and comments should be untouched.
+        $this->assertStringContainsString('@param mixed $value', $updatedFile);
+        $this->assertStringContainsString('($value)', $updatedFile);
+        $this->assertStringContainsString('return $value;', $updatedFile);
+        $this->assertStringContainsString('$content_type[\'value\']', $updatedFile);
+        $this->assertStringContainsString('Return the default value of the given value.', $updatedFile);
+        $this->assertStringContainsString('Return a value when the given condition is true.', $updatedFile);
+    }
 }
