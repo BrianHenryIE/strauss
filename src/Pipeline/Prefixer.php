@@ -306,6 +306,8 @@ class Prefixer
             $this->findDocCommentPositionsInAst($ast, $discoveredSymbols),
             $this->findPositionsOfUsesOfNamespacedConstants($discoveredSymbols, $ast),
             $this->findGlobalSymbolsPositionsInAst($ast, $discoveredSymbols),
+            // Last, so its `use const` replacement wins over the aliased one from findGlobalSymbolsPositionsInAst().
+            $this->findConstantPositionsInAst($ast, $discoveredSymbols),
         );
 
         // Adjust positions to be relative to the original $contents (before any <?php prepend).
@@ -332,11 +334,6 @@ class Prefixer
 
         foreach ($positions as $pos) {
             $contents = substr_replace($contents, $pos['replacement'], $pos['start'], $pos['end'] - $pos['start']);
-        }
-
-        // TODO: Use AST.
-        if (!is_null($this->config->getConstantsPrefix())) {
-            $contents = $this->replaceConstants($contents, $discoveredSymbols);
         }
 
         // The following are for replacing symbols inside strings.
@@ -1084,107 +1081,30 @@ class Prefixer
     }
 
     /**
-     * TODO: This should be split and brought to FileScanner.
+     * Find global constants to rename in the already-parsed AST.
+     *
+     * Matches constant fetches (`MY_CONST`, `\MY_CONST`), `use const MY_CONST;`, top-level `const MY_CONST = 1;`
+     * declarations, and the string argument to `define('MY_CONST', ...)` and `defined('MY_CONST')`.
+     *
+     * Class constants (`self::MY_CONST`) and namespaced constant fetches are not matched here.
+     *
+     * @see self::findPositionsOfUsesOfNamespacedConstants()
+     *
+     * @param array<\PhpParser\Node> $ast
+     *
+     * @return array<array{start:int,end:int,replacement:string}>
      */
-    protected function replaceConstants(string $contents, DiscoveredSymbols $discoveredSymbols): string
+    protected function findConstantPositionsInAst(array $ast, DiscoveredSymbols $discoveredSymbols): array
     {
-        $originalConstantsArray = $discoveredSymbols->getConstants()->toArray();
-        usort($originalConstantsArray, fn(ConstantSymbol $a, ConstantSymbol $b) => strlen($b->getOriginalLocalName()) <=> strlen($a->getOriginalLocalName()));
-
-        foreach ($originalConstantsArray as $constant) {
-//            $contents = $this->replaceConstant($contents, $constant, $prefix . $constant);
-            $contents = $this->replaceConstant($contents, $constant->getOriginalFqdnName(), $constant->getReplacementFqdnName());
+        /** @var array<string,string> $constantsToRename original name => replacement name */
+        $constantsToRename = [];
+        /** @var ConstantSymbol $constant */
+        foreach ($discoveredSymbols->getConstants()->getToRename() as $constant) {
+            $constantsToRename[$constant->getOriginalFqdnName()] = $constant->getReplacementFqdnName();
         }
 
-        return $contents;
-    }
-
-    /**
-     * TODO: Use php-parser for this.
-     */
-    protected function replaceConstant(string $contents, string $originalConstant, string $replacementConstant): string
-    {
-//        return preg_replace(
-//            '/([^A-Z0-9_])('.$originalConstant.')([^A-Z0-9_])/',
-//            '$1'.$replacementConstant.'$3',
-//            $contents
-//        );
-        if ($originalConstant === $replacementConstant) {
-            return $contents;
-        }
-
-        $needsPhpTag = false === stripos($contents, '<?php');
-        $parseContents = $needsPhpTag ? "<?php\n" . $contents : $contents;
-
-        $nodeFinder = new NodeFinder();
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        try {
-            $ast = $parser->parse($parseContents);
-        } catch (\PhpParser\Error $e) {
-            $this->logger->warning("Skipping ::replaceConstant() AST replacement due to parse error: " . $e->getMessage());
-
-            return preg_replace(
-                '/\b' . preg_quote($originalConstant, '/') . '\b/',
-                $replacementConstant,
-                $contents
-            );
-        }
-
-        if (null === $ast) {
-            return $contents;
-        }
-
-        $positions = [];
-
-        /** @var ConstFetch[] $constFetches */
-        $constFetches = $nodeFinder->findInstanceOf($ast, ConstFetch::class);
-        foreach ($constFetches as $fetch) {
-            if ($fetch->name instanceof Name
-                && (!$fetch->name->isFullyQualified() || 1 === count($fetch->name->getParts()))
-                && $fetch->name->toString() === $originalConstant
-            ) {
-                $positions[] = [
-                    'start' => $fetch->name->getStartFilePos(),
-                    'end' => $fetch->name->getEndFilePos() + 1,
-                    'replacement' => $fetch->name->isFullyQualified()
-                        ? '\\' . $replacementConstant
-                        : $replacementConstant,
-                ];
-            }
-        }
-
-        /** @var Use_[] $uses */
-        $uses = $nodeFinder->findInstanceOf($ast, Use_::class);
-        foreach ($uses as $use) {
-            if (Use_::TYPE_CONSTANT !== $use->type) {
-                continue;
-            }
-
-            foreach ($use->uses as $useItem) {
-                if ($useItem->name->toString() !== $originalConstant) {
-                    continue;
-                }
-
-                $positions[] = [
-                    'start' => $useItem->name->getStartFilePos(),
-                    'end' => $useItem->name->getEndFilePos() + 1,
-                    'replacement' => $replacementConstant,
-                ];
-            }
-        }
-
-        /** @var Const_[] $constDeclarations */
-        $constDeclarations = $nodeFinder->findInstanceOf($ast, Const_::class);
-        foreach ($constDeclarations as $constDeclaration) {
-            foreach ($constDeclaration->consts as $const) {
-                if ($const->name->toString() === $originalConstant) {
-                    $positions[] = [
-                        'start' => $const->name->getStartFilePos(),
-                        'end' => $const->name->getEndFilePos() + 1,
-                        'replacement' => $replacementConstant,
-                    ];
-                }
-            }
+        if (empty($constantsToRename)) {
+            return [];
         }
 
         $functionsUsingConstantName = [
@@ -1192,50 +1112,76 @@ class Prefixer
             'defined',
         ];
 
-        /** @var FuncCall[] $funcCalls */
-        $funcCalls = $nodeFinder->findInstanceOf($ast, FuncCall::class);
-        foreach ($funcCalls as $call) {
-            if (! $call->name instanceof Name
-                 || ! in_array($call->name->toString(), $functionsUsingConstantName, true)
-                 || ! isset($call->args[0])
-                 || ! $call->args[0] instanceof Arg
-                 || ! $call->args[0]->value instanceof String_
-            ) {
-                continue;
+        $positions = [];
+
+        $nodes = $this->getNodeFinder()->find($ast, function (Node $node): bool {
+            return $node instanceof ConstFetch
+                || $node instanceof Use_
+                || $node instanceof Const_
+                || $node instanceof FuncCall;
+        });
+
+        foreach ($nodes as $node) {
+            if ($node instanceof ConstFetch) {
+                $name = $node->name;
+                if ((!$name->isFullyQualified() || 1 === count($name->getParts()))
+                    && isset($constantsToRename[$name->toString()])
+                ) {
+                    $positions[] = [
+                        'start' => $name->getStartFilePos(),
+                        'end' => $name->getEndFilePos() + 1,
+                        'replacement' => $name->isFullyQualified()
+                            ? '\\' . $constantsToRename[$name->toString()]
+                            : $constantsToRename[$name->toString()],
+                    ];
+                }
+            } elseif ($node instanceof Use_) {
+                if (Use_::TYPE_CONSTANT !== $node->type) {
+                    continue;
+                }
+                foreach ($node->uses as $useItem) {
+                    $name = $useItem->name->toString();
+                    if (isset($constantsToRename[$name])) {
+                        $positions[] = [
+                            'start' => $useItem->name->getStartFilePos(),
+                            'end' => $useItem->name->getEndFilePos() + 1,
+                            'replacement' => $constantsToRename[$name],
+                        ];
+                    }
+                }
+            } elseif ($node instanceof Const_) {
+                foreach ($node->consts as $const) {
+                    $name = $const->name->toString();
+                    if (isset($constantsToRename[$name])) {
+                        $positions[] = [
+                            'start' => $const->name->getStartFilePos(),
+                            'end' => $const->name->getEndFilePos() + 1,
+                            'replacement' => $constantsToRename[$name],
+                        ];
+                    }
+                }
+            } elseif ($node instanceof FuncCall) {
+                if (! $node->name instanceof Name
+                    || ! in_array($node->name->toString(), $functionsUsingConstantName, true)
+                    || ! isset($node->args[0])
+                    || ! $node->args[0] instanceof Arg
+                    || ! $node->args[0]->value instanceof String_
+                ) {
+                    continue;
+                }
+                $stringNode = $node->args[0]->value;
+                if (isset($constantsToRename[$stringNode->value])) {
+                    // Inside the quotes.
+                    $positions[] = [
+                        'start' => $stringNode->getStartFilePos() + 1,
+                        'end' => $stringNode->getEndFilePos(),
+                        'replacement' => $constantsToRename[$stringNode->value],
+                    ];
+                }
             }
-
-            $stringNode = $call->args[0]->value;
-            if ($stringNode->value !== $originalConstant) {
-                continue;
-            }
-
-            $positions[] = [
-                'start' => $stringNode->getStartFilePos() + 1,
-                'end' => $stringNode->getEndFilePos(),
-                'replacement' => $replacementConstant,
-            ];
         }
 
-        if (empty($positions)) {
-            return $contents;
-        }
-
-        usort($positions, fn($a, $b) => $b['start'] <=> $a['start']);
-
-        foreach ($positions as $pos) {
-            $parseContents = substr_replace(
-                $parseContents,
-                $pos['replacement'],
-                $pos['start'],
-                $pos['end'] - $pos['start']
-            );
-        }
-
-        if ($needsPhpTag) {
-            return substr($parseContents, strlen("<?php\n"));
-        }
-
-        return $parseContents;
+        return $positions;
     }
 
     /**

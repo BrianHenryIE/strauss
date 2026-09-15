@@ -1603,8 +1603,7 @@ EOD;
     }
 
     /**
-     * @covers ::replaceConstants
-     * @covers ::replaceConstant
+     * @covers ::findConstantPositionsInAst
      */
     public function testReplaceConstantsWithLeadingCommentBeforePhpTag(): void
     {
@@ -1644,26 +1643,119 @@ EOD;
         self::assertStringNotContainsString("<?php\n<?php", $result);
     }
 
-    public function testReplaceConstantFallbackDoesNotCorruptPrefixSupersetConstant(): void
+    /**
+     * Top-level `const` declarations, `use const` imports and `defined()` checks should all be prefixed,
+     * while class constants and `use` statements for classes are left alone.
+     *
+     * @covers ::findConstantPositionsInAst
+     */
+    public function testReplaceConstantDeclarationsUseConstAndDefined(): void
     {
-        $contents = 'FILTER_VALIDATE_BOOLEAN; FILTER_VALIDATE_BOOL;';
+        $contents = <<<'EOD'
+<?php
+namespace Vendor\Package;
+
+use Vendor\Other\SomeClass;
+use const MY_CONSTANT;
+
+const MY_CONSTANT = 1;
+const OTHER_CONSTANT = 2, MY_CONSTANT_ALIAS = MY_CONSTANT;
+
+class Foo
+{
+    const MY_CONSTANT = 3;
+
+    public function bar(): bool
+    {
+        return defined('MY_CONSTANT') && self::MY_CONSTANT === MY_CONSTANT;
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+namespace Vendor\Package;
+
+use Vendor\Other\SomeClass;
+use const PREFIX_MY_CONSTANT;
+
+const PREFIX_MY_CONSTANT = 1;
+const OTHER_CONSTANT = 2, MY_CONSTANT_ALIAS = PREFIX_MY_CONSTANT;
+
+class Foo
+{
+    const MY_CONSTANT = 3;
+
+    public function bar(): bool
+    {
+        return defined('PREFIX_MY_CONSTANT') && self::MY_CONSTANT === PREFIX_MY_CONSTANT;
+    }
+}
+EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
+        $config->method('getConstantsPrefix')->willReturn('PREFIX_');
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $method = new \ReflectionMethod(Prefixer::class, 'replaceConstant');
-        PHP_VERSION_ID < 80100 && $method->setAccessible(true);
-        $result = $method->invoke(
-            $replacer,
-            $contents,
-            'FILTER_VALIDATE_BOOL',
-            'PREFIX_FILTER_VALIDATE_BOOL'
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
         );
 
-        self::assertSame(
-            'FILTER_VALIDATE_BOOLEAN; PREFIX_FILTER_VALIDATE_BOOL;',
-            $result
+        $globalNamespace = new NamespaceSymbol('\\', $file);
+        $discoveredSymbols = new DiscoveredSymbols();
+        $constantSymbol = new ConstantSymbol('MY_CONSTANT', $file, $globalNamespace);
+        $constantSymbol->setDoRename(true);
+        $constantSymbol->setLocalReplacement('PREFIX_MY_CONSTANT');
+        $discoveredSymbols->add($constantSymbol);
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * A discovered constant which is not marked for renaming, or whose replacement equals its original name,
+     * must leave the contents untouched.
+     *
+     * @covers ::findConstantPositionsInAst
+     */
+    public function testReplaceConstantsSkipsConstantsWithoutReplacement(): void
+    {
+        $contents = <<<'EOD'
+<?php
+define('MY_CONSTANT', 1);
+define('KEEP_CONSTANT', 2);
+$value = MY_CONSTANT + KEEP_CONSTANT;
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config->method('getConstantsPrefix')->willReturn('PREFIX_');
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
         );
+
+        $globalNamespace = new NamespaceSymbol('\\', $file);
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $notRenamed = new ConstantSymbol('MY_CONSTANT', $file, $globalNamespace);
+        $notRenamed->setDoRename(false);
+        $notRenamed->setLocalReplacement('PREFIX_MY_CONSTANT');
+        $discoveredSymbols->add($notRenamed);
+
+        $sameReplacement = new ConstantSymbol('KEEP_CONSTANT', $file, $globalNamespace);
+        $sameReplacement->setDoRename(true);
+        $sameReplacement->setLocalReplacement('KEEP_CONSTANT');
+        $discoveredSymbols->add($sameReplacement);
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertEqualsRN($contents, $result);
     }
 
     public function testReplaceConstantPrefixesFullyQualifiedGlobalConstant(): void
