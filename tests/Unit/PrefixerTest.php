@@ -5749,7 +5749,10 @@ if (! function_exists('value')) {
 
 if (! function_exists('when')) {
     /**
-     * Return a value when the given condition is true.
+     * Return a value by calling value() `value` when the given condition is true.
+     *
+     * @see value()
+     * @see value
      */
     function when($condition, $value)
     {
@@ -5775,7 +5778,10 @@ if (! function_exists('myprefix_value')) {
 
 if (! function_exists('myprefix_when')) {
     /**
-     * Return a value when the given condition is true.
+     * Return a value by calling myprefix_value() `myprefix_value` when the given condition is true.
+     *
+     * @see myprefix_value()
+     * @see myprefix_value
      */
     function myprefix_when($condition, $value)
     {

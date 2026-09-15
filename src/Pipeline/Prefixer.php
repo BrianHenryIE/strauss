@@ -1230,6 +1230,46 @@ class Prefixer
     }
 
     /**
+     * Find references to a function in a doc comment: `value()`, `\value()`, `@see value`, `@uses value`, or `value` in backticks.
+     *
+     * Bare words (`the default value`), variables (`$value`) and method calls (`->value()`, `::value()`) are ignored.
+     *
+     * @return array<array{start:int,end:int,replacement:string}>
+     */
+    protected function findFunctionPositionsInDocComment(Doc $doc, FunctionSymbol $symbol): array
+    {
+        $positions = [];
+
+        $name = preg_quote($symbol->getOriginalFqdnName(), '/');
+        $replacement = $symbol->getReplacementFqdnName();
+
+        $patterns = [
+            // `value()` – not preceded by an identifier character, namespace separator, `$`, `->` or `::`.
+            '/(?<![a-zA-Z0-9_\x7f-\xff\\\\$>:])\\\\?\K' . $name . '(?=\s*\()/',
+            // `@see value` / `@uses value` – followed by a non-identifier character.
+            '/@(?:see|uses)\s+\\\\?\K' . $name . '(?![a-zA-Z0-9_\x7f-\xff\\\\])/',
+            // Inline code: `value` or `\value`.
+            '/`\\\\?\K' . $name . '(?=`)/',
+        ];
+
+        $text = $doc->getText();
+
+        foreach ($patterns as $pattern) {
+            preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE);
+            $this->checkPregError();
+            foreach ($matches[0] as [$match, $offset]) {
+                $positions[] = [
+                    'start' => $doc->getStartFilePos() + $offset,
+                    'end' => $doc->getStartFilePos() + $offset + strlen($match),
+                    'replacement' => $replacement,
+                ];
+            }
+        }
+
+        return $positions;
+    }
+
+    /**
      * Look for declared functions, function calls, and built-in functions that accept a function as their parameter.
      *
      * @see Function_
@@ -1329,10 +1369,23 @@ class Prefixer
         // Doc comments: scan for \OriginalNamespace references in @param/@return/etc.
         foreach ($commentNodes as $node) {
             $doc = $node->getDocComment();
+            if (is_null($doc)) {
+                continue;
+            }
             $text = $doc->getText();
             /** @var NamespacedSymbol $symbol */
             foreach ($namespacedSymbols as $symbol) {
                 $replacement = $symbol->getReplacementFqdnName();
+
+                // Function names can be common words (e.g. `value`, `when`), so only replace them when
+                // they are clearly a reference to the function: `value()` or `@see value`.
+                if ($symbol instanceof FunctionSymbol) {
+                    $positions = array_merge(
+                        $positions,
+                        $this->findFunctionPositionsInDocComment($doc, $symbol)
+                    );
+                    continue;
+                }
 //                $docSearchStr = '\\' . $symbol->getOriginalSymbol();
                 $docSearchStr = $symbol->getOriginalFqdnName();
                 $docSearchLen = strlen($docSearchStr);
