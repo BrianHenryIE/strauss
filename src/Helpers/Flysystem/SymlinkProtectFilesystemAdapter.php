@@ -62,6 +62,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
 use SplFileInfo;
+use Throwable;
 
 class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements FlysystemAdapterBackCompatTraitInterface
 {
@@ -691,9 +692,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         // We run this so first encounter with a symlink is recorded.
         try {
             $this->getSymlinkDetails($path);
-        } finally {
-            return parent::fileExists($path);
+        } catch (Throwable $throwable) {
         }
+        return parent::fileExists($path);
     }
 
     /**
@@ -706,9 +707,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         try {
             // We run this so first encounter with a symlink is recorded.
             $this->getSymlinkDetails($path);
-        } finally {
-            return parent::read($path);
+        } catch (Throwable $throwable) {
         }
+        return parent::read($path);
     }
 
     /**
@@ -721,9 +722,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         try {
             // We run this so first encounter with a symlink is recorded.
             $this->getSymlinkDetails($path);
-        } finally {
-            return parent::readStream($path);
+        } catch (Throwable $throwable) {
         }
+        return parent::readStream($path);
     }
 
     public function visibility(string $path): FileAttributes
@@ -733,9 +734,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         try {
             // We run this so first encounter with a symlink is recorded.
             $this->getSymlinkDetails($path);
-        } finally {
-            return parent::visibility($path);
+        } catch (Throwable $throwable) {
         }
+        return parent::visibility($path);
     }
 
     public function mimeType(string $path): FileAttributes
@@ -745,9 +746,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         try {
             // We run this so first encounter with a symlink is recorded.
             $this->getSymlinkDetails($path);
-        } finally {
-            return parent::mimeType($path);
+        } catch (Throwable $throwable) {
         }
+        return parent::mimeType($path);
     }
 
     public function lastModified(string $path): FileAttributes
@@ -757,9 +758,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         try {
             // We run this so first encounter with a symlink is recorded.
             $this->getSymlinkDetails($path);
-        } finally {
-            return parent::lastModified($path);
+        } catch (Throwable $throwable) {
         }
+        return parent::lastModified($path);
     }
 
     public function fileSize(string $path): FileAttributes
@@ -769,9 +770,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         try {
             // We run this so first encounter with a symlink is recorded.
             $this->getSymlinkDetails($path);
-        } finally {
-            return parent::fileSize($path);
+        } catch (Throwable $throwable) {
         }
+        return parent::fileSize($path);
     }
 
     /**
