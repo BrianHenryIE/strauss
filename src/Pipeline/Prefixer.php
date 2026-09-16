@@ -872,7 +872,11 @@ class Prefixer
      * Handle special case with null character `\0` in Composer's AutoloadGenerator.
      *
      * `$prefix = "\0Composer\Autoload\ClassLoader\0";` must become
-     * `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
+     * `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`.
+     *
+     * Only the exact unprefixed class name is matched (an already prefixed line is left alone), and the returned
+     * position covers only the class name, so it starts at the same offset as any doc comment match for the same
+     * text and is deduplicated rather than overlapping it. This matters when Strauss prefixes its own source.
      *
      * TODO: I'm worried that dump-autoload when running via `.phar` will include `BrianHenryIE\Strauss` prefix. I don't think I have addressed that issue here.
      * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\Composer\Autoload\ClassLoader\0";`
@@ -897,21 +901,17 @@ class Prefixer
 
         $disguisedNamespaceString = implode("\\\\", ['Comp'.'oser','Autoload','ClassLoader']);
 
-        // `/(\$prefix = "\\0).*(Composer\\Autoload\\ClassLoader\\0";)/`
-        $pattern = "/(\\\$prefix = \\\"\\\\0).*($disguisedNamespaceString)(\\\\0\\\";)/";
+        // `/\$prefix = "\\0(Composer\\Autoload\\ClassLoader)\\0";/`
+        $pattern = "/\\\$prefix = \\\"\\\\0($disguisedNamespaceString)\\\\0\\\";/";
 
         preg_match_all($pattern, $contents, $matches, PREG_OFFSET_CAPTURE);
         $this->checkPregError();
 
         $positions = [];
-        foreach (array_keys($matches[0]) as $i) {
-            [$prefixString, $prefixOffset] = $matches[1][$i];
-            [$suffixString, $suffixOffset] = $matches[3][$i];
-
-            // Replace everything between `"\0` and `\0";` – dropping any existing prefix.
+        foreach ($matches[1] as [$classnameString, $classnameOffset]) {
             $positions[] = [
-                'start' => $prefixOffset + strlen($prefixString),
-                'end' => $suffixOffset,
+                'start' => $classnameOffset,
+                'end' => $classnameOffset + strlen($classnameString),
                 'replacement' => $replacementNamespace . '\\ClassLoader',
             ];
         }

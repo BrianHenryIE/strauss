@@ -5465,6 +5465,148 @@ EOD;
     }
 
     /**
+     * As {@see self::tests_autoload_generator_classloader_null_character()} but with the symbols as they are
+     * discovered when Strauss prefixes itself for release: the parent `Composer` namespace and fully qualified
+     * class names are all marked for renaming.
+     *
+     * @see \BrianHenryIE\Strauss\Tests\Issues\StraussIssue146Test::test_prefix_own_classes_for_release()
+     */
+    public function tests_autoload_generator_classloader_null_character_with_parent_namespace(): void
+    {
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+        $config->allows('isTargetDirectoryVendor')->andReturnFalse();
+        $config->allows('getConstantsPrefix')->andReturnNull();
+
+        $file = new File(
+            'vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+            'composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+            'vendor-prefixed/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+        );
+        $file->setDoPrefix(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $composerNamespace = new NamespaceSymbol('Composer', $file);
+        $composerNamespace->setDoRename(true);
+        $composerNamespace->setLocalReplacement('BrianHenryIE\TestStrauss\Composer');
+        $discoveredSymbols->add($composerNamespace);
+
+        $autoloadNamespace = new NamespaceSymbol('Composer\Autoload', $file);
+        $autoloadNamespace->setDoRename(true);
+        $autoloadNamespace->setLocalReplacement('BrianHenryIE\TestStrauss\Composer\Autoload');
+        $discoveredSymbols->add($autoloadNamespace);
+
+        foreach (['Composer\Autoload\ClassLoader', 'Composer\Autoload\AutoloadGenerator'] as $className) {
+            $classSymbol = new ClassSymbol($className, $file, $autoloadNamespace);
+            $classSymbol->setDoRename(true);
+            $discoveredSymbols->add($classSymbol);
+        }
+        $installedVersions = new ClassSymbol('Composer\InstalledVersions', $file, $composerNamespace);
+        $installedVersions->setDoRename(true);
+        $discoveredSymbols->add($installedVersions);
+
+        $contents = file_get_contents(getcwd() . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php') ?: '';
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem(), $this->getLogger());
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertFalse(
+            $this->getTestLogger()->hasWarningThatContains('overlapping'),
+            'No overlapping replacements expected.'
+        );
+        $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $result);
+        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $result);
+    }
+
+    /**
+     * When Strauss prefixes its own source for release, the `\0Composer\Autoload\ClassLoader\0` special case
+     * matches the example lines in Prefixer's own doc comments. Those lines are also matched by the doc comment
+     * finder, so the two positions must not overlap or one is skipped with a warning.
+     *
+     * @see \BrianHenryIE\Strauss\Tests\Issues\StraussIssue146Test::test_prefix_own_classes_for_release()
+     * @see Prefixer::findComposerClassLoaderPrefixPositions()
+     */
+    public function test_classloader_null_character_example_in_doc_comment_does_not_overlap(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace BrianHenryIE\Strauss\Pipeline;
+
+class Prefixer
+{
+    /**
+     * Handle special case with null character `\0` in Composer's AutoloadGenerator.
+     *
+     * `$prefix = "\0Composer\Autoload\ClassLoader\0";` must become
+     * `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
+     *
+     * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\Composer\Autoload\ClassLoader\0";`
+     */
+    protected function findComposerClassLoaderPrefixPositions(): array
+    {
+        return [];
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace BrianHenryIE\Strauss\Pipeline;
+
+class Prefixer
+{
+    /**
+     * Handle special case with null character `\0` in Composer's AutoloadGenerator.
+     *
+     * `$prefix = "\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";` must become
+     * `$prefix = "\0Project\Prefix\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
+     *
+     * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`
+     */
+    protected function findComposerClassLoaderPrefixPositions(): array
+    {
+        return [];
+    }
+}
+EOD;
+
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+        $config->allows('isTargetDirectoryVendor')->andReturnTrue();
+        $config->allows('getConstantsPrefix')->andReturnNull();
+
+        $file = new File(
+            'src/Pipeline/Prefixer.php',
+            'src/Pipeline/Prefixer.php',
+            'src/Pipeline/Prefixer.php',
+        );
+        $file->setDoPrefix(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $autoloadNamespace = new NamespaceSymbol('Composer\Autoload', $file);
+        $autoloadNamespace->setDoRename(true);
+        $autoloadNamespace->setLocalReplacement('BrianHenryIE\TestStrauss\Composer\Autoload');
+        $discoveredSymbols->add($autoloadNamespace);
+
+        $classSymbol = new ClassSymbol('Composer\Autoload\ClassLoader', $file, $autoloadNamespace);
+        $classSymbol->setDoRename(true);
+        $discoveredSymbols->add($classSymbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem(), $this->getLogger());
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertFalse(
+            $this->getTestLogger()->hasWarningThatContains('overlapping'),
+            'No overlapping replacements expected.'
+        );
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
      * (a) A namespaced enum declaration's namespace is replaced; the enum body (cases, backing type) is untouched.
      *
      * @covers ::replaceInString
