@@ -1603,8 +1603,7 @@ EOD;
     }
 
     /**
-     * @covers ::replaceConstants
-     * @covers ::replaceConstant
+     * @covers ::findConstantPositionsInAst
      */
     public function testReplaceConstantsWithLeadingCommentBeforePhpTag(): void
     {
@@ -1644,26 +1643,119 @@ EOD;
         self::assertStringNotContainsString("<?php\n<?php", $result);
     }
 
-    public function testReplaceConstantFallbackDoesNotCorruptPrefixSupersetConstant(): void
+    /**
+     * Top-level `const` declarations, `use const` imports and `defined()` checks should all be prefixed,
+     * while class constants and `use` statements for classes are left alone.
+     *
+     * @covers ::findConstantPositionsInAst
+     */
+    public function testReplaceConstantDeclarationsUseConstAndDefined(): void
     {
-        $contents = 'FILTER_VALIDATE_BOOLEAN; FILTER_VALIDATE_BOOL;';
+        $contents = <<<'EOD'
+<?php
+namespace Vendor\Package;
+
+use Vendor\Other\SomeClass;
+use const MY_CONSTANT;
+
+const MY_CONSTANT = 1;
+const OTHER_CONSTANT = 2, MY_CONSTANT_ALIAS = MY_CONSTANT;
+
+class Foo
+{
+    const MY_CONSTANT = 3;
+
+    public function bar(): bool
+    {
+        return defined('MY_CONSTANT') && self::MY_CONSTANT === MY_CONSTANT;
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+namespace Vendor\Package;
+
+use Vendor\Other\SomeClass;
+use const PREFIX_MY_CONSTANT;
+
+const PREFIX_MY_CONSTANT = 1;
+const OTHER_CONSTANT = 2, MY_CONSTANT_ALIAS = PREFIX_MY_CONSTANT;
+
+class Foo
+{
+    const MY_CONSTANT = 3;
+
+    public function bar(): bool
+    {
+        return defined('PREFIX_MY_CONSTANT') && self::MY_CONSTANT === PREFIX_MY_CONSTANT;
+    }
+}
+EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
+        $config->method('getConstantsPrefix')->willReturn('PREFIX_');
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-        $method = new \ReflectionMethod(Prefixer::class, 'replaceConstant');
-        PHP_VERSION_ID < 80100 && $method->setAccessible(true);
-        $result = $method->invoke(
-            $replacer,
-            $contents,
-            'FILTER_VALIDATE_BOOL',
-            'PREFIX_FILTER_VALIDATE_BOOL'
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
         );
 
-        self::assertSame(
-            'FILTER_VALIDATE_BOOLEAN; PREFIX_FILTER_VALIDATE_BOOL;',
-            $result
+        $globalNamespace = new NamespaceSymbol('\\', $file);
+        $discoveredSymbols = new DiscoveredSymbols();
+        $constantSymbol = new ConstantSymbol('MY_CONSTANT', $file, $globalNamespace);
+        $constantSymbol->setDoRename(true);
+        $constantSymbol->setLocalReplacement('PREFIX_MY_CONSTANT');
+        $discoveredSymbols->add($constantSymbol);
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * A discovered constant which is not marked for renaming, or whose replacement equals its original name,
+     * must leave the contents untouched.
+     *
+     * @covers ::findConstantPositionsInAst
+     */
+    public function testReplaceConstantsSkipsConstantsWithoutReplacement(): void
+    {
+        $contents = <<<'EOD'
+<?php
+define('MY_CONSTANT', 1);
+define('KEEP_CONSTANT', 2);
+$value = MY_CONSTANT + KEEP_CONSTANT;
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+        $config->method('getConstantsPrefix')->willReturn('PREFIX_');
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
         );
+
+        $globalNamespace = new NamespaceSymbol('\\', $file);
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $notRenamed = new ConstantSymbol('MY_CONSTANT', $file, $globalNamespace);
+        $notRenamed->setDoRename(false);
+        $notRenamed->setLocalReplacement('PREFIX_MY_CONSTANT');
+        $discoveredSymbols->add($notRenamed);
+
+        $sameReplacement = new ConstantSymbol('KEEP_CONSTANT', $file, $globalNamespace);
+        $sameReplacement->setDoRename(true);
+        $sameReplacement->setLocalReplacement('KEEP_CONSTANT');
+        $discoveredSymbols->add($sameReplacement);
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertEqualsRN($contents, $result);
     }
 
     public function testReplaceConstantPrefixesFullyQualifiedGlobalConstant(): void
@@ -5370,6 +5462,241 @@ EOD;
 
         $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $result);
         $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $result);
+    }
+
+    /**
+     * As {@see self::tests_autoload_generator_classloader_null_character()} but with the symbols as they are
+     * discovered when Strauss prefixes itself for release: the parent `Composer` namespace and fully qualified
+     * class names are all marked for renaming.
+     *
+     * @see \BrianHenryIE\Strauss\Tests\Issues\StraussIssue146Test::test_prefix_own_classes_for_release()
+     */
+    public function tests_autoload_generator_classloader_null_character_with_parent_namespace(): void
+    {
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+        $config->allows('isTargetDirectoryVendor')->andReturnFalse();
+        $config->allows('getConstantsPrefix')->andReturnNull();
+
+        $file = new File(
+            'vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+            'composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+            'vendor-prefixed/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
+        );
+        $file->setDoPrefix(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $composerNamespace = new NamespaceSymbol('Composer', $file);
+        $composerNamespace->setDoRename(true);
+        $composerNamespace->setLocalReplacement('BrianHenryIE\TestStrauss\Composer');
+        $discoveredSymbols->add($composerNamespace);
+
+        $autoloadNamespace = new NamespaceSymbol('Composer\Autoload', $file);
+        $autoloadNamespace->setDoRename(true);
+        $autoloadNamespace->setLocalReplacement('BrianHenryIE\TestStrauss\Composer\Autoload');
+        $discoveredSymbols->add($autoloadNamespace);
+
+        foreach (['Composer\Autoload\ClassLoader', 'Composer\Autoload\AutoloadGenerator'] as $className) {
+            $classSymbol = new ClassSymbol($className, $file, $autoloadNamespace);
+            $classSymbol->setDoRename(true);
+            $discoveredSymbols->add($classSymbol);
+        }
+        $installedVersions = new ClassSymbol('Composer\InstalledVersions', $file, $composerNamespace);
+        $installedVersions->setDoRename(true);
+        $discoveredSymbols->add($installedVersions);
+
+        $contents = file_get_contents(getcwd() . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php') ?: '';
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem(), $this->getLogger());
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $result);
+        $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $result);
+    }
+
+    /**
+     * When Strauss prefixes its own source for release, the `\0Composer\Autoload\ClassLoader\0` special case
+     * matches the example lines in Prefixer's own doc comments. Those lines are also matched by the doc comment
+     * finder, so the two positions must not overlap or one is skipped with a warning.
+     *
+     * @see \BrianHenryIE\Strauss\Tests\Issues\StraussIssue146Test::test_prefix_own_classes_for_release()
+     * @see Prefixer::findComposerClassLoaderPrefixPositions()
+     */
+    public function test_classloader_null_character_example_in_doc_comment_does_not_overlap(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace BrianHenryIE\Strauss\Pipeline;
+
+class Prefixer
+{
+    /**
+     * Handle special case with null character `\0` in Composer's AutoloadGenerator.
+     *
+     * `$prefix = "\0Composer\Autoload\ClassLoader\0";` must become
+     * `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
+     *
+     * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\Composer\Autoload\ClassLoader\0";`
+     */
+    protected function findComposerClassLoaderPrefixPositions(): array
+    {
+        return [];
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace BrianHenryIE\Strauss\Pipeline;
+
+class Prefixer
+{
+    /**
+     * Handle special case with null character `\0` in Composer's AutoloadGenerator.
+     *
+     * `$prefix = "\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";` must become
+     * `$prefix = "\0Project\Prefix\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
+     *
+     * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`
+     */
+    protected function findComposerClassLoaderPrefixPositions(): array
+    {
+        return [];
+    }
+}
+EOD;
+
+        $config = Mockery::mock(PrefixerConfigInterface::class);
+        $config->allows('isTargetDirectoryVendor')->andReturnTrue();
+        $config->allows('getConstantsPrefix')->andReturnNull();
+
+        $file = new File(
+            'src/Pipeline/Prefixer.php',
+            'src/Pipeline/Prefixer.php',
+            'src/Pipeline/Prefixer.php',
+        );
+        $file->setDoPrefix(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+
+        $autoloadNamespace = new NamespaceSymbol('Composer\Autoload', $file);
+        $autoloadNamespace->setDoRename(true);
+        $autoloadNamespace->setLocalReplacement('BrianHenryIE\TestStrauss\Composer\Autoload');
+        $discoveredSymbols->add($autoloadNamespace);
+
+        $classSymbol = new ClassSymbol('Composer\Autoload\ClassLoader', $file, $autoloadNamespace);
+        $classSymbol->setDoRename(true);
+        $discoveredSymbols->add($classSymbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem(), $this->getLogger());
+
+        $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * A fully qualified global function referenced in a doc comment is matched by both the global symbol comment
+     * scan (from the backslash) and the function doc comment finder. Both must start at the same offset so they
+     * are deduplicated rather than overlapping.
+     *
+     * @see \BrianHenryIE\Strauss\Tests\Issues\StraussIssue146Test::test_prefix_own_classes_for_release()
+     * @see https://github.com/symfony/polyfill-deepclone/blob/main/Resources/stubs/ClassNotFoundException.php
+     */
+    public function test_fully_qualified_global_function_in_doc_comment_does_not_overlap(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace DeepClone;
+
+if (!\extension_loaded('deepclone')) {
+    /**
+     * Thrown by {@see \deepclone_from_array()} when the payload references a
+     * class that no longer exists in the running PHP process.
+     *
+     * @see \deepclone_from_array
+     * @uses deepclone_from_array()
+     * @see `\deepclone_from_array`
+     */
+    class ClassNotFoundException extends \InvalidArgumentException
+    {
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace DeepClone;
+
+if (!\extension_loaded('deepclone')) {
+    /**
+     * Thrown by {@see \myprefix_deepclone_from_array()} when the payload references a
+     * class that no longer exists in the running PHP process.
+     *
+     * @see \myprefix_deepclone_from_array
+     * @uses myprefix_deepclone_from_array()
+     * @see `\myprefix_deepclone_from_array`
+     */
+    class ClassNotFoundException extends \InvalidArgumentException
+    {
+    }
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = new File(
+            'vendor/symfony/polyfill-deepclone/Resources/stubs/ClassNotFoundException.php',
+            'symfony/polyfill-deepclone/Resources/stubs/ClassNotFoundException.php',
+            'vendor-prefixed/symfony/polyfill-deepclone/Resources/stubs/ClassNotFoundException.php',
+        );
+
+        $symbols = new DiscoveredSymbols();
+        $symbol = new FunctionSymbol('deepclone_from_array', $file, new NamespaceSymbol('\\'));
+        $symbol->setDoRename(true);
+        $symbol->setLocalReplacement('myprefix_deepclone_from_array');
+        $symbols->add($symbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents, $file);
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * Overlapping positions can only come from a bug in a position finder, so they are a hard error rather than
+     * being silently applied on top of each other.
+     */
+    public function test_overlapping_positions_throw(): void
+    {
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $replacer = new class ($config, $this->getInMemoryFileSystem()) extends Prefixer {
+            protected function findConstantPositionsInAst(array $ast, DiscoveredSymbols $discoveredSymbols): array
+            {
+                return [
+                    ['start' => 6, 'end' => 20, 'replacement' => 'outer'],
+                    ['start' => 10, 'end' => 15, 'replacement' => 'inner'],
+                ];
+            }
+        };
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Overlapping replacement');
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $replacer->replaceInString(new DiscoveredSymbols(), "<?php\n\$a = 'some string here';\n", $file);
     }
 
     /**

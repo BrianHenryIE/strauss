@@ -328,7 +328,7 @@ EOD;
     }
 
     /**
-     * @see Prefixer::replaceSingleClassnameInString()
+     * @see Prefixer::findSymbolPositionsInStrings()
      */
     public function test_replace_namespace_string(): void
     {
@@ -363,7 +363,7 @@ JSON;
     }
 
     /**
-     * @see Prefixer::replaceSingleClassnameInString()
+     * @see Prefixer::findSymbolPositionsInStrings()
      */
     public function test_replace_string(): void
     {
