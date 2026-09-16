@@ -5511,10 +5511,6 @@ EOD;
 
         $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
 
-        $this->assertFalse(
-            $this->getTestLogger()->hasWarningThatContains('overlapping'),
-            'No overlapping replacements expected.'
-        );
         $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $result);
         $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $result);
     }
@@ -5599,11 +5595,108 @@ EOD;
 
         $result = $replacer->replaceInString($discoveredSymbols, $contents, $file);
 
-        $this->assertFalse(
-            $this->getTestLogger()->hasWarningThatContains('overlapping'),
-            'No overlapping replacements expected.'
-        );
         $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * A fully qualified global function referenced in a doc comment is matched by both the global symbol comment
+     * scan (from the backslash) and the function doc comment finder. Both must start at the same offset so they
+     * are deduplicated rather than overlapping.
+     *
+     * @see \BrianHenryIE\Strauss\Tests\Issues\StraussIssue146Test::test_prefix_own_classes_for_release()
+     * @see https://github.com/symfony/polyfill-deepclone/blob/main/Resources/stubs/ClassNotFoundException.php
+     */
+    public function test_fully_qualified_global_function_in_doc_comment_does_not_overlap(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+namespace DeepClone;
+
+if (!\extension_loaded('deepclone')) {
+    /**
+     * Thrown by {@see \deepclone_from_array()} when the payload references a
+     * class that no longer exists in the running PHP process.
+     *
+     * @see \deepclone_from_array
+     * @uses deepclone_from_array()
+     * @see `\deepclone_from_array`
+     */
+    class ClassNotFoundException extends \InvalidArgumentException
+    {
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+namespace DeepClone;
+
+if (!\extension_loaded('deepclone')) {
+    /**
+     * Thrown by {@see \myprefix_deepclone_from_array()} when the payload references a
+     * class that no longer exists in the running PHP process.
+     *
+     * @see \myprefix_deepclone_from_array
+     * @uses myprefix_deepclone_from_array()
+     * @see `\myprefix_deepclone_from_array`
+     */
+    class ClassNotFoundException extends \InvalidArgumentException
+    {
+    }
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = new File(
+            'vendor/symfony/polyfill-deepclone/Resources/stubs/ClassNotFoundException.php',
+            'symfony/polyfill-deepclone/Resources/stubs/ClassNotFoundException.php',
+            'vendor-prefixed/symfony/polyfill-deepclone/Resources/stubs/ClassNotFoundException.php',
+        );
+
+        $symbols = new DiscoveredSymbols();
+        $symbol = new FunctionSymbol('deepclone_from_array', $file, new NamespaceSymbol('\\'));
+        $symbol->setDoRename(true);
+        $symbol->setLocalReplacement('myprefix_deepclone_from_array');
+        $symbols->add($symbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents, $file);
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * Overlapping positions can only come from a bug in a position finder, so they are a hard error rather than
+     * being silently applied on top of each other.
+     */
+    public function test_overlapping_positions_throw(): void
+    {
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $replacer = new class ($config, $this->getInMemoryFileSystem()) extends Prefixer {
+            protected function findConstantPositionsInAst(array $ast, DiscoveredSymbols $discoveredSymbols): array
+            {
+                return [
+                    ['start' => 6, 'end' => 20, 'replacement' => 'outer'],
+                    ['start' => 10, 'end' => 15, 'replacement' => 'inner'],
+                ];
+            }
+        };
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Overlapping replacement');
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $replacer->replaceInString(new DiscoveredSymbols(), "<?php\n\$a = 'some string here';\n", $file);
     }
 
     /**

@@ -346,14 +346,17 @@ class Prefixer
         $parts = [];
         $cursor = strlen($contents);
         foreach ($positions as $pos) {
+            // Overlapping positions are a bug in a finder – there is no valid case for them.
             if ($pos['end'] > $cursor) {
-                $this->logger->warning('Skipping overlapping replacement in {filePath} at {start}-{end}: {replacement}', [
-                    'filePath' => $fileAbsolutePath ?? 'file',
-                    'start' => $pos['start'],
-                    'end' => $pos['end'],
-                    'replacement' => $pos['replacement'],
-                ]);
-                continue;
+                throw new Exception(sprintf(
+                    'Overlapping replacement in %s at %d-%d ("%s" -> "%s") overlaps a replacement starting at %d.',
+                    $fileAbsolutePath ?? 'file',
+                    $pos['start'],
+                    $pos['end'],
+                    substr($contents, $pos['start'], $pos['end'] - $pos['start']),
+                    $pos['replacement'],
+                    $cursor
+                ));
             }
             $parts[] = substr($contents, $pos['end'], $cursor - $pos['end']);
             $parts[] = $pos['replacement'];
@@ -1223,13 +1226,15 @@ class Prefixer
         $name = preg_quote($symbol->getOriginalFqdnName(), '/');
         $replacement = $symbol->getReplacementFqdnName();
 
+        // The optional leading backslash is included in the match so the position starts at the same offset as
+        // the one from findGlobalSymbolsPositionsInComment() for `\value` and is deduplicated rather than overlapping.
         $patterns = [
             // `value()` – not preceded by an identifier character, namespace separator, `$`, `->` or `::`.
-            '/(?<![a-zA-Z0-9_\x7f-\xff\\\\$>:])\\\\?\K' . $name . '(?=\s*\()/',
+            '/(?<![a-zA-Z0-9_\x7f-\xff\\\\$>:])\\\\?' . $name . '(?=\s*\()/',
             // `@see value` / `@uses value` – followed by a non-identifier character.
-            '/@(?:see|uses)\s+\\\\?\K' . $name . '(?![a-zA-Z0-9_\x7f-\xff\\\\])/',
+            '/@(?:see|uses)\s+\K\\\\?' . $name . '(?![a-zA-Z0-9_\x7f-\xff\\\\])/',
             // Inline code: `value` or `\value`.
-            '/`\\\\?\K' . $name . '(?=`)/',
+            '/`\K\\\\?' . $name . '(?=`)/',
         ];
 
         $text = $doc->getText();
@@ -1241,7 +1246,7 @@ class Prefixer
                 $positions[] = [
                     'start' => $doc->getStartFilePos() + $offset,
                     'end' => $doc->getStartFilePos() + $offset + strlen($match),
-                    'replacement' => $replacement,
+                    'replacement' => str_starts_with($match, '\\') ? '\\' . $replacement : $replacement,
                 ];
             }
         }
