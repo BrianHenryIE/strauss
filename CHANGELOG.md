@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.30.0 September 2026
+
+* Add: `exclude_from_string_rename` to exclude symbols from false-positive matches in strings
+
 ## 0.29.2 September 2026
 
 * Fix: `realpath()` failure when `delete_vendor_packages` and `delete_vendor_files` both enabled

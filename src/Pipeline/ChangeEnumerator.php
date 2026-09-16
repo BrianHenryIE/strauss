@@ -151,12 +151,17 @@ class ChangeEnumerator
         unset($classmapPrefix, $classesTraitsInterfaces);
 
         $functionsSymbols = $discoveredSymbols->getDiscoveredFunctions();
+        $excludeFunctionsFromStringRenaming = $this->config->getExcludeFunctionsFromStringRenaming();
 
         /** @var FunctionSymbol $symbol */
         foreach ($functionsSymbols as $symbol) {
             // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
             if (!$symbol->getNamespace()->isGlobal()) {
                 continue;
+            }
+            // Common words, e.g. `value`, should still be prefixed where called, but not inside strings.
+            if (in_array($symbol->getOriginalFqdnName(), $excludeFunctionsFromStringRenaming, true)) {
+                $symbol->setReplaceInString(false);
             }
             $functionPrefix = $this->config->getFunctionsPrefix();
             if (empty($functionPrefix) || str_starts_with($symbol->getOriginalFqdnName(), $functionPrefix)) {

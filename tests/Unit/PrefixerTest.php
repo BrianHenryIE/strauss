@@ -5722,4 +5722,158 @@ EOD;
         $this->assertStringContainsString("Status::Ready => 'ready',", $result);
         $this->assertStringContainsString("Status::Done => 'done',", $result);
     }
+
+    /**
+     * When a package defines global functions named `value()` and `when()` (e.g. illuminate/collections),
+     * the function declaration and calls should be prefixed, but `$value` variables, `'value'` array keys
+     * and words in comments must be left untouched.
+     *
+     * @see \BrianHenryIE\Strauss\Tests\Integration\ReplacerIntegrationTest::test_prefixing_global_function_does_not_replace_bare_word_occurrences()
+     */
+    public function test_prefixing_global_function_does_not_replace_bare_word_occurrences(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+if (! function_exists('value')) {
+    /**
+     * Return the default value of the given value.
+     *
+     * @param mixed $value
+     */
+    function value($value)
+    {
+        return $value;
+    }
+}
+
+if (! function_exists('when')) {
+    /**
+     * Return a value by calling value() `value` when the given condition is true.
+     *
+     * @see value()
+     * @see value
+     */
+    function when($condition, $value)
+    {
+        return $condition ? value($value) : null;
+    }
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+if (! function_exists('myprefix_value')) {
+    /**
+     * Return the default value of the given value.
+     *
+     * @param mixed $value
+     */
+    function myprefix_value($value)
+    {
+        return $value;
+    }
+}
+
+if (! function_exists('myprefix_when')) {
+    /**
+     * Return a value by calling myprefix_value() `myprefix_value` when the given condition is true.
+     *
+     * @see myprefix_value()
+     * @see myprefix_value
+     */
+    function myprefix_when($condition, $value)
+    {
+        return $condition ? myprefix_value($value) : null;
+    }
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $symbols = new DiscoveredSymbols();
+
+        $globalNamespace = new NamespaceSymbol('\\');
+
+        $valueSymbol = new FunctionSymbol('value', $file, $globalNamespace);
+        $valueSymbol->setDoRename(true);
+        $valueSymbol->setLocalReplacement('myprefix_value');
+        $symbols->add($valueSymbol);
+
+        $whenSymbol = new FunctionSymbol('when', $file, $globalNamespace);
+        $whenSymbol->setDoRename(true);
+        $whenSymbol->setLocalReplacement('myprefix_when');
+        $symbols->add($whenSymbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents, $file);
+
+        $this->assertEqualsRN($expected, $result);
+    }
+
+    /**
+     * A global function named `value()` should not cause the string `'value'` used as an array key to be prefixed.
+     *
+     * @see \BrianHenryIE\Strauss\Tests\Integration\ReplacerIntegrationTest::test_prefixing_global_function_does_not_replace_bare_word_occurrences()
+     */
+    public function test_prefixing_global_function_does_not_replace_matching_array_key_string(): void
+    {
+        $contents = <<<'EOD'
+<?php
+
+function value($value)
+{
+    return $value;
+}
+
+function check_content_type(array $content_type): bool
+{
+    return 'text/plain' === $content_type['value'];
+}
+EOD;
+
+        $expected = <<<'EOD'
+<?php
+
+function myprefix_value($value)
+{
+    return $value;
+}
+
+function check_content_type(array $content_type): bool
+{
+    return 'text/plain' === $content_type['value'];
+}
+EOD;
+
+        $config = $this->createMock(PrefixerConfigInterface::class);
+
+        $file = new File(
+            'vendor/package/name/src/file.php',
+            'package/name/src/file.php',
+            'vendor-prefixed/package/name/src/file.php',
+        );
+
+        $symbols = new DiscoveredSymbols();
+
+        $symbol = new FunctionSymbol('value', $file, new NamespaceSymbol('\\'));
+        $symbol->setDoRename(true);
+        $symbol->setReplaceInString(false);
+        $symbol->setLocalReplacement('myprefix_value');
+        $symbols->add($symbol);
+
+        $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
+
+        $result = $replacer->replaceInString($symbols, $contents, $file);
+
+        $this->assertEqualsRN($expected, $result);
+    }
 }

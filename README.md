@@ -181,6 +181,10 @@ Strauss potentially requires zero configuration, but likely you'll want to custo
             "constants": [
             ]
         },
+        "exclude_from_string_rename": {
+            "functions": [
+            ]
+        },
         "namespace_replacement_patterns" : {
         },
         "delete_vendor_packages": false,
@@ -242,6 +246,8 @@ The remainder is empty:
   - `namespaces` array of namespaces (prefix match) whose constants are not prefixed
   - `file_patterns` array of regex patterns for file paths
   - `constants` array of constant names to never prefix (e.g. `["WP_PLUGIN_DIR", "ABSPATH"]`)
+- `exclude_from_string_rename` – symbols which are renamed where used in code, but left unchanged where the name appears inside a string, e.g. as an array key
+  - `functions` array of global function names (e.g. `["value", "when"]`) to leave unchanged inside strings such as `$array['value']`
 - [`namespace_replacement_patterns`](https://github.com/BrianHenryIE/strauss/blob/83484b79cfaa399bba55af0bf4569c24d6eb169d/src/ChangeEnumerator.php#L183-L190) a dictionary to use in `preg_replace` instead of prefixing with `namespace_prefix`.
 
 ## Autoloading

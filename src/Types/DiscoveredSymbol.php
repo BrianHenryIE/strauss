@@ -38,6 +38,16 @@ abstract class DiscoveredSymbol
     protected DependenciesCollection $dependencies;
 
     /**
+     * Most replacements use php-parser's abstract syntax tree to e.g. identify a function declaration and edit its
+     * name. We also want to replace references to the symbol in strings, e.g. classnames as string, but this results
+     * in some false positives, e.g. a function called "value" collides with array keys called "value". This property
+     * allows disabling the in-string replacement for specific symbols.
+     *
+     * Should this be a regex to match which files to skip in?
+     */
+    protected bool $replaceInString = true;
+
+    /**
      * @param string $fqdnSymbol The classname / namespace etc.
      * @param ?FileBase $sourceFile The file it was discovered in. Unneeded for global namespace and some (Composer) predictable files.
      */
@@ -190,5 +200,14 @@ abstract class DiscoveredSymbol
     public function getDependencies(): DependenciesCollection
     {
         return $this->dependencies;
+    }
+
+    public function setReplaceInString(bool $replaceInString): void
+    {
+        $this->replaceInString = $replaceInString;
+    }
+    public function isReplaceInString(): bool
+    {
+        return $this->replaceInString;
     }
 }

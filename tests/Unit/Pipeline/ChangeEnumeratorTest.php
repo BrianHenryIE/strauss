@@ -27,6 +27,7 @@ class ChangeEnumeratorTest extends TestCase
         $config->expects('getClassmapPrefix')->andReturn('Class_Prefix_');
         $config->expects('getFunctionsPrefix')->andReturn('functions_prefix_')->atLeast()->once();
         $config->allows('getConstantsPrefix')->andReturnNull();
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
 
         $sut = new ChangeEnumerator($config, $this->getTestLogger());
 
@@ -67,6 +68,7 @@ class ChangeEnumeratorTest extends TestCase
         $config->allows('getClassmapPrefix')->andReturn('Class_Prefix_');
         $config->allows('getFunctionsPrefix')->andReturnNull();
         $config->allows('getConstantsPrefix')->andReturnNull();
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
 
         $sut = new ChangeEnumerator($config, $this->getTestLogger());
 
@@ -111,6 +113,7 @@ class ChangeEnumeratorTest extends TestCase
         $config->allows('getClassmapPrefix')->andReturn('Class_Prefix_');
         $config->allows('getFunctionsPrefix')->andReturnNull();
         $config->allows('getConstantsPrefix')->andReturnNull();
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
 
         $sut = new ChangeEnumerator($config, $this->getTestLogger());
 
@@ -150,6 +153,7 @@ class ChangeEnumeratorTest extends TestCase
         $config->allows('getClassmapPrefix')->andReturn('Class_Prefix_');
         $config->allows('getFunctionsPrefix')->andReturnNull();
         $config->allows('getConstantsPrefix')->andReturnNull();
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
 
         $sut = new ChangeEnumerator($config, $this->getTestLogger());
 
@@ -170,5 +174,44 @@ class ChangeEnumeratorTest extends TestCase
             'Class_Prefix_GlobalSuit',
             $enumSymbol->getReplacementFqdnName()
         );
+    }
+
+    /**
+     * Functions listed in `exclude_from_string_rename.functions` are still prefixed where called,
+     * but are flagged so the Prefixer does not rename occurrences inside strings, e.g. `$array['value']`.
+     *
+     * @covers ::determineReplacements
+     */
+    public function testExcludeFunctionsFromStringRenaming(): void
+    {
+        /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
+        $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
+        $config->expects('getClassmapPrefix')->andReturn('Class_Prefix_');
+        $config->allows('getFunctionsPrefix')->andReturn('functions_prefix_');
+        $config->allows('getConstantsPrefix')->andReturnNull();
+        $config->expects('getExcludeFunctionsFromStringRenaming')->andReturn(['value']);
+
+        $sut = new ChangeEnumerator($config, $this->getTestLogger());
+
+        $file = new File('/path/to/file.php', 'file.php', '/destination-path/to/file.php');
+        $globalNamespace = new NamespaceSymbol('\\');
+
+        $excludedSymbol = new FunctionSymbol('value', $file, $globalNamespace);
+        $excludedSymbol->setDoRename(true);
+
+        $otherSymbol = new FunctionSymbol('other_fn', $file, $globalNamespace);
+        $otherSymbol->setDoRename(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($excludedSymbol);
+        $discoveredSymbols->add($otherSymbol);
+
+        $sut->determineReplacements($discoveredSymbols);
+
+        $this->assertEquals('functions_prefix_value', $excludedSymbol->getLocalReplacement());
+        $this->assertFalse($excludedSymbol->isReplaceInString());
+
+        $this->assertEquals('functions_prefix_other_fn', $otherSymbol->getLocalReplacement());
+        $this->assertTrue($otherSymbol->isReplaceInString());
     }
 }
