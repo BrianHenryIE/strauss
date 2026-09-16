@@ -1,6 +1,6 @@
 <?php
 /**
- * A list of built-in classes, interfaces, traits and functions.
+ * A list of built-in classes, interfaces, traits, enums and functions.
  *
  * Required so that they are not modified when encountered in polyfills.
  *
@@ -10,7 +10,7 @@
  */
 
 /**
- * @var array<numeric-string, array{classes:string[],interfaces:string[],traits:string[],functions:string[]}>
+ * @var array<numeric-string, array{classes:string[],interfaces:string[],traits:string[],enums:string[],functions:string[]}>
  */
 return array (
     '7.4' =>
@@ -224,6 +224,9 @@ return array (
                     'Traversable',
                 ),
             'traits' =>
+                array (
+                ),
+            'enums' =>
                 array (
                 ),
             'functions' =>
@@ -2450,6 +2453,9 @@ return array (
             'traits' =>
                 array (
                 ),
+            'enums' =>
+                array (
+                ),
             'functions' =>
                 array (
                     'fdiv',
@@ -2536,6 +2542,9 @@ return array (
             'traits' =>
                 array (
                 ),
+            'enums' =>
+                array (
+                ),
             'functions' =>
                 array (
                     'array_is_list',
@@ -2589,6 +2598,9 @@ return array (
             'traits' =>
                 array (
                 ),
+            'enums' =>
+                array (
+                ),
             'functions' =>
                 array (
                     'curl_upkeep',
@@ -2617,7 +2629,6 @@ return array (
                     'DateObjectError',
                     'DateRangeError',
                     'Override',
-                    'Random\\IntervalBoundary',
                     'SQLite3Exception',
                 ),
             'interfaces' =>
@@ -2625,6 +2636,10 @@ return array (
                 ),
             'traits' =>
                 array (
+                ),
+            'enums' =>
+                array (
+                    'Random\\IntervalBoundary',
                 ),
             'functions' =>
                 array (
@@ -2645,88 +2660,9 @@ return array (
         array (
             'classes' =>
                 array (
-                    'DOM\\Attr',
-                    'DOM\\CDATASection',
-                    'DOM\\CharacterData',
-                    'DOM\\Comment',
-                    'DOM\\DTDNamedNodeMap',
-                    'DOM\\Document',
-                    'DOM\\DocumentFragment',
-                    'DOM\\DocumentType',
-                    'DOM\\Element',
-                    'DOM\\Entity',
-                    'DOM\\EntityReference',
-                    'DOM\\HTMLCollection',
-                    'DOM\\HTMLDocument',
-                    'DOM\\Implementation',
-                    'DOM\\NamedNodeMap',
-                    'DOM\\Node',
-                    'DOM\\NodeList',
-                    'DOM\\Notation',
-                    'DOM\\ProcessingInstruction',
-                    'DOM\\Text',
-                    'DOM\\XMLDocument',
-                    'DOM\\XPath',
-                    'Odbc\\Connection',
-                    'Odbc\\Result',
-                    'PdoDblib',
-                    'PdoMysql',
-                    'PdoOdbc',
-                    'PdoPgsql',
-                    'PdoSqlite',
-                    'QosClass',
-                    'ReflectionConstant',
-                    'RequestParseBodyException',
-                    'StreamBucket',
-                    'dom\\domexception',
-                ),
-            'interfaces' =>
-                array (
-                    'DOM\\ChildNode',
-                    'DOM\\ParentNode',
-                ),
-            'traits' =>
-                array (
-                ),
-            'functions' =>
-                array (
-                    'bcceil',
-                    'bcfloor',
-                    'bcround',
-                    'dom\\import_simplexml',
-                    'grapheme_str_split',
-                    'http_clear_last_response_headers',
-                    'http_get_last_response_headers',
-                    'intltz_get_iana_id',
-                    'mb_lcfirst',
-                    'mb_ltrim',
-                    'mb_rtrim',
-                    'mb_trim',
-                    'mb_ucfirst',
-                    'pcntl_getqos_class',
-                    'pcntl_setqos_class',
-                    'request_parse_body',
-                    'sodium_crypto_aead_aegis128l_decrypt',
-                    'sodium_crypto_aead_aegis128l_encrypt',
-                    'sodium_crypto_aead_aegis128l_keygen',
-                    'sodium_crypto_aead_aegis256_decrypt',
-                    'sodium_crypto_aead_aegis256_encrypt',
-                    'sodium_crypto_aead_aegis256_keygen',
-                    'sodium_crypto_aead_aes256gcm_decrypt',
-                    'sodium_crypto_aead_aes256gcm_encrypt',
-                    'sodium_crypto_aead_aes256gcm_keygen',
-                ),
-        ),
-    '8.5' =>
-        array (
-            'classes' =>
-                array (
                     'BcMath\\Number',
-                    'CurlSharePersistentHandle',
                     'Dba\\Connection',
-                    'DelayedTargetValidation',
                     'Deprecated',
-                    'Dom\\AdjacentPosition',
                     'Dom\\Attr',
                     'Dom\\CDATASection',
                     'Dom\\CharacterData',
@@ -2752,31 +2688,27 @@ return array (
                     'Dom\\TokenList',
                     'Dom\\XMLDocument',
                     'Dom\\XPath',
-                    'Filter\\FilterException',
-                    'Filter\\FilterFailedException',
-                    'IntlListFormatter',
-                    'NoDiscard',
-                    'Pcntl\\QosClass',
+                    'Odbc\\Connection',
+                    'Odbc\\Result',
+                    'PdoDblib',
+                    'PdoMysql',
+                    'PdoOdbc',
+                    'PdoPgsql',
+                    'PdoSqlite',
                     'Pdo\\Dblib',
                     'Pdo\\Mysql',
                     'Pdo\\Odbc',
                     'Pdo\\Pgsql',
                     'Pdo\\Sqlite',
-                    'PropertyHookType',
-                    'RoundingMode',
+                    'QosClass',
+                    'ReflectionConstant',
+                    'RequestParseBodyException',
                     'SNMP',
                     'SNMPException',
                     'Soap\\Sdl',
                     'Soap\\Url',
-                    'Uri\\InvalidUriException',
-                    'Uri\\Rfc3986\\Uri',
-                    'Uri\\UriComparisonMode',
-                    'Uri\\UriError',
-                    'Uri\\UriException',
-                    'Uri\\WhatWg\\InvalidUrlException',
-                    'Uri\\WhatWg\\Url',
-                    'Uri\\WhatWg\\UrlValidationError',
-                    'Uri\\WhatWg\\UrlValidationErrorType',
+                    'StreamBucket',
+                    'dom\\domexception',
                 ),
             'interfaces' =>
                 array (
@@ -2786,38 +2718,48 @@ return array (
             'traits' =>
                 array (
                 ),
+            'enums' =>
+                array (
+                    'Dom\\AdjacentPosition',
+                    'Pcntl\\QosClass',
+                    'PropertyHookType',
+                    'RoundingMode',
+                ),
             'functions' =>
                 array (
                     'array_all',
                     'array_any',
                     'array_find',
                     'array_find_key',
-                    'array_first',
-                    'array_last',
+                    'bcceil',
                     'bcdivmod',
-                    'clone',
-                    'curl_multi_get_handles',
-                    'curl_share_init_persistent',
+                    'bcfloor',
+                    'bcround',
                     'die',
+                    'dom\\import_simplexml',
                     'exit',
                     'fpow',
-                    'get_error_handler',
-                    'get_exception_handler',
-                    'grapheme_levenshtein',
-                    'locale_add_likely_subtags',
-                    'locale_is_right_to_left',
-                    'locale_minimize_subtags',
-                    'opcache_is_script_cached_in_file_cache',
+                    'grapheme_str_split',
+                    'http_clear_last_response_headers',
+                    'http_get_last_response_headers',
+                    'intltz_get_iana_id',
+                    'mb_lcfirst',
+                    'mb_ltrim',
+                    'mb_rtrim',
+                    'mb_trim',
+                    'mb_ucfirst',
                     'opcache_jit_blacklist',
+                    'pcntl_getqos_class',
+                    'pcntl_setqos_class',
                     'pcntl_waitid',
                     'pg_change_password',
-                    'pg_close_stmt',
                     'pg_jit',
                     'pg_put_copy_data',
                     'pg_put_copy_end',
                     'pg_result_memory_size',
                     'pg_set_chunked_rows_size',
                     'pg_socket_poll',
+                    'request_parse_body',
                     'snmp2_get',
                     'snmp2_getnext',
                     'snmp2_real_walk',
@@ -2842,6 +2784,61 @@ return array (
                     'snmpset',
                     'snmpwalk',
                     'snmpwalkoid',
+                    'sodium_crypto_aead_aegis128l_decrypt',
+                    'sodium_crypto_aead_aegis128l_encrypt',
+                    'sodium_crypto_aead_aegis128l_keygen',
+                    'sodium_crypto_aead_aegis256_decrypt',
+                    'sodium_crypto_aead_aegis256_encrypt',
+                    'sodium_crypto_aead_aegis256_keygen',
+                    'sodium_crypto_aead_aes256gcm_decrypt',
+                    'sodium_crypto_aead_aes256gcm_encrypt',
+                    'sodium_crypto_aead_aes256gcm_keygen',
+                ),
+        ),
+    '8.5' =>
+        array (
+            'classes' =>
+                array (
+                    'CurlSharePersistentHandle',
+                    'DelayedTargetValidation',
+                    'Filter\\FilterException',
+                    'Filter\\FilterFailedException',
+                    'IntlListFormatter',
+                    'NoDiscard',
+                    'Uri\\InvalidUriException',
+                    'Uri\\Rfc3986\\Uri',
+                    'Uri\\UriError',
+                    'Uri\\UriException',
+                    'Uri\\WhatWg\\InvalidUrlException',
+                    'Uri\\WhatWg\\Url',
+                    'Uri\\WhatWg\\UrlValidationError',
+                ),
+            'interfaces' =>
+                array (
+                ),
+            'traits' =>
+                array (
+                ),
+            'enums' =>
+                array (
+                    'Uri\\UriComparisonMode',
+                    'Uri\\WhatWg\\UrlValidationErrorType',
+                ),
+            'functions' =>
+                array (
+                    'array_first',
+                    'array_last',
+                    'clone',
+                    'curl_multi_get_handles',
+                    'curl_share_init_persistent',
+                    'get_error_handler',
+                    'get_exception_handler',
+                    'grapheme_levenshtein',
+                    'locale_add_likely_subtags',
+                    'locale_is_right_to_left',
+                    'locale_minimize_subtags',
+                    'opcache_is_script_cached_in_file_cache',
+                    'pg_close_stmt',
                 ),
         ),
     '8.6' =>
@@ -2850,10 +2847,8 @@ return array (
                 array (
                     'IntlNumberRangeFormatter',
                     'Io\\IoException',
-                    'Io\\Poll\\Backend',
                     'Io\\Poll\\BackendUnavailableException',
                     'Io\\Poll\\Context',
-                    'Io\\Poll\\Event',
                     'Io\\Poll\\FailedContextInitializationException',
                     'Io\\Poll\\FailedHandleAddException',
                     'Io\\Poll\\FailedPollOperationException',
@@ -2867,17 +2862,10 @@ return array (
                     'Openssl\\OpensslException',
                     'Openssl\\Psk',
                     'Openssl\\Session',
-                    'SortDirection',
                     'StreamError',
-                    'StreamErrorCode',
-                    'StreamErrorMode',
-                    'StreamErrorStore',
                     'StreamException',
                     'StreamPollHandle',
                     'Uri\\Rfc3986\\UriBuilder',
-                    'Uri\\Rfc3986\\UriHostType',
-                    'Uri\\Rfc3986\\UriType',
-                    'Uri\\WhatWg\\UrlHostType',
                 ),
             'interfaces' =>
                 array (
@@ -2885,6 +2873,18 @@ return array (
                 ),
             'traits' =>
                 array (
+                ),
+            'enums' =>
+                array (
+                    'Io\\Poll\\Backend',
+                    'Io\\Poll\\Event',
+                    'SortDirection',
+                    'StreamErrorCode',
+                    'StreamErrorMode',
+                    'StreamErrorStore',
+                    'Uri\\Rfc3986\\UriHostType',
+                    'Uri\\Rfc3986\\UriType',
+                    'Uri\\WhatWg\\UrlHostType',
                 ),
             'functions' =>
                 array (
