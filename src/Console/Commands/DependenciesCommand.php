@@ -15,6 +15,7 @@ use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
+use BrianHenryIE\Strauss\Pipeline\ChangePlanner;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Pipeline\Copier;
@@ -172,6 +173,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->markSymbolsForRenaming();
             $this->determineChanges();
             $this->markFilesExcludedFromChanges();
+            $this->planChanges();
 
             (new Psr0($this->filesystem, $this->logger))->setTargetDirectory(
                 $this->flatDependencyTree,
@@ -422,6 +424,18 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
+    }
+
+    /**
+     * Determine every edit to make to every file, from the symbols marked for renaming and each file's code map,
+     * before any file is copied or modified.
+     */
+    protected function planChanges(): void
+    {
+        $this->logger->notice('Planning changes to files...');
+
+        $changePlanner = new ChangePlanner($this->logger);
+        $changePlanner->planInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
     }
 
     protected function markFilesExcludedFromChanges(): void

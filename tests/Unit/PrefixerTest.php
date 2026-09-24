@@ -1582,8 +1582,8 @@ EOD;
         $file->shouldReceive('getSourcePath');
         $file->shouldReceive('getVendorRelativePath');
         $file->shouldReceive('getTargetAbsolutePath');
-        $file->shouldReceive('setParsedAst');
-        $file->shouldReceive('getParsedAst')->andReturnNull();
+        $file->shouldReceive("setCodeMap");
+        $file->shouldReceive("getCodeMap")->andReturnNull();
 
         $discoveredSymbols = new DiscoveredSymbols();
         $globalNamespace = new NamespaceSymbol('\\', $file);
@@ -1626,8 +1626,8 @@ EOD;
         $file->shouldReceive('getSourcePath');
         $file->shouldReceive('getVendorRelativePath');
         $file->shouldReceive('getTargetAbsolutePath');
-        $file->shouldReceive('setParsedAst');
-        $file->shouldReceive('getParsedAst')->andReturnNull();
+        $file->shouldReceive("setCodeMap");
+        $file->shouldReceive("getCodeMap")->andReturnNull();
 
         $globalNamespace = new NamespaceSymbol('\\', $file);
         $globalNamespace->setDoRename(true);
@@ -1775,8 +1775,8 @@ EOD;
         $file->shouldReceive('getSourcePath');
         $file->shouldReceive('getVendorRelativePath');
         $file->shouldReceive('getTargetAbsolutePath');
-        $file->shouldReceive('setParsedAst');
-        $file->shouldReceive('getParsedAst')->andReturnNull();
+        $file->shouldReceive("setCodeMap");
+        $file->shouldReceive("getCodeMap")->andReturnNull();
 
         $globalNamespace = new NamespaceSymbol('\\', $file);
         $globalNamespace->setDoRename(true);
@@ -5667,36 +5667,6 @@ EOD;
         $result = $replacer->replaceInString($symbols, $contents, $file);
 
         $this->assertEqualsRN($expected, $result);
-    }
-
-    /**
-     * Overlapping positions can only come from a bug in a position finder, so they are a hard error rather than
-     * being silently applied on top of each other.
-     */
-    public function test_overlapping_positions_throw(): void
-    {
-        $config = $this->createMock(PrefixerConfigInterface::class);
-
-        $replacer = new class ($config, $this->getInMemoryFileSystem()) extends Prefixer {
-            protected function findConstantPositionsInAst(array $ast, DiscoveredSymbols $discoveredSymbols): array
-            {
-                return [
-                    ['start' => 6, 'end' => 20, 'replacement' => 'outer'],
-                    ['start' => 10, 'end' => 15, 'replacement' => 'inner'],
-                ];
-            }
-        };
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Overlapping replacement');
-
-        $file = new File(
-            'vendor/package/name/src/file.php',
-            'package/name/src/file.php',
-            'vendor-prefixed/package/name/src/file.php',
-        );
-
-        $replacer->replaceInString(new DiscoveredSymbols(), "<?php\n\$a = 'some string here';\n", $file);
     }
 
     /**
