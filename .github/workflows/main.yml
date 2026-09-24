@@ -100,9 +100,9 @@ jobs:
 
       # On PHP 8.0 a conflict exists between psr/simple-cache and symfony/cache. Pinning versions or using composer.json's `conflict` key would restrict installs on other PHP versions, so
       # we will be explicit about the version only for CI tests, and if a user were to encounter the error, they can choose which way to address it in their project (use the prefixed phar!).
-      # LogicException: psr/simple-cache 3.0+ is not compatible with this version of symfony/cache. Please upgrade symfony/cache to 6.0+ or downgrade psr/simple-cache to 1.x or 2.x.
+      # "LogicException: psr/simple-cache 3.0+ is not compatible with this version of symfony/cache. Please upgrade symfony/cache to 6.0+ or downgrade psr/simple-cache to 1.x or 2.x."
       - name: On PHP 8.0 install psr/simple-cache:"^2"
-        run: composer require --dev psr/simple-cache:"^2" --verbose
+        run: composer require --dev psr/simple-cache:"^2" --verbose --update-with-all-dependencies
         if: ${{ matrix.php == '8.0' }}
 
       - name: Print installed dependencies
