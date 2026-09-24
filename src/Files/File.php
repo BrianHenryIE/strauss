@@ -213,7 +213,7 @@ class File implements FileBase
      */
     public function setParsedAst(?array $ast): void
     {
-//        $this->ast = $ast;
+        $this->ast = $ast;
     }
 
     /**
