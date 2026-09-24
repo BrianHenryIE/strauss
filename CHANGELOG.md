@@ -3,6 +3,8 @@
 ## 0.30.0 September 2026
 
 * Add: `exclude_from_string_rename` to exclude symbols from false-positive matches in strings
+* Performance: each PHP file is parsed exactly once (`FileSymbolScanner` → `PhpFileAnalyzer`), into a `FileCodeMap` on the `File` listing the symbols it defines and every symbol it uses, by type
+* Architecture: new `ChangePlanner` pipeline step determines every edit to every file before any file is modified; `Prefixer` only applies the planned edits
 
 ## 0.29.2 September 2026
 
