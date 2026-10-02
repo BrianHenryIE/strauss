@@ -5,6 +5,8 @@
 * Add: `exclude_from_string_rename` to exclude symbols from false-positive matches in strings
 * Performance: each PHP file is parsed exactly once (`FileSymbolScanner` → `PhpFileAnalyzer`), into a `FileCodeMap` on the `File` listing the symbols it defines and every symbol it uses, by type
 * Architecture: new `ChangePlanner` pipeline step determines every edit to every file before any file is modified; `Prefixer` only applies the planned edits
+* Performance: when searching strings, a package's files are only searched for symbols of the packages it requires, suggests, or which provide/replace its requirements
+* Performance: references to Composer's runtime classes (`Composer\InstalledVersions` etc.) are planned with every other change, so prefixing Composer's autoload files no longer rewrites every file a second time
 
 ## 0.29.2 September 2026
 

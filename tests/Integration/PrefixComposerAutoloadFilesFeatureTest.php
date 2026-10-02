@@ -83,4 +83,70 @@ EOD;
         $this->assertStringNotContainsString('namespace Composer;', $installedVersionsPhpString);
         $this->assertStringContainsString('namespace Strauss\Prefixed\Composer;', $installedVersionsPhpString);
     }
+
+    /**
+     * Packages use Composer's runtime classes without requiring `composer-runtime-api`. References to them are
+     * changed along with every other change to the file, to match the prefixed copy in `vendor-prefixed/composer`.
+     *
+     * @return array<string, array{0:bool, 1:string}>
+     */
+    public static function composerRuntimeReferenceProvider(): array
+    {
+        return [
+            'classmap output' => [true, '\Strauss\Prefixed\Composer\InstalledVersions::getVersion'],
+            // No prefixed copy of Composer's files is generated, so the reference must be to the real class.
+            'no classmap output' => [false, 'return \Composer\InstalledVersions::getVersion'],
+        ];
+    }
+
+    /**
+     * @dataProvider composerRuntimeReferenceProvider
+     */
+    public function test_composer_runtime_references_in_package_files(bool $classmapOutput, string $expected): void
+    {
+        $classmapOutputJson = $classmapOutput ? 'true' : 'false';
+        $composerJsonString = <<<EOD
+{
+  "name": "strauss/composer-runtime-references",
+  "require": {
+    "psr/log": "1.1.4"
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Strauss\\\\Prefixed\\\\",
+      "classmap_output": $classmapOutputJson
+    }
+  }
+}
+EOD;
+
+        chdir($this->testsWorkingDir);
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        exec('composer install');
+
+        $usesRuntimePhpString = <<<'EOD'
+<?php
+
+namespace Psr\Log;
+
+class UsesRuntime
+{
+    public function version(): ?string
+    {
+        return \Composer\InstalledVersions::getVersion('psr/log');
+    }
+}
+EOD;
+        $this->getFileSystem()->write($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/UsesRuntime.php', $usesRuntimePhpString);
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $prefixedPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/Psr/Log/UsesRuntime.php');
+
+        $this->assertStringContainsString('namespace Strauss\Prefixed\Psr\Log;', $prefixedPhpString);
+        $this->assertStringContainsString($expected, $prefixedPhpString);
+    }
 }

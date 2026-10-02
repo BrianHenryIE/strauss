@@ -45,6 +45,22 @@ class Prefixer
      */
     const SELF_NAMESPACE_PREFIX = 'BrianHenryIE\\Strauss\\';
 
+    /**
+     * The PHP files Composer writes to its `composer` directory.
+     */
+    const COMPOSER_RUNTIME_FILES = [
+        'autoload_classmap.php',
+        'autoload_files.php',
+        'autoload_namespaces.php',
+        'autoload_psr4.php',
+        'autoload_real.php',
+        'autoload_static.php',
+        'ClassLoader.php',
+        'installed.php',
+        'InstalledVersions.php',
+        'platform_check.php',
+    ];
+
     protected PrefixerConfigInterface $config;
 
     protected FileSystem $filesystem;
@@ -426,46 +442,64 @@ class Prefixer
         return $this->changedFiles;
     }
 
-    public function prefixComposerAutoloadFiles(string $absoluteDirectory, DiscoveredFiles $discoveredFiles): void
+    /**
+     * Prefix Composer's own files in the target directory's `composer` directory: `autoload_real.php`,
+     * `ClassLoader.php`, `InstalledVersions.php` etc.
+     *
+     * References to those classes in the packages' files have already been changed: the pipeline plans every
+     * file with {@see self::getComposerRuntimeSymbols()} included.
+     *
+     * @throws FilesystemException
+     */
+    public function prefixComposerAutoloadFiles(string $absoluteDirectory): void
     {
         $this->logger->debug("Prefixing the Composer autoload files in {path}.", [
             'path' => $absoluteDirectory,
         ]);
-
-        $composerFilePaths = [
-            'InstalledVersions.php',
-            'autoload_classmap.php',
-            'autoload_files.php',
-            'autoload_namespaces.php',
-            'autoload_psr4.php',
-            'autoload_real.php',
-            'autoload_static.php',
-            'ClassLoader.php',
-            'installed.json',
-            'installed.php',
-            'InstalledVersions.php',
-            'platform_check.php',
-        ];
-
-        $composerFiles = [];
-
-        foreach ($composerFilePaths as $filePath) {
-            if ($this->filesystem->fileExists($absoluteDirectory . '/composer/' . $filePath)) {
-                $file = new File(
-                    $absoluteDirectory . '/composer/' . $filePath,
-                    $filePath,
-                    $absoluteDirectory . '/composer/' . $filePath,
-                );
-                $discoveredFiles->add($file);
-                $composerFiles[ $filePath ] = $file;
-            }
-        }
 
         // During `--dry-run`, until Composer fully supports streamwrappers.
         if ($this->config->isDryRun()) {
             return;
         }
 
+        $composerFiles = $this->getComposerRuntimeFiles($absoluteDirectory . '/composer');
+
+        $this->replaceInFiles($this->getComposerRuntimeSymbols($composerFiles), $composerFiles);
+    }
+
+    /**
+     * The files Composer writes to its `composer` directory, which exist in the given directory.
+     *
+     * @param string $composerDirectory E.g. `/path/to/project/vendor/composer`.
+     *
+     * @return array<string, File> Keyed by filename.
+     */
+    public function getComposerRuntimeFiles(string $composerDirectory): array
+    {
+        $composerFiles = [];
+
+        foreach (self::COMPOSER_RUNTIME_FILES as $fileName) {
+            $filePath = $composerDirectory . '/' . $fileName;
+            if ($this->filesystem->fileExists($filePath)) {
+                $composerFiles[$fileName] = new File($filePath, $fileName, $filePath);
+            }
+        }
+
+        return $composerFiles;
+    }
+
+    /**
+     * The classes and namespaces Composer itself provides at runtime – `Composer\InstalledVersions`,
+     * `Composer\Autoload\ClassLoader` and the generated autoloader classes – marked for renaming with the
+     * project's prefix.
+     *
+     * Packages use these (effectively `composer-runtime-api`) without requiring them, so every file is assumed to
+     * be able to refer to them.
+     *
+     * @param array<string, File> $composerFiles Keyed by filename: {@see self::getComposerRuntimeFiles()}.
+     */
+    public function getComposerRuntimeSymbols(array $composerFiles): DiscoveredSymbols
+    {
         $classMapGenerator = new ClassMapGenerator();
         $classMapGenerator->scanPaths(array_map(
             fn(File $file) => new \SplFileInfo(
@@ -558,7 +592,7 @@ class Prefixer
             $discoveredSymbols->add($selfPrefixedClassSymbol);
         }
 
-        $this->replaceInFiles($discoveredSymbols, $discoveredFiles->getFiles());
+        return $discoveredSymbols;
     }
 
     protected function getNamespaceFromFqdn(string $namespacedString): ?string

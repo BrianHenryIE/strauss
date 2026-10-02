@@ -18,7 +18,6 @@
 namespace BrianHenryIE\Strauss\Tests\Issues;
 
 use BrianHenryIE\Strauss\Config\PrefixerConfigInterface;
-use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\IntegrationTestCase;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use Mockery;
@@ -106,7 +105,7 @@ EOD;
             $this->getTestLogger()
         );
 
-        $prefixer->prefixComposerAutoloadFiles($targetDirectory, new DiscoveredFiles());
+        $prefixer->prefixComposerAutoloadFiles($targetDirectory);
 
         // The class declaration is correctly prefixed (this already works).
         $installedVersionsPhpString = $this->getFileSystem()->read($targetDirectory . '/composer/InstalledVersions.php');

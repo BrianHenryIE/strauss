@@ -435,7 +435,56 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $this->logger->notice('Planning changes to files...');
 
         $changePlanner = new ChangePlanner($this->logger);
-        $changePlanner->planInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
+        $changePlanner->planInFiles(
+            $this->getDiscoveredSymbolsWithComposerRuntime(),
+            $this->discoveredFiles->getFiles()
+        );
+    }
+
+    /**
+     * The discovered symbols, plus the classes Composer itself provides at runtime (`Composer\InstalledVersions`,
+     * `Composer\Autoload\ClassLoader`), which will be prefixed when the autoloader is generated.
+     *
+     * Packages use those classes without requiring `composer-runtime-api`, so every package is assumed to depend
+     * on them. Planning with them here means {@see self::prefixComposerAutoloadFiles()} only needs to change
+     * Composer's own files, not every file again.
+     *
+     * They are not added to {@see self::$discoveredSymbols}: they are not the project's dependencies' symbols, and
+     * should not get aliases etc.
+     */
+    protected function getDiscoveredSymbolsWithComposerRuntime(): DiscoveredSymbols
+    {
+        // Without the classmap output, no prefixed copy of Composer's files is generated.
+        if (!$this->config->isClassmapOutput()) {
+            return $this->discoveredSymbols;
+        }
+
+        $prefixer = new Prefixer($this->config, $this->filesystem, $this->logger);
+
+        // The project's own Composer files declare the same classes the generated, prefixed, copies will.
+        $composerRuntimeSymbols = $prefixer->getComposerRuntimeSymbols(
+            $prefixer->getComposerRuntimeFiles($this->config->getAbsoluteVendorDirectory() . '/composer')
+        );
+
+        $symbols = $this->discoveredSymbols->toArray();
+        $existingNames = [];
+        foreach ($symbols as $symbol) {
+            $existingNames[get_class($symbol) . ':' . $symbol->getOriginalFqdnName()] = true;
+        }
+
+        foreach ($composerRuntimeSymbols->toArray() as $symbol) {
+            // The generated autoloader classes (`ComposerAutoloaderInit...`) are only used in Composer's own files.
+            if ($symbol->isGlobal()) {
+                continue;
+            }
+            // E.g. when `composer/composer` is itself being prefixed: its symbols were already discovered.
+            if (isset($existingNames[get_class($symbol) . ':' . $symbol->getOriginalFqdnName()])) {
+                continue;
+            }
+            $symbols[] = $symbol;
+        }
+
+        return new DiscoveredSymbols($symbols);
     }
 
     protected function markFilesExcludedFromChanges(): void
@@ -643,7 +692,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     protected function prefixComposerAutoloadFiles() : void
     {
 
-        $this->replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory(), $this->discoveredFiles);
+        $this->replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
     }
 
     /**
