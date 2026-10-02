@@ -126,7 +126,7 @@ EOD;
      *
      * @covers ::findInFiles
      */
-    public function testUnparseableFileHasNoCodeMap(): void
+    public function testUnparsableFileHasNoCodeMap(): void
     {
         $this->expectWarningLogs();
 

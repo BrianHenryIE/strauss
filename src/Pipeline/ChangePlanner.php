@@ -49,7 +49,7 @@ class ChangePlanner
     /**
      * Plan the changes for every scanned PHP file.
      *
-     * Files without a code map (non-PHP, unparseable, or never scanned) are skipped.
+     * Files without a code map (non-PHP, unparsable, or never scanned) are skipped.
      *
      * @param iterable<FileBase> $files
      *
@@ -63,7 +63,7 @@ class ChangePlanner
             }
             $codeMap = $file->getCodeMap();
             if (is_null($codeMap)) {
-                $this->logger->debug('No code map to plan changes against (unparseable or unscanned)::::{filePath}', [
+                $this->logger->debug('No code map to plan changes against (unparsable or unscanned)::::{filePath}', [
                     'filePath' => $file->getSourcePath(),
                 ]);
                 continue;

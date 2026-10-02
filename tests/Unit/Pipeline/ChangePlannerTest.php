@@ -102,7 +102,7 @@ EOD;
     }
 
     /**
-     * Files without a code map (non-PHP, unparseable) are skipped.
+     * Files without a code map (non-PHP, unparsable) are skipped.
      *
      * @covers ::planInFiles
      */
