@@ -102,6 +102,7 @@ EOD;
     /**
      * @dataProvider composerRuntimeReferenceProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('composerRuntimeReferenceProvider')]
     public function test_composer_runtime_references_in_package_files(bool $classmapOutput, string $expected): void
     {
         $classmapOutputJson = $classmapOutput ? 'true' : 'false';

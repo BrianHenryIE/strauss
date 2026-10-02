@@ -466,11 +466,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $prefixer->getComposerRuntimeFiles($this->config->getAbsoluteVendorDirectory() . '/composer')
         );
 
-        $symbols = $this->discoveredSymbols->toArray();
-        $existingNames = [];
-        foreach ($symbols as $symbol) {
-            $existingNames[get_class($symbol) . ':' . $symbol->getOriginalFqdnName()] = true;
-        }
+        // A copy of the collection (the symbols themselves are shared), so the additions are only seen by planning.
+        // Not rebuilt via `::toArray()`, which loses symbols of different types with the same name, e.g. a class
+        // `WPGraphQL` and a namespace `WPGraphQL`.
+        $symbols = clone $this->discoveredSymbols;
 
         foreach ($composerRuntimeSymbols->toArray() as $symbol) {
             // The generated autoloader classes (`ComposerAutoloaderInit...`) are only used in Composer's own files.
@@ -478,13 +477,13 @@ class DependenciesCommand extends AbstractRenamespacerCommand
                 continue;
             }
             // E.g. when `composer/composer` is itself being prefixed: its symbols were already discovered.
-            if (isset($existingNames[get_class($symbol) . ':' . $symbol->getOriginalFqdnName()])) {
+            if ($symbols->has($symbol)) {
                 continue;
             }
-            $symbols[] = $symbol;
+            $symbols->add($symbol);
         }
 
-        return new DiscoveredSymbols($symbols);
+        return $symbols;
     }
 
     protected function markFilesExcludedFromChanges(): void
