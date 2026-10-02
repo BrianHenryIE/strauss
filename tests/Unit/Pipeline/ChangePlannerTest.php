@@ -50,12 +50,12 @@ class ChangePlannerTest extends TestCase
     }
 
     /**
-     * The plan is stored on the code map, ascending by position, before any file is touched.
+     * The plan is stored on the file, ascending by position, before any file is touched.
      *
      * @covers ::plan
      * @covers ::planInFiles
      */
-    public function test_plan_is_stored_on_code_map(): void
+    public function test_plan_is_stored_on_file(): void
     {
         $contents = <<<'EOD'
 <?php
@@ -79,12 +79,13 @@ EOD;
         $classSymbol->setDoRename(true);
         $discoveredSymbols = new DiscoveredSymbols([$namespace, $classSymbol]);
 
-        self::assertFalse($codeMap->isPlanned());
+        self::assertNull($file->getPlannedEdits());
 
         (new ChangePlanner())->planInFiles($discoveredSymbols, [$file]);
 
-        self::assertTrue($codeMap->isPlanned());
-        $edits = $codeMap->getPlannedEdits();
+        $edits = $file->getPlannedEdits();
+
+        self::assertNotNull($edits);
 
         self::assertCount(3, $edits);
 
@@ -96,18 +97,6 @@ EOD;
         self::assertSame('Prefix\Acme\Widgets', $edits[0]['replacement']);
         self::assertSame('Prefix\Acme\Widgets\Widget', $edits[1]['replacement']);
         self::assertSame('Prefix\Acme\Widgets\Widget', $edits[2]['replacement']);
-
-        $expected = <<<'EOD'
-<?php
-
-namespace Prefix\Acme\Widgets;
-
-use Prefix\Acme\Widgets\Widget;
-
-$w = new Widget();
-$name = 'Prefix\Acme\Widgets\Widget';
-EOD;
-        self::assertSame($expected, $codeMap->applyPlannedEdits($contents));
     }
 
     /**

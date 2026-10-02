@@ -4,8 +4,8 @@
  *
  * Works entirely from the file's {@see FileCodeMap} — the locations (and texts) of every symbol definition, usage,
  * comment and string recorded when {@see FileSymbolScanner} parsed the file — so planning needs neither the file
- * contents nor a parser. The result, a list of (start, end, replacement) edits, is stored on the map
- * ({@see FileCodeMap::setPlannedEdits()}) for {@see Prefixer} to apply.
+ * contents nor a parser. The result, a list of (start, end, replacement) edits, is stored on the file
+ * ({@see File::setPlannedEdits()}) for {@see Prefixer} to apply.
  */
 
 declare(strict_types=1);
@@ -58,12 +58,12 @@ class ChangePlanner
                 ]);
                 continue;
             }
-            $this->plan($discoveredSymbols, $codeMap, $file);
+            $file->setPlannedEdits($this->plan($discoveredSymbols, $codeMap, $file));
         }
     }
 
     /**
-     * Determine all changes for one file and record them on its code map.
+     * Determine all changes for one file.
      *
      * @return array<array{start:int,end:int,replacement:string}> The planned edits, ascending by start.
      *
@@ -113,11 +113,7 @@ class ChangePlanner
             $cursor = $edit['start'];
         }
 
-        $edits = array_reverse(array_values($edits));
-
-        $codeMap->setPlannedEdits($edits);
-
-        return $edits;
+        return array_reverse(array_values($edits));
     }
 
     /**

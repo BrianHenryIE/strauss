@@ -3,8 +3,8 @@
  * Applies the changes to each file.
  *
  * By the time the pipeline reaches here, every change has already been determined: {@see FileSymbolScanner} parsed
- * each file once into a {@see FileCodeMap}, and {@see ChangePlanner} recorded the edits on that map. This class only
- * reads the file, applies the planned edits, and writes it back.
+ * each file once into a {@see FileCodeMap}, and {@see ChangePlanner} recorded the edits on the {@see File}. This class
+ * only reads the file, applies the planned edits, writes it back, and gives the file a code map for its new contents.
  *
  * {@see self::replaceInString()} remains for content that did not pass through the pipeline (tests, Composer's
  * generated autoload files, project files): it analyses and plans on demand, still parsing each file only once.
@@ -210,6 +210,9 @@ class Prefixer
      * When the file has a code map for these contents with planned edits, only those edits are applied. Otherwise
      * (content that did not pass through the pipeline) the contents are analysed and planned now.
      *
+     * Consumes the plan: afterwards the file has no planned edits and its code map describes the returned contents,
+     * ready for a later pipeline phase to plan a new set of changes against it.
+     *
      * @param DiscoveredSymbols $discoveredSymbols
      * @param string $contents
      *
@@ -217,62 +220,200 @@ class Prefixer
      */
     public function replaceInString(DiscoveredSymbols $discoveredSymbols, string $contents, ?FileBase $file = null): string
     {
-        $codeMap = $this->getPlannedCodeMap($discoveredSymbols, $contents, $file);
+        $codeMap = $this->getCodeMap($contents, $file);
 
         if (is_null($codeMap)) {
             return $contents;
         }
 
-        return $codeMap->applyPlannedEdits($contents);
+        $edits = $file instanceof File ? $file->getPlannedEdits() : null;
+
+        if (is_null($edits)) {
+            $this->logger->debug("Planning changes::::{filePath}", [
+                'filePath' => is_null($file) ? 'file' : $file->getTargetAbsolutePath(),
+            ]);
+            $edits = $this->getPlanner()->plan($discoveredSymbols, $codeMap, $file);
+        }
+
+        if ($file instanceof File) {
+            $file->setPlannedEdits(null);
+        }
+
+        if (empty($edits)) {
+            return $contents;
+        }
+
+        $edits = $this->sortFilterEdits($edits);
+
+        $updatedContents = $this->applyEdits($contents, $edits);
+
+        if ($file instanceof File) {
+            $file->setCodeMap($this->updateCodeMap($codeMap, $edits, $updatedContents));
+        }
+
+        return $updatedContents;
     }
 
     /**
-     * The file's code map, with edits planned, for the given contents.
+     * The file's code map for the given contents, analysing them now if the file has none that matches.
      *
      * @return ?FileCodeMap Null when the contents cannot be parsed.
      */
-    protected function getPlannedCodeMap(DiscoveredSymbols $discoveredSymbols, string $contents, ?FileBase $file): ?FileCodeMap
+    protected function getCodeMap(string $contents, ?FileBase $file): ?FileCodeMap
     {
         $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
 
         $codeMap = $file instanceof File ? $file->getCodeMap() : null;
 
-        if ($codeMap && !$codeMap->matchesContent($contents)) {
+        if ($codeMap && $codeMap->matchesContent($contents)) {
+            return $codeMap;
+        }
+
+        if ($codeMap) {
             $this->logger->debug("Code map does not match the file contents, re-analysing::::{filePath}", [
                 'filePath' => $fileAbsolutePath ?? 'file',
             ]);
-            $codeMap = null;
         }
+
+        $this->logger->info("Parsing::::{filePath}", [
+            'filePath' => $fileAbsolutePath ?? 'file',
+        ]);
+
+        $codeMap = $this->getAnalyzer()->analyze($contents, $fileAbsolutePath);
 
         if (is_null($codeMap)) {
-            $this->logger->info("Parsing::::{filePath}", [
+            // This happens in template files, E.g `x.blade.php`.
+            $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: {errorMessage}", [
                 'filePath' => $fileAbsolutePath ?? 'file',
+                'errorMessage' => $this->getAnalyzer()->getLastErrorMessage(),
             ]);
-
-            $codeMap = $this->getAnalyzer()->analyze($contents, $fileAbsolutePath);
-
-            if (is_null($codeMap)) {
-                // This happens in template files, E.g `x.blade.php`.
-                $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: {errorMessage}", [
-                    'filePath' => $fileAbsolutePath ?? 'file',
-                    'errorMessage' => $this->getAnalyzer()->getLastErrorMessage(),
-                ]);
-                return null;
-            }
-
-            if ($file instanceof File) {
-                $file->setCodeMap($codeMap);
-            }
+            return null;
         }
 
-        if (!$codeMap->isPlanned()) {
-            $this->logger->debug("Planning changes::::{filePath}", [
-                'filePath' => $fileAbsolutePath ?? 'file',
-            ]);
-            $this->getPlanner()->plan($discoveredSymbols, $codeMap, $file);
+        if ($file instanceof File) {
+            // Also discards any edits planned against the previous map.
+            $file->setCodeMap($codeMap);
         }
 
         return $codeMap;
+    }
+
+    /**
+     * Sort edits ascending by start and drop overlaps, keeping the earliest-starting edit.
+     *
+     * @param array<array{start:int,end:int,replacement:string}> $edits
+     *
+     * @return array<array{start:int,end:int,replacement:string}>
+     */
+    protected function sortFilterEdits(array $edits): array
+    {
+        usort($edits, fn($a, $b) => $a['start'] <=> $b['start']);
+
+        $previousEnd = -1;
+        return array_values(array_filter(
+            $edits,
+            function (array $edit) use (&$previousEnd): bool {
+                if ($edit['start'] < $previousEnd) {
+                    return false;
+                }
+                $previousEnd = max($previousEnd, $edit['end']);
+                return true;
+            }
+        ));
+    }
+
+    /**
+     * Apply text replacements to the contents.
+     *
+     * @param array<array{start:int,end:int,replacement:string}> $edits Ascending by start, not overlapping: {@see self::sortFilterEdits()}.
+     *
+     * @return string The updated contents.
+     */
+    protected function applyEdits(string $contents, array $edits): string
+    {
+        // Rebuild the string in one pass rather than `substr_replace()` per edit, which is quadratic for large files.
+        $parts = [];
+        $cursor = 0;
+        foreach ($edits as $edit) {
+            $parts[] = substr($contents, $cursor, $edit['start'] - $cursor);
+            $parts[] = $edit['replacement'];
+            $cursor = $edit['end'];
+        }
+        $parts[] = substr($contents, $cursor);
+
+        return implode('', $parts);
+    }
+
+    /**
+     * Build the code map describing the contents after the edits were applied. The given map is not modified.
+     *
+     * A location whose range exactly matches an edit gets the replacement as its new text; edits strictly inside a
+     * location (e.g. a classname inside a comment) are spliced into its text; a location partially overlapped by an
+     * edit can no longer be tracked and is dropped from the map.
+     *
+     * @param FileCodeMap $codeMap The map of the contents before the edits.
+     * @param array<array{start:int,end:int,replacement:string}> $edits Ascending by start, not overlapping: {@see self::sortFilterEdits()}.
+     * @param string $updatedContents The contents after the edits: {@see self::applyEdits()}.
+     */
+    protected function updateCodeMap(FileCodeMap $codeMap, array $edits, string $updatedContents): FileCodeMap
+    {
+        $updatedLocations = [];
+        foreach ($codeMap->getLocations() as $originalLocation) {
+            $location = clone $originalLocation;
+            $shift = 0;
+            $newText = $location->getText();
+            $modified = false;
+            $dropped = false;
+
+            foreach ($edits as $edit) {
+                $delta = strlen($edit['replacement']) - ($edit['end'] - $edit['start']);
+
+                if ($edit['end'] <= $location->getStart()) {
+                    // Entirely before: shift.
+                    $shift += $delta;
+                } elseif ($edit['start'] >= $location->getEnd()) {
+                    // Entirely after: no effect.
+                    continue;
+                } elseif ($edit['start'] === $location->getStart() && $edit['end'] === $location->getEnd()) {
+                    $newText = $edit['replacement'];
+                    $modified = true;
+                } elseif ($edit['start'] >= $location->getStart() && $edit['end'] <= $location->getEnd()) {
+                    // Strictly inside: splice into the text. Edits are ascending, but any earlier inside-edits
+                    // changed the text length, so adjust by the accumulated inner delta.
+                    $innerOffset = $edit['start'] - $location->getStart() + (strlen($newText) - $location->getLength());
+                    $newText = substr_replace(
+                        $newText,
+                        $edit['replacement'],
+                        $innerOffset,
+                        $edit['end'] - $edit['start']
+                    );
+                    $modified = true;
+                } else {
+                    // Partial overlap: position can no longer be tracked.
+                    $dropped = true;
+                    break;
+                }
+            }
+
+            if ($dropped) {
+                continue;
+            }
+
+            $location->setStart($location->getStart() + $shift);
+            if ($modified) {
+                $location->setText($newText);
+                // The written text changed; what it now resolves to is not re-derived.
+                $location->setResolvedName(null);
+            }
+            $updatedLocations[] = $location;
+        }
+
+        return new FileCodeMap(
+            $updatedLocations,
+            $updatedContents,
+            $codeMap->getDefinitions(),
+            $codeMap->getNamespaceNames()
+        );
     }
 
     /**

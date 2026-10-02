@@ -1584,6 +1584,8 @@ EOD;
         $file->shouldReceive('getTargetAbsolutePath');
         $file->shouldReceive("setCodeMap");
         $file->shouldReceive("getCodeMap")->andReturnNull();
+        $file->shouldReceive("getPlannedEdits")->andReturnNull();
+        $file->shouldReceive("setPlannedEdits");
 
         $discoveredSymbols = new DiscoveredSymbols();
         $globalNamespace = new NamespaceSymbol('\\', $file);
@@ -1628,6 +1630,8 @@ EOD;
         $file->shouldReceive('getTargetAbsolutePath');
         $file->shouldReceive("setCodeMap");
         $file->shouldReceive("getCodeMap")->andReturnNull();
+        $file->shouldReceive("getPlannedEdits")->andReturnNull();
+        $file->shouldReceive("setPlannedEdits");
 
         $globalNamespace = new NamespaceSymbol('\\', $file);
         $globalNamespace->setDoRename(true);
@@ -1777,6 +1781,8 @@ EOD;
         $file->shouldReceive('getTargetAbsolutePath');
         $file->shouldReceive("setCodeMap");
         $file->shouldReceive("getCodeMap")->andReturnNull();
+        $file->shouldReceive("getPlannedEdits")->andReturnNull();
+        $file->shouldReceive("setPlannedEdits");
 
         $globalNamespace = new NamespaceSymbol('\\', $file);
         $globalNamespace->setDoRename(true);
