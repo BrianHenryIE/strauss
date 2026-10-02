@@ -567,6 +567,9 @@ class ChangePlanner
      * Find a single symbol inside quoted strings, e.g. `is_a( $recurrence, 'CronExpression' )`,
      * `"My\\Namespace\\" . $var` and `'My\Namespace\Classname::$staticProperty'`.
      *
+     * @param string $contents The joined text of the file's string, comment and inline HTML regions, never the whole
+     *                         file: {@see self::findSymbolsPositionsInStrings()}.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      * @throws Exception
      */

@@ -41,7 +41,7 @@ class CodeLocation
     // Regions that may contain symbol names as text.
     public const COMMENT = 'comment';
     public const DOC_COMMENT = 'doc_comment';
-    public const STRING = 'string'; // A string literal, including its quotes/heredoc markers.
+    public const STRING = 'string'; // A string literal (or backtick shell command), including its quotes/heredoc markers.
     public const INLINE_HTML = 'inline_html'; // Content outside the PHP open/close tags.
 
     public const DEFINITION_TYPES = [

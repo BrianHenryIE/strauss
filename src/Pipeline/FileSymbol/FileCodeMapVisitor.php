@@ -12,10 +12,10 @@ declare(strict_types=1);
 namespace BrianHenryIE\Strauss\Pipeline\FileSymbol;
 
 use BrianHenryIE\Strauss\Files\CodeLocation;
-use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\ShellExec;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\InterpolatedString;
@@ -32,6 +32,7 @@ use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\UseItem;
 use PhpParser\NodeVisitorAbstract;
+use PhpParser\Token;
 
 class FileCodeMapVisitor extends NodeVisitorAbstract
 {
@@ -74,12 +75,27 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     /** @var array<int,bool> spl_object_id of Name nodes already recorded with a specific role. */
     protected array $claimedNames = [];
 
-    /** @var array<int,bool> Start position of comments already recorded. */
-    protected array $seenComments = [];
+    /**
+     * Every comment token in the file, ascending by position. Taken from the tokens rather than from the nodes'
+     * attached comments, which omit comments not followed by a node (e.g. after the last argument or array item).
+     *
+     * @var Token[]
+     */
+    protected array $commentTokens = [];
 
-    public function __construct(string $contents)
+    /** Index in {@see self::$commentTokens} of the next comment to record. */
+    protected int $nextCommentToken = 0;
+
+    /**
+     * @param Token[] $tokens The tokens of the contents: {@see \PhpParser\Parser::getTokens()}.
+     */
+    public function __construct(string $contents, array $tokens = [])
     {
         $this->contents = $contents;
+        $this->commentTokens = array_values(array_filter(
+            $tokens,
+            fn(Token $token): bool => $token->is([T_COMMENT, T_DOC_COMMENT])
+        ));
     }
 
     /**
@@ -108,18 +124,9 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     public function enterNode(Node $node)
     {
-        foreach ($node->getComments() as $comment) {
-            if (isset($this->seenComments[$comment->getStartFilePos()])) {
-                continue;
-            }
-            $this->seenComments[$comment->getStartFilePos()] = true;
-            $this->locations[] = new CodeLocation(
-                $comment instanceof Doc ? CodeLocation::DOC_COMMENT : CodeLocation::COMMENT,
-                $comment->getStartFilePos(),
-                $comment->getText(),
-                $this->currentNamespace
-            );
-        }
+        // Before a namespace node changes the current namespace, so each comment is recorded in the namespace it
+        // is written in.
+        $this->addCommentLocationsBefore($node->getStartFilePos());
 
         if ($node instanceof Namespace_) {
             $this->enterNamespace($node);
@@ -176,7 +183,7 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
             return null;
         }
 
-        if ($node instanceof String_ || $node instanceof InterpolatedString) {
+        if ($node instanceof String_ || $node instanceof InterpolatedString || $node instanceof ShellExec) {
             $this->locations[] = new CodeLocation(
                 CodeLocation::STRING,
                 $node->getStartFilePos(),
@@ -197,6 +204,30 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
         }
 
         return null;
+    }
+
+    /**
+     * Comments after the last node.
+     */
+    public function afterTraverse(array $nodes)
+    {
+        $this->addCommentLocationsBefore(PHP_INT_MAX);
+        return null;
+    }
+
+    protected function addCommentLocationsBefore(int $position): void
+    {
+        while (isset($this->commentTokens[$this->nextCommentToken])
+            && $this->commentTokens[$this->nextCommentToken]->pos < $position
+        ) {
+            $token = $this->commentTokens[$this->nextCommentToken++];
+            $this->locations[] = new CodeLocation(
+                $token->is(T_DOC_COMMENT) ? CodeLocation::DOC_COMMENT : CodeLocation::COMMENT,
+                $token->pos,
+                $token->text,
+                $this->currentNamespace
+            );
+        }
     }
 
     protected function enterNamespace(Namespace_ $node): void

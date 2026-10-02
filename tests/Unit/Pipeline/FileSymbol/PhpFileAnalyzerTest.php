@@ -139,6 +139,110 @@ EOD;
     }
 
     /**
+     * Comments that are not followed by a node (after the last argument, array item or statement) and every kind
+     * of string are recorded, so the search for symbols in strings never needs the whole file.
+     *
+     * @covers ::analyze
+     */
+    public function testRecordsEveryCommentAndString(): void
+    {
+        $contents = <<<'EOD'
+<?php
+namespace A;
+// c1 leading
+$x = foo(
+    'arg', // c2 trailing in args
+    /* c3 before close */
+);
+$a = [
+    'k' => "v {$b['inner']} w", // c4 after item
+    // c5 last in array
+];
+function f() {
+    return 1;
+    // c6 end of block
+}
+$h = <<<EOT
+heredoc
+EOT;
+$n = <<<'EOT'
+nowdoc
+EOT;
+echo `shell 'cmd'`;
+/** c7 doc at end of file */
+EOD;
+
+        $codeMap = $this->analyze($contents);
+        $this->assertLocationsMatchContents($codeMap, $contents);
+
+        $texts = fn(string $type): array => array_map(
+            fn(CodeLocation $location): string => $location->getText(),
+            $codeMap->getLocationsOfType($type)
+        );
+
+        self::assertSame([
+            '// c1 leading',
+            '// c2 trailing in args',
+            '/* c3 before close */',
+            '// c4 after item',
+            '// c5 last in array',
+            '// c6 end of block',
+        ], $texts(CodeLocation::COMMENT));
+
+        self::assertSame(['/** c7 doc at end of file */'], $texts(CodeLocation::DOC_COMMENT));
+
+        self::assertSame([
+            "'arg'",
+            "'k'",
+            '"v {$b[\'inner\']} w"',
+            "'inner'",
+            "<<<EOT\nheredoc\nEOT",
+            "<<<'EOT'\nnowdoc\nEOT",
+            "`shell 'cmd'`",
+        ], $texts(CodeLocation::STRING));
+
+        foreach ($codeMap->getRegions() as $region) {
+            self::assertSame('A', $region->getNamespace());
+        }
+    }
+
+    /**
+     * Each comment is recorded in the namespace it is written in.
+     *
+     * @covers ::analyze
+     */
+    public function testCommentNamespaces(): void
+    {
+        $contents = <<<'EOD'
+<?php
+// before
+namespace A {
+    $a = [
+        1, // in a
+    ];
+}
+// between
+namespace B {
+    // in b
+}
+EOD;
+
+        $codeMap = $this->analyze($contents);
+
+        $namespaces = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::COMMENT) as $comment) {
+            $namespaces[$comment->getText()] = $comment->getNamespace();
+        }
+
+        self::assertSame([
+            '// before' => null,
+            '// in a' => 'A',
+            '// between' => 'A',
+            '// in b' => 'B',
+        ], $namespaces);
+    }
+
+    /**
      * A fragment without an opening `<?php` tag is parsed as PHP, with positions still relative to the fragment.
      *
      * @covers ::analyze

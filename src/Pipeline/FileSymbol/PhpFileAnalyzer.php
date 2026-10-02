@@ -87,7 +87,7 @@ class PhpFileAnalyzer
             return null;
         }
 
-        $visitor = new FileCodeMapVisitor($parseContents);
+        $visitor = new FileCodeMapVisitor($parseContents, $this->getParser()->getTokens());
 
         $traverser = new NodeTraverser();
         /**
