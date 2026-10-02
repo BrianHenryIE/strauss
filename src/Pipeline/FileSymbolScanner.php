@@ -7,14 +7,6 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\SimplePhpParser\Model\PHPClass;
-use BrianHenryIE\SimplePhpParser\Model\PHPConst;
-use BrianHenryIE\SimplePhpParser\Model\PHPFunction;
-use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserContainer;
-use BrianHenryIE\SimplePhpParser\Parsers\Helper\ParserErrorHandler;
-use BrianHenryIE\SimplePhpParser\Parsers\Helper\Utils;
-use BrianHenryIE\SimplePhpParser\Parsers\PhpCodeParser;
-use BrianHenryIE\SimplePhpParser\Parsers\Visitors\ASTVisitor;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
@@ -22,7 +14,6 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
-use BrianHenryIE\Strauss\Helpers\ParserErrorException;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -33,10 +24,23 @@ use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use League\Flysystem\FilesystemException;
+use PhpParser\Error;
 use PhpParser\Node;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Name;
+use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\Const_;
+use PhpParser\Node\Stmt\Enum_;
+use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\Interface_;
+use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt\Trait_;
+use PhpParser\NodeFinder;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
-use PhpParser\PrettyPrinter\Standard;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -68,7 +72,7 @@ class FileSymbolScanner
     protected array $builtIns = [];
 
     protected ?Parser $parser = null;
-    protected ?Standard $prettyPrinter = null;
+    protected ?NodeFinder $nodeFinder = null;
 
     /**
      * @var array<string,bool>
@@ -183,213 +187,228 @@ class FileSymbolScanner
 
     protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
     {
-        $namespaces = $this->splitByNamespace($contents);
-        PhpCodeParser::$classExistsAutoload = false;
+        try {
+            $ast = $this->getParser()->parse($this->prepareForParsing($contents));
+        } catch (Error $e) {
+            // E.g. template files with placeholders: `namespace %g_namespace%\AdminMenus;`.
+            $this->logger->warning('Failed to parse file {filePath} with error: {errorMessage}', [
+                'filePath' => $file->getSourcePath(),
+                'errorMessage' => $e->getMessage(),
+            ]);
+            return;
+        }
 
-        foreach ($namespaces as $namespaceName => $contents) {
-            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
+        if (is_null($ast)) {
+            return;
+        }
 
-            /**
-             * Swallow the `E_USER_DEPRECATED` notices triggered while the parser reads docblocks.
-             *
-             * `phpdocumentor/reflection-docblock` 5.x emits deprecations from its own
-             * `DocBlock\Tags\Method` factory when parsing `@method` tags (e.g. in the PayPal SDK
-             * scanned by {@see \BrianHenryIE\Strauss\Tests\Issues\MozartIssue13Test}):
-             *
-             *   phpdocumentor/reflection-docblock/src/DocBlock/Tags/Method.php:102
-             *     "Create using static factory is deprecated, this method should not be called directly[...]"
-             *   phpdocumentor/reflection-docblock/src/DocBlock/Tags/Method.php:342
-             *     "Create method parameters via legacy format is deprecated[...]"
-             *
-             * It is a transitive dependency pinned to 5.x by `brianhenryie/simple-php-code-parser`
-             * (~5.3) and `json-mapper/json-mapper` (^5.6), so it cannot be upgraded past the
-             * deprecation. The notice originates entirely within third-party code parsing
-             * third-party code — nothing Strauss can change at the call site — so it is swallowed
-             * here. Left unhandled it fails CI under PHPUnit 10's `--fail-on-deprecation` (the
-             * `E_DEPRECATED | E_USER_DEPRECATED` mask means Strauss's own deprecations still surface).
-             *
-             * Two handlers are pushed because `PhpCodeParser::getPhpFiles()` calls
-             * `restore_error_handler()` once internally, before it parses the docblocks. That
-             * internal call removes the inner, sacrificial handler, leaving the outer
-             * deprecation-swallowing handler active while the docblocks are actually parsed. It also
-             * keeps the handler stack balanced, avoiding PHPUnit's risky-test warning "Test code or
-             * tested code removed error handlers other than its own".
-             *
-             * @see PhpCodeParser::getPhpFiles()
-             */
-            set_error_handler(
-                function (int $errNo, string $errStr, string $errFile, int $errLine): bool {
-                    return true;
-                },
-                E_DEPRECATED | E_USER_DEPRECATED
-            );
-            // Sacrificial handler; removed by PhpCodeParser::getPhpFiles()'s internal restore_error_handler().
-            set_error_handler(function (): bool {
-                return false;
-            });
+        /**
+         * Sets `namespacedName` on class-like, function and constant declarations, and a `resolvedName` attribute
+         * on the names in `extends` and `implements`. The nodes themselves are not replaced, so the AST is the same
+         * as {@see Prefixer} would produce by parsing the file itself.
+         */
+        $traverser = new NodeTraverser(new NameResolver(null, ['replaceNodes' => false]));
+        $traverser->traverse($ast);
 
-            try {
-                $phpCode = PhpCodeParser::getFromString($contents);
+        /**
+         * {@see Prefixer} strips anything before the first `<?` and prepends `<?php` when absent, so its AST positions
+         * are only comparable to ours when the file begins with the PHP open tag.
+         */
+        if ($file instanceof File && 0 === strpos($contents, '<?')) {
+            $file->setParsedAst($ast);
+        }
 
-                /** @var File $file */
-                $file->setParsedAst($phpCode->getAst());
-            } catch (ParserErrorException $e) {
-                $this->logger->warning('Failed to parse namespace {namespaceName} in file {filePath} with error: {errorMessage}', [
-                    'namespaceName' => $namespaceName,
-                    'filePath' => $file->getSourcePath(),
-                    'errorMessage' => $e->getMessage(),
-                ]);
-                continue;
-            } finally {
-                restore_error_handler();
-            }
+        $namespaceNodes = array_filter($ast, fn(Node $node): bool => $node instanceof Namespace_);
 
-            PhpCodeParser::$classExistsAutoload = false;
+        if (empty($namespaceNodes)) {
+            $this->findInNamespace('\\', $ast, $file, $package);
+            return;
+        }
 
-            /** @var PHPClass[] $phpClasses */
-            $phpClasses = $phpCode->getClasses();
-            foreach ($phpClasses as $fqdnClassname => $class) {
-                // Skip classes defined in other files.
-                // I tried to use the $class->file property but it was autoloading from Strauss so incorrectly setting
-                // the path, different to the file being scanned.
-                // TODO this was causing false positives when found in comments.
-//                if (false !== strpos($contents, "use {$fqdnClassname};")) {
-//                    continue;
-//                }
-
-                $isAbstract = (bool) $class->is_abstract;
-                $extends     = $class->parentClass;
-                $interfaces  = $class->interfaces;
-                $classSymbol = $this->addDiscoveredClassChange($fqdnClassname, $isAbstract, $file, $extends, $namespaceSymbol, $interfaces);
-                if ($classSymbol) {
-                    $classSymbol->setDoRename($file->isDoPrefix());
-                }
-            }
-
-            /** @var PHPFunction[] $phpFunctions */
-            $phpFunctions = $phpCode->getFunctions();
-            foreach ($phpFunctions as $functionName => $function) {
-                if ($this->isBuiltInSymbol($functionName)) {
-                    continue;
-                }
-                $functionSymbol = $this->discoveredSymbols->getFunction($functionName);
-                if (is_null($functionSymbol)) {
-                    $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceSymbol, $package);
-                    $this->add($functionSymbol);
-                }
-                $functionSymbol->addSourceFile($file);
-                $functionSymbol->setDoRename($file->isDoPrefix());
-            }
-
-            /** @var PHPConst[] $phpConstants */
-            $phpConstants = $phpCode->getConstants();
-            foreach ($phpConstants as $constantName => $constant) {
-                if (empty(trim($constantName, '\\'))) {
-                    continue;
-                }
-                $constantSymbol = $this->discoveredSymbols->getConst($constantName);
-                if (is_null($constantSymbol)) {
-                    $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceSymbol);
-                    $this->add($constantSymbol, $file);
-                }
-                $constantSymbol->addSourceFile($file);
-                $constantSymbol->setDoRename($file->isDoPrefix());
-            }
-
-            $phpInterfaces = $phpCode->getInterfaces();
-            foreach ($phpInterfaces as $interfaceName => $interface) {
-                $interfaceSymbol = $this->discoveredSymbols->getInterface($interfaceName);
-                if (is_null($interfaceSymbol)) {
-                    $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceSymbol);
-                    $this->add($interfaceSymbol);
-                }
-                $interfaceSymbol->addSourceFile($file);
-                $interfaceSymbol->setDoRename($file->isDoPrefix());
-            }
-
-            $phpTraits = $phpCode->getTraits();
-            foreach ($phpTraits as $traitName => $trait) {
-                $traitSymbol = $this->discoveredSymbols->getTrait($traitName);
-                if (is_null($traitSymbol)) {
-                    $traitSymbol = new TraitSymbol($traitName, $file, $namespaceSymbol);
-                    $this->add($traitSymbol);
-                }
-                $traitSymbol->addSourceFile($file);
-                $traitSymbol->setDoRename($file->isDoPrefix());
-            }
-
-            $phpEnums = $phpCode->getEnums();
-            foreach ($phpEnums as $enumName => $enum) {
-                if ($this->isBuiltInSymbol($enumName)) {
-                    continue;
-                }
-                $enumSymbol = $this->discoveredSymbols->getEnum($enumName);
-                if (is_null($enumSymbol)) {
-                    $enumSymbol = new EnumSymbol($enumName, $file, $namespaceSymbol, $enum->backingType, $enum->interfaces);
-                    $this->add($enumSymbol, $file);
-                }
-                $enumSymbol->addSourceFile($file);
-                $enumSymbol->setDoRename($file->isDoPrefix());
-            }
+        /** @var Namespace_ $namespaceNode */
+        foreach ($namespaceNodes as $namespaceNode) {
+            $namespaceName = is_null($namespaceNode->name) ? '\\' : $namespaceNode->name->toString();
+            $this->findInNamespace($namespaceName, $namespaceNode->stmts, $file, $package);
         }
     }
 
     /**
-     * @param string $contents
-     * @return array<string,string>
+     * Mirror {@see Prefixer::replaceInString()}: discard anything before the first `<?`, and prepend `<?php` when
+     * there is no open tag at all, so the scanner and the prefixer parse the same code.
      */
-    protected function splitByNamespace(string $contents):array
+    protected function prepareForParsing(string $contents): string
     {
-        $namespaceDeclarations = $this->getNamespaceDeclarations($contents);
+        $openTagPosition = strpos($contents, '<?');
 
-        if (count($namespaceDeclarations) === 0) {
-            if ($this->hasMalformedNamespaceDeclaration($contents)) {
-                return [];
+        if (false === $openTagPosition) {
+            return "<?php\n" . $contents;
+        }
+
+        return substr($contents, $openTagPosition);
+    }
+
+    /**
+     * Record the namespace and every symbol declared within its statements, at any depth, e.g. a function declared
+     * inside `if (!function_exists(...))`.
+     *
+     * @param string $namespaceName `\` for the global namespace.
+     * @param Node[] $stmts
+     */
+    protected function findInNamespace(string $namespaceName, array $stmts, FileBase $file, ?ComposerPackage $package = null): void
+    {
+        $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
+
+        /** @var Class_ $classNode */
+        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Class_::class) as $classNode) {
+            if ($classNode->isAnonymous() || is_null($classNode->namespacedName)) {
+                continue;
             }
-
-            return ['\\' => '<?php' . PHP_EOL . PHP_EOL . $contents];
+            $classSymbol = $this->addDiscoveredClassChange(
+                $classNode->namespacedName->toString(),
+                $classNode->isAbstract(),
+                $file,
+                is_null($classNode->extends) ? null : $this->resolveName($classNode->extends),
+                $namespaceSymbol,
+                array_map([$this, 'resolveName'], $classNode->implements)
+            );
+            if ($classSymbol) {
+                $classSymbol->setDoRename($file->isDoPrefix());
+            }
         }
 
-        if (count($namespaceDeclarations) === 1) {
-            $namespaceName = $namespaceDeclarations[0] ?? '\\';
-            $namespaceName = empty($namespaceName) ? '\\' : $namespaceName;
-            return [$namespaceName => $contents];
+        /** @var Function_ $functionNode */
+        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Function_::class) as $functionNode) {
+            if (is_null($functionNode->namespacedName)) {
+                continue;
+            }
+            $functionName = $functionNode->namespacedName->toString();
+            if ($this->isBuiltInSymbol($functionName)) {
+                continue;
+            }
+            $functionSymbol = $this->discoveredSymbols->getFunction($functionName);
+            if (is_null($functionSymbol)) {
+                $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceSymbol, $package);
+                $this->add($functionSymbol);
+            }
+            $functionSymbol->addSourceFile($file);
+            $functionSymbol->setDoRename($file->isDoPrefix());
         }
 
-        $result = [];
-        try {
-            $ast = $this->getParser()->parse(trim($contents)) ?? [];
-        } catch (\PhpParser\Error $e) {
-            $this->logger->error('Parse error: ' . $e->getMessage());
-            return [];
+        foreach ($this->findConstantNames($stmts) as $constantName) {
+            $constantSymbol = $this->discoveredSymbols->getConst($constantName);
+            if (is_null($constantSymbol)) {
+                $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceSymbol);
+                $this->add($constantSymbol, $file);
+            }
+            $constantSymbol->addSourceFile($file);
+            $constantSymbol->setDoRename($file->isDoPrefix());
         }
 
-        foreach ($ast as $rootNode) {
-            if ($rootNode instanceof Node\Stmt\Namespace_) {
-                if (is_null($rootNode->name)) {
-                    if (count($ast) === 1) {
-                        $result['\\'] = $contents;
-                    } else {
-                        $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . $this->getPrettyPrinter()->prettyPrintFile($rootNode->stmts);
-                    }
-                } else {
-                    $namespaceName = $rootNode->name->name;
-                    if (count($ast) === 1) {
-                        $result[$namespaceName] = $contents;
-                    } else {
-                        // This was failing for `phpoffice/phpspreadsheet/src/PhpSpreadsheet/Writer/Xlsx/FunctionPrefix.php`
-                        $result[$namespaceName] = '<?php' . PHP_EOL . PHP_EOL . 'namespace ' . $namespaceName . ';' . PHP_EOL . PHP_EOL . $this->getPrettyPrinter()->prettyPrintFile($rootNode->stmts);
-                    }
+        /** @var Interface_ $interfaceNode */
+        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Interface_::class) as $interfaceNode) {
+            if (is_null($interfaceNode->namespacedName)) {
+                continue;
+            }
+            $interfaceName = $interfaceNode->namespacedName->toString();
+            $interfaceSymbol = $this->discoveredSymbols->getInterface($interfaceName);
+            if (is_null($interfaceSymbol)) {
+                $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceSymbol);
+                $this->add($interfaceSymbol);
+            }
+            $interfaceSymbol->addSourceFile($file);
+            $interfaceSymbol->setDoRename($file->isDoPrefix());
+        }
+
+        /** @var Trait_ $traitNode */
+        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Trait_::class) as $traitNode) {
+            if (is_null($traitNode->namespacedName)) {
+                continue;
+            }
+            $traitName = $traitNode->namespacedName->toString();
+            $traitSymbol = $this->discoveredSymbols->getTrait($traitName);
+            if (is_null($traitSymbol)) {
+                $traitSymbol = new TraitSymbol($traitName, $file, $namespaceSymbol);
+                $this->add($traitSymbol);
+            }
+            $traitSymbol->addSourceFile($file);
+            $traitSymbol->setDoRename($file->isDoPrefix());
+        }
+
+        /** @var Enum_ $enumNode */
+        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Enum_::class) as $enumNode) {
+            if (is_null($enumNode->namespacedName)) {
+                continue;
+            }
+            $enumName = $enumNode->namespacedName->toString();
+            if ($this->isBuiltInSymbol($enumName)) {
+                continue;
+            }
+            $enumSymbol = $this->discoveredSymbols->getEnum($enumName);
+            if (is_null($enumSymbol)) {
+                $backingType = $enumNode->scalarType instanceof Node\Identifier ? $enumNode->scalarType->name : null;
+                $enumSymbol = new EnumSymbol(
+                    $enumName,
+                    $file,
+                    $namespaceSymbol,
+                    $backingType,
+                    array_map([$this, 'resolveName'], $enumNode->implements)
+                );
+                $this->add($enumSymbol, $file);
+            }
+            $enumSymbol->addSourceFile($file);
+            $enumSymbol->setDoRename($file->isDoPrefix());
+        }
+    }
+
+    /**
+     * Constants declared with `const NAME = ...;` (class constants are `ClassConst`, not `Const_`) and with
+     * `define('NAME', ...)`.
+     *
+     * The names are as written in the source; {@see ConstantSymbol} prefixes the namespace where they are unqualified.
+     *
+     * @param Node[] $stmts
+     * @return string[]
+     */
+    protected function findConstantNames(array $stmts): array
+    {
+        $constantNames = [];
+
+        $constantNodes = $this->getNodeFinder()->find(
+            $stmts,
+            fn(Node $node): bool => $node instanceof Const_ || $this->isDefineCall($node)
+        );
+
+        foreach ($constantNodes as $constantNode) {
+            if ($constantNode instanceof Const_) {
+                foreach ($constantNode->consts as $const) {
+                    $constantNames[] = $const->name->toString();
+                }
+            } elseif ($constantNode instanceof FuncCall) {
+                $firstArg = $constantNode->args[0] ?? null;
+                if ($firstArg instanceof Node\Arg && $firstArg->value instanceof String_) {
+                    $constantNames[] = $firstArg->value->value;
                 }
             }
         }
 
-        // TODO: is this necessary?
-        if (empty($result)) {
-            $result['\\'] = '<?php' . PHP_EOL . PHP_EOL . $contents;
-        }
+        return array_filter($constantNames, fn(string $name): bool => '' !== trim($name, '\\'));
+    }
 
-        return $result;
+    protected function isDefineCall(Node $node): bool
+    {
+        return $node instanceof FuncCall
+            && $node->name instanceof Name
+            && 'define' === strtolower($node->name->toString());
+    }
+
+    /**
+     * The fully qualified name, without leading `\`, of a class name in `extends` or `implements`.
+     */
+    protected function resolveName(Name $name): string
+    {
+        $resolvedName = $name->getAttribute('resolvedName');
+
+        return $resolvedName instanceof Name ? $resolvedName->toString() : $name->toString();
     }
 
     /**
@@ -510,164 +529,8 @@ class FileSymbolScanner
         return $this->parser ??= (new ParserFactory())->createForNewestSupportedVersion();
     }
 
-    protected function getPrettyPrinter(): Standard
+    protected function getNodeFinder(): NodeFinder
     {
-        return $this->prettyPrinter ??= new Standard();
-    }
-
-    protected function parsePhpCode(string $contents): ParserContainer
-    {
-        $parserContainer = new ParserContainer();
-        $visitor = new ASTVisitor($parserContainer);
-
-        /**
-         * PhpUnit error "Test code or tested code removed error handlers other than its own" caused by the
-         * code parser removing an error handler. TODO: Fix this in the library then remove this line.
-         *
-         * @see PhpCodeParser::getPhpFiles()
-         */
-        set_error_handler(function () {
-            return true;
-        });
-
-        $result = PhpCodeParser::process($contents, null, $parserContainer, $visitor);
-        if ($result instanceof ParserErrorHandler) {
-            throw new ParserErrorException($result);
-        }
-
-        $interfaces = $parserContainer->getInterfaces();
-        foreach ($interfaces as &$interface) {
-            $interface->parentInterfaces = $visitor->combineParentInterfaces($interface);
-        }
-        unset($interface);
-
-        $classes = &$parserContainer->getClassesByReference();
-        foreach ($classes as &$class) {
-            $class->interfaces = Utils::flattenArray(
-                $visitor->combineImplementedInterfaces($class),
-                false
-            );
-        }
-        unset($class);
-
-        return $parserContainer;
-    }
-
-    /**
-     * Collect declared namespaces in source order. Namespace operators (namespace\foo) are ignored.
-     *
-     * @return array<int,string|null> Null indicates the explicit global namespace.
-     */
-    protected function getNamespaceDeclarations(string $contents): array
-    {
-        $tokens = token_get_all($contents);
-
-        $declarations = [];
-        $tokenCount = count($tokens);
-        for ($i = 0; $i < $tokenCount; $i++) {
-            $token = $tokens[$i];
-
-            if (!is_array($token) || $token[0] !== T_NAMESPACE) {
-                continue;
-            }
-
-            $nextIndex = $this->nextSignificantTokenIndex($tokens, $i + 1);
-            if (is_null($nextIndex)) {
-                continue;
-            }
-
-            $next = $tokens[$nextIndex];
-            if (is_string($next) && ($next === ';' || $next === '{')) {
-                $declarations[] = null;
-                continue;
-            }
-
-            $namespaceName = '';
-            while (!is_null($nextIndex)) {
-                $current = $tokens[$nextIndex];
-
-                if (is_array($current) && $this->isNamespaceNameToken($current[0])) {
-                    $namespaceName .= $current[1];
-                    $nextIndex = $this->nextSignificantTokenIndex($tokens, $nextIndex + 1);
-                    continue;
-                }
-
-                if (is_string($current) && $current === '\\') {
-                    $namespaceName .= '\\';
-                    $nextIndex = $this->nextSignificantTokenIndex($tokens, $nextIndex + 1);
-                    continue;
-                }
-
-                if (is_string($current) && ($current === ';' || $current === '{')) {
-                    if ($namespaceName !== '') {
-                        $declarations[] = trim($namespaceName, '\\');
-                    }
-                }
-                break;
-            }
-        }
-
-        return $declarations;
-    }
-
-    protected function hasMalformedNamespaceDeclaration(string $contents): bool
-    {
-        $tokens = token_get_all($contents);
-        $tokenCount = count($tokens);
-        for ($i = 0; $i < $tokenCount; $i++) {
-            $token = $tokens[$i];
-
-            if (!is_array($token) || $token[0] !== T_NAMESPACE) {
-                continue;
-            }
-
-            $nextIndex = $this->nextSignificantTokenIndex($tokens, $i + 1);
-            if (is_null($nextIndex)) {
-                continue;
-            }
-
-            $next = $tokens[$nextIndex];
-            if (is_string($next) && ($next === ';' || $next === '{')) {
-                continue;
-            }
-
-            if (is_array($next) && $this->isNamespaceNameToken($next[0])) {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @param array<int, array<int, mixed>|string> $tokens
-     */
-    protected function nextSignificantTokenIndex(array $tokens, int $start): ?int
-    {
-        $tokenCount = count($tokens);
-        for ($i = $start; $i < $tokenCount; $i++) {
-            $token = $tokens[$i];
-            if (is_array($token) && in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
-                continue;
-            }
-
-            return $i;
-        }
-
-        return null;
-    }
-
-    protected function isNamespaceNameToken(int $tokenType): bool
-    {
-        if ($tokenType === T_STRING || $tokenType === T_NS_SEPARATOR) {
-            return true;
-        }
-
-        return
-            (defined('T_NAME_QUALIFIED') && $tokenType === T_NAME_QUALIFIED)
-            || (defined('T_NAME_FULLY_QUALIFIED') && $tokenType === T_NAME_FULLY_QUALIFIED)
-            || (defined('T_NAME_RELATIVE') && $tokenType === T_NAME_RELATIVE);
+        return $this->nodeFinder ??= new NodeFinder();
     }
 }
