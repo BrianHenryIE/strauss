@@ -2,7 +2,9 @@
 
 namespace BrianHenryIE\Strauss\Tests\Unit\Pipeline;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Files\FileCodeMap;
 use BrianHenryIE\Strauss\Pipeline\ChangePlanner;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
@@ -111,5 +113,95 @@ EOD;
         (new ChangePlanner())->planInFiles(new DiscoveredSymbols(), [$file]);
 
         self::assertNull($file->getCodeMap());
+    }
+
+    /**
+     * @param array<string,string> $require
+     */
+    protected function getPackage(string $name, array $require = []): ComposerPackage
+    {
+        $package = ComposerPackage::fromComposerJsonArray(['name' => $name, 'require' => $require]);
+        $package->setPackageAbsolutePath('/project/vendor/' . $name . '/');
+        return $package;
+    }
+
+    protected function getPackageFile(ComposerPackage $package): FileWithDependency
+    {
+        $name = $package->getPackageName();
+        return new FileWithDependency(
+            $package,
+            $name . '/src/file.php',
+            '/project/vendor/' . $name . '/src/file.php',
+            '/project/vendor-prefixed/' . $name . '/src/file.php'
+        );
+    }
+
+    /**
+     * A string in a package's file can only refer to symbols of that package and of the packages it requires,
+     * directly or transitively, or suggests.
+     *
+     * @covers ::plan
+     * @covers ::findSymbolsPositionsInStrings
+     * @covers ::filterToSymbolsAvailableToFile
+     * @covers ::getAvailablePackageNames
+     */
+    public function test_strings_only_match_symbols_from_required_packages(): void
+    {
+        $unrelated = $this->getPackage('acme/unrelated');
+        $deepest = $this->getPackage('acme/deepest');
+        $deep = $this->getPackage('acme/deep', ['acme/deepest' => '*']);
+        $deep->addDependency($deepest);
+        $direct = $this->getPackage('acme/direct', ['acme/deep' => '*']);
+        $direct->addDependency($deep);
+        $own = $this->getPackage('acme/own', ['acme/direct' => '*']);
+        $own->addDependency($direct);
+        $suggested = $this->getPackage('acme/suggested');
+        $own->addSuggestedPackage($suggested);
+
+        $symbols = [];
+        foreach ([
+            'Own' => $own,
+            'Direct' => $direct,
+            'Deep' => $deep,
+            'Deepest' => $deepest,
+            'Unrelated' => $unrelated,
+            'Suggested' => $suggested,
+        ] as $namespaceName => $package) {
+            $namespace = new NamespaceSymbol($namespaceName, $this->getPackageFile($package));
+            $namespace->setDoRename(true);
+            $namespace->setLocalReplacement('Prefix\\' . $namespaceName);
+            $symbols[] = $namespace;
+        }
+        // Not from any package: always searched for.
+        $unknown = new NamespaceSymbol('Unknown', $this->getFile());
+        $unknown->setDoRename(true);
+        $unknown->setLocalReplacement('Prefix\Unknown');
+        $symbols[] = $unknown;
+
+        $discoveredSymbols = new DiscoveredSymbols($symbols);
+
+        $contents = <<<'EOD'
+<?php
+$a = ['Own\\', 'Direct\\', 'Deep\\', 'Deepest\\', 'Unrelated\\', 'Suggested\\', 'Unknown\\'];
+EOD;
+
+        $planFor = function (File $file) use ($contents, $discoveredSymbols): array {
+            $codeMap = (new PhpFileAnalyzer())->analyze($contents);
+            return array_column((new ChangePlanner())->plan($discoveredSymbols, $codeMap, $file), 'replacement');
+        };
+
+        self::assertSame(
+            ['Prefix\Own', 'Prefix\Direct', 'Prefix\Deep', 'Prefix\Deepest', 'Prefix\Suggested', 'Prefix\Unknown'],
+            $planFor($this->getPackageFile($own))
+        );
+
+        // A dependency does not know about the packages which require it.
+        self::assertSame(
+            ['Prefix\Deepest', 'Prefix\Unknown'],
+            $planFor($this->getPackageFile($deepest))
+        );
+
+        // A file which is not part of a package (e.g. a project file) may refer to anything.
+        self::assertCount(7, $planFor($this->getFile()));
     }
 }

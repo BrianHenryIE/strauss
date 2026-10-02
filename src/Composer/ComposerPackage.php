@@ -85,6 +85,28 @@ class ComposerPackage
      */
     protected array $dependencies = [];
 
+    /**
+     * The names in the composer.json's "provide" and "replace" fields: packages (often virtual, e.g.
+     * `psr/log-implementation`) that this package satisfies a requirement for.
+     *
+     * @var string[]
+     */
+    protected array $providesNames = [];
+
+    /**
+     * The names of the packages in the composer.json's "suggest" field.
+     *
+     * @var string[]
+     */
+    protected array $suggestsNames = [];
+
+    /**
+     * The installed packages this package suggests: not required, but its code may refer to their symbols.
+     *
+     * @var array<string,ComposerPackage>
+     */
+    protected array $suggestedPackages = [];
+
     protected string $license;
 
     /**
@@ -247,6 +269,12 @@ class ComposerPackage
         foreach ($composer->getPackage()->getRequires() as $_name => $packageLink) {
             $this->requiresNames[] = $packageLink->getTarget();
         }
+
+        foreach (array_merge($composer->getPackage()->getProvides(), $composer->getPackage()->getReplaces()) as $packageLink) {
+            $this->providesNames[] = $packageLink->getTarget();
+        }
+
+        $this->suggestsNames = array_map('strval', array_keys($composer->getPackage()->getSuggests()));
 
         // Try to get the license from the package's composer.json, assume proprietary (all rights reserved!).
         $this->license = !empty($composer->getPackage()->getLicense())
@@ -469,6 +497,41 @@ class ComposerPackage
     public function getDependencies(): array
     {
         return $this->dependencies;
+    }
+
+    /**
+     * The names of the packages in the composer.json's "provide" and "replace" fields (without version).
+     *
+     * @return string[]
+     */
+    public function getProvidesNames(): array
+    {
+        return $this->providesNames;
+    }
+
+    /**
+     * The names of the packages in the composer.json's "suggest" field.
+     *
+     * @return string[]
+     */
+    public function getSuggestsNames(): array
+    {
+        return $this->suggestsNames;
+    }
+
+    public function addSuggestedPackage(ComposerPackage $composerPackage): void
+    {
+        $this->suggestedPackages[$composerPackage->getPackageName()] = $composerPackage;
+    }
+
+    /**
+     * The installed packages this package suggests. Optional integrations: e.g. `class_exists('Monolog\Logger')`.
+     *
+     * @return array<string,ComposerPackage>
+     */
+    public function getSuggestedPackages(): array
+    {
+        return $this->suggestedPackages;
     }
 
     public function getFlatDependencyTree(): DeepDependenciesCollection

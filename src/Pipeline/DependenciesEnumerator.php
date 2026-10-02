@@ -83,11 +83,31 @@ class DependenciesEnumerator
     {
         $this->recursiveGetAllDependencies($this->requiredPackageNames);
 
+        /** @var array<string, ComposerPackage[]> $providers The packages which `provide` or `replace` each name. */
+        $providers = [];
+        foreach ($this->flatDependencyArray as $composerPackage) {
+            foreach ($composerPackage->getProvidesNames() as $providesName) {
+                $providers[$providesName][] = $composerPackage;
+            }
+        }
+
         foreach ($this->flatDependencyArray as $composerPackage) {
             foreach ($composerPackage->getRequiresNames() as $requiresName) {
-                // The package would be missing if it is in `provides`.
                 if (isset($this->flatDependencyArray[$requiresName])) {
                     $composerPackage->addDependency($this->flatDependencyArray[$requiresName]);
+                    continue;
+                }
+                // A virtual (e.g. `psr/log-implementation`) or replaced package: the requirement is satisfied by
+                // whichever installed packages `provide` or `replace` it.
+                foreach ($providers[$requiresName] ?? [] as $provider) {
+                    if ($provider !== $composerPackage) {
+                        $composerPackage->addDependency($provider);
+                    }
+                }
+            }
+            foreach ($composerPackage->getSuggestsNames() as $suggestsName) {
+                if (isset($this->flatDependencyArray[$suggestsName])) {
+                    $composerPackage->addSuggestedPackage($this->flatDependencyArray[$suggestsName]);
                 }
             }
         }

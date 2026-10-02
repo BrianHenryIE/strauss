@@ -12,10 +12,13 @@ declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
 use BrianHenryIE\Strauss\Files\CodeLocation;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileCodeMap;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -30,6 +33,13 @@ use Psr\Log\NullLogger;
 class ChangePlanner
 {
     use LoggerAwareTrait;
+
+    /**
+     * For each package: itself, every package in its dependency tree, and the packages it suggests with theirs.
+     *
+     * @var array<string, array<string, mixed>> Keyed by package name, then by package name.
+     */
+    protected array $availablePackageNames = [];
 
     public function __construct(?LoggerInterface $logger = null)
     {
@@ -85,7 +95,7 @@ class ChangePlanner
             // Last, so its `use const` replacement wins over the aliased one from findGlobalSymbolsPositions().
             $this->findConstantPositions($codeMap, $discoveredSymbols),
             // Symbols inside strings, e.g. `is_a( $recurrence, 'CronExpression' )`.
-            $this->findSymbolsPositionsInStrings($codeMap, $discoveredSymbols, $fileAbsolutePath)
+            $this->findSymbolsPositionsInStrings($codeMap, $discoveredSymbols, $file)
         );
 
         // Descending by start; PHP's sort is stable, so for equal starts the later-found position comes later and
@@ -479,14 +489,17 @@ class ChangePlanner
      * The search runs over the recorded string, comment and inline HTML regions rather than the whole file. The
      * regions are joined into one buffer so each symbol's pattern is run once per file, as before.
      *
-     * TODO: filter the changes in a file to something like `$symbol->getPackages()[0]->getFlatDependencyTree()`.
-     * The file should not be using symbols that are not defined in their required dependencies.
+     * A file in a package can only be referring to symbols of that package, of the packages it requires
+     * (transitively) and of the packages it suggests, so symbols from every other package are not searched for: {@see self::filterToSymbolsAvailableToFile()}.
+     *
      * TODO: optionally filter to only namespaces of more than a single depth.
      *
      * @return array<array{start:int,end:int,replacement:string}>
      */
-    protected function findSymbolsPositionsInStrings(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols, ?string $fileAbsolutePath): array
+    protected function findSymbolsPositionsInStrings(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols, ?FileBase $file): array
     {
+        $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
+
         $discoveredSymbolsCount = count($discoveredSymbols->toArray());
         $this->logger->debug(sprintf(
             'Searching in {filename} for {count} symbol%s as string',
@@ -502,6 +515,7 @@ class ChangePlanner
             $discoveredSymbols->getNamespacedSymbols()->getToRename()->toArray()
         );
         $symbols = array_filter($symbols, fn(DiscoveredSymbol $symbol): bool => $symbol->isReplaceInString());
+        $symbols = $this->filterToSymbolsAvailableToFile($symbols, $file);
 
         if (empty($symbols)) {
             return [];
@@ -561,6 +575,54 @@ class ChangePlanner
         }
 
         return $positions;
+    }
+
+    /**
+     * Remove the symbols the file cannot be referring to: those only defined in packages which the file's package
+     * neither requires, directly or transitively, nor suggests.
+     *
+     * Nothing is removed for files that are not part of a package (project files, Composer's autoload files), and
+     * symbols whose package is unknown are always kept.
+     *
+     * @param DiscoveredSymbol[] $symbols
+     *
+     * @return DiscoveredSymbol[]
+     */
+    protected function filterToSymbolsAvailableToFile(array $symbols, ?FileBase $file): array
+    {
+        if (!($file instanceof FileWithDependency)) {
+            return $symbols;
+        }
+
+        $availablePackageNames = $this->getAvailablePackageNames($file->getDependency());
+
+        return array_filter(
+            $symbols,
+            function (DiscoveredSymbol $symbol) use ($availablePackageNames): bool {
+                $symbolPackages = $symbol->getDependencies()->toArray();
+                return empty($symbolPackages)
+                    || !empty(array_intersect_key($symbolPackages, $availablePackageNames));
+            }
+        );
+    }
+
+    /**
+     * The package itself, every package in its dependency tree, and the packages it suggests with theirs.
+     *
+     * @return array<string, mixed> Keyed by package name.
+     */
+    protected function getAvailablePackageNames(ComposerPackage $package): array
+    {
+        $packageName = $package->getPackageName();
+
+        if (!isset($this->availablePackageNames[$packageName])) {
+            $this->availablePackageNames[$packageName] = [$packageName => true]
+                + $package->getFlatDependencyTree()->toArray()
+                // Optional integrations, e.g. `class_exists('Monolog\\Logger')`.
+                + (new DeepDependenciesCollection($package->getSuggestedPackages()))->toArray();
+        }
+
+        return $this->availablePackageNames[$packageName];
     }
 
     /**
