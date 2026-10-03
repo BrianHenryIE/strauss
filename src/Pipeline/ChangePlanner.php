@@ -338,8 +338,12 @@ class ChangePlanner
             // Always mark use item names as handled so section D never adds a spurious '\' prefix.
             $handled[$item->getStart()] = true;
             if ($item->getUseType() !== CodeLocation::USE_TYPE_NORMAL) {
-                // TYPE_FUNCTION / TYPE_CONSTANT: replace directly here.
-                if ($symbol = $discoveredSymbols->get($nameStr)) {
+                // TYPE_FUNCTION / TYPE_CONSTANT: replace directly here. Looked up by type: a namespace or class
+                // may share the name.
+                $symbol = $item->getUseType() === CodeLocation::USE_TYPE_FUNCTION
+                    ? $discoveredSymbols->getFunction($nameStr)
+                    : $discoveredSymbols->getConst($nameStr);
+                if ($symbol) {
                     $replacement = $symbol->getReplacementFqdnName();
                 } elseif ($match = $findPrefixSymbol($item->getNameParts())) {
                     // groups
@@ -366,8 +370,10 @@ class ChangePlanner
         // those classes is excluded and one should be updated.
         foreach ($codeMap->getLocationsOfType(CodeLocation::GROUP_USE_PREFIX) as $groupUse) {
             $nameStr = $groupUse->getName();
-            if ($symbol = $discoveredSymbols->get($nameStr)) {
-                $replacement = $symbol->getReplacementFqdnName();
+            // The prefix of `use A\B\{C, D};` is always a namespace, even when an interface or class is also named
+            // `A\B` (e.g. opis/json-schema's `Opis\JsonSchema\Variables`), so it is not looked up by name alone.
+            if (isset($symbolMap[$nameStr])) {
+                $replacement = $symbolMap[$nameStr]->getReplacementFqdnName();
             } elseif ($match = $findPrefixSymbol($groupUse->getNameParts())) {
                 $replacement = rtrim($match['symbol']->getReplacementFqdnName(), '\\') . '\\' . $match['suffix'];
             } else {
@@ -805,13 +811,17 @@ class ChangePlanner
 
         // Replace \Classname (fully qualified) references in any namespace context.
         foreach ($names as $name) {
-            if (!$name->isFullyQualified() || !$this->getGlobalSymbolByName($name->getName(), $discoveredSymbols)) {
+            if (!$name->isFullyQualified()) {
+                continue;
+            }
+            $globalSymbol = $this->getGlobalSymbolByName($name->getName(), $discoveredSymbols);
+            if (!$globalSymbol) {
                 continue;
             }
             $positions[] = [
                 'start' => $name->getStart(),
                 'end' => $name->getEnd(),
-                'replacement' => '\\' . $discoveredSymbols->getNamespacedSymbols()->get($name->getName())->getReplacementFqdnName(),
+                'replacement' => '\\' . $globalSymbol->getReplacementFqdnName(),
             ];
         }
 
