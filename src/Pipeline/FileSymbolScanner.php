@@ -3,6 +3,9 @@
  * The purpose of this class is only to find changes that should be made.
  * i.e. classes and namespaces to change.
  * Those recorded are updated in a later step.
+ *
+ * Each PHP file is parsed exactly once, by {@see PhpFileAnalyzer}, producing a {@see FileCodeMap} of what the file
+ * defines and every symbol it uses. The map is stored on the {@see File} for {@see ChangePlanner} and {@see Prefixer}.
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -12,8 +15,11 @@ use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
+use BrianHenryIE\Strauss\Files\FileCodeMap;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
+use BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -24,23 +30,6 @@ use BrianHenryIE\Strauss\Types\InterfaceSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\TraitSymbol;
 use League\Flysystem\FilesystemException;
-use PhpParser\Error;
-use PhpParser\Node;
-use PhpParser\Node\Expr\FuncCall;
-use PhpParser\Node\Name;
-use PhpParser\Node\Scalar\String_;
-use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\Const_;
-use PhpParser\Node\Stmt\Enum_;
-use PhpParser\Node\Stmt\Function_;
-use PhpParser\Node\Stmt\Interface_;
-use PhpParser\Node\Stmt\Namespace_;
-use PhpParser\Node\Stmt\Trait_;
-use PhpParser\NodeFinder;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\Parser;
-use PhpParser\ParserFactory;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -71,8 +60,7 @@ class FileSymbolScanner
     /** @var string[] */
     protected array $builtIns = [];
 
-    protected ?Parser $parser = null;
-    protected ?NodeFinder $nodeFinder = null;
+    protected ?PhpFileAnalyzer $analyzer = null;
 
     /**
      * @var array<string,bool>
@@ -185,230 +173,146 @@ class FileSymbolScanner
         return $this->discoveredSymbols;
     }
 
+    /**
+     * Parse the file once, store the resulting map on the file, and register every symbol it defines.
+     */
     protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
     {
-        try {
-            $ast = $this->getParser()->parse($this->prepareForParsing($contents));
-        } catch (Error $e) {
-            // E.g. template files with placeholders: `namespace %g_namespace%\AdminMenus;`.
-            $this->logger->warning('Failed to parse file {filePath} with error: {errorMessage}', [
-                'filePath' => $file->getSourcePath(),
-                'errorMessage' => $e->getMessage(),
-            ]);
+        $codeMap = $this->getAnalyzer()->analyze($contents, $file->getSourcePath());
+
+        if (is_null($codeMap)) {
             return;
         }
 
-        if (is_null($ast)) {
-            return;
+        if ($file instanceof File) {
+            $file->setCodeMap($codeMap);
         }
 
-        /**
-         * Sets `namespacedName` on class-like, function and constant declarations, and a `resolvedName` attribute
-         * on the names in `extends` and `implements`. The nodes themselves are not replaced, so the AST is the same
-         * as {@see Prefixer} would produce by parsing the file itself.
-         */
-        $traverser = new NodeTraverser(new NameResolver(null, ['replaceNodes' => false]));
-        $traverser->traverse($ast);
-
-        /**
-         * {@see Prefixer} strips anything before the first `<?` and prepends `<?php` when absent, so its AST positions
-         * are only comparable to ours when the file begins with the PHP open tag.
-         */
-        if ($file instanceof File && 0 === strpos($contents, '<?')) {
-            $file->setParsedAst($ast);
-        }
-
-        $namespaceNodes = array_filter($ast, fn(Node $node): bool => $node instanceof Namespace_);
-
-        if (empty($namespaceNodes)) {
-            $this->findInNamespace('\\', $ast, $file, $package);
-            return;
-        }
-
-        /** @var Namespace_ $namespaceNode */
-        foreach ($namespaceNodes as $namespaceNode) {
-            $namespaceName = is_null($namespaceNode->name) ? '\\' : $namespaceNode->name->toString();
-            $this->findInNamespace($namespaceName, $namespaceNode->stmts, $file, $package);
-        }
+        $this->recordDefinitions($codeMap, $file, $package);
     }
 
     /**
-     * Mirror {@see Prefixer::replaceInString()}: discard anything before the first `<?`, and prepend `<?php` when
-     * there is no open tag at all, so the scanner and the prefixer parse the same code.
+     * Register each namespace and every symbol declared within it, at any depth, e.g. a function declared inside
+     * `if (!function_exists(...))`.
      */
-    protected function prepareForParsing(string $contents): string
+    protected function recordDefinitions(FileCodeMap $codeMap, FileBase $file, ?ComposerPackage $package = null): void
     {
-        $openTagPosition = strpos($contents, '<?');
+        foreach ($codeMap->getNamespaceNames() as $namespaceName) {
+            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
 
-        if (false === $openTagPosition) {
-            return "<?php\n" . $contents;
-        }
-
-        return substr($contents, $openTagPosition);
-    }
-
-    /**
-     * Record the namespace and every symbol declared within its statements, at any depth, e.g. a function declared
-     * inside `if (!function_exists(...))`.
-     *
-     * @param string $namespaceName `\` for the global namespace.
-     * @param Node[] $stmts
-     */
-    protected function findInNamespace(string $namespaceName, array $stmts, FileBase $file, ?ComposerPackage $package = null): void
-    {
-        $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
-
-        /** @var Class_ $classNode */
-        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Class_::class) as $classNode) {
-            if ($classNode->isAnonymous() || is_null($classNode->namespacedName)) {
-                continue;
-            }
-            $classSymbol = $this->addDiscoveredClassChange(
-                $classNode->namespacedName->toString(),
-                $classNode->isAbstract(),
-                $file,
-                is_null($classNode->extends) ? null : $this->resolveName($classNode->extends),
-                $namespaceSymbol,
-                array_map([$this, 'resolveName'], $classNode->implements)
+            $definitions = array_filter(
+                $codeMap->getDefinitions(),
+                fn(SymbolDefinition $definition): bool => $namespaceName === $definition->getNamespace()
+                    && SymbolDefinition::TYPE_NAMESPACE !== $definition->getType()
             );
-            if ($classSymbol) {
-                $classSymbol->setDoRename($file->isDoPrefix());
+
+            // Grouped by type, in the order the symbols have always been registered.
+            foreach ([
+                SymbolDefinition::TYPE_CLASS,
+                SymbolDefinition::TYPE_FUNCTION,
+                SymbolDefinition::TYPE_CONSTANT,
+                SymbolDefinition::TYPE_INTERFACE,
+                SymbolDefinition::TYPE_TRAIT,
+                SymbolDefinition::TYPE_ENUM,
+            ] as $type) {
+                foreach ($definitions as $definition) {
+                    if ($type === $definition->getType()) {
+                        $this->recordDefinition($definition, $file, $namespaceSymbol, $package);
+                    }
+                }
             }
         }
+    }
 
-        /** @var Function_ $functionNode */
-        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Function_::class) as $functionNode) {
-            if (is_null($functionNode->namespacedName)) {
-                continue;
-            }
-            $functionName = $functionNode->namespacedName->toString();
-            if ($this->isBuiltInSymbol($functionName)) {
-                continue;
-            }
-            $functionSymbol = $this->discoveredSymbols->getFunction($functionName);
-            if (is_null($functionSymbol)) {
-                $functionSymbol = new FunctionSymbol($functionName, $file, $namespaceSymbol, $package);
-                $this->add($functionSymbol);
-            }
-            $functionSymbol->addSourceFile($file);
-            $functionSymbol->setDoRename($file->isDoPrefix());
-        }
+    protected function recordDefinition(
+        SymbolDefinition $definition,
+        FileBase $file,
+        NamespaceSymbol $namespaceSymbol,
+        ?ComposerPackage $package = null
+    ): void {
+        $name = $definition->getName();
 
-        foreach ($this->findConstantNames($stmts) as $constantName) {
-            $constantSymbol = $this->discoveredSymbols->getConst($constantName);
-            if (is_null($constantSymbol)) {
-                $constantSymbol = new ConstantSymbol($constantName, $file, $namespaceSymbol);
-                $this->add($constantSymbol, $file);
-            }
-            $constantSymbol->addSourceFile($file);
-            $constantSymbol->setDoRename($file->isDoPrefix());
-        }
-
-        /** @var Interface_ $interfaceNode */
-        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Interface_::class) as $interfaceNode) {
-            if (is_null($interfaceNode->namespacedName)) {
-                continue;
-            }
-            $interfaceName = $interfaceNode->namespacedName->toString();
-            $interfaceSymbol = $this->discoveredSymbols->getInterface($interfaceName);
-            if (is_null($interfaceSymbol)) {
-                $interfaceSymbol = new InterfaceSymbol($interfaceName, $file, $namespaceSymbol);
-                $this->add($interfaceSymbol);
-            }
-            $interfaceSymbol->addSourceFile($file);
-            $interfaceSymbol->setDoRename($file->isDoPrefix());
-        }
-
-        /** @var Trait_ $traitNode */
-        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Trait_::class) as $traitNode) {
-            if (is_null($traitNode->namespacedName)) {
-                continue;
-            }
-            $traitName = $traitNode->namespacedName->toString();
-            $traitSymbol = $this->discoveredSymbols->getTrait($traitName);
-            if (is_null($traitSymbol)) {
-                $traitSymbol = new TraitSymbol($traitName, $file, $namespaceSymbol);
-                $this->add($traitSymbol);
-            }
-            $traitSymbol->addSourceFile($file);
-            $traitSymbol->setDoRename($file->isDoPrefix());
-        }
-
-        /** @var Enum_ $enumNode */
-        foreach ($this->getNodeFinder()->findInstanceOf($stmts, Enum_::class) as $enumNode) {
-            if (is_null($enumNode->namespacedName)) {
-                continue;
-            }
-            $enumName = $enumNode->namespacedName->toString();
-            if ($this->isBuiltInSymbol($enumName)) {
-                continue;
-            }
-            $enumSymbol = $this->discoveredSymbols->getEnum($enumName);
-            if (is_null($enumSymbol)) {
-                $backingType = $enumNode->scalarType instanceof Node\Identifier ? $enumNode->scalarType->name : null;
-                $enumSymbol = new EnumSymbol(
-                    $enumName,
+        switch ($definition->getType()) {
+            case SymbolDefinition::TYPE_CLASS:
+                $classSymbol = $this->addDiscoveredClassChange(
+                    $name,
+                    $definition->isAbstract(),
                     $file,
+                    $definition->getExtends(),
                     $namespaceSymbol,
-                    $backingType,
-                    array_map([$this, 'resolveName'], $enumNode->implements)
+                    $definition->getInterfaces()
                 );
-                $this->add($enumSymbol, $file);
-            }
-            $enumSymbol->addSourceFile($file);
-            $enumSymbol->setDoRename($file->isDoPrefix());
-        }
-    }
-
-    /**
-     * Constants declared with `const NAME = ...;` (class constants are `ClassConst`, not `Const_`) and with
-     * `define('NAME', ...)`.
-     *
-     * The names are as written in the source; {@see ConstantSymbol} prefixes the namespace where they are unqualified.
-     *
-     * @param Node[] $stmts
-     * @return string[]
-     */
-    protected function findConstantNames(array $stmts): array
-    {
-        $constantNames = [];
-
-        $constantNodes = $this->getNodeFinder()->find(
-            $stmts,
-            fn(Node $node): bool => $node instanceof Const_ || $this->isDefineCall($node)
-        );
-
-        foreach ($constantNodes as $constantNode) {
-            if ($constantNode instanceof Const_) {
-                foreach ($constantNode->consts as $const) {
-                    $constantNames[] = $const->name->toString();
+                if ($classSymbol) {
+                    $classSymbol->setDoRename($file->isDoPrefix());
                 }
-            } elseif ($constantNode instanceof FuncCall) {
-                $firstArg = $constantNode->args[0] ?? null;
-                if ($firstArg instanceof Node\Arg && $firstArg->value instanceof String_) {
-                    $constantNames[] = $firstArg->value->value;
+                return;
+
+            case SymbolDefinition::TYPE_FUNCTION:
+                if ($this->isBuiltInSymbol($name)) {
+                    return;
                 }
-            }
+                $functionSymbol = $this->discoveredSymbols->getFunction($name);
+                if (is_null($functionSymbol)) {
+                    $functionSymbol = new FunctionSymbol($name, $file, $namespaceSymbol, $package);
+                    $this->add($functionSymbol);
+                }
+                $functionSymbol->addSourceFile($file);
+                $functionSymbol->setDoRename($file->isDoPrefix());
+                return;
+
+            case SymbolDefinition::TYPE_CONSTANT:
+                // The name is as written in the source; {@see ConstantSymbol} prefixes the namespace where unqualified.
+                $constantSymbol = $this->discoveredSymbols->getConst($name);
+                if (is_null($constantSymbol)) {
+                    $constantSymbol = new ConstantSymbol($name, $file, $namespaceSymbol);
+                    $this->add($constantSymbol, $file);
+                }
+                $constantSymbol->addSourceFile($file);
+                $constantSymbol->setDoRename($file->isDoPrefix());
+                return;
+
+            case SymbolDefinition::TYPE_INTERFACE:
+                $interfaceSymbol = $this->discoveredSymbols->getInterface($name);
+                if (is_null($interfaceSymbol)) {
+                    $interfaceSymbol = new InterfaceSymbol($name, $file, $namespaceSymbol);
+                    $this->add($interfaceSymbol);
+                }
+                $interfaceSymbol->addSourceFile($file);
+                $interfaceSymbol->setDoRename($file->isDoPrefix());
+                return;
+
+            case SymbolDefinition::TYPE_TRAIT:
+                $traitSymbol = $this->discoveredSymbols->getTrait($name);
+                if (is_null($traitSymbol)) {
+                    $traitSymbol = new TraitSymbol($name, $file, $namespaceSymbol);
+                    $this->add($traitSymbol);
+                }
+                $traitSymbol->addSourceFile($file);
+                $traitSymbol->setDoRename($file->isDoPrefix());
+                return;
+
+            case SymbolDefinition::TYPE_ENUM:
+                if ($this->isBuiltInSymbol($name)) {
+                    return;
+                }
+                $enumSymbol = $this->discoveredSymbols->getEnum($name);
+                if (is_null($enumSymbol)) {
+                    $enumSymbol = new EnumSymbol(
+                        $name,
+                        $file,
+                        $namespaceSymbol,
+                        $definition->getBackingType(),
+                        $definition->getInterfaces()
+                    );
+                    $this->add($enumSymbol, $file);
+                }
+                $enumSymbol->addSourceFile($file);
+                $enumSymbol->setDoRename($file->isDoPrefix());
+                return;
+
+            default:
+                return;
         }
-
-        return array_filter($constantNames, fn(string $name): bool => '' !== trim($name, '\\'));
-    }
-
-    protected function isDefineCall(Node $node): bool
-    {
-        return $node instanceof FuncCall
-            && $node->name instanceof Name
-            && 'define' === strtolower($node->name->toString());
-    }
-
-    /**
-     * The fully qualified name, without leading `\`, of a class name in `extends` or `implements`.
-     */
-    protected function resolveName(Name $name): string
-    {
-        $resolvedName = $name->getAttribute('resolvedName');
-
-        return $resolvedName instanceof Name ? $resolvedName->toString() : $name->toString();
     }
 
     /**
@@ -524,13 +428,8 @@ class FileSymbolScanner
         return isset($this->builtInsLookup[$symbolName]);
     }
 
-    protected function getParser(): Parser
+    protected function getAnalyzer(): PhpFileAnalyzer
     {
-        return $this->parser ??= (new ParserFactory())->createForNewestSupportedVersion();
-    }
-
-    protected function getNodeFinder(): NodeFinder
-    {
-        return $this->nodeFinder ??= new NodeFinder();
+        return $this->analyzer ??= new PhpFileAnalyzer($this->logger);
     }
 }

@@ -35,9 +35,7 @@ class DeepDependenciesCollection extends DependenciesCollection
                 continue;
             }
             $flatDependenciesArray[$dependency->getPackageName()] = $dependency;
-            foreach ($dependency->getDependencies() as $childDependency) {
-                $flatDependenciesArray = array_merge($flatDependenciesArray, self::getDependenciesRecursive($childDependency, $flatDependenciesArray));
-            }
+            $flatDependenciesArray = self::getDependenciesRecursive($dependency, $flatDependenciesArray);
         }
         return $flatDependenciesArray;
     }

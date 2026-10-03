@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
+use BrianHenryIE\Strauss\Pipeline\ChangePlanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
@@ -201,6 +202,10 @@ class ReplaceCommand extends AbstractRenamespacerCommand
             $this->logger
         );
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
+
+        // Every edit to every file is determined now, before any file is modified.
+        $changePlanner = new ChangePlanner($this->logger);
+        $changePlanner->planInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
     }
 
     // 5. Update namespaces and class names.

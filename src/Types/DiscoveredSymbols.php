@@ -118,6 +118,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         }
     }
 
+    /**
+     * @deprecated Can cause false positives when duplicate names exist.
+     */
     public function get(string $fqdnName): ?DiscoveredSymbol
     {
         /** @var DiscoveredSymbol[] $found */

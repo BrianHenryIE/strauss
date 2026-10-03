@@ -15,6 +15,7 @@ use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
 use BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
+use BrianHenryIE\Strauss\Pipeline\ChangePlanner;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
 use BrianHenryIE\Strauss\Pipeline\Copier;
@@ -172,6 +173,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->markSymbolsForRenaming();
             $this->determineChanges();
             $this->markFilesExcludedFromChanges();
+            $this->planChanges();
 
             (new Psr0($this->filesystem, $this->logger))->setTargetDirectory(
                 $this->flatDependencyTree,
@@ -424,6 +426,66 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 
+    /**
+     * Determine every edit to make to every file, from the symbols marked for renaming and each file's code map,
+     * before any file is copied or modified.
+     */
+    protected function planChanges(): void
+    {
+        $this->logger->notice('Planning changes to files...');
+
+        $changePlanner = new ChangePlanner($this->logger);
+        $changePlanner->planInFiles(
+            $this->getDiscoveredSymbolsWithComposerRuntime(),
+            $this->discoveredFiles->getFiles()
+        );
+    }
+
+    /**
+     * The discovered symbols, plus the classes Composer itself provides at runtime (`Composer\InstalledVersions`,
+     * `Composer\Autoload\ClassLoader`), which will be prefixed when the autoloader is generated.
+     *
+     * Packages use those classes without requiring `composer-runtime-api`, so every package is assumed to depend
+     * on them. Planning with them here means {@see self::prefixComposerAutoloadFiles()} only needs to change
+     * Composer's own files, not every file again.
+     *
+     * They are not added to {@see self::$discoveredSymbols}: they are not the project's dependencies' symbols, and
+     * should not get aliases etc.
+     */
+    protected function getDiscoveredSymbolsWithComposerRuntime(): DiscoveredSymbols
+    {
+        // Without the classmap output, no prefixed copy of Composer's files is generated.
+        if (!$this->config->isClassmapOutput()) {
+            return $this->discoveredSymbols;
+        }
+
+        $prefixer = new Prefixer($this->config, $this->filesystem, $this->logger);
+
+        // The project's own Composer files declare the same classes the generated, prefixed, copies will.
+        $composerRuntimeSymbols = $prefixer->getComposerRuntimeSymbols(
+            $prefixer->getComposerRuntimeFiles($this->config->getAbsoluteVendorDirectory() . '/composer')
+        );
+
+        // A copy of the collection (the symbols themselves are shared), so the additions are only seen by planning.
+        // Not rebuilt via `::toArray()`, which loses symbols of different types with the same name, e.g. a class
+        // `WPGraphQL` and a namespace `WPGraphQL`.
+        $symbols = clone $this->discoveredSymbols;
+
+        foreach ($composerRuntimeSymbols->toArray() as $symbol) {
+            // The generated autoloader classes (`ComposerAutoloaderInit...`) are only used in Composer's own files.
+            if ($symbol->isGlobal()) {
+                continue;
+            }
+            // E.g. when `composer/composer` is itself being prefixed: its symbols were already discovered.
+            if ($symbols->has($symbol)) {
+                continue;
+            }
+            $symbols->add($symbol);
+        }
+
+        return $symbols;
+    }
+
     protected function markFilesExcludedFromChanges(): void
     {
         $this->logger->notice('Scanning files to omit from changes...');
@@ -629,7 +691,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     protected function prefixComposerAutoloadFiles() : void
     {
 
-        $this->replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory(), $this->discoveredFiles);
+        $this->replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
     }
 
     /**

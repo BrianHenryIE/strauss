@@ -49,8 +49,20 @@ class File implements FileBase
 
     protected bool $didDelete = false;
 
-    /** @var \PhpParser\Node[]|null Cache of php-parser parsed AST */
-    protected ?array $ast = null;
+    /**
+     * What the file defines and every symbol it uses, from parsing it once in
+     * {@see \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner}. Null for non-PHP files, files that could not be
+     * parsed, and files not yet scanned.
+     */
+    protected ?FileCodeMap $codeMap = null;
+
+    /**
+     * The pre-calculated changes to make to the file: position, end and replacement string, planned against
+     * {@see self::$codeMap}. Null distinguishes "not planned yet" from "planned, and there is nothing to change".
+     *
+     * @var ?array<array{start:int,end:int,replacement:string}>
+     */
+    protected ?array $plannedEdits = null;
 
     public function __construct(
         string $sourceAbsolutePath,
@@ -209,19 +221,36 @@ class File implements FileBase
     }
 
     /**
-     * @param \PhpParser\Node[]|null $ast Parsed PHP file
+     * Replacing the code map discards any planned edits: a plan is only valid for the map it was made against.
      */
-    public function setParsedAst(?array $ast): void
+    public function setCodeMap(?FileCodeMap $codeMap): void
     {
-        $this->ast = $ast;
+        $this->codeMap = $codeMap;
+        $this->plannedEdits = null;
     }
 
     /**
-     * @see \PhpParser\PhpParser
-     * @return \PhpParser\Node[]|null
+     * The symbols this file defines and uses, and the regions of text (comments, strings) that may name symbols.
+     * Null when the file has not been, or could not be, parsed.
      */
-    public function getParsedAst(): ?array
+    public function getCodeMap(): ?FileCodeMap
     {
-        return $this->ast;
+        return $this->codeMap;
+    }
+
+    /**
+     * @param ?array<array{start:int,end:int,replacement:string}> $plannedEdits Null to mark the file as unplanned.
+     */
+    public function setPlannedEdits(?array $plannedEdits): void
+    {
+        $this->plannedEdits = is_null($plannedEdits) ? null : array_values($plannedEdits);
+    }
+
+    /**
+     * @return ?array<array{start:int,end:int,replacement:string}> Null when no changes have been planned yet.
+     */
+    public function getPlannedEdits(): ?array
+    {
+        return $this->plannedEdits;
     }
 }
