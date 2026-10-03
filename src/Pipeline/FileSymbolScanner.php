@@ -20,6 +20,8 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition;
+use BrianHenryIE\Strauss\Pipeline\Parallel\ParallelisationException;
+use BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -63,6 +65,18 @@ class FileSymbolScanner
     protected ?PhpFileAnalyzer $analyzer = null;
 
     /**
+     * When set, files are analysed in worker processes before the (sequential) symbol discovery.
+     */
+    protected ?WorkerPool $workerPool = null;
+
+    /**
+     * Results from the worker processes, keyed by source path: the map, or null with the parse error message.
+     *
+     * @var array<string, array{0:?FileCodeMap, 1:?string}>
+     */
+    protected array $parallelResults = [];
+
+    /**
      * @var array<string,bool>
      */
     protected array $loggedSymbols = [];
@@ -85,6 +99,11 @@ class FileSymbolScanner
         $this->discoveredSymbols = $discoveredSymbols;
         $this->filesystem = $filesystem;
         $this->logger = $logger ?? new NullLogger();
+    }
+
+    public function setWorkerPool(?WorkerPool $workerPool): void
+    {
+        $this->workerPool = $workerPool;
     }
 
     protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
@@ -128,6 +147,8 @@ class FileSymbolScanner
         $packagesToPrefixLookup = array_fill_keys(array_keys($this->config->getPackagesToPrefix()), true);
         $projectDirectory = $this->config->getProjectAbsolutePath();
 
+        $this->analyzeInParallel($files);
+
         foreach ($files->getFiles() as $file) {
             if ($file instanceof FileWithDependency
                 && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
@@ -159,6 +180,23 @@ class FileSymbolScanner
             }
 
             $this->logger->info("Scanning file:::" . $relativeFilePath);
+
+            $package = $file instanceof FileWithDependency ? $file->getDependency() : null;
+
+            if (isset($this->parallelResults[$file->getSourcePath()])) {
+                [$codeMap, $errorMessage] = $this->parallelResults[$file->getSourcePath()];
+                unset($this->parallelResults[$file->getSourcePath()]);
+                if (is_null($codeMap)) {
+                    // As {@see PhpFileAnalyzer::analyze()} logs it when parsing in this process.
+                    $this->logger->warning('Failed to parse file {filePath} with error: {errorMessage}', [
+                        'filePath' => $file->getSourcePath(),
+                        'errorMessage' => $errorMessage ?? 'unknown',
+                    ]);
+                }
+                $this->record($codeMap, $file, $package);
+                continue;
+            }
+
             $this->find(
                 /**
                  * "one unreadable file cancels scanning of all remaining files with no per-file error handling."
@@ -166,11 +204,54 @@ class FileSymbolScanner
                  */
                 $this->filesystem->read($file->getSourcePath()),
                 $file,
-                $file instanceof FileWithDependency ? $file->getDependency() : null
+                $package
             );
         }
 
         return $this->discoveredSymbols;
+    }
+
+    /**
+     * Parse the PHP files in worker processes, so the loop in {@see self::findInFiles()} only records what they
+     * found. The loop's order, and so the order symbols are discovered and logged in, is unchanged.
+     *
+     * If the workers cannot be run, the files are parsed in this process as before.
+     */
+    protected function analyzeInParallel(DiscoveredFiles $files): void
+    {
+        if (is_null($this->workerPool)) {
+            return;
+        }
+
+        /** @var array<string, string> $absolutePaths Keyed by source path. */
+        $absolutePaths = [];
+        foreach ($files->getFiles() as $file) {
+            if (!$file->isPhpFile() || !($file instanceof File)) {
+                continue;
+            }
+            $absolutePaths[$file->getSourcePath()] = $this->filesystem->makeAbsolute($file->getSourcePath());
+        }
+
+        if (count($absolutePaths) <= $this->workerPool->getConfig()->getFilesPerChunk()) {
+            $this->logger->debug('Too few files to analyse in parallel.');
+            return;
+        }
+
+        $sourcePathsByAbsolutePath = array_flip($absolutePaths);
+
+        try {
+            $this->workerPool->analyze(
+                array_values($absolutePaths),
+                function (string $absolutePath, ?FileCodeMap $codeMap, ?string $errorMessage) use ($sourcePathsByAbsolutePath): void {
+                    $this->parallelResults[$sourcePathsByAbsolutePath[$absolutePath]] = [$codeMap, $errorMessage];
+                }
+            );
+        } catch (ParallelisationException $e) {
+            $this->logger->warning('Could not analyse files in parallel, continuing in this process: {errorMessage}', [
+                'errorMessage' => $e->getMessage(),
+            ]);
+            $this->parallelResults = [];
+        }
     }
 
     /**
@@ -180,6 +261,14 @@ class FileSymbolScanner
     {
         $codeMap = $this->getAnalyzer()->analyze($contents, $file->getSourcePath());
 
+        $this->record($codeMap, $file, $package);
+    }
+
+    /**
+     * Store the map on the file and register every symbol it defines. Null when the file could not be parsed.
+     */
+    protected function record(?FileCodeMap $codeMap, FileBase $file, ?ComposerPackage $package): void
+    {
         if (is_null($codeMap)) {
             return;
         }

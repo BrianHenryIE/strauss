@@ -23,6 +23,8 @@ use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
+use BrianHenryIE\Strauss\Pipeline\Parallel\ParallelConfig;
+use BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool;
 use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges;
 use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
@@ -100,6 +102,14 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
 
         $this->addOption(
+            'parallel',
+            null,
+            4,
+            'Analyse files in worker processes: true (one per spare CPU), a maximum number of workers, or false',
+            false
+        );
+
+        $this->addOption(
             'info',
             null,
             4,
@@ -152,6 +162,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         try {
             $this->logger->notice('Starting... '/** version */); // + PHP version
+            $startedAt = microtime(true);
 
             $this->loadProjectComposerPackage();
             $this->loadConfigFromComposerJson();
@@ -160,45 +171,41 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             // Checks dry-run, replaces filesystem and logger.
             parent::execute($input, $output);
 
-            $this->buildDependencyList();
+            $this->timed('buildDependencyList');
 
-            $this->enumerateFiles();
+            $this->timed('enumerateFiles');
 
             $this->discoveredSymbols = new DiscoveredSymbols();
 
-            $this->enumeratePsrNamespaces();
-            $this->scanFilesForSymbols();
-            $this->enumerateAutoloadedFiles();
-            $this->analyseFilesToCopy();
-            $this->markSymbolsForRenaming();
-            $this->determineChanges();
-            $this->markFilesExcludedFromChanges();
-            $this->planChanges();
+            $this->timed('enumeratePsrNamespaces');
+            $this->timed('scanFilesForSymbols');
+            $this->timed('enumerateAutoloadedFiles');
+            $this->timed('analyseFilesToCopy');
+            $this->timed('markSymbolsForRenaming');
+            $this->timed('determineChanges');
+            $this->timed('markFilesExcludedFromChanges');
+            $this->timed('planChanges');
 
-            (new Psr0($this->filesystem, $this->logger))->setTargetDirectory(
-                $this->flatDependencyTree,
-                $this->discoveredFiles,
-                $this->discoveredSymbols
-            );
+            $this->timed('setPsr0TargetDirectory');
 
-            $this->copyFiles();
+            $this->timed('copyFiles');
 
-            $this->performReplacements();
+            $this->timed('performReplacements');
 
-            $this->performReplacementsInProjectFiles();
+            $this->timed('performReplacementsInProjectFiles');
 
-            $this->addLicenses();
+            $this->timed('addLicenses');
 
-            $this->cleanUp();
+            $this->timed('cleanUp');
 
-            $this->generateAutoloader();
+            $this->timed('generateAutoloader');
 
             // After files have been deleted, we may need aliases.
-            $this->generateAliasesFile();
+            $this->timed('generateAliasesFile');
 
-            $this->prefixComposerAutoloadFiles();
+            $this->timed('prefixComposerAutoloadFiles');
 
-            $this->logger->notice('Done');
+            $this->logger->notice('Done in {seconds}s', ['seconds' => number_format(microtime(true) - $startedAt, 2)]);
         } catch (Exception $e) {
             $this->logger->error($e->getMessage() . ' in ' . $e->getFile() . ' ' . $e->getLine());
             $this->logger->error('Please submit a bug report with a minimally reproducing composer.json and logs from running strauss --debug');
@@ -206,6 +213,30 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Run one pipeline step and log how long it took, for finding where the time goes on large projects.
+     */
+    protected function timed(string $step): void
+    {
+        $startedAt = microtime(true);
+
+        $this->{$step}();
+
+        $this->logger->debug('{step} took {seconds}s', [
+            'step' => $step,
+            'seconds' => number_format(microtime(true) - $startedAt, 3),
+        ]);
+    }
+
+    protected function setPsr0TargetDirectory(): void
+    {
+        (new Psr0($this->filesystem, $this->logger))->setTargetDirectory(
+            $this->flatDependencyTree,
+            $this->discoveredFiles,
+            $this->discoveredSymbols
+        );
     }
 
     /**
@@ -386,8 +417,28 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->filesystem,
             $this->logger
         );
+        $fileSymbolScanner->setWorkerPool($this->getWorkerPool());
 
         $fileSymbolScanner->findInFiles($this->discoveredFiles);
+    }
+
+    /**
+     * Worker processes to parse files in, or null to parse them in this process: when configured off, when there
+     * is only one CPU, or during `--dry-run` (the workers would not see the in-memory filesystem).
+     */
+    protected function getWorkerPool(): ?WorkerPool
+    {
+        if ($this->config->isDryRun() || !function_exists('proc_open')) {
+            return null;
+        }
+
+        $parallelConfig = ParallelConfig::detect($this->config->getParallel());
+
+        if ($parallelConfig->isSequential()) {
+            return null;
+        }
+
+        return new WorkerPool($parallelConfig, null, $this->logger);
     }
 
     protected function enumerateAutoloadedFiles(): void

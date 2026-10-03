@@ -41,9 +41,26 @@ class ChangePlanner
      */
     protected array $availablePackageNames = [];
 
+    /**
+     * Built once per run: {@see self::getIndex()}.
+     */
+    protected ?SymbolIndex $index = null;
+
     public function __construct(?LoggerInterface $logger = null)
     {
         $this->logger = $logger ?? new NullLogger();
+    }
+
+    /**
+     * The symbols to rename, grouped and indexed, for the given collection. Rebuilt when a different collection is
+     * passed (e.g. {@see \BrianHenryIE\Strauss\Pipeline\Prefixer::replaceInString()} on demand).
+     */
+    protected function getIndex(DiscoveredSymbols $discoveredSymbols): SymbolIndex
+    {
+        if (is_null($this->index) || !$this->index->isFor($discoveredSymbols)) {
+            $this->index = new SymbolIndex($discoveredSymbols);
+        }
+        return $this->index;
     }
 
     /**
@@ -83,7 +100,7 @@ class ChangePlanner
     {
         $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
 
-        $functionsToRename = $discoveredSymbols->getDiscoveredFunctions()->getToRename();
+        $functionsToRename = $this->getIndex($discoveredSymbols)->getFunctionsToRename();
 
         $positions = array_merge(
             $this->findUseStatementPositionsForNamespacedClasses($codeMap, $discoveredSymbols),
@@ -180,7 +197,7 @@ class ChangePlanner
     {
         $activeNamespaces = [];
         /** @var NamespacedSymbol $symbol */
-        foreach ($discoveredSymbols->getNamespacedSymbols()->getToRename()->notGlobal()->toArray() as $symbol) {
+        foreach ($this->getIndex($discoveredSymbols)->getNamespacedToRenameNotGlobal()->toArray() as $symbol) {
             $ns = $symbol->getNamespace();
             $original = rtrim($ns->getOriginalFqdnName(), '\\');
             $replacement = rtrim($ns->getReplacementFqdnName(), '\\');
@@ -195,7 +212,7 @@ class ChangePlanner
 
         $positions = [];
 
-        $namespacedSymbols = $discoveredSymbols->getNamespacedSymbols()->getToRename()->notGlobal();
+        $namespacedSymbols = $this->getIndex($discoveredSymbols)->getNamespacedToRenameNotGlobal();
         foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $item) {
             $nameStr = $item->getName();
             // Full match.
@@ -243,11 +260,12 @@ class ChangePlanner
      */
     protected function findNamespacePositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols, ?FileBase $file): array
     {
-        $namespaces = $discoveredSymbols->getNamespaces();
+        $index = $this->getIndex($discoveredSymbols);
         // Only symbols actually being renamed: a symbol whose replacement is its original name would
         // produce no-op positions that overwrite real replacements for the same range in the dedupe.
-        $namespacedChanges = $discoveredSymbols->getNamespacedSymbols()->getToRename()->notGlobal();
-        if (count($namespaces->getToRename()) === 0) {
+        $namespacedChanges = $index->getNamespacedToRenameNotGlobal();
+        $namespacesToRename = $index->getNamespacesToRename();
+        if (count($namespacesToRename) === 0) {
             return [];
         }
 
@@ -257,7 +275,7 @@ class ChangePlanner
 
         /** @var NamespaceSymbol[] $symbolMap indexed by exact original symbol (no trailing \) */
         $symbolMap = [];
-        foreach ($namespaces->getToRename() as $symbol) {
+        foreach ($namespacesToRename as $symbol) {
             if (isset($symbolMap[rtrim($symbol->getOriginalFqdnName(), '\\')])) {
                 throw new Exception('losing data');
             }
@@ -451,9 +469,17 @@ class ChangePlanner
      */
     protected function findGlobalSymbolsPositionsInComment(CodeLocation $comment, DiscoveredSymbols $globalSymbols): array
     {
+        $index = $this->getIndex($globalSymbols);
+
+        // Only the `\Name`s written in the comment are looked up, rather than every global symbol searched for.
+        preg_match_all('/\\\\([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/', $comment->getText(), $matches);
+
         $positions = [];
-        foreach ($globalSymbols->getGlobalClassesInterfacesTraitsToRename() as $discoveredSymbol) {
-            $positions = array_merge($positions, $this->findGlobalSymbolPositionInComment($comment, $discoveredSymbol));
+        foreach (array_unique($matches[1]) as $name) {
+            $discoveredSymbol = $index->getGlobalClassInterfaceTraitToRenameByName($name);
+            if ($discoveredSymbol) {
+                $positions = array_merge($positions, $this->findGlobalSymbolPositionInComment($comment, $discoveredSymbol));
+            }
         }
         return $positions;
     }
@@ -515,18 +541,6 @@ class ChangePlanner
             'count' => $discoveredSymbolsCount,
         ]);
 
-        /** @var DiscoveredSymbol[] $symbols */
-        $symbols = array_merge(
-            $discoveredSymbols->getNamespaces()->getToRename()->toArray(),
-            $discoveredSymbols->getNamespacedSymbols()->getToRename()->toArray()
-        );
-        $symbols = array_filter($symbols, fn(DiscoveredSymbol $symbol): bool => $symbol->isReplaceInString());
-        $symbols = $this->filterToSymbolsAvailableToFile($symbols, $file);
-
-        if (empty($symbols)) {
-            return [];
-        }
-
         $regions = $codeMap->getRegions();
 
         if (empty($regions)) {
@@ -549,6 +563,14 @@ class ChangePlanner
             $offset += $region->getLength() + 1;
         }
         $buffer = implode('', $bufferParts);
+
+        // Only the symbols whose name could appear in the buffer, rather than every symbol in the project.
+        $symbols = $this->getIndex($discoveredSymbols)->getStringSearchSymbolsForWords(SymbolIndex::getWords($buffer));
+        $symbols = $this->filterToSymbolsAvailableToFile($symbols, $file);
+
+        if (empty($symbols)) {
+            return [];
+        }
 
         /**
          * The region a buffer offset falls in, by binary search.
@@ -792,7 +814,7 @@ class ChangePlanner
      */
     protected function findGlobalSymbolsPositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
     {
-        $globalClassesInterfacesTraitsToRename = $discoveredSymbols->getGlobalClassesInterfacesTraits()->getToRename();
+        $globalClassesInterfacesTraitsToRename = $this->getIndex($discoveredSymbols)->getGlobalClassesInterfacesTraitsToRename();
 
         if (count($globalClassesInterfacesTraitsToRename) === 0) {
             return [];
@@ -920,7 +942,7 @@ class ChangePlanner
         /** @var array<string,string> $constantsToRename original name => replacement name */
         $constantsToRename = [];
         /** @var ConstantSymbol $constant */
-        foreach ($discoveredSymbols->getConstants()->getToRename() as $constant) {
+        foreach ($this->getIndex($discoveredSymbols)->getConstantsToRename() as $constant) {
             $constantsToRename[$constant->getOriginalFqdnName()] = $constant->getReplacementFqdnName();
         }
 
@@ -1110,28 +1132,34 @@ class ChangePlanner
             return [];
         }
 
-        $namespacedSymbols = $discoveredSymbols->getNamespacedSymbols()->getToRename();
+        $index = $this->getIndex($discoveredSymbols);
 
-        $this->logger->debug('Searching {number_of_comments} comments for {number_of_symbols} symbols', [
+        $this->logger->debug('Searching {number_of_comments} comments for symbols', [
             'number_of_comments' => count($docComments),
-            'number_of_symbols' => count($namespacedSymbols),
         ]);
 
         foreach ($docComments as $doc) {
             $text = $doc->getText();
-            /** @var NamespacedSymbol $symbol */
-            foreach ($namespacedSymbols as $symbol) {
-                $replacement = $symbol->getReplacementFqdnName();
 
-                // Function names can be common words (e.g. `value`, `when`), so only replace them when
-                // they are clearly a reference to the function: `value()` or `@see value`.
-                if ($symbol instanceof FunctionSymbol) {
+            // Only the names written in the comment are looked up, rather than every symbol searched for.
+            foreach (SymbolIndex::getQualifiedNameCandidates($text) as $candidate => $_) {
+                $candidate = (string) $candidate;
+
+                $function = $index->getFunctionToRenameByFqdn($candidate);
+                if ($function) {
+                    // Function names can be common words (e.g. `value`, `when`), so only replace them when
+                    // they are clearly a reference to the function: `value()` or `@see value`.
                     $positions = array_merge(
                         $positions,
-                        $this->findFunctionPositionsInDocComment($doc, $symbol)
+                        $this->findFunctionPositionsInDocComment($doc, $function)
                     );
+                }
+
+                $symbol = $index->getNamespacedToRenameByFqdn($candidate);
+                if (!$symbol) {
                     continue;
                 }
+                $replacement = $symbol->getReplacementFqdnName();
                 $docSearchStr = $symbol->getOriginalFqdnName();
                 $docSearchLen = strlen($docSearchStr);
                 // For global symbols (no \ in name), also treat \ as a boundary character

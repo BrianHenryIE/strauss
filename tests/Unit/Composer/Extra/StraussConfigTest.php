@@ -1245,6 +1245,50 @@ EOD;
         }
     }
 
+    /**
+     * @return array<string, array{0:string, 1:?int}>
+     */
+    public static function parallelProvider(): array
+    {
+        return [
+            'default' => ['', null],
+            'true' => ['"parallel": true,', null],
+            'zero' => ['"parallel": 0,', null],
+            'false' => ['"parallel": false,', 1],
+            'one' => ['"parallel": 1,', 1],
+            'four' => ['"parallel": 4,', 4],
+        ];
+    }
+
+    /**
+     * `parallel` in composer.json: null means as many workers as there are spare CPUs, 1 means none.
+     *
+     * @dataProvider parallelProvider
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('parallelProvider')]
+    public function test_parallel(string $parallelJson, ?int $expected): void
+    {
+        $composerJson = <<<EOD
+{
+ "extra":{
+  "strauss": {
+   $parallelJson
+   "namespace_prefix": "BrianHenryIE\\\\TestStrauss\\\\"
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerJson);
+            $composer = (new Factory())->createComposer(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertSame($expected, $sut->getParallel());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
+
     public function test_exclude_git_files_default_true(): void
     {
         $composerExtraStraussJson = <<<'EOD'

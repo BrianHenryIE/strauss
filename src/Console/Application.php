@@ -6,6 +6,7 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\PrefixComposerAutoloadFilesCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
+use BrianHenryIE\Strauss\Console\Commands\WorkerCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 
 class Application extends BaseApplication
@@ -23,6 +24,7 @@ class Application extends BaseApplication
         $this->add(new ReplaceCommand());
         $this->add(new IncludeAutoloaderCommand());
         $this->add(new PrefixComposerAutoloadFilesCommand());
+        $this->add(new WorkerCommand());
 
         $this->setDefaultCommand('dependencies');
     }
