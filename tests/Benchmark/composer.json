@@ -1,0 +1,16 @@
+{
+  "name": "strauss/benchmark",
+  "description": "A large project to time Strauss on: `sylius/sylius` alone installs 175 packages. See scripts/benchmark.php.",
+  "require": {
+    "sylius/sylius": "2.3.0"
+  },
+  "config": {
+    "allow-plugins": false
+  },
+  "extra": {
+    "strauss": {
+      "namespace_prefix": "Strauss\\Benchmark\\",
+      "classmap_prefix": "Strauss_Benchmark_"
+    }
+  }
+}
