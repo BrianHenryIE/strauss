@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
+use BrianHenryIE\Strauss\Pipeline\FileSymbol\AnalysisCache;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
 use BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool;
 use Psr\Log\NullLogger;
@@ -20,6 +21,8 @@ use Throwable;
 class WorkerCommand extends Command
 {
     public const NAME = 'worker';
+
+    protected ?AnalysisCache $analysisCache = null;
 
     protected function configure(): void
     {
@@ -54,15 +57,18 @@ class WorkerCommand extends Command
                 }
 
                 $paths = $request['files'] ?? [];
-                if (!is_array($paths)) {
+                $cacheDirectory = $request['cache'] ?? null;
+                if (!is_array($paths) || !(is_null($cacheDirectory) || is_string($cacheDirectory))) {
                     throw new \RuntimeException('Unexpected request: ' . $line);
                 }
+
+                $cache = is_null($cacheDirectory) ? null : $this->getAnalysisCache($cacheDirectory);
 
                 foreach ($paths as $path) {
                     if (!is_string($path)) {
                         throw new \RuntimeException('Unexpected request: ' . $line);
                     }
-                    $this->write($this->analyzeFile($analyzer, $path));
+                    $this->write($this->analyzeFile($analyzer, $path, $cache));
                 }
 
                 $this->write(['action' => WorkerPool::ACTION_CHUNK_DONE]);
@@ -81,7 +87,7 @@ class WorkerCommand extends Command
     /**
      * @return array{action:string, file:string, map:?string, error:?string}
      */
-    protected function analyzeFile(PhpFileAnalyzer $analyzer, string $path): array
+    protected function analyzeFile(PhpFileAnalyzer $analyzer, string $path, ?AnalysisCache $cache = null): array
     {
         $contents = @file_get_contents($path);
         if (false === $contents) {
@@ -95,12 +101,27 @@ class WorkerCommand extends Command
 
         $codeMap = $analyzer->analyze($contents, $path);
 
+        if (!is_null($cache)) {
+            $cache->set($contents, $codeMap, $analyzer->getLastErrorMessage());
+        }
+
         return [
             'action' => WorkerPool::ACTION_RESULT,
             'file' => $path,
             'map' => is_null($codeMap) ? null : WorkerPool::encodeCodeMap($codeMap),
             'error' => is_null($codeMap) ? ($analyzer->getLastErrorMessage() ?? 'Could not parse file.') : null,
         ];
+    }
+
+    /**
+     * The cache the parent process asked for results to be added to; the same one for every chunk.
+     */
+    protected function getAnalysisCache(string $directory): AnalysisCache
+    {
+        if (is_null($this->analysisCache) || $this->analysisCache->getDirectory() !== rtrim($directory, '/\\')) {
+            $this->analysisCache = new AnalysisCache($directory);
+        }
+        return $this->analysisCache;
     }
 
     /**

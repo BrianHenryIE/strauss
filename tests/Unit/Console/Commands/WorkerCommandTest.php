@@ -6,6 +6,7 @@ namespace BrianHenryIE\Strauss\Tests\Unit\Console\Commands;
 
 use BrianHenryIE\Strauss\Console\Application;
 use BrianHenryIE\Strauss\Console\Commands\WorkerCommand;
+use BrianHenryIE\Strauss\Pipeline\FileSymbol\AnalysisCache;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
 use BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool;
 use BrianHenryIE\Strauss\TestCase;
@@ -27,7 +28,7 @@ class WorkerCommandTest extends TestCase
      *
      * @return array{0:int, 1:array<array<string, mixed>>} The exit code and the messages written.
      */
-    protected function runWorker(array $requests): array
+    protected function runWorker(array $requests, ?WorkerCommand &$sut = null): array
     {
         $stdin = fopen('php://memory', 'r+');
         self::assertIsResource($stdin);
@@ -58,6 +59,11 @@ class WorkerCommandTest extends TestCase
             protected function write(array $message): void
             {
                 $this->written[] = $message;
+            }
+
+            public function getCache(): ?AnalysisCache
+            {
+                return $this->analysisCache;
             }
         };
 
@@ -231,6 +237,7 @@ class WorkerCommandTest extends TestCase
             'unknown action' => ['{"action":"dance"}', 'Unexpected action: dance'],
             'action is not a string' => ['{"action":["analyze"]}', 'Unexpected request: {"action":["analyze"]}'],
             'files is not a list' => ['{"action":"analyze","files":"a.php"}', 'Unexpected request: {"action":"analyze","files":"a.php"}'],
+            'cache is not a string' => ['{"action":"analyze","files":[],"cache":["a"]}', 'Unexpected request: {"action":"analyze","files":[],"cache":["a"]}'],
             'path is not a string' => ['{"action":"analyze","files":[["a.php"]]}', 'Unexpected request: {"action":"analyze","files":[["a.php"]]}'],
         ];
     }
@@ -254,5 +261,79 @@ class WorkerCommandTest extends TestCase
         self::assertCount(1, $written);
         self::assertSame(WorkerPool::ACTION_ERROR, $written[0]['action']);
         self::assertStringContainsString('RuntimeException: ' . $expectedMessage, $written[0]['message']);
+    }
+
+    /**
+     * Asked to, the worker adds each result to the analysis cache, including files which could not be parsed.
+     *
+     * @covers ::execute
+     * @covers ::analyzeFile
+     * @covers ::getAnalysisCache
+     */
+    public function test_results_are_added_to_the_cache(): void
+    {
+        $cacheDirectory = sys_get_temp_dir() . '/strauss-worker-cache-test-' . bin2hex(random_bytes(6));
+        $readable = dirname(__DIR__, 4) . '/src/Pipeline/Parallel/Worker.php';
+        $unparsable = tempnam(sys_get_temp_dir(), 'strauss-unparsable') . '.php';
+        $unparsableContents = "<?php\nnamespace %g_namespace%\\AdminMenus;\n";
+        file_put_contents($unparsable, $unparsableContents);
+
+        try {
+            [$exitCode, $written] = $this->runWorker([
+                (string) json_encode([
+                    'action' => WorkerPool::ACTION_ANALYZE,
+                    'files' => [$readable, $unparsable],
+                    'cache' => $cacheDirectory,
+                ]),
+                $this->quitRequest(),
+            ]);
+
+            self::assertSame(Command::SUCCESS, $exitCode);
+            self::assertCount(3, $written);
+
+            $cache = new AnalysisCache($cacheDirectory, true);
+
+            $cached = $cache->get((string) file_get_contents($readable));
+            self::assertNotNull($cached);
+            self::assertEquals(WorkerPool::decodeCodeMap($written[0]['map']), $cached[0]);
+
+            $cachedFailure = $cache->get($unparsableContents);
+            self::assertNotNull($cachedFailure);
+            self::assertNull($cachedFailure[0]);
+            self::assertSame($written[1]['error'], $cachedFailure[1]);
+        } finally {
+            unlink($unparsable);
+            $this->removeDirectory($cacheDirectory);
+        }
+    }
+
+    /**
+     * @covers ::execute
+     */
+    public function test_nothing_is_cached_unless_asked(): void
+    {
+        $readable = dirname(__DIR__, 4) . '/src/Pipeline/Parallel/Worker.php';
+
+        $sut = null;
+        [$exitCode] = $this->runWorker([$this->analyzeRequest([$readable]), $this->quitRequest()], $sut);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertNull($sut->getCache());
+    }
+
+    protected function removeDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+        $entries = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+        /** @var \SplFileInfo $entry */
+        foreach ($entries as $entry) {
+            $entry->isDir() ? rmdir($entry->getPathname()) : unlink($entry->getPathname());
+        }
+        rmdir($directory);
     }
 }

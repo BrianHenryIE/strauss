@@ -22,6 +22,7 @@ use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
+use BrianHenryIE\Strauss\Pipeline\FileSymbol\AnalysisCache;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\Parallel\ParallelConfig;
 use BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool;
@@ -106,6 +107,14 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             null,
             4,
             'Analyse files in worker processes: true (one per spare CPU), a maximum number of workers, or false',
+            false
+        );
+
+        $this->addOption(
+            'cache',
+            null,
+            4,
+            'Keep the analysis of each file between runs, so unchanged files are not parsed again: true or false',
             false
         );
 
@@ -418,6 +427,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger
         );
         $fileSymbolScanner->setWorkerPool($this->getWorkerPool());
+        $fileSymbolScanner->setAnalysisCache($this->getAnalysisCache());
 
         $fileSymbolScanner->findInFiles($this->discoveredFiles);
     }
@@ -439,6 +449,50 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
 
         return new WorkerPool($parallelConfig, null, $this->logger);
+    }
+
+    /**
+     * The cache of file analyses, in a `strauss` directory in Composer's cache directory, or null when not
+     * configured on or when Composer's cache is disabled.
+     *
+     * During `--dry-run` the cache is read but nothing is written to it.
+     */
+    protected function getAnalysisCache(): ?AnalysisCache
+    {
+        if (!$this->config->isCache()) {
+            return null;
+        }
+
+        $directory = $this->getAnalysisCacheDirectory();
+
+        if (is_null($directory)) {
+            $this->logger->debug('Composer has no cache directory; not using the analysis cache.');
+            return null;
+        }
+
+        return new AnalysisCache($directory, $this->config->isDryRun(), $this->logger);
+    }
+
+    /**
+     * Composer's `cache-dir` (which honours `COMPOSER_CACHE_DIR` and the user's global config) is somewhere the user
+     * already expects to find, and clear, caches.
+     */
+    protected function getAnalysisCacheDirectory(): ?string
+    {
+        try {
+            $composerCacheDirectory = Factory::createConfig()->get('cache-dir');
+        } catch (Exception $e) {
+            return null;
+        }
+
+        // Composer treats these as "no cache".
+        if ('' === $composerCacheDirectory
+            || 1 === preg_match('{(^|[\\\\/])(\$null|nul|NUL|/dev/null)([\\\\/]|$)}', $composerCacheDirectory)
+        ) {
+            return null;
+        }
+
+        return rtrim($composerCacheDirectory, '/\\') . '/strauss/analysis';
     }
 
     protected function enumerateAutoloadedFiles(): void

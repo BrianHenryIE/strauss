@@ -41,11 +41,18 @@ class WorkerTest extends TestCase
         $written = $input->getIterator();
 
         self::assertSame(
-            '{"action":"analyze","files":["\/a\/one.php","\/a\/two.php"]}' . "\n",
+            '{"action":"analyze","files":["\/a\/one.php","\/a\/two.php"],"cache":null}' . "\n",
             $written->current()
         );
         $written->next();
-        self::assertSame('{"action":"quit","files":[]}' . "\n", $written->current());
+        self::assertSame('{"action":"quit","files":[],"cache":null}' . "\n", $written->current());
+
+        $sut->send([WorkerPool::ACTION_ANALYZE, ['/a/one.php'], '/cache/strauss/analysis']);
+        $written->next();
+        self::assertSame(
+            '{"action":"analyze","files":["\/a\/one.php"],"cache":"\/cache\/strauss\/analysis"}' . "\n",
+            $written->current()
+        );
     }
 
     /**

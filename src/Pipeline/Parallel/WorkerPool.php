@@ -34,6 +34,11 @@ class WorkerPool
 
     protected WorkerProcessFactory $processFactory;
 
+    /**
+     * Sent to the workers with each chunk.
+     */
+    protected ?string $cacheDirectory = null;
+
     public function __construct(
         ParallelConfig $config,
         ?WorkerProcessFactory $processFactory = null,
@@ -56,11 +61,16 @@ class WorkerPool
      *
      * @param string[] $absolutePaths
      * @param callable(string $absolutePath, ?FileCodeMap $codeMap, ?string $errorMessage): void $onResult
+     * @param ?string $cacheDirectory The directory of an {@see \BrianHenryIE\Strauss\Pipeline\FileSymbol\AnalysisCache}
+     *                                for the workers to add each result to, so the entries are compressed and
+     *                                written in parallel too.
      *
      * @throws ParallelisationException When a worker fails, times out, or sends something unexpected.
      */
-    public function analyze(array $absolutePaths, callable $onResult): void
+    public function analyze(array $absolutePaths, callable $onResult, ?string $cacheDirectory = null): void
     {
+        $this->cacheDirectory = $cacheDirectory;
+
         $queue = array_values($absolutePaths);
         if (empty($queue)) {
             return;
@@ -152,7 +162,7 @@ class WorkerPool
 
         $worker->pendingFiles = array_fill_keys($chunk, true);
         $worker->chunkStartedAt = microtime(true);
-        $worker->send([self::ACTION_ANALYZE, $chunk]);
+        $worker->send([self::ACTION_ANALYZE, $chunk, $this->cacheDirectory]);
     }
 
     /**

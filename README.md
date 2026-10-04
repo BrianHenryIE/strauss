@@ -154,6 +154,7 @@ Strauss potentially requires zero configuration, but likely you'll want to custo
         "include_root_autoload": false,
         "optimize_autoloader": true,
         "parallel": true,
+        "cache": false,
         "override_autoload": {
         },
         "exclude_from_copy": {
@@ -213,6 +214,7 @@ The following configuration is default:
 - `include_root_autoload`: `false` is a boolean flag to indicate whether Strauss should include the root autoload section of your project when creating its autoloader. It is false by default. Enabling this option will allow you to require only the Strauss autoloader in your project. Note that conflicts may occur if your project enables this option, requires both the Composer and Strauss autoloaders, and uses `files` autoloading.
 - `optimize_autoloader`: `true` is a boolean flag to indicate whether Strauss should force optimized/classmap-authoritative autoload generation. Set it to `false` to still regenerate autoload files without authoritative mode.
 - `parallel`: `true` analyses (parses) files in worker processes, one per spare CPU. Set it to a number to cap the number of workers, or to `false` (or `1`) to do everything in one process. `--parallel`, `--parallel=4` and `--parallel=false` on the command line override it. Workers are not used during `--dry-run`.
+- `cache`: `true` (or `--cache` on the command line) keeps the analysis of each PHP file between runs, so a file whose contents have not changed is not parsed again. It is off by default: the run which fills the cache is slower, and when files are already parsed in worker processes (`parallel`) later runs gain little. It helps most where everything runs in one process. The cache is in a `strauss` directory inside Composer's cache directory (`composer config cache-dir`) and is shared by every project. During `--dry-run` the cache is read but not written to.
 - `exclude_git_files`: `true` is a boolean flag to indicate whether Strauss should skip files that would not be part of a package's distributed archive when enumerating files to copy: the `.git` directory, files matched by the package's `.gitignore`, and files marked `export-ignore` in the package's `.gitattributes` (mirroring `git archive` / Composer dist behaviour). Set it to `false` to copy every file found in the package directory. This is mostly useful for symlinked packages during local development.
 
 To disable optimized/classmap-authoritative Composer autoload generation:

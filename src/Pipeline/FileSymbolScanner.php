@@ -18,6 +18,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileCodeMap;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\FileSymbol\AnalysisCache;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition;
 use BrianHenryIE\Strauss\Pipeline\Parallel\ParallelisationException;
@@ -70,11 +71,25 @@ class FileSymbolScanner
     protected ?WorkerPool $workerPool = null;
 
     /**
-     * Results from the worker processes, keyed by source path: the map, or null with the parse error message.
+     * When set, a file whose contents were analysed on an earlier run is not parsed again.
+     */
+    protected ?AnalysisCache $analysisCache = null;
+
+    /**
+     * Results from the cache and the worker processes, keyed by source path: the map, or null with the parse
+     * error message.
      *
      * @var array<string, array{0:?FileCodeMap, 1:?string}>
      */
-    protected array $parallelResults = [];
+    protected array $analysisResults = [];
+
+    /**
+     * The files already found not to be in the cache, keyed by source path, so they are not looked up a second
+     * time.
+     *
+     * @var array<string, true>
+     */
+    protected array $missedCacheKeys = [];
 
     /**
      * @var array<string,bool>
@@ -104,6 +119,11 @@ class FileSymbolScanner
     public function setWorkerPool(?WorkerPool $workerPool): void
     {
         $this->workerPool = $workerPool;
+    }
+
+    public function setAnalysisCache(?AnalysisCache $analysisCache): void
+    {
+        $this->analysisCache = $analysisCache;
     }
 
     protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
@@ -183,15 +203,11 @@ class FileSymbolScanner
 
             $package = $file instanceof FileWithDependency ? $file->getDependency() : null;
 
-            if (isset($this->parallelResults[$file->getSourcePath()])) {
-                [$codeMap, $errorMessage] = $this->parallelResults[$file->getSourcePath()];
-                unset($this->parallelResults[$file->getSourcePath()]);
+            if (isset($this->analysisResults[$file->getSourcePath()])) {
+                [$codeMap, $errorMessage] = $this->analysisResults[$file->getSourcePath()];
+                unset($this->analysisResults[$file->getSourcePath()]);
                 if (is_null($codeMap)) {
-                    // As {@see PhpFileAnalyzer::analyze()} logs it when parsing in this process.
-                    $this->logger->warning('Failed to parse file {filePath} with error: {errorMessage}', [
-                        'filePath' => $file->getSourcePath(),
-                        'errorMessage' => $errorMessage ?? 'unknown',
-                    ]);
+                    $this->logParseFailure($file, $errorMessage);
                 }
                 $this->record($codeMap, $file, $package);
                 continue;
@@ -208,12 +224,33 @@ class FileSymbolScanner
             );
         }
 
+        if (!is_null($this->analysisCache)) {
+            $this->logger->debug('Analysis cache: {hits} files read from the cache, {misses} parsed.', [
+                'hits' => $this->analysisCache->getHits(),
+                'misses' => $this->analysisCache->getMisses(),
+            ]);
+        }
+
         return $this->discoveredSymbols;
+    }
+
+    /**
+     * As {@see PhpFileAnalyzer::analyze()} logs it when parsing in this process.
+     */
+    protected function logParseFailure(FileBase $file, ?string $errorMessage): void
+    {
+        $this->logger->warning('Failed to parse file {filePath} with error: {errorMessage}', [
+            'filePath' => $file->getSourcePath(),
+            'errorMessage' => $errorMessage ?? 'unknown',
+        ]);
     }
 
     /**
      * Parse the PHP files in worker processes, so the loop in {@see self::findInFiles()} only records what they
      * found. The loop's order, and so the order symbols are discovered and logged in, is unchanged.
+     *
+     * Files with an entry in the analysis cache are not sent to the workers, and the workers add what they analyse
+     * to the cache themselves.
      *
      * If the workers cannot be run, the files are parsed in this process as before.
      */
@@ -225,12 +262,27 @@ class FileSymbolScanner
 
         /** @var array<string, string> $absolutePaths Keyed by source path. */
         $absolutePaths = [];
+        /** @var array<string, array{0:?FileCodeMap, 1:?string}> $cachedResults Keyed by source path. */
+        $cachedResults = [];
         foreach ($files->getFiles() as $file) {
             if (!$file->isPhpFile() || !($file instanceof File)) {
                 continue;
             }
-            $absolutePaths[$file->getSourcePath()] = $this->filesystem->makeAbsolute($file->getSourcePath());
+            $sourcePath = $file->getSourcePath();
+            // With an empty cache the files are not read here only to be read again by the workers.
+            if (!is_null($this->analysisCache) && $this->analysisCache->hasEntries()) {
+                $contents = $this->filesystem->read($sourcePath);
+                $cachedResult = $this->analysisCache->get($contents);
+                if (!is_null($cachedResult)) {
+                    $cachedResults[$sourcePath] = $cachedResult;
+                    continue;
+                }
+                $this->missedCacheKeys[$sourcePath] = true;
+            }
+            $absolutePaths[$sourcePath] = $this->filesystem->makeAbsolute($sourcePath);
         }
+
+        $this->analysisResults = $cachedResults;
 
         if (count($absolutePaths) <= $this->workerPool->getConfig()->getFilesPerChunk()) {
             $this->logger->debug('Too few files to analyse in parallel.');
@@ -243,23 +295,44 @@ class FileSymbolScanner
             $this->workerPool->analyze(
                 array_values($absolutePaths),
                 function (string $absolutePath, ?FileCodeMap $codeMap, ?string $errorMessage) use ($sourcePathsByAbsolutePath): void {
-                    $this->parallelResults[$sourcePathsByAbsolutePath[$absolutePath]] = [$codeMap, $errorMessage];
-                }
+                    $this->analysisResults[$sourcePathsByAbsolutePath[$absolutePath]] = [$codeMap, $errorMessage];
+                },
+                is_null($this->analysisCache) || $this->analysisCache->isReadOnly()
+                    ? null
+                    : $this->analysisCache->getDirectory()
             );
         } catch (ParallelisationException $e) {
             $this->logger->warning('Could not analyse files in parallel, continuing in this process: {errorMessage}', [
                 'errorMessage' => $e->getMessage(),
             ]);
-            $this->parallelResults = [];
+            // What the workers returned before failing is not used.
+            $this->analysisResults = $cachedResults;
         }
     }
 
     /**
      * Parse the file once, store the resulting map on the file, and register every symbol it defines.
+     *
+     * A file whose contents are in the analysis cache is not parsed.
      */
     protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
     {
-        $codeMap = $this->getAnalyzer()->analyze($contents, $file->getSourcePath());
+        // Already looked up, and missed, before the files were offered to the worker processes.
+        $isKnownMiss = isset($this->missedCacheKeys[$file->getSourcePath()]);
+
+        $cachedResult = is_null($this->analysisCache) || $isKnownMiss ? null : $this->analysisCache->get($contents);
+
+        if (!is_null($cachedResult)) {
+            [$codeMap, $errorMessage] = $cachedResult;
+            if (is_null($codeMap)) {
+                $this->logParseFailure($file, $errorMessage);
+            }
+        } else {
+            $codeMap = $this->getAnalyzer()->analyze($contents, $file->getSourcePath());
+            if (!is_null($this->analysisCache)) {
+                $this->analysisCache->set($contents, $codeMap, $this->getAnalyzer()->getLastErrorMessage());
+            }
+        }
 
         $this->record($codeMap, $file, $package);
     }

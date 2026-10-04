@@ -34,11 +34,15 @@ class Worker
     }
 
     /**
-     * @param array{0:string, 1?:string[]} $message `[action, files]`.
+     * @param array{0:string, 1?:string[], 2?:?string} $message `[action, files, cache directory]`.
      */
     public function send(array $message): void
     {
-        $this->input->write(json_encode(['action' => $message[0], 'files' => $message[1] ?? []]) . "\n");
+        $this->input->write(json_encode([
+            'action' => $message[0],
+            'files' => $message[1] ?? [],
+            'cache' => $message[2] ?? null,
+        ]) . "\n");
     }
 
     /**

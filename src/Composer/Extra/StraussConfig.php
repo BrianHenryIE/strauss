@@ -242,6 +242,14 @@ class StraussConfig implements
     protected $parallel = true;
 
     /**
+     * Keep the analysis of each file between runs, so files which have not changed are not parsed again.
+     *
+     * Off by default: the first run is slower for writing the cache, and with worker processes later runs gain
+     * little. It pays where files are parsed in one process.
+     */
+    protected bool $cache = false;
+
+    /**
      * Should `.git`, `.gitignore`-matched and `.gitattributes export-ignore` files be skipped when
      * enumerating each package's files (mimicking `git archive` / Composer dist behaviour)?
      */
@@ -1016,6 +1024,16 @@ class StraussConfig implements
         return 0 === $parallel ? null : max(1, $parallel);
     }
 
+    public function isCache(): bool
+    {
+        return $this->cache;
+    }
+
+    public function setCache(bool $cache): void
+    {
+        $this->cache = $cache;
+    }
+
     /**
      * @param bool|int $parallel
      */
@@ -1067,6 +1085,14 @@ class StraussConfig implements
             $isDeleteVendorPackagesCommandLine = $input->getOption('delete_vendor_packages') === 'true'
                 || $input->getOption('delete_vendor_packages') === null;
             $this->setDeleteVendorPackages($isDeleteVendorPackagesCommandLine);
+        }
+
+        if ($input->hasOption('cache') && $input->getOption('cache') !== false) {
+            // `--cache` alone enables it; `--cache=false` disables it.
+            $cacheInput = $input->getOption('cache');
+            $this->setCache(
+                is_null($cacheInput) || '' === $cacheInput || filter_var($cacheInput, FILTER_VALIDATE_BOOLEAN)
+            );
         }
 
         if ($input->hasOption('parallel') && $input->getOption('parallel') !== false) {
