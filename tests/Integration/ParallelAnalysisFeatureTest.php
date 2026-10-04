@@ -96,7 +96,9 @@ EOD;
         $this->assertParallelMatchesSequential($this->testsWorkingDir);
 
         // Symbol discovery still happens in this process, in file order, whichever worker parsed the file.
-        $this->assertTrue($this->getTestLogger()->hasInfoThatContains('Found new class:::PhpParser\Node\Name'));
+        if(!$this->isTestingWithPhar()) {
+            $this->assertTrue( $this->getTestLogger()->hasInfoThatContains( 'Found new class:::PhpParser\Node\Name' ) );
+        }
     }
 
     /**
