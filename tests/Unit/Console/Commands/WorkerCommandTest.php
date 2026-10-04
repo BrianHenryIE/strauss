@@ -227,6 +227,9 @@ class WorkerCommandTest extends TestCase
             'no action' => ['{"files":[]}', 'Unexpected request: {"files":[]}'],
             'not an object' => ['"analyze"', 'Unexpected request: "analyze"'],
             'unknown action' => ['{"action":"dance"}', 'Unexpected action: dance'],
+            'action is not a string' => ['{"action":["analyze"]}', 'Unexpected request: {"action":["analyze"]}'],
+            'files is not a list' => ['{"action":"analyze","files":"a.php"}', 'Unexpected request: {"action":"analyze","files":"a.php"}'],
+            'path is not a string' => ['{"action":"analyze","files":[["a.php"]]}', 'Unexpected request: {"action":"analyze","files":[["a.php"]]}'],
         ];
     }
 

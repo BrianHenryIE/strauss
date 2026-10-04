@@ -41,7 +41,7 @@ class WorkerCommand extends Command
                 }
 
                 $request = json_decode($line, true);
-                if (!is_array($request) || !isset($request['action'])) {
+                if (!is_array($request) || !isset($request['action']) || !is_string($request['action'])) {
                     throw new \RuntimeException('Unexpected request: ' . $line);
                 }
 
@@ -53,8 +53,16 @@ class WorkerCommand extends Command
                     throw new \RuntimeException('Unexpected action: ' . $request['action']);
                 }
 
-                foreach ($request['files'] ?? [] as $path) {
-                    $this->write($this->analyzeFile($analyzer, (string) $path));
+                $paths = $request['files'] ?? [];
+                if (!is_array($paths)) {
+                    throw new \RuntimeException('Unexpected request: ' . $line);
+                }
+
+                foreach ($paths as $path) {
+                    if (!is_string($path)) {
+                        throw new \RuntimeException('Unexpected request: ' . $line);
+                    }
+                    $this->write($this->analyzeFile($analyzer, $path));
                 }
 
                 $this->write(['action' => WorkerPool::ACTION_CHUNK_DONE]);

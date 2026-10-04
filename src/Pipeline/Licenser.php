@@ -185,7 +185,7 @@ class Licenser
     }
 
     /**
-     * @param array<string, ComposerPackage> $modifiedFiles
+     * @param array<string, ?ComposerPackage> $modifiedFiles Null for a file which is not from a dependency.
      *
      * @throws \Exception
      * @throws FilesystemException
@@ -196,6 +196,11 @@ class Licenser
         $date = gmdate("d-F-Y", time());
 
         foreach ($modifiedFiles as $relativeFilePath => $package) {
+            if (is_null($package)) {
+                // A project file: there is no package's licence to declare a change under.
+                continue;
+            }
+
             $filepath = $this->config->getAbsoluteTargetDirectory() . '/'.$relativeFilePath;
 
             if (!$this->filesystem->fileExists($filepath)) {

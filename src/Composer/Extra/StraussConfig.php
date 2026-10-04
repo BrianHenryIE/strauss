@@ -1011,7 +1011,9 @@ class StraussConfig implements
         if (is_bool($this->parallel)) {
             return $this->parallel ? null : 1;
         }
-        return 0 === $this->parallel ? null : max(1, $this->parallel);
+        $parallel = is_numeric($this->parallel) ? (int) $this->parallel : 0;
+
+        return 0 === $parallel ? null : max(1, $parallel);
     }
 
     /**
