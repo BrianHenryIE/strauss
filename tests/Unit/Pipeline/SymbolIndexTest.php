@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BrianHenryIE\Strauss\Tests\Unit\Pipeline;
 
 use BrianHenryIE\Strauss\Files\File;

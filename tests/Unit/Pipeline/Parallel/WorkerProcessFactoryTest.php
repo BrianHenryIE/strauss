@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BrianHenryIE\Strauss\Tests\Unit\Pipeline\Parallel;
 
 use BrianHenryIE\Strauss\Console\Commands\WorkerCommand;

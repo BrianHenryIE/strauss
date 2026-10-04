@@ -435,7 +435,7 @@ class Prefixer
     /**
      * TODO: This should be a function on {@see DiscoveredFiles}.
      *
-     * @return array<string, ComposerPackage>
+     * @return array<string, ?ComposerPackage> Null for a file which is not from a dependency (i.e. a project file).
      */
     public function getModifiedFiles(): array
     {

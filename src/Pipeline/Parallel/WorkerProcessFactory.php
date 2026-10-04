@@ -59,8 +59,9 @@ class WorkerProcessFactory
             return $mainScript;
         }
 
-        if (isset($_SERVER['argv'][0]) && is_file($_SERVER['argv'][0])) {
-            return $_SERVER['argv'][0];
+        $argv = $_SERVER['argv'] ?? null;
+        if (is_array($argv) && isset($argv[0]) && is_string($argv[0]) && is_file($argv[0])) {
+            return $argv[0];
         }
 
         throw new ParallelisationException('Cannot determine the Strauss script to start worker processes with.');

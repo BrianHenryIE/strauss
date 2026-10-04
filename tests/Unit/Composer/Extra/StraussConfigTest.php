@@ -1258,6 +1258,8 @@ EOD;
             'one' => ['"parallel": 1,', 1],
             'four' => ['"parallel": 4,', 4],
             'negative' => ['"parallel": -2,', 1],
+            'numeric string' => ['"parallel": "3",', 3],
+            'nonsense' => ['"parallel": "many",', null],
         ];
     }
 

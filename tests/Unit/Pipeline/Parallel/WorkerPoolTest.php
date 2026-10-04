@@ -227,6 +227,20 @@ class WorkerPoolTest extends TestCase
                 'fgets(STDIN); echo json_encode(["action" => "result", "file" => "/not/asked/for.php"]), "\n"; sleep(5);',
                 'a file it was not given: /not/asked/for.php',
             ],
+            'result without a file' => [
+                'fgets(STDIN); echo json_encode(["action" => "result"]), "\n"; sleep(5);',
+                'Unexpected message from worker process: {"action":"result"}',
+            ],
+            'result with an error which is not a string' => [
+                '$request = json_decode(fgets(STDIN), true);'
+                . ' echo json_encode(["action" => "result", "file" => $request["files"][0], "error" => ["a"]]), "\n";'
+                . ' sleep(5);',
+                'Unexpected message from worker process: ',
+            ],
+            'error with a message which is not a string' => [
+                'fgets(STDIN); echo json_encode(["action" => "error", "message" => ["a"]]), "\n"; sleep(5);',
+                'Worker process failed: unknown error',
+            ],
             'chunk done without results' => [
                 'fgets(STDIN); echo json_encode(["action" => "chunk-done"]), "\n"; sleep(5);',
                 'finished a chunk without returning: ',

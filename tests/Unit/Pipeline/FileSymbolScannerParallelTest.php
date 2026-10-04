@@ -3,6 +3,8 @@
  * With a worker pool set, files are parsed by the pool and the scanner only records what it returned.
  */
 
+declare(strict_types=1);
+
 namespace BrianHenryIE\Strauss\Tests\Unit\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;

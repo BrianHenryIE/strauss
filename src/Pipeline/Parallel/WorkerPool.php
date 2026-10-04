@@ -168,13 +168,17 @@ class WorkerPool
 
             switch ($message['action']) {
                 case self::ACTION_RESULT:
-                    $file = $message['file'];
+                    $file = $message['file'] ?? null;
+                    $map = $message['map'] ?? null;
+                    $error = $message['error'] ?? null;
+                    if (!is_string($file) || !(is_null($map) || is_string($map)) || !(is_null($error) || is_string($error))) {
+                        throw new ParallelisationException('Unexpected message from worker process: ' . $line);
+                    }
                     if (!isset($worker->pendingFiles[$file])) {
                         throw new ParallelisationException('Worker process returned a result for a file it was not given: ' . $file);
                     }
                     unset($worker->pendingFiles[$file]);
-                    $codeMap = isset($message['map']) ? self::decodeCodeMap($message['map']) : null;
-                    $onResult($file, $codeMap, $message['error'] ?? null);
+                    $onResult($file, is_null($map) ? null : self::decodeCodeMap($map), $error);
                     break;
 
                 case self::ACTION_CHUNK_DONE:
@@ -185,7 +189,8 @@ class WorkerPool
                     break;
 
                 case self::ACTION_ERROR:
-                    throw new ParallelisationException('Worker process failed: ' . ($message['message'] ?? 'unknown error'));
+                    $errorMessage = $message['message'] ?? null;
+                    throw new ParallelisationException('Worker process failed: ' . (is_string($errorMessage) ? $errorMessage : 'unknown error'));
 
                 default:
                     throw new ParallelisationException('Unexpected message from worker process: ' . $line);

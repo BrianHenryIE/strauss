@@ -4,6 +4,8 @@
  * each for every symbol. The names it finds, and the ones it leaves alone, must be the same as before.
  */
 
+declare(strict_types=1);
+
 namespace BrianHenryIE\Strauss\Tests\Unit\Pipeline;
 
 use BrianHenryIE\Strauss\Files\File;
