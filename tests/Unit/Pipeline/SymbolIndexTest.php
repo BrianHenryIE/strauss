@@ -146,35 +146,62 @@ class SymbolIndexTest extends TestCase
     }
 
     /**
-     * A symbol is a candidate when the first segment of its name is a word in the text; each is returned once.
+     * A symbol is a candidate when the name it is searched for by is quoted in the text; each is returned once.
      *
      * @covers ::__construct
-     * @covers ::getStringSearchSymbolsForWords
+     * @covers ::getStringSearchSymbolsForNames
      */
-    public function test_string_search_symbols_are_found_by_first_segment(): void
+    public function test_string_search_symbols_are_found_by_name(): void
     {
         $symbols = $this->getSymbols();
         $sut = new SymbolIndex(new DiscoveredSymbols(array_values($symbols)));
 
+        self::assertSame(['Acme\Lib'], $this->names($sut->getStringSearchSymbolsForNames(['Acme\Lib' => true])));
         self::assertSame(
-            ['Acme\Lib', 'Acme\Lib\Widget', 'Acme\Lib\helper'],
-            $this->names($sut->getStringSearchSymbolsForWords(['Acme' => true]))
+            ['Acme\Lib\Widget', 'Acme\Lib\helper'],
+            $this->names($sut->getStringSearchSymbolsForNames(['Acme\Lib\Widget' => true, 'Acme\Lib\helper' => true]))
         );
 
         // Symbols in the global namespace are searched for by their local name.
         self::assertSame(
             ['ACME_VERSION', 'GlobalThing'],
-            $this->names($sut->getStringSearchSymbolsForWords(['GlobalThing' => true, 'ACME_VERSION' => true]))
+            $this->names($sut->getStringSearchSymbolsForNames(['GlobalThing' => true, 'ACME_VERSION' => true]))
         );
 
-        // Later segments, and names which are not being renamed, find nothing.
-        self::assertSame([], $sut->getStringSearchSymbolsForWords(['Lib' => true, 'Widget' => true, 'Other' => true]));
-        self::assertSame([], $sut->getStringSearchSymbolsForWords([]));
+        // Part of a name, and names which are not being renamed, find nothing.
+        self::assertSame(
+            [],
+            $sut->getStringSearchSymbolsForNames(['Acme' => true, 'Widget' => true, 'Other\Lib\Untouched' => true])
+        );
+        self::assertSame([], $sut->getStringSearchSymbolsForNames([]));
+    }
+
+    /**
+     * A namespace and a class with the same name are both candidates, the namespace first.
+     *
+     * @covers ::__construct
+     * @covers ::getStringSearchSymbolsForNames
+     */
+    public function test_string_search_returns_every_symbol_with_the_name(): void
+    {
+        $symbols = $this->getSymbols();
+
+        $widgetNamespace = new NamespaceSymbol('Acme\Lib\Widget', $this->getFile());
+        $widgetNamespace->setDoRename(true);
+        $widgetNamespace->setLocalReplacement('Prefix\Acme\Lib\Widget');
+        $symbols['widgetNamespace'] = $widgetNamespace;
+
+        $sut = new SymbolIndex(new DiscoveredSymbols(array_values($symbols)));
+
+        self::assertSame(
+            [$widgetNamespace, $symbols['widget']],
+            $sut->getStringSearchSymbolsForNames(['Acme\Lib\Widget' => true])
+        );
     }
 
     /**
      * @covers ::__construct
-     * @covers ::getStringSearchSymbolsForWords
+     * @covers ::getStringSearchSymbolsForNames
      */
     public function test_string_search_excludes_symbols_not_replaced_in_strings(): void
     {
@@ -185,8 +212,12 @@ class SymbolIndexTest extends TestCase
         $sut = new SymbolIndex(new DiscoveredSymbols(array_values($symbols)));
 
         self::assertSame(
-            ['Acme\Lib', 'Acme\Lib\Widget'],
-            $this->names($sut->getStringSearchSymbolsForWords(['Acme' => true, 'GlobalThing' => true]))
+            ['Acme\Lib\Widget'],
+            $this->names($sut->getStringSearchSymbolsForNames([
+                'Acme\Lib\Widget' => true,
+                'Acme\Lib\helper' => true,
+                'GlobalThing' => true,
+            ]))
         );
     }
 
@@ -194,7 +225,7 @@ class SymbolIndexTest extends TestCase
      * The global namespace `\` has no name to search strings for.
      *
      * @covers ::__construct
-     * @covers ::getStringSearchSymbolsForWords
+     * @covers ::getStringSearchSymbolsForNames
      */
     public function test_string_search_excludes_the_global_namespace(): void
     {
@@ -205,7 +236,90 @@ class SymbolIndexTest extends TestCase
         $sut = new SymbolIndex(new DiscoveredSymbols(array_values($symbols)));
 
         self::assertContains('\\', $this->names($sut->getNamespacesToRename()));
-        self::assertSame([], $sut->getStringSearchSymbolsForWords(['\\' => true, '' => true]));
+        self::assertSame([], $sut->getStringSearchSymbolsForNames(['\\' => true, '' => true]));
+    }
+
+    /**
+     * `"\0Composer\Autoload\ClassLoader\0"` is not a quoted name, so that namespace is always a candidate.
+     *
+     * @covers ::__construct
+     * @covers ::getStringSearchSymbolsForNames
+     */
+    public function test_string_search_always_includes_the_composer_autoload_namespace(): void
+    {
+        $name = implode('\\', ['Comp' . 'oser', 'Autoload']);
+        $composerAutoload = new NamespaceSymbol($name, $this->getFile());
+        $composerAutoload->setDoRename(true);
+        $composerAutoload->setLocalReplacement('Prefix\\' . $name);
+
+        $symbols = $this->getSymbols();
+        $symbols['composerAutoload'] = $composerAutoload;
+
+        $sut = new SymbolIndex(new DiscoveredSymbols(array_values($symbols)));
+
+        self::assertSame([$composerAutoload], $sut->getStringSearchSymbolsForNames([]));
+        self::assertSame([$composerAutoload], $sut->getStringSearchSymbolsForNames([$name => true]), 'Once.');
+    }
+
+    /**
+     * @covers ::getNamespaces
+     * @covers ::getSymbolCount
+     */
+    public function test_all_namespaces_and_the_symbol_count(): void
+    {
+        $sut = new SymbolIndex(new DiscoveredSymbols(array_values($this->getSymbols())));
+
+        self::assertSame(['Acme\Lib', 'Other\Lib', '\\'], $this->names($sut->getNamespaces()));
+        self::assertSame(8, $sut->getSymbolCount());
+    }
+
+    /**
+     * @covers ::getNamespacesToRenameByName
+     */
+    public function test_namespaces_to_rename_by_name_longest_first(): void
+    {
+        $symbols = $this->getSymbols();
+
+        $deeper = new NamespaceSymbol('Acme\Lib\Deeper', $this->getFile());
+        $deeper->setDoRename(true);
+        $deeper->setLocalReplacement('Prefix\Acme\Lib\Deeper');
+        $symbols['deeper'] = $deeper;
+
+        $sut = new SymbolIndex(new DiscoveredSymbols(array_values($symbols)));
+
+        self::assertSame(
+            ['Acme\Lib\Deeper' => $deeper, 'Acme\Lib' => $symbols['acme']],
+            $sut->getNamespacesToRenameByName()
+        );
+    }
+
+    /**
+     * Only namespaces with a symbol being renamed are "active"; the global namespace never is.
+     *
+     * @covers ::getActiveNamespaceReplacements
+     */
+    public function test_active_namespace_replacements_longest_first(): void
+    {
+        $symbols = $this->getSymbols();
+
+        $deeper = new NamespaceSymbol('Acme\Lib\Deeper', $this->getFile());
+        $deeper->setDoRename(true);
+        $deeper->setLocalReplacement('Prefix\Acme\Lib\Deeper');
+        $deeperClass = new ClassSymbol('Acme\Lib\Deeper\Thing', $this->getFile(), $deeper);
+        $deeperClass->setDoRename(true);
+
+        $empty = new NamespaceSymbol('Acme\Empty', $this->getFile());
+        $empty->setDoRename(true);
+        $empty->setLocalReplacement('Prefix\Acme\Empty');
+
+        $sut = new SymbolIndex(new DiscoveredSymbols(
+            array_merge(array_values($symbols), [$deeper, $deeperClass, $empty])
+        ));
+
+        self::assertSame(
+            ['Acme\Lib\Deeper' => 'Prefix\Acme\Lib\Deeper', 'Acme\Lib' => 'Prefix\Acme\Lib'],
+            $sut->getActiveNamespaceReplacements()
+        );
     }
 
     /**
@@ -221,16 +335,23 @@ class SymbolIndexTest extends TestCase
     }
 
     /**
-     * @covers ::getWords
+     * The name after each quote, with at most two backslashes before it, escaped backslashes as single ones.
+     *
+     * @covers ::getQuotedNames
      */
-    public function test_get_words(): void
+    public function test_get_quoted_names(): void
     {
+        $text = <<<'EOD'
+ 'Acme\\Lib\\Widget::$instance' "\\Acme\Lib\\" 'GlobalThing' "Acme\Lib\$class" 'two words' unquoted\Name
+EOD;
+
         self::assertSame(
-            ['Acme' => true, 'Lib' => true, 'Widget' => true, 'class' => true, '_private' => true, 'a1' => true],
-            SymbolIndex::getWords('Acme\Lib\Widget::class, Acme\\\\Lib, $_private + 1a1')
+            ['Acme\Lib\Widget', 'Acme\Lib', 'GlobalThing', 'two'],
+            array_keys(SymbolIndex::getQuotedNames($text))
         );
-        self::assertSame([], SymbolIndex::getWords(''));
-        self::assertSame([], SymbolIndex::getWords('123 + 456 !'));
+        self::assertSame([], SymbolIndex::getQuotedNames(''));
+        self::assertSame([], SymbolIndex::getQuotedNames('No\Quotes here'));
+        self::assertSame([], SymbolIndex::getQuotedNames("'\\\\\\Three\\Backslashes'"));
     }
 
     /**

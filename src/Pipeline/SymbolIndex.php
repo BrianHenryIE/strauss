@@ -16,12 +16,29 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
+use Exception;
 
 class SymbolIndex
 {
     protected DiscoveredSymbols $discoveredSymbols;
 
+    /** Every namespace, including those not being renamed. */
+    protected DiscoveredSymbols $namespaces;
+
+    protected int $symbolCount;
+
     protected DiscoveredSymbols $namespacesToRename;
+
+    /**
+     * @var ?array<string, NamespaceSymbol> Namespaces to rename, by name without a trailing `\`, longest first.
+     */
+    protected ?array $namespacesToRenameByName = null;
+
+    /**
+     * @var ?array<string, string> Original => replacement of each namespace which has a symbol being renamed,
+     *                             longest first.
+     */
+    protected ?array $activeNamespaceReplacements = null;
 
     protected DiscoveredSymbols $namespacedToRename;
 
@@ -43,17 +60,26 @@ class SymbolIndex
     protected array $globalClassesInterfacesTraitsToRenameByName = [];
 
     /**
-     * The symbols searched for in strings, by the first segment of their name.
+     * The symbols searched for in strings, by the name searched for.
      *
      * @var array<string, DiscoveredSymbol[]>
      */
-    protected array $stringSearchSymbolsByFirstSegment = [];
+    protected array $stringSearchSymbolsByName = [];
+
+    /**
+     * Namespaces whose special case is not a quoted name: {@see ChangePlanner::findComposerClassLoaderPrefixPositions()}.
+     *
+     * @var DiscoveredSymbol[]
+     */
+    protected array $stringSearchSymbolsAlways = [];
 
     public function __construct(DiscoveredSymbols $discoveredSymbols)
     {
         $this->discoveredSymbols = $discoveredSymbols;
 
-        $this->namespacesToRename = $discoveredSymbols->getNamespaces()->getToRename();
+        $this->namespaces = $discoveredSymbols->getNamespaces();
+        $this->symbolCount = count($discoveredSymbols->toArray());
+        $this->namespacesToRename = $this->namespaces->getToRename();
         $this->namespacedToRename = $discoveredSymbols->getNamespacedSymbols()->getToRename();
         $this->namespacedToRenameNotGlobal = $this->namespacedToRename->notGlobal();
         $this->globalClassesInterfacesTraitsToRename = $discoveredSymbols->getGlobalClassesInterfacesTraits()->getToRename();
@@ -74,8 +100,12 @@ class SymbolIndex
             }
         }
 
+        // By value: a namespace and a class may share a name, and merging by key would drop the namespace.
         /** @var DiscoveredSymbol $symbol */
-        foreach (array_merge($this->namespacesToRename->toArray(), $this->namespacedToRename->toArray()) as $symbol) {
+        foreach (array_merge(
+            array_values($this->namespacesToRename->toArray()),
+            array_values($this->namespacedToRename->toArray())
+        ) as $symbol) {
             if (!$symbol->isReplaceInString()) {
                 continue;
             }
@@ -86,14 +116,73 @@ class SymbolIndex
             if ($symbol instanceof NamespaceSymbol && $symbol->isGlobal()) {
                 continue;
             }
-            $firstSegment = strstr($name, '\\', true) ?: $name;
-            $this->stringSearchSymbolsByFirstSegment[$firstSegment][] = $symbol;
+            $this->stringSearchSymbolsByName[$name][] = $symbol;
+            // `"\0Composer\Autoload\ClassLoader\0"`. Concatenated so it is not replaced when Strauss prefixes itself.
+            if ($symbol instanceof NamespaceSymbol && str_ends_with($name, implode('\\', ['Comp' . 'oser', 'Autoload']))) {
+                $this->stringSearchSymbolsAlways[] = $symbol;
+            }
         }
     }
 
     public function isFor(DiscoveredSymbols $discoveredSymbols): bool
     {
         return $this->discoveredSymbols === $discoveredSymbols;
+    }
+
+    public function getNamespaces(): DiscoveredSymbols
+    {
+        return $this->namespaces;
+    }
+
+    /**
+     * The number of distinctly named symbols, for logging.
+     */
+    public function getSymbolCount(): int
+    {
+        return $this->symbolCount;
+    }
+
+    /**
+     * @return array<string, NamespaceSymbol> Namespaces to rename, by name without a trailing `\`, longest first.
+     *
+     * @throws Exception
+     */
+    public function getNamespacesToRenameByName(): array
+    {
+        if (is_null($this->namespacesToRenameByName)) {
+            $byName = [];
+            /** @var NamespaceSymbol $symbol */
+            foreach ($this->namespacesToRename as $symbol) {
+                $name = rtrim($symbol->getOriginalFqdnName(), '\\');
+                if (isset($byName[$name])) {
+                    throw new Exception('losing data');
+                }
+                $byName[$name] = $symbol;
+            }
+            uksort($byName, fn($a, $b) => strlen((string) $b) - strlen((string) $a));
+            $this->namespacesToRenameByName = $byName;
+        }
+        return $this->namespacesToRenameByName;
+    }
+
+    /**
+     * A namespace is "active" when at least one symbol in it is being renamed.
+     *
+     * @return array<string, string> Original => replacement namespace name, without trailing `\`, longest first.
+     */
+    public function getActiveNamespaceReplacements(): array
+    {
+        if (is_null($this->activeNamespaceReplacements)) {
+            $active = [];
+            /** @var NamespacedSymbol $symbol */
+            foreach ($this->namespacedToRenameNotGlobal->toArray() as $symbol) {
+                $namespace = $symbol->getNamespace();
+                $active[rtrim($namespace->getOriginalFqdnName(), '\\')] = rtrim($namespace->getReplacementFqdnName(), '\\');
+            }
+            uksort($active, fn($a, $b) => strlen((string) $b) - strlen((string) $a));
+            $this->activeNamespaceReplacements = $active;
+        }
+        return $this->activeNamespaceReplacements;
     }
 
     public function getNamespacesToRename(): DiscoveredSymbols
@@ -142,34 +231,52 @@ class SymbolIndex
     }
 
     /**
-     * The symbols which might appear in a string containing the given words.
+     * The symbols which might be found in strings in which the given names are quoted.
      *
-     * A symbol can only match the string pattern if the first segment of its name is a whole word in the text.
+     * A symbol only matches the string pattern where its whole name follows a quote.
      *
-     * @param array<string, true> $words Keyed by word.
+     * @param array<string, true> $names Keyed by name: {@see self::getQuotedNames()}.
      *
      * @return DiscoveredSymbol[]
      */
-    public function getStringSearchSymbolsForWords(array $words): array
+    public function getStringSearchSymbolsForNames(array $names): array
     {
         $symbols = [];
-        foreach (array_intersect_key($this->stringSearchSymbolsByFirstSegment, $words) as $symbolsForWord) {
-            foreach ($symbolsForWord as $symbol) {
+        foreach (array_intersect_key($this->stringSearchSymbolsByName, $names) as $symbolsForName) {
+            foreach ($symbolsForName as $symbol) {
                 $symbols[spl_object_id($symbol)] = $symbol;
             }
+        }
+        foreach ($this->stringSearchSymbolsAlways as $symbol) {
+            $symbols[spl_object_id($symbol)] = $symbol;
         }
         return array_values($symbols);
     }
 
     /**
-     * The identifier-like words in the text: what a symbol name's first segment would have to be.
+     * The names which begin a quoted string in the text, e.g. `'Acme\\Lib\\Widget::$instance'` gives
+     * `Acme\Lib\Widget`: the run of name characters after a quote and at most two backslashes, with doubled
+     * (escaped) backslashes as single ones.
      *
-     * @return array<string, true> Keyed by word.
+     * The text need not be PHP: any quote character counts, so this finds at least every name that
+     * {@see ChangePlanner::findSymbolPositionsInStrings()} can match.
+     *
+     * @return array<string, true> Keyed by name.
      */
-    public static function getWords(string $text): array
+    public static function getQuotedNames(string $text): array
     {
-        preg_match_all('/[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/', $text, $matches);
-        return array_fill_keys($matches[0], true);
+        preg_match_all(
+            '/[\'"]\\\\{0,2}((?:[a-zA-Z0-9_\x7f-\xff]+\\\\{1,2})*[a-zA-Z0-9_\x7f-\xff]+)/',
+            $text,
+            $matches
+        );
+
+        $names = [];
+        foreach ($matches[1] as $name) {
+            $names[str_replace('\\\\', '\\', $name)] = true;
+        }
+
+        return $names;
     }
 
     /**
