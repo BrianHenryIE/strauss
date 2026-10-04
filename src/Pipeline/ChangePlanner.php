@@ -283,6 +283,7 @@ class ChangePlanner
          * @param string[] $parts
          */
         $findPrefixSymbol = function (array $parts) use ($symbolMap): ?array {
+            /** @var string[] $parts */
             for ($len = count($parts) - 1; $len >= 1; $len--) {
                 $prefix = implode('\\', array_slice($parts, 0, $len));
 
