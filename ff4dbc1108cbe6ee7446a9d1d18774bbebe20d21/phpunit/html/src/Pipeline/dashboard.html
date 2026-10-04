@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for /home/runner/work/strauss/strauss/src/Pipeline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../_css/bootstrap.min.css?v=9.2.32" rel="stylesheet" type="text/css">
+  <link href="../../_css/nv.d3.min.css?v=9.2.32" rel="stylesheet" type="text/css">
+  <link href="../../_css/style.css?v=9.2.32" rel="stylesheet" type="text/css">
+  <link href="../../_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="../../index.html">/home/runner/work/strauss/strauss</a></li>
+         <li class="breadcrumb-item"><a href="../index.html">src</a></li>
+         <li class="breadcrumb-item"><a href="index.html">Pipeline</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Autoload.php.html#26">BrianHenryIE\Strauss\Pipeline\Autoload</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#31">BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#18">BrianHenryIE\Strauss\AliasAutoloader</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#34">BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup</a></td><td class="text-right">5%</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#30">BrianHenryIE\Strauss\Pipeline\FileCopyScanner</a></td><td class="text-right">15%</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#22">BrianHenryIE\Strauss\Pipeline\FileEnumerator</a></td><td class="text-right">18%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#23">BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming</a></td><td class="text-right">22%</td></tr>
+       <tr><td><a href="Autoload/ComposerAutoloadGenerator.php.html#28">BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGenerator</a></td><td class="text-right">33%</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#25">BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload</a></td><td class="text-right">42%</td></tr>
+       <tr><td><a href="Prefixer.php.html#35">BrianHenryIE\Strauss\Pipeline\Prefixer</a></td><td class="text-right">46%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#13">BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition</a></td><td class="text-right">47%</td></tr>
+       <tr><td><a href="Licenser.php.html#31">BrianHenryIE\Strauss\Pipeline\Licenser</a></td><td class="text-right">53%</td></tr>
+       <tr><td><a href="Copier.php.html#24">BrianHenryIE\Strauss\Pipeline\Copier</a></td><td class="text-right">58%</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#46">BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson</a></td><td class="text-right">60%</td></tr>
+       <tr><td><a href="ChangeEnumerator.php.html#19">BrianHenryIE\Strauss\Pipeline\ChangeEnumerator</a></td><td class="text-right">64%</td></tr>
+       <tr><td><a href="Parallel/WorkerProcessFactory.php.html#15">BrianHenryIE\Strauss\Pipeline\Parallel\WorkerProcessFactory</a></td><td class="text-right">78%</td></tr>
+       <tr><td><a href="Parallel/ParallelConfig.php.html#15">BrianHenryIE\Strauss\Pipeline\Parallel\ParallelConfig</a></td><td class="text-right">80%</td></tr>
+       <tr><td><a href="DependenciesEnumerator.php.html#27">BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator</a></td><td class="text-right">82%</td></tr>
+       <tr><td><a href="Autoload/Psr0.php.html#27">BrianHenryIE\Strauss\Pipeline\Autoload\Psr0</a></td><td class="text-right">85%</td></tr>
+       <tr><td><a href="Autoload/DumpAutoload.php.html#27">BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload</a></td><td class="text-right">87%</td></tr>
+       <tr><td><a href="Aliases/Aliases.php.html#34">BrianHenryIE\Strauss\Pipeline\Aliases\Aliases</a></td><td class="text-right">88%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="AutoloadedEnumerator.php.html#31">BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator</a></td><td class="text-right">15500</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#34">BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup</a></td><td class="text-right">1695</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#23">BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming</a></td><td class="text-right">1662</td></tr>
+       <tr><td><a href="Prefixer.php.html#35">BrianHenryIE\Strauss\Pipeline\Prefixer</a></td><td class="text-right">775</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#22">BrianHenryIE\Strauss\Pipeline\FileEnumerator</a></td><td class="text-right">731</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#18">BrianHenryIE\Strauss\AliasAutoloader</a></td><td class="text-right">462</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#30">BrianHenryIE\Strauss\Pipeline\FileCopyScanner</a></td><td class="text-right">438</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#46">BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson</a></td><td class="text-right">317</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#25">BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload</a></td><td class="text-right">166</td></tr>
+       <tr><td><a href="Licenser.php.html#31">BrianHenryIE\Strauss\Pipeline\Licenser</a></td><td class="text-right">119</td></tr>
+       <tr><td><a href="ChangeEnumerator.php.html#19">BrianHenryIE\Strauss\Pipeline\ChangeEnumerator</a></td><td class="text-right">62</td></tr>
+       <tr><td><a href="DependenciesEnumerator.php.html#27">BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator</a></td><td class="text-right">44</td></tr>
+       <tr><td><a href="Aliases/Aliases.php.html#34">BrianHenryIE\Strauss\Pipeline\Aliases\Aliases</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Parallel/ParallelConfig.php.html#15">BrianHenryIE\Strauss\Pipeline\Parallel\ParallelConfig</a></td><td class="text-right">22</td></tr>
+       <tr><td><a href="Autoload.php.html#26">BrianHenryIE\Strauss\Pipeline\Autoload</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Copier.php.html#24">BrianHenryIE\Strauss\Pipeline\Copier</a></td><td class="text-right">19</td></tr>
+       <tr><td><a href="Autoload/DumpAutoload.php.html#27">BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload</a></td><td class="text-right">16</td></tr>
+       <tr><td><a href="Parallel/WorkerProcessFactory.php.html#15">BrianHenryIE\Strauss\Pipeline\Parallel\WorkerProcessFactory</a></td><td class="text-right">9</td></tr>
+       <tr><td><a href="Autoload/Psr0.php.html#27">BrianHenryIE\Strauss\Pipeline\Autoload\Psr0</a></td><td class="text-right">8</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Prefixer.php.html#598"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::getNamespaceFromFqdn">getNamespaceFromFqdn</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#83"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::getType">getType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#131"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::getInterfaces">getInterfaces</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#118"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::getExtends">getExtends</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#108"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::isAbstract">isAbstract</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#103"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::getLocation">getLocation</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#98"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::isInGlobalNamespace">isInGlobalNamespace</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#93"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::getNamespace">getNamespace</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#88"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::getName">getName</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#179"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::isGitExcluded">isGitExcluded</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Licenser.php.html#88"><abbr title="BrianHenryIE\Strauss\Pipeline\Licenser::copyLicenses">copyLicenses</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#122"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::excludeGitFiles">excludeGitFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#35"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#190"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::preparePattern">preparePattern</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#125"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::isNamespaceExcluded">isNamespaceExcluded</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#113"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::isPackageExcluded">isPackageExcluded</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#49"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::scanFiles">scanFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Copier.php.html#60"><abbr title="BrianHenryIE\Strauss\Pipeline\Copier::prepareTarget">prepareTarget</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#290"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson">removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileSymbol/SymbolDefinition.php.html#144"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::getBackingType">getBackingType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Licenser.php.html#182"><abbr title="BrianHenryIE\Strauss\Pipeline\Licenser::getDiscoveredLicenseFiles">getDiscoveredLicenseFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#302"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::doIsDeleteVendorPackages">doIsDeleteVendorPackages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#247"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludeConstantsNamespace">isExcludeConstantsNamespace</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Prefixer.php.html#501"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::getComposerRuntimeSymbols">getComposerRuntimeSymbols</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Prefixer.php.html#477"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::getComposerRuntimeFiles">getComposerRuntimeFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Prefixer.php.html#454"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::prefixComposerAutoloadFiles">prefixComposerAutoloadFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Prefixer.php.html#440"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::getModifiedFiles">getModifiedFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Prefixer.php.html#171"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::replaceInProjectFiles">replaceInProjectFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#289"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::preparePattern">preparePattern</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#263"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludedConstantsFilePattern">isExcludedConstantsFilePattern</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#239"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludeConstantsPackage">isExcludeConstantsPackage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Licenser.php.html#193"><abbr title="BrianHenryIE\Strauss\Pipeline\Licenser::addInformationToUpdatedFiles">addInformationToUpdatedFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#208"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludedFromPrefixFilePattern">isExcludedFromPrefixFilePattern</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#186"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludeFromPrefixNamespace">isExcludeFromPrefixNamespace</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#166"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludeFromPrefixPackage">isExcludeFromPrefixPackage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#142"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isSymbolFoundInFileThatIsCopied">isSymbolFoundInFileThatIsCopied</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#129"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isSymbolFoundInFileThatIsNotCopied">isSymbolFoundInFileThatIsNotCopied</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#114"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::excludeFromPrefix">excludeFromPrefix</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#31"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MarkFilesExcludedFromChanges.php.html#26"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#352"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::doIsDeleteVendorFiles">doIsDeleteVendorFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DependenciesEnumerator.php.html#304"><abbr title="BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator::getAllFilesAutoloaders">getAllFilesAutoloaders</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#237"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::deleteEmptyDirectories">deleteEmptyDirectories</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#256"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload::addVendorPrefixedAutoloadToComposerAutoload">addVendorPrefixedAutoloadToComposerAutoload</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#378"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isFileInPsr0Autoloader">isFileInPsr0Autoloader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#362"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isFileInPsr4Autoloader">isFileInPsr4Autoloader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#322"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isSymbolInClassmapAutoloader">isSymbolInClassmapAutoloader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#296"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isSymbolInFilesAutoloader">isSymbolInFilesAutoloader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#187"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::stripPharPrefix">stripPharPrefix</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#243"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isFileInFilesAutoloader">isFileInFilesAutoloader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#223"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isNamespaceInPsr4Autoloader">isNamespaceInPsr4Autoloader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#208"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isNamespaceInPsr0Autoloader">isNamespaceInPsr0Autoloader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#58"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::scanSetIsAutoloaded">scanSetIsAutoloaded</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#38"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#46"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload::addVendorPrefixedAutoloadToVendorAutoload">addVendorPrefixedAutoloadToVendorAutoload</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#549"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::markIncludedFilesRecursive">markIncludedFilesRecursive</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Autoload/Psr0.php.html#33"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\Psr0::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Autoload/DumpAutoload.php.html#265"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload::getSuffix">getSuffix</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Autoload/ComposerAutoloadGenerator.php.html#42"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\ComposerAutoloadGenerator::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Autoload.php.html#69"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload::generate">generate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Autoload.php.html#51"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#133"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::traitTemplate">traitTemplate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#115"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::interfaceTemplate">interfaceTemplate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#90"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::classTemplate">classTemplate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#80"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::load">load</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#35"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::autoload">autoload</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#27"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#406"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::scanPackage">scanPackage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#262"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isFileInClassmapAutoloader">isFileInClassmapAutoloader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ChangeEnumerator.php.html#184"><abbr title="BrianHenryIE\Strauss\Pipeline\ChangeEnumerator::globalOrPsr0">globalOrPsr0</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#124"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::rebuildVendorAutoloader">rebuildVendorAutoloader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#610"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::resolveIncludePath">resolveIncludePath</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#639"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::processClassmapFiles">processClassmapFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#65"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::deleteFiles">deleteFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#89"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::cleanupVendorInstalledJson">cleanupVendorInstalledJson</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ChangeEnumerator.php.html#25"><abbr title="BrianHenryIE\Strauss\Pipeline\ChangeEnumerator::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ChangeEnumerator.php.html#220"><abbr title="BrianHenryIE\Strauss\Pipeline\ChangeEnumerator::determineNamespaceReplacement">determineNamespaceReplacement</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#227"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::addFile">addFile</abbr></a></td><td class="text-right">9%</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#194"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::removeMissingAutoloadKeyPaths">removeMissingAutoloadKeyPaths</abbr></a></td><td class="text-right">33%</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#127"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::updatePackagePaths">updatePackagePaths</abbr></a></td><td class="text-right">34%</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#163"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::isFilePathExcluded">isFilePathExcluded</abbr></a></td><td class="text-right">47%</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#325"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson">removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson</abbr></a></td><td class="text-right">50%</td></tr>
+       <tr><td><a href="Parallel/ParallelConfig.php.html#61"><abbr title="BrianHenryIE\Strauss\Pipeline\Parallel\ParallelConfig::countCpus">countCpus</abbr></a></td><td class="text-right">54%</td></tr>
+       <tr><td><a href="Parallel/WorkerProcessFactory.php.html#50"><abbr title="BrianHenryIE\Strauss\Pipeline\Parallel\WorkerProcessFactory::getMainScript">getMainScript</abbr></a></td><td class="text-right">55%</td></tr>
+       <tr><td><a href="Prefixer.php.html#102"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::replaceInFile">replaceInFile</abbr></a></td><td class="text-right">55%</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#91"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload::addAliasesFileToComposer">addAliasesFileToComposer</abbr></a></td><td class="text-right">58%</td></tr>
+       <tr><td><a href="FileSymbolScanner.php.html#415"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbolScanner::addDiscoveredClassChange">addDiscoveredClassChange</abbr></a></td><td class="text-right">61%</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#96"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::getJsonFile">getJsonFile</abbr></a></td><td class="text-right">62%</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#48"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::scanSetDoRename">scanSetDoRename</abbr></a></td><td class="text-right">62%</td></tr>
+       <tr><td><a href="FileSymbolScanner.php.html#511"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbolScanner::isBuiltInSymbol">isBuiltInSymbol</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ChangePlanner.php.html#246"><abbr title="BrianHenryIE\Strauss\Pipeline\ChangePlanner::checkPregError">checkPregError</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="Licenser.php.html#138"><abbr title="BrianHenryIE\Strauss\Pipeline\Licenser::findLicenseFiles">findLicenseFiles</abbr></a></td><td class="text-right">68%</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#367"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::updateNamespaces">updateNamespaces</abbr></a></td><td class="text-right">71%</td></tr>
+       <tr><td><a href="FileSymbolScanner.php.html#109"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbolScanner::add">add</abbr></a></td><td class="text-right">75%</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#80"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::compileFileListForPaths">compileFileListForPaths</abbr></a></td><td class="text-right">76%</td></tr>
+       <tr><td><a href="Copier.php.html#85"><abbr title="BrianHenryIE\Strauss\Pipeline\Copier::copy">copy</abbr></a></td><td class="text-right">79%</td></tr>
+       <tr><td><a href="Autoload/DumpAutoload.php.html#211"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload::createInstalledVersionsFiles">createInstalledVersionsFiles</abbr></a></td><td class="text-right">80%</td></tr>
+       <tr><td><a href="Prefixer.php.html#278"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::getCodeMap">getCodeMap</abbr></a></td><td class="text-right">80%</td></tr>
+       <tr><td><a href="ChangeEnumerator.php.html#33"><abbr title="BrianHenryIE\Strauss\Pipeline\ChangeEnumerator::determineReplacements">determineReplacements</abbr></a></td><td class="text-right">81%</td></tr>
+       <tr><td><a href="Aliases/Aliases.php.html#157"><abbr title="BrianHenryIE\Strauss\Pipeline\Aliases\Aliases::getFunctionAliasesString">getFunctionAliasesString</abbr></a></td><td class="text-right">81%</td></tr>
+       <tr><td><a href="DependenciesEnumerator.php.html#124"><abbr title="BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator::recursiveGetAllDependencies">recursiveGetAllDependencies</abbr></a></td><td class="text-right">82%</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#482"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::cleanTargetDirInstalledJson">cleanTargetDirInstalledJson</abbr></a></td><td class="text-right">84%</td></tr>
+       <tr><td><a href="Parallel/WorkerPool.php.html#123"><abbr title="BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool::startWorker">startWorker</abbr></a></td><td class="text-right">85%</td></tr>
+       <tr><td><a href="FileSymbol/FileCodeMapVisitor.php.html#470"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\FileCodeMapVisitor::getDefinitionLocationType">getDefinitionLocationType</abbr></a></td><td class="text-right">85%</td></tr>
+       <tr><td><a href="FileSymbol/FileCodeMapVisitor.php.html#487"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\FileCodeMapVisitor::getDefinitionSymbolType">getDefinitionSymbolType</abbr></a></td><td class="text-right">85%</td></tr>
+       <tr><td><a href="FileSymbol/FileCodeMapVisitor.php.html#125"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\FileCodeMapVisitor::enterNode">enterNode</abbr></a></td><td class="text-right">86%</td></tr>
+       <tr><td><a href="Aliases/Aliases.php.html#281"><abbr title="BrianHenryIE\Strauss\Pipeline\Aliases\Aliases::aliasedFunctionTemplate">aliasedFunctionTemplate</abbr></a></td><td class="text-right">86%</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#54"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::compileFileListForDependencies">compileFileListForDependencies</abbr></a></td><td class="text-right">87%</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#132"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload::isComposerInstalled">isComposerInstalled</abbr></a></td><td class="text-right">88%</td></tr>
+       <tr><td><a href="Autoload/Psr0.php.html#41"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\Psr0::setTargetDirectory">setTargetDirectory</abbr></a></td><td class="text-right">89%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="AutoloadedEnumerator.php.html#58"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::scanSetIsAutoloaded">scanSetIsAutoloaded</abbr></a></td><td class="text-right">1806</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#406"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::scanPackage">scanPackage</abbr></a></td><td class="text-right">306</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#49"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::scanFiles">scanFiles</abbr></a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#179"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::isGitExcluded">isGitExcluded</abbr></a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#610"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::resolveIncludePath">resolveIncludePath</abbr></a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#194"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::removeMissingAutoloadKeyPaths">removeMissingAutoloadKeyPaths</abbr></a></td><td class="text-right">102</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#549"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::markIncludedFilesRecursive">markIncludedFilesRecursive</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Prefixer.php.html#501"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::getComposerRuntimeSymbols">getComposerRuntimeSymbols</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#322"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isSymbolInClassmapAutoloader">isSymbolInClassmapAutoloader</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#89"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::cleanupVendorInstalledJson">cleanupVendorInstalledJson</abbr></a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#237"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::deleteEmptyDirectories">deleteEmptyDirectories</abbr></a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#122"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::excludeGitFiles">excludeGitFiles</abbr></a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#256"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload::addVendorPrefixedAutoloadToComposerAutoload">addVendorPrefixedAutoloadToComposerAutoload</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#262"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isFileInClassmapAutoloader">isFileInClassmapAutoloader</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#35"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::autoload">autoload</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#227"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::addFile">addFile</abbr></a></td><td class="text-right">43</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#114"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::excludeFromPrefix">excludeFromPrefix</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#296"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isSymbolInFilesAutoloader">isSymbolInFilesAutoloader</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Prefixer.php.html#171"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::replaceInProjectFiles">replaceInProjectFiles</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#302"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::doIsDeleteVendorPackages">doIsDeleteVendorPackages</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#187"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::stripPharPrefix">stripPharPrefix</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#65"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::deleteFiles">deleteFiles</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#125"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::isNamespaceExcluded">isNamespaceExcluded</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Copier.php.html#60"><abbr title="BrianHenryIE\Strauss\Pipeline\Copier::prepareTarget">prepareTarget</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#46"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload::addVendorPrefixedAutoloadToVendorAutoload">addVendorPrefixedAutoloadToVendorAutoload</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#90"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::classTemplate">classTemplate</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#263"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludedConstantsFilePattern">isExcludedConstantsFilePattern</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#208"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludedFromPrefixFilePattern">isExcludedFromPrefixFilePattern</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ChangeEnumerator.php.html#33"><abbr title="BrianHenryIE\Strauss\Pipeline\ChangeEnumerator::determineReplacements">determineReplacements</abbr></a></td><td class="text-right">26</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#48"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::scanSetDoRename">scanSetDoRename</abbr></a></td><td class="text-right">23</td></tr>
+       <tr><td><a href="DependenciesEnumerator.php.html#124"><abbr title="BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator::recursiveGetAllDependencies">recursiveGetAllDependencies</abbr></a></td><td class="text-right">23</td></tr>
+       <tr><td><a href="FileSymbol/FileCodeMapVisitor.php.html#125"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\FileCodeMapVisitor::enterNode">enterNode</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#367"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::updateNamespaces">updateNamespaces</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#208"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isNamespaceInPsr0Autoloader">isNamespaceInPsr0Autoloader</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#124"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::rebuildVendorAutoloader">rebuildVendorAutoloader</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Licenser.php.html#193"><abbr title="BrianHenryIE\Strauss\Pipeline\Licenser::addInformationToUpdatedFiles">addInformationToUpdatedFiles</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#362"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isFileInPsr4Autoloader">isFileInPsr4Autoloader</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#223"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isNamespaceInPsr4Autoloader">isNamespaceInPsr4Autoloader</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Cleanup/Cleanup.php.html#352"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::doIsDeleteVendorFiles">doIsDeleteVendorFiles</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#186"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludeFromPrefixNamespace">isExcludeFromPrefixNamespace</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#243"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isFileInFilesAutoloader">isFileInFilesAutoloader</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#247"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludeConstantsNamespace">isExcludeConstantsNamespace</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#290"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson">removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Licenser.php.html#88"><abbr title="BrianHenryIE\Strauss\Pipeline\Licenser::copyLicenses">copyLicenses</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#378"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::isFileInPsr0Autoloader">isFileInPsr0Autoloader</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Aliases/Aliases.php.html#157"><abbr title="BrianHenryIE\Strauss\Pipeline\Aliases\Aliases::getFunctionAliasesString">getFunctionAliasesString</abbr></a></td><td class="text-right">16</td></tr>
+       <tr><td><a href="Prefixer.php.html#102"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::replaceInFile">replaceInFile</abbr></a></td><td class="text-right">16</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#127"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::updatePackagePaths">updatePackagePaths</abbr></a></td><td class="text-right">15</td></tr>
+       <tr><td><a href="Parallel/ParallelConfig.php.html#61"><abbr title="BrianHenryIE\Strauss\Pipeline\Parallel\ParallelConfig::countCpus">countCpus</abbr></a></td><td class="text-right">14</td></tr>
+       <tr><td><a href="ChangeEnumerator.php.html#184"><abbr title="BrianHenryIE\Strauss\Pipeline\ChangeEnumerator::globalOrPsr0">globalOrPsr0</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#142"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isSymbolFoundInFileThatIsCopied">isSymbolFoundInFileThatIsCopied</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#129"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isSymbolFoundInFileThatIsNotCopied">isSymbolFoundInFileThatIsNotCopied</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="DependenciesEnumerator.php.html#304"><abbr title="BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator::getAllFilesAutoloaders">getAllFilesAutoloaders</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Autoload.php.html#69"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload::generate">generate</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="AutoloadedEnumerator.php.html#639"><abbr title="BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator::processClassmapFiles">processClassmapFiles</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#133"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::traitTemplate">traitTemplate</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#166"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludeFromPrefixPackage">isExcludeFromPrefixPackage</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#115"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::interfaceTemplate">interfaceTemplate</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Prefixer.php.html#477"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::getComposerRuntimeFiles">getComposerRuntimeFiles</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#325"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson">removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson</abbr></a></td><td class="text-right">10</td></tr>
+       <tr><td><a href="Licenser.php.html#138"><abbr title="BrianHenryIE\Strauss\Pipeline\Licenser::findLicenseFiles">findLicenseFiles</abbr></a></td><td class="text-right">8</td></tr>
+       <tr><td><a href="Prefixer.php.html#278"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::getCodeMap">getCodeMap</abbr></a></td><td class="text-right">8</td></tr>
+       <tr><td><a href="Parallel/WorkerProcessFactory.php.html#50"><abbr title="BrianHenryIE\Strauss\Pipeline\Parallel\WorkerProcessFactory::getMainScript">getMainScript</abbr></a></td><td class="text-right">7</td></tr>
+       <tr><td><a href="Autoload/Psr0.php.html#41"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\Psr0::setTargetDirectory">setTargetDirectory</abbr></a></td><td class="text-right">7</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#91"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload::addAliasesFileToComposer">addAliasesFileToComposer</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#80"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::compileFileListForPaths">compileFileListForPaths</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#163"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::isFilePathExcluded">isFilePathExcluded</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#482"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::cleanTargetDirInstalledJson">cleanTargetDirInstalledJson</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#239"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::isExcludeConstantsPackage">isExcludeConstantsPackage</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="MarkSymbolsForRenaming.php.html#289"><abbr title="BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming::preparePattern">preparePattern</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Prefixer.php.html#454"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::prefixComposerAutoloadFiles">prefixComposerAutoloadFiles</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Aliases/autoload_aliases.template.php.html#80"><abbr title="BrianHenryIE\Strauss\AliasAutoloader::load">load</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Prefixer.php.html#598"><abbr title="BrianHenryIE\Strauss\Pipeline\Prefixer::getNamespaceFromFqdn">getNamespaceFromFqdn</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#190"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::preparePattern">preparePattern</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Autoload/DumpAutoload.php.html#265"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload::getSuffix">getSuffix</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="FileCopyScanner.php.html#113"><abbr title="BrianHenryIE\Strauss\Pipeline\FileCopyScanner::isPackageExcluded">isPackageExcluded</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="FileSymbolScanner.php.html#109"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbolScanner::add">add</abbr></a></td><td class="text-right">5</td></tr>
+       <tr><td><a href="Copier.php.html#85"><abbr title="BrianHenryIE\Strauss\Pipeline\Copier::copy">copy</abbr></a></td><td class="text-right">5</td></tr>
+       <tr><td><a href="FileSymbol/FileCodeMapVisitor.php.html#487"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\FileCodeMapVisitor::getDefinitionSymbolType">getDefinitionSymbolType</abbr></a></td><td class="text-right">5</td></tr>
+       <tr><td><a href="FileSymbol/FileCodeMapVisitor.php.html#470"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbol\FileCodeMapVisitor::getDefinitionLocationType">getDefinitionLocationType</abbr></a></td><td class="text-right">5</td></tr>
+       <tr><td><a href="FileSymbolScanner.php.html#415"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbolScanner::addDiscoveredClassChange">addDiscoveredClassChange</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="Cleanup/InstalledJson.php.html#96"><abbr title="BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson::getJsonFile">getJsonFile</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="Autoload/DumpAutoload.php.html#211"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload::createInstalledVersionsFiles">createInstalledVersionsFiles</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="FileEnumerator.php.html#54"><abbr title="BrianHenryIE\Strauss\Pipeline\FileEnumerator::compileFileListForDependencies">compileFileListForDependencies</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="FileSymbolScanner.php.html#511"><abbr title="BrianHenryIE\Strauss\Pipeline\FileSymbolScanner::isBuiltInSymbol">isBuiltInSymbol</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ChangePlanner.php.html#246"><abbr title="BrianHenryIE\Strauss\Pipeline\ChangePlanner::checkPregError">checkPregError</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="Autoload/VendorComposerAutoload.php.html#132"><abbr title="BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload::isComposerInstalled">isComposerInstalled</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="Parallel/WorkerPool.php.html#123"><abbr title="BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool::startWorker">startWorker</abbr></a></td><td class="text-right">2</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 9.2.32</a> using <a href="https://secure.php.net/" target="_top">PHP 7.4.33</a> and <a href="https://phpunit.de/">PHPUnit 9.6.37</a> at Sun Oct 4 15:31:45 UTC 2026.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="../../_js/jquery.min.js?v=9.2.32" type="text/javascript"></script>
+  <script src="../../_js/d3.min.js?v=9.2.32" type="text/javascript"></script>
+  <script src="../../_js/nv.d3.min.js?v=9.2.32" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([3,1,2,1,1,3,2,2,1,5,7,3], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([77,1,0,0,2,1,5,6,4,14,18,127], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[88.13559322033898,29,"<a href=\"Aliases\/Aliases.php.html#34\">BrianHenryIE\\Strauss\\Pipeline\\Aliases\\Aliases<\/a>"],[0,21,"<a href=\"Aliases\/autoload_aliases.template.php.html#18\">BrianHenryIE\\Strauss\\AliasAutoloader<\/a>"],[0,4,"<a href=\"Autoload.php.html#26\">BrianHenryIE\\Strauss\\Pipeline\\Autoload<\/a>"],[33.33333333333333,2,"<a href=\"Autoload\/ComposerAutoloadGenerator.php.html#28\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\ComposerAutoloadGenerator<\/a>"],[100,1,"<a href=\"Autoload\/ComposerAutoloadGeneratorFactory.php.html#18\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\ComposerAutoloadGeneratorFactory<\/a>"],[87.75510204081633,16,"<a href=\"Autoload\/DumpAutoload.php.html#27\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\DumpAutoload<\/a>"],[85,8,"<a href=\"Autoload\/Psr0.php.html#27\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\Psr0<\/a>"],[42.331288343558285,27,"<a href=\"Autoload\/VendorComposerAutoload.php.html#25\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\VendorComposerAutoload<\/a>"],[0,124,"<a href=\"AutoloadedEnumerator.php.html#31\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator<\/a>"],[64.81481481481481,28,"<a href=\"ChangeEnumerator.php.html#19\">BrianHenryIE\\Strauss\\Pipeline\\ChangeEnumerator<\/a>"],[96.61016949152543,167,"<a href=\"ChangePlanner.php.html#33\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner<\/a>"],[5.161290322580645,44,"<a href=\"Cleanup\/Cleanup.php.html#34\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup<\/a>"],[60,63,"<a href=\"Cleanup\/InstalledJson.php.html#46\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson<\/a>"],[58.97435897435898,11,"<a href=\"Copier.php.html#24\">BrianHenryIE\\Strauss\\Pipeline\\Copier<\/a>"],[82.73381294964028,37,"<a href=\"DependenciesEnumerator.php.html#27\">BrianHenryIE\\Strauss\\Pipeline\\DependenciesEnumerator<\/a>"],[15.18987341772152,26,"<a href=\"FileCopyScanner.php.html#30\">BrianHenryIE\\Strauss\\Pipeline\\FileCopyScanner<\/a>"],[18.75,36,"<a href=\"FileEnumerator.php.html#22\">BrianHenryIE\\Strauss\\Pipeline\\FileEnumerator<\/a>"],[94.97716894977168,74,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#37\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor<\/a>"],[95.83333333333334,9,"<a href=\"FileSymbol\/PhpFileAnalyzer.php.html#27\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\PhpFileAnalyzer<\/a>"],[47.05882352941176,14,"<a href=\"FileSymbol\/SymbolDefinition.php.html#13\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition<\/a>"],[92.78846153846155,65,"<a href=\"FileSymbolScanner.php.html#39\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner<\/a>"],[53.6,30,"<a href=\"Licenser.php.html#31\">BrianHenryIE\\Strauss\\Pipeline\\Licenser<\/a>"],[95.55555555555556,16,"<a href=\"MarkFilesExcludedFromChanges.php.html#21\">BrianHenryIE\\Strauss\\Pipeline\\MarkFilesExcludedFromChanges<\/a>"],[22.772277227722775,59,"<a href=\"MarkSymbolsForRenaming.php.html#23\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming<\/a>"],[80.76923076923077,20,"<a href=\"Parallel\/ParallelConfig.php.html#15\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig<\/a>"],[100,0,"<a href=\"Parallel\/ParallelisationException.php.html#9\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelisationException<\/a>"],[100,9,"<a href=\"Parallel\/Worker.php.html#15\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\Worker<\/a>"],[98.85057471264368,35,"<a href=\"Parallel\/WorkerPool.php.html#23\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool<\/a>"],[78.26086956521739,9,"<a href=\"Parallel\/WorkerProcessFactory.php.html#15\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerProcessFactory<\/a>"],[46.51162790697674,68,"<a href=\"Prefixer.php.html#35\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer<\/a>"],[98.87640449438202,43,"<a href=\"SymbolIndex.php.html#21\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[100,1,"<a href=\"Aliases\/Aliases.php.html#42\">BrianHenryIE\\Strauss\\Pipeline\\Aliases\\Aliases::__construct<\/a>"],[96.15384615384616,4,"<a href=\"Aliases\/Aliases.php.html#58\">BrianHenryIE\\Strauss\\Pipeline\\Aliases\\Aliases::getTemplate<\/a>"],[100,1,"<a href=\"Aliases\/Aliases.php.html#100\">BrianHenryIE\\Strauss\\Pipeline\\Aliases\\Aliases::writeAliasesFileForSymbols<\/a>"],[100,1,"<a href=\"Aliases\/Aliases.php.html#112\">BrianHenryIE\\Strauss\\Pipeline\\Aliases\\Aliases::getAliasFilepath<\/a>"],[100,1,"<a href=\"Aliases\/Aliases.php.html#120\">BrianHenryIE\\Strauss\\Pipeline\\Aliases\\Aliases::buildStringOfAliases<\/a>"],[90,5,"<a href=\"Aliases\/Aliases.php.html#135\">BrianHenryIE\\Strauss\\Pipeline\\Aliases\\Aliases::getAliasesArray<\/a>"],[81.48148148148148,15,"<a href=\"Aliases\/Aliases.php.html#157\">BrianHenryIE\\Strauss\\Pipeline\\Aliases\\Aliases::getFunctionAliasesString<\/a>"],[86.66666666666667,1,"<a href=\"Aliases\/Aliases.php.html#281\">BrianHenryIE\\Strauss\\Pipeline\\Aliases\\Aliases::aliasedFunctionTemplate<\/a>"],[0,1,"<a href=\"Aliases\/autoload_aliases.template.php.html#27\">BrianHenryIE\\Strauss\\AliasAutoloader::__construct<\/a>"],[0,7,"<a href=\"Aliases\/autoload_aliases.template.php.html#35\">BrianHenryIE\\Strauss\\AliasAutoloader::autoload<\/a>"],[0,2,"<a href=\"Aliases\/autoload_aliases.template.php.html#80\">BrianHenryIE\\Strauss\\AliasAutoloader::load<\/a>"],[0,5,"<a href=\"Aliases\/autoload_aliases.template.php.html#90\">BrianHenryIE\\Strauss\\AliasAutoloader::classTemplate<\/a>"],[0,3,"<a href=\"Aliases\/autoload_aliases.template.php.html#115\">BrianHenryIE\\Strauss\\AliasAutoloader::interfaceTemplate<\/a>"],[0,3,"<a href=\"Aliases\/autoload_aliases.template.php.html#133\">BrianHenryIE\\Strauss\\AliasAutoloader::traitTemplate<\/a>"],[0,1,"<a href=\"Autoload.php.html#51\">BrianHenryIE\\Strauss\\Pipeline\\Autoload::__construct<\/a>"],[0,3,"<a href=\"Autoload.php.html#69\">BrianHenryIE\\Strauss\\Pipeline\\Autoload::generate<\/a>"],[0,1,"<a href=\"Autoload\/ComposerAutoloadGenerator.php.html#42\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\ComposerAutoloadGenerator::__construct<\/a>"],[100,1,"<a href=\"Autoload\/ComposerAutoloadGenerator.php.html#65\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\ComposerAutoloadGenerator::getFileIdentifier<\/a>"],[100,1,"<a href=\"Autoload\/ComposerAutoloadGeneratorFactory.php.html#26\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\ComposerAutoloadGeneratorFactory::get<\/a>"],[100,1,"<a href=\"Autoload\/DumpAutoload.php.html#40\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\DumpAutoload::__construct<\/a>"],[100,1,"<a href=\"Autoload\/DumpAutoload.php.html#62\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\DumpAutoload::generatedPrefixedAutoloader<\/a>"],[93.22033898305084,7,"<a href=\"Autoload\/DumpAutoload.php.html#75\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\DumpAutoload::generateMainAutoloader<\/a>"],[100,2,"<a href=\"Autoload\/DumpAutoload.php.html#194\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\DumpAutoload::isOptimizeAutoloaderEnabled<\/a>"],[80,3,"<a href=\"Autoload\/DumpAutoload.php.html#211\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\DumpAutoload::createInstalledVersionsFiles<\/a>"],[0,2,"<a href=\"Autoload\/DumpAutoload.php.html#265\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\DumpAutoload::getSuffix<\/a>"],[0,1,"<a href=\"Autoload\/Psr0.php.html#33\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\Psr0::__construct<\/a>"],[89.47368421052632,7,"<a href=\"Autoload\/Psr0.php.html#41\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\Psr0::setTargetDirectory<\/a>"],[100,1,"<a href=\"Autoload\/VendorComposerAutoload.php.html#33\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\VendorComposerAutoload::__construct<\/a>"],[0,5,"<a href=\"Autoload\/VendorComposerAutoload.php.html#46\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\VendorComposerAutoload::addVendorPrefixedAutoloadToVendorAutoload<\/a>"],[58.82352941176471,5,"<a href=\"Autoload\/VendorComposerAutoload.php.html#91\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\VendorComposerAutoload::addAliasesFileToComposer<\/a>"],[88.88888888888889,2,"<a href=\"Autoload\/VendorComposerAutoload.php.html#132\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\VendorComposerAutoload::isComposerInstalled<\/a>"],[100,2,"<a href=\"Autoload\/VendorComposerAutoload.php.html#159\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\VendorComposerAutoload::isComposerNoDev<\/a>"],[90,5,"<a href=\"Autoload\/VendorComposerAutoload.php.html#172\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\VendorComposerAutoload::addAliasesFileToComposerAutoload<\/a>"],[0,7,"<a href=\"Autoload\/VendorComposerAutoload.php.html#256\">BrianHenryIE\\Strauss\\Pipeline\\Autoload\\VendorComposerAutoload::addVendorPrefixedAutoloadToComposerAutoload<\/a>"],[0,1,"<a href=\"AutoloadedEnumerator.php.html#38\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::__construct<\/a>"],[0,42,"<a href=\"AutoloadedEnumerator.php.html#58\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::scanSetIsAutoloaded<\/a>"],[0,4,"<a href=\"AutoloadedEnumerator.php.html#208\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::isNamespaceInPsr0Autoloader<\/a>"],[0,4,"<a href=\"AutoloadedEnumerator.php.html#223\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::isNamespaceInPsr4Autoloader<\/a>"],[0,4,"<a href=\"AutoloadedEnumerator.php.html#243\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::isFileInFilesAutoloader<\/a>"],[0,7,"<a href=\"AutoloadedEnumerator.php.html#262\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::isFileInClassmapAutoloader<\/a>"],[0,6,"<a href=\"AutoloadedEnumerator.php.html#296\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::isSymbolInFilesAutoloader<\/a>"],[0,9,"<a href=\"AutoloadedEnumerator.php.html#322\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::isSymbolInClassmapAutoloader<\/a>"],[0,4,"<a href=\"AutoloadedEnumerator.php.html#362\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::isFileInPsr4Autoloader<\/a>"],[0,4,"<a href=\"AutoloadedEnumerator.php.html#378\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::isFileInPsr0Autoloader<\/a>"],[0,17,"<a href=\"AutoloadedEnumerator.php.html#406\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::scanPackage<\/a>"],[0,9,"<a href=\"AutoloadedEnumerator.php.html#549\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::markIncludedFilesRecursive<\/a>"],[0,10,"<a href=\"AutoloadedEnumerator.php.html#610\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::resolveIncludePath<\/a>"],[0,3,"<a href=\"AutoloadedEnumerator.php.html#639\">BrianHenryIE\\Strauss\\Pipeline\\AutoloadedEnumerator::processClassmapFiles<\/a>"],[0,1,"<a href=\"ChangeEnumerator.php.html#25\">BrianHenryIE\\Strauss\\Pipeline\\ChangeEnumerator::__construct<\/a>"],[81.3953488372093,23,"<a href=\"ChangeEnumerator.php.html#33\">BrianHenryIE\\Strauss\\Pipeline\\ChangeEnumerator::determineReplacements<\/a>"],[0,3,"<a href=\"ChangeEnumerator.php.html#184\">BrianHenryIE\\Strauss\\Pipeline\\ChangeEnumerator::globalOrPsr0<\/a>"],[0,1,"<a href=\"ChangeEnumerator.php.html#220\">BrianHenryIE\\Strauss\\Pipeline\\ChangeEnumerator::determineNamespaceReplacement<\/a>"],[100,1,"<a href=\"ChangePlanner.php.html#49\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::__construct<\/a>"],[100,3,"<a href=\"ChangePlanner.php.html#58\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::getIndex<\/a>"],[90,5,"<a href=\"ChangePlanner.php.html#75\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::planInFiles<\/a>"],[100,5,"<a href=\"ChangePlanner.php.html#99\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::plan<\/a>"],[95.45454545454545,6,"<a href=\"ChangePlanner.php.html#149\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findPositionsOfUsesOfNamespacedConstants<\/a>"],[93.10344827586206,8,"<a href=\"ChangePlanner.php.html#196\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findUseStatementPositionsForNamespacedClasses<\/a>"],[66.66666666666666,2,"<a href=\"ChangePlanner.php.html#246\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::checkPregError<\/a>"],[90.9090909090909,34,"<a href=\"ChangePlanner.php.html#257\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findNamespacePositions<\/a>"],[100,3,"<a href=\"ChangePlanner.php.html#460\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findGlobalSymbolsPositionsInComment<\/a>"],[100,4,"<a href=\"ChangePlanner.php.html#480\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findGlobalSymbolPositionInComment<\/a>"],[100,10,"<a href=\"ChangePlanner.php.html#521\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findSymbolsPositionsInStrings<\/a>"],[100,3,"<a href=\"ChangePlanner.php.html#610\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::filterToSymbolsAvailableToFile<\/a>"],[100,2,"<a href=\"ChangePlanner.php.html#633\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::getAvailablePackageNames<\/a>"],[91.83673469387756,13,"<a href=\"ChangePlanner.php.html#657\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findSymbolPositionsInStrings<\/a>"],[100,4,"<a href=\"ChangePlanner.php.html#766\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findComposerClassLoaderPrefixPositions<\/a>"],[100,20,"<a href=\"ChangePlanner.php.html#806\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findGlobalSymbolsPositions<\/a>"],[100,1,"<a href=\"ChangePlanner.php.html#911\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::getGlobalSymbolByName<\/a>"],[100,16,"<a href=\"ChangePlanner.php.html#931\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findConstantPositions<\/a>"],[100,4,"<a href=\"ChangePlanner.php.html#1014\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findFunctionPositionsInDocComment<\/a>"],[100,11,"<a href=\"ChangePlanner.php.html#1054\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findFunctionPositions<\/a>"],[100,12,"<a href=\"ChangePlanner.php.html#1116\">BrianHenryIE\\Strauss\\Pipeline\\ChangePlanner::findDocCommentPositions<\/a>"],[100,3,"<a href=\"Cleanup\/Cleanup.php.html#45\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup::__construct<\/a>"],[0,5,"<a href=\"Cleanup\/Cleanup.php.html#65\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup::deleteFiles<\/a>"],[0,8,"<a href=\"Cleanup\/Cleanup.php.html#89\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup::cleanupVendorInstalledJson<\/a>"],[0,4,"<a href=\"Cleanup\/Cleanup.php.html#124\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup::rebuildVendorAutoloader<\/a>"],[0,5,"<a href=\"Cleanup\/Cleanup.php.html#187\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup::stripPharPrefix<\/a>"],[100,2,"<a href=\"Cleanup\/Cleanup.php.html#226\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup::isOptimizeAutoloaderEnabled<\/a>"],[0,8,"<a href=\"Cleanup\/Cleanup.php.html#237\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup::deleteEmptyDirectories<\/a>"],[0,5,"<a href=\"Cleanup\/Cleanup.php.html#302\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup::doIsDeleteVendorPackages<\/a>"],[0,4,"<a href=\"Cleanup\/Cleanup.php.html#352\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\Cleanup::doIsDeleteVendorFiles<\/a>"],[100,1,"<a href=\"Cleanup\/InstalledJson.php.html#54\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::__construct<\/a>"],[100,1,"<a href=\"Cleanup\/InstalledJson.php.html#68\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::copyInstalledJson<\/a>"],[62.5,3,"<a href=\"Cleanup\/InstalledJson.php.html#96\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::getJsonFile<\/a>"],[34.78260869565217,6,"<a href=\"Cleanup\/InstalledJson.php.html#127\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::updatePackagePaths<\/a>"],[100,1,"<a href=\"Cleanup\/InstalledJson.php.html#180\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::pathExistsInPackage<\/a>"],[33.33333333333333,17,"<a href=\"Cleanup\/InstalledJson.php.html#194\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::removeMissingAutoloadKeyPaths<\/a>"],[0,4,"<a href=\"Cleanup\/InstalledJson.php.html#290\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson<\/a>"],[50,6,"<a href=\"Cleanup\/InstalledJson.php.html#325\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson<\/a>"],[71.42857142857143,15,"<a href=\"Cleanup\/InstalledJson.php.html#367\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::updateNamespaces<\/a>"],[84.84848484848484,6,"<a href=\"Cleanup\/InstalledJson.php.html#482\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::cleanTargetDirInstalledJson<\/a>"],[100,2,"<a href=\"Cleanup\/InstalledJson.php.html#549\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::cleanupVendorInstalledJson<\/a>"],[100,1,"<a href=\"Cleanup\/InstalledJson.php.html#591\">BrianHenryIE\\Strauss\\Pipeline\\Cleanup\\InstalledJson::reindexPackagesList<\/a>"],[100,1,"<a href=\"Copier.php.html#42\">BrianHenryIE\\Strauss\\Pipeline\\Copier::__construct<\/a>"],[0,5,"<a href=\"Copier.php.html#60\">BrianHenryIE\\Strauss\\Pipeline\\Copier::prepareTarget<\/a>"],[79.16666666666666,5,"<a href=\"Copier.php.html#85\">BrianHenryIE\\Strauss\\Pipeline\\Copier::copy<\/a>"],[100,1,"<a href=\"DependenciesEnumerator.php.html#64\">BrianHenryIE\\Strauss\\Pipeline\\DependenciesEnumerator::__construct<\/a>"],[100,10,"<a href=\"DependenciesEnumerator.php.html#82\">BrianHenryIE\\Strauss\\Pipeline\\DependenciesEnumerator::getAllDependencies<\/a>"],[82.4074074074074,21,"<a href=\"DependenciesEnumerator.php.html#124\">BrianHenryIE\\Strauss\\Pipeline\\DependenciesEnumerator::recursiveGetAllDependencies<\/a>"],[0,3,"<a href=\"DependenciesEnumerator.php.html#304\">BrianHenryIE\\Strauss\\Pipeline\\DependenciesEnumerator::getAllFilesAutoloaders<\/a>"],[100,2,"<a href=\"DependenciesEnumerator.php.html#318\">BrianHenryIE\\Strauss\\Pipeline\\DependenciesEnumerator::removeVirtualPackagesFilter<\/a>"],[100,1,"<a href=\"FileCopyScanner.php.html#38\">BrianHenryIE\\Strauss\\Pipeline\\FileCopyScanner::__construct<\/a>"],[0,12,"<a href=\"FileCopyScanner.php.html#49\">BrianHenryIE\\Strauss\\Pipeline\\FileCopyScanner::scanFiles<\/a>"],[0,2,"<a href=\"FileCopyScanner.php.html#113\">BrianHenryIE\\Strauss\\Pipeline\\FileCopyScanner::isPackageExcluded<\/a>"],[0,5,"<a href=\"FileCopyScanner.php.html#125\">BrianHenryIE\\Strauss\\Pipeline\\FileCopyScanner::isNamespaceExcluded<\/a>"],[47.368421052631575,4,"<a href=\"FileCopyScanner.php.html#163\">BrianHenryIE\\Strauss\\Pipeline\\FileCopyScanner::isFilePathExcluded<\/a>"],[0,2,"<a href=\"FileCopyScanner.php.html#190\">BrianHenryIE\\Strauss\\Pipeline\\FileCopyScanner::preparePattern<\/a>"],[0,1,"<a href=\"FileEnumerator.php.html#35\">BrianHenryIE\\Strauss\\Pipeline\\FileEnumerator::__construct<\/a>"],[87.5,3,"<a href=\"FileEnumerator.php.html#54\">BrianHenryIE\\Strauss\\Pipeline\\FileEnumerator::compileFileListForDependencies<\/a>"],[76.92307692307693,6,"<a href=\"FileEnumerator.php.html#80\">BrianHenryIE\\Strauss\\Pipeline\\FileEnumerator::compileFileListForPaths<\/a>"],[0,8,"<a href=\"FileEnumerator.php.html#122\">BrianHenryIE\\Strauss\\Pipeline\\FileEnumerator::excludeGitFiles<\/a>"],[0,11,"<a href=\"FileEnumerator.php.html#179\">BrianHenryIE\\Strauss\\Pipeline\\FileEnumerator::isGitExcluded<\/a>"],[9.30232558139535,7,"<a href=\"FileEnumerator.php.html#227\">BrianHenryIE\\Strauss\\Pipeline\\FileEnumerator::addFile<\/a>"],[100,1,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#92\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::__construct<\/a>"],[100,1,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#104\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::getLocations<\/a>"],[100,1,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#112\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::getDefinitions<\/a>"],[100,1,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#120\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::getNamespaceNames<\/a>"],[86.53846153846155,20,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#125\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::enterNode<\/a>"],[100,1,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#212\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::afterTraverse<\/a>"],[100,4,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#218\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::addCommentLocationsBefore<\/a>"],[100,4,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#233\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::enterNamespace<\/a>"],[100,8,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#255\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::enterFuncCall<\/a>"],[96.15384615384616,7,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#296\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::enterClassLike<\/a>"],[100,1,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#335\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::enterFunction<\/a>"],[100,2,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#356\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::enterConst<\/a>"],[100,3,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#376\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::addUseItemLocation<\/a>"],[93.33333333333333,3,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#390\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::addNameLocation<\/a>"],[100,1,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#415\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::addStringArgLocation<\/a>"],[100,1,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#434\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::claimName<\/a>"],[100,1,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#439\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::getNodeText<\/a>"],[100,2,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#448\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::qualify<\/a>"],[100,2,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#458\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::resolveName<\/a>"],[85.71428571428571,5,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#470\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::getDefinitionLocationType<\/a>"],[85.71428571428571,5,"<a href=\"FileSymbol\/FileCodeMapVisitor.php.html#487\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\FileCodeMapVisitor::getDefinitionSymbolType<\/a>"],[100,1,"<a href=\"FileSymbol\/PhpFileAnalyzer.php.html#38\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\PhpFileAnalyzer::__construct<\/a>"],[100,1,"<a href=\"FileSymbol\/PhpFileAnalyzer.php.html#43\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\PhpFileAnalyzer::getLastErrorMessage<\/a>"],[95.55555555555556,6,"<a href=\"FileSymbol\/PhpFileAnalyzer.php.html#54\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\PhpFileAnalyzer::analyze<\/a>"],[100,1,"<a href=\"FileSymbol\/PhpFileAnalyzer.php.html#132\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\PhpFileAnalyzer::getParser<\/a>"],[100,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#71\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::__construct<\/a>"],[0,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#83\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::getType<\/a>"],[0,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#88\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::getName<\/a>"],[0,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#93\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::getNamespace<\/a>"],[0,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#98\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::isInGlobalNamespace<\/a>"],[0,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#103\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::getLocation<\/a>"],[0,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#108\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::isAbstract<\/a>"],[100,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#113\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::setIsAbstract<\/a>"],[0,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#118\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::getExtends<\/a>"],[100,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#123\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::setExtends<\/a>"],[0,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#131\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::getInterfaces<\/a>"],[100,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#139\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::setInterfaces<\/a>"],[0,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#144\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::getBackingType<\/a>"],[100,1,"<a href=\"FileSymbol\/SymbolDefinition.php.html#149\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbol\\SymbolDefinition::setBackingType<\/a>"],[100,1,"<a href=\"FileSymbolScanner.php.html#92\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::__construct<\/a>"],[100,1,"<a href=\"FileSymbolScanner.php.html#104\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::setWorkerPool<\/a>"],[75,5,"<a href=\"FileSymbolScanner.php.html#109\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::add<\/a>"],[100,11,"<a href=\"FileSymbolScanner.php.html#145\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::findInFiles<\/a>"],[100,7,"<a href=\"FileSymbolScanner.php.html#220\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::analyzeInParallel<\/a>"],[100,1,"<a href=\"FileSymbolScanner.php.html#260\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::find<\/a>"],[100,3,"<a href=\"FileSymbolScanner.php.html#270\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::record<\/a>"],[100,6,"<a href=\"FileSymbolScanner.php.html#287\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::recordDefinitions<\/a>"],[94.91525423728814,16,"<a href=\"FileSymbolScanner.php.html#316\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::recordDefinition<\/a>"],[61.53846153846154,4,"<a href=\"FileSymbolScanner.php.html#415\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::addDiscoveredClassChange<\/a>"],[100,3,"<a href=\"FileSymbolScanner.php.html#443\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::addDiscoveredNamespaceChange<\/a>"],[100,2,"<a href=\"FileSymbolScanner.php.html#479\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::getBuiltIns<\/a>"],[91.66666666666666,2,"<a href=\"FileSymbolScanner.php.html#491\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::loadBuiltIns<\/a>"],[66.66666666666666,2,"<a href=\"FileSymbolScanner.php.html#511\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::isBuiltInSymbol<\/a>"],[100,1,"<a href=\"FileSymbolScanner.php.html#520\">BrianHenryIE\\Strauss\\Pipeline\\FileSymbolScanner::getAnalyzer<\/a>"],[100,1,"<a href=\"Licenser.php.html#65\">BrianHenryIE\\Strauss\\Pipeline\\Licenser::__construct<\/a>"],[0,4,"<a href=\"Licenser.php.html#88\">BrianHenryIE\\Strauss\\Pipeline\\Licenser::copyLicenses<\/a>"],[68.42105263157895,7,"<a href=\"Licenser.php.html#138\">BrianHenryIE\\Strauss\\Pipeline\\Licenser::findLicenseFiles<\/a>"],[0,1,"<a href=\"Licenser.php.html#182\">BrianHenryIE\\Strauss\\Pipeline\\Licenser::getDiscoveredLicenseFiles<\/a>"],[0,4,"<a href=\"Licenser.php.html#193\">BrianHenryIE\\Strauss\\Pipeline\\Licenser::addInformationToUpdatedFiles<\/a>"],[97.91666666666666,13,"<a href=\"Licenser.php.html#242\">BrianHenryIE\\Strauss\\Pipeline\\Licenser::addChangeDeclarationToPhpString<\/a>"],[0,1,"<a href=\"MarkFilesExcludedFromChanges.php.html#26\">BrianHenryIE\\Strauss\\Pipeline\\MarkFilesExcludedFromChanges::__construct<\/a>"],[100,5,"<a href=\"MarkFilesExcludedFromChanges.php.html#34\">BrianHenryIE\\Strauss\\Pipeline\\MarkFilesExcludedFromChanges::scanDiscoveredFiles<\/a>"],[100,3,"<a href=\"MarkFilesExcludedFromChanges.php.html#46\">BrianHenryIE\\Strauss\\Pipeline\\MarkFilesExcludedFromChanges::fileMatchesFilePattern<\/a>"],[100,2,"<a href=\"MarkFilesExcludedFromChanges.php.html#65\">BrianHenryIE\\Strauss\\Pipeline\\MarkFilesExcludedFromChanges::preparePattern<\/a>"],[100,2,"<a href=\"MarkFilesExcludedFromChanges.php.html#80\">BrianHenryIE\\Strauss\\Pipeline\\MarkFilesExcludedFromChanges::fileMatchesNamespace<\/a>"],[100,3,"<a href=\"MarkFilesExcludedFromChanges.php.html#99\">BrianHenryIE\\Strauss\\Pipeline\\MarkFilesExcludedFromChanges::fileMatchesPackage<\/a>"],[0,1,"<a href=\"MarkSymbolsForRenaming.php.html#31\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::__construct<\/a>"],[62.96296296296296,14,"<a href=\"MarkSymbolsForRenaming.php.html#48\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::scanSetDoRename<\/a>"],[0,6,"<a href=\"MarkSymbolsForRenaming.php.html#114\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::excludeFromPrefix<\/a>"],[0,3,"<a href=\"MarkSymbolsForRenaming.php.html#129\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isSymbolFoundInFileThatIsNotCopied<\/a>"],[0,3,"<a href=\"MarkSymbolsForRenaming.php.html#142\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isSymbolFoundInFileThatIsCopied<\/a>"],[100,2,"<a href=\"MarkSymbolsForRenaming.php.html#158\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isExcludeFromCopyPackage<\/a>"],[0,3,"<a href=\"MarkSymbolsForRenaming.php.html#166\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isExcludeFromPrefixPackage<\/a>"],[0,4,"<a href=\"MarkSymbolsForRenaming.php.html#186\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isExcludeFromPrefixNamespace<\/a>"],[0,5,"<a href=\"MarkSymbolsForRenaming.php.html#208\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isExcludedFromPrefixFilePattern<\/a>"],[100,4,"<a href=\"MarkSymbolsForRenaming.php.html#231\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isExcludeConstants<\/a>"],[0,2,"<a href=\"MarkSymbolsForRenaming.php.html#239\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isExcludeConstantsPackage<\/a>"],[0,4,"<a href=\"MarkSymbolsForRenaming.php.html#247\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isExcludeConstantsNamespace<\/a>"],[0,5,"<a href=\"MarkSymbolsForRenaming.php.html#263\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isExcludedConstantsFilePattern<\/a>"],[100,1,"<a href=\"MarkSymbolsForRenaming.php.html#281\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::isExcludeConstantName<\/a>"],[0,2,"<a href=\"MarkSymbolsForRenaming.php.html#289\">BrianHenryIE\\Strauss\\Pipeline\\MarkSymbolsForRenaming::preparePattern<\/a>"],[100,4,"<a href=\"Parallel\/ParallelConfig.php.html#27\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig::__construct<\/a>"],[100,1,"<a href=\"Parallel\/ParallelConfig.php.html#40\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig::sequential<\/a>"],[100,2,"<a href=\"Parallel\/ParallelConfig.php.html#50\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig::detect<\/a>"],[54.54545454545454,8,"<a href=\"Parallel\/ParallelConfig.php.html#61\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig::countCpus<\/a>"],[100,1,"<a href=\"Parallel\/ParallelConfig.php.html#84\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig::isSequential<\/a>"],[100,1,"<a href=\"Parallel\/ParallelConfig.php.html#89\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig::getMaxProcesses<\/a>"],[100,1,"<a href=\"Parallel\/ParallelConfig.php.html#94\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig::getFilesPerChunk<\/a>"],[100,1,"<a href=\"Parallel\/ParallelConfig.php.html#99\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig::getChunkTimeoutSeconds<\/a>"],[100,1,"<a href=\"Parallel\/ParallelConfig.php.html#107\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\ParallelConfig::getProcessesToSpawn<\/a>"],[100,1,"<a href=\"Parallel\/Worker.php.html#30\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\Worker::__construct<\/a>"],[100,1,"<a href=\"Parallel\/Worker.php.html#39\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\Worker::send<\/a>"],[100,3,"<a href=\"Parallel\/Worker.php.html#49\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\Worker::readLines<\/a>"],[100,2,"<a href=\"Parallel\/Worker.php.html#65\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\Worker::isChunkDone<\/a>"],[100,2,"<a href=\"Parallel\/Worker.php.html#70\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\Worker::isChunkTimedOut<\/a>"],[100,1,"<a href=\"Parallel\/WorkerPool.php.html#37\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool::__construct<\/a>"],[100,1,"<a href=\"Parallel\/WorkerPool.php.html#47\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool::getConfig<\/a>"],[100,11,"<a href=\"Parallel\/WorkerPool.php.html#62\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool::analyze<\/a>"],[85.71428571428571,2,"<a href=\"Parallel\/WorkerPool.php.html#123\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool::startWorker<\/a>"],[100,2,"<a href=\"Parallel\/WorkerPool.php.html#141\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool::sendNextChunk<\/a>"],[100,11,"<a href=\"Parallel\/WorkerPool.php.html#161\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool::readResults<\/a>"],[100,4,"<a href=\"Parallel\/WorkerPool.php.html#196\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool::checkExited<\/a>"],[100,1,"<a href=\"Parallel\/WorkerPool.php.html#208\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool::encodeCodeMap<\/a>"],[100,2,"<a href=\"Parallel\/WorkerPool.php.html#213\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerPool::decodeCodeMap<\/a>"],[90.9090909090909,3,"<a href=\"Parallel\/WorkerProcessFactory.php.html#20\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerProcessFactory::getCommand<\/a>"],[100,1,"<a href=\"Parallel\/WorkerProcessFactory.php.html#42\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerProcessFactory::create<\/a>"],[55.55555555555556,5,"<a href=\"Parallel\/WorkerProcessFactory.php.html#50\">BrianHenryIE\\Strauss\\Pipeline\\Parallel\\WorkerProcessFactory::getMainScript<\/a>"],[100,1,"<a href=\"Prefixer.php.html#79\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::__construct<\/a>"],[100,2,"<a href=\"Prefixer.php.html#95\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::replaceInFiles<\/a>"],[55.55555555555556,9,"<a href=\"Prefixer.php.html#102\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::replaceInFile<\/a>"],[0,6,"<a href=\"Prefixer.php.html#171\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::replaceInProjectFiles<\/a>"],[100,8,"<a href=\"Prefixer.php.html#237\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::replaceInString<\/a>"],[80.95238095238095,8,"<a href=\"Prefixer.php.html#278\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::getCodeMap<\/a>"],[90.9090909090909,2,"<a href=\"Prefixer.php.html#324\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::sortFilterEdits<\/a>"],[100,2,"<a href=\"Prefixer.php.html#348\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::applyEdits<\/a>"],[100,11,"<a href=\"Prefixer.php.html#374\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::updateCodeMap<\/a>"],[0,1,"<a href=\"Prefixer.php.html#440\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::getModifiedFiles<\/a>"],[0,2,"<a href=\"Prefixer.php.html#454\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::prefixComposerAutoloadFiles<\/a>"],[0,3,"<a href=\"Prefixer.php.html#477\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::getComposerRuntimeFiles<\/a>"],[0,9,"<a href=\"Prefixer.php.html#501\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::getComposerRuntimeSymbols<\/a>"],[0,2,"<a href=\"Prefixer.php.html#598\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::getNamespaceFromFqdn<\/a>"],[100,1,"<a href=\"Prefixer.php.html#606\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::getAnalyzer<\/a>"],[100,1,"<a href=\"Prefixer.php.html#611\">BrianHenryIE\\Strauss\\Pipeline\\Prefixer::getPlanner<\/a>"],[100,14,"<a href=\"SymbolIndex.php.html#76\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::__construct<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#127\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::isFor<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#132\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getNamespaces<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#140\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getSymbolCount<\/a>"],[90,4,"<a href=\"SymbolIndex.php.html#150\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getNamespacesToRenameByName<\/a>"],[100,3,"<a href=\"SymbolIndex.php.html#173\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getActiveNamespaceReplacements<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#188\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getNamespacesToRename<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#193\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getNamespacedToRename<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#198\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getNamespacedToRenameNotGlobal<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#203\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getGlobalClassesInterfacesTraitsToRename<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#208\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getFunctionsToRename<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#213\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getConstantsToRename<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#218\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getNamespacedToRenameByFqdn<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#223\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getFunctionToRenameByFqdn<\/a>"],[100,1,"<a href=\"SymbolIndex.php.html#228\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getGlobalClassInterfaceTraitToRenameByName<\/a>"],[100,4,"<a href=\"SymbolIndex.php.html#242\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getStringSearchSymbolsForNames<\/a>"],[100,2,"<a href=\"SymbolIndex.php.html#266\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getQuotedNames<\/a>"],[100,4,"<a href=\"SymbolIndex.php.html#289\">BrianHenryIE\\Strauss\\Pipeline\\SymbolIndex::getQualifiedNameCandidates<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>
