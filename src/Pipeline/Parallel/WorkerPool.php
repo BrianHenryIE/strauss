@@ -104,7 +104,7 @@ class WorkerPool
                         throw new ParallelisationException(sprintf(
                             'Worker process timed out after %d seconds analysing: %s',
                             $this->config->getChunkTimeoutSeconds(),
-                            implode(', ', $worker->pendingFiles)
+                            implode(', ', array_keys($worker->pendingFiles))
                         ));
                     }
                 }
