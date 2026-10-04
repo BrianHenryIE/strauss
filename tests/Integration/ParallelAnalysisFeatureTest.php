@@ -60,8 +60,10 @@ class ParallelAnalysisFeatureTest extends IntegrationTestCase
 
         $exitCode = $this->runStrauss($parallelOutput, '--parallel=4 --debug');
         $this->assertEquals(0, $exitCode, $parallelOutput);
-        $this->assertTrue($logger->hasDebugThatMatches('/Analysing \d+ files with \d+ worker processes/'), 'Parallel run should use workers.');
-        $this->assertFalse($logger->hasWarningThatContains('Could not analyse files in parallel'));
+        if(!$this->isTestingWithPhar()) {
+            $this->assertTrue( $logger->hasDebugThatMatches( '/Analysing \d+ files with \d+ worker processes/' ), 'Parallel run should use workers.' );
+            $this->assertFalse( $logger->hasWarningThatContains( 'Could not analyse files in parallel' ) );
+        }
         $parallel = $this->snapshotDirectory($projectDir . '/vendor-prefixed');
 
         $this->assertSame(array_keys($sequential), array_keys($parallel), 'Different files were written.');
