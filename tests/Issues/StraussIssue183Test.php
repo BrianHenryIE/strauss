@@ -41,6 +41,13 @@ class StraussIssue183Test extends IntegrationTestCase
   "require-dev": {
     "brianhenryie/strauss": "dev-master"
   },
+  "config": {
+    "audit": {
+      "ignore": {
+        "CVE-2026-102601": "league/flysytem 2.x"
+      }
+    }
+  },
   "extra": {
     "strauss": {
 $targetDirectoryJsonLine

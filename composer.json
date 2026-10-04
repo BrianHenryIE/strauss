@@ -163,6 +163,11 @@
         "coenjacobs/mozart": "*"
     },
     "config": {
+        "audit": {
+            "ignore": {
+                "CVE-2026-102601": "league/flysytem 2.x"
+            }
+        },
         "sort-packages": true,
         "allow-plugins": {
             "phpstan/extension-installer": true
