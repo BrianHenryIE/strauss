@@ -60,9 +60,9 @@ class ParallelAnalysisFeatureTest extends IntegrationTestCase
 
         $exitCode = $this->runStrauss($parallelOutput, '--parallel=4 --debug');
         $this->assertEquals(0, $exitCode, $parallelOutput);
-        if(!$this->isTestingWithPhar()) {
-            $this->assertTrue( $logger->hasDebugThatMatches( '/Analysing \d+ files with \d+ worker processes/' ), 'Parallel run should use workers.' );
-            $this->assertFalse( $logger->hasWarningThatContains( 'Could not analyse files in parallel' ) );
+        if (!$this->isTestingWithPhar()) {
+            $this->assertTrue($logger->hasDebugThatMatches('/Analysing \d+ files with \d+ worker processes/'), 'Parallel run should use workers.');
+            $this->assertFalse($logger->hasWarningThatContains('Could not analyse files in parallel'));
         }
         $parallel = $this->snapshotDirectory($projectDir . '/vendor-prefixed');
 
@@ -96,8 +96,8 @@ EOD;
         $this->assertParallelMatchesSequential($this->testsWorkingDir);
 
         // Symbol discovery still happens in this process, in file order, whichever worker parsed the file.
-        if(!$this->isTestingWithPhar()) {
-            $this->assertTrue( $this->getTestLogger()->hasInfoThatContains( 'Found new class:::PhpParser\Node\Name' ) );
+        if (!$this->isTestingWithPhar()) {
+            $this->assertTrue($this->getTestLogger()->hasInfoThatContains('Found new class:::PhpParser\Node\Name'));
         }
     }
 
