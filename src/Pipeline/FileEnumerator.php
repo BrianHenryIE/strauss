@@ -230,8 +230,8 @@ class FileEnumerator
         ?string $autoloaderType = null
     ): void {
 
+        // Check if we are dealing with a file or directory.
         if ($this->filesystem->directoryExists($sourceAbsoluteFilepath)) {
-            $this->logger->debug("Skipping directory at {sourcePath}", ['sourcePath' => $sourceAbsoluteFilepath]);
             return;
         }
 

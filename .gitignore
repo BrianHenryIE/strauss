@@ -22,3 +22,8 @@ scripts/builtins.php
 
 /teststempdir
 /.phpstanfilter
+
+# The benchmark project keeps its lock so runs are comparable.
+!tests/Benchmark/composer.lock
+tests/Benchmark/vendor/
+tests/Benchmark/vendor-prefixed/

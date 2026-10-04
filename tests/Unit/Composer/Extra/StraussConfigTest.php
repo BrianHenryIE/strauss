@@ -1245,6 +1245,108 @@ EOD;
         }
     }
 
+    /**
+     * @return array<string, array{0:string, 1:?int}>
+     */
+    public static function parallelProvider(): array
+    {
+        return [
+            'default' => ['', null],
+            'true' => ['"parallel": true,', null],
+            'zero' => ['"parallel": 0,', null],
+            'false' => ['"parallel": false,', 1],
+            'one' => ['"parallel": 1,', 1],
+            'four' => ['"parallel": 4,', 4],
+            'negative' => ['"parallel": -2,', 1],
+        ];
+    }
+
+    /**
+     * `parallel` in composer.json: null means as many workers as there are spare CPUs, 1 means none.
+     *
+     * @dataProvider parallelProvider
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('parallelProvider')]
+    public function test_parallel(string $parallelJson, ?int $expected): void
+    {
+        $composerJson = <<<EOD
+{
+ "extra":{
+  "strauss": {
+   $parallelJson
+   "namespace_prefix": "BrianHenryIE\\\\TestStrauss\\\\"
+  }
+ }
+}
+EOD;
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerJson);
+            $composer = (new Factory())->createComposer(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $this->assertSame($expected, $sut->getParallel());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
+
+    /**
+     * @return array<string, array{0:string, 1:string, 2:?int}> composer.json fragment, CLI, expected.
+     */
+    public static function parallelCliProvider(): array
+    {
+        return [
+            'not passed keeps composer.json false' => ['"parallel": false,', '', 1],
+            'not passed keeps composer.json number' => ['"parallel": 3,', '', 3],
+            'flag alone enables' => ['"parallel": false,', '--parallel', null],
+            'true' => ['"parallel": false,', '--parallel=true', null],
+            'zero' => ['"parallel": false,', '--parallel=0', null],
+            'false' => ['', '--parallel=false', 1],
+            'one' => ['', '--parallel=1', 1],
+            'number overrides composer.json' => ['"parallel": 2,', '--parallel=6', 6],
+            'nonsense disables' => ['', '--parallel=maybe', 1],
+        ];
+    }
+
+    /**
+     * `--parallel` on the command line overrides `parallel` in composer.json.
+     *
+     * @dataProvider parallelCliProvider
+     *
+     * @covers ::updateFromCli
+     * @covers ::getParallel
+     * @covers ::setParallel
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('parallelCliProvider')]
+    public function test_parallel_cli(string $parallelJson, string $cli, ?int $expected): void
+    {
+        $composerJson = <<<EOD
+{
+ "extra":{
+  "strauss": {
+   $parallelJson
+   "namespace_prefix": "BrianHenryIE\\\\TestStrauss\\\\"
+  }
+ }
+}
+EOD;
+        // As {@see \BrianHenryIE\Strauss\Console\Commands\DependenciesCommand::configure()} defines it.
+        $inputDefinition = new \Symfony\Component\Console\Input\InputDefinition();
+        $inputDefinition->addOption(new InputOption('parallel', null, InputOption::VALUE_OPTIONAL, '', false));
+        $input = new ArgvInput(array_merge(['strauss'], array_filter(explode(' ', $cli))), $inputDefinition);
+
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerJson);
+            $composer = (new Factory())->createComposer(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $sut->updateFromCli($input);
+            $this->assertSame($expected, $sut->getParallel());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
+
     public function test_exclude_git_files_default_true(): void
     {
         $composerExtraStraussJson = <<<'EOD'

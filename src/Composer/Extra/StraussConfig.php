@@ -232,6 +232,16 @@ class StraussConfig implements
     protected bool $optimizeAutoloader = true;
 
     /**
+     * Analyse files in parallel worker processes.
+     *
+     * `true` or `0`: as many workers as there are spare CPUs; `false` or `1`: in this process only; `N`: at most
+     * `N` workers.
+     *
+     * @var mixed `int|bool`; untyped so the JSON mapper does not cast one to the other.
+     */
+    protected $parallel = true;
+
+    /**
      * Should `.git`, `.gitignore`-matched and `.gitattributes export-ignore` files be skipped when
      * enumerating each package's files (mimicking `git archive` / Composer dist behaviour)?
      */
@@ -992,6 +1002,27 @@ class StraussConfig implements
     }
 
     /**
+     * The maximum number of worker processes to analyse files with, or null for as many as there are spare CPUs.
+     *
+     * `1` means no worker processes.
+     */
+    public function getParallel(): ?int
+    {
+        if (is_bool($this->parallel)) {
+            return $this->parallel ? null : 1;
+        }
+        return 0 === $this->parallel ? null : max(1, $this->parallel);
+    }
+
+    /**
+     * @param bool|int $parallel
+     */
+    public function setParallel($parallel): void
+    {
+        $this->parallel = $parallel;
+    }
+
+    /**
      * @param bool $includeRootAutoload Include the project root autoload in the strauss autoloader.
      */
     public function setIncludeRootAutoload(bool $includeRootAutoload): void
@@ -1034,6 +1065,18 @@ class StraussConfig implements
             $isDeleteVendorPackagesCommandLine = $input->getOption('delete_vendor_packages') === 'true'
                 || $input->getOption('delete_vendor_packages') === null;
             $this->setDeleteVendorPackages($isDeleteVendorPackagesCommandLine);
+        }
+
+        if ($input->hasOption('parallel') && $input->getOption('parallel') !== false) {
+            // `--parallel` alone enables it; `--parallel=N` caps the workers; `--parallel=false` or `=1` disables it.
+            $parallelInput = $input->getOption('parallel');
+            if (is_null($parallelInput) || '' === $parallelInput) {
+                $this->setParallel(true);
+            } elseif (is_numeric($parallelInput)) {
+                $this->setParallel((int) $parallelInput);
+            } else {
+                $this->setParallel((bool) filter_var($parallelInput, FILTER_VALIDATE_BOOLEAN));
+            }
         }
 
         if ($input->hasOption('dry-run') && $input->getOption('dry-run') !== false) {
