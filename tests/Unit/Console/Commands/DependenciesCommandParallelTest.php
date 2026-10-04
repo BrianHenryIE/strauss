@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BrianHenryIE\Strauss\Tests\Unit\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
