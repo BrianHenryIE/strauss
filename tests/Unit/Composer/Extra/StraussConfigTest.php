@@ -1349,6 +1349,62 @@ EOD;
         }
     }
 
+    /**
+     * @return array<string, array{0:string, 1:string, 2:bool}> composer.json fragment, CLI, expected.
+     */
+    public static function cacheProvider(): array
+    {
+        return [
+            'default' => ['', '', false],
+            'composer.json true' => ['"cache": true,', '', true],
+            'composer.json false' => ['"cache": false,', '', false],
+            'flag alone enables' => ['', '--cache', true],
+            'cli true' => ['"cache": false,', '--cache=true', true],
+            'cli false' => ['', '--cache=false', false],
+            'cli false overrides composer.json' => ['"cache": true,', '--cache=false', false],
+            'cli zero' => ['', '--cache=0', false],
+        ];
+    }
+
+    /**
+     * `cache` in composer.json, overridden by `--cache` on the command line.
+     *
+     * @dataProvider cacheProvider
+     *
+     * @covers ::updateFromCli
+     * @covers ::isCache
+     * @covers ::setCache
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('cacheProvider')]
+    public function test_cache(string $cacheJson, string $cli, bool $expected): void
+    {
+        $composerJson = <<<EOD
+{
+ "extra":{
+  "strauss": {
+   $cacheJson
+   "namespace_prefix": "BrianHenryIE\\\\TestStrauss\\\\"
+  }
+ }
+}
+EOD;
+        // As {@see \BrianHenryIE\Strauss\Console\Commands\DependenciesCommand::configure()} defines it.
+        $inputDefinition = new \Symfony\Component\Console\Input\InputDefinition();
+        $inputDefinition->addOption(new InputOption('cache', null, InputOption::VALUE_OPTIONAL, '', false));
+        $input = new ArgvInput(array_merge(['strauss'], array_filter(explode(' ', $cli))), $inputDefinition);
+
+        $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
+        try {
+            file_put_contents($tmpfname, $composerJson);
+            $composer = (new Factory())->createComposer(new NullIO(), $tmpfname);
+            $sut = new StraussConfig($composer);
+            $sut->updateFromCli($input);
+            $this->assertSame($expected, $sut->isCache());
+        } finally {
+            unlink($tmpfname);
+        }
+    }
+
     public function test_exclude_git_files_default_true(): void
     {
         $composerExtraStraussJson = <<<'EOD'

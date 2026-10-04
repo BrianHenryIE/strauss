@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Tests\Unit\Pipeline\Parallel;
 
 use BrianHenryIE\Strauss\Files\FileCodeMap;
+use BrianHenryIE\Strauss\Pipeline\FileSymbol\AnalysisCache;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
 use BrianHenryIE\Strauss\Pipeline\Parallel\ParallelConfig;
 use BrianHenryIE\Strauss\Pipeline\Parallel\ParallelisationException;
@@ -368,5 +369,46 @@ PHP;
         $config = new ParallelConfig(3, 7);
 
         self::assertSame($config, (new WorkerPool($config))->getConfig());
+    }
+
+    /**
+     * Given a cache directory, real workers add what they analyse to it.
+     *
+     * @covers ::analyze
+     * @covers ::sendNextChunk
+     * @covers \BrianHenryIE\Strauss\Console\Commands\WorkerCommand
+     */
+    public function test_workers_write_to_the_analysis_cache(): void
+    {
+        $cacheDirectory = sys_get_temp_dir() . '/strauss-pool-cache-test-' . bin2hex(random_bytes(6));
+        $files = $this->getSourceFiles(6);
+
+        $pool = new WorkerPool(new ParallelConfig(2, 2));
+
+        $results = [];
+        try {
+            $pool->analyze($files, function (string $path, ?FileCodeMap $codeMap) use (&$results): void {
+                $results[$path] = $codeMap;
+            }, $cacheDirectory);
+
+            $cache = new AnalysisCache($cacheDirectory, true);
+            foreach ($files as $path) {
+                $cached = $cache->get((string) file_get_contents($path));
+                self::assertNotNull($cached, $path);
+                self::assertEquals($results[$path], $cached[0]);
+            }
+        } finally {
+            if (is_dir($cacheDirectory)) {
+                $entries = new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($cacheDirectory, \FilesystemIterator::SKIP_DOTS),
+                    \RecursiveIteratorIterator::CHILD_FIRST
+                );
+                /** @var \SplFileInfo $entry */
+                foreach ($entries as $entry) {
+                    $entry->isDir() ? rmdir($entry->getPathname()) : unlink($entry->getPathname());
+                }
+                rmdir($cacheDirectory);
+            }
+        }
     }
 }
