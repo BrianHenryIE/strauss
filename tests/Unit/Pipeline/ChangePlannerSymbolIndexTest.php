@@ -283,4 +283,124 @@ EOD;
         self::assertSame($contents, $this->prefix($contents, new DiscoveredSymbols(), $planner));
         self::assertSame($expected, $this->prefix($contents, $this->getSymbols(), $planner));
     }
+
+    /**
+     * Namespaces `Acme`, `Acme\Lib` and `Acme\Lib\Widget`, and a class `Acme\Lib\Widget` which shares a name with
+     * the last of them.
+     */
+    protected function getNestedSymbols(): DiscoveredSymbols
+    {
+        $file = $this->getFile();
+
+        $namespaces = [];
+        foreach (['Acme', 'Acme\Lib', 'Acme\Lib\Widget'] as $name) {
+            $namespaces[$name] = new NamespaceSymbol($name, $file);
+            $namespaces[$name]->setDoRename(true);
+            $namespaces[$name]->setLocalReplacement('Prefix\\' . $name);
+        }
+
+        $root = new ClassSymbol('Acme\Root', $file, $namespaces['Acme']);
+        $root->setDoRename(true);
+        $widget = new ClassSymbol('Acme\Lib\Widget', $file, $namespaces['Acme\Lib']);
+        $widget->setDoRename(true);
+        $part = new ClassSymbol('Acme\Lib\Widget\Part', $file, $namespaces['Acme\Lib\Widget']);
+        $part->setDoRename(true);
+
+        return new DiscoveredSymbols(array_merge(array_values($namespaces), [$root, $widget, $part]));
+    }
+
+    /**
+     * A `use` of a class which was not discovered is renamed by the namespaces it is in; a name which only contains
+     * a namespace's name is not.
+     *
+     * @covers ::findUseStatementPositionsForNamespacedClasses
+     */
+    public function test_use_statements_in_nested_namespaces(): void
+    {
+        $contents = <<<'EOD'
+<?php
+namespace Consumer;
+
+use Acme\Lib\Widget;
+use Acme\Lib\Unknown;
+use Acme\Lib\Widget\Deeper\Thing;
+use Acme\Lib\{Widget as W, Other};
+use Unrelated\Acme\Lib\Widget as U;
+use AcmeNot\Lib\Widget as N;
+EOD;
+        $expected = <<<'EOD'
+<?php
+namespace Consumer;
+
+use Prefix\Acme\Lib\Widget;
+use Prefix\Acme\Lib\Unknown;
+use Prefix\Acme\Lib\Widget\Deeper\Thing;
+use Prefix\Acme\Lib\{Widget as W, Other};
+use Unrelated\Acme\Lib\Widget as U;
+use AcmeNot\Lib\Widget as N;
+EOD;
+
+        self::assertSame($expected, $this->prefix($contents, $this->getNestedSymbols()));
+    }
+
+    /**
+     * Only a whole quoted name is replaced. When a namespace and a class share the name, the namespace's forms
+     * (a trailing backslash, a variable class name) are replaced as well as the class's (a static property).
+     *
+     * @covers ::findSymbolsPositionsInStrings
+     * @covers ::findSymbolPositionsInStrings
+     */
+    public function test_strings_naming_a_namespace_and_class_with_the_same_name(): void
+    {
+        $contents = <<<'EOD'
+<?php
+namespace Consumer;
+
+$a = ['Acme\\Lib\\Widget', 'Acme\\Lib\\Widget\\', "Acme\Lib\Widget\\$name", 'Acme\Lib\Widget::$instance'];
+$b = ['Acme\\Lib\\WidgetFactory', 'the Acme\\Lib\\Widget class', 'Lib\\Widget'];
+EOD;
+        $expected = <<<'EOD'
+<?php
+namespace Consumer;
+
+$a = ['Prefix\\Acme\\Lib\\Widget', 'Prefix\\Acme\\Lib\\Widget\\', "Prefix\Acme\Lib\Widget\\$name", 'Prefix\Acme\Lib\Widget::$instance'];
+$b = ['Acme\\Lib\\WidgetFactory', 'the Acme\\Lib\\Widget class', 'Lib\\Widget'];
+EOD;
+
+        self::assertSame($expected, $this->prefix($contents, $this->getNestedSymbols()));
+    }
+
+    /**
+     * A file which mentions a vendor namespace everywhere, as a licence header does, is only searched for the
+     * symbols it quotes.
+     *
+     * @covers ::findSymbolsPositionsInStrings
+     */
+    public function test_strings_are_only_searched_for_quoted_names(): void
+    {
+        $planner = new class () extends ChangePlanner {
+            /** @var string[] */
+            public array $searchedFor = [];
+
+            protected function findSymbolPositionsInStrings(string $contents, \BrianHenryIE\Strauss\Types\DiscoveredSymbol $symbol): array
+            {
+                $this->searchedFor[] = get_class($symbol) . ':' . $symbol->getOriginalFqdnName();
+                return parent::findSymbolPositionsInStrings($contents, $symbol);
+            }
+        };
+
+        $contents = <<<'EOD'
+<?php
+/*
+ * This file is part of the Acme package. See Acme\Lib and Acme\Root.
+ */
+namespace Consumer;
+
+return is_a($thing, 'Acme\\Lib\\Widget\\Part');
+EOD;
+
+        $this->prefix($contents, $this->getNestedSymbols(), $planner);
+
+        self::assertSame([ClassSymbol::class . ':Acme\Lib\Widget\Part'], $planner->searchedFor);
+    }
 }

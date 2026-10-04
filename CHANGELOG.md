@@ -7,6 +7,8 @@
 * Architecture: new `ChangePlanner` pipeline step determines every edit to every file before any file is modified; `Prefixer` only applies the planned edits
 * Performance: when searching strings, a package's files are only searched for symbols of the packages it requires, suggests, or which provide/replace its requirements
 * Performance: files are parsed in parallel worker processes (`parallel` config / `--parallel=N`), one per spare CPU; `--debug` logs how long each pipeline step took
+* Performance: planning a file's changes no longer depends on the number of symbols in the project: strings are only searched for the symbols they quote, and the planner's lookup tables are built once per run
+* Fix: a namespace which shares its name with a class was not prefixed in strings such as `'Acme\\Widget\\'`
 * Performance: references to Composer's runtime classes (`Composer\InstalledVersions` etc.) are planned with every other change, so prefixing Composer's autoload files no longer rewrites every file a second time
 
 ## 0.29.2 September 2026

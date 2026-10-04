@@ -148,7 +148,7 @@ class ChangePlanner
      */
     protected function findPositionsOfUsesOfNamespacedConstants(DiscoveredSymbols $symbols, FileCodeMap $codeMap): array
     {
-        $namespaceSymbols = $symbols->getNamespaces();
+        $namespaceSymbols = $this->getIndex($symbols)->getNamespaces();
         if (count($namespaceSymbols) === 0) {
             return [];
         }
@@ -195,20 +195,11 @@ class ChangePlanner
      */
     protected function findUseStatementPositionsForNamespacedClasses(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
     {
-        $activeNamespaces = [];
-        /** @var NamespacedSymbol $symbol */
-        foreach ($this->getIndex($discoveredSymbols)->getNamespacedToRenameNotGlobal()->toArray() as $symbol) {
-            $ns = $symbol->getNamespace();
-            $original = rtrim($ns->getOriginalFqdnName(), '\\');
-            $replacement = rtrim($ns->getReplacementFqdnName(), '\\');
-            $activeNamespaces[$original] = $replacement;
-        }
+        $activeNamespaces = $this->getIndex($discoveredSymbols)->getActiveNamespaceReplacements();
 
         if (empty($activeNamespaces)) {
             return [];
         }
-
-        uksort($activeNamespaces, fn($a, $b) => strlen($b) - strlen($a));
 
         $positions = [];
 
@@ -223,8 +214,13 @@ class ChangePlanner
                     'replacement' => $namespacedSymbols->get($nameStr)->getReplacementFqdnName(),
                 ];
             } else { // Partial match (group)
-                foreach ($activeNamespaces as $original => $replacement) {
-                    if (str_starts_with($nameStr, $original . '\\')) {
+                // Every active namespace the name is in, longest first: looked up by each of the name's prefixes
+                // rather than comparing the name with every namespace.
+                $nameParts = explode('\\', $nameStr);
+                for ($length = count($nameParts) - 1; $length >= 1; $length--) {
+                    $original = implode('\\', array_slice($nameParts, 0, $length));
+                    if (isset($activeNamespaces[$original])) {
+                        $replacement = $activeNamespaces[$original];
                         /** @var ?NamespacedSymbol $classSymbol */
                         $classSymbol = $namespacedSymbols->get($nameStr);
                         if ($classSymbol && $classSymbol->isDoRename()) {
@@ -274,14 +270,7 @@ class ChangePlanner
         $unprefixedFileSymbols = $isDoPrefix ? null : $file->getDiscoveredSymbols();
 
         /** @var NamespaceSymbol[] $symbolMap indexed by exact original symbol (no trailing \) */
-        $symbolMap = [];
-        foreach ($namespacesToRename as $symbol) {
-            if (isset($symbolMap[rtrim($symbol->getOriginalFqdnName(), '\\')])) {
-                throw new Exception('losing data');
-            }
-            $symbolMap[rtrim($symbol->getOriginalFqdnName(), '\\')] = $symbol;
-        }
-        uksort($symbolMap, fn($a, $b) => strlen($b) - strlen($a));
+        $symbolMap = $index->getNamespacesToRenameByName();
 
         $positions = [];
         $handled = [];
@@ -294,6 +283,7 @@ class ChangePlanner
          * @param string[] $parts
          */
         $findPrefixSymbol = function (array $parts) use ($symbolMap): ?array {
+            /** @var string[] $parts */
             for ($len = count($parts) - 1; $len >= 1; $len--) {
                 $prefix = implode('\\', array_slice($parts, 0, $len));
 
@@ -532,7 +522,7 @@ class ChangePlanner
     {
         $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
 
-        $discoveredSymbolsCount = count($discoveredSymbols->toArray());
+        $discoveredSymbolsCount = $this->getIndex($discoveredSymbols)->getSymbolCount();
         $this->logger->debug(sprintf(
             'Searching in {filename} for {count} symbol%s as string',
             $discoveredSymbolsCount === 1 ? '' : 's'
@@ -564,8 +554,9 @@ class ChangePlanner
         }
         $buffer = implode('', $bufferParts);
 
-        // Only the symbols whose name could appear in the buffer, rather than every symbol in the project.
-        $symbols = $this->getIndex($discoveredSymbols)->getStringSearchSymbolsForWords(SymbolIndex::getWords($buffer));
+        // Only the symbols named at the start of a quoted string in the buffer, rather than every symbol in the
+        // project: a file's strings name few symbols, however many share a vendor namespace with them.
+        $symbols = $this->getIndex($discoveredSymbols)->getStringSearchSymbolsForNames(SymbolIndex::getQuotedNames($buffer));
         $symbols = $this->filterToSymbolsAvailableToFile($symbols, $file);
 
         if (empty($symbols)) {
