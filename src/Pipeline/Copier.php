@@ -32,6 +32,13 @@ class Copier
     protected CopierConfigInterface $config;
 
     /**
+     * Given a file, writes its target and returns true, or returns false for the file to be copied.
+     *
+     * @var ?callable(File): bool
+     */
+    protected $fileWriter = null;
+
+    /**
      * Copier constructor.
      *
      * @param DiscoveredFiles $files Contains a collections of Files with source and target paths.
@@ -49,6 +56,18 @@ class Copier
         $this->config = $config;
         $this->logger = $logger;
         $this->filesystem = $filesystem;
+    }
+
+    /**
+     * Have files written to their target by something other than copying, e.g. with their changes already made:
+     * {@see Prefixer::writeFromSource()}.
+     *
+     * @param ?callable(File): bool $fileWriter Writes the file's target and returns true, or returns false for
+     *                                           the file to be copied.
+     */
+    public function setFileWriter(?callable $fileWriter): void
+    {
+        $this->fileWriter = $fileWriter;
     }
 
     /**
@@ -86,9 +105,6 @@ class Copier
     {
         $this->logger->notice('Copying files');
 
-        /**
-         * @var File $file
-         */
         foreach ($this->files->getFiles() as $file) {
             if (!$file->isDoCopy()) {
                 $this->logger->debug('Skipping {sourcePath}', ['sourcePath' => $file->getSourcePath()]);
@@ -110,7 +126,9 @@ class Copier
                     'Copying file to {targetPath}',
                     ['targetPath' => $targetAbsolutePath]
                 );
-                $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
+                if (is_null($this->fileWriter) || !($file instanceof File) || !($this->fileWriter)($file)) {
+                    $this->filesystem->copy($sourceAbsoluteFilepath, $targetAbsolutePath);
+                }
             } else {
                 $file->setDoPrefix(false);
                 $this->logger->warning(

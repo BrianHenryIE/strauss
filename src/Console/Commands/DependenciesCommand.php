@@ -584,6 +584,15 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
 
 
+        // PHP files with planned changes are written once, already changed, instead of copied and then rewritten.
+        // Not during `--dry-run`, which keeps the two steps apart.
+        if (!$this->config->isDryRun()) {
+            $replacer = $this->getReplacer();
+            $copier->setFileWriter(
+                fn(File $file): bool => $replacer->writeFromSource($this->discoveredSymbols, $file)
+            );
+        }
+
         $copier->prepareTarget();
         $copier->copy();
 
@@ -608,16 +617,26 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
         $this->logger->notice('Performing replacements...');
 
-        $this->replacer = new Prefixer(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-
-        $this->replacer->replaceInFiles(
+        $this->getReplacer()->replaceInFiles(
             $this->discoveredSymbols,
             $this->discoveredFiles->getFiles()
         );
+    }
+
+    /**
+     * One Prefixer for copying and for replacing: it remembers which files it wrote while they were being copied.
+     */
+    protected function getReplacer(): Prefixer
+    {
+        if (!isset($this->replacer)) {
+            $this->replacer = new Prefixer(
+                $this->config,
+                $this->filesystem,
+                $this->logger
+            );
+        }
+
+        return $this->replacer;
     }
 
     /**
