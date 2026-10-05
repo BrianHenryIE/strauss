@@ -20,8 +20,18 @@ use BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition;
 
 class FileCodeMap
 {
-    /** @var CodeLocation[] Sorted by start position. */
+    /** @var array<int, CodeLocation> Sorted by start position. */
     protected array $locations;
+
+    /**
+     * The same locations grouped by {@see CodeLocation::getType()}, each keyed by its index in
+     * {@see self::$locations}, so asking for the locations of a type does not mean looking at every location.
+     *
+     * Derived from {@see self::$locations}: not serialized, and rebuilt when unserialized.
+     *
+     * @var array<string, array<int, CodeLocation>>
+     */
+    protected array $locationsByType = [];
 
     /**
      * The symbols the file defines, in declaration order.
@@ -52,6 +62,7 @@ class FileCodeMap
     {
         usort($locations, fn(CodeLocation $a, CodeLocation $b) => $a->getStart() <=> $b->getStart());
         $this->locations = $locations;
+        $this->groupLocationsByType();
         $this->definitions = array_values($definitions);
         $this->namespaceNames = empty($namespaceNames) ? ['\\'] : array_values($namespaceNames);
         $this->contentsCrc32 = crc32($contents);
@@ -70,11 +81,39 @@ class FileCodeMap
      */
     public function getLocationsOfType(string ...$types): array
     {
-        $typesLookup = array_fill_keys($types, true);
-        return array_values(array_filter(
-            $this->locations,
-            fn(CodeLocation $location) => isset($typesLookup[$location->getType()])
-        ));
+        if (1 === count($types)) {
+            return array_values($this->locationsByType[$types[0]] ?? []);
+        }
+
+        // The groups are keyed by position in the sorted list, so the union sorted by key is in source order.
+        $locations = [];
+        foreach (array_unique($types) as $type) {
+            $locations += $this->locationsByType[$type] ?? [];
+        }
+        ksort($locations);
+
+        return array_values($locations);
+    }
+
+    protected function groupLocationsByType(): void
+    {
+        $this->locationsByType = [];
+        foreach ($this->locations as $index => $location) {
+            $this->locationsByType[$location->getType()][$index] = $location;
+        }
+    }
+
+    /**
+     * @return string[] The properties to serialize: everything but the derived grouping.
+     */
+    public function __sleep(): array
+    {
+        return ['locations', 'definitions', 'namespaceNames', 'contentsCrc32'];
+    }
+
+    public function __wakeup(): void
+    {
+        $this->groupLocationsByType();
     }
 
     /**

@@ -13,11 +13,11 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Helpers\GitAttributes;
-use Inmarelibero\GitIgnoreChecker\Exception\GitIgnoreCherkerException;
-use Inmarelibero\GitIgnoreChecker\GitIgnoreChecker;
+use BrianHenryIE\Strauss\Helpers\GitIgnoreRules;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 class FileEnumerator
 {
@@ -121,7 +121,7 @@ class FileEnumerator
      */
     protected function excludeGitFiles(array $basePaths, array $absoluteFilePaths): array
     {
-        /** @var array<string, array{gitignore?:GitIgnoreChecker, gitattributes?:GitAttributes}> $repositories */
+        /** @var array<string, array{gitignore?:GitIgnoreRules, gitattributes?:GitAttributes}> $repositories */
         $repositories = [];
         foreach ($basePaths as $basePath) {
             if (!$this->filesystem->directoryExists($basePath)) {
@@ -142,9 +142,9 @@ class FileEnumerator
                     /**
                      * TODO: use {@see FileSystem::prefixPath()} when #278 is merged.
                      */
-                    $gitIgnoreChecker = new GitIgnoreChecker('/' . $normalizedBasePath);
-                    $repositories[$normalizedBasePath][ 'gitignore'] = $gitIgnoreChecker;
-                } catch (GitIgnoreCherkerException $e) {
+                    // Reads and compiles each `.gitignore` once, however many paths are checked against it.
+                    $repositories[$normalizedBasePath][ 'gitignore'] = new GitIgnoreRules('/' . $normalizedBasePath);
+                } catch (RuntimeException $e) {
                     // e.g. when the path is not on the local filesystem (in-memory tests).
                     // The user explicitly enabled Git exclusion, so surface the failure to honour it.
                     $this->logger->warning("Could not read .gitignore at {path}: {message}", [
@@ -172,7 +172,7 @@ class FileEnumerator
     }
 
     /**
-     * @param array<string, array{gitignore?:GitIgnoreChecker, gitattributes?:GitAttributes}> $repositories
+     * @param array<string, array{gitignore?:GitIgnoreRules, gitattributes?:GitAttributes}> $repositories
      *
      * @throws FilesystemException
      */
@@ -198,7 +198,7 @@ class FileEnumerator
                         $this->logger->debug("Skipping .gitignore'd file {path}", ['path' => $sourceAbsolutePath]);
                         return true;
                     }
-                } catch (GitIgnoreCherkerException $e) {
+                } catch (RuntimeException $e) {
                     $this->logger->warning("Could not check .gitignore for {path}: {message}", [
                         'path' => $sourceAbsolutePath,
                         'message' => $e->getMessage(),
