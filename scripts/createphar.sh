@@ -44,7 +44,6 @@ rm vendor/json-mapper/json-mapper/*.dist
 rm vendor/json-mapper/json-mapper/*.xml
 
 rm -rf vendor/pimple/pimple/src/Pimple/Tests
-rm -rf vendor/inmarelibero/gitignore-checker/tests
 
 echo "Run strauss --debug";
 php -d memory_limit=2G ../bin/strauss --debug

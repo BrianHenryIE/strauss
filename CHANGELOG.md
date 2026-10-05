@@ -10,6 +10,9 @@
 * Performance: planning a file's changes no longer depends on the number of symbols in the project: strings are only searched for the symbols they quote, and the planner's lookup tables are built once per run
 * Fix: a namespace which shares its name with a class was not prefixed in strings such as `'Acme\\Widget\\'`
 * Fix: `update_call_sites` no longer treats the target directory as call sites when the project's `autoload` key lists it (e.g. `"classmap": ["vendor-prefixed"]`), which double-prefixed docblocks
+* Performance: `.gitignore` files are read and compiled once per package rather than for every path checked (`GitIgnoreRules` replaces `inmarelibero/gitignore-checker`, which is now only a dev dependency used to check it gives the same answers)
+* Performance: worker processes run with OPcache's JIT compiler when it is available (PHP 8+, OPcache loaded, no Xdebug); set `STRAUSS_WORKER_JIT=0` to turn it off
+* Performance: keyed lookups replace linear scans for built-in symbol names, logged symbols and a file's locations by type
 * Performance: references to Composer's runtime classes (`Composer\InstalledVersions` etc.) are planned with every other change, so prefixing Composer's autoload files no longer rewrites every file a second time
 
 ## 0.29.2 September 2026

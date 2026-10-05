@@ -108,7 +108,7 @@ class FileSymbolScanner
 
     protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
     {
-        if (in_array($symbol->getOriginalFqdnName(), $this->getBuiltIns())) {
+        if ($this->isBuiltInSymbol($symbol->getOriginalFqdnName())) {
             $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
                 'symbolName' => $symbol->getOriginalLocalName(),
             ]);
@@ -121,11 +121,11 @@ class FileSymbolScanner
             $file->getDependency()->addDiscoveredSymbol($symbol);
         }
 
-        $level = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? 'debug' : 'info';
-        $newText = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? '' : 'new ';
+        $isLogged = isset($this->loggedSymbols[$symbol->getOriginalFqdnName()]);
+        $level = $isLogged ? 'debug' : 'info';
+        $newText = $isLogged ? '' : 'new ';
 
-        $this->loggedSymbols[] = $symbol->getOriginalFqdnName();
-//        $this->loggedSymbols[$symbol->getOriginalFqdnName()] = true;
+        $this->loggedSymbols[$symbol->getOriginalFqdnName()] = true;
 
         $this->logger->log(
             $level,
@@ -151,7 +151,7 @@ class FileSymbolScanner
 
         foreach ($files->getFiles() as $file) {
             if ($file instanceof FileWithDependency
-                && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
+                && !isset($packagesToPrefixLookup[$file->getDependency()->getPackageName()])) {
                     /**
                      * We will not prefix symbols found in this file because it is not in a default or listed package.
                      *
