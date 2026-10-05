@@ -7,6 +7,7 @@ use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
@@ -638,6 +639,23 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $relativeCallSitePaths
         );
 
+        // The files in the target directory have already been updated as the packages' own files. The project's
+        // autoload key often lists it, e.g. `"classmap": ["vendor-prefixed"]`.
+        $callSitePaths = array_values(array_filter(
+            $callSitePaths,
+            function (string $path): bool {
+                if ($this->isInTargetDirectory($path)) {
+                    $this->logger->debug('Skipping target directory when updating call sites: {path}', ['path' => $path]);
+                    return false;
+                }
+                return true;
+            }
+        ));
+
+        if (empty($callSitePaths)) {
+            return;
+        }
+
         $projectReplace = new Prefixer(
             $this->config,
             $this->filesystem,
@@ -650,12 +668,27 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->logger
         );
 
-        $projectFiles = $fileEnumerator->compileFileListForPaths($callSitePaths);
+        // A call site path may also contain the target directory, e.g. `"classmap": ["."]`.
+        $projectFiles = new DiscoveredFiles(array_filter(
+            $fileEnumerator->compileFileListForPaths($callSitePaths)->getFiles(),
+            fn(FileBase $file): bool => !$this->isInTargetDirectory($file->getSourcePath())
+        ));
 
         // TODO: Warn when a file that was specified is not found
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
 
         $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $projectFiles);
+    }
+
+    /**
+     * Is the path the target directory, or a file or directory inside it?
+     */
+    protected function isInTargetDirectory(string $absolutePath): bool
+    {
+        $targetDirectory = rtrim($this->filesystem->normalizePath($this->config->getAbsoluteTargetDirectory()), '/');
+        $path = rtrim($this->filesystem->normalizePath($absolutePath), '/');
+
+        return $path === $targetDirectory || str_starts_with($path, $targetDirectory . '/');
     }
 
     protected function addLicenses(): void
