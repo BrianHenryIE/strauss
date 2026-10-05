@@ -72,6 +72,13 @@ class Prefixer
      */
     protected array $changedFiles = array();
 
+    /**
+     * The files whose targets {@see self::writeFromSource()} wrote, keyed by source path.
+     *
+     * @var array<string, true>
+     */
+    protected array $writtenFromSource = [];
+
     protected ?PhpFileAnalyzer $analyzer = null;
 
     protected ?ChangePlanner $planner = null;
@@ -99,8 +106,74 @@ class Prefixer
         }
     }
 
+    /**
+     * Write the file's target directly from its source with the planned edits applied, so the file is written
+     * once rather than copied and then read back, edited and written again.
+     *
+     * Only for a PHP file which is to be copied and updated, has edits planned against its source's contents, and
+     * whose source is not reached through a symlink (copying has its own rules for those). Any other file is left
+     * to be copied, and updated by {@see self::replaceInFiles()} as before.
+     *
+     * Returns whether the target was written. When it was, {@see self::replaceInFiles()} skips the file.
+     *
+     * @throws FilesystemException
+     */
+    public function writeFromSource(DiscoveredSymbols $discoveredSymbols, File $file): bool
+    {
+        if ($this->config->isTargetDirectoryVendor()
+            || !$file->isDoCopy()
+            || !$file->getDoUpdate()
+            || !$file->isPhpFile()
+            || empty($file->getPlannedEdits())
+        ) {
+            return false;
+        }
+
+        $sourceAbsolutePath = $file->getSourcePath();
+        $targetAbsolutePath = $file->getTargetAbsolutePath();
+
+        if ($sourceAbsolutePath === $targetAbsolutePath || $this->filesystem->isSymlinked($sourceAbsolutePath)) {
+            return false;
+        }
+
+        $codeMap = $file->getCodeMap();
+        $contents = $this->filesystem->read($sourceAbsolutePath);
+
+        // Changed since it was scanned: copy it, and let it be analysed again when it is updated.
+        if (is_null($codeMap) || !$codeMap->matchesContent($contents)) {
+            return false;
+        }
+
+        $this->logger->debug("Updating contents of file: {targetAbsolutePath}", [
+            'targetAbsolutePath' => $targetAbsolutePath
+        ]);
+
+        $updatedContents = $this->replaceInString($discoveredSymbols, $contents, $file);
+
+        $this->filesystem->write($targetAbsolutePath, $updatedContents);
+        $this->writtenFromSource[$sourceAbsolutePath] = true;
+
+        if ($updatedContents !== $contents) {
+            $file->setDidUpdate();
+            $this->logger->info("Updated contents of file::::{targetAbsolutePath}", [
+                'targetAbsolutePath' => $targetAbsolutePath
+            ]);
+        } else {
+            $this->logger->debug("No changes to file::::{targetAbsolutePath}", [
+                'targetAbsolutePath' => $targetAbsolutePath
+            ]);
+        }
+
+        return true;
+    }
+
     protected function replaceInFile(DiscoveredSymbols $discoveredSymbols, FileBase $file): void
     {
+        // Its target was written, already updated, when the files were copied.
+        if (isset($this->writtenFromSource[$file->getSourcePath()])) {
+            return;
+        }
+
         if (!$this->config->isTargetDirectoryVendor()
             && !$file->isDoCopy()
         ) {
