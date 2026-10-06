@@ -464,7 +464,34 @@ class Prefixer
 
         $composerFiles = $this->getComposerRuntimeFiles($absoluteDirectory . '/composer');
 
-        $this->replaceInFiles($this->getComposerRuntimeSymbols($composerFiles), $composerFiles);
+        $composerRuntimeSymbols = $this->getComposerRuntimeSymbols($composerFiles);
+
+        // E.g. an `InstalledVersions.php` kept from an earlier run, when there is no `vendor` copy to replace it.
+        $filesToPrefix = array_filter(
+            $composerFiles,
+            fn(File $file): bool => !$this->isNamespaceAlreadyPrefixed($file)
+        );
+
+        $this->replaceInFiles($composerRuntimeSymbols, $filesToPrefix);
+    }
+
+    /**
+     * Does the file declare a namespace which already begins with the project's namespace prefix?
+     *
+     * @throws FilesystemException
+     */
+    protected function isNamespaceAlreadyPrefixed(File $file): bool
+    {
+        $namespacePrefix = rtrim($this->config->getNamespacePrefix() ?? '', '\\');
+
+        if ('' === $namespacePrefix) {
+            return false;
+        }
+
+        return 1 === preg_match(
+            '/^\s*namespace\s+' . preg_quote($namespacePrefix, '/') . '(\\\\|\s*[;{])/m',
+            $this->filesystem->read($file->getTargetAbsolutePath())
+        );
     }
 
     /**
@@ -561,6 +588,35 @@ class Prefixer
             );
             $classLoaderSymbol->setDoRename(true);
             $discoveredSymbols->add($classLoaderSymbol);
+
+            /**
+             * When the autoloader is regenerated without the `vendor` directory (`strauss dump-autoload`), the
+             * target directory's existing `InstalledVersions.php` already declares the prefixed class, although
+             * Composer's newly written classmap entry is the original `'Composer\InstalledVersions'`. Register
+             * the original name too so the classmap entry is renamed.
+             */
+            $namespacePrefix = rtrim($this->config->getNamespacePrefix() ?? '', '\\');
+            if (!is_null($namespaceString)
+                && '' !== $namespacePrefix
+                && str_starts_with($namespaceString, $namespacePrefix . '\\')
+            ) {
+                $originalNamespaceString = substr($namespaceString, strlen($namespacePrefix) + 1);
+                $originalNamespace = $discoveredSymbols->getNamespace($originalNamespaceString);
+                if (is_null($originalNamespace)) {
+                    $originalNamespace = new NamespaceSymbol($originalNamespaceString);
+                    $originalNamespace->setLocalReplacement($namespace->getLocalReplacement());
+                    $originalNamespace->setDoRename(true);
+                    $discoveredSymbols->add($originalNamespace);
+                }
+                $originalClassSymbol = new ClassSymbol(
+                    substr($fqdnClass, strlen($namespacePrefix) + 1),
+                    $composerFile,
+                    $originalNamespace,
+                );
+                $originalClassSymbol->setDoRename(true);
+                $discoveredSymbols->add($originalClassSymbol);
+                continue;
+            }
 
             /**
              * When Strauss itself has been prefixed (i.e. `strauss.phar`), its bundled Composer's hardcoded

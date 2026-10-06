@@ -172,39 +172,11 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             // Checks dry-run, replaces filesystem and logger.
             parent::execute($input, $output);
 
-            $this->timed('buildDependencyList');
-
-            $this->timed('enumerateFiles');
-
             $this->discoveredSymbols = new DiscoveredSymbols();
 
-            $this->timed('enumeratePsrNamespaces');
-            $this->timed('scanFilesForSymbols');
-            $this->timed('enumerateAutoloadedFiles');
-            $this->timed('analyseFilesToCopy');
-            $this->timed('markSymbolsForRenaming');
-            $this->timed('determineChanges');
-            $this->timed('markFilesExcludedFromChanges');
-            $this->timed('planChanges');
-
-            $this->timed('setPsr0TargetDirectory');
-
-            $this->timed('copyFiles');
-
-            $this->timed('performReplacements');
-
-            $this->timed('performReplacementsInProjectFiles');
-
-            $this->timed('addLicenses');
-
-            $this->timed('cleanUp');
-
-            $this->timed('generateAutoloader');
-
-            // After files have been deleted, we may need aliases.
-            $this->timed('generateAliasesFile');
-
-            $this->timed('prefixComposerAutoloadFiles');
+            foreach ($this->getPipelineSteps() as $step) {
+                $this->timed($step);
+            }
 
             $this->logger->notice('Done in {seconds}s', ['seconds' => number_format(microtime(true) - $startedAt, 2)]);
         } catch (Exception $e) {
@@ -214,6 +186,37 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * The names of the methods to run, in order.
+     *
+     * @return string[]
+     */
+    protected function getPipelineSteps(): array
+    {
+        return [
+            'buildDependencyList',
+            'enumerateFiles',
+            'enumeratePsrNamespaces',
+            'scanFilesForSymbols',
+            'enumerateAutoloadedFiles',
+            'analyseFilesToCopy',
+            'markSymbolsForRenaming',
+            'determineChanges',
+            'markFilesExcludedFromChanges',
+            'planChanges',
+            'setPsr0TargetDirectory',
+            'copyFiles',
+            'performReplacements',
+            'performReplacementsInProjectFiles',
+            'addLicenses',
+            'cleanUp',
+            'generateAutoloader',
+            // After files have been deleted, we may need aliases.
+            'generateAliasesFile',
+            'prefixComposerAutoloadFiles',
+        ];
     }
 
     /**
@@ -774,8 +777,9 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
     protected function prefixComposerAutoloadFiles() : void
     {
+        $replacer = $this->replacer ?? new Prefixer($this->config, $this->filesystem, $this->logger);
 
-        $this->replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
+        $replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
     }
 
     /**
