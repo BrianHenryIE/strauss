@@ -3,6 +3,7 @@
 namespace BrianHenryIE\Strauss\Console;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Console\Commands\DumpAutoloadCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\PrefixComposerAutoloadFilesCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
@@ -22,6 +23,7 @@ class Application extends BaseApplication
         $this->add($composeCommand);
 
         $this->add(new ReplaceCommand());
+        $this->add(new DumpAutoloadCommand());
         $this->add(new IncludeAutoloaderCommand());
         $this->add(new PrefixComposerAutoloadFilesCommand());
         $this->add(new WorkerCommand());

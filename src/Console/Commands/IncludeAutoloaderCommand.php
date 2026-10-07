@@ -15,11 +15,7 @@
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
-use Composer\Factory;
-use Composer\Util\Platform;
 use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -76,31 +72,5 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
         }
 
         return Command::SUCCESS;
-    }
-
-
-    /**
-     * 1. Load the composer.json.
-     *
-     * @throws Exception
-     */
-    protected function loadProjectComposerPackage(): void
-    {
-        $this->logger->notice('Loading package...');
-
-        $this->projectComposerPackage = new ProjectComposerPackage(
-            $this->filesystem->makeAbsolute(
-                $this->workingDir . '/' . Factory::getComposerFile()
-            )
-        );
-    }
-
-    protected function loadConfigFromComposerJson(): void
-    {
-        $this->logger->notice('Loading composer.json config...');
-
-        $this->config = $this->projectComposerPackage->getStraussConfig();
-        $config = new StraussConfig();
-        $config->setProjectAbsolutePath(Platform::getcwd());
     }
 }

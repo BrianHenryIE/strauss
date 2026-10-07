@@ -8,6 +8,7 @@
 namespace BrianHenryIE\Strauss;
 
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
+use BrianHenryIE\Strauss\Console\Commands\DumpAutoloadCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\PrefixComposerAutoloadFilesCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
@@ -164,6 +165,10 @@ class IntegrationTestCase extends TestCase
                 break;
             case 'replace':
                 $strauss = new ReplaceCommand();
+                unset($paramsSplit[0]);
+                break;
+            case 'dump-autoload':
+                $strauss = new DumpAutoloadCommand();
                 unset($paramsSplit[0]);
                 break;
             case 'prefix-vendor-autoload':

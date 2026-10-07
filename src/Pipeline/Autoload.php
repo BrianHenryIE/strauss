@@ -86,6 +86,18 @@ class Autoload
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
         }
 
+        $this->dumpAutoload();
+    }
+
+    /**
+     * Regenerate the autoload files from the target directory's existing `composer/installed.json`, i.e. after
+     * the packages have already been copied and prefixed.
+     *
+     * @throws FilesystemException
+     * @throws ParsingException
+     */
+    public function dumpAutoload(): void
+    {
         (new DumpAutoload(
             $this->config,
             $this->filesystem,

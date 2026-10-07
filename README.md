@@ -264,7 +264,7 @@ If you plan to continue using Composer's autoloader you probably want to turn on
 
 You can use `strauss include-autoloader` to add a line to `vendor/autoload.php` which includes the autoloader for the new files.
 
-If you don't plan to use Composer's autoloader, you may wish to enable `include_root_autoload` so that the Strauss autoloader includes the autoload for your project.
+If you don't plan to use Composer's autoloader, you may wish to enable `include_root_autoload` so that the Strauss autoloader includes the autoload for your project. After adding a class to your project's `classmap` autoload, run `strauss dump-autoload` to regenerate the Strauss autoloader without copying and prefixing the packages again. It only needs your `composer.json` and the target directory, not `vendor`.
 
 When `delete_vendor_packages` is enabled, `vendor/composer/autoload_aliases.php` is created to allow modified classes to be loaded with their old name during development. This file should not be included in your production code.
 
