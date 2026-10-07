@@ -8,18 +8,10 @@
 namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\Extra\ReplaceConfigInterface;
-use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
-use BrianHenryIE\Strauss\Files\DiscoveredFiles;
-use BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator;
-use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
-use BrianHenryIE\Strauss\Pipeline\ChangePlanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
-use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
-use BrianHenryIE\Strauss\Pipeline\Licenser;
-use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
+use BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use Composer\Util\Platform;
 use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -28,19 +20,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ReplaceCommand extends AbstractRenamespacerCommand
 {
-    /** @var Prefixer */
-    protected Prefixer $replacer;
-
-    /**
-     * ArrayAccess of \BrianHenryIE\Strauss\File objects indexed by their path relative to the output target directory.
-     *
-     * Each object contains the file's relative and absolute paths, the package and autoloaders it came from,
-     * and flags indicating should it / has it been copied / deleted etc.
-     *
-     */
-    protected DiscoveredFiles $discoveredFiles;
-    protected DiscoveredSymbols $discoveredSymbols;
-
     protected function getConfig(): ReplaceConfigInterface
     {
         return $this->config;
@@ -102,21 +81,9 @@ class ReplaceCommand extends AbstractRenamespacerCommand
             parent::execute($input, $output);
 
             $this->updateConfigFromCli($input);
-            // Pipeline
-
-            $config = $this->getConfig();
-
             $this->discoveredSymbols = new DiscoveredSymbols();
 
-            $this->enumerateFiles($config);
-
-            $this->determineChanges($config);
-
-            $this->performReplacements($config);
-
-            $this->performReplacementsInProjectFiles($config);
-
-            $this->addLicenses($config);
+            $this->runPipeline();
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
 
@@ -127,12 +94,27 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     }
 
 
+    /**
+     * @return string[]
+     */
+    protected function getPipelineSteps(): array
+    {
+        return [
+            'enumerateFiles',
+            'scanFilesForSymbols',
+            'enumerateAutoloadedFiles',
+            'markSymbolsForRenaming',
+            'determineChanges',
+            'planChanges',
+            'performReplacements',
+            'performReplacementsInProjectFiles',
+            'addLicenses',
+        ];
+    }
+
     protected function updateConfigFromCli(InputInterface $input): void
     {
         $this->logger->notice('Loading cli config...');
-
-        $config = new StraussConfig();
-        $config->setProjectAbsolutePath(Platform::getcwd());
 
         /** @var string $inputFrom */
         $inputFrom = $input->getOption('from');
@@ -153,8 +135,10 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     }
 
 
-    protected function enumerateFiles(ReplaceConfigInterface $config): void
+    protected function enumerateFiles(): void
     {
+        $config = $this->getConfig();
+
         $this->logger->info('Enumerating files...');
         $relativeUpdateCallSites = $config->getUpdateCallSites() ?? [];
         $updateCallSites = array_map(
@@ -165,62 +149,17 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         $this->discoveredFiles = $fileEnumerator->compileFileListForPaths($updateCallSites);
     }
 
-    // 4. Determine namespace and classname changes
-    protected function determineChanges(ReplaceConfigInterface $config): void
+    /**
+     * The files are analysed in this process.
+     */
+    protected function getWorkerPool(): ?WorkerPool
     {
-        $this->logger->info('Determining changes...');
-
-        /**
-         * We have all files from {@see FileEnumerator::compileFileListForPaths()}, now we find what classes,
-         * interfaces, constants etc are defined in those files.
-         */
-        $fileScanner = new FileSymbolScanner(
-            $config,
-            $this->discoveredSymbols,
-            $this->filesystem
-        );
-        $fileScanner->findInFiles($this->discoveredFiles);
-
-        // Determine which files and symbols are autoloaded by Composer.
-        $autoloadFilesEnumerator = new AutoloadedEnumerator(
-            $config,
-            $this->filesystem,
-            $this->logger
-        );
-        $autoloadFilesEnumerator->scanSetIsAutoloaded($this->discoveredFiles, $this->discoveredSymbols);
-
-        // Symbols defined in autoloaded files are renamed unless marked as excluded.
-        $markSymbolsForRenaming = new MarkSymbolsForRenaming(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-        $markSymbolsForRenaming->scanSetDoRename($this->discoveredSymbols);
-
-        $changeEnumerator = new ChangeEnumerator(
-            $config,
-            $this->logger
-        );
-        $changeEnumerator->determineReplacements($this->discoveredSymbols);
-
-        // Every edit to every file is determined now, before any file is modified.
-        $changePlanner = new ChangePlanner($this->logger);
-        $changePlanner->planInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
+        return null;
     }
 
-    // 5. Update namespaces and class names.
-    // Replace references to updated namespaces and classnames throughout the dependencies.
-    protected function performReplacements(ReplaceConfigInterface $config): void
+    protected function performReplacementsInProjectFiles(): void
     {
-        $this->logger->info('Performing replacements...');
-
-        $this->replacer = new Prefixer($config, $this->filesystem, $this->logger);
-
-        $this->replacer->replaceInFiles($this->discoveredSymbols, $this->discoveredFiles->getFiles());
-    }
-
-    protected function performReplacementsInProjectFiles(ReplaceConfigInterface $config): void
-    {
+        $config = $this->getConfig();
 
         $relativeCallSitePaths = $this->config->getUpdateCallSites();
 
@@ -249,29 +188,20 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         $projectReplace->replaceInProjectFiles($this->discoveredSymbols, $files);
     }
 
-
-    protected function addLicenses(ReplaceConfigInterface $config): void
+    /**
+     * There may be no `composer.json`: use the Git user, or the current system user.
+     */
+    protected function getLicenseAuthor(): string
     {
-        $this->logger->info('Adding licenses...');
-
         $username = trim(shell_exec('git config user.name') ?: '');
         $email = trim(shell_exec('git config user.email') ?: '');
 
         if (!empty($username) && !empty($email)) {
             // e.g. "Brian Henry <BrianHenryIE@gmail.com>".
-            $author = $username . ' <' . $email . '>';
-        } else {
-            // e.g. "brianhenry".
-            $author = get_current_user();
+            return $username . ' <' . $email . '>';
         }
 
-        // TODO: Update to use DiscoveredFiles
-        $dependencies = $this->flatDependencyTree;
-        $licenser = new Licenser($config, $dependencies, $author, $this->filesystem, $this->logger);
-
-        $licenser->copyLicenses();
-
-        $modifiedFiles = $this->replacer->getModifiedFiles();
-        $licenser->addInformationToUpdatedFiles($modifiedFiles);
+        // e.g. "brianhenry".
+        return get_current_user();
     }
 }

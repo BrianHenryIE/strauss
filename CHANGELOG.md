@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.31.0 October 2026
+
+* Fix: Do not update call sites in the target directory
+* Performance: huge improvements
+* Add: `strauss dump-autoload` for when `include_root_autoload` is enabled
+
 ## 0.30.0 September 2026
 
 * Add: `exclude_from_string_rename` to exclude symbols from false-positive matches in strings

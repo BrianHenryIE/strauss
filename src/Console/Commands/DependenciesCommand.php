@@ -5,7 +5,6 @@ namespace BrianHenryIE\Strauss\Console\Commands;
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DeepDependenciesCollection;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
-use BrianHenryIE\Strauss\Composer\ProjectComposerPackage;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\File;
@@ -14,8 +13,6 @@ use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
-use BrianHenryIE\Strauss\Pipeline\AutoloadedEnumerator;
-use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\ChangePlanner;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
 use BrianHenryIE\Strauss\Pipeline\Cleanup\InstalledJson;
@@ -23,17 +20,11 @@ use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
-use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
-use BrianHenryIE\Strauss\Pipeline\Parallel\ParallelConfig;
-use BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool;
-use BrianHenryIE\Strauss\Pipeline\Licenser;
 use BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges;
-use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\Psr0NamespaceSymbol;
-use Composer\Factory;
 use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -42,20 +33,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class DependenciesCommand extends AbstractRenamespacerCommand
 {
-    /** @var Prefixer */
-    protected Prefixer $replacer;
-
     protected DependenciesEnumerator $dependenciesEnumerator;
-
-    /**
-     * ArrayAccess of \BrianHenryIE\Strauss\File objects indexed by their path relative to the output target directory.
-     *
-     * Each object contains the file's relative and absolute paths, the package and autoloaders it came from,
-     * and flags indicating should it / has it been copied / deleted etc.
-     *
-     */
-    protected DiscoveredFiles $discoveredFiles;
-    protected DiscoveredSymbols $discoveredSymbols;
 
     /**
      * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
@@ -174,9 +152,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
             $this->discoveredSymbols = new DiscoveredSymbols();
 
-            foreach ($this->getPipelineSteps() as $step) {
-                $this->timed($step);
-            }
+            $this->runPipeline();
 
             $this->logger->notice('Done in {seconds}s', ['seconds' => number_format(microtime(true) - $startedAt, 2)]);
         } catch (Exception $e) {
@@ -219,20 +195,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         ];
     }
 
-    /**
-     * Run one pipeline step and log how long it took, for finding where the time goes on large projects.
-     */
-    protected function timed(string $step): void
-    {
-        $startedAt = microtime(true);
-
-        $this->{$step}();
-
-        $this->logger->debug('{step} took {seconds}s', [
-            'step' => $step,
-            'seconds' => number_format(microtime(true) - $startedAt, 3),
-        ]);
-    }
 
     protected function setPsr0TargetDirectory(): void
     {
@@ -243,50 +205,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
     }
 
-    /**
-     * Load the project's composer package using the current working directory.
-     *
-     * @throws Exception
-     */
-    protected function loadProjectComposerPackage(): void
-    {
-        $this->logger->notice('Loading package...');
-
-        $composerFilePath = $this->filesystem->makeAbsolute(
-            $this->filesystem->normalizePath(
-                $this->workingDir . '/' .Factory::getComposerFile()
-            )
-        );
-        $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/composer.json');
-        if ($composerFilePath !== $defaultComposerFilePath) {
-            $this->logger->info('Using: ' . $composerFilePath);
-        }
-
-        $composerFilePath = $this->filesystem->normalizePath($composerFilePath);
-        $this->projectComposerPackage = new ProjectComposerPackage(
-            $this->filesystem->makeAbsolute($composerFilePath)
-        );
-
-        // TODO: Print the config that Strauss is using.
-        // Maybe even highlight what is default config and what is custom config.
-    }
-
-    /**
-     * Load Strauss config from the project's composer.json.
-     */
-    protected function loadConfigFromComposerJson(): void
-    {
-        $this->logger->notice('Loading composer.json config...');
-
-        $this->config = $this->projectComposerPackage->getStraussConfig();
-    }
-
-    protected function updateConfigFromCli(InputInterface $input): void
-    {
-        $this->logger->notice('Loading cli config...');
-
-        $this->config->updateFromCli($input);
-    }
 
     /**
      * 2. Built flat list of packages and dependencies.
@@ -411,75 +329,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
     }
 
-    protected function scanFilesForSymbols(): void
-    {
-        $this->logger->notice('Scanning files for defined symbols...');
-
-        $fileSymbolScanner = new FileSymbolScanner(
-            $this->config,
-            $this->discoveredSymbols,
-            $this->filesystem,
-            $this->logger
-        );
-        $fileSymbolScanner->setWorkerPool($this->getWorkerPool());
-
-        $fileSymbolScanner->findInFiles($this->discoveredFiles);
-    }
-
-    /**
-     * Worker processes to parse files in, or null to parse them in this process: when configured off, when there
-     * is only one CPU, or during `--dry-run` (the workers would not see the in-memory filesystem).
-     */
-    protected function getWorkerPool(): ?WorkerPool
-    {
-        if ($this->config->isDryRun() || !function_exists('proc_open')) {
-            return null;
-        }
-
-        $parallelConfig = ParallelConfig::detect($this->config->getParallel());
-
-        if ($parallelConfig->isSequential()) {
-            return null;
-        }
-
-        return new WorkerPool($parallelConfig, null, $this->logger);
-    }
-
-    protected function enumerateAutoloadedFiles(): void
-    {
-        $this->logger->notice('Enumerating autoloaded files and symbols...');
-
-        $autoloadFilesEnumerator = new AutoloadedEnumerator(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-        $autoloadFilesEnumerator->scanSetIsAutoloaded($this->discoveredFiles, $this->discoveredSymbols);
-    }
-
-    protected function markSymbolsForRenaming(): void
-    {
-        $this->logger->notice('Marking symbols to rename...');
-
-        $markSymbolsForRenaming = new MarkSymbolsForRenaming(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-
-        $markSymbolsForRenaming->scanSetDoRename($this->discoveredSymbols);
-    }
-
-    protected function determineChanges(): void
-    {
-        $this->logger->notice('Determining changes...');
-
-        $changeEnumerator = new ChangeEnumerator(
-            $this->config,
-            $this->logger
-        );
-        $changeEnumerator->determineReplacements($this->discoveredSymbols);
-    }
 
     /**
      * Determine every edit to make to every file, from the symbols marked for renaming and each file's code map,
@@ -605,24 +454,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     }
 
 
-    // 5. Update namespaces and class names.
-    // Replace references to updated namespaces and classnames throughout the dependencies.
-    protected function performReplacements(): void
-    {
-        $this->logger->notice('Performing replacements...');
-
-        $this->replacer = new Prefixer(
-            $this->config,
-            $this->filesystem,
-            $this->logger
-        );
-
-        $this->replacer->replaceInFiles(
-            $this->discoveredSymbols,
-            $this->discoveredFiles->getFiles()
-        );
-    }
-
     /**
      * Update a project's /src/* files where they call the newly renamed /vendor/* classes etc.
      */
@@ -694,27 +525,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         return $path === $targetDirectory || str_starts_with($path, $targetDirectory . '/');
     }
 
-    protected function addLicenses(): void
-    {
-        $this->logger->notice('Adding licenses...');
-
-        $author = $this->projectComposerPackage->getAuthor();
-
-        $dependencies = $this->flatDependencyTree;
-
-        $licenser = new Licenser(
-            $this->config,
-            $dependencies,
-            $author,
-            $this->filesystem,
-            $this->logger
-        );
-
-        $licenser->copyLicenses();
-
-        $modifiedFiles = $this->replacer->getModifiedFiles();
-        $licenser->addInformationToUpdatedFiles($modifiedFiles);
-    }
 
     /**
      * 6. Generate autoloader.
@@ -775,12 +585,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         $vendorComposerAutoload->addVendorPrefixedAutoloadToVendorAutoload();
     }
 
-    protected function prefixComposerAutoloadFiles() : void
-    {
-        $replacer = $this->replacer ?? new Prefixer($this->config, $this->filesystem, $this->logger);
-
-        $replacer->prefixComposerAutoloadFiles($this->config->getAbsoluteTargetDirectory());
-    }
 
     /**
      *

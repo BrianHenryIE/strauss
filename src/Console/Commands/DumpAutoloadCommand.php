@@ -20,8 +20,11 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use Exception;
 use League\Flysystem\FilesystemException;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
-class DumpAutoloadCommand extends DependenciesCommand
+class DumpAutoloadCommand extends AbstractRenamespacerCommand
 {
     /**
      * @used-by \Symfony\Component\Console\Command\Command::__construct
@@ -30,15 +33,35 @@ class DumpAutoloadCommand extends DependenciesCommand
      */
     protected function configure()
     {
-        parent::configure();
-
         $this->setName('dump-autoload');
         $this->setAliases(['dumpautoload']);
         $this->setDescription('Regenerate the autoloader in the target directory.');
+
+        parent::configure();
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        try {
+            $this->loadProjectComposerPackage();
+            $this->loadConfigFromComposerJson();
+            $this->updateConfigFromCli($input);
+
+            // Checks dry-run, replaces filesystem and logger.
+            parent::execute($input, $output);
+
+            $this->runPipeline();
+        } catch (Exception $e) {
+            $this->logger->error($e->getMessage());
+
+            return Command::FAILURE;
+        }
+
+        return Command::SUCCESS;
     }
 
     /**
-     * Only the steps of the full pipeline needed to write the autoloader.
+     * Only the steps of the `dependencies` pipeline needed to write the autoloader.
      *
      * @return string[]
      */
