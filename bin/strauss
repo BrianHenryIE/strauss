@@ -23,7 +23,18 @@ call_user_func(function (string $version) {
         $composerVendorDir = dirname($autoloader);
         require_once $composerVendorDir .  '/composer/InstalledVersions.php';
 
+        /**
+         * PHP Deprecated:  DI\autowire(): Implicitly marking parameter $className as nullable is deprecated, the
+         * explicit nullable type must be used instead in /path/to/vendor/php-di/php-di/src/functions.php on line 48
+         */
+        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
         require $autoloader;
+
+        restore_error_handler();
+
         break;
     }
 
