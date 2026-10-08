@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.31.1 October 2026
+
+* Fix: class names in strings from packages which `provide` or `replace` another (e.g. `nyholm/psr7`) were not prefixed in packages which do not require them (e.g. php-http/discovery's candidate list), so discovery failed at runtime
+
 ## 0.31.0 October 2026
 
 * Fix: Do not update call sites in the target directory

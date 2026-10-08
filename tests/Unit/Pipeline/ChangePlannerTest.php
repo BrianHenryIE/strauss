@@ -204,4 +204,47 @@ EOD;
         // A file which is not part of a package (e.g. a project file) may refer to anything.
         self::assertCount(7, $planFor($this->getFile()));
     }
+
+    /**
+     * Packages which `provide` or `replace` another are treated as a dependency of every package: implementations
+     * are discovered by name without being required, e.g. php-http/discovery's `'Nyholm\Psr7\Factory\Psr17Factory'`.
+     *
+     * @covers ::filterToSymbolsAvailableToFile
+     *
+     * @see \BrianHenryIE\Strauss\PhpHttpDiscoveryFeatureTest
+     */
+    public function test_strings_match_symbols_from_providing_and_replacing_packages(): void
+    {
+        $discovery = $this->getPackage('acme/discovery');
+        $packages = [
+            'Provider' => ComposerPackage::fromComposerJsonArray([
+                'name' => 'acme/provider',
+                'provide' => ['acme/implementation' => '1.0'],
+            ]),
+            'Replacer' => ComposerPackage::fromComposerJsonArray([
+                'name' => 'acme/replacer',
+                'replace' => ['acme/original' => '1.0'],
+            ]),
+            'Unrelated' => $this->getPackage('acme/unrelated'),
+        ];
+
+        $symbols = [];
+        foreach ($packages as $namespaceName => $package) {
+            $package->setPackageAbsolutePath('/project/vendor/' . $package->getPackageName() . '/');
+            $namespace = new NamespaceSymbol($namespaceName, $this->getPackageFile($package));
+            $namespace->setDoRename(true);
+            $namespace->setLocalReplacement('Prefix\\' . $namespaceName);
+            $symbols[] = $namespace;
+        }
+
+        $contents = <<<'EOD'
+<?php
+$a = ['Provider\\', 'Replacer\\', 'Unrelated\\'];
+EOD;
+
+        $codeMap = (new PhpFileAnalyzer())->analyze($contents);
+        $edits = (new ChangePlanner())->plan(new DiscoveredSymbols($symbols), $codeMap, $this->getPackageFile($discovery));
+
+        self::assertSame(['Prefix\Provider', 'Prefix\Replacer'], array_column($edits, 'replacement'));
+    }
 }

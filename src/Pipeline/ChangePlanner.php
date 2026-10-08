@@ -512,7 +512,8 @@ class ChangePlanner
      * regions are joined into one buffer so each symbol's pattern is run once per file, as before.
      *
      * A file in a package can only be referring to symbols of that package, of the packages it requires
-     * (transitively) and of the packages it suggests, so symbols from every other package are not searched for: {@see self::filterToSymbolsAvailableToFile()}.
+     * (transitively) and of the packages it suggests, or of packages which `provide` or `replace` another, so symbols
+     * from every other package are not searched for: {@see self::filterToSymbolsAvailableToFile()}.
      *
      * TODO: optionally filter to only namespaces of more than a single depth.
      *
@@ -603,6 +604,10 @@ class ChangePlanner
      * Nothing is removed for files that are not part of a package (project files, Composer's autoload files), and
      * symbols whose package is unknown are always kept.
      *
+     * Symbols of packages which `provide` or `replace` another are always kept, as though every package depended on
+     * them (as with `composer-runtime-api`): implementations are discovered by name without being required, e.g.
+     * php-http/discovery's `'Nyholm\Psr7\Factory\Psr17Factory'`.
+     *
      * @param DiscoveredSymbol[] $symbols
      *
      * @return DiscoveredSymbol[]
@@ -619,8 +624,16 @@ class ChangePlanner
             $symbols,
             function (DiscoveredSymbol $symbol) use ($availablePackageNames): bool {
                 $symbolPackages = $symbol->getDependencies()->toArray();
-                return empty($symbolPackages)
-                    || !empty(array_intersect_key($symbolPackages, $availablePackageNames));
+                if (empty($symbolPackages)
+                    || !empty(array_intersect_key($symbolPackages, $availablePackageNames))) {
+                    return true;
+                }
+                foreach ($symbolPackages as $symbolPackage) {
+                    if (!empty($symbolPackage->getProvidesNames())) {
+                        return true;
+                    }
+                }
+                return false;
             }
         );
     }
