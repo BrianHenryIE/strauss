@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.31.1 October 2026
+
+* Fix: class names in strings from packages which `provide` or `replace` another (e.g. `nyholm/psr7`) were not prefixed in packages which do not require them (e.g. php-http/discovery's candidate list), so discovery failed at runtime
+
 ## 0.31.0 October 2026
 
 * Fix: Do not update call sites in the target directory
@@ -9,7 +13,6 @@
 ## 0.30.0 September 2026
 
 * Add: `exclude_from_string_rename` to exclude symbols from false-positive matches in strings
-* Add: `strauss dump-autoload` command to regenerate the target directory's autoloader, e.g. after adding a class when `include_root_autoload` is enabled
 * Performance: each PHP file is parsed exactly once (`FileSymbolScanner` → `PhpFileAnalyzer`), into a `FileCodeMap` on the `File` listing the symbols it defines and every symbol it uses, by type
 * Architecture: new `ChangePlanner` pipeline step determines every edit to every file before any file is modified; `Prefixer` only applies the planned edits
 * Performance: when searching strings, a package's files are only searched for symbols of the packages it requires, suggests, or which provide/replace its requirements
