@@ -3,6 +3,33 @@
 <ruleset name="strauss">
     <description>Coding standard ruleset based on the PSR-2 coding standard.</description>
     <arg value="s"/> <!-- Show sniff error codes in all reports. -->
+    <rule ref="PEAR">
+        <!-- Don't require such verbose PhpDoc in every file. -->
+        <exclude name="Generic.Commenting.DocComment.MissingShort"/>
+        <exclude name="PEAR.Commenting.FileComment.MissingVersion"/>
+        <exclude name="PEAR.Commenting.FileComment.MissingCategoryTag"/>
+        <exclude name="PEAR.Commenting.FileComment.MissingAuthorTag"/>
+        <exclude name="PEAR.Commenting.FileComment.MissingLicenseTag"/>
+        <exclude name="PEAR.Commenting.ClassComment.MissingCategoryTag"/>
+        <exclude name="PEAR.Commenting.ClassComment.MissingPackageTag"/>
+        <exclude name="PEAR.Commenting.ClassComment.MissingAuthorTag"/>
+        <exclude name="PEAR.Commenting.ClassComment.MissingLicenseTag"/>
+        <exclude name="PEAR.Commenting.ClassComment.MissingLinkTag"/>
+        <exclude name="PEAR.Commenting.FileComment.MissingLinkTag"/>
+        <exclude name="PEAR.Commenting.FunctionComment.MissingReturn"/>
+        <!-- Contradicts PSR-12 -->
+        <exclude name="PEAR.NamingConventions.ValidVariableName.PrivateNoUnderscore"/>
+        <exclude name="PEAR.NamingConventions.ValidFunctionName.PrivateNoUnderscore"/>
+        <!--
+            Directly contradicts PSR-12: PEAR wants `case` at the same indent as its `switch`,
+            `Generic.WhiteSpace.ScopeIndent` (via PSR-12) wants it one level deeper. Satisfying
+            either always fails the other, so defer to PSR-12, which still checks indentation.
+        -->
+        <exclude name="PEAR.WhiteSpace.ScopeIndent"/>
+        <!-- I prefer the @package in comments to match the Composer package name -->
+        <exclude name="PEAR.Commenting.FileComment.InvalidPackage"/>
+        <exclude-pattern>tests</exclude-pattern>
+    </rule>
     <rule ref="PSR2">
         <exclude name="Generic.Files.LineLength.TooLong"/>
     </rule>
@@ -12,5 +39,6 @@
     <file>./src</file>
     <file>./tests</file>
     <exclude-pattern>/tests/_reports/</exclude-pattern>
+    <exclude-pattern>/tests/Benchmark/</exclude-pattern>
     <exclude-pattern>/tests/Issues/data</exclude-pattern>
 </ruleset>
