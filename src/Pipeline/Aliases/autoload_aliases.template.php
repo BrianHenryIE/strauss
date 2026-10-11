@@ -37,7 +37,7 @@ namespace BrianHenryIE\Strauss {
         }
 
         /**
-         * @param string $class
+         * @param string $class The fully qualified name being autoloaded, without leading backslash; only original (unprefixed) names listed in the alias map are handled.
          */
         public function autoload($class): void
         {
@@ -92,7 +92,7 @@ namespace BrianHenryIE\Strauss {
         }
 
         /**
-         * @param ClassAliasArray $class
+         * @param ClassAliasArray $class The alias entry: original short class name and namespace, and the prefixed class it extends.
          */
         private function classTemplate(array $class): string
         {
@@ -117,7 +117,7 @@ namespace BrianHenryIE\Strauss {
         }
 
         /**
-         * @param InterfaceAliasArray $interface
+         * @param InterfaceAliasArray $interface The alias entry: original short interface name and namespace, and the prefixed interface(s) it extends.
          */
         private function interfaceTemplate(array $interface): string
         {
@@ -135,7 +135,7 @@ namespace BrianHenryIE\Strauss {
         }
 
         /**
-         * @param TraitAliasArray $trait
+         * @param TraitAliasArray $trait The alias entry: original short trait name and namespace, and the prefixed trait it uses.
          */
         private function traitTemplate(array $trait): string
         {

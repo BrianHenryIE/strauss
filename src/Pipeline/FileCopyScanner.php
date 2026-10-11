@@ -179,7 +179,7 @@ class FileCopyScanner
      *
      * I.e. `my/package/src/file.php`.
      *
-     * @param FileBase $file
+     * @param FileBase $file The file whose vendor-relative path is matched against the patterns.
      */
     protected function isFilePathExcluded(FileBase $file): bool
     {

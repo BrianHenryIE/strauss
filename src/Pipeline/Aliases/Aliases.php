@@ -50,8 +50,8 @@ class Aliases
     }
 
     /**
-     * @param  array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray> $aliasesArray
-     * @param  string|null                                                                       $autoloadAliasesFunctionsString
+     * @param  array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray> $aliasesArray                   Alias definitions keyed by original FQDN, without leading backslash.
+     * @param  string|null                                                                       $autoloadAliasesFunctionsString PHP code aliasing functions and constants, inserted at the template's placeholder; empty or null for none.
      * @return string
      * @throws RuntimeException
      */
@@ -280,8 +280,8 @@ class Aliases
      *
      * Ensures the correct leading backslashes.
      *
-     * @param string $namespacedOriginalFunction
-     * @param string $namespacedReplacementFunction
+     * @param string $namespacedOriginalFunction    The original function name, fully qualified, with or without leading backslash.
+     * @param string $namespacedReplacementFunction The prefixed function name to call, with or without leading backslash.
      */
     protected function aliasedFunctionTemplate(
         string $namespacedOriginalFunction,

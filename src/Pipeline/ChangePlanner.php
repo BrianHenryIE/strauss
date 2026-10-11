@@ -77,7 +77,7 @@ class ChangePlanner
      *
      * Files without a code map (non-PHP, unparsable, or never scanned) are skipped.
      *
-     * @param iterable<FileBase> $files
+     * @param iterable<FileBase> $files The files to plan; the edits are stored on each file.
      *
      * @throws Exception
      */
@@ -633,7 +633,7 @@ class ChangePlanner
      * them (as with `composer-runtime-api`): implementations are discovered by name without being required, e.g.
      * php-http/discovery's `'Nyholm\Psr7\Factory\Psr17Factory'`.
      *
-     * @param DiscoveredSymbol[] $symbols
+     * @param DiscoveredSymbol[] $symbols Candidate symbols whose names appear in the file's strings.
      *
      * @return DiscoveredSymbol[]
      */

@@ -31,7 +31,7 @@ trait FlysystemReaderBackCompatTrait
     use FlysystemAdapterBackCompatTrait;
 
     /**
-     * @param string $location
+     * @param string $location File or directory path to check.
      *
      * @return bool
      * @throws \League\Flysystem\FilesystemException

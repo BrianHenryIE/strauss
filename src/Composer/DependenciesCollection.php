@@ -25,7 +25,7 @@ class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countabl
     protected array $dependencies = [];
 
     /**
-     * @param array<ComposerPackage> $dependencies
+     * @param array<ComposerPackage> $dependencies Packages to store, re-keyed by their package name.
      */
     public function __construct(
         array $dependencies

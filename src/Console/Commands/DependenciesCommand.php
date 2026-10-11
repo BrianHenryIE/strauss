@@ -141,8 +141,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     }
 
     /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
+     * @param InputInterface  $input  Command-line arguments and options.
+     * @param OutputInterface $output Console output for logging.
      *
      * @return int
      * @see    Command::execute()

@@ -53,8 +53,8 @@ class Autoload
     /**
      * Autoload constructor.
      *
-     * @param StraussConfig&AutoloadConfigInterface $config
-     * @param array<string, array<string>>          $discoveredFilesAutoloaders
+     * @param StraussConfig&AutoloadConfigInterface $config                     Strauss config, used for target/vendor directories and classmap output settings.
+     * @param array<string, array<string>>          $discoveredFilesAutoloaders Package path => relative file paths of `files` autoloaders (currently unused; callers pass []).
      */
     public function __construct(
         StraussConfig $config,
@@ -69,7 +69,7 @@ class Autoload
     }
 
     /**
-     * @param  DependenciesCollection $flatDependencyTree
+     * @param  DependenciesCollection $flatDependencyTree All dependencies (flattened), used to update package paths in the target directory's installed.json.
      * @throws FilesystemException
      * @throws ParsingException
      * @throws Exception

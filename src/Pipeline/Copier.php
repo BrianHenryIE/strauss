@@ -41,7 +41,7 @@ class Copier
      * Copier constructor.
      *
      * @param DiscoveredFiles       $files      Contains a collections of Files with source and target paths.
-     * @param CopierConfigInterface $config
+     * @param CopierConfigInterface $config     Provides the target directory to copy into.
      * @param FileSystem            $filesystem A filesystem instance.
      * @param LoggerInterface       $logger     A logger implementation.
      */

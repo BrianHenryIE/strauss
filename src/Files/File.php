@@ -97,7 +97,7 @@ class File implements FileBase
     /**
      * Some combination of file copy exclusions and vendor-dir == target-dir
      *
-     * @param bool $doCopy
+     * @param bool $doCopy True to copy the file to the target directory; false to leave it in place.
      */
     public function setDoCopy(bool $doCopy): void
     {
@@ -142,7 +142,7 @@ class File implements FileBase
      * For marking moved files to be deleted when delete_vendor_files is enabled. (should that be deprecated?)
      * For marking files that are symlinked as not-to-be-deleted.
      *
-     * @param bool $doDelete
+     * @param bool $doDelete True to delete the source file after copying; false to keep it.
      */
     public function setDoDelete(bool $doDelete): void
     {

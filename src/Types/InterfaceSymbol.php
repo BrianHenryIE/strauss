@@ -22,11 +22,11 @@ class InterfaceSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     protected array $extends;
 
     /**
-     * @param string           $fqdnClassname
-     * @param FileBase         $sourceFile
-     * @param NamespaceSymbol  $namespace
-     * @param ?ComposerPackage $package
-     * @param string[]         $extends
+     * @param string           $fqdnClassname Fully qualified interface name, without leading backslash.
+     * @param FileBase         $sourceFile    The file the interface was first discovered in.
+     * @param NamespaceSymbol  $namespace     The namespace the interface is declared in (may be the global namespace).
+     * @param ?ComposerPackage $package       The package the interface belongs to; null if not from a package.
+     * @param string[]         $extends       FQDNs of the interfaces this interface extends.
      */
     public function __construct(
         string $fqdnClassname,

@@ -62,7 +62,7 @@ class WorkerPool
      *
      * Results arrive in no particular order.
      *
-     * @param string[]        $absolutePaths
+     * @param string[]        $absolutePaths Absolute paths of the PHP files to analyse.
      * @param callable(string $absolutePath, ?FileCodeMap $codeMap, ?string $errorMessage): void $onResult
      *
      * @throws ParallelisationException When a worker fails, times out, or sends something unexpected.
@@ -151,7 +151,7 @@ class WorkerPool
     }
 
     /**
-     * @param string[] $queue
+     * @param string[] $queue Absolute paths still to be analysed; the next chunk is removed from the front.
      */
     protected function sendNextChunk(Worker $worker, array &$queue): void
     {
@@ -171,7 +171,7 @@ class WorkerPool
     }
 
     /**
-     * @param callable(string, ?FileCodeMap, ?string): void $onResult
+     * @param callable(string, ?FileCodeMap, ?string): void $onResult Called with each file's absolute path, its code map (null on failure) and error message (null on success).
      */
     protected function readResults(Worker $worker, callable $onResult): void
     {

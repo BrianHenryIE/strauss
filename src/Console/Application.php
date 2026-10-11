@@ -23,7 +23,7 @@ use Symfony\Component\Console\Application as BaseApplication;
 class Application extends BaseApplication
 {
     /**
-     * @param string $version
+     * @param string $version Strauss version string shown by `--version`.
      */
     public function __construct(string $version)
     {

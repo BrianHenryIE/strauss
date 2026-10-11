@@ -24,8 +24,8 @@ class ProjectComposerPackage extends ComposerPackage
     protected string $relativeVendorDirectory;
 
     /**
-     * @param string                                                                                           $absolutePathFile
-     * @param ?array{files?:array<string>,classmap?:array<string>,"psr-4"?:array<string,string|array<string>>} $overrideAutoload
+     * @param string                                                                                           $absolutePathFile Absolute path to the project's composer.json file (or the directory containing it).
+     * @param ?array{files?:array<string>,classmap?:array<string>,"psr-4"?:array<string,string|array<string>>} $overrideAutoload Autoload rules to use instead of the project's own, or null to keep them.
      */
     public function __construct(string $absolutePathFile, ?array $overrideAutoload = null)
     {

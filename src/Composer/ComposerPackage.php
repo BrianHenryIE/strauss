@@ -164,7 +164,7 @@ class ComposerPackage
     }
 
     /**
-     * @param string|ComposerJsonArray $composerInput
+     * @param string|ComposerJsonArray $composerInput Absolute path to a composer.json file, or its already-decoded contents.
      */
     private static function createPartialComposer($composerInput): PartialComposer
     {
@@ -181,7 +181,7 @@ class ComposerPackage
     /**
      * Create a PHP object to represent a composer package.
      *
-     * @param  PartialComposer   $composer
+     * @param  PartialComposer   $composer         Composer instance loaded from the package's composer.json.
      * @param  ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
      * @throws Exception
      */

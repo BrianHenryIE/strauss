@@ -16,7 +16,7 @@ class DeepDependenciesCollection extends DependenciesCollection
 {
 
     /**
-     * @param array<ComposerPackage> $dependencies
+     * @param array<ComposerPackage> $dependencies Top-level packages whose dependency trees are flattened into this collection.
      */
     public function __construct(
         array $dependencies
@@ -30,8 +30,8 @@ class DeepDependenciesCollection extends DependenciesCollection
     }
 
     /**
-     * @param ComposerPackage   $composerPackage
-     * @param ComposerPackage[] $flatDependenciesArray
+     * @param ComposerPackage   $composerPackage       Package whose dependencies are added, recursively.
+     * @param ComposerPackage[] $flatDependenciesArray Packages collected so far, keyed by package name; already-present names are skipped.
      *
      * @return ComposerPackage[]
      */

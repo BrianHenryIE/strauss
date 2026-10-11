@@ -54,9 +54,9 @@ class FileCodeMap
     protected int $contentsCrc32;
 
     /**
-     * @param CodeLocation[]     $locations
-     * @param SymbolDefinition[] $definitions
-     * @param string[]           $namespaceNames
+     * @param CodeLocation[]     $locations      Every definition, usage and text region found in the file, in any order.
+     * @param SymbolDefinition[] $definitions    The symbols the file defines, in declaration order.
+     * @param string[]           $namespaceNames Declared namespace names, in source order; `\` for global. Empty means global.
      */
     public function __construct(array $locations, string $contents, array $definitions = [], array $namespaceNames = ['\\'])
     {

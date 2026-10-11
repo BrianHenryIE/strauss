@@ -314,7 +314,7 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * @param Class_|Interface_|Trait_|Enum_ $node
+     * @param Class_|Interface_|Trait_|Enum_ $node The class-like declaration being entered; anonymous classes are ignored.
      */
     protected function enterClassLike(Node $node): void
     {
@@ -488,7 +488,7 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * @param Class_|Interface_|Trait_|Enum_ $node
+     * @param Class_|Interface_|Trait_|Enum_ $node The class-like declaration whose name location is being recorded.
      */
     protected function getDefinitionLocationType(Node $node): string
     {
@@ -505,7 +505,7 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * @param Class_|Interface_|Trait_|Enum_ $node
+     * @param Class_|Interface_|Trait_|Enum_ $node The class-like declaration being recorded as a definition.
      */
     protected function getDefinitionSymbolType(Node $node): string
     {

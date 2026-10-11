@@ -27,7 +27,7 @@ trait FlysystemAdapterBackCompatTrait
 {
     /**
      * @see   FilesystemAdapter::directoryExists()
-     * @param string $path
+     * @param string $path Directory path to check.
      *
      * @return bool
      * @throws FilesystemException

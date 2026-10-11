@@ -26,8 +26,8 @@ class ComposerAutoloadGeneratorFactory
     /**
      * Get a AutoloadGenerator for creating/recreating the autoload files
      *
-     * @param string          $namespacePrefix
-     * @param EventDispatcher $eventDispatcher
+     * @param string          $namespacePrefix The configured `namespace_prefix`, hashed into `files` autoloader identifiers so they are unique to this project.
+     * @param EventDispatcher $eventDispatcher Used by Composer's generator to dispatch autoload dump scripts.
      */
     public function get(
         string $namespacePrefix,

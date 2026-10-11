@@ -27,7 +27,7 @@ class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
     protected array $files = [];
 
     /**
-     * @param FileBase[] $files
+     * @param FileBase[] $files Initial files, keyed internally by their absolute source path.
      */
     public function __construct(array $files = [])
     {

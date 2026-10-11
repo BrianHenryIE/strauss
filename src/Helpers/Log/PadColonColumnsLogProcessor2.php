@@ -23,7 +23,7 @@ class PadColonColumnsLogProcessor2 implements ProcessorInterface
     protected int $padLength = 0;
 
     /**
-     * @param  MonologRecordArray $record
+     * @param  MonologRecordArray $record Log record whose message may contain a `:::` column separator.
      * @return MonologRecordArray
      */
     public function __invoke(array $record): array

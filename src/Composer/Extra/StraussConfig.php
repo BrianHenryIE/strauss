@@ -261,7 +261,7 @@ class StraussConfig implements
      * Overwrite it with any Strauss config.
      * Provide sensible defaults.
      *
-     * @param ?PartialComposer $composer
+     * @param ?PartialComposer $composer Project Composer instance whose `extra.strauss` config is read; null for defaults only.
      *
      * @throws Exception
      */
@@ -478,7 +478,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string $targetVendorRelativePath
+     * @param string $targetVendorRelativePath Output directory relative to the project root, e.g. `vendor-prefixed`.
      */
     public function setTargetVendorRelativePath(string $targetVendorRelativePath): void
     {
@@ -494,7 +494,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string $relativeVendorDirectory
+     * @param string $relativeVendorDirectory Composer vendor directory relative to the project root, e.g. `vendor`.
      */
     public function setRelativeVendorDirectory(string $relativeVendorDirectory): void
     {
@@ -510,7 +510,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string $namespacePrefix
+     * @param string $namespacePrefix Namespace to prepend to vendor namespaces; leading/trailing backslashes are trimmed on read.
      */
     public function setNamespacePrefix(string $namespacePrefix): void
     {
@@ -526,7 +526,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string $classmapPrefix
+     * @param string $classmapPrefix Prefix prepended to global (un-namespaced) class names, e.g. `My_Project_`.
      */
     public function setClassmapPrefix(string $classmapPrefix): void
     {
@@ -548,7 +548,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string|bool|null $functionsPrefix
+     * @param string|bool|null $functionsPrefix Prefix for global functions; false/empty disables, unset falls back to the lowercased classmap prefix.
      */
     public function setFunctionsPrefix($functionsPrefix): void
     {
@@ -564,7 +564,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string $constantsPrefix
+     * @param string $constantsPrefix Prefix prepended to global constant names.
      */
     public function setConstantsPrefix(string $constantsPrefix): void
     {
@@ -582,7 +582,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param  string[]|array{0:bool}|null $updateCallSites
+     * @param  string[]|array{0:bool}|null $updateCallSites Project files/directories to update; `[true]` for the autoload key, `[false]` or empty to disable.
      * @throws InvalidArgumentException
      */
     public function setUpdateCallSites($updateCallSites): void
@@ -605,7 +605,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>} $excludeFromCopy
+     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>} $excludeFromCopy Packages (by name), namespaces and file regex patterns not to copy; keys not given keep their current value.
      */
     public function setExcludeFromCopy(array $excludeFromCopy): void
     {
@@ -642,7 +642,7 @@ class StraussConfig implements
 
 
     /**
-     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>} $excludeFilesFromUpdates
+     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>} $excludeFilesFromUpdates Packages, namespaces and file regex patterns whose files should not be modified; keys not given are unchanged.
      */
     public function setExcludeFilesFromUpdates(array $excludeFilesFromUpdates): void
     {
@@ -679,7 +679,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>} $excludeFromPrefix
+     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>} $excludeFromPrefix Packages, namespaces and file regex patterns not to prefix; keys not given are unchanged.
      */
     public function setExcludeFromPrefix(array $excludeFromPrefix): void
     {
@@ -705,7 +705,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string[] $excludePackagesFromPrefixing
+     * @param string[] $excludePackagesFromPrefixing Composer package names (`vendor/package`) not to prefix.
      */
     public function setExcludePackagesFromPrefixing(array $excludePackagesFromPrefixing): void
     {
@@ -732,7 +732,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>, constants?:array<string>} $excludeConstants
+     * @param array{packages?:array<string>, namespaces?:array<string>, file_patterns?:array<string>, constants?:array<string>} $excludeConstants Packages, namespaces, file regex patterns and constant names whose constants should not be prefixed.
      */
     public function setExcludeConstants(array $excludeConstants): void
     {
@@ -786,7 +786,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param array{functions?:array<string>} $excludeFromStringRename
+     * @param array{functions?:array<string>} $excludeFromStringRename Function names which should not be renamed where they appear inside strings.
      */
     public function setExcludeFromStringRename(array $excludeFromStringRename): void
     {
@@ -836,7 +836,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param bool $deleteVendorFiles
+     * @param bool $deleteVendorFiles Delete the copied source files from the vendor directory after prefixing.
      */
     public function setDeleteVendorFiles(bool $deleteVendorFiles): void
     {
@@ -844,7 +844,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param bool $deleteVendorPackages
+     * @param bool $deleteVendorPackages Delete whole source packages from the vendor directory after prefixing.
      */
     public function setDeleteVendorPackages(bool $deleteVendorPackages): void
     {
@@ -876,7 +876,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string[] $packages
+     * @param string[] $packages Composer package names (`vendor/package`) to copy; empty to use the project's `require` list.
      */
     public function setPackages(array $packages): void
     {
@@ -895,7 +895,7 @@ class StraussConfig implements
     /**
      * @used-by DependenciesCommand::buildDependencyList()
      *
-     * @param array<string,ComposerPackage> $packagesToCopy
+     * @param array<string,ComposerPackage> $packagesToCopy Resolved packages to copy, keyed by package name.
      */
     public function setPackagesToCopy(array $packagesToCopy): void
     {
@@ -911,7 +911,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param array<string,ComposerPackage> $packagesToPrefix
+     * @param array<string,ComposerPackage> $packagesToPrefix Resolved packages to prefix, keyed by package name.
      */
     public function setPackagesToPrefix(array $packagesToPrefix): void
     {
@@ -926,7 +926,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param bool $classmapOutput
+     * @param bool $classmapOutput Generate a classmap autoloader for the output directory.
      */
     public function setClassmapOutput(bool $classmapOutput): void
     {
@@ -936,7 +936,7 @@ class StraussConfig implements
     /**
      * Backwards compatibility with Mozart.
      *
-     * @param string[] $excludePackages
+     * @param string[] $excludePackages Composer package names (`vendor/package`) not to prefix.
      */
     public function setExcludePackages(array $excludePackages): void
     {
@@ -952,7 +952,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param array<string,string> $namespaceReplacementPatterns
+     * @param array<string,string> $namespaceReplacementPatterns Regex pattern => replacement pairs applied to namespaces instead of simple prefixing.
      */
     public function setNamespaceReplacementPatterns(array $namespaceReplacementPatterns): void
     {
@@ -968,7 +968,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param bool $includeModifiedDate
+     * @param bool $includeModifiedDate Include the modified date in the header comment of changed files.
      */
     public function setIncludeModifiedDate(bool $includeModifiedDate): void
     {
@@ -985,7 +985,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param bool $includeAuthor
+     * @param bool $includeAuthor Include the author name in the header comment of changed files.
      */
     public function setIncludeAuthor(bool $includeAuthor): void
     {
@@ -1037,7 +1037,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param bool|int $parallel
+     * @param bool|int $parallel `true`/`0` for as many workers as spare CPUs, `false`/`1` for none, or N for at most N workers.
      */
     public function setParallel($parallel): void
     {

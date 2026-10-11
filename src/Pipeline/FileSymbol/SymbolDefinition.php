@@ -142,7 +142,7 @@ class SymbolDefinition
     }
 
     /**
-     * @param string[] $interfaces
+     * @param string[] $interfaces FQDNs of implemented (or, for interfaces, extended) interfaces, without leading backslashes.
      */
     public function setInterfaces(array $interfaces): void
     {

@@ -22,11 +22,11 @@ class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     protected array $uses;
 
     /**
-     * @param string           $fqdnClassname
-     * @param FileBase         $sourceFile
-     * @param NamespaceSymbol  $namespace
-     * @param ?ComposerPackage $composerPackage
-     * @param ?string[]        $uses
+     * @param string           $fqdnClassname   Fully qualified trait name, without leading backslash.
+     * @param FileBase         $sourceFile      The file the trait was first discovered in.
+     * @param NamespaceSymbol  $namespace       The namespace the trait is declared in (may be the global namespace).
+     * @param ?ComposerPackage $composerPackage The package the trait belongs to; null if not from a package.
+     * @param ?string[]        $uses            FQDNs of the traits this trait `use`s; null for none.
      */
     public function __construct(
         string $fqdnClassname,

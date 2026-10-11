@@ -125,9 +125,9 @@ class InstalledJson
     }
 
     /**
-     * @param  InstalledJsonArray     $installedJsonArray
-     * @param  DependenciesCollection $flatDependencyTree
-     * @param  string[]               $excludedPackageNames
+     * @param  InstalledJsonArray     $installedJsonArray   The parsed contents of `composer/installed.json`.
+     * @param  DependenciesCollection $flatDependencyTree   All dependencies Strauss considered; other packages are left unchanged.
+     * @param  string[]               $excludedPackageNames Names of packages to remove from the list entirely.
      * @return InstalledJsonArray
      */
     protected function updatePackagePaths(
@@ -193,7 +193,7 @@ class InstalledJson
     /**
      * Remove autoload key entries from `installed.json` whose file or directory does not exist after deleting.
      *
-     * @param  InstalledJsonArray $installedJsonArray
+     * @param  InstalledJsonArray $installedJsonArray The parsed contents of `composer/installed.json`.
      * @return InstalledJsonArray
      * @throws FilesystemException
      */
@@ -289,8 +289,8 @@ class InstalledJson
      *
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      *
-     * @param  InstalledJsonArray     $installedJsonArray
-     * @param  DependenciesCollection $flatDependencyTree
+     * @param  InstalledJsonArray     $installedJsonArray The parsed contents of the vendor directory's `composer/installed.json`.
+     * @param  DependenciesCollection $flatDependencyTree All dependencies Strauss considered, used to check which were deleted.
      * @return InstalledJsonArray
      */
     protected function removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson(array $installedJsonArray, DependenciesCollection $flatDependencyTree, string $installedJsonPath): array
@@ -324,8 +324,8 @@ class InstalledJson
      *
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      *
-     * @param  InstalledJsonArray     $installedJsonArray
-     * @param  DependenciesCollection $flatDependencyTree
+     * @param  InstalledJsonArray     $installedJsonArray The parsed contents of the target directory's `composer/installed.json`.
+     * @param  DependenciesCollection $flatDependencyTree All dependencies Strauss considered, used to check which were copied.
      * @return InstalledJsonArray
      */
     protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, DependenciesCollection $flatDependencyTree, string $installedJsonPath): array
@@ -367,7 +367,7 @@ class InstalledJson
     }
 
     /**
-     * @param  InstalledJsonArray $installedJsonArray
+     * @param  InstalledJsonArray $installedJsonArray The parsed contents of `composer/installed.json`.
      * @return InstalledJsonArray
      */
     protected function updateNamespaces(array $installedJsonArray, DiscoveredSymbols $discoveredSymbols): array
@@ -594,7 +594,7 @@ class InstalledJson
     }
 
     /**
-     * @param  InstalledJsonArray $installedJsonArray
+     * @param  InstalledJsonArray $installedJsonArray The parsed contents of `composer/installed.json`.
      * @return InstalledJsonArray
      */
     private function reindexPackagesList(array $installedJsonArray): array

@@ -44,7 +44,7 @@ interface FileBase
      * Used to mark files that should be deleted after moving when `delete_vendor_files` is enabled.
      * Used to mark files that are symlinked as not-to-be-deleted.
      *
-     * @param bool $doDelete
+     * @param bool $doDelete True to delete the source file after copying; false to keep it.
      *
      * @return void
      */

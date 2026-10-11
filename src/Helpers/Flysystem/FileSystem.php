@@ -73,10 +73,10 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      *
      * TODO: Check are any of these methods unused
      *
-     * @param FilesystemAdapter                                    $adapter
-     * @param array{visibility?:string}                            $config
-     * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer
-     * @param PathNormalizer|null                                  $pathNormalizer
+     * @param FilesystemAdapter                                    $adapter        Underlying storage adapter.
+     * @param array{visibility?:string}                            $config         Flysystem config, e.g. default visibility.
+     * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer   Converts Flysystem paths to real filesystem paths; null for one rooted at the filesystem root.
+     * @param PathNormalizer|null                                  $pathNormalizer Normalizes paths before use; null for one which strips the filesystem root.
      */
     public function __construct(
         FilesystemAdapter $adapter,
@@ -175,7 +175,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     }
 
     /**
-     * @param string[] $fileAndDirPaths
+     * @param string[] $fileAndDirPaths Absolute paths; files are returned as-is, directories are expanded to their contents.
      *
      * @return string[]
      * @throws FilesystemException
@@ -265,8 +265,8 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      * /path/to/this/dir, /path/to/file.php => ../../file.php
      * /path/to/here, /path/to/here/dir/file.php => dir/file.php
      *
-     * @param  string $fromAbsoluteDirectory
-     * @param  string $toAbsolutePath
+     * @param  string $fromAbsoluteDirectory Absolute directory the result is relative to.
+     * @param  string $toAbsolutePath        Absolute file or directory path to express relatively.
      * @return string
      */
     public function getRelativePath(string $fromAbsoluteDirectory, string $toAbsolutePath): string

@@ -27,7 +27,7 @@ class StripFsRootPathNormalizer implements PathNormalizer
     private PathNormalizer $delegateNormalizer;
 
     /**
-     * @param string|string[]|null $fsRoots
+     * @param string|string[]|null $fsRoots Filesystem root(s) to strip, e.g. `/` or `C:\`; null for the cwd's root and `c:` variants.
      */
     public function __construct(
         $fsRoots = null,

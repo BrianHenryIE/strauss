@@ -55,7 +55,7 @@ class PhpFileAnalyzer
 
     /**
      * @param string  $contents           The file contents. May be a fragment without a `<?php` opener, or begin with HTML.
-     * @param ?string $filePathForLogging
+     * @param ?string $filePathForLogging Path of the file, only used in log messages; null logs "string".
      *
      * @return ?FileCodeMap Null if the file could not be parsed (e.g. a `.blade.php` template).
      */

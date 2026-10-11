@@ -54,8 +54,8 @@ class AutoloadedEnumerator
      *
      * If a file is in a `files` or `classmap` key, mark all its symbols as autoloaded.
      *
-     * @param DiscoveredFiles   $discoveredFiles
-     * @param DiscoveredSymbols $discoveredSymbols
+     * @param DiscoveredFiles   $discoveredFiles   All files found in the dependencies, to be marked autoloaded or not.
+     * @param DiscoveredSymbols $discoveredSymbols All symbols found in those files, whose namespaces are checked against psr-0/psr-4 keys.
      */
     public function scanSetIsAutoloaded(DiscoveredFiles $discoveredFiles, DiscoveredSymbols $discoveredSymbols): void
     {
@@ -579,10 +579,10 @@ class AutoloadedEnumerator
     }
 
     /**
-     * @param string             $absoluteFilePath
-     * @param ComposerPackage    $dependency
-     * @param string             $packageAbsolutePath
-     * @param array<string,bool> $visited
+     * @param string             $absoluteFilePath    Absolute path of the file whose `include`/`require` statements are followed.
+     * @param ComposerPackage    $dependency          The package the file belongs to; included files are looked up in it.
+     * @param string             $packageAbsolutePath Absolute path of the package directory; includes outside it are ignored.
+     * @param array<string,bool> $visited             Absolute paths already processed, to prevent infinite recursion.
      *
      * @return void
      * @throws FilesystemException

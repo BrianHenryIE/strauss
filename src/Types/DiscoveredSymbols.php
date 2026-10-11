@@ -51,7 +51,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     ];
 
     /**
-     * @param DiscoveredSymbol[] $symbols
+     * @param DiscoveredSymbol[] $symbols Initial symbols, each added via {@see self::add()}.
      */
     public function __construct(array $symbols = [])
     {
@@ -63,7 +63,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     /**
      * TODO: This should merge the symbols instead of overwriting them.
      *
-     * @param DiscoveredSymbol $symbol
+     * @param DiscoveredSymbol $symbol Symbol to store, keyed by its original FQDN under its type.
      */
     public function add(DiscoveredSymbol $symbol): void
     {
@@ -354,7 +354,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param int|string $offset
+     * @param int|string $offset Original FQDN of the symbol to look for, across all symbol types.
      *
      * @return bool
      */
@@ -378,7 +378,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param string $offset
+     * @param string $offset Original FQDN of the symbol to return.
      *
      * @return DiscoveredSymbol|null
      */
@@ -391,8 +391,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param string           $offset
-     * @param DiscoveredSymbol $value
+     * @param string           $offset Unused; setting by offset is not supported.
+     * @param DiscoveredSymbol $value  Unused; use {@see self::add()} instead.
      *
      * @return void
      */
@@ -403,7 +403,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param string $offset
+     * @param string $offset Unused; unsetting by offset is not supported.
      *
      * @return void
      */

@@ -114,7 +114,7 @@ class WorkerCommand extends Command
     }
 
     /**
-     * @param array<string, mixed> $message
+     * @param array<string, mixed> $message Response to the parent process, keyed by `action`; JSON-encoded as a single line to STDOUT.
      */
     protected function write(array $message): void
     {

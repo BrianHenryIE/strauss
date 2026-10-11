@@ -110,7 +110,7 @@ class FileWithDependency extends File implements HasDependency
     }
 
     /**
-     * @param string[] $autoloaderTypes
+     * @param string[] $autoloaderTypes Composer autoload keys the file is loaded under, e.g. `psr-4`, `classmap`, `files`.
      */
     public function setAutoloaderTypes(array $autoloaderTypes): void
     {

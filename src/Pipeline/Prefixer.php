@@ -97,8 +97,8 @@ class Prefixer
     }
 
     /**
-     * @param DiscoveredSymbols $discoveredSymbols
-     * @param array<FileBase>   $files
+     * @param DiscoveredSymbols $discoveredSymbols The symbols found in the dependencies, those marked for renaming are prefixed.
+     * @param array<FileBase>   $files             The dependency files; each is updated in place at its target path.
      *
      * @throws FilesystemException
      */
@@ -192,8 +192,8 @@ class Prefixer
     }
 
     /**
-     * @param DiscoveredSymbols $discoveredSymbols
-     * @param DiscoveredFiles   $projectFiles
+     * @param DiscoveredSymbols $discoveredSymbols The symbols found in the dependencies, those marked for renaming are prefixed.
+     * @param DiscoveredFiles   $projectFiles      The project's own (autoloaded) files, updated in place at their source path.
      *
      * @return void
      * @throws FilesystemException
@@ -273,8 +273,8 @@ class Prefixer
      * Consumes the plan: afterwards the file has no planned edits and its code map describes the returned contents,
      * ready for a later pipeline phase to plan a new set of changes against it.
      *
-     * @param DiscoveredSymbols $discoveredSymbols
-     * @param string            $contents
+     * @param DiscoveredSymbols $discoveredSymbols The symbols found in the dependencies, used to plan edits when none are planned yet.
+     * @param string            $contents          The PHP source code to update.
      *
      * @throws Exception
      */
@@ -373,7 +373,7 @@ class Prefixer
     /**
      * Sort edits ascending by start and drop overlaps, keeping the earliest-starting edit.
      *
-     * @param array<array{start:int,end:int,replacement:string}> $edits
+     * @param array<array{start:int,end:int,replacement:string}> $edits Byte-offset ranges in the contents and their replacement text.
      *
      * @return array<array{start:int,end:int,replacement:string}>
      */

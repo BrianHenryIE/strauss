@@ -121,7 +121,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     protected array $symlinkTargetsMap = [];
 
     /**
-     * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer
+     * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer Converts adapter paths to absolute filesystem paths; null for one rooted at `$location`.
      */
     public function __construct(
         string $location,
@@ -153,7 +153,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     }
 
     /**
-     * @param string $path
+     * @param string $path Path relative to the adapter root.
      */
     protected function getSymlinkDetails(string $path): ?PathSymlinkDetails
     {
@@ -791,8 +791,8 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      *
      * @see LocalFilesystemAdapter::listContents()
      *
-     * @param string $path
-     * @param bool   $deep
+     * @param string $path Directory path relative to the adapter root.
+     * @param bool   $deep Recurse into subdirectories.
      *
      * @return iterable
      * @throws FilesystemException

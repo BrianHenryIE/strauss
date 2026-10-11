@@ -56,7 +56,7 @@ class FileEnumerator
     }
 
     /**
-     * @param DependenciesCollection $flatDependencies
+     * @param DependenciesCollection $flatDependencies All dependencies (flattened) whose package directories are scanned; meta packages are skipped.
      *
      * @throws FilesystemException
      */
@@ -85,7 +85,7 @@ class FileEnumerator
     }
 
     /**
-     * @param  string[] $paths
+     * @param  string[] $paths Absolute paths of the files and directories to scan, recursively.
      * @throws FilesystemException
      */
     public function compileFileListForPaths(
@@ -124,8 +124,8 @@ class FileEnumerator
      * the `.git` directory, files matched by `.gitignore`, and files marked `export-ignore`
      * in `.gitattributes`. Each base path is treated as its own repository root.
      *
-     * @param string[] $basePaths
-     * @param string[] $absoluteFilePaths
+     * @param string[] $basePaths         Absolute paths of the directories, each treated as a repository root.
+     * @param string[] $absoluteFilePaths Absolute paths of the files (and directories) to filter.
      *
      * @return string[]
      * @throws FilesystemException
@@ -190,7 +190,7 @@ class FileEnumerator
     }
 
     /**
-     * @param array<string, array{gitignore?:GitIgnoreChecker, gitattributes?:GitAttributes}> $repositories
+     * @param array<string, array{gitignore?:GitIgnoreChecker, gitattributes?:GitAttributes}> $repositories Git checkers, keyed by repository root absolute path.
      *
      * @throws FilesystemException
      */
@@ -237,9 +237,9 @@ class FileEnumerator
     }
 
     /**
-     * @param string           $sourceAbsoluteFilepath
-     * @param ?ComposerPackage $dependency
-     * @param ?string          $autoloaderType
+     * @param string           $sourceAbsoluteFilepath Absolute path of the file; directories are ignored.
+     * @param ?ComposerPackage $dependency             The package the file belongs to; null for project files.
+     * @param ?string          $autoloaderType         Autoload key type the file is in, e.g. `files` or `classmap` (currently never passed).
      *
      * @throws FilesystemException
      * @uses   DiscoveredFiles::add

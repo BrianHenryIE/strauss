@@ -214,7 +214,7 @@ class MarkSymbolsForRenaming
      *
      * Config: `extra.strauss.exclude_from_prefix.file_patterns`.
      *
-     * @param array<FileBase> $files
+     * @param array<FileBase> $files The files the symbol is defined in; a matching file is also marked not to be prefixed.
      */
     protected function isExcludedFromPrefixFilePattern(array $files): bool
     {
@@ -271,7 +271,7 @@ class MarkSymbolsForRenaming
     }
 
     /**
-     * @param array<FileBase> $files
+     * @param array<FileBase> $files The files the constant is defined in, matched by vendor-relative path.
      */
     protected function isExcludedConstantsFilePattern(array $files): bool
     {

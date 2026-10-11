@@ -74,8 +74,8 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     }
 
     /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
+     * @param InputInterface  $input  Command-line arguments and options.
+     * @param OutputInterface $output Console output for logging.
      *
      * @see Command::execute()
      */
