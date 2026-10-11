@@ -18,6 +18,12 @@ use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Iterates the {@see DiscoveredFiles} and calls {@see FileBase::setDoUpdate()} with false for any file whose
+ * vendor-relative path matches a configured regex (delimiters added when missing), which contains an excluded
+ * namespace, or whose {@see FileWithDependency} package is excluded, as read from the
+ * {@see MarkFilesExcludedFromChangesConfigInterface}.
+ */
 class MarkFilesExcludedFromChanges
 {
     protected MarkFilesExcludedFromChangesConfigInterface $config;

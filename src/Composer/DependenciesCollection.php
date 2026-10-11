@@ -1,6 +1,8 @@
 <?php
 /**
  * A collection of `ComposerPackage`.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Composer;

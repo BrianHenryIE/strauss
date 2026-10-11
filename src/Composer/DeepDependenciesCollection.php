@@ -1,10 +1,17 @@
 <?php
 /**
  * Extension of DirectDependencies which represents all Composer Packages in the dependency tree.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Composer;
 
+/**
+ * Flattens the tree in its constructor: each given {@see ComposerPackage} and, recursively, every package returned by
+ * {@see ComposerPackage::getDependencies()} is added once, keyed by package name, before being passed to the parent
+ * {@see DependenciesCollection}. Already-seen package names are skipped, which also prevents infinite recursion on cycles.
+ */
 class DeepDependenciesCollection extends DependenciesCollection
 {
 

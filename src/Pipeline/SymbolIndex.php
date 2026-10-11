@@ -5,6 +5,8 @@
  * Planning a file must not cost O(symbols): a large project has tens of thousands of symbols and files. The
  * planner finds the names present in a file (or comment, or string) and looks them up here, rather than looking
  * for every symbol in every file.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -18,6 +20,12 @@ use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Exception;
 
+/**
+ * Built from a {@see DiscoveredSymbols} collection, it splits the symbols to rename into namespaces, namespaced
+ * symbols, global classes/interfaces/traits, functions and constants, and keeps hash maps by FQDN or name for
+ * constant-time lookups. Namespaces sorted longest first and the names to search for in strings are computed lazily,
+ * and static helpers extract quoted names and qualified-name candidates from a piece of text.
+ */
 class SymbolIndex
 {
     protected DiscoveredSymbols $discoveredSymbols;

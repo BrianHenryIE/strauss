@@ -1,4 +1,10 @@
 <?php
+/**
+ * The default `strauss` command: copies the project's Composer dependencies to the target directory, prefixes their
+ * namespaces, classes, functions and constants, and generates an autoloader for the result.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
@@ -31,6 +37,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Registered as `dependencies`. Merges the `extra.strauss` config with command-line options, then runs the full
+ * pipeline listed in {@see self::getPipelineSteps()}: {@see DependenciesEnumerator} builds the flat dependency tree,
+ * files are enumerated, scanned and marked for copying and renaming, changes are planned, files are copied and
+ * prefixed (including project call sites when configured), licences are added, originals cleaned up, and the
+ * autoloader, aliases file and prefixed Composer autoload files are written.
+ */
 class DependenciesCommand extends AbstractRenamespacerCommand
 {
     protected DependenciesEnumerator $dependenciesEnumerator;

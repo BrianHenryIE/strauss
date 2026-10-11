@@ -1,9 +1,21 @@
 <?php
+/**
+ * The configuration needed to generate the autoloader for the prefixed files and to include it from the project's
+ * `vendor/autoload.php`.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Config;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 
+/**
+ * Implemented by {@see \BrianHenryIE\Strauss\Composer\Extra\StraussConfig} and consumed by
+ * {@see \BrianHenryIE\Strauss\Pipeline\Autoload}, {@see \BrianHenryIE\Strauss\Pipeline\Autoload\DumpAutoload} and
+ * {@see \BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload}. Exposes the vendor, target and project paths,
+ * output options (classmap, root autoload, dry run) and the {@see ComposerPackage} lists to copy and to prefix.
+ */
 interface AutoloadConfigInterface
 {
 

@@ -2,6 +2,8 @@
 /**
  * `FlysystemAdapterBackCompatTrait` needs to normalize paths.
  *
+ * @package brianhenryie/strauss
+ *
  * @see \League\Flysystem\FilesystemAdapter
  */
 

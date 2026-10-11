@@ -3,6 +3,8 @@
  * Rename a namespace in files. (in-place renaming)
  *
  * strauss replace --from "YourCompany\\Project" --to "BrianHenryIE\\MyProject" --paths "includes,my-plugin.php"
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Console\Commands;
@@ -18,6 +20,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Registered as `replace`. The `--from`/`--to` pair becomes a single namespace replacement pattern and `--paths` the
+ * update call sites on the {@see ReplaceConfigInterface} config. It then runs the shared renaming pipeline from
+ * {@see AbstractRenamespacerCommand} over the files {@see FileEnumerator} finds in those paths, with no copying, cleanup
+ * or autoloader steps, in this process (no worker pool). Licence headers credit the Git user or the system user, since
+ * there may be no `composer.json`.
+ */
 class ReplaceCommand extends AbstractRenamespacerCommand
 {
     protected function getConfig(): ReplaceConfigInterface

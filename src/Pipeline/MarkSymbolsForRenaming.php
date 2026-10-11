@@ -4,6 +4,8 @@
  * Symbols found in autoloaded files should be prefixed, unless:
  * * The `exclude_from_prefix` rules apply to the discovered symbols.
  * * The file is in `exclude_from_copy`
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -20,6 +22,12 @@ use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Walks every {@see DiscoveredSymbol} in the {@see DiscoveredSymbols} and calls `setDoRename()` on it. A symbol starts
+ * as renamable if it is autoloaded or its namespace matches a `namespace_replacement_patterns` key, then the
+ * {@see MarkSymbolsForRenamingConfigInterface} package, namespace and file-pattern exclusions (and the constant-only
+ * `exclude_constants` rules for {@see ConstantSymbol}s) are checked against it.
+ */
 class MarkSymbolsForRenaming
 {
     use LoggerAwareTrait;

@@ -1,9 +1,20 @@
 <?php
+/**
+ * The contract for a file that belongs to a Composer package dependency, as opposed to a project or
+ * `vendor/composer` file.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 
+/**
+ * Implemented by {@see FileWithDependency}. Exposes the {@see ComposerPackage} the file came from and records which
+ * autoload keys (`files`, `classmap`, `psr-0`, `psr-4`) reference the file, so files loaded by the `files`
+ * autoloader can be identified.
+ */
 interface HasDependency
 {
 

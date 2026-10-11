@@ -1,6 +1,8 @@
 <?php
 /**
  * The extra/strauss key in composer.json.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Composer\Extra;
@@ -34,6 +36,13 @@ use JsonMapper\Middleware\CaseConversion;
 use JsonMapper\Middleware\Rename\Rename;
 use Symfony\Component\Console\Input\InputInterface;
 
+/**
+ * Built from a Composer {@see PartialComposer}: the `extra.strauss` (or legacy `extra.mozart`) object is mapped onto
+ * these properties with JsonMapper, renaming legacy and snake_case keys. Unset values get defaults inferred from the
+ * project, e.g. the namespace and classmap prefixes from the first PSR-4/PSR-0 autoload key or the package name, and
+ * `packages` from `require`. {@see self::updateFromCli()} then applies command-line overrides. It implements every
+ * per-step config interface in `BrianHenryIE\Strauss\Config` so one object can be passed through the whole pipeline.
+ */
 class StraussConfig implements
     AliasesConfigInterface,
     AutoloadConfigInterface,

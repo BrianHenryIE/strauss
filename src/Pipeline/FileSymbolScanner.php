@@ -6,6 +6,8 @@
  *
  * Each PHP file is parsed exactly once, by {@see PhpFileAnalyzer}, producing a {@see FileCodeMap} of what the file
  * defines and every symbol it uses. The map is stored on the {@see File} for {@see ChangePlanner} and {@see Prefixer}.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -36,6 +38,13 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * Iterates the {@see DiscoveredFiles}, marking files outside the packages to prefix and non-PHP files not to prefix,
+ * then records each PHP file's {@see SymbolDefinition}s as {@see DiscoveredSymbol}s (namespaces, classes, functions,
+ * constants, interfaces, traits and enums) in the shared {@see DiscoveredSymbols}, skipping PHP built-ins listed in
+ * `FileSymbol/builtinsymbols.php`. When a {@see WorkerPool} is set, the files are first parsed in worker processes,
+ * falling back to parsing in this process if parallelisation fails.
+ */
 class FileSymbolScanner
 {
     use LoggerAwareTrait;

@@ -1,7 +1,17 @@
 <?php
+/**
+ * The configuration needed when applying the planned prefixes to file contents.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Config;
 
+/**
+ * Implemented by {@see \BrianHenryIE\Strauss\Composer\Extra\StraussConfig} and consumed by
+ * {@see \BrianHenryIE\Strauss\Pipeline\Prefixer}. Provides the vendor and target directories, the namespace, classmap
+ * and constant prefixes, the `exclude_from_prefix` rules, and whether this is a dry run.
+ */
 interface PrefixerConfigInterface
 {
     public function getAbsoluteVendorDirectory(): string;

@@ -2,6 +2,8 @@
 /**
  * A symbol (namespace, class, interface, trait, enum, function, constant) defined in a PHP file, as found by
  * {@see PhpFileAnalyzer}. What the file "contains".
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -10,6 +12,12 @@ namespace BrianHenryIE\Strauss\Pipeline\FileSymbol;
 
 use BrianHenryIE\Strauss\Files\CodeLocation;
 
+/**
+ * A plain data object built by {@see FileCodeMapVisitor}: one of the `TYPE_*` constants, the symbol's name and its
+ * enclosing namespace, and the {@see CodeLocation} of the name in the declaration. Classes, interfaces and enums also
+ * carry their parent class, interfaces, abstractness and enum backing type, which {@see FileSymbolScanner} uses when
+ * creating the corresponding {@see \BrianHenryIE\Strauss\Types\DiscoveredSymbol}.
+ */
 class SymbolDefinition
 {
     public const TYPE_NAMESPACE = 'namespace';

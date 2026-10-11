@@ -1,6 +1,8 @@
 <?php
 /**
  * Deletes source files and empty directories.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;

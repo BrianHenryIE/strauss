@@ -23,6 +23,8 @@
  * Your implementation of LoggerInterface can decide what to do with the log messages, e.g.
  * throw an exception on error, or just log them with an instruction on how to remedy the issue.
  *
+ * @package brianhenryie/strauss
+ *
  * @see \League\Flysystem\SymbolicLinkEncountered
  * @see \League\Flysystem\Local\LocalFilesystemAdapter::SKIP_LINKS
  * @see \League\Flysystem\Local\LocalFilesystemAdapter::DISALLOW_LINKS
@@ -64,6 +66,13 @@ use RuntimeException;
 use SplFileInfo;
 use Throwable;
 
+/**
+ * Each write, copy, move, delete and visibility operation normalizes the path, prefixes it to an absolute path, then
+ * walks up its parent directories with `is_link()` to find any symlink, recording each one found with its `realpath()`
+ * target in `$symlinkTargetsMap`. If a symlink is involved, the configured link handling mode decides whether to skip,
+ * throw, or log a warning and continue; details are passed to the logger as a {@see PathSymlinkDetails}. Directory
+ * listing is reimplemented because the parent's iterator helpers are private.
+ */
 class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements FlysystemAdapterBackCompatTraitInterface
 {
     use FlysystemAdapterBackCompatTrait;

@@ -1,6 +1,8 @@
 <?php
 /**
  * Log level, filesystem
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Console\Commands;
@@ -42,6 +44,14 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Base class for the Strauss commands. {@see self::initialize()} sets up the working directory, a Monolog logger and a
+ * {@see FileSystem} over a {@see SymlinkProtectFilesystemAdapter}; {@see self::execute()} swaps in a
+ * {@see ReadOnlyFileSystemAdapter} for `--dry-run` and configures log levels from `--info`, `--debug` and `--silent`.
+ * Subclasses list method names in {@see self::getPipelineSteps()}, which {@see self::runPipeline()} calls in order and
+ * times. The shared steps (symbol scanning, optionally in a {@see WorkerPool}, renaming, change planning, prefixing,
+ * licensing and Composer autoload file prefixing) are implemented here.
+ */
 abstract class AbstractRenamespacerCommand extends Command
 {
     /**

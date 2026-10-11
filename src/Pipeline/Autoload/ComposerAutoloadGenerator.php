@@ -16,6 +16,8 @@
  * {@see AutoloadGenerator::getFileIdentifier()} which is used in {@see AutoloadGenerator::getIncludeFilesFile()} to
  * generate `autoload_files.php` which is loaded in {@see AutoloadGenerator::getStaticFilesFile()} to create
  * `autoload_static.php`.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
@@ -25,6 +27,11 @@ use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
 
+/**
+ * Holds the project-unique string passed to the constructor and appends it to the package name and path in the md5
+ * hash returned by {@see ComposerAutoloadGenerator::getFileIdentifier()}. All other autoload generation is inherited
+ * unchanged from {@see AutoloadGenerator}.
+ */
 class ComposerAutoloadGenerator extends AutoloadGenerator
 {
     /**

@@ -3,6 +3,8 @@
  * Hidden command run by {@see WorkerPool}: reads requests from stdin, analyses the files, writes results to stdout.
  *
  * Nothing else may write to stdout; logs go to stderr and are only shown by the parent when a worker fails.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -17,6 +19,12 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
+/**
+ * Reads newline-delimited JSON requests from stdin: `analyze` requests list file paths, each of which is read and
+ * parsed by a {@see PhpFileAnalyzer}, and the {@see WorkerPool::encodeCodeMap()}-encoded code map (or an error) is written
+ * back as one JSON line per file, followed by a chunk-done message. A `quit` request ends the loop; any exception is
+ * reported as an error message and the command exits with failure.
+ */
 class WorkerCommand extends Command
 {
     public const NAME = 'worker';

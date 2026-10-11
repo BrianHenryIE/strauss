@@ -15,6 +15,13 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 
+/**
+ * Holds the {@see NamespaceSymbol} the symbol was declared in and derives the original and replacement fully
+ * qualified names from it: in the global namespace the symbol's own local replacement (prefix) is used, otherwise
+ * the namespace's replacement is joined to the original local name. A symbol is only renamed when its namespace
+ * is global or is itself being renamed. {@see self::getPsr0NamespaceString()} matches each source file's
+ * package-relative path against its package's `psr-0` paths so underscore-style classes can be renamed.
+ */
 class NamespacedSymbol extends DiscoveredSymbol
 {
     protected NamespaceSymbol $namespace;

@@ -1,10 +1,17 @@
 <?php
 /**
  * Given two namespaces, sort them by the number of levels, then the length of the final part
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Helpers;
 
+/**
+ * An invokable comparator for `usort()`. Leading/trailing backslashes are trimmed, then namespaces are compared by
+ * the count of `\`-separated parts and, when equal, by the string length of the last part. The constructor's
+ * {@see self::SHORTEST} / {@see self::LONGEST} flag decides the direction by swapping the operands.
+ */
 class NamespaceSort
 {
 

@@ -2,11 +2,11 @@
 /**
  * After a PSR-0 namespaced class is renamed, its directory structure must be updated to match the required format.
  *
+ * @package brianhenryie/strauss
+ *
  * @see https://www.php-fig.org/psr/psr-0/
  * @see vendor/composer/composer/res/composer-schema.json
  * @see vendor/pimple/pimple/composer.json
- *
- * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
@@ -20,10 +20,12 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
-// We have a PSR-0 key
-// PHP files may be in namespaces
-// They may be global with underscores.
-
+/**
+ * For each package with a `psr-0` autoload key, looks up the {@see \BrianHenryIE\Strauss\Types\NamespaceSymbol} for
+ * each PSR-0 root namespace and, for every {@see FileWithDependency} under that key's path, replaces the original
+ * namespace's directory path with the replacement namespace's in the file's target path. PHP files may be in
+ * namespaces, or global with underscored classnames; either way the target directory changes.
+ */
 class Psr0
 {
     use LoggerAwareTrait;

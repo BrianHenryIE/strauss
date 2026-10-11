@@ -7,6 +7,8 @@
  * file and then a "chunk done" message, at which point it gets the next chunk, so a fast worker takes more of the
  * work. Communication is newline-delimited JSON over the worker's stdin/stdout; a serialized {@see FileCodeMap} is
  * sent back base64-encoded.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -20,6 +22,12 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 
+/**
+ * Starts as many {@see Worker}s as {@see ParallelConfig::getProcessesToSpawn()} allows, using the
+ * {@see WorkerProcessFactory}, then polls them in a loop: reading `result`, `chunk-done` and `error` messages, sending
+ * the next chunk (or `quit` when the queue is empty), and throwing {@see ParallelisationException} on timeouts,
+ * non-zero exits or unexpected output. Any workers still running are stopped when the loop exits.
+ */
 class WorkerPool
 {
     use LoggerAwareTrait;

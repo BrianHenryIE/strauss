@@ -1,6 +1,8 @@
 <?php
 /**
  * Build a list of ComposerPackage objects for all dependencies.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;

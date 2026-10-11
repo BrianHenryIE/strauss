@@ -3,6 +3,8 @@
  * Object for getting typed values from composer.json.
  *
  * Use this for dependencies. Use ProjectComposerPackage for the primary composer.json.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Composer;

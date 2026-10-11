@@ -3,6 +3,8 @@
  * Determine the replacements to be made to the discovered symbols.
  *
  * Typically, this will just be a prefix, but more complex rules allow for replacements specific to individual symbols/namespaces.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -16,6 +18,13 @@ use BrianHenryIE\Strauss\Types\Psr0NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Sets the local replacement on each {@see DiscoveredSymbols} entry marked for renaming: namespaces via the first
+ * matching `namespace_replacement_patterns` regex (with `namespace_prefix` added as a catch-all pattern that avoids
+ * double-prefixing); namespaced classes, interfaces, traits and enums by swapping in their namespace's replacement;
+ * global ones with `classmap_prefix`; global functions with `function_prefix` (handling PSR-0 underscored names);
+ * and constants with `constant_prefix`, all read from the {@see ChangeEnumeratorConfigInterface}.
+ */
 class ChangeEnumerator
 {
     use LoggerAwareTrait;

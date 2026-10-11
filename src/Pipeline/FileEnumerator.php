@@ -1,6 +1,8 @@
 <?php
 /**
  * Build a list of files for the Composer packages.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -19,6 +21,13 @@ use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Lists each package's (or path's) files through the {@see FileSystem}, first shallowly so that, when Git exclusion is
+ * enabled, directories Git would exclude are never descended into, then filters the full list with
+ * {@see GitIgnoreChecker} and {@see GitAttributes} `export-ignore` rules. Each remaining file is added to a single
+ * {@see DiscoveredFiles} collection as a {@see FileWithDependency} (with its vendor-relative and target paths) or,
+ * for files outside a package, a plain {@see File}.
+ */
 class FileEnumerator
 {
     use LoggerAwareTrait;

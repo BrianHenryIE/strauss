@@ -1,6 +1,8 @@
 <?php
 /**
  * A file without a dependency means the project src files and the vendor/composer autoload files.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Files;
@@ -8,6 +10,12 @@ namespace BrianHenryIE\Strauss\Files;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 
+/**
+ * Holds the source absolute path, the vendor-relative path (which cannot always be inferred through a symlink) and
+ * the target path, plus the copy/prefix/update/delete flags pipeline steps set on it. Collects the
+ * {@see DiscoveredSymbols} defined in the file, its {@see FileCodeMap} and the edits planned against that map;
+ * replacing the map discards the planned edits.
+ */
 class File implements FileBase
 {
     /**

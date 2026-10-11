@@ -1,10 +1,21 @@
 <?php
+/**
+ * The interface pipeline steps use for every file Strauss handles, whether a project file, a
+ * `vendor/composer` autoload file, or a file from a dependency.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 
+/**
+ * Implemented by {@see File} and {@see FileWithDependency}. Declares accessors for the source, target and
+ * vendor-relative paths, the copy/prefix/update/delete flags that pipeline steps set and later read, and the
+ * {@see DiscoveredSymbols} defined in the file.
+ */
 interface FileBase
 {
 

@@ -1,6 +1,10 @@
 <?php
 /**
- * @see \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
+ * The collection of symbols discovered in the scanned files and autoload configuration, which the pipeline
+ * filters to decide what to rename and to generate aliases and autoloaders.
+ *
+ * @package brianhenryie/strauss
+ * @see     \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
  */
 
 declare(strict_types=1);

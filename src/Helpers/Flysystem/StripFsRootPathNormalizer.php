@@ -1,4 +1,10 @@
 <?php
+/**
+ * A Flysystem path normalizer which removes the filesystem root (e.g. `/` or `C:\`) from the start of absolute
+ * paths so they can be used as Flysystem-relative paths, including on Windows.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
@@ -6,6 +12,11 @@ use Composer\Util\Platform;
 use League\Flysystem\PathNormalizer;
 use League\Flysystem\WhitespacePathNormalizer;
 
+/**
+ * Builds a case-insensitive regex from the configured roots (defaulting to the current working directory's root and
+ * `c:` variants via {@see FileSystem::getFsRoot()}), strips the first match from the path, then passes the result to
+ * a delegate {@see PathNormalizer}, by default League's {@see WhitespacePathNormalizer}.
+ */
 class StripFsRootPathNormalizer implements PathNormalizer
 {
     /**

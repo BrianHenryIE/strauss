@@ -1,4 +1,10 @@
 <?php
+/**
+ * Generates Composer's autoloader files (`autoload.php` and the `composer` directory) for the target directory,
+ * and the `InstalledVersions.php` and `installed.php` files Composer's classmap expects to find there.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Pipeline\Autoload;
 

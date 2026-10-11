@@ -6,6 +6,8 @@
  * comment and string recorded when {@see FileSymbolScanner} parsed the file — so planning needs neither the file
  * contents nor a parser. The result, a list of (start, end, replacement) edits, is stored on the file
  * ({@see File::setPlannedEdits()}) for {@see Prefixer} to apply.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -30,6 +32,13 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * Looks up the {@see CodeLocation}s of each file against a {@see SymbolIndex} (built once per
+ * {@see DiscoveredSymbols} collection) with a separate finder per kind of change: `use` statements, namespaces,
+ * functions, doc comments, namespaced and global constants, global classes, and symbol names inside strings. The
+ * positions are merged and de-duplicated by start offset, and an overlap throws. Symbols in strings are only replaced
+ * when they come from a package available to the file's package (its dependency tree, or packages it suggests).
+ */
 class ChangePlanner
 {
     use LoggerAwareTrait;

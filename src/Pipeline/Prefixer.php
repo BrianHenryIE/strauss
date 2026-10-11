@@ -8,6 +8,8 @@
  *
  * {@see self::replaceInString()} remains for content that did not pass through the pipeline (tests, Composer's
  * generated autoload files, project files): it analyses and plans on demand, still parsing each file only once.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -32,6 +34,14 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * For each file to update, reads the target file through the {@see FileSystem}, takes the {@see File}'s planned edits
+ * (or asks a {@see ChangePlanner} for them, re-analysing with {@see PhpFileAnalyzer} if the stored {@see FileCodeMap}
+ * no longer matches), sorts them and drops overlaps, then rebuilds the contents in a single pass. The code map is
+ * updated to the new offsets rather than re-parsed. For Composer's own `composer/` runtime files, the symbols to
+ * rename are found with {@see ClassMapGenerator}, also registering their already-prefixed and
+ * {@see Prefixer::SELF_NAMESPACE_PREFIX}-prefixed names so every variant is renamed to the project's prefix.
+ */
 class Prefixer
 {
     use LoggerAwareTrait;

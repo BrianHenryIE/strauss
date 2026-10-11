@@ -1,7 +1,19 @@
 <?php
+/**
+ * The configuration needed to decide which discovered symbols (namespaces, classes, functions, constants) should be
+ * renamed, after applying the prefix, copy and constant exclusion rules.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Config;
 
+/**
+ * Implemented by {@see \BrianHenryIE\Strauss\Composer\Extra\StraussConfig} and consumed by
+ * {@see \BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming}. Provides the vendor and target directories, the
+ * `exclude_from_prefix`, `exclude_from_copy` and `exclude_constants` rules, explicit constant names to skip, and the
+ * namespace replacement patterns, whose namespaces are always renamed.
+ */
 interface MarkSymbolsForRenamingConfigInterface
 {
     public function getAbsoluteVendorDirectory(): string;

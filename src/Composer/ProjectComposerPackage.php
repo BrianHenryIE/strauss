@@ -1,6 +1,8 @@
 <?php
 /**
  * Extends ComposerPackage to return the typed Strauss config.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Composer;
@@ -10,6 +12,11 @@ use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Composer\Factory;
 use Composer\IO\NullIO;
 
+/**
+ * Loads the project's `composer.json` through Composer's {@see Factory} rather than from an already-installed package.
+ * It records the first author's name (falling back to the vendor part of the package name) and the vendor directory
+ * relative to the project, and builds a {@see StraussConfig} from the `extra.strauss` key on request.
+ */
 class ProjectComposerPackage extends ComposerPackage
 {
     protected string $author;

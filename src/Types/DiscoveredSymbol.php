@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 /**
  * A namespace, class, interface or trait discovered in the project.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Types;
@@ -16,6 +18,13 @@ use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use Composer\Package\PackageInterface;
 
+/**
+ * Holds the original fully qualified and local names, an optional local replacement and a `doRename` flag; the
+ * replacement getters return the original names until the symbol is marked for renaming. Source files are kept
+ * keyed by vendor-relative path, and each {@see FileWithDependency} source adds its package to a
+ * {@see DependenciesCollection}. The constructor also registers the symbol on its source file via
+ * {@see FileBase::addDiscoveredSymbol()}. Subclasses decide whether the symbol is global and/or autoloaded.
+ */
 abstract class DiscoveredSymbol
 {
     /**

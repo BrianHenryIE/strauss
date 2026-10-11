@@ -4,6 +4,8 @@
  *
  * v2:
  *
+ * @package brianhenryie/strauss
+ *
  * @see https://github.com/thephpleague/flysystem/blob/2.x/src/FilesystemAdapter.php
  * Interface:
  * @see https://github.com/thephpleague/flysystem/blob/3.x/src/FilesystemAdapter.php

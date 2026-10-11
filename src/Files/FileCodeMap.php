@@ -10,6 +10,8 @@
  *
  * A value object: it describes one exact contents string ({@see self::matchesContent()}) and is never modified.
  * When the Prefixer changes the contents it builds a new map for the result.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -18,6 +20,12 @@ namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition;
 
+/**
+ * Holds the {@see CodeLocation}s sorted by start offset, the {@see SymbolDefinition}s in declaration order, the
+ * declared namespace names, and a CRC32 checksum of the contents. Definitions, usages and regions are read by
+ * filtering the one location list by type, and {@see self::matchesContent()} compares checksums to detect a
+ * stale map.
+ */
 class FileCodeMap
 {
     /**

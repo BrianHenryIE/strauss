@@ -1,4 +1,10 @@
 <?php
+/**
+ * A trait definition discovered in a scanned file, which Strauss may prefix, and for which it records what is
+ * needed to write an alias for the original trait name in `autoload_aliases.php`.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Types;
 

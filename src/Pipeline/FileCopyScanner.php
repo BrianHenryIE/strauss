@@ -12,6 +12,8 @@
  *   ]
  * },
  * ```
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -27,6 +29,12 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * For each {@see FileBase} in the {@see DiscoveredFiles}, checks the {@see FileCopyScannerConfigInterface} excluded
+ * packages, namespaces and file-path regex patterns, then calls `setDoCopy()` and, when copying, sets the target path
+ * under the target directory. It also marks files for deletion when `delete_vendor_files` is set and the file is not
+ * symlinked, and stops files that will not be copied from being prefixed in place.
+ */
 class FileCopyScanner
 {
     use LoggerAwareTrait;

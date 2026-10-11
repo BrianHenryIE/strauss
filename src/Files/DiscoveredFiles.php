@@ -1,4 +1,10 @@
 <?php
+/**
+ * The collection of files Strauss has found to process, built by {@see \BrianHenryIE\Strauss\Pipeline\FileEnumerator}
+ * and passed through the pipeline steps that copy, scan, prefix and delete them.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Files;
 

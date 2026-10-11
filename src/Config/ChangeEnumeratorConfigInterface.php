@@ -1,4 +1,10 @@
 <?php
+/**
+ * The configuration needed to determine the replacement name for each discovered symbol: the namespace, classmap,
+ * function and constant prefixes, plus any explicit namespace replacement patterns.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Config;
 
@@ -6,6 +12,10 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 
 /**
+ * Implemented by {@see StraussConfig} and consumed by {@see \BrianHenryIE\Strauss\Pipeline\ChangeEnumerator}, which
+ * sets each symbol's replacement name from the prefixes, the namespace replacement patterns and the excluded
+ * namespaces, and stops function names listed in `exclude_from_string_rename` being replaced inside strings.
+ *
  * @see StraussConfig
  */
 interface ChangeEnumeratorConfigInterface

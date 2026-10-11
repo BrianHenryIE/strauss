@@ -1,6 +1,8 @@
 <?php
 /**
  * Use each package's autoload key to determine which files in the package are to be prefixed, apply exclusion rules.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;

@@ -16,6 +16,11 @@ use DateTimeInterface;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 
+/**
+ * Splits the message on the first `:::`, tracks the longest prefix seen so far across all records, and pads the
+ * prefix to that width with a single `:` appended after it. Returns a copy of the immutable record via
+ * `LogRecord::with()`; messages without `:::` are returned unchanged.
+ */
 class PadColonColumnsLogProcessor3 implements ProcessorInterface
 {
     /**

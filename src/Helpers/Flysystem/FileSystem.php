@@ -3,6 +3,8 @@
  * This class extends Flysystem's Filesystem class to add some additional functionality, particularly around
  * symlinks which are not supported by Flysystem.
  *
+ * @package brianhenryie/strauss
+ *
  * @see https://github.com/thephpleague/flysystem/issues/599
  */
 
@@ -23,6 +25,13 @@ use League\Flysystem\PathNormalizer;
 use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 
+/**
+ * Wraps a {@see FilesystemAdapter} (typically {@see SymlinkProtectFilesystemAdapter}) and keeps its own copies of the
+ * path normalizer (by default {@see StripFsRootPathNormalizer} inside a `mem://`-stripping normalizer), a
+ * {@see PathPrefixer} for the local filesystem location, and the working directory. These are used to convert
+ * between Flysystem-relative and absolute paths, compute project-relative paths for logging, and detect symlinked
+ * paths with `is_link()`/`realpath()`. Flysystem v2/v3 differences are covered by {@see FlysystemReaderBackCompatTrait}.
+ */
 class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixerInterface, FlysystemReaderBackCompatTraitInterface
 {
     use FlysystemReaderBackCompatTrait;

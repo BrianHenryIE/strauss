@@ -9,9 +9,10 @@
  * GPL states: "You must cause the modified files to carry prominent notices stating
  * that you changed the files and the date of any change."
  *
- * @see https://github.com/coenjacobs/mozart/issues/87
+ * @package brianhenryie/strauss
+ * @author  Brian Henry <BrianHenryIE@gmail.com>
  *
- * @author BrianHenryIE
+ * @see https://github.com/coenjacobs/mozart/issues/87
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -28,6 +29,12 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * Searches each package in the {@see DependenciesCollection} for files whose name matches `licen.e`, and copies them
+ * from the vendor directory to the matching target directory when that directory exists. For each modified file it
+ * then adds (or extends) the header docblock with the package's `@license` and a "Modified by ... using Strauss"
+ * line, the author and date being included according to the {@see LicenserConfigInterface}.
+ */
 class Licenser
 {
     use LoggerAwareTrait;

@@ -7,6 +7,8 @@
  * This is the only place php-parser is used for symbol scanning and replacement. Downstream steps
  * ({@see \BrianHenryIE\Strauss\Pipeline\ChangePlanner}, {@see \BrianHenryIE\Strauss\Pipeline\Prefixer}) work from
  * the map and never parse.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -24,6 +26,12 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * Discards anything before the first `<?` (or prepends `<?php` to a fragment), parses with php-parser's newest
+ * supported version, then traverses the AST with a {@see NameResolver} (preserving the original nodes) followed by a
+ * {@see FileCodeMapVisitor}. Recorded positions are shifted back to the original contents' offsets, and a file with no
+ * `namespace` statement is given the global namespace. Parse errors are logged and returned as null.
+ */
 class PhpFileAnalyzer
 {
     use LoggerAwareTrait;

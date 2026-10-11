@@ -1,10 +1,12 @@
 <?php
 /**
- * php-parser visitor which, in a single traversal, records the location of every symbol definition, symbol usage,
+ * A php-parser visitor which, in a single traversal, records the location of every symbol definition, symbol usage,
  * comment, string and inline HTML region in a file.
  *
  * Run after {@see \PhpParser\NodeVisitor\NameResolver} (with `replaceNodes` disabled) so `resolvedName` attributes
  * are available.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -34,6 +36,13 @@ use PhpParser\Node\UseItem;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\Token;
 
+/**
+ * In `enterNode()`, records a {@see CodeLocation} for each `use` item, group-use prefix, constant fetch, function call
+ * (including string arguments to functions such as `function_exists()` and `define()`), name, string and inline HTML
+ * node, and a {@see SymbolDefinition} for each namespace, class-like, function and constant declaration. Name nodes
+ * already recorded with a specific role are tracked by object id so they are not recorded again as plain names.
+ * Comments are read from the parser's tokens, rather than from nodes, so none are missed.
+ */
 class FileCodeMapVisitor extends NodeVisitorAbstract
 {
     /**

@@ -6,7 +6,7 @@
  * Only the subset of `.gitattributes` needed by Strauss is implemented: line parsing into
  * pattern + attributes, and `export-ignore` path matching using gitignore-style globbing.
  *
- * @author Claude
+ * Originally written by Claude.
  *
  * @package brianhenryie/strauss
  */
@@ -16,6 +16,12 @@ namespace BrianHenryIE\Strauss\Helpers;
 use League\Flysystem\FilesystemException;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 
+/**
+ * Reads the `.gitattributes` file at the repository path via the {@see FileSystem}, lazily parsing it once into
+ * pattern/attributes entries which are cached. {@see self::isExportIgnored()} walks the entries in order, the last
+ * matching `export-ignore` rule winning, and matches patterns with `fnmatch()`: unanchored patterns against each
+ * path segment, anchored patterns against the full path and each of its ancestor directories.
+ */
 class GitAttributes
 {
     protected FileSystem $filesystem;

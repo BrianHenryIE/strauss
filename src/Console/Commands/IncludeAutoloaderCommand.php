@@ -21,6 +21,11 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Registered as `include-autoloader`. Loads the project's {@see \BrianHenryIE\Strauss\Composer\ProjectComposerPackage}
+ * and its {@see \BrianHenryIE\Strauss\Composer\Extra\StraussConfig}, then calls {@see VendorComposerAutoload} to add
+ * the `autoload_aliases.php` and target directory `autoload.php` requires to `vendor/autoload.php`.
+ */
 class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
 {
     /**

@@ -8,6 +8,8 @@
  *
  * directoryExists, has
  *
+ * @package brianhenryie/strauss
+ *
  * @see https://github.com/thephpleague/flysystem/blob/2.x/src/FilesystemReader.php
  * @see https://github.com/thephpleague/flysystem/blob/3.x/src/FilesystemReader.php
  *

@@ -3,6 +3,8 @@
  * One worker process and the state of the chunk it is working on.
  *
  * @internal Used by {@see WorkerPool}.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -12,6 +14,11 @@ namespace BrianHenryIE\Strauss\Pipeline\Parallel;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 
+/**
+ * Wraps a Symfony {@see Process} and the {@see InputStream} feeding its stdin. Holds the paths still pending in the
+ * current chunk and when that chunk started, so the pool can detect completion and timeouts, and buffers stdout so
+ * that {@see Worker::readLines()} only returns complete newline-terminated messages.
+ */
 class Worker
 {
     public Process $process;

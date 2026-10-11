@@ -1,4 +1,9 @@
 <?php
+/**
+ * A file that belongs to one of the Composer packages Strauss is copying and prefixing.
+ *
+ * @package brianhenryie/strauss
+ */
 
 namespace BrianHenryIE\Strauss\Files;
 
@@ -6,6 +11,12 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 
+/**
+ * Extends {@see File} with the owning {@see ComposerPackage}, the path relative to the package root (derived by
+ * stripping the package's absolute path from the source path) and the autoload types that reference the file.
+ * `doDelete` starts as null so {@see self::isDoDelete()} defers to the package's setting until set explicitly.
+ * The constructor registers the file on its package with {@see ComposerPackage::addFile()}.
+ */
 class FileWithDependency extends File implements HasDependency
 {
 

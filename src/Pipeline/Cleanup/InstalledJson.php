@@ -7,11 +7,11 @@
  * * when delete is enabled, remove dead entries in the original vendor/composer/installed.json
  * * update psr-0 autoload keys to have matching classmap entries
  *
- * @see vendor/composer/installed.json
- *
  * TODO: when delete_vendor_files is used, the original directory still exists so the paths are not updated.
  *
  * @package brianhenryie/strauss
+ *
+ * @see vendor/composer/installed.json
  */
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
