@@ -7,6 +7,7 @@
  * v3 is installed, the genuine parent methods are used, when v2 is installed the trait provides implementations.
  *
  * directoryExists, has
+ *
  * @see https://github.com/thephpleague/flysystem/blob/2.x/src/FilesystemReader.php
  * @see https://github.com/thephpleague/flysystem/blob/3.x/src/FilesystemReader.php
  *
@@ -39,7 +40,9 @@ trait FlysystemReaderBackCompatTrait
          * @phpstan-ignore booleanAnd.leftAlwaysTrue
          */
         if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'has')) {
-            /** @phpstan-ignore staticMethod.notFound */
+            /**
+ * @phpstan-ignore staticMethod.notFound
+*/
             return parent::has($location);
         }
 

@@ -17,7 +17,7 @@ class PrefixComposerAutoloadFilesCommand extends AbstractRenamespacerCommand
     /**
      * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
      *
-     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @used-by  \Symfony\Component\Console\Command\Command::__construct
      * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
      *
      * @return void
@@ -31,11 +31,10 @@ class PrefixComposerAutoloadFilesCommand extends AbstractRenamespacerCommand
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      *
      * @see Command::execute()
-     *
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {

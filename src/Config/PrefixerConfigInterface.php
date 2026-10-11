@@ -16,13 +16,19 @@ interface PrefixerConfigInterface
 
     public function getConstantsPrefix(): ?string;
 
-    /** @return string[] */
+    /**
+     * @return string[]
+     */
     public function getExcludePackagesFromPrefixing(): array;
 
-    /** @return string[] */
+    /**
+     * @return string[]
+     */
     public function getExcludeNamespacesFromPrefixing(): array;
 
-    /** @return string[] */
+    /**
+     * @return string[]
+     */
     public function getExcludeFilePatternsFromPrefixing(): array;
 
     public function isDryRun(): bool;

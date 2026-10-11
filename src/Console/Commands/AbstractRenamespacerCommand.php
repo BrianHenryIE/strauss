@@ -49,7 +49,9 @@ abstract class AbstractRenamespacerCommand extends Command
      */
     protected $logger;
 
-    /** No trailing slash */
+    /**
+     * No trailing slash
+     */
     protected string $workingDir;
 
     protected FileSystem $filesystem;
@@ -60,7 +62,9 @@ abstract class AbstractRenamespacerCommand extends Command
 
     protected DependenciesCollection $flatDependencyTree;
 
-    /** @var Prefixer */
+    /**
+     * @var Prefixer
+     */
     protected Prefixer $replacer;
 
     /**
@@ -68,7 +72,6 @@ abstract class AbstractRenamespacerCommand extends Command
      *
      * Each object contains the file's relative and absolute paths, the package and autoloaders it came from,
      * and flags indicating should it / has it been copied / deleted etc.
-     *
      */
     protected DiscoveredFiles $discoveredFiles;
     protected DiscoveredSymbols $discoveredSymbols;
@@ -76,7 +79,7 @@ abstract class AbstractRenamespacerCommand extends Command
     /**
      * Set name and description, call parent class to add dry-run, verbosity options.
      *
-     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @used-by  \Symfony\Component\Console\Command\Command::__construct
      * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
      *
      * @return void
@@ -146,9 +149,12 @@ abstract class AbstractRenamespacerCommand extends Command
          * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
          * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
          */
-        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-            return true;
-        }, E_DEPRECATED | E_USER_DEPRECATED);
+        set_error_handler(
+            function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+                return true;
+            },
+            E_DEPRECATED | E_USER_DEPRECATED
+        );
 
         $workingDir      = Platform::getcwd();
         $localFsLocation = FileSystem::getFsRoot($workingDir);
@@ -207,9 +213,12 @@ abstract class AbstractRenamespacerCommand extends Command
              * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
              * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
              */
-            set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-                return true;
-            }, E_DEPRECATED | E_USER_DEPRECATED);
+            set_error_handler(
+                function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+                    return true;
+                },
+                E_DEPRECATED | E_USER_DEPRECATED
+            );
 
             $this->filesystem->setAdapter(
                 new ReadOnlyFileSystemAdapter(
@@ -221,7 +230,9 @@ abstract class AbstractRenamespacerCommand extends Command
 
             restore_error_handler();
 
-            /** @var FilesystemRegistry $registry */
+            /**
+ * @var FilesystemRegistry $registry
+*/
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
 
             // Register a file stream mem:// to handle file operations by third party libraries.
@@ -341,10 +352,13 @@ abstract class AbstractRenamespacerCommand extends Command
 
         $this->{$step}();
 
-        $this->logger->debug('{step} took {seconds}s', [
+        $this->logger->debug(
+            '{step} took {seconds}s',
+            [
             'step' => $step,
             'seconds' => number_format(microtime(true) - $startedAt, 3),
-        ]);
+            ]
+        );
     }
 
     /**

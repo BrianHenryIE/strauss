@@ -18,11 +18,13 @@ use Monolog\Processor\ProcessorInterface;
 
 class PadColonColumnsLogProcessor3 implements ProcessorInterface
 {
-    /** @var int $padLength */
+    /**
+     * @var int $padLength
+     */
     protected int $padLength = 0;
 
     /**
-     * @param LogRecord $record
+     * @param  LogRecord $record
      * @return LogRecord
      */
     public function __invoke(LogRecord $record): LogRecord

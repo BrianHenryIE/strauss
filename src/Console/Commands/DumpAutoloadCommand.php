@@ -92,7 +92,9 @@ class DumpAutoloadCommand extends AbstractRenamespacerCommand
             );
         }
 
-        /** @var array{packages?: array<array{name: string}>} $installedJson */
+        /**
+ * @var array{packages?: array<array{name: string}>} $installedJson
+*/
         $installedJson = json_decode($this->filesystem->read($installedJsonPath), true, 512, JSON_THROW_ON_ERROR);
 
         $packages = [];

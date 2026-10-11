@@ -22,7 +22,7 @@ use Exception;
  * @phpstan-type AutoloadKeyArray array{files?:array<string>, classmap?:array<string>, "psr-4"?:array<string,string|array<string>>, "psr-0"?:array<string,string|array<string>>, "exclude_from_classmap"?:array<string>}
  * @phpstan-type ComposerConfigArray array{vendor-dir?:string}
  * @phpstan-type ComposerJsonArray array{name?:string, type?:string, license?:string, require?:array<string,string>, autoload?:AutoloadKeyArray, config?:ComposerConfigArray, repositories?:array<mixed>, provide?:array<string,string>}
- * @see \Composer\Config::merge()
+ * @see          \Composer\Config::merge()
  */
 class ComposerPackage
 {
@@ -138,9 +138,9 @@ class ComposerPackage
     protected DiscoveredSymbols $discoveredSymbolsDeep;
 
     /**
-     * @param string $absolutePath The absolute path to composer.json
-     * @param ?array{files?:array<string>, classmap?:array<string>, psr?:array<string,string|array<string>>} $overrideAutoload Optional configuration to replace the package's own autoload definition with
-     *                                    another which Strauss can use.
+     * @param  string                                                                                         $absolutePath     The absolute path to composer.json
+     * @param  ?array{files?:array<string>, classmap?:array<string>, psr?:array<string,string|array<string>>} $overrideAutoload Optional configuration to replace the package's own autoload definition with
+     *                                                                                                                          another which Strauss can use.
      * @return ComposerPackage
      * @throws Exception
      */
@@ -152,8 +152,8 @@ class ComposerPackage
     /**
      * This is used for virtual packages, which don't have a composer.json.
      *
-     * @param ComposerJsonArray $jsonArray composer.json decoded to array
-     * @param ?AutoloadKeyArray $overrideAutoload New autoload rules to replace the existing ones.
+     * @param  ComposerJsonArray $jsonArray        composer.json decoded to array
+     * @param  ?AutoloadKeyArray $overrideAutoload New autoload rules to replace the existing ones.
      * @throws Exception
      */
     public static function fromComposerJsonArray(array $jsonArray, ?array $overrideAutoload = null): ComposerPackage
@@ -168,7 +168,9 @@ class ComposerPackage
     {
         $factory = new Factory();
 
-        /** @var PartialComposer $composer */
+        /**
+ * @var PartialComposer $composer
+*/
         $composer = $factory->createComposer(new NullIO(), $composerInput, true, null, false);
 
         return $composer;
@@ -177,8 +179,8 @@ class ComposerPackage
     /**
      * Create a PHP object to represent a composer package.
      *
-     * @param PartialComposer $composer
-     * @param ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
+     * @param  PartialComposer   $composer
+     * @param  ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
      * @throws Exception
      */
     public function __construct(PartialComposer $composer, ?array $overrideAutoload = null)
@@ -219,7 +221,9 @@ class ComposerPackage
 
         $fsCurrentWorkingDirectory = FileSystem::normalizeDirSeparator($fsCurrentWorkingDirectory);
 
-        /** @var string $packageVendorAbsoluteDirectoryPath */
+        /**
+ * @var string $packageVendorAbsoluteDirectoryPath
+*/
         $packageVendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
         $packageAbsoluteDirectoryPath = dirname($packageVendorAbsoluteDirectoryPath);
         $vendorAbsoluteDirectoryPath = $fsCurrentWorkingDirectory . '/vendor';
@@ -323,7 +327,6 @@ class ComposerPackage
     }
 
     /**
-     *
      * e.g. ['psr-4' => [ 'BrianHenryIE\Project' => 'src' ]]
      * e.g. ['psr-4' => [ 'BrianHenryIE\Project' => ['src','lib] ]]
      * e.g. ['classmap' => [ 'src', 'lib' ]]

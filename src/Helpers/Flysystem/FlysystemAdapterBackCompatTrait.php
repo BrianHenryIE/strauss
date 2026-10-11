@@ -3,6 +3,7 @@
  * `FilesystemAdapter` interface v3 introduced `::directoryExists()`.
  *
  * v2:
+ *
  * @see https://github.com/thephpleague/flysystem/blob/2.x/src/FilesystemAdapter.php
  * Interface:
  * @see https://github.com/thephpleague/flysystem/blob/3.x/src/FilesystemAdapter.php
@@ -23,7 +24,7 @@ use League\Flysystem\FilesystemException;
 trait FlysystemAdapterBackCompatTrait
 {
     /**
-     * @see FilesystemAdapter::directoryExists()
+     * @see   FilesystemAdapter::directoryExists()
      * @param string $path
      *
      * @return bool
@@ -38,7 +39,9 @@ trait FlysystemAdapterBackCompatTrait
          * @phpstan-ignore booleanAnd.leftAlwaysTrue
          */
         if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'directoryExists')) {
-            /** @phpstan-ignore staticMethod.notFound  */
+            /**
+ * @phpstan-ignore staticMethod.notFound
+*/
             return parent::directoryExists($path);
         }
 
@@ -62,7 +65,9 @@ trait FlysystemAdapterBackCompatTrait
         }
 
         $parentDirectoryContents = $this->listContents($parentDir, false);
-        /** @var FileAttributes $entry */
+        /**
+ * @var FileAttributes $entry
+*/
         foreach ($parentDirectoryContents as $entry) {
             if ($entry->path() == $path) {
                 return $entry->isDir();
@@ -73,7 +78,8 @@ trait FlysystemAdapterBackCompatTrait
         // TODO: This should be moved into its own adapter.
         if (property_exists($this, 'pathPrefixer')) {
             if (false !== realpath($this->pathPrefixer->prefixPath($path))
-                && is_dir($this->pathPrefixer->prefixPath($path))) {
+                && is_dir($this->pathPrefixer->prefixPath($path))
+            ) {
                 return true;
             }
         }

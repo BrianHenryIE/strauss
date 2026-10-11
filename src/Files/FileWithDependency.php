@@ -41,7 +41,9 @@ class FileWithDependency extends File implements HasDependency
 
         $this->dependency = $dependency;
 
-        /** @var string $packageAbsolutePath */
+        /**
+ * @var string $packageAbsolutePath
+*/
         $packageAbsolutePath = $dependency->getPackageAbsolutePath();
 
         $this->vendorRelativePath = $vendorRelativePath;

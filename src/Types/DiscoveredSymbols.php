@@ -123,7 +123,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      */
     public function get(string $fqdnName): ?DiscoveredSymbol
     {
-        /** @var DiscoveredSymbol[] $found */
+        /**
+ * @var DiscoveredSymbol[] $found
+*/
         $found = array_reduce(
             $this->types,
             fn (array $carry, array $symbol) => isset($symbol[$fqdnName]) ? array_merge($carry, [$symbol[$fqdnName]]) : $carry,
@@ -385,8 +387,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param string $offset
-     * @param DiscoveredSymbol$value
+     * @param string           $offset
+     * @param DiscoveredSymbol $value
      *
      * @return void
      */
@@ -424,7 +426,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     public function notGlobal(): self
     {
-        /** @var DiscoveredSymbol[] $all */
+        /**
+ * @var DiscoveredSymbol[] $all
+*/
         $all = [];
         /**
          * @var array<string, DiscoveredSymbol> $types

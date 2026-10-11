@@ -23,7 +23,7 @@ class DeepDependenciesCollection extends DependenciesCollection
     }
 
     /**
-     * @param ComposerPackage $composerPackage
+     * @param ComposerPackage   $composerPackage
      * @param ComposerPackage[] $flatDependenciesArray
      *
      * @return ComposerPackage[]

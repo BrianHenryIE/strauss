@@ -17,7 +17,7 @@ class ProjectComposerPackage extends ComposerPackage
     protected string $relativeVendorDirectory;
 
     /**
-     * @param string $absolutePathFile
+     * @param string                                                                                           $absolutePathFile
      * @param ?array{files?:array<string>,classmap?:array<string>,"psr-4"?:array<string,string|array<string>>} $overrideAutoload
      */
     public function __construct(string $absolutePathFile, ?array $overrideAutoload = null)
@@ -37,14 +37,19 @@ class ProjectComposerPackage extends ComposerPackage
             $this->author = $authors[0]['name'];
         }
 
-        /** @var ?string $projectVendorAbsoluteDirectoryPath */
+        /**
+ * @var ?string $projectVendorAbsoluteDirectoryPath
+*/
         $projectVendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
         $this->relativeVendorDirectory = is_string($projectVendorAbsoluteDirectoryPath) && !empty($projectVendorAbsoluteDirectoryPath)
-            ? ltrim(str_replace(
-                FileSystem::normalizeDirSeparator(dirname($absolutePathFile)),
-                '',
-                FileSystem::normalizeDirSeparator($projectVendorAbsoluteDirectoryPath)
-            ), '\\/')
+            ? ltrim(
+                str_replace(
+                    FileSystem::normalizeDirSeparator(dirname($absolutePathFile)),
+                    '',
+                    FileSystem::normalizeDirSeparator($projectVendorAbsoluteDirectoryPath)
+                ),
+                '\\/'
+            )
             :  'vendor';
     }
 

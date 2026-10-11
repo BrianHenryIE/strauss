@@ -35,9 +35,9 @@ class ComposerAutoloadGenerator extends AutoloadGenerator
     /**
      * Constructor
      *
-     * @param string $projectUniqueString A string to include in the hash to ensure uniqueness across projects, probably `namespace_prefix`.
-     * @param EventDispatcher $eventDispatcher Used to dispatch `optimize` script when {@see AutoloadGenerator::$runScripts} is true, which defaults to `false`.
-     * @param IOInterface|null $io Used to write errors and warnings. Default `null`.
+     * @param string           $projectUniqueString A string to include in the hash to ensure uniqueness across projects, probably `namespace_prefix`.
+     * @param EventDispatcher  $eventDispatcher     Used to dispatch `optimize` script when {@see AutoloadGenerator::$runScripts} is true, which defaults to `false`.
+     * @param IOInterface|null $io                  Used to write errors and warnings. Default `null`.
      */
     public function __construct(
         string $projectUniqueString,
@@ -55,10 +55,10 @@ class ComposerAutoloadGenerator extends AutoloadGenerator
      * `$path` here is `PackageInterface->getTargetDir()`.`PackageInterface::getAutoload()['files'][]`
      *
      * @override
-     * @see AutoloadGenerator::getFileIdentifier()
+     * @see      AutoloadGenerator::getFileIdentifier()
      *
      * @param PackageInterface $package The package to get the file identifier for.
-     * @param string $path Relative path from `vendor`.
+     * @param string           $path    Relative path from `vendor`.
      *
      * @return string
      */

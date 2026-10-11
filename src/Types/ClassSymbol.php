@@ -18,12 +18,12 @@ class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     protected array $interfaces;
 
     /**
-     * @param string $fqdnClassname
-     * @param FileBase $sourceFile
+     * @param string          $fqdnClassname
+     * @param FileBase        $sourceFile
      * @param NamespaceSymbol $namespace
-     * @param bool $isAbstract
-     * @param ?string $extends
-     * @param string[] $interfaces
+     * @param bool            $isAbstract
+     * @param ?string         $extends
+     * @param string[]        $interfaces
      */
     public function __construct(
         string $fqdnClassname,

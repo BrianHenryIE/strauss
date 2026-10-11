@@ -20,7 +20,9 @@ use BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition;
 
 class FileCodeMap
 {
-    /** @var CodeLocation[] Sorted by start position. */
+    /**
+     * @var CodeLocation[] Sorted by start position.
+     */
     protected array $locations;
 
     /**
@@ -44,9 +46,9 @@ class FileCodeMap
     protected int $contentsCrc32;
 
     /**
-     * @param CodeLocation[] $locations
+     * @param CodeLocation[]     $locations
      * @param SymbolDefinition[] $definitions
-     * @param string[] $namespaceNames
+     * @param string[]           $namespaceNames
      */
     public function __construct(array $locations, string $contents, array $definitions = [], array $namespaceNames = ['\\'])
     {
@@ -71,10 +73,12 @@ class FileCodeMap
     public function getLocationsOfType(string ...$types): array
     {
         $typesLookup = array_fill_keys($types, true);
-        return array_values(array_filter(
-            $this->locations,
-            fn(CodeLocation $location) => isset($typesLookup[$location->getType()])
-        ));
+        return array_values(
+            array_filter(
+                $this->locations,
+                fn(CodeLocation $location) => isset($typesLookup[$location->getType()])
+            )
+        );
     }
 
     /**
@@ -87,10 +91,12 @@ class FileCodeMap
         if (is_null($type)) {
             return $this->definitions;
         }
-        return array_values(array_filter(
-            $this->definitions,
-            fn(SymbolDefinition $definition) => $type === $definition->getType()
-        ));
+        return array_values(
+            array_filter(
+                $this->definitions,
+                fn(SymbolDefinition $definition) => $type === $definition->getType()
+            )
+        );
     }
 
     /**

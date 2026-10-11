@@ -68,10 +68,12 @@ class WorkerCommand extends Command
                 $this->write(['action' => WorkerPool::ACTION_CHUNK_DONE]);
             }
         } catch (Throwable $e) {
-            $this->write([
+            $this->write(
+                [
                 'action' => WorkerPool::ACTION_ERROR,
                 'message' => sprintf('%s: %s in %s:%d', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()),
-            ]);
+                ]
+            );
             return Command::FAILURE;
         }
 

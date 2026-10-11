@@ -10,7 +10,9 @@ class RelativeFilepathLogProcessor
 
     public static function make(FileSystem $fileSystem): ProcessorInterface
     {
-        /** @phpstan-ignore identical.alwaysTrue (Depends on what version of PHP Strauss installed on) */
+        /**
+ * @phpstan-ignore identical.alwaysTrue (Depends on what version of PHP Strauss installed on)
+*/
         return \Monolog\Logger::API === 2
                 ? new RelativeFilepathLogProcessor2($fileSystem)
                 : new RelativeFilepathLogProcessor3($fileSystem);

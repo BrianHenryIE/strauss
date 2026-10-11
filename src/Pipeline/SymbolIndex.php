@@ -22,7 +22,9 @@ class SymbolIndex
 {
     protected DiscoveredSymbols $discoveredSymbols;
 
-    /** Every namespace, including those not being renamed. */
+    /**
+     * Every namespace, including those not being renamed.
+     */
     protected DiscoveredSymbols $namespaces;
 
     protected int $symbolCount;
@@ -50,13 +52,19 @@ class SymbolIndex
 
     protected DiscoveredSymbols $constantsToRename;
 
-    /** @var array<string, NamespacedSymbol> Namespaced (incl. global) symbols to rename, except functions, by FQDN. */
+    /**
+     * @var array<string, NamespacedSymbol> Namespaced (incl. global) symbols to rename, except functions, by FQDN.
+     */
     protected array $namespacedToRenameByFqdn = [];
 
-    /** @var array<string, FunctionSymbol> By FQDN. */
+    /**
+     * @var array<string, FunctionSymbol> By FQDN.
+     */
     protected array $functionsToRenameByFqdn = [];
 
-    /** @var array<string, NamespacedSymbol> Global classes, interfaces, traits and enums to rename, by name. */
+    /**
+     * @var array<string, NamespacedSymbol> Global classes, interfaces, traits and enums to rename, by name.
+     */
     protected array $globalClassesInterfacesTraitsToRenameByName = [];
 
     /**
@@ -101,7 +109,9 @@ class SymbolIndex
         }
 
         // By value: a namespace and a class may share a name, and merging by key would drop the namespace.
-        /** @var DiscoveredSymbol $symbol */
+        /**
+ * @var DiscoveredSymbol $symbol
+*/
         foreach (array_merge(
             array_values($this->namespacesToRename->toArray()),
             array_values($this->namespacedToRename->toArray())
@@ -151,7 +161,9 @@ class SymbolIndex
     {
         if (is_null($this->namespacesToRenameByName)) {
             $byName = [];
-            /** @var NamespaceSymbol $symbol */
+            /**
+ * @var NamespaceSymbol $symbol
+*/
             foreach ($this->namespacesToRename as $symbol) {
                 $name = rtrim($symbol->getOriginalFqdnName(), '\\');
                 if (isset($byName[$name])) {
@@ -174,7 +186,9 @@ class SymbolIndex
     {
         if (is_null($this->activeNamespaceReplacements)) {
             $active = [];
-            /** @var NamespacedSymbol $symbol */
+            /**
+ * @var NamespacedSymbol $symbol
+*/
             foreach ($this->namespacedToRenameNotGlobal->toArray() as $symbol) {
                 $namespace = $symbol->getNamespace();
                 $active[rtrim($namespace->getOriginalFqdnName(), '\\')] = rtrim($namespace->getReplacementFqdnName(), '\\');

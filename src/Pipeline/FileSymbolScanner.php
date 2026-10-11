@@ -59,7 +59,9 @@ class FileSymbolScanner
 
     protected FileSymbolScannerConfigInterface $config;
 
-    /** @var string[] */
+    /**
+     * @var string[]
+     */
     protected array $builtIns = [];
 
     protected ?PhpFileAnalyzer $analyzer = null;
@@ -109,9 +111,12 @@ class FileSymbolScanner
     protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
     {
         if (in_array($symbol->getOriginalFqdnName(), $this->getBuiltIns())) {
-            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
+            $this->logger->debug(
+                'Skipping built-in symbol {symbolName}, possible a polyfill.',
+                [
                 'symbolName' => $symbol->getOriginalLocalName(),
-            ]);
+                ]
+            );
             return;
         }
 
@@ -151,7 +156,8 @@ class FileSymbolScanner
 
         foreach ($files->getFiles() as $file) {
             if ($file instanceof FileWithDependency
-                && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
+                && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))
+            ) {
                     /**
                      * We will not prefix symbols found in this file because it is not in a default or listed package.
                      *
@@ -188,10 +194,13 @@ class FileSymbolScanner
                 unset($this->parallelResults[$file->getSourcePath()]);
                 if (is_null($codeMap)) {
                     // As {@see PhpFileAnalyzer::analyze()} logs it when parsing in this process.
-                    $this->logger->warning('Failed to parse file {filePath} with error: {errorMessage}', [
+                    $this->logger->warning(
+                        'Failed to parse file {filePath} with error: {errorMessage}',
+                        [
                         'filePath' => $file->getSourcePath(),
                         'errorMessage' => $errorMessage ?? 'unknown',
-                    ]);
+                        ]
+                    );
                 }
                 $this->record($codeMap, $file, $package);
                 continue;
@@ -223,7 +232,9 @@ class FileSymbolScanner
             return;
         }
 
-        /** @var array<string, string> $absolutePaths Keyed by source path. */
+        /**
+ * @var array<string, string> $absolutePaths Keyed by source path.
+*/
         $absolutePaths = [];
         foreach ($files->getFiles() as $file) {
             if (!$file->isPhpFile() || !($file instanceof File)) {
@@ -247,9 +258,12 @@ class FileSymbolScanner
                 }
             );
         } catch (ParallelisationException $e) {
-            $this->logger->warning('Could not analyse files in parallel, continuing in this process: {errorMessage}', [
+            $this->logger->warning(
+                'Could not analyse files in parallel, continuing in this process: {errorMessage}',
+                [
                 'errorMessage' => $e->getMessage(),
-            ]);
+                ]
+            );
             $this->parallelResults = [];
         }
     }
@@ -405,12 +419,12 @@ class FileSymbolScanner
     }
 
     /**
-     * @param string $fqdnClassname
-     * @param bool $isAbstract
-     * @param FileBase $file
-     * @param ?string $extends
+     * @param string               $fqdnClassname
+     * @param bool                 $isAbstract
+     * @param FileBase             $file
+     * @param ?string              $extends
      * @param NamespaceSymbol|null $namespace
-     * @param string[] $interfaces
+     * @param string[]             $interfaces
      */
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
@@ -422,9 +436,12 @@ class FileSymbolScanner
     ): ?ClassSymbol {
         // TODO: This should be included but marked not to prefix.
         if ($this->isBuiltInSymbol($fqdnClassname)) {
-            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
+            $this->logger->debug(
+                'Skipping built-in symbol {symbolName}, possible a polyfill.',
+                [
                 'symbolName' => $fqdnClassname,
-            ]);
+                ]
+            );
             return null;
         }
 

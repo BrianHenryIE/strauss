@@ -18,13 +18,19 @@ class Worker
 
     public InputStream $input;
 
-    /** @var array<string, true> Files sent in the current chunk, keyed by path, removed as results arrive. */
+    /**
+     * @var array<string, true> Files sent in the current chunk, keyed by path, removed as results arrive.
+     */
     public array $pendingFiles = [];
 
-    /** @var ?float Null when the worker has no outstanding chunk. */
+    /**
+     * @var ?float Null when the worker has no outstanding chunk.
+     */
     public ?float $chunkStartedAt = null;
 
-    /** Output received but not yet terminated by a newline. */
+    /**
+     * Output received but not yet terminated by a newline.
+     */
     public string $buffer = '';
 
     public function __construct(Process $process, InputStream $input)

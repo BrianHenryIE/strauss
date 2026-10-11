@@ -119,6 +119,7 @@ class Cleanup
      *
      * Shares a lot of code with {@see DumpAutoload::generatedPrefixedAutoloader()} but I've done lots of work
      * on that in another branch so I don't want to cause merge conflicts.
+     *
      * @throws ParsingException
      */
     public function rebuildVendorAutoloader(): void
@@ -132,7 +133,9 @@ class Cleanup
                 $this->config->getProjectAbsolutePath() . '/composer.json' // Factory::getComposerFile();
             )
         );
-        /** @var ComposerJsonArray $projectComposerJsonArray */
+        /**
+ * @var ComposerJsonArray $projectComposerJsonArray
+*/
         $projectComposerJsonArray = $projectComposerJson->read();
         if (!isset($projectComposerJsonArray['require'])) {
             $projectComposerJsonArray['require'] = [];
@@ -158,7 +161,9 @@ class Cleanup
         );
         $localRepo = new InstalledFilesystemRepository($installedJson);
         $strictAmbiguous = false; // $input->getOption('strict-ambiguous')
-        /** @var InstalledJsonArray $installedJsonArray */
+        /**
+ * @var InstalledJsonArray $installedJsonArray
+*/
         $installedJsonArray = $installedJson->read();
         $generator->setDevMode($installedJsonArray['dev'] ?? false);
 
@@ -199,16 +204,22 @@ class Cleanup
             'ClassLoader.php'
         ];
 
-        /** @var StorageAttributes $composerFile */
+        /**
+ * @var StorageAttributes $composerFile
+*/
         foreach ($this->filesystem->listContents($composerDirectoryPath) as $composerFile) {
-            /** @var array{path:string} $composerFile */
+            /**
+ * @var array{path:string} $composerFile
+*/
 
             if (!in_array(basename($composerFile['path']), $filesToProcess, true)) {
                 continue;
             }
 
             $fileContents = $this->filesystem->read($composerFile['path']);
-            /** @var string $updated */
+            /**
+ * @var string $updated
+*/
             $updated = preg_replace('/\\\\?BrianHenryIE\\\\{1,2}Strauss\\\\{1,2}/', '', $fileContents) ?? (function () {
                 throw new \Exception(preg_last_error_msg(), preg_last_error());
             })();
@@ -231,7 +242,7 @@ class Cleanup
     }
 
     /**
-     * @param FileBase[] $files
+     * @param  FileBase[] $files
      * @throws FilesystemException
      */
     protected function deleteEmptyDirectories(array $files): void

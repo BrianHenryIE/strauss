@@ -1,8 +1,6 @@
 <?php
 /**
- *
  * Flysystem 3.x requires PHP 8.
- *
  */
 
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;

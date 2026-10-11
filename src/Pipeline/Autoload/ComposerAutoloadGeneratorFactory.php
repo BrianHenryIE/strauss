@@ -20,7 +20,7 @@ class ComposerAutoloadGeneratorFactory
     /**
      * Get a AutoloadGenerator for creating/recreating the autoload files
      *
-     * @param string $namespacePrefix
+     * @param string          $namespacePrefix
      * @param EventDispatcher $eventDispatcher
      */
     public function get(

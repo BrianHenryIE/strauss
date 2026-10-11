@@ -60,19 +60,29 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     protected string $contents;
 
-    /** @var CodeLocation[] */
+    /**
+     * @var CodeLocation[]
+     */
     protected array $locations = [];
 
-    /** @var SymbolDefinition[] In declaration order. */
+    /**
+     * @var SymbolDefinition[] In declaration order.
+     */
     protected array $definitions = [];
 
-    /** @var array<string,bool> Namespace names in declaration order (`\` for global). */
+    /**
+     * @var array<string,bool> Namespace names in declaration order (`\` for global).
+     */
     protected array $namespaceNames = [];
 
-    /** @var ?string Current namespace, null when global. */
+    /**
+     * @var ?string Current namespace, null when global.
+     */
     protected ?string $currentNamespace = null;
 
-    /** @var array<int,bool> spl_object_id of Name nodes already recorded with a specific role. */
+    /**
+     * @var array<int,bool> spl_object_id of Name nodes already recorded with a specific role.
+     */
     protected array $claimedNames = [];
 
     /**
@@ -83,7 +93,9 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
      */
     protected array $commentTokens = [];
 
-    /** Index in {@see self::$commentTokens} of the next comment to record. */
+    /**
+     * Index in {@see self::$commentTokens} of the next comment to record.
+     */
     protected int $nextCommentToken = 0;
 
     /**
@@ -92,10 +104,12 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     public function __construct(string $contents, array $tokens = [])
     {
         $this->contents = $contents;
-        $this->commentTokens = array_values(array_filter(
-            $tokens,
-            fn(Token $token): bool => $token->is([T_COMMENT, T_DOC_COMMENT])
-        ));
+        $this->commentTokens = array_values(
+            array_filter(
+                $tokens,
+                fn(Token $token): bool => $token->is([T_COMMENT, T_DOC_COMMENT])
+            )
+        );
     }
 
     /**

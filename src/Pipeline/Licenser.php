@@ -60,7 +60,7 @@ class Licenser
      * Licenser constructor.
      *
      * @param DependenciesCollection $dependencies Whose folders are searched for existing license.txt files.
-     * @param string $author To add to each modified file's header
+     * @param string                 $author       To add to each modified file's header
      */
     public function __construct(
         LicenserConfigInterface $config,
@@ -100,21 +100,25 @@ class Licenser
 
             // Don't try copy it if it's already there.
             if ($this->filesystem->fileExists($targetLicenseFile)) {
-                $this->logger->debug(sprintf(
-                    "Skipping %s because it already exists at %s",
-                    basename($licenseFile),
-                    $targetLicenseFile
-                ));
+                $this->logger->debug(
+                    sprintf(
+                        "Skipping %s because it already exists at %s",
+                        basename($licenseFile),
+                        $targetLicenseFile
+                    )
+                );
                 continue;
             }
 
             // Don't add licenses to non-existent directories – there were no files copied there!
             if (! $this->filesystem->directoryExists($targetLicenseFileDir)) {
-                $this->logger->debug(sprintf(
-                    "Skipping %s because the directory %s does not exist",
-                    basename($licenseFile),
-                    $targetLicenseFileDir
-                ));
+                $this->logger->debug(
+                    sprintf(
+                        "Skipping %s because the directory %s does not exist",
+                        basename($licenseFile),
+                        $targetLicenseFileDir
+                    )
+                );
                 continue;
             }
 
@@ -139,7 +143,9 @@ class Licenser
     {
         // Include all license files in the dependency path.
 
-        /** @var ComposerPackage $dependency */
+        /**
+ * @var ComposerPackage $dependency
+*/
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
             // Meta packages.
@@ -149,15 +155,20 @@ class Licenser
             $packagePath = $this->filesystem->normalizePath($packagePath);
 
             if (!$packagePath) {
-                $this->logger->debug('Dependency {dependency} had no package path?', [
+                $this->logger->debug(
+                    'Dependency {dependency} had no package path?',
+                    [
                     'dependency' => $dependency->getPackageName()
-                ]);
+                    ]
+                );
                 continue;
             }
 
             $files = $this->filesystem->listContents($packagePath, true)
                 ->filter(fn (StorageAttributes $attributes) => $attributes->isFile());
-            /** @var FileAttributes $file */
+            /**
+ * @var FileAttributes $file
+*/
             foreach ($files as $file) {
                 $filePath = $this->filesystem->makeAbsolute($file->path());
 
@@ -217,9 +228,12 @@ class Licenser
             );
 
             if ($updatedContents !== $contents) {
-                $this->logger->info("Adding change declaration to {filepath}", [
+                $this->logger->info(
+                    "Adding change declaration to {filepath}",
+                    [
                     'filepath' => $filepath
-                ]);
+                    ]
+                );
                 $this->filesystem->write($filepath, $updatedContents);
             }
         }
@@ -229,6 +243,7 @@ class Licenser
      * Given a php file as a string, edit its header phpdoc, or add a header, to include:
      *
      * "Modified by {author} on {date} using Strauss.
+     *
      * @see https://github.com/BrianHenryIE/strauss"
      *
      * Should probably include the original license in each file since it'll often be a mix, with the parent
@@ -304,7 +319,9 @@ class Licenser
             $licenseDeclaration,
             $modifiedDeclaration
         ) {
-            /** @var array<int,string> $matches */
+            /**
+ * @var array<int,string> $matches
+*/
 
             // Find the line prefix and use it, i.e. could be none, asterisk or space-asterisk.
             $commentLines = explode("\n", $matches[2]);

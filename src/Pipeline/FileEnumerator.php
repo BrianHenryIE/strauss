@@ -53,7 +53,9 @@ class FileEnumerator
      */
     public function compileFileListForDependencies(DependenciesCollection $flatDependencies): DiscoveredFiles
     {
-        /** @var ComposerPackage $dependency */
+        /**
+ * @var ComposerPackage $dependency
+*/
         foreach ($flatDependencies as $dependency) {
             $this->logger->info("Scanning for files for package {packageName}", ['packageName' => $dependency->getPackageName()]);
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
@@ -74,7 +76,7 @@ class FileEnumerator
     }
 
     /**
-     * @param string[] $paths
+     * @param  string[] $paths
      * @throws FilesystemException
      */
     public function compileFileListForPaths(
@@ -121,7 +123,9 @@ class FileEnumerator
      */
     protected function excludeGitFiles(array $basePaths, array $absoluteFilePaths): array
     {
-        /** @var array<string, array{gitignore?:GitIgnoreChecker, gitattributes?:GitAttributes}> $repositories */
+        /**
+ * @var array<string, array{gitignore?:GitIgnoreChecker, gitattributes?:GitAttributes}> $repositories
+*/
         $repositories = [];
         foreach ($basePaths as $basePath) {
             if (!$this->filesystem->directoryExists($basePath)) {
@@ -147,10 +151,13 @@ class FileEnumerator
                 } catch (GitIgnoreCherkerException $e) {
                     // e.g. when the path is not on the local filesystem (in-memory tests).
                     // The user explicitly enabled Git exclusion, so surface the failure to honour it.
-                    $this->logger->warning("Could not read .gitignore at {path}: {message}", [
+                    $this->logger->warning(
+                        "Could not read .gitignore at {path}: {message}",
+                        [
                         'path' => $normalizedBasePath,
                         'message' => $e->getMessage(),
-                    ]);
+                        ]
+                    );
                 }
             }
 
@@ -165,10 +172,12 @@ class FileEnumerator
 
         $this->logger->info('Processing .gitignore/.gitattributes – checking ' . count($absoluteFilePaths) . ' files.');
 
-        return array_values(array_filter(
-            $absoluteFilePaths,
-            fn(string $sourceAbsolutePath): bool => !$this->isGitExcluded($sourceAbsolutePath, $repositories)
-        ));
+        return array_values(
+            array_filter(
+                $absoluteFilePaths,
+                fn(string $sourceAbsolutePath): bool => !$this->isGitExcluded($sourceAbsolutePath, $repositories)
+            )
+        );
     }
 
     /**
@@ -199,10 +208,13 @@ class FileEnumerator
                         return true;
                     }
                 } catch (GitIgnoreCherkerException $e) {
-                    $this->logger->warning("Could not check .gitignore for {path}: {message}", [
+                    $this->logger->warning(
+                        "Could not check .gitignore for {path}: {message}",
+                        [
                         'path' => $sourceAbsolutePath,
                         'message' => $e->getMessage(),
-                    ]);
+                        ]
+                    );
                 }
             }
 
@@ -216,13 +228,12 @@ class FileEnumerator
     }
 
     /**
-     * @param string $sourceAbsoluteFilepath
+     * @param string           $sourceAbsoluteFilepath
      * @param ?ComposerPackage $dependency
-     * @param ?string $autoloaderType
+     * @param ?string          $autoloaderType
      *
      * @throws FilesystemException
-     * @uses DiscoveredFiles::add
-     *
+     * @uses   DiscoveredFiles::add
      */
     protected function addFile(
         string $sourceAbsoluteFilepath,
@@ -247,7 +258,9 @@ class FileEnumerator
                 $sourceAbsoluteFilepath
             );
 
-            /** @var string $dependencyPackageAbsolutePath */
+            /**
+ * @var string $dependencyPackageAbsolutePath
+*/
             $dependencyPackageAbsolutePath = $dependency->getPackageAbsolutePath();
             if ($vendorRelativePath === $sourceAbsoluteFilepath) {
                 $vendorRelativePath = $dependency->getRelativePath() . str_replace(
@@ -257,7 +270,9 @@ class FileEnumerator
                 );
             }
 
-            /** @var FileWithDependency $f */
+            /**
+ * @var FileWithDependency $f
+*/
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
                 ?? new FileWithDependency(
                     $dependency,
@@ -282,11 +297,11 @@ class FileEnumerator
             $targetAbsolutePath = $this->config->getAbsoluteTargetDirectory() . '/' . $vendorRelativePath;
 
             $f = $this->discoveredFiles->getFile($sourceAbsoluteFilepath)
-                 ?? new File(
-                     FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath),
-                     $vendorRelativePath,
-                     $targetAbsolutePath
-                 );
+                ?? new File(
+                    FileSystem::normalizeDirSeparator($sourceAbsoluteFilepath),
+                    $vendorRelativePath,
+                    $targetAbsolutePath
+                );
         }
 
         $this->discoveredFiles->add($f);

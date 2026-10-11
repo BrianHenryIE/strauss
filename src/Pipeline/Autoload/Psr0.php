@@ -43,7 +43,9 @@ class Psr0
         DiscoveredFiles $discoveredFiles,
         DiscoveredSymbols $discoveredSymbols
     ): void {
-        /** @var ComposerPackage $package */
+        /**
+ * @var ComposerPackage $package
+*/
         foreach ($flatDependencyTree as $package) {
             if (! $package->hasPsr0()) {
                 continue;
@@ -51,11 +53,13 @@ class Psr0
 
             $composerAutoloadKey = $package->getAutoload();
 
-            /** @var DiscoveredFiles $allPackagesFiles */
+            /**
+ * @var DiscoveredFiles $allPackagesFiles
+*/
             $allPackagesFiles = $package->getFiles();
 
             /**
-             * @see ComposerPackage::hasPsr0()
+             * @see            ComposerPackage::hasPsr0()
              * @phpstan-ignore offsetAccess.notFound
              */
             foreach ($composerAutoloadKey['psr-0'] as $psrRootNamespace => $packageRelativeNamespacePath) {
@@ -66,14 +70,17 @@ class Psr0
                     throw new \Exception('Namespace symbol not found for ' . $psrRootNamespace);
                 }
 
-                /** @var FileWithDependency $file */
+                /**
+ * @var FileWithDependency $file
+*/
                 foreach ($allPackagesFiles as $file) {
                     $filePackageRelativePath = $file->getPackageRelativePath();
 
                     if (! str_starts_with(
                         $filePackageRelativePath,
                         $packageRelativeNamespacePath
-                    )) {
+                    )
+                    ) {
                         continue;
                     }
 

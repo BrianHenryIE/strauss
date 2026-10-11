@@ -12,13 +12,19 @@ interface FileEnumeratorConfig
 
     public function getRelativeTargetDirectory(): string;
 
-    /** @return string[] */
+    /**
+     * @return string[]
+     */
     public function getExcludeNamespacesFromCopy(): array;
 
-    /** @return string[] */
+    /**
+     * @return string[]
+     */
     public function getExcludePackagesFromCopy(): array;
 
-    /** @return string[] */
+    /**
+     * @return string[]
+     */
     public function getExcludeFilePatternsFromCopy(): array;
 
     /**

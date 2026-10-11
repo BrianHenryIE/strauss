@@ -53,9 +53,12 @@ class VendorComposerAutoload
         $composerAutoloadPhpFilepath = $this->config->getAbsoluteVendorDirectory() . '/autoload.php';
 
         if (!$this->fileSystem->fileExists($composerAutoloadPhpFilepath)) {
-            $this->logger->info("No autoload.php found: {composerAutoloadPhpFilepath}", [
+            $this->logger->info(
+                "No autoload.php found: {composerAutoloadPhpFilepath}",
+                [
                 'composerAutoloadPhpFilepath' => $composerAutoloadPhpFilepath
-            ]);
+                ]
+            );
             return;
         }
 
@@ -63,9 +66,12 @@ class VendorComposerAutoload
 
         // TODO: fix dry-run.
         if (!$this->fileSystem->fileExists($newAutoloadPhpFilepath) & !$this->config->isDryRun()) {
-            $this->logger->warning("No new autoload.php found: {newAutoloadPhpFilepath}", [
+            $this->logger->warning(
+                "No new autoload.php found: {newAutoloadPhpFilepath}",
+                [
                 'newAutoloadPhpFilepath' => $newAutoloadPhpFilepath
-            ]);
+                ]
+            );
         }
 
         $this->logger->info('Modifying original autoload.php to add `' . $newAutoloadPhpFilepath);
@@ -85,6 +91,7 @@ class VendorComposerAutoload
     /**
      * Given the PHP code string for `vendor/autoload.php`, add a `require_once autoload_aliases.php`
      * before require autoload_real.php.
+     *
      * @throws FilesystemException
      * @throws JsonException
      */
@@ -135,7 +142,9 @@ class VendorComposerAutoload
             return false;
         }
 
-        /** @var InstalledJsonArray $installedJsonArray */
+        /**
+ * @var InstalledJsonArray $installedJsonArray
+*/
         $installedJsonArray = json_decode(
             $this->fileSystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.json'),
             true,
@@ -154,12 +163,15 @@ class VendorComposerAutoload
      *   "dev": true,
      *   "dev-package-names": []
      * }
+     *
      * @throws FilesystemException
      */
     protected function isComposerNoDev(): bool
     {
         $installedJson = $this->fileSystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.json');
-        /** @var InstalledJsonArray $installedJsonArray */
+        /**
+ * @var InstalledJsonArray $installedJsonArray
+*/
         $installedJsonArray = json_decode($installedJson, true);
         return !isset($installedJsonArray['dev']) || !$installedJsonArray['dev'];
     }
@@ -185,63 +197,65 @@ class VendorComposerAutoload
         }
 
         $traverser = new NodeTraverser();
-        $traverser->addVisitor(new class() extends NodeVisitorAbstract {
+        $traverser->addVisitor(
+            new class() extends NodeVisitorAbstract {
 
-            public function leaveNode(Node $node)
-            {
-                if (get_class($node) === \PhpParser\Node\Stmt\Expression::class) {
-                    $prettyPrinter = new Standard();
-                    $maybeRequireAutoloadReal = $prettyPrinter->prettyPrintExpr($node->expr);
+                public function leaveNode(Node $node)
+                {
+                    if (get_class($node) === \PhpParser\Node\Stmt\Expression::class) {
+                        $prettyPrinter = new Standard();
+                        $maybeRequireAutoloadReal = $prettyPrinter->prettyPrintExpr($node->expr);
 
-                    // Every `vendor/autoload.php` should have this line.
-                    $target = "require_once __DIR__ . '/composer/autoload_real.php'";
+                        // Every `vendor/autoload.php` should have this line.
+                        $target = "require_once __DIR__ . '/composer/autoload_real.php'";
 
-                    // If this node isn't the one we want to insert before, continue.
-                    if ($maybeRequireAutoloadReal !== $target) {
-                        return $node;
-                    }
+                        // If this node isn't the one we want to insert before, continue.
+                        if ($maybeRequireAutoloadReal !== $target) {
+                            return $node;
+                        }
 
-                    // __DIR__ . '/composer/autoload_aliases.php'
-                    $path = new \PhpParser\Node\Expr\BinaryOp\Concat(
-                        new \PhpParser\Node\Scalar\MagicConst\Dir(),
-                        new \PhpParser\Node\Scalar\String_('/composer/autoload_aliases.php')
-                    );
+                        // __DIR__ . '/composer/autoload_aliases.php'
+                        $path = new \PhpParser\Node\Expr\BinaryOp\Concat(
+                            new \PhpParser\Node\Scalar\MagicConst\Dir(),
+                            new \PhpParser\Node\Scalar\String_('/composer/autoload_aliases.php')
+                        );
 
-                    // require_once
-                    $requireOnceAutoloadAliases = new Node\Stmt\Expression(
-                        new \PhpParser\Node\Expr\Include_(
-                            $path,
-                            \PhpParser\Node\Expr\Include_::TYPE_REQUIRE_ONCE
-                        )
-                    );
+                        // require_once
+                        $requireOnceAutoloadAliases = new Node\Stmt\Expression(
+                            new \PhpParser\Node\Expr\Include_(
+                                $path,
+                                \PhpParser\Node\Expr\Include_::TYPE_REQUIRE_ONCE
+                            )
+                        );
 
-                    // if(file_exists()){}
-                    $ifFileExistsRequireOnceAutoloadAliases = new \PhpParser\Node\Stmt\If_(
-                        new \PhpParser\Node\Expr\FuncCall(
-                            new \PhpParser\Node\Name('file_exists'),
-                            [
+                        // if(file_exists()){}
+                        $ifFileExistsRequireOnceAutoloadAliases = new \PhpParser\Node\Stmt\If_(
+                            new \PhpParser\Node\Expr\FuncCall(
+                                new \PhpParser\Node\Name('file_exists'),
+                                [
                                 new \PhpParser\Node\Arg($path)
-                            ],
-                        ),
-                        [
+                                ],
+                            ),
+                            [
                             'stmts' => [
                                 $requireOnceAutoloadAliases
                             ],
-                        ]
-                    );
+                            ]
+                        );
 
-                    // Add a blank line. Probably not the correct way to do this.
-                    $node->setAttribute('comments', [new \PhpParser\Comment('')]);
-                    $ifFileExistsRequireOnceAutoloadAliases->setAttribute('comments', [new \PhpParser\Comment('')]);
+                        // Add a blank line. Probably not the correct way to do this.
+                        $node->setAttribute('comments', [new \PhpParser\Comment('')]);
+                        $ifFileExistsRequireOnceAutoloadAliases->setAttribute('comments', [new \PhpParser\Comment('')]);
 
-                    return [
-                        $ifFileExistsRequireOnceAutoloadAliases,
-                        $node
-                    ];
+                        return [
+                            $ifFileExistsRequireOnceAutoloadAliases,
+                            $node
+                        ];
+                    }
+                    return $node;
                 }
-                return $node;
             }
-        });
+        );
 
         $modifiedStmts = $traverser->traverse($ast);
 
@@ -276,76 +290,78 @@ class VendorComposerAutoload
         }
 
         $traverser = new NodeTraverser();
-        $traverser->addVisitor(new class($targetDirAutoload) extends NodeVisitorAbstract {
+        $traverser->addVisitor(
+            new class($targetDirAutoload) extends NodeVisitorAbstract {
 
-            protected bool $added = false;
-            protected ?string $targetDirectoryAutoload;
-            public function __construct(?string $targetDirectoryAutoload)
-            {
-                $this->targetDirectoryAutoload = $targetDirectoryAutoload;
-            }
-
-            public function leaveNode(Node $node)
-            {
-                if ($this->added) {
-                    return $node;
+                protected bool $added = false;
+                protected ?string $targetDirectoryAutoload;
+                public function __construct(?string $targetDirectoryAutoload)
+                {
+                    $this->targetDirectoryAutoload = $targetDirectoryAutoload;
                 }
 
-                if (get_class($node) === \PhpParser\Node\Stmt\Expression::class) {
-                    $prettyPrinter = new Standard();
-                    $nodeText = $prettyPrinter->prettyPrintExpr($node->expr);
-
-                    $targets = [
-                        "require_once __DIR__ . '/composer/autoload_real.php'",
-                    ];
-
-                    if (!in_array($nodeText, $targets)) {
+                public function leaveNode(Node $node)
+                {
+                    if ($this->added) {
                         return $node;
                     }
 
-                    // __DIR__ . '../vendor-prefixed/autoload.php'
-                    $path = new \PhpParser\Node\Expr\BinaryOp\Concat(
-                        new \PhpParser\Node\Scalar\MagicConst\Dir(),
-                        new Node\Scalar\String_($this->targetDirectoryAutoload)
-                    );
+                    if (get_class($node) === \PhpParser\Node\Stmt\Expression::class) {
+                        $prettyPrinter = new Standard();
+                        $nodeText = $prettyPrinter->prettyPrintExpr($node->expr);
 
-                    // require_once
-                    $requireOnceStraussAutoload = new Node\Stmt\Expression(
-                        new Node\Expr\Include_(
-                            $path,
-                            Node\Expr\Include_::TYPE_REQUIRE_ONCE
-                        )
-                    );
+                        $targets = [
+                        "require_once __DIR__ . '/composer/autoload_real.php'",
+                        ];
 
-                    // if(file_exists()){}
-                    $ifFileExistsRequireOnceStraussAutoload = new \PhpParser\Node\Stmt\If_(
-                        new \PhpParser\Node\Expr\FuncCall(
-                            new \PhpParser\Node\Name('file_exists'),
-                            [
+                        if (!in_array($nodeText, $targets)) {
+                            return $node;
+                        }
+
+                        // __DIR__ . '../vendor-prefixed/autoload.php'
+                        $path = new \PhpParser\Node\Expr\BinaryOp\Concat(
+                            new \PhpParser\Node\Scalar\MagicConst\Dir(),
+                            new Node\Scalar\String_($this->targetDirectoryAutoload)
+                        );
+
+                        // require_once
+                        $requireOnceStraussAutoload = new Node\Stmt\Expression(
+                            new Node\Expr\Include_(
+                                $path,
+                                Node\Expr\Include_::TYPE_REQUIRE_ONCE
+                            )
+                        );
+
+                        // if(file_exists()){}
+                        $ifFileExistsRequireOnceStraussAutoload = new \PhpParser\Node\Stmt\If_(
+                            new \PhpParser\Node\Expr\FuncCall(
+                                new \PhpParser\Node\Name('file_exists'),
+                                [
                                 new \PhpParser\Node\Arg($path)
-                            ],
-                        ),
-                        [
+                                ],
+                            ),
+                            [
                             'stmts' => [
                                 $requireOnceStraussAutoload
                             ],
-                        ]
-                    );
+                            ]
+                        );
 
-                    // Add a blank line. Probably not the correct way to do this.
-                    $node->setAttribute('comments', [new \PhpParser\Comment('')]);
-                    $ifFileExistsRequireOnceStraussAutoload->setAttribute('comments', [new \PhpParser\Comment('')]);
+                        // Add a blank line. Probably not the correct way to do this.
+                        $node->setAttribute('comments', [new \PhpParser\Comment('')]);
+                        $ifFileExistsRequireOnceStraussAutoload->setAttribute('comments', [new \PhpParser\Comment('')]);
 
-                    $this->added = true;
+                        $this->added = true;
 
-                    return [
-                        $ifFileExistsRequireOnceStraussAutoload,
-                        $node
-                    ];
+                        return [
+                            $ifFileExistsRequireOnceStraussAutoload,
+                            $node
+                        ];
+                    }
+                    return $node;
                 }
-                return $node;
             }
-        });
+        );
 
         $modifiedStmts = $traverser->traverse($ast);
 

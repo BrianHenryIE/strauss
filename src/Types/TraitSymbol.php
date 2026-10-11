@@ -16,11 +16,11 @@ class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     protected array $uses;
 
     /**
-     * @param string $fqdnClassname
-     * @param FileBase $sourceFile
-     * @param NamespaceSymbol $namespace
+     * @param string           $fqdnClassname
+     * @param FileBase         $sourceFile
+     * @param NamespaceSymbol  $namespace
      * @param ?ComposerPackage $composerPackage
-     * @param ?string[] $uses
+     * @param ?string[]        $uses
      */
     public function __construct(
         string $fqdnClassname,

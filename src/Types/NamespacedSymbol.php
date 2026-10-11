@@ -80,7 +80,9 @@ class NamespacedSymbol extends DiscoveredSymbol
 
     public function getPsr0NamespaceString(): ?string
     {
-        /** @var ComposerPackage $dependency */
+        /**
+ * @var ComposerPackage $dependency
+*/
         foreach ($this->dependencies as $dependency) {
             if (! $dependency->isPsr0Autoloaded()) {
                 continue;
@@ -93,8 +95,8 @@ class NamespacedSymbol extends DiscoveredSymbol
                     /**
                      * This is verified in {@see ComposerPackage::isPsr0Autoloaded()}.
                      *
-                     * @var string $psr0namespace
-                     * @var string|string[] $autoloadPackageRelativePaths
+                     * @var            string $psr0namespace
+                     * @var            string|string[] $autoloadPackageRelativePaths
                      * @phpstan-ignore offsetAccess.notFound
                      */
                     foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePaths) {
@@ -102,7 +104,8 @@ class NamespacedSymbol extends DiscoveredSymbol
                             if (str_starts_with(
                                 trim($file->getPackageRelativePath(), '\\/'),
                                 trim($autoloadPackageRelativePath, '\\/')
-                            )) {
+                            )
+                            ) {
                                 return $psr0namespace;
                             }
                         }

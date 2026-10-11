@@ -48,7 +48,7 @@ abstract class DiscoveredSymbol
     protected bool $replaceInString = true;
 
     /**
-     * @param string $fqdnSymbol The classname / namespace etc.
+     * @param string    $fqdnSymbol The classname / namespace etc.
      * @param ?FileBase $sourceFile The file it was discovered in. Unneeded for global namespace and some (Composer) predictable files.
      */
     public function __construct(
@@ -153,14 +153,20 @@ abstract class DiscoveredSymbol
      */
     public function getPackages(): array
     {
-        return array_values(array_unique(array_filter(array_map(
-            function (FileBase $file) {
-                return $file instanceof FileWithDependency
-                    ? $file->getDependency()
-                    : null;
-            },
-            $this->getSourceFiles()
-        ))));
+        return array_values(
+            array_unique(
+                array_filter(
+                    array_map(
+                        function (FileBase $file) {
+                            return $file instanceof FileWithDependency
+                                ? $file->getDependency()
+                                : null;
+                        },
+                        $this->getSourceFiles()
+                    )
+                )
+            )
+        );
     }
 
     public function getPackageName(): ?string

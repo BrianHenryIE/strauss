@@ -50,7 +50,9 @@ class MarkSymbolsForRenaming
         $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
 
         $allSymbols = $symbols->getSymbols();
-        /** @var NamespaceSymbol|NamespacedSymbol $symbol */
+        /**
+ * @var NamespaceSymbol|NamespacedSymbol $symbol
+*/
         foreach ($allSymbols as $symbol) {
             if ($symbol instanceof NamespaceSymbol && $symbol->getOriginalFqdnName() === '\\') {
                 continue;
@@ -173,7 +175,8 @@ class MarkSymbolsForRenaming
             $packageName,
             $this->config->getExcludePackagesFromPrefixing(),
             true
-        )) {
+        )
+        ) {
             return true;
         }
 
@@ -207,7 +210,9 @@ class MarkSymbolsForRenaming
      */
     protected function isExcludedFromPrefixFilePattern(array $files): bool
     {
-        /** @var File $file */
+        /**
+ * @var File $file
+*/
         foreach ($files as $file) {
             $absoluteFilePath = $file->getTargetAbsolutePath();
             if (empty($absoluteFilePath)) {
@@ -262,7 +267,9 @@ class MarkSymbolsForRenaming
      */
     protected function isExcludedConstantsFilePattern(array $files): bool
     {
-        /** @var File $file */
+        /**
+ * @var File $file
+*/
         foreach ($files as $file) {
             $absoluteFilePath = $file->getTargetAbsolutePath();
             if (empty($absoluteFilePath)) {

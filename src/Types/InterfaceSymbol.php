@@ -16,11 +16,11 @@ class InterfaceSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     protected array $extends;
 
     /**
-     * @param string $fqdnClassname
-     * @param FileBase $sourceFile
-     * @param NamespaceSymbol $namespace
+     * @param string           $fqdnClassname
+     * @param FileBase         $sourceFile
+     * @param NamespaceSymbol  $namespace
      * @param ?ComposerPackage $package
-     * @param string[] $extends
+     * @param string[]         $extends
      */
     public function __construct(
         string $fqdnClassname,

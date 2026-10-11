@@ -48,10 +48,13 @@ class MarkFilesExcludedFromChanges
         $vendorRelativePath = $file->getVendorRelativePath();
         foreach ($this->config->getExcludeFilesFromUpdateFilePatterns() as $excludeFilePattern) {
             if (1 === preg_match($this->preparePattern($excludeFilePattern), $vendorRelativePath)) {
-                $this->logger->info('Exclude from changes: {filePath} matches pattern {pattern}', [
+                $this->logger->info(
+                    'Exclude from changes: {filePath} matches pattern {pattern}',
+                    [
                     'filePath' => $file->getVendorRelativePath(),
                     'pattern' => $excludeFilePattern
-                ]);
+                    ]
+                );
 
                 return true;
             }
@@ -88,10 +91,13 @@ class MarkFilesExcludedFromChanges
             return false;
         }
 
-        $this->logger->info('Exclude from changes: {filePath} matches namespace {namespaces}', [
+        $this->logger->info(
+            'Exclude from changes: {filePath} matches namespace {namespaces}',
+            [
             'filePath' => $file->getTargetAbsolutePath(),
             'namespaces' => implode(', ', $matchingNamespaces)
-        ]);
+            ]
+        );
 
         return true;
     }
@@ -112,10 +118,13 @@ class MarkFilesExcludedFromChanges
             return false;
         }
 
-        $this->logger->info('Exclude from changes: {filePath} matches package {package}', [
+        $this->logger->info(
+            'Exclude from changes: {filePath} matches package {package}',
+            [
             'filePath' => $file->getTargetAbsolutePath(),
             'package' => $excludePackages[$matchingKey]
-        ]);
+            ]
+        );
 
 
         return true;

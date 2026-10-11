@@ -64,10 +64,10 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      *
      * TODO: Check are any of these methods unused
      *
-     * @param FilesystemAdapter $adapter
-     * @param array{visibility?:string} $config
+     * @param FilesystemAdapter                                    $adapter
+     * @param array{visibility?:string}                            $config
      * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer
-     * @param PathNormalizer|null $pathNormalizer
+     * @param PathNormalizer|null                                  $pathNormalizer
      */
     public function __construct(
         FilesystemAdapter $adapter,
@@ -136,7 +136,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     {
         $parentAdapterProperty = new \ReflectionProperty(\League\Flysystem\Filesystem::class, 'adapter');
         PHP_VERSION_ID < 80100 && $parentAdapterProperty->setAccessible(true);
-        /** @var FilesystemAdapter */
+        /**
+ * @var FilesystemAdapter
+*/
         return $parentAdapterProperty->getValue($this);
     }
 
@@ -190,7 +192,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
                 $deep
             );
 
-            /** @var FileAttributes[] $fileAttributesArray */
+            /**
+ * @var FileAttributes[] $fileAttributesArray
+*/
             $fileAttributesArray = $directoryListing->toArray();
 
             $paths = array_map(
@@ -221,6 +225,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
         /**
          * Unsupported symbolic link encountered at location //home
          * \League\Flysystem\SymbolicLinkEncountered
+         *
          * @see \League\Flysystem\Filesystem::listContents()
          */
         $dirList = $this->listContents($fileDirectory)->toArray();
@@ -236,6 +241,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     /**
      * TODO: rename to ::has()
      * TODO: extract symlink handling to adapter.
+     *
      * @throws FilesystemException
      */
     public function exists(string $location): bool
@@ -247,12 +253,11 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
 
 
     /**
-     *
      * /path/to/this/dir, /path/to/file.php => ../../file.php
      * /path/to/here, /path/to/here/dir/file.php => dir/file.php
      *
-     * @param string $fromAbsoluteDirectory
-     * @param string $toAbsolutePath
+     * @param  string $fromAbsoluteDirectory
+     * @param  string $toAbsolutePath
      * @return string
      */
     public function getRelativePath(string $fromAbsoluteDirectory, string $toAbsolutePath): string
@@ -411,7 +416,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     /**
      * @throws FilesystemException
      * @throws Exception
-     * @see LeagueFilesystem::listContents()
+     * @see    LeagueFilesystem::listContents()
      */
     public function isDirectoryEmpty(string $dirPath): bool
     {

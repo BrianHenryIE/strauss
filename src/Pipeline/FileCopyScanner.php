@@ -48,7 +48,9 @@ class FileCopyScanner
 
     public function scanFiles(DiscoveredFiles $files): void
     {
-        /** @var FileBase $file */
+        /**
+ * @var FileBase $file
+*/
         foreach ($files->getFiles() as $file) {
             $copy = true;
 
@@ -60,9 +62,12 @@ class FileCopyScanner
             if ($file instanceof FileWithDependency) {
                 if ($this->isPackageExcluded($file->getDependency())) {
                     $copy = false;
-                    $this->logger->debug("File {sourcePath} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.", [
+                    $this->logger->debug(
+                        "File {sourcePath} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.",
+                        [
                         'sourcePath' => $file->getSourcePath(),
-                    ]);
+                        ]
+                    );
                 }
             }
 
@@ -116,7 +121,8 @@ class FileCopyScanner
             $package->getPackageName(),
             $this->config->getExcludePackagesFromCopy(),
             true
-        )) {
+        )
+        ) {
             return true;
         }
         return false;
@@ -127,7 +133,9 @@ class FileCopyScanner
         if (!$file->isPhpFile()) {
             return false;
         }
-        /** @var string[] $namespaceStringsInFile */
+        /**
+ * @var string[] $namespaceStringsInFile
+*/
         $namespaceStringsInFile = array_map(
             fn(DiscoveredSymbol $symbol): string => $symbol->getOriginalFqdnName(),
             $file->getDiscoveredSymbols()->getNamespaces()->notGlobal()->toArray()
@@ -135,7 +143,9 @@ class FileCopyScanner
         foreach ($this->config->getExcludeNamespacesFromCopy() as $excludedNamespaceString) {
             $excludedNamespaceString = rtrim($excludedNamespaceString, '\\');
 
-            /** @var string[] $excludedNamespaceStringsInFile */
+            /**
+ * @var string[] $excludedNamespaceStringsInFile
+*/
             $excludedNamespaceStringsInFile = array_reduce(
                 $namespaceStringsInFile,
                 // TODO: use case insensitive check instead. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
@@ -144,9 +154,12 @@ class FileCopyScanner
                 []
             );
             if (!empty($excludedNamespaceStringsInFile)) {
-                $this->logger->debug("File {sourcePath} will not be copied because namespace {$excludedNamespaceString} is excluded from copy.", [
+                $this->logger->debug(
+                    "File {sourcePath} will not be copied because namespace {$excludedNamespaceString} is excluded from copy.",
+                    [
                     'sourcePath' => $file->getSourcePath(),
-                ]);
+                    ]
+                );
                 return true;
             }
         }
@@ -168,9 +181,12 @@ class FileCopyScanner
             $escapedPattern = $this->preparePattern($pattern);
             $match = preg_match($escapedPattern, $path);
             if (1 === $match) {
-                $this->logger->debug("File {path} will not be copied because it matches pattern {$pattern}.", [
+                $this->logger->debug(
+                    "File {path} will not be copied because it matches pattern {$pattern}.",
+                    [
                     'path' => $path
-                ]);
+                    ]
+                );
                 return true;
             }
             if (false === $match) {

@@ -54,7 +54,7 @@ class WorkerPool
      *
      * Results arrive in no particular order.
      *
-     * @param string[] $absolutePaths
+     * @param string[]        $absolutePaths
      * @param callable(string $absolutePath, ?FileCodeMap $codeMap, ?string $errorMessage): void $onResult
      *
      * @throws ParallelisationException When a worker fails, times out, or sends something unexpected.
@@ -68,12 +68,17 @@ class WorkerPool
 
         $processesToSpawn = $this->config->getProcessesToSpawn(count($queue));
 
-        $this->logger->debug('Analysing {fileCount} files with {workerCount} worker processes.', [
+        $this->logger->debug(
+            'Analysing {fileCount} files with {workerCount} worker processes.',
+            [
             'fileCount' => count($queue),
             'workerCount' => $processesToSpawn,
-        ]);
+            ]
+        );
 
-        /** @var Worker[] $workers */
+        /**
+ * @var Worker[] $workers
+*/
         $workers = [];
         for ($i = 0; $i < $processesToSpawn; $i++) {
             $workers[] = $this->startWorker();
@@ -101,11 +106,13 @@ class WorkerPool
                     }
 
                     if ($worker->isChunkTimedOut($this->config->getChunkTimeoutSeconds())) {
-                        throw new ParallelisationException(sprintf(
-                            'Worker process timed out after %d seconds analysing: %s',
-                            $this->config->getChunkTimeoutSeconds(),
-                            implode(', ', array_keys($worker->pendingFiles))
-                        ));
+                        throw new ParallelisationException(
+                            sprintf(
+                                'Worker process timed out after %d seconds analysing: %s',
+                                $this->config->getChunkTimeoutSeconds(),
+                                implode(', ', array_keys($worker->pendingFiles))
+                            )
+                        );
                     }
                 }
 
@@ -201,12 +208,14 @@ class WorkerPool
     protected function checkExited(Worker $worker): void
     {
         if (0 !== $worker->process->getExitCode() || !empty($worker->pendingFiles)) {
-            throw new ParallelisationException(sprintf(
-                'Worker process exited with code %s%s. %s',
-                (string) $worker->process->getExitCode(),
-                empty($worker->pendingFiles) ? '' : ' before analysing ' . implode(', ', array_keys($worker->pendingFiles)),
-                trim($worker->process->getErrorOutput() . "\n" . $worker->buffer)
-            ));
+            throw new ParallelisationException(
+                sprintf(
+                    'Worker process exited with code %s%s. %s',
+                    (string) $worker->process->getExitCode(),
+                    empty($worker->pendingFiles) ? '' : ' before analysing ' . implode(', ', array_keys($worker->pendingFiles)),
+                    trim($worker->process->getErrorOutput() . "\n" . $worker->buffer)
+                )
+            );
         }
     }
 

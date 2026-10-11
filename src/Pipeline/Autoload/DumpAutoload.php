@@ -56,6 +56,7 @@ class DumpAutoload
 
     /**
      * Create `autoload.php` and the `vendor-prefixed/composer` directory.
+     *
      * @throws ParsingException
      * @throws FilesystemException
      */
@@ -94,7 +95,9 @@ class DumpAutoload
             )
         );
 
-        /** @var ComposerJsonArray $projectComposerJsonArray */
+        /**
+ * @var ComposerJsonArray $projectComposerJsonArray
+*/
         $projectComposerJsonArray = $projectComposerJson->read();
         if (isset($projectComposerJsonArray['config'], $projectComposerJsonArray['config']['vendor-dir'])) {
             $projectComposerJsonArray['config']['vendor-dir'] = $this->config->getRelativeTargetDirectory();
@@ -130,7 +133,9 @@ class DumpAutoload
             )
         );
 
-        /** @var array{config?: array<string, mixed>} $projectComposerConfigMergeArray */
+        /**
+ * @var array{config?: array<string, mixed>} $projectComposerConfigMergeArray
+*/
         $projectComposerConfigMergeArray = ['config' => $projectComposerJsonArray['config'] ?? []];
 
         $config->merge($projectComposerConfigMergeArray);
@@ -149,7 +154,9 @@ class DumpAutoload
         $installedJsonFile = new JsonFile(
             $this->filesystem->makeAbsolute($this->config->getAbsoluteTargetDirectory() . '/composer/installed.json')
         );
-        /** @var array{dev?:bool} $installedJson */
+        /**
+ * @var array{dev?:bool} $installedJson
+*/
         $installedJson = $installedJsonFile->read();
         $localRepo = new InstalledFilesystemRepository($installedJsonFile);
 
@@ -206,6 +213,7 @@ class DumpAutoload
      * If the file does not exist, its entry in the classmap will not be prefixed and will cause autoloading issues for the real class.
      *
      * The accompanying `installed.php` is unique per install. Copy it and filter its packages to the packages that was copied.
+     *
      * @throws FilesystemException
      */
     protected function createInstalledVersionsFiles(): void
@@ -217,9 +225,12 @@ class DumpAutoload
         $sourcePath = $this->config->getAbsoluteVendorDirectory() . '/composer/InstalledVersions.php';
 
         if (!$this->filesystem->fileExists($sourcePath)) {
-            $this->logger->debug('InstalledVersions.php does not exist at {sourcePath}, skipping copy.', [
+            $this->logger->debug(
+                'InstalledVersions.php does not exist at {sourcePath}, skipping copy.',
+                [
                 'sourcePath' => $sourcePath
-            ]);
+                ]
+            );
             return;
         }
 
@@ -230,7 +241,9 @@ class DumpAutoload
 
         // This is just `<?php return array(...);`
         $installedPhpString = $this->filesystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.php');
-        /** @var array{root:array<string,string>, versions:array<string,array<string, string|array|bool>>} $installed */
+        /**
+ * @var array{root:array<string,string>, versions:array<string,array<string, string|array|bool>>} $installed
+*/
         $installed = eval(str_replace('<?php', '', $installedPhpString));
 
         $targetPackages = $this->config->getPackagesToCopy();
@@ -256,10 +269,10 @@ class DumpAutoload
      * If there is an existing autoloader, it will use the same suffix. If there is not, it pulls the suffix from
      * {Composer::getLocker()} and clashes with the existing autoloader.
      *
-     * @see https://github.com/composer/composer/blob/ae208dc1e182bd45d99fcecb956501da212454a1/src/Composer/Autoload/AutoloadGenerator.php#L429
-     * @see AutoloadGenerator::dump() 412:431
-     * @throws \Random\RandomException in PHP 8.2+
-     * @throws FilesystemException
+     * @see            https://github.com/composer/composer/blob/ae208dc1e182bd45d99fcecb956501da212454a1/src/Composer/Autoload/AutoloadGenerator.php#L429
+     * @see            AutoloadGenerator::dump() 412:431
+     * @throws         \Random\RandomException in PHP 8.2+
+     * @throws         FilesystemException
      * @phpstan-ignore throws.notThrowable
      */
     protected function getSuffix(): ?string

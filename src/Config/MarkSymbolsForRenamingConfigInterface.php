@@ -26,8 +26,8 @@ interface MarkSymbolsForRenamingConfigInterface
     public function getExcludeNamespacesFromPrefixing(): array;
 
    /**
-     * @return string[]
-     */
+    * @return string[]
+    */
     public function getExcludePackagesFromCopy(): array;
 
     /**

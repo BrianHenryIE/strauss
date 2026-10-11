@@ -50,8 +50,8 @@ class Aliases
     }
 
     /**
-     * @param array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray> $aliasesArray
-     * @param string|null $autoloadAliasesFunctionsString
+     * @param  array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray> $aliasesArray
+     * @param  string|null                                                                       $autoloadAliasesFunctionsString
      * @return string
      * @throws RuntimeException
      */
@@ -172,6 +172,7 @@ class Aliases
              * "define() will define constants exactly as specified.  So, if you want to define a constant in a
              * namespace, you will need to specify the namespace in your call to define(), even if you're calling
              * define() from within a namespace."
+             *
              * @see https://www.php.net/manual/en/function.define.php
              */
             if ($symbol instanceof ConstantSymbol) {
@@ -182,7 +183,9 @@ class Aliases
         if (!empty($symbolsByNamespace['\\'])) {
             $globalAliasesPhpString = 'namespace {' . PHP_EOL;
 
-            /** @var FunctionSymbol | ConstantSymbol $symbol */
+            /**
+ * @var FunctionSymbol | ConstantSymbol $symbol
+*/
             foreach ($symbolsByNamespace['\\'] as $symbol) {
                 $aliasesPhpString = '';
 
@@ -237,12 +240,14 @@ class Aliases
             foreach ($symbols as $symbol) {
                 $originalLocalSymbol = $symbol->getOriginalLocalName();
 
-                /** @var NamespaceSymbol $namespaceSymbol */
+                /**
+ * @var NamespaceSymbol $namespaceSymbol
+*/
                 $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespaceName());
 
                 if (!($symbol instanceof FunctionSymbol
-                   &&
-                   $namespaceSymbol->isChangedNamespace())
+                    
+                    && $namespaceSymbol->isChangedNamespace())
                 ) {
                     $this->logger->debug("Skipping {$originalLocalSymbol} because it is not being changed.");
                     continue;

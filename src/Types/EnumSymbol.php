@@ -20,11 +20,11 @@ class EnumSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     protected array $interfaces;
 
     /**
-     * @param string $fqdnEnumName
-     * @param FileBase $sourceFile
+     * @param string          $fqdnEnumName
+     * @param FileBase        $sourceFile
      * @param NamespaceSymbol $namespace
-     * @param ?string $backingType
-     * @param string[] $interfaces
+     * @param ?string         $backingType
+     * @param string[]        $interfaces
      */
     public function __construct(
         string $fqdnEnumName,

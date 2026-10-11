@@ -46,7 +46,7 @@ class Autoload
      * Autoload constructor.
      *
      * @param StraussConfig&AutoloadConfigInterface $config
-     * @param array<string, array<string>> $discoveredFilesAutoloaders
+     * @param array<string, array<string>>          $discoveredFilesAutoloaders
      */
     public function __construct(
         StraussConfig $config,
@@ -61,7 +61,7 @@ class Autoload
     }
 
     /**
-     * @param DependenciesCollection $flatDependencyTree
+     * @param  DependenciesCollection $flatDependencyTree
      * @throws FilesystemException
      * @throws ParsingException
      * @throws Exception

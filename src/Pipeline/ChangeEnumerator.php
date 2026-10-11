@@ -47,7 +47,8 @@ class ChangeEnumerator
                     $symbol->getOriginalFqdnName(),
                     $this->config->getExcludeNamespacesFromPrefixing(),
                     true
-                )) {
+                )
+                ) {
                     $symbol->setDoRename(false);
                 }
 
@@ -112,13 +113,17 @@ class ChangeEnumerator
             $discoveredSymbols->getAllClasses()->toArray()
         );
 
-        /** @var NamespacedSymbol $symbol */
+        /**
+ * @var NamespacedSymbol $symbol
+*/
         foreach ($classesTraitsInterfaces as $symbol) {
             // If we're a namespaced class/interface/trait, apply the fqdnchange.
             if (!$symbol->getNamespace()->isGlobal()) {
                 if ($discoveredNamespaces->has($symbol->getNamespace())) {
 //                if (isset($discoveredNamespaces[ $symbol->getNamespace() ])) {
-                    /** @var NamespaceSymbol $newNamespace */
+                    /**
+ * @var NamespaceSymbol $newNamespace
+*/
                     $newNamespace = $discoveredNamespaces->get($symbol->getNamespace()->getOriginalFqdnName());
                     $replacement  = $this->determineNamespaceReplacement(
                         $newNamespace->getOriginalFqdnName(),
@@ -153,7 +158,9 @@ class ChangeEnumerator
         $functionsSymbols = $discoveredSymbols->getDiscoveredFunctions();
         $excludeFunctionsFromStringRenaming = $this->config->getExcludeFunctionsFromStringRenaming();
 
-        /** @var FunctionSymbol $symbol */
+        /**
+ * @var FunctionSymbol $symbol
+*/
         foreach ($functionsSymbols as $symbol) {
             // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
             if (!$symbol->getNamespace()->isGlobal()) {
@@ -185,7 +192,7 @@ class ChangeEnumerator
     {
         if ($symbol->isPsr0Autoloaded()) {
             /**
-             * @var Psr0NamespaceSymbol $psr0Namespace
+             * @var            Psr0NamespaceSymbol $psr0Namespace
              *
              * `::isPsr0Autoloaded()` proves it is not null.
              * @phpstan-ignore argument.type
@@ -215,7 +222,7 @@ class ChangeEnumerator
     }
 
     /**
-     *`str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
+     * `str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
      */
     protected function determineNamespaceReplacement(string $originalNamespace, string $newNamespace, string $fqdnClassname): string
     {

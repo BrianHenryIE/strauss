@@ -80,9 +80,12 @@ class ChangePlanner
             }
             $codeMap = $file->getCodeMap();
             if (is_null($codeMap)) {
-                $this->logger->debug('No code map to plan changes against (unparsable or unscanned)::::{filePath}', [
+                $this->logger->debug(
+                    'No code map to plan changes against (unparsable or unscanned)::::{filePath}',
+                    [
                     'filePath' => $file->getSourcePath(),
-                ]);
+                    ]
+                );
                 continue;
             }
             $file->setPlannedEdits($this->plan($discoveredSymbols, $codeMap, $file));
@@ -128,14 +131,16 @@ class ChangePlanner
         $cursor = PHP_INT_MAX;
         foreach ($edits as $edit) {
             if ($edit['end'] > $cursor) {
-                throw new Exception(sprintf(
-                    'Overlapping replacement in %s at %d-%d ("%s") overlaps a replacement starting at %d.',
-                    $fileAbsolutePath ?? 'file',
-                    $edit['start'],
-                    $edit['end'],
-                    $edit['replacement'],
-                    $cursor
-                ));
+                throw new Exception(
+                    sprintf(
+                        'Overlapping replacement in %s at %d-%d ("%s") overlaps a replacement starting at %d.',
+                        $fileAbsolutePath ?? 'file',
+                        $edit['start'],
+                        $edit['end'],
+                        $edit['replacement'],
+                        $cursor
+                    )
+                );
             }
             $cursor = $edit['start'];
         }
@@ -221,7 +226,9 @@ class ChangePlanner
                     $original = implode('\\', array_slice($nameParts, 0, $length));
                     if (isset($activeNamespaces[$original])) {
                         $replacement = $activeNamespaces[$original];
-                        /** @var ?NamespacedSymbol $classSymbol */
+                        /**
+ * @var ?NamespacedSymbol $classSymbol
+*/
                         $classSymbol = $namespacedSymbols->get($nameStr);
                         if ($classSymbol && $classSymbol->isDoRename()) {
                             $nsReplacement = rtrim($classSymbol->getNamespace()->getReplacementFqdnName(), '\\');
@@ -269,7 +276,9 @@ class ChangePlanner
         // When the file's own symbols are not being prefixed, references to them within the file are left alone.
         $unprefixedFileSymbols = $isDoPrefix ? null : $file->getDiscoveredSymbols();
 
-        /** @var NamespaceSymbol[] $symbolMap indexed by exact original symbol (no trailing \) */
+        /**
+ * @var NamespaceSymbol[] $symbolMap indexed by exact original symbol (no trailing \)
+*/
         $symbolMap = $index->getNamespacesToRenameByName();
 
         $positions = [];
@@ -283,7 +292,9 @@ class ChangePlanner
          * @param string[] $parts
          */
         $findPrefixSymbol = function (array $parts) use ($symbolMap): ?array {
-            /** @var string[] $parts */
+            /**
+ * @var string[] $parts
+*/
             for ($len = count($parts) - 1; $len >= 1; $len--) {
                 $prefix = implode('\\', array_slice($parts, 0, $len));
 
@@ -524,13 +535,16 @@ class ChangePlanner
         $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
 
         $discoveredSymbolsCount = $this->getIndex($discoveredSymbols)->getSymbolCount();
-        $this->logger->debug(sprintf(
-            'Searching in {filename} for {count} symbol%s as string',
-            $discoveredSymbolsCount === 1 ? '' : 's'
-        ), [
+        $this->logger->debug(
+            sprintf(
+                'Searching in {filename} for {count} symbol%s as string',
+                $discoveredSymbolsCount === 1 ? '' : 's'
+            ),
+            [
             'filename' => basename($fileAbsolutePath ?? 'file'),
             'count' => $discoveredSymbolsCount,
-        ]);
+            ]
+        );
 
         $regions = $codeMap->getRegions();
 
@@ -542,7 +556,9 @@ class ChangePlanner
         // at the edges of a region the way they matched the code around a string in the whole file. The pattern
         // consumes the boundary character after a match, so adjacent regions need a space each.
         $bufferParts = [];
-        /** @var int[] $bufferStarts Offset of each region's text in the buffer. */
+        /**
+ * @var int[] $bufferStarts Offset of each region's text in the buffer.
+*/
         $bufferStarts = [];
         $offset = 0;
         foreach ($regions as $region) {
@@ -625,7 +641,8 @@ class ChangePlanner
             function (DiscoveredSymbol $symbol) use ($availablePackageNames): bool {
                 $symbolPackages = $symbol->getDependencies()->toArray();
                 if (empty($symbolPackages)
-                    || !empty(array_intersect_key($symbolPackages, $availablePackageNames))) {
+                    || !empty(array_intersect_key($symbolPackages, $availablePackageNames))
+                ) {
                     return true;
                 }
                 foreach ($symbolPackages as $symbolPackage) {
@@ -943,9 +960,13 @@ class ChangePlanner
      */
     protected function findConstantPositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
     {
-        /** @var array<string,string> $constantsToRename original name => replacement name */
+        /**
+ * @var array<string,string> $constantsToRename original name => replacement name
+*/
         $constantsToRename = [];
-        /** @var ConstantSymbol $constant */
+        /**
+ * @var ConstantSymbol $constant
+*/
         foreach ($this->getIndex($discoveredSymbols)->getConstantsToRename() as $constant) {
             $constantsToRename[$constant->getOriginalFqdnName()] = $constant->getReplacementFqdnName();
         }
@@ -1138,9 +1159,12 @@ class ChangePlanner
 
         $index = $this->getIndex($discoveredSymbols);
 
-        $this->logger->debug('Searching {number_of_comments} comments for symbols', [
+        $this->logger->debug(
+            'Searching {number_of_comments} comments for symbols',
+            [
             'number_of_comments' => count($docComments),
-        ]);
+            ]
+        );
 
         foreach ($docComments as $doc) {
             $text = $doc->getText();

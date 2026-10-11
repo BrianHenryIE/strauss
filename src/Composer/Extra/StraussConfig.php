@@ -327,9 +327,13 @@ class StraussConfig implements
                 // Replace all non-word characters with underscores.
                 $namespacePrefix = preg_replace('/[^\w\/]+/', '_', $packageName) ?? $packageName;
                 $namespacePrefix = str_replace('/', '\\', $namespacePrefix) . '\\';
-                $namespacePrefix = preg_replace_callback('/(?<=^|_|\\\\)[a-z]/', function ($match) {
-                    return strtoupper($match[0]);
-                }, $namespacePrefix) ?? $namespacePrefix;
+                $namespacePrefix = preg_replace_callback(
+                    '/(?<=^|_|\\\\)[a-z]/',
+                    function ($match) {
+                        return strtoupper($match[0]);
+                    },
+                    $namespacePrefix
+                ) ?? $namespacePrefix;
                 $this->setNamespacePrefix($namespacePrefix);
             } elseif (isset($this->classmapPrefix) && !empty($this->getClassmapPrefix())) {
                 $namespacePrefix = rtrim($this->getClassmapPrefix(), '_');
@@ -355,10 +359,14 @@ class StraussConfig implements
                 })();
                 $classmapPrefix = str_replace('/', '\\', $classmapPrefix);
                 // Uppercase the first letter of each word. ~`ucfirst()`.
-                $classmapPrefix = preg_replace_callback('/(?<=^|_|\\\\)[a-z]/', function ($match) {
-                    return strtoupper($match[0]);
-                }, $classmapPrefix) ?? (function () {
-                    throw new \Exception(preg_last_error_msg(), preg_last_error());
+                $classmapPrefix = preg_replace_callback(
+                    '/(?<=^|_|\\\\)[a-z]/',
+                    function ($match) {
+                        return strtoupper($match[0]);
+                    },
+                    $classmapPrefix
+                ) ?? (function () {
+                        throw new \Exception(preg_last_error_msg(), preg_last_error());
                 })();
                 $classmapPrefix = str_replace("\\", "_", $classmapPrefix);
                 $this->setClassmapPrefix($classmapPrefix);
@@ -378,9 +386,12 @@ class StraussConfig implements
 //        }
 
         if (isset($composer) && empty($this->packages)) {
-            $this->packages = array_map(function (Link $element) {
-                return $element->getTarget();
-            }, $composer->getPackage()->getRequires());
+            $this->packages = array_map(
+                function (Link $element) {
+                    return $element->getTarget();
+                },
+                $composer->getPackage()->getRequires()
+            );
         }
 
         // @deprecated.
@@ -562,7 +573,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param string[]|array{0:bool}|null $updateCallSites
+     * @param  string[]|array{0:bool}|null $updateCallSites
      * @throws InvalidArgumentException
      */
     public function setUpdateCallSites($updateCallSites): void
@@ -865,7 +876,7 @@ class StraussConfig implements
 
     /**
      * @used-by DumpAutoload::createInstalledVersionsFiles()
-     * @return array<string,ComposerPackage>
+     * @return  array<string,ComposerPackage>
      */
     public function getPackagesToCopy(): array
     {

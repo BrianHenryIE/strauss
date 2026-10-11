@@ -46,7 +46,7 @@ class PhpFileAnalyzer
     }
 
     /**
-     * @param string $contents The file contents. May be a fragment without a `<?php` opener, or begin with HTML.
+     * @param string  $contents           The file contents. May be a fragment without a `<?php` opener, or begin with HTML.
      * @param ?string $filePathForLogging
      *
      * @return ?FileCodeMap Null if the file could not be parsed (e.g. a `.blade.php` template).
@@ -75,10 +75,13 @@ class PhpFileAnalyzer
         } catch (Error $e) {
             // E.g. template files with placeholders: `namespace %g_namespace%\AdminMenus;`, or `x.blade.php`.
             $this->lastErrorMessage = $e->getMessage();
-            $this->logger->warning('Failed to parse file {filePath} with error: {errorMessage}', [
+            $this->logger->warning(
+                'Failed to parse file {filePath} with error: {errorMessage}',
+                [
                 'filePath' => $filePathForLogging ?? 'string',
                 'errorMessage' => $e->getMessage(),
-            ]);
+                ]
+            );
             return null;
         }
 
@@ -94,27 +97,34 @@ class PhpFileAnalyzer
          * Sets `resolvedName` attributes on names (e.g. in `extends` and `implements`) without replacing the nodes,
          * so positions and texts are those of the source.
          */
-        $traverser->addVisitor(new NameResolver(null, [
-            'preserveOriginalNames' => true,
-            'replaceNodes' => false,
-        ]));
+        $traverser->addVisitor(
+            new NameResolver(
+                null,
+                [
+                'preserveOriginalNames' => true,
+                'replaceNodes' => false,
+                ]
+            )
+        );
         $traverser->addVisitor($visitor);
         $traverser->traverse($ast);
 
         $locations = $visitor->getLocations();
 
         if (0 !== $offset) {
-            $locations = array_values(array_filter(
-                array_map(
-                    function (CodeLocation $location) use ($offset): CodeLocation {
-                        $location->setStart($location->getStart() + $offset);
-                        return $location;
-                    },
-                    $locations
-                ),
-                // Only the prepended opener itself can be at a negative position.
-                fn(CodeLocation $location) => $location->getStart() >= 0
-            ));
+            $locations = array_values(
+                array_filter(
+                    array_map(
+                        function (CodeLocation $location) use ($offset): CodeLocation {
+                            $location->setStart($location->getStart() + $offset);
+                            return $location;
+                        },
+                        $locations
+                    ),
+                    // Only the prepended opener itself can be at a negative position.
+                    fn(CodeLocation $location) => $location->getStart() >= 0
+                )
+            );
         }
 
         $namespaceNames = $visitor->getNamespaceNames();

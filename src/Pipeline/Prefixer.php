@@ -88,7 +88,7 @@ class Prefixer
 
     /**
      * @param DiscoveredSymbols $discoveredSymbols
-     * @param array<FileBase> $files
+     * @param array<FileBase>   $files
      *
      * @throws FilesystemException
      */
@@ -112,9 +112,12 @@ class Prefixer
         }
 
         if ($this->filesystem->directoryExists($file->getTargetAbsolutePath())) {
-            $this->logger->debug("is_dir() / nothing to do : {targetAbsolutePath}", [
+            $this->logger->debug(
+                "is_dir() / nothing to do : {targetAbsolutePath}",
+                [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
-            ]);
+                ]
+            );
             return;
         }
 
@@ -124,21 +127,32 @@ class Prefixer
 
         if (!$this->filesystem->fileExists($file->getTargetAbsolutePath())) {
             // Some files are only sometimes present.
-            if (in_array($file->getTargetAbsolutePath(), [
+            if (in_array(
+                $file->getTargetAbsolutePath(),
+                [
                 $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
                 $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
-            ], true)) {
+                ],
+                true
+            )
+            ) {
                 return;
             }
-            $this->logger->warning("Expected file does not exist: {targetAbsolutePath}", [
+            $this->logger->warning(
+                "Expected file does not exist: {targetAbsolutePath}",
+                [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
-            ]);
+                ]
+            );
             return;
         }
 
-        $this->logger->debug("Updating contents of file: {targetAbsolutePath}", [
+        $this->logger->debug(
+            "Updating contents of file: {targetAbsolutePath}",
+            [
             'targetAbsolutePath' => $file->getTargetAbsolutePath()
-        ]);
+            ]
+        );
 
         /**
          * Throws an exception, but unlikely to happen.
@@ -151,19 +165,25 @@ class Prefixer
             // TODO: diff here and debug log.
             $file->setDidUpdate();
             $this->filesystem->write($file->getTargetAbsolutePath(), $updatedContents);
-            $this->logger->info("Updated contents of file::::{targetAbsolutePath}", [
+            $this->logger->info(
+                "Updated contents of file::::{targetAbsolutePath}",
+                [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
-            ]);
+                ]
+            );
         } else {
-            $this->logger->debug("No changes to file::::{targetAbsolutePath}", [
+            $this->logger->debug(
+                "No changes to file::::{targetAbsolutePath}",
+                [
                 'targetAbsolutePath' => $file->getTargetAbsolutePath()
-            ]);
+                ]
+            );
         }
     }
 
     /**
      * @param DiscoveredSymbols $discoveredSymbols
-     * @param DiscoveredFiles $projectFiles
+     * @param DiscoveredFiles   $projectFiles
      *
      * @return void
      * @throws FilesystemException
@@ -181,29 +201,43 @@ class Prefixer
             $relativeFilePath = $this->filesystem->getRelativePath(dirname($this->config->getAbsoluteTargetDirectory()), $fileAbsolutePath);
 
             if ($this->filesystem->directoryExists($fileAbsolutePath)) {
-                $this->logger->debug("is_dir() / nothing to do::::{relativeFilePath}", [
+                $this->logger->debug(
+                    "is_dir() / nothing to do::::{relativeFilePath}",
+                    [
                     'relativeFilePath' => $relativeFilePath
-                ]);
+                    ]
+                );
                 continue;
             }
 
             if (!$this->filesystem->fileExists($fileAbsolutePath)) {
                 // Some files are only sometimes present.
-                if (in_array($fileAbsolutePath, [
+                if (in_array(
+                    $fileAbsolutePath,
+                    [
                     $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
                     $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
-                    ], true)) {
+                    ],
+                    true
+                )
+                ) {
                     continue;
                 }
-                $this->logger->warning("Expected file does not exist::::{relativeFilePath}", [
+                $this->logger->warning(
+                    "Expected file does not exist::::{relativeFilePath}",
+                    [
                     'relativeFilePath' => $relativeFilePath
-                ]);
+                    ]
+                );
                 continue;
             }
 
-            $this->logger->debug("Updating contents of file (project)::::{fileAbsolutePath}", [
+            $this->logger->debug(
+                "Updating contents of file (project)::::{fileAbsolutePath}",
+                [
                 'fileAbsolutePath' => $fileAbsolutePath,
-            ]);
+                ]
+            );
 
             // Throws an exception, but unlikely to happen.
             $contents = $this->filesystem->read($fileAbsolutePath);
@@ -230,7 +264,7 @@ class Prefixer
      * ready for a later pipeline phase to plan a new set of changes against it.
      *
      * @param DiscoveredSymbols $discoveredSymbols
-     * @param string $contents
+     * @param string            $contents
      *
      * @throws Exception
      */
@@ -245,9 +279,12 @@ class Prefixer
         $edits = $file instanceof File ? $file->getPlannedEdits() : null;
 
         if (is_null($edits)) {
-            $this->logger->debug("Planning changes::::{filePath}", [
+            $this->logger->debug(
+                "Planning changes::::{filePath}",
+                [
                 'filePath' => is_null($file) ? 'file' : $file->getTargetAbsolutePath(),
-            ]);
+                ]
+            );
             $edits = $this->getPlanner()->plan($discoveredSymbols, $codeMap, $file);
         }
 
@@ -286,23 +323,32 @@ class Prefixer
         }
 
         if ($codeMap) {
-            $this->logger->debug("Code map does not match the file contents, re-analysing::::{filePath}", [
+            $this->logger->debug(
+                "Code map does not match the file contents, re-analysing::::{filePath}",
+                [
                 'filePath' => $fileAbsolutePath ?? 'file',
-            ]);
+                ]
+            );
         }
 
-        $this->logger->info("Parsing::::{filePath}", [
+        $this->logger->info(
+            "Parsing::::{filePath}",
+            [
             'filePath' => $fileAbsolutePath ?? 'file',
-        ]);
+            ]
+        );
 
         $codeMap = $this->getAnalyzer()->analyze($contents, $fileAbsolutePath);
 
         if (is_null($codeMap)) {
             // This happens in template files, E.g `x.blade.php`.
-            $this->logger->warning("Skipping Prefixing in {filePath} due to parse error: {errorMessage}", [
+            $this->logger->warning(
+                "Skipping Prefixing in {filePath} due to parse error: {errorMessage}",
+                [
                 'filePath' => $fileAbsolutePath ?? 'file',
                 'errorMessage' => $this->getAnalyzer()->getLastErrorMessage(),
-            ]);
+                ]
+            );
             return null;
         }
 
@@ -326,16 +372,18 @@ class Prefixer
         usort($edits, fn($a, $b) => $a['start'] <=> $b['start']);
 
         $previousEnd = -1;
-        return array_values(array_filter(
-            $edits,
-            function (array $edit) use (&$previousEnd): bool {
-                if ($edit['start'] < $previousEnd) {
-                    return false;
+        return array_values(
+            array_filter(
+                $edits,
+                function (array $edit) use (&$previousEnd): bool {
+                    if ($edit['start'] < $previousEnd) {
+                        return false;
+                    }
+                    $previousEnd = max($previousEnd, $edit['end']);
+                    return true;
                 }
-                $previousEnd = max($previousEnd, $edit['end']);
-                return true;
-            }
-        ));
+            )
+        );
     }
 
     /**
@@ -367,9 +415,9 @@ class Prefixer
      * location (e.g. a classname inside a comment) are spliced into its text; a location partially overlapped by an
      * edit can no longer be tracked and is dropped from the map.
      *
-     * @param FileCodeMap $codeMap The map of the contents before the edits.
-     * @param array<array{start:int,end:int,replacement:string}> $edits Ascending by start, not overlapping: {@see self::sortFilterEdits()}.
-     * @param string $updatedContents The contents after the edits: {@see self::applyEdits()}.
+     * @param FileCodeMap                                        $codeMap         The map of the contents before the edits.
+     * @param array<array{start:int,end:int,replacement:string}> $edits           Ascending by start, not overlapping: {@see self::sortFilterEdits()}.
+     * @param string                                             $updatedContents The contents after the edits: {@see self::applyEdits()}.
      */
     protected function updateCodeMap(FileCodeMap $codeMap, array $edits, string $updatedContents): FileCodeMap
     {
@@ -453,9 +501,12 @@ class Prefixer
      */
     public function prefixComposerAutoloadFiles(string $absoluteDirectory): void
     {
-        $this->logger->debug("Prefixing the Composer autoload files in {path}.", [
+        $this->logger->debug(
+            "Prefixing the Composer autoload files in {path}.",
+            [
             'path' => $absoluteDirectory,
-        ]);
+            ]
+        );
 
         // During `--dry-run`, until Composer fully supports streamwrappers.
         if ($this->config->isDryRun()) {
@@ -528,14 +579,16 @@ class Prefixer
     public function getComposerRuntimeSymbols(array $composerFiles): DiscoveredSymbols
     {
         $classMapGenerator = new ClassMapGenerator();
-        $classMapGenerator->scanPaths(array_map(
-            fn(File $file) => new \SplFileInfo(
-                $this->filesystem->makeAbsolute(
-                    $file->getTargetAbsolutePath()
-                )
-            ),
-            $composerFiles
-        ));
+        $classMapGenerator->scanPaths(
+            array_map(
+                fn(File $file) => new \SplFileInfo(
+                    $this->filesystem->makeAbsolute(
+                        $file->getTargetAbsolutePath()
+                    )
+                ),
+                $composerFiles
+            )
+        );
 
         $classMap = $classMapGenerator->getClassMap();
 

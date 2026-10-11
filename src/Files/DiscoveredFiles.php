@@ -15,7 +15,9 @@ use Traversable;
  */
 class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
 {
-    /** @var array<string,FileBase|File|FileWithDependency> */
+    /**
+     * @var array<string,FileBase|File|FileWithDependency>
+     */
     protected array $files = [];
 
     /**

@@ -72,20 +72,26 @@ class InstalledJson
         $source = $this->config->getAbsoluteVendorDirectory() . '/composer/installed.json';
         $target = $this->config->getAbsoluteTargetDirectory() . '/composer/installed.json';
 
-        $this->logger->info('Copying {sourcePath} to {targetPath}', [
+        $this->logger->info(
+            'Copying {sourcePath} to {targetPath}',
+            [
             'sourcePath' => $source,
             'targetPath' => $target
-        ]);
+            ]
+        );
 
         $this->filesystem->copy(
             $source,
             $target
         );
 
-        $this->logger->info('Copied {sourcePath} to {targetPath}', [
+        $this->logger->info(
+            'Copied {sourcePath} to {targetPath}',
+            [
             'sourcePath' => $source,
             'targetPath' => $target
-        ]);
+            ]
+        );
     }
 
     /**
@@ -119,9 +125,9 @@ class InstalledJson
     }
 
     /**
-     * @param InstalledJsonArray $installedJsonArray
-     * @param DependenciesCollection $flatDependencyTree
-     * @param string[] $excludedPackageNames
+     * @param  InstalledJsonArray     $installedJsonArray
+     * @param  DependenciesCollection $flatDependencyTree
+     * @param  string[]               $excludedPackageNames
      * @return InstalledJsonArray
      */
     protected function updatePackagePaths(
@@ -172,7 +178,7 @@ class InstalledJson
     }
 
     /**
-     * @param array{install-path: string, ...} $packageArray Typically {@see InstalledJsonPackageArray}, but only
+     * @param  array{install-path: string, ...} $packageArray Typically {@see InstalledJsonPackageArray}, but only
      *                                                       `install-path` is used, and modifying the autoload key
      *                                                       in loops widens the inferred type beyond that alias.
      * @throws FilesystemException
@@ -187,7 +193,7 @@ class InstalledJson
     /**
      * Remove autoload key entries from `installed.json` whose file or directory does not exist after deleting.
      *
-     * @param InstalledJsonArray $installedJsonArray
+     * @param  InstalledJsonArray $installedJsonArray
      * @return InstalledJsonArray
      * @throws FilesystemException
      */
@@ -283,8 +289,8 @@ class InstalledJson
      *
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      *
-     * @param InstalledJsonArray $installedJsonArray
-     * @param DependenciesCollection $flatDependencyTree
+     * @param  InstalledJsonArray     $installedJsonArray
+     * @param  DependenciesCollection $flatDependencyTree
      * @return InstalledJsonArray
      */
     protected function removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson(array $installedJsonArray, DependenciesCollection $flatDependencyTree, string $installedJsonPath): array
@@ -318,8 +324,8 @@ class InstalledJson
      *
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      *
-     * @param InstalledJsonArray $installedJsonArray
-     * @param DependenciesCollection $flatDependencyTree
+     * @param  InstalledJsonArray     $installedJsonArray
+     * @param  DependenciesCollection $flatDependencyTree
      * @return InstalledJsonArray
      */
     protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, DependenciesCollection $flatDependencyTree, string $installedJsonPath): array
@@ -361,7 +367,7 @@ class InstalledJson
     }
 
     /**
-     * @param InstalledJsonArray $installedJsonArray
+     * @param  InstalledJsonArray $installedJsonArray
      * @return InstalledJsonArray
      */
     protected function updateNamespaces(array $installedJsonArray, DiscoveredSymbols $discoveredSymbols): array
@@ -450,9 +456,12 @@ class InstalledJson
                          * Custom autoloader types might.
                          */
                         if (!in_array($type, ['files', 'classmap', 'exclude-from-classmap'])) {
-                            $this->logger->warning('Unexpected autoloader type: {type} in {packageName}.', [
+                            $this->logger->warning(
+                                'Unexpected autoloader type: {type} in {packageName}.',
+                                [
                                 'type' => $type, 'packageName' => $package['name']
-                            ]);
+                                ]
+                            );
                         }
                         break;
                 }
@@ -585,7 +594,7 @@ class InstalledJson
     }
 
     /**
-     * @param InstalledJsonArray $installedJsonArray
+     * @param  InstalledJsonArray $installedJsonArray
      * @return InstalledJsonArray
      */
     private function reindexPackagesList(array $installedJsonArray): array

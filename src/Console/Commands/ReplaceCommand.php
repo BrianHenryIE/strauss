@@ -28,7 +28,7 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     /**
      * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
      *
-     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @used-by  \Symfony\Component\Console\Command\Command::__construct
      * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
      *
      * @return void
@@ -65,11 +65,10 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      *
      * @see Command::execute()
-     *
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -116,10 +115,14 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     {
         $this->logger->notice('Loading cli config...');
 
-        /** @var string $inputFrom */
+        /**
+ * @var string $inputFrom
+*/
         $inputFrom = $input->getOption('from');
 
-        /** @var string $inputTo */
+        /**
+ * @var string $inputTo
+*/
         $inputTo = $input->getOption('to');
 
         // TODO: validate input exists.
@@ -127,7 +130,9 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         // TODO:
         $this->config->setNamespaceReplacementPatterns([$inputFrom => $inputTo]);
 
-        /** @var string $inputPaths */
+        /**
+ * @var string $inputPaths
+*/
         $inputPaths = $input->getOption('paths');
         $paths = explode(',', $inputPaths);
 

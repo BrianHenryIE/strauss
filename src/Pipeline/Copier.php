@@ -34,10 +34,10 @@ class Copier
     /**
      * Copier constructor.
      *
-     * @param DiscoveredFiles $files Contains a collections of Files with source and target paths.
+     * @param DiscoveredFiles       $files      Contains a collections of Files with source and target paths.
      * @param CopierConfigInterface $config
-     * @param FileSystem $filesystem A filesystem instance.
-     * @param LoggerInterface $logger A logger implementation.
+     * @param FileSystem            $filesystem A filesystem instance.
+     * @param LoggerInterface       $logger     A logger implementation.
      */
     public function __construct(
         DiscoveredFiles $files,
