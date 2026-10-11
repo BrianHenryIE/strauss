@@ -232,6 +232,10 @@ class ChangeEnumerator
 
     /**
      * `str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
+     *
+     * @param string $originalNamespace The namespace being replaced, without leading backslash.
+     * @param string $newNamespace      The prefixed namespace to replace it with.
+     * @param string $fqdnClassname     The class's fully qualified name, without leading backslash.
      */
     protected function determineNamespaceReplacement(string $originalNamespace, string $newNamespace, string $fqdnClassname): string
     {

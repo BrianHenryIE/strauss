@@ -89,6 +89,9 @@ class WorkerCommand extends Command
     }
 
     /**
+     * @param PhpFileAnalyzer $analyzer Parses the file contents into a code map.
+     * @param string          $path     Absolute path of the PHP file to read and analyse.
+     *
      * @return array{action:string, file:string, map:?string, error:?string}
      */
     protected function analyzeFile(PhpFileAnalyzer $analyzer, string $path): array

@@ -62,6 +62,9 @@ class Cleanup
      * Maybe delete the source files that were copied (depending on config),
      * then delete empty directories.
      *
+     * @param DependenciesCollection $flatDependencyTree All dependencies Strauss considered; whole packages are deleted when `delete_vendor_packages` is enabled.
+     * @param DiscoveredFiles        $discoveredFiles    The discovered files; individual files are deleted when `delete_vendor_files` is enabled.
+     *
      * @throws FilesystemException
      */
     public function deleteFiles(DependenciesCollection $flatDependencyTree, DiscoveredFiles $discoveredFiles): void
@@ -85,6 +88,9 @@ class Cleanup
     }
 
     /**
+     * @param DependenciesCollection $flatDependencyTree All dependencies Strauss considered.
+     * @param DiscoveredSymbols      $discoveredSymbols  Discovered symbols whose namespace replacements are applied to the autoload keys.
+     *
      * @throws Exception
      * @throws FilesystemException
      */
@@ -188,6 +194,8 @@ class Cleanup
     /**
      * Composer classes are prefixed inside the Phar causing the output of dump-autoload when run inside Strauss
      * to contain references to `BrianHenryIE\Strauss`, remove them.
+     *
+     * @param string $composerDirectoryPath Absolute path to the `composer` directory inside the vendor or target directory.
      *
      * @throws FilesystemException
      */
@@ -310,6 +318,9 @@ class Cleanup
     }
 
     /**
+     * @param DependenciesCollection $flatDependencyTree All dependencies Strauss considered; each package not excluded from copy is deleted.
+     * @param DiscoveredFiles        $discoveredFiles    Unused.
+     *
      * @throws FilesystemException
      */
     protected function doIsDeleteVendorPackages(DependenciesCollection $flatDependencyTree, DiscoveredFiles $discoveredFiles): void

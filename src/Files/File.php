@@ -121,6 +121,8 @@ class File implements FileBase
 
     /**
      * Should symbols discovered in this file be prefixed. (i.e. class definitions etc., not usages)
+     *
+     * @param bool $doPrefix True if symbols defined in this file should be prefixed.
      */
     public function setDoPrefix(bool $doPrefix): void
     {
@@ -160,6 +162,8 @@ class File implements FileBase
     }
 
     /**
+     * @param bool $didDelete Whether the file has been deleted from the vendor directory.
+     *
      * @see Cleanup::doIsDeleteVendorFiles()
      */
     public function setDidDelete(bool $didDelete): void
@@ -230,6 +234,8 @@ class File implements FileBase
 
     /**
      * Replacing the code map discards any planned edits: a plan is only valid for the map it was made against.
+     *
+     * @param ?FileCodeMap $codeMap The parsed code map for the file's current contents; null to clear it.
      */
     public function setCodeMap(?FileCodeMap $codeMap): void
     {

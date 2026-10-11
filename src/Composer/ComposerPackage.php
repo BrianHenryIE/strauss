@@ -382,6 +382,8 @@ class ComposerPackage
 
     /**
      * Should the file be copied? (defaults to yes)
+     *
+     * @param bool $isCopy Whether the package's files should be copied to the target directory.
      */
     public function setCopy(bool $isCopy): void
     {
@@ -398,6 +400,8 @@ class ComposerPackage
 
     /**
      * Has the file been copied? (defaults to no)
+     *
+     * @param bool $didCopy Whether the package's files have been copied to the target directory.
      */
     public function setDidCopy(bool $didCopy): void
     {
@@ -414,6 +418,8 @@ class ComposerPackage
 
     /**
      * Should the file be deleted? (defaults to no)
+     *
+     * @param bool $isDelete Whether the package's files should be deleted from the vendor directory.
      */
     public function setDelete(bool $isDelete): void
     {
@@ -430,6 +436,8 @@ class ComposerPackage
 
     /**
      * Has the file been deleted? (defaults to no)
+     *
+     * @param bool $didDelete Whether the package's files have been deleted from the vendor directory.
      */
     public function setDidDelete(bool $didDelete): void
     {

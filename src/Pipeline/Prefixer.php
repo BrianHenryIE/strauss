@@ -275,6 +275,8 @@ class Prefixer
      *
      * @param DiscoveredSymbols $discoveredSymbols The symbols found in the dependencies, used to plan edits when none are planned yet.
      * @param string            $contents          The PHP source code to update.
+     * @param ?FileBase         $file              The file the contents are from, whose planned edits and code map are
+     *                                             used and updated; null to analyse and plan the contents alone.
      *
      * @throws Exception
      */
@@ -319,6 +321,10 @@ class Prefixer
 
     /**
      * The file's code map for the given contents, analysing them now if the file has none that matches.
+     *
+     * @param string    $contents The PHP source code to map.
+     * @param ?FileBase $file     The file the contents are from; its code map is reused when it matches the contents,
+     *                            and a new one stored on it. Null to analyse the contents alone.
      *
      * @return ?FileCodeMap Null when the contents cannot be parsed.
      */
@@ -399,7 +405,8 @@ class Prefixer
     /**
      * Apply text replacements to the contents.
      *
-     * @param array<array{start:int,end:int,replacement:string}> $edits Ascending by start, not overlapping: {@see self::sortFilterEdits()}.
+     * @param string                                             $contents The PHP source code the edit offsets refer to.
+     * @param array<array{start:int,end:int,replacement:string}> $edits    Ascending by start, not overlapping: {@see self::sortFilterEdits()}.
      *
      * @return string The updated contents.
      */
@@ -507,6 +514,9 @@ class Prefixer
      * References to those classes in the packages' files have already been changed: the pipeline plans every
      * file with {@see self::getComposerRuntimeSymbols()} included.
      *
+     * @param string $absoluteDirectory The absolute path of the target directory which contains the `composer`
+     *                                  directory, e.g. `/path/to/project/vendor-prefixed`.
+     *
      * @throws FilesystemException
      */
     public function prefixComposerAutoloadFiles(string $absoluteDirectory): void
@@ -538,6 +548,8 @@ class Prefixer
 
     /**
      * Does the file declare a namespace which already begins with the project's namespace prefix?
+     *
+     * @param File $file A Composer runtime file, read from its target path.
      *
      * @throws FilesystemException
      */

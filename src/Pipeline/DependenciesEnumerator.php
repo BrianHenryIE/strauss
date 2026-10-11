@@ -66,6 +66,10 @@ class DependenciesEnumerator
 
     /**
      * Constructor.
+     *
+     * @param StraussConfig    $config     The required packages, autoload overrides, and project and vendor directories.
+     * @param FileSystem       $filesystem Used to read `composer.json`, `composer.lock` and packages' `composer.json` files.
+     * @param ?LoggerInterface $logger     Optional logger; a NullLogger is used when null.
      */
     public function __construct(
         StraussConfig    $config,
@@ -342,6 +346,8 @@ class DependenciesEnumerator
 
     /**
      * Unset PHP, ext-*, ...
+     *
+     * @param string $requiredPackageName A package name from a `require` list, e.g. `php`, `ext-json` or `psr/log`.
      */
     protected function removeVirtualPackagesFilter(string $requiredPackageName): bool
     {

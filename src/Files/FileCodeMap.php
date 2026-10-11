@@ -55,6 +55,7 @@ class FileCodeMap
 
     /**
      * @param CodeLocation[]     $locations      Every definition, usage and text region found in the file, in any order.
+     * @param string             $contents       The file contents the locations were calculated for; only its CRC32 checksum is kept.
      * @param SymbolDefinition[] $definitions    The symbols the file defines, in declaration order.
      * @param string[]           $namespaceNames Declared namespace names, in source order; `\` for global. Empty means global.
      */
@@ -76,6 +77,8 @@ class FileCodeMap
     }
 
     /**
+     * @param string ...$types One or more {@see CodeLocation} type constants to match.
+     *
      * @return CodeLocation[]
      */
     public function getLocationsOfType(string ...$types): array
@@ -91,6 +94,8 @@ class FileCodeMap
 
     /**
      * The symbols this file defines, optionally of one {@see SymbolDefinition::TYPES} type.
+     *
+     * @param ?string $type A {@see SymbolDefinition::TYPES} type to filter by; null for all definitions.
      *
      * @return SymbolDefinition[]
      */
@@ -123,6 +128,8 @@ class FileCodeMap
 
     /**
      * Every use of a symbol name in this file, optionally of one {@see CodeLocation::USAGE_TYPES} type.
+     *
+     * @param ?string $type A {@see CodeLocation::USAGE_TYPES} type to filter by; null for all usage types.
      *
      * @return CodeLocation[]
      */
@@ -183,6 +190,8 @@ class FileCodeMap
 
     /**
      * Do the given contents match the contents this map's positions were calculated for?
+     *
+     * @param string $contents The file contents to compare against, by CRC32 checksum.
      */
     public function matchesContent(string $contents): bool
     {

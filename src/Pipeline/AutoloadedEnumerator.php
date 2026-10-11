@@ -432,6 +432,8 @@ class AutoloadedEnumerator
     /**
      * Read the autoload keys of the dependencies and marks the appropriate files to be prefixed
      *
+     * @param ComposerPackage $dependency The package whose autoload key is read; meta packages are skipped.
+     *
      * @throws FilesystemException
      */
     protected function scanPackage(ComposerPackage $dependency): void

@@ -108,7 +108,8 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     protected int $nextCommentToken = 0;
 
     /**
-     * @param Token[] $tokens The tokens of the contents: {@see \PhpParser\Parser::getTokens()}.
+     * @param string  $contents The PHP source code being traversed; location texts are read from it.
+     * @param Token[] $tokens   The tokens of the contents: {@see \PhpParser\Parser::getTokens()}.
      */
     public function __construct(string $contents, array $tokens = [])
     {
@@ -231,6 +232,8 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     /**
      * Comments after the last node.
+     *
+     * @param Node[] $nodes The file's top-level nodes (unused).
      */
     public function afterTraverse(array $nodes)
     {
@@ -375,6 +378,8 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     /**
      * `const NAME = ...;` (class constants are `ClassConst`, not `Const_`).
+     *
+     * @param Const_ $node The constant declaration statement, which may declare several constants.
      */
     protected function enterConst(Const_ $node): void
     {
@@ -477,6 +482,8 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     /**
      * The fully qualified name, without leading `\`, of a class name in `extends` or `implements`.
+     *
+     * @param Name $name The name as written; its `resolvedName` attribute is used when set by the name resolver.
      */
     protected function resolveName(Name $name): string
     {

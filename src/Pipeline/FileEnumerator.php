@@ -40,6 +40,10 @@ class FileEnumerator
 
     /**
      * Copier constructor.
+     *
+     * @param FileEnumeratorConfig $config     Whether to exclude Git-ignored files, and the vendor, target and project directories.
+     * @param FileSystem           $filesystem Used to list the files under each path.
+     * @param LoggerInterface      $logger     Logger.
      */
     public function __construct(
         FileEnumeratorConfig $config,
@@ -85,7 +89,9 @@ class FileEnumerator
     }
 
     /**
-     * @param  string[] $paths Absolute paths of the files and directories to scan, recursively.
+     * @param string[]         $paths      Absolute paths of the files and directories to scan, recursively.
+     * @param ?ComposerPackage $dependency The package the paths belong to, or null for project files (e.g. call sites).
+     *
      * @throws FilesystemException
      */
     public function compileFileListForPaths(
@@ -190,7 +196,8 @@ class FileEnumerator
     }
 
     /**
-     * @param array<string, array{gitignore?:GitIgnoreChecker, gitattributes?:GitAttributes}> $repositories Git checkers, keyed by repository root absolute path.
+     * @param string                                                                          $sourceAbsolutePath Absolute path of the file or directory to check.
+     * @param array<string, array{gitignore?:GitIgnoreChecker, gitattributes?:GitAttributes}> $repositories       Git checkers, keyed by repository root absolute path.
      *
      * @throws FilesystemException
      */

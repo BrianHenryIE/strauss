@@ -99,6 +99,11 @@ class FileSymbolScanner
 
     /**
      * FileScanner constructor.
+     *
+     * @param FileSymbolScannerConfigInterface $config            The packages to prefix and the project directory.
+     * @param DiscoveredSymbols                $discoveredSymbols The collection the found symbols are added to.
+     * @param FileSystem                       $filesystem        Reads the files and resolves their paths.
+     * @param ?LoggerInterface                 $logger            Logs each file scanned and symbol found; null for none.
      */
     public function __construct(
         FileSymbolScannerConfigInterface $config,
@@ -154,6 +159,8 @@ class FileSymbolScanner
     }
 
     /**
+     * @param DiscoveredFiles $files The project's and dependencies' files; PHP files are parsed and their maps stored.
+     *
      * @throws FilesystemException
      */
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
@@ -234,6 +241,8 @@ class FileSymbolScanner
      * found. The loop's order, and so the order symbols are discovered and logged in, is unchanged.
      *
      * If the workers cannot be run, the files are parsed in this process as before.
+     *
+     * @param DiscoveredFiles $files The files to scan; only PHP files are analysed.
      */
     protected function analyzeInParallel(DiscoveredFiles $files): void
     {
@@ -279,6 +288,10 @@ class FileSymbolScanner
 
     /**
      * Parse the file once, store the resulting map on the file, and register every symbol it defines.
+     *
+     * @param string           $contents The file's PHP source code.
+     * @param FileBase         $file     The file being scanned.
+     * @param ?ComposerPackage $package  The package the file belongs to; null for project files.
      */
     protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
     {
@@ -289,6 +302,10 @@ class FileSymbolScanner
 
     /**
      * Store the map on the file and register every symbol it defines. Null when the file could not be parsed.
+     *
+     * @param ?FileCodeMap     $codeMap The parsed map of the file; null when it could not be parsed.
+     * @param FileBase         $file    The file being scanned.
+     * @param ?ComposerPackage $package The package the file belongs to; null for project files.
      */
     protected function record(?FileCodeMap $codeMap, FileBase $file, ?ComposerPackage $package): void
     {
@@ -306,6 +323,10 @@ class FileSymbolScanner
     /**
      * Register each namespace and every symbol declared within it, at any depth, e.g. a function declared inside
      * `if (!function_exists(...))`.
+     *
+     * @param FileCodeMap      $codeMap The parsed map of the file.
+     * @param FileBase         $file    The file the symbols are defined in.
+     * @param ?ComposerPackage $package The package the file belongs to; null for project files.
      */
     protected function recordDefinitions(FileCodeMap $codeMap, FileBase $file, ?ComposerPackage $package = null): void
     {

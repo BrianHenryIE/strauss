@@ -51,6 +51,8 @@ trait FlysystemAdapterBackCompatTrait
     }
 
     /**
+     * @param string $path Path of the directory to check; it is normalized first.
+     *
      * @throws FilesystemException
      */
     protected function directoryExistsImplementation(string $path): bool

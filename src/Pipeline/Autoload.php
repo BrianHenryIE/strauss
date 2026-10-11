@@ -55,6 +55,8 @@ class Autoload
      *
      * @param StraussConfig&AutoloadConfigInterface $config                     Strauss config, used for target/vendor directories and classmap output settings.
      * @param array<string, array<string>>          $discoveredFilesAutoloaders Package path => relative file paths of `files` autoloaders (currently unused; callers pass []).
+     * @param FileSystem                            $filesystem                 Used to read and write the autoload and `installed.json` files.
+     * @param ?LoggerInterface                      $logger                     Optional logger; a NullLogger is used when null.
      */
     public function __construct(
         StraussConfig $config,
@@ -69,7 +71,9 @@ class Autoload
     }
 
     /**
-     * @param  DependenciesCollection $flatDependencyTree All dependencies (flattened), used to update package paths in the target directory's installed.json.
+     * @param DependenciesCollection $flatDependencyTree All dependencies (flattened), used to update package paths in the target directory's installed.json.
+     * @param DiscoveredSymbols      $discoveredSymbols  Discovered symbols whose namespace replacements are applied to the installed.json autoload keys.
+     *
      * @throws FilesystemException
      * @throws ParsingException
      * @throws Exception

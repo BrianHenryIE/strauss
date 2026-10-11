@@ -30,6 +30,8 @@ class RelativeFilepathLogProcessor3 implements ProcessorInterface
     /**
      * Checks all context values for keys containing 'path' modifies their values to be
      * relative to the project root.
+     *
+     * @param LogRecord $record Monolog log record whose `context` values may hold absolute paths.
      */
     public function __invoke(LogRecord $record): LogRecord
     {

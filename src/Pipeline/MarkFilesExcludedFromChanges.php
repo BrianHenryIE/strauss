@@ -70,6 +70,9 @@ class MarkFilesExcludedFromChanges
 
     /**
      * TODO: This should be moved into the class parsing the config.
+     *
+     * @param string $pattern A regex from config, with or without delimiters; `#` delimiters are added when its first
+     *                        and last characters differ.
      */
     private function preparePattern(string $pattern): string
     {
@@ -85,6 +88,8 @@ class MarkFilesExcludedFromChanges
      * If any excluded namespaces are in the file, do not make changes to the file.
      *
      * A PHP file can contain multiple namespaces, but that is generally discouraged.
+     *
+     * @param FileBase $file The file whose discovered namespaces are compared with the excluded namespaces.
      */
     protected function fileMatchesNamespace(FileBase $file): bool
     {

@@ -111,6 +111,8 @@ class ParallelConfig
 
     /**
      * How many workers are worth starting for this many files: never more than there are chunks.
+     *
+     * @param int $fileCount The number of files to be analysed.
      */
     public function getProcessesToSpawn(int $fileCount): int
     {

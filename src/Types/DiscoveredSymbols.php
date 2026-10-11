@@ -123,6 +123,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
+     * @param string $fqdnName The symbol's original fully qualified name, as returned by {@see DiscoveredSymbol::getOriginalFqdnName()}.
+     *
      * @deprecated Can cause false positives when duplicate names exist.
      */
     public function get(string $fqdnName): ?DiscoveredSymbol

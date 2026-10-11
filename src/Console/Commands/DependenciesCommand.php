@@ -539,6 +539,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
     /**
      * Is the path the target directory, or a file or directory inside it?
+     *
+     * @param string $absolutePath Absolute path to a file or directory.
      */
     protected function isInTargetDirectory(string $absolutePath): bool
     {

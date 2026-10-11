@@ -146,6 +146,9 @@ abstract class AbstractRenamespacerCommand extends Command
 
     /**
      * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
+     *
+     * @param InputInterface  $input  The command-line arguments and options.
+     * @param OutputInterface $output The console output the logger writes to.
      */
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
@@ -283,6 +286,9 @@ abstract class AbstractRenamespacerCommand extends Command
      * Build a logger honoring optional --info/--debug/--silent flags if present.
      *
      * TODO: maybe this should be called ~`::getConsoleLogger()`.
+     *
+     * @param InputInterface  $input  Checked for the `--info`, `--debug` and `--silent` options.
+     * @param OutputInterface $output The console output the logger writes to.
      */
     protected function getPsrLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
@@ -355,6 +361,8 @@ abstract class AbstractRenamespacerCommand extends Command
 
     /**
      * Run one pipeline step and log how long it took, for finding where the time goes on large projects.
+     *
+     * @param string $step Name of the method on this command to run, from {@see self::getPipelineSteps()}.
      */
     protected function timed(string $step): void
     {

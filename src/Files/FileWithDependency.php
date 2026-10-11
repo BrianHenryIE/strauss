@@ -83,6 +83,8 @@ class FileWithDependency extends File implements HasDependency
 
     /**
      * Record the autoloader it is found in. Which could be all of them.
+     *
+     * @param string $autoloaderType The autoload key the file was found under, e.g. `psr-4`, `psr-0`, `classmap` or `files`.
      */
     public function addAutoloader(string $autoloaderType): void
     {

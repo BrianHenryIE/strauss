@@ -15,6 +15,8 @@ use Monolog\Processor\ProcessorInterface;
 /**
  * For each string context value whose key contains `path` (case-insensitive), replaces it with
  * {@see FileSystem::getProjectRelativePath()}. Operates on the Monolog v2 array record, modifying the array in place.
+ *
+ * @phpstan-import-type Record from \Monolog\Logger
  */
 class RelativeFilepathLogProcessor2 implements ProcessorInterface
 {
@@ -29,6 +31,10 @@ class RelativeFilepathLogProcessor2 implements ProcessorInterface
     /**
      * Checks all context values for keys containing 'path' modifies their values to be
      * relative to the project root.
+     *
+     * @param array $record Monolog log record whose `context` values may hold absolute paths.
+     *
+     * @phpstan-param Record $record
      */
     public function __invoke(array $record): array
     {

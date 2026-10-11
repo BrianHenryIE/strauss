@@ -57,8 +57,9 @@ abstract class DiscoveredSymbol
     protected bool $replaceInString = true;
 
     /**
-     * @param string    $fqdnSymbol The classname / namespace etc.
-     * @param ?FileBase $sourceFile The file it was discovered in. Unneeded for global namespace and some (Composer) predictable files.
+     * @param string           $fqdnSymbol      The classname / namespace etc.
+     * @param ?FileBase        $sourceFile      The file it was discovered in. Unneeded for global namespace and some (Composer) predictable files.
+     * @param ?ComposerPackage $composerPackage The package the symbol belongs to, added as a dependency; null if unknown or none.
      */
     public function __construct(
         string $fqdnSymbol,
@@ -117,6 +118,8 @@ abstract class DiscoveredSymbol
     }
 
     /**
+     * @param FileBase $sourceFile A file the symbol was discovered in; its package, if any, is added as a dependency.
+     *
      * @see FileSymbolScanner
      */
     public function addSourceFile(FileBase $sourceFile): void
@@ -189,6 +192,8 @@ abstract class DiscoveredSymbol
     }
 
     /**
+     * @param string $classPrefix The class prefix to repeatedly remove from the start of the original symbol name.
+     *
      * @deprecated This is only being called in {@see Prefixer::findSymbolPositionsInStrings()}, the actual determination should be made in {@see ChangeEnumerator}.
      */
     public function getOriginalSymbolStripPrefix(string $classPrefix): string

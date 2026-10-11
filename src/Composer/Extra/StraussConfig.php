@@ -861,6 +861,8 @@ class StraussConfig implements
 
     /**
      * Should Strauss read and respect `.gitignore` and `.gitattributes` files and exclude `.git` directory. Packagist packages have already respected these.
+     *
+     * @param bool $excludeGitFiles True to honour `.gitignore`/`.gitattributes` and skip the `.git` directory when copying.
      */
     public function setExcludeGitFiles(bool $excludeGitFiles): void
     {
@@ -1002,6 +1004,8 @@ class StraussConfig implements
 
     /**
      * Disable making changes to files; output changes to console instead.
+     *
+     * @param bool $dryRun True to log intended changes without writing to the filesystem.
      */
     public function setDryRun(bool $dryRun): void
     {

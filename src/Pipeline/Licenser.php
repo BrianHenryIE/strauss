@@ -66,8 +66,11 @@ class Licenser
     /**
      * Licenser constructor.
      *
-     * @param DependenciesCollection $dependencies Whose folders are searched for existing license.txt files.
-     * @param string                 $author       To add to each modified file's header
+     * @param LicenserConfigInterface $config       Whether to include the author and modified date, and the vendor and target directories.
+     * @param DependenciesCollection  $dependencies Whose folders are searched for existing license.txt files.
+     * @param string                  $author       To add to each modified file's header
+     * @param FileSystem              $filesystem   Used to find, copy and update license and PHP files.
+     * @param ?LoggerInterface        $logger       Optional logger; a NullLogger is used when null.
      */
     public function __construct(
         LicenserConfigInterface $config,
@@ -264,7 +267,10 @@ class Licenser
      * If there is no mention in the header of the license already, add it.
      * Add a note that changes have been made.
      *
-     * @param string $phpString Code.
+     * @param string $phpString      Code.
+     * @param string $modifiedDate   The date to include in the declaration, e.g. "25-April-2021".
+     * @param string $packageName    The Composer package name the file came from, e.g. `psr/log`.
+     * @param string $packageLicense The package's license identifier, added as an `@license` tag.
      */
     public function addChangeDeclarationToPhpString(
         string $phpString,

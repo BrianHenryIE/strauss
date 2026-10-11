@@ -129,6 +129,8 @@ class Aliases
     }
 
     /**
+     * @param DiscoveredSymbols $symbols The discovered symbols; only renamed classes, interfaces, traits and enums are aliased.
+     *
      * @return array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray>
      * @throws FilesystemException
      */

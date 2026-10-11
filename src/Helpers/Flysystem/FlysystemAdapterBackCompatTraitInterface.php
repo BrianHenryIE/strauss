@@ -20,12 +20,16 @@ interface FlysystemAdapterBackCompatTraitInterface extends PathNormalizer
     /**
      * Implementation is provided by {@see FlysystemAdapterBackCompatTrait::directoryExists()}.
      *
+     * @param string $location Path of the directory to check, relative to the filesystem root.
+     *
      * @see FilesystemReader::directoryExists()
      */
     public function directoryExists(string $location): bool;
 
     /**
      * This isn't strictly on v3 interface but is needed to implement `::directoryExists()`.
+     *
+     * @param string $path Path to normalize.
      *
      * @see PathNormalizer
      */

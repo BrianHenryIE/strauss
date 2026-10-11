@@ -283,6 +283,8 @@ class SymbolIndex
      * The text need not be PHP: any quote character counts, so this finds at least every name that
      * {@see ChangePlanner::findSymbolPositionsInStrings()} can match.
      *
+     * @param string $text The text to search, e.g. the joined string, comment and inline HTML regions of a file.
+     *
      * @return array<string, true> Keyed by name.
      */
     public static function getQuotedNames(string $text): array
@@ -305,6 +307,8 @@ class SymbolIndex
      * Every qualified-name-shaped candidate in the text: for each run of identifier characters and backslashes,
      * every segment-aligned substring, e.g. `\Foo\Bar\Baz` gives `Foo`, `Foo\Bar`, `Foo\Bar\Baz`, `Bar`,
      * `Bar\Baz`, `Baz`.
+     *
+     * @param string $text The text to search, e.g. a doc comment.
      *
      * @return array<string, true> Keyed by candidate name.
      */

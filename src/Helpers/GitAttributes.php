@@ -116,6 +116,8 @@ class GitAttributes
      *
      * The last matching pattern wins, so a later `-export-ignore` rule can re-include a path.
      *
+     * @param string $relativePath Path relative to the repository root; backslashes and a leading slash are tolerated.
+     *
      * @throws FilesystemException
      */
     public function isExportIgnored(string $relativePath): bool
@@ -142,6 +144,9 @@ class GitAttributes
      *
      * A pattern matches when it matches the path itself or one of its ancestor directories
      * (marking a directory `export-ignore` also excludes its contents).
+     *
+     * @param string $pattern      Pattern from a `.gitattributes` line; one containing a non-trailing `/` is anchored to the repository root.
+     * @param string $relativePath Forward-slash path relative to the repository root, without a leading slash.
      */
     protected function matchesPattern(string $pattern, string $relativePath): bool
     {

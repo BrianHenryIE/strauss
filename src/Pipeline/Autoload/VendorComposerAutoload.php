@@ -182,6 +182,8 @@ class VendorComposerAutoload
      * This is a very over-engineered way to do a string replace.
      *
      * `require_once __DIR__ . '/composer/autoload_aliases.php';`
+     *
+     * @param string $code The contents of `vendor/autoload.php`.
      */
     protected function addAliasesFileToComposerAutoload(string $code): string
     {
@@ -268,6 +270,8 @@ class VendorComposerAutoload
 
     /**
      * `require_once __DIR__ . '/../vendor-prefixed/autoload.php';`
+     *
+     * @param string $code The contents of `vendor/autoload.php`.
      */
     protected function addVendorPrefixedAutoloadToComposerAutoload(string $code): string
     {

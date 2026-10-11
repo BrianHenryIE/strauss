@@ -52,6 +52,8 @@ class MarkSymbolsForRenaming
      * If a namespace matches a namespace replacement pattern, then doRename needs to be set true.
      *
      * There are packages that have conditionally loaded classes, e.g. `art4/requests-psr18-adapter`'s `v1-compat`.
+     *
+     * @param DiscoveredSymbols $symbols All discovered symbols; each one's doRename flag is set.
      */
     public function scanSetDoRename(DiscoveredSymbols $symbols): void
     {
@@ -120,6 +122,8 @@ class MarkSymbolsForRenaming
 
     /**
      * Check the `exclude_from_prefix` rules for this symbol's package name, namespace and file-paths.
+     *
+     * @param DiscoveredSymbol $symbol The symbol to check.
      */
     protected function excludeFromPrefix(DiscoveredSymbol $symbol): bool
     {
@@ -135,6 +139,8 @@ class MarkSymbolsForRenaming
      * `config.strauss.exclude_from_copy`.
      *
      * This requires {@see FileCopyScanner} to have been run first.
+     *
+     * @param DiscoveredSymbol $symbol The symbol whose source files are checked.
      */
     protected function isSymbolFoundInFileThatIsNotCopied(DiscoveredSymbol $symbol): bool
     {
@@ -164,6 +170,8 @@ class MarkSymbolsForRenaming
 
     /**
      * Config: `extra.strauss.exclude_from_copy.packages`.
+     *
+     * @param ?string $packageName The symbol's Composer package name, e.g. `vendor/package`; null when not from a package.
      */
     protected function isExcludeFromCopyPackage(?string $packageName): bool
     {
@@ -172,6 +180,8 @@ class MarkSymbolsForRenaming
 
     /**
      * Config: `extra.strauss.exclude_from_prefix.packages`.
+     *
+     * @param ?string $packageName The symbol's Composer package name, e.g. `vendor/package`; null when not from a package.
      */
     protected function isExcludeFromPrefixPackage(?string $packageName): bool
     {
@@ -193,6 +203,9 @@ class MarkSymbolsForRenaming
 
     /**
      * Config: `extra.strauss.exclude_from_prefix.namespaces`.
+     *
+     * @param ?string $namespace The symbol's namespace, matched by prefix against each excluded namespace; empty or
+     *                           null is never excluded.
      */
     protected function isExcludeFromPrefixNamespace(?string $namespace): bool
     {
@@ -240,6 +253,8 @@ class MarkSymbolsForRenaming
 
     /**
      * Config: extra.strauss.exclude_constants – applies only to constants.
+     *
+     * @param ConstantSymbol $symbol The constant to check.
      */
     protected function isExcludeConstants(ConstantSymbol $symbol): bool
     {
@@ -300,6 +315,9 @@ class MarkSymbolsForRenaming
 
     /**
      * TODO: This should be moved into the class parsing the config.
+     *
+     * @param string $pattern A regex from config, with or without delimiters; `#` delimiters are added when its first
+     *                        and last characters differ.
      */
     private function preparePattern(string $pattern): string
     {

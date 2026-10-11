@@ -50,6 +50,8 @@ class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countabl
     }
 
     /**
+     * @param string $offset The Composer package name, e.g. `vendor/package`.
+     *
      * @return bool
      */
     #[\ReturnTypeWillChange]
@@ -59,6 +61,8 @@ class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countabl
     }
 
     /**
+     * @param string $offset The Composer package name, e.g. `vendor/package`.
+     *
      * @return ?ComposerPackage
      */
     #[\ReturnTypeWillChange]
