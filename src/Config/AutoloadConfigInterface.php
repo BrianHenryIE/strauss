@@ -22,7 +22,7 @@ interface AutoloadConfigInterface
     /**
      * The directory where the source files are located.
      *
-     * absolute? relative?
+     * Absolute? Relative?
      */
     public function getAbsoluteVendorDirectory(): string;
 

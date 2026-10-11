@@ -252,7 +252,8 @@ class Cleanup
     }
 
     /**
-     * @param  FileBase[] $files The files that were copied; empty directories left where they were in the vendor directory are deleted.
+     * @param FileBase[] $files The files that were copied; empty directories left where they were in the vendor directory are deleted.
+     *
      * @throws FilesystemException
      */
     protected function deleteEmptyDirectories(array $files): void

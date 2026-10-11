@@ -2,16 +2,12 @@
 /**
  * `FilesystemAdapter` interface v3 introduced `::directoryExists()`.
  *
- * v2:
- *
  * @package brianhenryie/strauss
  *
- * @see https://github.com/thephpleague/flysystem/blob/2.x/src/FilesystemAdapter.php
- * Interface:
- * @see https://github.com/thephpleague/flysystem/blob/3.x/src/FilesystemAdapter.php
- * Implementations:
- * @see https://github.com/thephpleague/flysystem/blob/3.x/src/Filesystem.php#L41-L44
- * @see https://github.com/thephpleague/flysystem/blob/3.x/src/Local/LocalFilesystemAdapter.php#L346-L351
+ * @see https://github.com/thephpleague/flysystem/blob/2.x/src/FilesystemAdapter.php v2 interface.
+ * @see https://github.com/thephpleague/flysystem/blob/3.x/src/FilesystemAdapter.php v3 interface.
+ * @see https://github.com/thephpleague/flysystem/blob/3.x/src/Filesystem.php#L41-L44 v3 implementation.
+ * @see https://github.com/thephpleague/flysystem/blob/3.x/src/Local/LocalFilesystemAdapter.php#L346-L351 v3 implementation.
  */
 
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
@@ -26,9 +22,9 @@ use League\Flysystem\FilesystemException;
 trait FlysystemAdapterBackCompatTrait
 {
     /**
-     * @see   FilesystemAdapter::directoryExists()
      * @param string $path Directory path to check.
      *
+     * @see    FilesystemAdapter::directoryExists()
      * @return bool
      * @throws FilesystemException
      */

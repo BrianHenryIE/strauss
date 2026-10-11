@@ -322,8 +322,8 @@ class FileEnumerator
 
         $this->discoveredFiles->add($f);
 
-        $vendorRelativeFilePath =
-            $this->filesystem->getRelativePath(
+        $vendorRelativeFilePath
+            = $this->filesystem->getRelativePath(
                 $this->config->getProjectAbsolutePath(),
                 $f->getSourcePath()
             );

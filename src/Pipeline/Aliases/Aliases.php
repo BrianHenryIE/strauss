@@ -50,8 +50,9 @@ class Aliases
     }
 
     /**
-     * @param  array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray> $aliasesArray                   Alias definitions keyed by original FQDN, without leading backslash.
-     * @param  string|null                                                                       $autoloadAliasesFunctionsString PHP code aliasing functions and constants, inserted at the template's placeholder; empty or null for none.
+     * @param array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray> $aliasesArray                   Alias definitions keyed by original FQDN, without leading backslash.
+     * @param string|null                                                                       $autoloadAliasesFunctionsString PHP code aliasing functions and constants, inserted at the template's placeholder; empty or null for none.
+     *
      * @return string
      * @throws RuntimeException
      */
@@ -205,9 +206,7 @@ class Aliases
                         $aliasesPhpString = $this->aliasedFunctionTemplate($originalLocalSymbol, $replacementSymbol);
                         break;
                     case ConstantSymbol::class:
-                        /**
-                         * https://stackoverflow.com/questions/19740621/namespace-constants-and-use-as
-                         */
+                        // @see https://stackoverflow.com/questions/19740621/namespace-constants-and-use-as
                         // Ideally this would somehow be loaded after everything else.
                         // Maybe some Patchwork style redefining of `define()` to add the alias?
                         // Does it matter since all references to use the constant should have been updated to the new name anyway.

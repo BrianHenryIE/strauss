@@ -412,7 +412,7 @@ class InstalledJson
                         // Intentionally fall through
                     case 'psr-4':
                         /**
-                         * e.g.
+                         * E.g.
                          * * {"psr-4":{"Psr\\Log\\":"Psr\/Log\/"}}
                          * * {"psr-4":{"":"src\/"}}
                          * * {"psr-4":{"Symfony\\Polyfill\\Mbstring\\":""}}
@@ -618,7 +618,8 @@ class InstalledJson
     }
 
     /**
-     * @param  InstalledJsonArray $installedJsonArray The parsed contents of `composer/installed.json`.
+     * @param InstalledJsonArray $installedJsonArray The parsed contents of `composer/installed.json`.
+     *
      * @return InstalledJsonArray
      */
     private function reindexPackagesList(array $installedJsonArray): array

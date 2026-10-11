@@ -29,7 +29,8 @@ class PadColonColumnsLogProcessor3 implements ProcessorInterface
     protected int $padLength = 0;
 
     /**
-     * @param  LogRecord $record Log record whose message may contain a `:::` column separator.
+     * @param LogRecord $record Log record whose message may contain a `:::` column separator.
+     *
      * @return LogRecord
      */
     public function __invoke(LogRecord $record): LogRecord

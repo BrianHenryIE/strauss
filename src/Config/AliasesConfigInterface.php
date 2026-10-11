@@ -20,13 +20,13 @@ interface AliasesConfigInterface
     /**
      * The directory where the source files are located.
      *
-     * absolute? relative?
+     * Absolute? Relative?
      */
     public function getAbsoluteVendorDirectory(): string;
 
     /**
      * The directory where Strauss copied the files to.
-     * absolute? relative?
+     * Absolute? Relative?
      */
     public function getAbsoluteTargetDirectory(): string;
 

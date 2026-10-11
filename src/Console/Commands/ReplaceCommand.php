@@ -2,7 +2,7 @@
 /**
  * Rename a namespace in files. (in-place renaming)
  *
- * strauss replace --from "YourCompany\\Project" --to "BrianHenryIE\\MyProject" --paths "includes,my-plugin.php"
+ * Usage: `strauss replace --from "YourCompany\\Project" --to "BrianHenryIE\\MyProject" --paths "includes,my-plugin.php"`
  *
  * @package brianhenryie/strauss
  */

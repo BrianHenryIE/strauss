@@ -85,7 +85,7 @@ class StraussConfig implements
     protected ?string $namespacePrefix = null;
 
     /**
-     *
+     * The prefix given to global classes, interfaces and traits, e.g. `My_Project_`.
      */
     protected ?string $classmapPrefix = null;
 
@@ -182,7 +182,7 @@ class StraussConfig implements
     /**
      * An array of autoload keys to replace packages' existing autoload key.
      *
-     * e.g. when
+     * E.g. when
      * * A package has no autoloader
      * * A package specified both a PSR-4 and a classmap but only needs one
      * ...
@@ -582,7 +582,8 @@ class StraussConfig implements
     }
 
     /**
-     * @param  string[]|array{0:bool}|null $updateCallSites Project files/directories to update; `[true]` for the autoload key, `[false]` or empty to disable.
+     * @param string[]|array{0:bool}|null $updateCallSites Project files/directories to update; `[true]` for the autoload key, `[false]` or empty to disable.
+     *
      * @throws InvalidArgumentException
      */
     public function setUpdateCallSites($updateCallSites): void
@@ -895,9 +896,9 @@ class StraussConfig implements
     }
 
     /**
-     * @used-by DependenciesCommand::buildDependencyList()
-     *
      * @param array<string,ComposerPackage> $packagesToCopy Resolved packages to copy, keyed by package name.
+     *
+     * @used-by DependenciesCommand::buildDependencyList()
      */
     public function setPackagesToCopy(array $packagesToCopy): void
     {

@@ -90,7 +90,7 @@ class ChangeEnumerator
                         throw new \Exception(preg_last_error_msg(), preg_last_error());
                     })();
                     $namespaceReplacementPatterns[ "~(" . preg_quote($namespacePrefix, '~') . '\\\\*)*' . preg_quote($strippedSymbol, '~') . '~' ]
-                                    = "{$namespacePrefix}\\{$strippedSymbol}";
+                        = "{$namespacePrefix}\\{$strippedSymbol}";
                     unset($stripPattern, $strippedSymbol);
                 }
 

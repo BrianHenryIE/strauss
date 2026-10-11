@@ -494,8 +494,11 @@ abstract class AbstractRenamespacerCommand extends Command
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 
-    // 5. Update namespaces and class names.
-    // Replace references to updated namespaces and classnames throughout the dependencies.
+    /**
+     * 5. Update namespaces and class names.
+     *
+     * Replace references to updated namespaces and classnames throughout the dependencies.
+     */
     protected function performReplacements(): void
     {
         $this->logger->notice('Performing replacements...');

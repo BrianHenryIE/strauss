@@ -28,7 +28,7 @@ interface LicenserConfigInterface
     /**
      * The directory where the source files are located.
      *
-     * absolute.
+     * Absolute.
      */
     public function getAbsoluteVendorDirectory(): string;
 }

@@ -190,8 +190,8 @@ class FileSymbolScanner
                 $file->setDoPrefix($doPrefix);
             }
 
-            $relativeFilePath =
-                $file instanceof FileWithDependency
+            $relativeFilePath
+                = $file instanceof FileWithDependency
                     ? $file->getVendorRelativePath()
                     : $this->filesystem->getRelativePath($projectDirectory, $file->getSourcePath());
 

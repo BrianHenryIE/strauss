@@ -61,11 +61,11 @@ class ComposerAutoloadGenerator extends AutoloadGenerator
      *
      * `$path` here is `PackageInterface->getTargetDir()`.`PackageInterface::getAutoload()['files'][]`
      *
-     * @override
-     * @see      AutoloadGenerator::getFileIdentifier()
-     *
      * @param PackageInterface $package The package to get the file identifier for.
      * @param string           $path    Relative path from `vendor`.
+     *
+     * @override
+     * @see      AutoloadGenerator::getFileIdentifier()
      *
      * @return string
      */

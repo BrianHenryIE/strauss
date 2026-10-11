@@ -153,9 +153,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         try {
             $this->logger->notice(
-                'Starting... '/**
-                * version
-                */
+                'Starting... '/* version */
             ); // + PHP version
             $startedAt = microtime(true);
 
@@ -479,8 +477,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     protected function performReplacementsInProjectFiles(): void
     {
         // TODO: this doesn't do tests?!
-        $relativeCallSitePaths =
-            $this->config->getUpdateCallSites()
+        $relativeCallSitePaths
+            = $this->config->getUpdateCallSites()
             ?? $this->projectComposerPackage->getFlatAutoloadKey();
 
         if (empty($relativeCallSitePaths)) {

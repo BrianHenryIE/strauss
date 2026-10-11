@@ -278,8 +278,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      * /path/to/this/dir, /path/to/file.php => ../../file.php
      * /path/to/here, /path/to/here/dir/file.php => dir/file.php
      *
-     * @param  string $fromAbsoluteDirectory Absolute directory the result is relative to.
-     * @param  string $toAbsolutePath        Absolute file or directory path to express relatively.
+     * @param string $fromAbsoluteDirectory Absolute directory the result is relative to.
+     * @param string $toAbsolutePath        Absolute file or directory path to express relatively.
+     *
      * @return string
      */
     public function getRelativePath(string $fromAbsoluteDirectory, string $toAbsolutePath): string
@@ -301,8 +302,8 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
             }
         }
 
-        $relativePath =
-            str_repeat('../', count($fromDirectoryParts))
+        $relativePath
+            = str_repeat('../', count($fromDirectoryParts))
             . implode('/', $toPathParts);
 
         return rtrim($relativePath, '\\/');

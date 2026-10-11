@@ -819,10 +819,10 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      * This is the only method in the parent class which uses {@see LocalFilesystemAdapter::$linkHandling} – we don't
      * use that because its results will not include files/directories that are symlinks.
      *
-     * @see LocalFilesystemAdapter::listContents()
-     *
      * @param string $path Directory path relative to the adapter root.
      * @param bool   $deep Recurse into subdirectories.
+     *
+     * @see LocalFilesystemAdapter::listContents()
      *
      * @return iterable
      * @throws FilesystemException

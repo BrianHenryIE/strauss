@@ -76,7 +76,8 @@ class Prefixer
     protected FileSystem $filesystem;
 
     /**
-     * array<$filePath, $package> or null if the file is not from a dependency (i.e. a project file).
+     * Files that were changed: `array<$filePath, $package>`, with a null package if the file is not from a dependency
+     * (i.e. a project file).
      *
      * @var array<string, ?ComposerPackage>
      */

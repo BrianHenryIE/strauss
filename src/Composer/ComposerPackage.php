@@ -40,7 +40,7 @@ class ComposerPackage
     /**
      * The name of the project in composer.json.
      *
-     * e.g. brianhenryie/my-project
+     * E.g. `brianhenryie/my-project`.
      *
      * @var string
      */
@@ -140,9 +140,10 @@ class ComposerPackage
     protected DiscoveredSymbols $discoveredSymbolsDeep;
 
     /**
-     * @param  string                                                                                         $absolutePath     The absolute path to composer.json
-     * @param  ?array{files?:array<string>, classmap?:array<string>, psr?:array<string,string|array<string>>} $overrideAutoload Optional configuration to replace the package's own autoload definition with
-     *                                                                                                                          another which Strauss can use.
+     * @param string                                                                                         $absolutePath     The absolute path to composer.json
+     * @param ?array{files?:array<string>, classmap?:array<string>, psr?:array<string,string|array<string>>} $overrideAutoload Optional configuration to replace the package's own autoload definition with
+     *                                                                                                                         another which Strauss can use.
+     *
      * @return ComposerPackage
      * @throws Exception
      */
@@ -154,8 +155,9 @@ class ComposerPackage
     /**
      * This is used for virtual packages, which don't have a composer.json.
      *
-     * @param  ComposerJsonArray $jsonArray        composer.json decoded to array
-     * @param  ?AutoloadKeyArray $overrideAutoload New autoload rules to replace the existing ones.
+     * @param ComposerJsonArray $jsonArray        composer.json decoded to array
+     * @param ?AutoloadKeyArray $overrideAutoload New autoload rules to replace the existing ones.
+     *
      * @throws Exception
      */
     public static function fromComposerJsonArray(array $jsonArray, ?array $overrideAutoload = null): ComposerPackage
@@ -181,8 +183,9 @@ class ComposerPackage
     /**
      * Create a PHP object to represent a composer package.
      *
-     * @param  PartialComposer   $composer         Composer instance loaded from the package's composer.json.
-     * @param  ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
+     * @param PartialComposer   $composer         Composer instance loaded from the package's composer.json.
+     * @param ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
+     *
      * @throws Exception
      */
     public function __construct(PartialComposer $composer, ?array $overrideAutoload = null)
@@ -245,8 +248,8 @@ class ComposerPackage
 //        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
 //            $this->vendorRelativePath = $output_array[1];
             } elseif (! ( $this instanceof ProjectComposerPackage ) && file_exists($packageAbsoluteDirectoryPath)) {
-                $this->vendorRelativePath  =
-                    implode(
+                $this->vendorRelativePath
+                    = implode(
                         '/',
                         array_slice(
                             explode(
@@ -291,7 +294,7 @@ class ComposerPackage
     /**
      * Composer package project name.
      *
-     * vendor/project-name
+     * E.g. `vendor/project-name`.
      *
      * @return string
      */
@@ -329,7 +332,9 @@ class ComposerPackage
     }
 
     /**
-     * e.g. ['psr-4' => [ 'BrianHenryIE\Project' => 'src' ]]
+     * The package's autoload key from its composer.json.
+     *
+     * E.g. ['psr-4' => [ 'BrianHenryIE\Project' => 'src' ]]
      * e.g. ['psr-4' => [ 'BrianHenryIE\Project' => ['src','lib] ]]
      * e.g. ['classmap' => [ 'src', 'lib' ]]
      * e.g. ['files' => [ 'lib', 'functions.php' ]]

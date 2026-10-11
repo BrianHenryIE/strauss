@@ -128,7 +128,8 @@ class DependenciesEnumerator
     }
 
     /**
-     * @param  string[] $requiredPackageNames Composer package names, e.g. `psr/log`; virtual packages (php, ext-*) are filtered out.
+     * @param string[] $requiredPackageNames Composer package names, e.g. `psr/log`; virtual packages (php, ext-*) are filtered out.
+     *
      * @throws FilesystemException
      * @throws JsonException
      * @throws Exception
