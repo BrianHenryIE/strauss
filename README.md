@@ -1,4 +1,7 @@
-[![PHPUnit ](.github/coverage.svg)](https://brianhenryie.github.io/strauss/) [![PHPStan ](.github/phpstan.svg)](https://phpstan.org/)
+[![PHP 7.4 | 8.x](https://img.shields.io/badge/PHP-7.4%20%7C%208.x-8892BF.svg)]()
+[![PHPUnit ](.github/coverage.svg)](https://brianhenryie.github.io/strauss/) 
+[![PHPCS PEAR](https://img.shields.io/badge/PHPCS-PEAR%7CPSR%2012%20-4e9a06.svg)](https://pear.php.net/manual/en/standards.php)
+[![PHPStan ](.github/phpstan.svg)](https://phpstan.org/)
 
 # Strauss – PHP Namespace Renamer
 
