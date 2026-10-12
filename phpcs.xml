@@ -6,6 +6,7 @@
     <rule ref="PEAR">
         <!-- Don't require such verbose PhpDoc in every file. -->
         <exclude name="Generic.Commenting.DocComment.MissingShort"/>
+        <exclude name="PEAR.Commenting.FunctionComment.Missing"/>
         <exclude name="PEAR.Commenting.FileComment.MissingVersion"/>
         <exclude name="PEAR.Commenting.FileComment.MissingCategoryTag"/>
         <exclude name="PEAR.Commenting.FileComment.MissingAuthorTag"/>
