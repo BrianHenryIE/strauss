@@ -38,9 +38,9 @@ trait FlysystemAdapterBackCompatTrait
          */
         if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'directoryExists')) {
             /**
- * @phpstan-ignore staticMethod.notFound
-*/
-            return parent::directoryExists($path);
+             * @phpstan-ignore staticMethod.notFound
+             */
+            return (bool) parent::directoryExists($path);
         }
 
         return $this->directoryExistsImplementation($path);
@@ -66,8 +66,8 @@ trait FlysystemAdapterBackCompatTrait
 
         $parentDirectoryContents = $this->listContents($parentDir, false);
         /**
- * @var FileAttributes $entry
-*/
+         * @var FileAttributes $entry
+         */
         foreach ($parentDirectoryContents as $entry) {
             if ($entry->path() == $path) {
                 return $entry->isDir();

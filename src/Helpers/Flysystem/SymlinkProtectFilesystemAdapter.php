@@ -824,7 +824,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      *
      * @see LocalFilesystemAdapter::listContents()
      *
-     * @return iterable
+     * @return iterable<FileAttributes>
      * @throws FilesystemException
      */
     public function listContents(string $path, bool $deep): iterable
@@ -837,8 +837,8 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         }
 
         /**
- * @var Generator<SplFileInfo> $iterator
-*/
+         * @var Generator<SplFileInfo> $iterator
+         */
         $iterator = $deep ? $this->parentListDirectoryRecursively($location) : $this->parentListDirectory($location);
 
         foreach ($iterator as $fileInfo) {
@@ -862,7 +862,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             $path = $this->pathPrefixer->stripPrefix($fileInfo->getPathname());
             $lastModified = $fileInfo->getMTime();
             $isDirectory = $fileInfo->isDir();
-            $permissions = octdec(substr(sprintf('%o', $fileInfo->getPerms()), -4));
+            $permissions = (int) octdec(substr(sprintf('%o', $fileInfo->getPerms()), -4));
             $visibility = $isDirectory ? $this->visibility->inverseForDirectory($permissions) : $this->visibility->inverseForFile($permissions);
 
             yield $isDirectory ? new DirectoryAttributes($path, $visibility, $lastModified) : new FileAttributes(
@@ -889,6 +889,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         string $path,
         int $mode = RecursiveIteratorIterator::SELF_FIRST
     ): Generator {
+        $mode = in_array( $mode, [
+            RecursiveIteratorIterator::LEAVES_ONLY,
+            RecursiveIteratorIterator::SELF_FIRST,
+            RecursiveIteratorIterator::CHILD_FIRST,
+            ], true ) ? $mode : RecursiveIteratorIterator::SELF_FIRST;
         yield from new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
             $mode

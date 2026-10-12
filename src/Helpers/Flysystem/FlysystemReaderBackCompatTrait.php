@@ -21,6 +21,8 @@
 
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
+use League\Flysystem\FilesystemException;
+
 /**
  * @mixin FlysystemReaderBackCompatTraitInterface
  *
@@ -33,8 +35,7 @@ trait FlysystemReaderBackCompatTrait
     /**
      * @param string $location File or directory path to check.
      *
-     * @return bool
-     * @throws \League\Flysystem\FilesystemException
+     * @throws FilesystemException
      */
     public function has(string $location): bool
     {
@@ -43,9 +44,9 @@ trait FlysystemReaderBackCompatTrait
          */
         if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'has')) {
             /**
- * @phpstan-ignore staticMethod.notFound
-*/
-            return parent::has($location);
+             * @phpstan-ignore staticMethod.notFound
+             */
+            return (bool) parent::has($location);
         }
 
         // Can we assume ::fileExists and ::directoryExists will ::normalizePath anyway?!
