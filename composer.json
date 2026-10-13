@@ -51,6 +51,10 @@
         },
         "classmap": [
             "tests"
+        ],
+        "exclude-from-classmap": [
+            "tests/Benchmark/",
+            "tests/Issues/data/"
         ]
     },
     "require-dev": {
@@ -58,6 +62,7 @@
         "ext-zip": "*",
         "brianhenryie/color-logger": "*",
         "brianhenryie/phpstan-checkstyle": "^0.1.1",
+        "friendsofphp/php-cs-fixer": "^3.95",
         "mockery/mockery": "^1.6",
         "phpstan/extension-installer": "*",
         "phpstan/phpstan": "^2.2",
