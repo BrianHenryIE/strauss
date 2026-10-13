@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/BrianHenryIE/strauss/issues/19
  */
@@ -13,7 +14,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue19Test extends IntegrationTestCase
 {
-
     /**
      * Need to make the class finder in change enumerator stricter.
      *
@@ -26,19 +26,19 @@ class StraussIssue19Test extends IntegrationTestCase
         $this->markTestIncomplete('I think when the Alias file is being built, this fails because a tcpdf file includes/requires a file that does not exist.');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-issue-19",
-  "require": {
-    "iio/libmergepdf": "^4.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue19\\",
-      "classmap_prefix": "Strauss_Issue19_"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-issue-19",
+              "require": {
+                "iio/libmergepdf": "^4.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue19\\",
+                  "classmap_prefix": "Strauss_Issue19_"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

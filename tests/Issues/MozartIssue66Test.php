@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Packages with files autoloaders do not autoload those files
  * @see https://github.com/coenjacobs/mozart/issues/66
@@ -17,7 +18,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue66Test extends IntegrationTestCase
 {
-
     /**
      *
      * php-di's composer.json's autoload key:
@@ -38,30 +38,30 @@ class MozartIssue66Test extends IntegrationTestCase
          *
          * @see https://github.com/PHP-DI/PHP-DI/blob/6.4/src/Compiler/Template.php
          */
-//        $this->expectWarningLogs();
+        //        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "markjaquith/mozart-bug-example",
-  "require": {
-    "php-di/php-di": "^6.0"
-  },
-  "extra": {
-    "mozart": {
-        "dep_namespace": "MarkJaquith\\",
-        "dep_directory": "/strauss/",
-        "delete_vendor_files": false
-    }
-  },
-  "autoload": {
-    "psr-4": {
-        "MarkJaquith\\MozartFileAutoloaderBug\\Mozart\\": "lib/Mozart/",
-        "MarkJaquith\\MozartFileAutoloaderBug\\": "app/"
-    }
-  }
-}
+            {
+              "name": "markjaquith/mozart-bug-example",
+              "require": {
+                "php-di/php-di": "^6.0"
+              },
+              "extra": {
+                "mozart": {
+                    "dep_namespace": "MarkJaquith\\",
+                    "dep_directory": "/strauss/",
+                    "delete_vendor_files": false
+                }
+              },
+              "autoload": {
+                "psr-4": {
+                    "MarkJaquith\\MozartFileAutoloaderBug\\Mozart\\": "lib/Mozart/",
+                    "MarkJaquith\\MozartFileAutoloaderBug\\": "app/"
+                }
+              }
+            }
 
-EOD;
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Undefined offset: 1
  *
@@ -22,18 +23,18 @@ class StraussIssue91Test extends IntegrationTestCase
         }
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "pr/91",
-  "require": {
-    "phpoffice/phpspreadsheet": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "pr/91",
+              "require": {
+                "phpoffice/phpspreadsheet": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

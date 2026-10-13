@@ -344,8 +344,8 @@ class SymbolIndexTest extends TestCase
     public function test_get_quoted_names(): void
     {
         $text = <<<'EOD'
- 'Acme\\Lib\\Widget::$instance' "\\Acme\Lib\\" 'GlobalThing' "Acme\Lib\$class" 'two words' unquoted\Name
-EOD;
+             'Acme\\Lib\\Widget::$instance' "\\Acme\Lib\\" 'GlobalThing' "Acme\Lib\$class" 'two words' unquoted\Name
+            EOD;
 
         self::assertSame(
             ['Acme\Lib\Widget', 'Acme\Lib', 'GlobalThing', 'two'],
@@ -375,10 +375,10 @@ EOD;
     public function test_get_qualified_name_candidates_in_a_comment(): void
     {
         $text = <<<'EOD'
-/**
- * @param \Acme\Widget|null $widget See `Acme\\Widget` and helper().
- */
-EOD;
+            /**
+             * @param \Acme\Widget|null $widget See `Acme\\Widget` and helper().
+             */
+            EOD;
 
         $candidates = SymbolIndex::getQualifiedNameCandidates($text);
 

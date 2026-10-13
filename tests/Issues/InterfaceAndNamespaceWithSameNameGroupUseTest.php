@@ -1,4 +1,5 @@
 <?php
+
 /**
  * "multiple symbols with the same name" when a package has an interface and a namespace with the same FQDN,
  * and a file imports from that namespace with a grouped `use` statement.
@@ -28,72 +29,72 @@ class InterfaceAndNamespaceWithSameNameGroupUseTest extends IntegrationTestCase
     public function test_group_use_prefix_matching_interface_name_does_not_throw(): void
     {
         $dependencyComposerJsonString = <<<'EOD'
-{
-  "name": "acme/same-name",
-  "autoload": {
-    "psr-4": {
-      "Acme\\SameName\\": "src/"
-    }
-  }
-}
-EOD;
+            {
+              "name": "acme/same-name",
+              "autoload": {
+                "psr-4": {
+                  "Acme\\SameName\\": "src/"
+                }
+              }
+            }
+            EOD;
 
         $interfaceWithSameNameAsNamespacePhpString = <<<'EOD'
-<?php
-namespace Acme\SameName;
+            <?php
+            namespace Acme\SameName;
 
-interface Widget {}
-EOD;
+            interface Widget {}
+            EOD;
 
         $classInNamespaceWithSameNameAsInterfacePhpString = <<<'EOD'
-<?php
-namespace Acme\SameName\Widget;
+            <?php
+            namespace Acme\SameName\Widget;
 
-use Acme\SameName\Widget;
+            use Acme\SameName\Widget;
 
-class WidgetImplementation implements Widget {}
-EOD;
+            class WidgetImplementation implements Widget {}
+            EOD;
 
         $traitUsingGroupUseStatementPhpString = <<<'EOD'
-<?php
-namespace Acme\SameName\Consumers;
+            <?php
+            namespace Acme\SameName\Consumers;
 
-use Acme\SameName\Widget;
-use Acme\SameName\Widget\{WidgetImplementation};
+            use Acme\SameName\Widget;
+            use Acme\SameName\Widget\{WidgetImplementation};
 
-trait WidgetFactoryTrait
-{
-    protected function createWidget(): Widget
-    {
-        return new WidgetImplementation();
-    }
-}
-EOD;
+            trait WidgetFactoryTrait
+            {
+                protected function createWidget(): Widget
+                {
+                    return new WidgetImplementation();
+                }
+            }
+            EOD;
 
         $mainComposerJsonString = <<<'EOD'
-{
-  "name": "strauss/interface-and-namespace-with-same-name",
-  "minimum-stability": "dev",
-  "repositories": {
-    "acme/same-name": {
-      "url": "../dependency",
-      "type": "path",
-      "options": {
-        "symlink": false
-      }
-    }
-  },
-  "require": {
-    "acme/same-name": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Repro\\Vendor\\",
-      "classmap_prefix": "Repro_Vendor_"
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/interface-and-namespace-with-same-name",
+              "minimum-stability": "dev",
+              "repositories": {
+                "acme/same-name": {
+                  "url": "../dependency",
+                  "type": "path",
+                  "options": {
+                    "symlink": false
+                  }
+                }
+              },
+              "require": {
+                "acme/same-name": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Repro\\Vendor\\",
+                  "classmap_prefix": "Repro_Vendor_"
+                }
+              }
+            }
+            EOD;
 
         $dependencyDir = $this->testsWorkingDir . '/dependency';
         mkdir($dependencyDir);

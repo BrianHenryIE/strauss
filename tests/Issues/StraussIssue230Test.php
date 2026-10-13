@@ -1,4 +1,5 @@
 <?php
+
 /**
  *  willdurand/geocoder:4.6.0
  *
@@ -17,23 +18,22 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue230Test extends IntegrationTestCase
 {
-
     public function test_return_type_prefixed_with_namespace(): void
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue230",
-  "require": {
-    "willdurand/geocoder":"4.6.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue230",
+              "require": {
+                "willdurand/geocoder":"4.6.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

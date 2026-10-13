@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed to determine the replacement name for each discovered symbol: the namespace, classmap,
  * function and constant prefixes, plus any explicit namespace replacement patterns.

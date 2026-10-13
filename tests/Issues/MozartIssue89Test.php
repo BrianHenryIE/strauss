@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/coenjacobs/mozart/issues/89
  */
@@ -17,7 +18,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class MozartIssue89Test extends IntegrationTestCase
 {
-
     /**
      * If a file is specified more than once in an autoloader, e.g. is explicitly listed and is also in a folder listed,
      * a "File already exists at path" error occurs.
@@ -58,19 +58,19 @@ class MozartIssue89Test extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionAbove('7.4');
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-89",
-	"require": {
-		"iio/libmergepdf": "4.0"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M89\\",
-			"classmap_prefix": "BrianHenryIE_M89_"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-89",
+            	"require": {
+            		"iio/libmergepdf": "4.0"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M89\\",
+            			"classmap_prefix": "BrianHenryIE_M89_"
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

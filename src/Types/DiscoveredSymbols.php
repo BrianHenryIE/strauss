@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The collection of symbols discovered in the scanned files and autoload configuration, which the pipeline
  * filters to decide what to rename and to generate aliases and autoloaders.
@@ -134,7 +135,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 */
         $found = array_reduce(
             $this->types,
-            fn (array $carry, array $symbol) => isset($symbol[$fqdnName]) ? array_merge($carry, [$symbol[$fqdnName]]) : $carry,
+            fn(array $carry, array $symbol) => isset($symbol[$fqdnName]) ? array_merge($carry, [$symbol[$fqdnName]]) : $carry,
             []
         );
 
@@ -144,7 +145,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
         if (count($found) > 1) {
             $names = array_map(
-                fn (DiscoveredSymbol $symbol):string => $symbol->getOriginalLocalName(),
+                fn(DiscoveredSymbol $symbol): string => $symbol->getOriginalLocalName(),
                 $found
             );
             // E.g. an interface and class have the same name.

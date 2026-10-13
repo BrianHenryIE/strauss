@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Prefix own classes
  *
@@ -25,7 +26,7 @@ class StraussIssue146Test extends IntegrationTestCase
     {
         $path = str_replace('//', '/', $path);
         $newPath = str_replace('/strauss-0.24.1', '', $path);
-        foreach (glob($path.'/*') as $file) {
+        foreach (glob($path . '/*') as $file) {
             if (is_dir($file)) {
                 $newDir = str_replace('/strauss-0.24.1', '', $file);
                 if (!is_dir($newDir)) {
@@ -49,9 +50,9 @@ class StraussIssue146Test extends IntegrationTestCase
             if (!is_dir($destination)) {
                 mkdir($destination);
             }
-            foreach (glob($source.'/*') as $file) {
+            foreach (glob($source . '/*') as $file) {
                 $subDirPath = str_replace($source, '', $file);
-                $tar = $destination.$subDirPath;
+                $tar = $destination . $subDirPath;
                 $this->copyRecursive($file, $tar);
             }
             return;
@@ -76,8 +77,8 @@ class StraussIssue146Test extends IntegrationTestCase
         ];
 
         foreach ($filesToInclude as $fileName) {
-            $source = $projectDir .'/'.$fileName;
-            $destination = $buildDir .'/'. $fileName;
+            $source = $projectDir . '/' . $fileName;
+            $destination = $buildDir . '/' . $fileName;
             $this->copyRecursive($source, $destination);
         }
 
@@ -88,10 +89,10 @@ class StraussIssue146Test extends IntegrationTestCase
         $composerJsonArray['extra']['strauss'] = [
             "update_call_sites" => true,
         ];
-//        $composerJsonArray['require'] = [
-//            "composer-runtime-api" => "^2.0",
-//            "composer/composer" => "*",
-//        ];
+        //        $composerJsonArray['require'] = [
+        //            "composer-runtime-api" => "^2.0",
+        //            "composer/composer" => "*",
+        //        ];
         $composerJsonArray['extra']['strauss']['target_directory'] = "vendor";
         $composerJsonArray['extra']['strauss']['namespace_prefix'] = "BrianHenryIE\\TestStrauss\\";
         file_put_contents($this->testsWorkingDir . '/composer.json', json_encode($composerJsonArray, JSON_PRETTY_PRINT));
@@ -108,7 +109,7 @@ class StraussIssue146Test extends IntegrationTestCase
          * @see AutoloadGenerator::getStaticFile()
          * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
          */
-        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
+        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
         $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
         $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
 
@@ -117,7 +118,7 @@ class StraussIssue146Test extends IntegrationTestCase
          *
          * `self::$loader = $loader = new \Composer\Autoload\ClassLoader(\dirname(__DIR__));`.
          */
-        $autoloadRealPhpString = file_get_contents($this->testsWorkingDir .'/vendor/composer/autoload_real.php');
+        $autoloadRealPhpString = file_get_contents($this->testsWorkingDir . '/vendor/composer/autoload_real.php');
         $this->assertStringNotContainsString('new \\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString);
         $this->assertStringContainsString('new \\BrianHenryIE\\TestStrauss\\Composer\\Autoload\\ClassLoader', $autoloadRealPhpString, 'Class name not properly prefixed.');
 
@@ -126,7 +127,7 @@ class StraussIssue146Test extends IntegrationTestCase
          *
          * `'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',`.
          */
-        $autoloadStaticPhpString = file_get_contents($this->testsWorkingDir .'/vendor/composer/autoload_static.php');
+        $autoloadStaticPhpString = file_get_contents($this->testsWorkingDir . '/vendor/composer/autoload_static.php');
         $this->assertStringNotContainsString('\'Composer\\\\InstalledVersions\'', $autoloadStaticPhpString);
         $this->assertStringContainsString('\'BrianHenryIE\\\\TestStrauss\\\\Composer\\\\InstalledVersions\'', $autoloadStaticPhpString, 'InstalledVersions not prefixed in autoload_static.');
 
@@ -139,11 +140,11 @@ class StraussIssue146Test extends IntegrationTestCase
             "File should no longer exist at original: " . $originalFilePath
         );
         // TODO: works locally.
-//        $expectedFilePath = '/vendor/pimple/pimple/src/BrianHenryIE/TestStrauss/Pimple/Container.php';
-//        $this->assertTrue(
-//            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
-//            "Expected file not found at: " . $expectedFilePath
-//        );
+        //        $expectedFilePath = '/vendor/pimple/pimple/src/BrianHenryIE/TestStrauss/Pimple/Container.php';
+        //        $this->assertTrue(
+        //            $this->getFileSystem()->fileExists($this->testsWorkingDir . $expectedFilePath),
+        //            "Expected file not found at: " . $expectedFilePath
+        //        );
 
         /**
          * Return type was being treated as a namespace and prefixed.
@@ -153,7 +154,7 @@ class StraussIssue146Test extends IntegrationTestCase
          *
          * `public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\Strauss\Vendor\Composer`;
          */
-        $php_string = file_get_contents($this->testsWorkingDir .         '/vendor/composer/composer/src/Composer/Factory.php');
+        $php_string = file_get_contents($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Factory.php');
         $this->assertStringNotContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\\S146\\Vendor\\Composer', $php_string);
         $this->assertStringContainsString('public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer', $php_string);
 
@@ -198,8 +199,8 @@ class StraussIssue146Test extends IntegrationTestCase
         ];
 
         foreach ($filesToInclude as $fileName) {
-            $source = $projectDir .'/'.$fileName;
-            $destination = $buildDir .'/'. $fileName;
+            $source = $projectDir . '/' . $fileName;
+            $destination = $buildDir . '/' . $fileName;
             $this->copyRecursive($source, $destination);
         }
 
@@ -235,15 +236,15 @@ class StraussIssue146Test extends IntegrationTestCase
 
         $client->request('GET', $repoUrl, ['sink' => $saveTo]);
 
-        $zip = new ZipArchive;
+        $zip = new ZipArchive();
         $zip->open($saveTo);
         $zip->extractTo($this->testsWorkingDir);
         $zip->close();
 
         unlink($saveTo);
 
-        $this->moveFiles($this->testsWorkingDir.'/strauss-0.25.0');
-        rmdir($this->testsWorkingDir.'/strauss-0.25.0');
+        $this->moveFiles($this->testsWorkingDir . '/strauss-0.25.0');
+        rmdir($this->testsWorkingDir . '/strauss-0.25.0');
 
         chdir($this->testsWorkingDir);
 

@@ -21,7 +21,6 @@ use Psr\Log\NullLogger;
  */
 class AliasesTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -80,18 +79,18 @@ class AliasesTest extends TestCase
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-'Foo\\Bar\\Baz' =>
-	array (
-		'type' => 'class',
-		'classname' => 'Baz',
-		'isabstract' => false,
-		'namespace' => 'Foo\\Bar',
-		'extends' => 'Baz\\Foo\\Bar\\Baz',
-		'implements' =>
-			array (
-			),
-),
-EOD;
+            'Foo\\Bar\\Baz' =>
+            	array (
+            		'type' => 'class',
+            		'classname' => 'Baz',
+            		'isabstract' => false,
+            		'namespace' => 'Foo\\Bar',
+            		'extends' => 'Baz\\Foo\\Bar\\Baz',
+            		'implements' =>
+            			array (
+            			),
+            ),
+            EOD;
 
         $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -141,12 +140,12 @@ EOD;
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-if(!function_exists('\\foo')){
-    function foo(...$args) {
-      return \bar_foo(...func_get_args());
-    }
-}
-EOD;
+            if(!function_exists('\\foo')){
+                function foo(...$args) {
+                  return \bar_foo(...func_get_args());
+                }
+            }
+            EOD;
         $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
 
@@ -192,17 +191,17 @@ EOD;
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-'Foo\\Bar\\Baz' =>
-	array (
-		'type' => 'interface',
-		'interfacename' => 'Baz',
-		'namespace' => 'Foo\\Bar',
-		'extends' =>
-		array (
-			0 => 'Baz\\Foo\\Bar\\Baz',
-			),
-),
-EOD;
+            'Foo\\Bar\\Baz' =>
+            	array (
+            		'type' => 'interface',
+            		'interfacename' => 'Baz',
+            		'namespace' => 'Foo\\Bar',
+            		'extends' =>
+            		array (
+            			0 => 'Baz\\Foo\\Bar\\Baz',
+            			),
+            ),
+            EOD;
 
         $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
@@ -258,19 +257,19 @@ EOD;
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-namespace Bar {
-	if(!function_exists('\\Bar\\baz')){
-		function baz(...$args) {
-			return \Foo\Bar\baz(...func_get_args());
-		}
-	}
-	if(!function_exists('\\Bar\\foobar')){
-		function foobar(...$args) {
-			return \Foo\Bar\foobar(...func_get_args());
-		}
-	}
-}
-EOD;
+            namespace Bar {
+            	if(!function_exists('\\Bar\\baz')){
+            		function baz(...$args) {
+            			return \Foo\Bar\baz(...func_get_args());
+            		}
+            	}
+            	if(!function_exists('\\Bar\\foobar')){
+            		function foobar(...$args) {
+            			return \Foo\Bar\foobar(...func_get_args());
+            		}
+            	}
+            }
+            EOD;
         $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
     }
 
@@ -318,14 +317,14 @@ EOD;
         $result = $fileSystem->read('vendor/composer/autoload_aliases.php');
 
         $expected = <<<'EOD'
-'Foo\\Bar\\Status' =>
-	array (
-		'type' => 'enum',
-		'enumname' => 'Status',
-		'namespace' => 'Foo\\Bar',
-		'concrete' => 'Baz\\Foo\\Bar\\Status',
-),
-EOD;
+            'Foo\\Bar\\Status' =>
+            	array (
+            		'type' => 'enum',
+            		'enumname' => 'Status',
+            		'namespace' => 'Foo\\Bar',
+            		'concrete' => 'Baz\\Foo\\Bar\\Status',
+            ),
+            EOD;
 
         $this->assertStringContainsStringRemoveBlankLinesLeadingWhitespace($expected, $result);
 

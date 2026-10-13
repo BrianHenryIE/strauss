@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Factory for the Monolog processor which rewrites absolute file paths in log context to be project-relative.
  *
@@ -17,7 +18,6 @@ use Monolog\Processor\ProcessorInterface;
  */
 class RelativeFilepathLogProcessor
 {
-
     public static function make(FileSystem $fileSystem): ProcessorInterface
     {
         /**

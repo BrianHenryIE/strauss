@@ -1,4 +1,5 @@
 <?php
+
 /**
  * When replacements are made in-situ in the vendor directory, add aliases for the original class fqdns so
  * dev dependencies can still be used.
@@ -63,9 +64,9 @@ class Aliases
 
         $globalFunctionsString = !$autoloadAliasesFunctionsString ? ''
                 : <<<GLOBAL
-                // Functions and constants
-                $autoloadAliasesFunctionsString
-                GLOBAL;
+                    // Functions and constants
+                    $autoloadAliasesFunctionsString
+                    GLOBAL;
 
         $template = file_get_contents(__DIR__ . '/autoload_aliases.template.php');
 
@@ -212,10 +213,10 @@ class Aliases
                         // Does it matter since all references to use the constant should have been updated to the new name anyway.
                         // TODO: global `const`.
                         $aliasesPhpString = <<<EOD
-        if(!defined('$originalLocalSymbol') && defined('$replacementSymbol')) {
-            define('$originalLocalSymbol', $replacementSymbol);
-        }
-        EOD;
+                            if(!defined('$originalLocalSymbol') && defined('$replacementSymbol')) {
+                                define('$originalLocalSymbol', $replacementSymbol);
+                            }
+                            EOD;
                         break;
                     default:
                         /**
@@ -302,11 +303,11 @@ class Aliases
                                          })();
 
         return <<<EOD
-                    if(!function_exists('$namespacedOriginalFunction')){
-                        function $localOriginalFunction(...\$args) {
-                            return $namespacedReplacementFunction(...func_get_args());
-                        }
+                if(!function_exists('$namespacedOriginalFunction')){
+                    function $localOriginalFunction(...\$args) {
+                        return $namespacedReplacementFunction(...func_get_args());
                     }
-                EOD . PHP_EOL;
+                }
+            EOD . PHP_EOL;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * When using Strauss to process the DomPDF package, not all files are being copied over.
  * Specifically, the VERSION file is missing, causing DomPDF to fail.
@@ -24,27 +25,27 @@ class StraussIssue215Test extends IntegrationTestCase
         $this->markTestSkippedLocally();
 
         $packageComposerJson = <<<'EOD'
-{
-	"name": "test/package-with-version-file",
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "WebAppCore\\",
-            "classmap_prefix": "WebAppCore_",
-            "constant_prefix": "WEB_APP_CORE_",
-            "exclude_from_copy": {
-				"packages": [
-			        "masterminds/html5",
-                    "dompdf/php-font-lib",
-		            "dompdf/php-svg-lib"
-	            ]
-			}
-        }
-    },
-    "require": {
-        "dompdf/dompdf": "^3.1"
-    }
-}
-EOD;
+            {
+            	"name": "test/package-with-version-file",
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "WebAppCore\\",
+                        "classmap_prefix": "WebAppCore_",
+                        "constant_prefix": "WEB_APP_CORE_",
+                        "exclude_from_copy": {
+            				"packages": [
+            			        "masterminds/html5",
+                                "dompdf/php-font-lib",
+            		            "dompdf/php-svg-lib"
+            	            ]
+            			}
+                    }
+                },
+                "require": {
+                    "dompdf/dompdf": "^3.1"
+                }
+            }
+            EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);

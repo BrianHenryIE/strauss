@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed when applying the planned prefixes to file contents.
  *

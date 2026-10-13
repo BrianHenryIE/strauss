@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Regenerates the autoloader in the target directory, without copying or prefixing any files again.
  *

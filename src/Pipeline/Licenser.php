@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copies license files from original folders.
  * Edits Phpdoc to record the file was changed.
@@ -57,7 +58,7 @@ class Licenser
      *
      * @var string[]
      */
-    protected array $discoveredLicenseFiles = array();
+    protected array $discoveredLicenseFiles = [];
 
     protected FileSystem $filesystem;
 
@@ -168,14 +169,14 @@ class Licenser
                 $this->logger->debug(
                     'Dependency {dependency} had no package path?',
                     [
-                    'dependency' => $dependency->getPackageName()
+                        'dependency' => $dependency->getPackageName(),
                     ]
                 );
                 continue;
             }
 
             $files = $this->filesystem->listContents($packagePath, true)
-                ->filter(fn (StorageAttributes $attributes) => $attributes->isFile());
+                ->filter(fn(StorageAttributes $attributes) => $attributes->isFile());
             /**
  * @var FileAttributes $file
 */
@@ -222,7 +223,7 @@ class Licenser
                 continue;
             }
 
-            $filepath = $this->config->getAbsoluteTargetDirectory() . '/'.$relativeFilePath;
+            $filepath = $this->config->getAbsoluteTargetDirectory() . '/' . $relativeFilePath;
 
             if (!$this->filesystem->fileExists($filepath)) {
                 continue;
@@ -241,7 +242,7 @@ class Licenser
                 $this->logger->info(
                     "Adding change declaration to {filepath}",
                     [
-                    'filepath' => $filepath
+                        'filepath' => $filepath,
                     ]
                 );
                 $this->filesystem->write($filepath, $updatedContents);
@@ -277,7 +278,7 @@ class Licenser
         string $modifiedDate,
         string $packageName,
         string $packageLicense
-    ) : string {
+    ): string {
 
         $author = $this->author;
 
@@ -339,7 +340,7 @@ class Licenser
             // Find the line prefix and use it, i.e. could be none, asterisk or space-asterisk.
             $commentLines = explode("\n", $matches[2]);
 
-            if (isset($commentLines[1])&& 1 === preg_match('/^([\s\\\*]*)/', $commentLines[1], $output_array)) {
+            if (isset($commentLines[1]) && 1 === preg_match('/^([\s\\\*]*)/', $commentLines[1], $output_array)) {
                 $lineStart = $output_array[1];
             } else {
                 $lineStart = ' * ';
@@ -354,7 +355,7 @@ class Licenser
 
             $appendString .= "{$lineStart}{$modifiedDeclaration}\n";
 
-            $commentEnd =  rtrim(rtrim($lineStart, ' '), '*').'*/';
+            $commentEnd =  rtrim(rtrim($lineStart, ' '), '*') . '*/';
 
             return $matches[1] . $matches[2] . $appendString . $commentEnd;
         };
@@ -362,7 +363,7 @@ class Licenser
         // If it's a simple case where there is no existing header, add the existing license.
         if (1 === preg_match($noCommentBetweenPhpOpenAndFirstCodePattern, $phpString)) {
             $modifiedComment = "/**\n * {$licenseDeclaration}\n *\n * {$modifiedDeclaration}\n */";
-            $updatedPhpString = preg_replace('~<\?php~', "<?php\n". $modifiedComment, $phpString, 1);
+            $updatedPhpString = preg_replace('~<\?php~', "<?php\n" . $modifiedComment, $phpString, 1);
         } else {
             $updatedPhpString = preg_replace_callback(
                 $multilineCommentCapturePattern,

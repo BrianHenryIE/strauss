@@ -1,4 +1,5 @@
 <?php
+
 /**
  * TODO: update issue number
  *
@@ -21,24 +22,24 @@ class ReplaceCommandIntegrationTest extends IntegrationTestCase
     public function test_rename_namespace(): void
     {
         $myPluginPhpString = <<<'EOD'
-<?php
-/**
- * Plugin Name: My Plugin
- */
+            <?php
+            /**
+             * Plugin Name: My Plugin
+             */
 
-namespace YourPlugin;
+            namespace YourPlugin;
 
-YourPluginClass::init();
-EOD;
+            YourPluginClass::init();
+            EOD;
 
         $myPluginClassPhpString = <<<'EOD'
-<?php
-namespace YourPlugin;
+            <?php
+            namespace YourPlugin;
 
-class YourPluginClass {
-	public static function init() {}
-}
-EOD;
+            class YourPluginClass {
+            	public static function init() {}
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -50,7 +51,7 @@ EOD;
             $this->projectDir . '/bin/strauss',
             'replace',
             '--from','YourPlugin',
-            '--to','BrianHenryIE\\MyPlugin'
+            '--to','BrianHenryIE\\MyPlugin',
         ];
 
         $version = '0.19.1';

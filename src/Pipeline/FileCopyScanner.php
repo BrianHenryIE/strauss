@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Loop over the discovered files and mark the file to be copied or not.
  *
@@ -73,7 +74,7 @@ class FileCopyScanner
                     $this->logger->debug(
                         "File {sourcePath} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.",
                         [
-                        'sourcePath' => $file->getSourcePath(),
+                            'sourcePath' => $file->getSourcePath(),
                         ]
                     );
                 }
@@ -87,17 +88,17 @@ class FileCopyScanner
                 $copy = false;
             }
 
-//            if ($copy) {
-//                $this->logger->debug("Marking file {relativeFilePath} to be copied.", [
-//                    'relativeFilePath' => $this->filesystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $file->getSourcePath()),
-//                ]);
-//            }
+            //            if ($copy) {
+            //                $this->logger->debug("Marking file {relativeFilePath} to be copied.", [
+            //                    'relativeFilePath' => $this->filesystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $file->getSourcePath()),
+            //                ]);
+            //            }
 
             $file->setDoCopy($copy);
 
             if ($copy) {
                 $target = $file instanceof FileWithDependency
-                    ?  $this->config->getAbsoluteTargetDirectory() . '/' . $file->getDependency()->getRelativePath() . '/'. $file->getPackageRelativePath()
+                    ? $this->config->getAbsoluteTargetDirectory() . '/' . $file->getDependency()->getRelativePath() . '/' . $file->getPackageRelativePath()
                     : $file->getSourcePath();
                 $file->setTargetAbsolutePath(FileSystem::normalizeDirSeparator($target));
             }
@@ -109,15 +110,15 @@ class FileCopyScanner
             if (!$file->isDoCopy() && !$this->config->isTargetDirectoryVendor()) {
                 $file->setDoPrefix(false);
             }
-//            // If the file is marked not to copy, mark the symbol not to be renamed
-//            if (!$copy && !$this->config->isTargetDirectoryVendor()) {
-//                foreach ($file->getDiscoveredSymbols() as $symbol) {
-//                    // Only make this change if the symbol is only in one file (i.e. namespaces will be in many).
-//                    if (count($symbol->getSourceFiles()) === 1) {
-//                        $symbol->setDoRename(false);
-//                    }
-//                }
-//            }
+            //            // If the file is marked not to copy, mark the symbol not to be renamed
+            //            if (!$copy && !$this->config->isTargetDirectoryVendor()) {
+            //                foreach ($file->getDiscoveredSymbols() as $symbol) {
+            //                    // Only make this change if the symbol is only in one file (i.e. namespaces will be in many).
+            //                    if (count($symbol->getSourceFiles()) === 1) {
+            //                        $symbol->setDoRename(false);
+            //                    }
+            //                }
+            //            }
             // To make step-debugging easier.
             unset($copy, $target, $shouldDelete);
         };
@@ -165,7 +166,7 @@ class FileCopyScanner
                 $this->logger->debug(
                     "File {sourcePath} will not be copied because namespace {$excludedNamespaceString} is excluded from copy.",
                     [
-                    'sourcePath' => $file->getSourcePath(),
+                        'sourcePath' => $file->getSourcePath(),
                     ]
                 );
                 return true;
@@ -192,7 +193,7 @@ class FileCopyScanner
                 $this->logger->debug(
                     "File {path} will not be copied because it matches pattern {$pattern}.",
                     [
-                    'path' => $path
+                        'path' => $path,
                     ]
                 );
                 return true;

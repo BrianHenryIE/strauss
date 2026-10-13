@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Build a list of ComposerPackage objects for all dependencies.
  *
@@ -40,9 +41,9 @@ class DependenciesEnumerator
     /**
      * @var string[]
      */
-    protected array $virtualPackages = array(
-        'php-http/client-implementation'
-    );
+    protected array $virtualPackages = [
+        'php-http/client-implementation',
+    ];
 
     /**
      * @var array<string,ComposerPackage>
@@ -61,7 +62,7 @@ class DependenciesEnumerator
     /**
      * @var array{}|array<string, AutoloadKeyArray> $overrideAutoload
      */
-    protected array $overrideAutoload = array();
+    protected array $overrideAutoload = [];
     protected StraussConfig $config;
 
     /**
@@ -136,7 +137,7 @@ class DependenciesEnumerator
      */
     protected function recursiveGetAllDependencies(array $requiredPackageNames): void
     {
-        $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
+        $requiredPackageNames = array_filter($requiredPackageNames, [ $this, 'removeVirtualPackagesFilter' ]);
 
         $installedJsonPath = $this->filesystem->makeAbsolute(
             sprintf(
@@ -181,7 +182,7 @@ class DependenciesEnumerator
                 $this->logger->debug(
                     'Loading ComposerPackage::fromFile {packageComposerFilePath}',
                     [
-                    'packageComposerFilePath' => $packageComposerFile,
+                        'packageComposerFilePath' => $packageComposerFile,
                     ]
                 );
 
@@ -252,7 +253,7 @@ class DependenciesEnumerator
                 $this->logger->info(
                     'Found {requiredPackageName} in composer.lock.',
                     [
-                    'requiredPackageName' => $requiredPackageName,
+                        'requiredPackageName' => $requiredPackageName,
                     ]
                 );
 
@@ -281,7 +282,7 @@ class DependenciesEnumerator
                 $packageRealPath = $this->filesystem->normalizePath(
                     Platform::realpath(
                         $this->filesystem->makeAbsolute(
-                            $this->config->getProjectAbsolutePath() . '/'.  $path
+                            $this->config->getProjectAbsolutePath() . '/' . $path
                         )
                     )
                 );
@@ -336,7 +337,7 @@ class DependenciesEnumerator
      */
     public function getAllFilesAutoloaders(): array
     {
-        $filesAutoloaders = array();
+        $filesAutoloaders = [];
         foreach ($this->flatDependencyArray as $packageName => $composerPackage) {
             if (isset($composerPackage->getAutoload()['files'])) {
                 $filesAutoloaders[$packageName] = $composerPackage->getAutoload()['files'];

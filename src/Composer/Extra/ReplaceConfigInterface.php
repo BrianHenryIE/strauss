@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed by the `replace` command, which renames a namespace in place in the project's own files
  * rather than copying and prefixing vendor packages.
@@ -29,7 +30,6 @@ interface ReplaceConfigInterface extends
     PrefixerConfigInterface,
     LicenserConfigInterface
 {
-
     /**
      * @return string[]
      */

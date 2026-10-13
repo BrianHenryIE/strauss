@@ -21,25 +21,24 @@ use stdClass;
  */
 class CopierIntegrationTest extends IntegrationTestCase
 {
-
     public function testPrepareTarget(): void
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_files": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_files": false
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -95,25 +94,25 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/copierintegrationtest",
-  "require": {
-    "google/apiclient": "v2.16.1"
-  },
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_files": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/copierintegrationtest",
+              "require": {
+                "google/apiclient": "v2.16.1"
+              },
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_files": false
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -169,10 +168,10 @@ EOD;
         $mozartConfig = new stdClass();
         $mozartConfig->dep_directory = "/dep_directory/";
         $mozartConfig->classmap_directory = "/classmap_directory/";
-        $mozartConfig->packages = array(
+        $mozartConfig->packages = [
             "pimple/pimple",
-            "ezyang/htmlpurifier"
-        );
+            "ezyang/htmlpurifier",
+        ];
 
         $pimpleAutoload = new stdClass();
         $pimpleAutoload->{'psr-0'} = new stdClass();
@@ -182,7 +181,7 @@ EOD;
         $htmlpurifierAutoload->classmap = new stdClass();
         $htmlpurifierAutoload->classmap->Pimple = "library/";
 
-        $mozartConfig->override_autoload = array();
+        $mozartConfig->override_autoload = [];
         $mozartConfig->override_autoload["pimple/pimple"] = $pimpleAutoload;
         $mozartConfig->override_autoload["ezyang/htmlpurifier"] = $htmlpurifierAutoload;
 
@@ -212,7 +211,7 @@ EOD;
         assert(! file_exists($this->testsWorkingDir . $this->config->gett()), "{$this->testsWorkingDir}{$this->config->getDepDirectory()} already exists");
         assert(! file_exists($this->testsWorkingDir . $this->config->getClassmapDirectory()));
 
-        $packages = array();
+        $packages = [];
 
         $mover->deleteTargetDirs($packages);
 
@@ -245,7 +244,7 @@ EOD;
         self::assertDirectoryExists($this->testsWorkingDir . $this->config->getDepDirectory());
         self::assertDirectoryExists($this->testsWorkingDir . $this->config->getClassmapDirectory());
 
-        $packages = array();
+        $packages = [];
 
         ob_start();
 
@@ -276,9 +275,9 @@ EOD;
         @mkdir($this->testsWorkingDir . $this->config->getDepDirectory() . 'Pimple');
         @mkdir($this->testsWorkingDir . $this->config->getClassmapDirectory() . 'ezyang');
 
-        $packages = array();
+        $packages = [];
         foreach ($this->config->getPackages() as $packageString) {
-            $testDummyComposerDir = $this->testsWorkingDir  . '/vendor/' . $packageString;
+            $testDummyComposerDir = $this->testsWorkingDir . '/vendor/' . $packageString;
             @mkdir($testDummyComposerDir, 0777, true);
             $testDummyComposerPath = $testDummyComposerDir . '/composer.json';
             $testDummyComposerContents = json_encode(new stdClass());

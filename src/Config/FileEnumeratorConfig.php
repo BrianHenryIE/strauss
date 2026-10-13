@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed to build the list of files belonging to each Composer package that Strauss processes.
  *
@@ -14,7 +15,6 @@ namespace BrianHenryIE\Strauss\Config;
  */
 interface FileEnumeratorConfig
 {
-
     public function getProjectAbsolutePath(): string;
     public function getAbsoluteVendorDirectory(): string;
 

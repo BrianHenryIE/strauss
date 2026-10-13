@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Builds the command line which starts a worker: the same PHP binary and the same Strauss script as the parent,
  * so it works for `bin/strauss`, `vendor/bin/strauss` and `strauss.phar`.

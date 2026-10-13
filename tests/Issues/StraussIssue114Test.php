@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `$data = @\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);` muted errors not prefixed.
  *
@@ -25,46 +26,46 @@ class StraussIssue114Test extends IntegrationTestCase
          * File starts with `#!/usr/bin/env php`.
          */
         // TODO: Figure out how to deal with templates / understand how they are currently parsed.
-//        $this->expectWarningLogs();
+        //        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/114",
-  "require": {
-    "aws/aws-sdk-php": "3.317.0"
-  },
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "exclude_from_copy": [
-         "aws/aws-crt-php",
-         "guzzlehttp/guzzle",
-         "guzzlehttp/promises",
-         "guzzlehttp/psr7",
-         "mtdowling/jmespath.php",
-         "psr/http-client",
-         "psr/http-factory",
-         "psr/http-message",
-         "ralouphie/getallheaders",
-         "symfony/deprecation-contracts",
-         "symfony/polyfill-mbstring",
-         "symfony/polyfill-php80"
-      ]
-    },
-    "aws/aws-sdk-php": [
-        "S3"
-    ]
-  },
-  "scripts": {
-    "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
-  }
-}
-EOD;
+            {
+              "name": "issue/114",
+              "require": {
+                "aws/aws-sdk-php": "3.317.0"
+              },
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "exclude_from_copy": [
+                     "aws/aws-crt-php",
+                     "guzzlehttp/guzzle",
+                     "guzzlehttp/promises",
+                     "guzzlehttp/psr7",
+                     "mtdowling/jmespath.php",
+                     "psr/http-client",
+                     "psr/http-factory",
+                     "psr/http-message",
+                     "ralouphie/getallheaders",
+                     "symfony/deprecation-contracts",
+                     "symfony/polyfill-mbstring",
+                     "symfony/polyfill-php80"
+                  ]
+                },
+                "aws/aws-sdk-php": [
+                    "S3"
+                ]
+              },
+              "scripts": {
+                "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

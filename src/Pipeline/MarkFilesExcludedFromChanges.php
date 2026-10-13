@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Given the `exclude_files_from_update` config options:
  * - `file_patterns`
@@ -57,8 +58,8 @@ class MarkFilesExcludedFromChanges
                 $this->logger->info(
                     'Exclude from changes: {filePath} matches pattern {pattern}',
                     [
-                    'filePath' => $file->getVendorRelativePath(),
-                    'pattern' => $excludeFilePattern
+                        'filePath' => $file->getVendorRelativePath(),
+                        'pattern' => $excludeFilePattern,
                     ]
                 );
 
@@ -105,8 +106,8 @@ class MarkFilesExcludedFromChanges
         $this->logger->info(
             'Exclude from changes: {filePath} matches namespace {namespaces}',
             [
-            'filePath' => $file->getTargetAbsolutePath(),
-            'namespaces' => implode(', ', $matchingNamespaces)
+                'filePath' => $file->getTargetAbsolutePath(),
+                'namespaces' => implode(', ', $matchingNamespaces),
             ]
         );
 
@@ -132,8 +133,8 @@ class MarkFilesExcludedFromChanges
         $this->logger->info(
             'Exclude from changes: {filePath} matches package {package}',
             [
-            'filePath' => $file->getTargetAbsolutePath(),
-            'package' => $excludePackages[$matchingKey]
+                'filePath' => $file->getTargetAbsolutePath(),
+                'package' => $excludePackages[$matchingKey],
             ]
         );
 

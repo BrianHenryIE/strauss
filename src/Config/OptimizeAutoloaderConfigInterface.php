@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration which says whether Composer's `optimize-autoloader` behaviour should be used when the
  * autoloader is regenerated.

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A Flysystem path normalizer which removes the filesystem root (e.g. `/` or `C:\`) from the start of absolute
  * paths so they can be used as Flysystem-relative paths, including on Windows.
@@ -44,13 +45,13 @@ class StripFsRootPathNormalizer implements PathNormalizer
     public function normalizePath(string $path): string
     {
         $fsRoots = array_unique(
-            $this->fsRoots ??
-                  [
+            $this->fsRoots
+                  ?? [
                       FileSystem::getFsRoot(Platform::getCwd()),
                       FileSystem::normalizeDirSeparator(FileSystem::getFsRoot(Platform::getCwd())),
                       'c:\\',
                       'c:/',
-                   ]
+                  ]
         );
 
         $pattern = '^(' . implode(
@@ -70,7 +71,7 @@ class StripFsRootPathNormalizer implements PathNormalizer
         ) . ')';
         $regexedPath   = preg_replace("#" . $pattern . "#i", '', $path)
                   ?? (function () {
-                    throw new \Exception(preg_last_error_msg(), preg_last_error());
+                      throw new \Exception(preg_last_error_msg(), preg_last_error());
                   })();
 
         $delegateNormalizedPath = $this->delegateNormalizer->normalizePath($regexedPath);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * php-http/discovery's candidate class strings must be prefixed even though the candidates are not in its dependency
  * tree.
@@ -29,24 +30,24 @@ class PhpHttpDiscoveryFeatureTest extends IntegrationTestCase
     public function test_discovery_candidate_strings_are_prefixed(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/php-http-discovery",
-  "require": {
-    "php-http/curl-client": "^2.3",
-    "nyholm/psr7": "^1.8"
-  },
-  "config": {
-    "allow-plugins": {
-      "php-http/discovery": false
-    }
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\PhpHttpDiscovery\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/php-http-discovery",
+              "require": {
+                "php-http/curl-client": "^2.3",
+                "nyholm/psr7": "^1.8"
+              },
+              "config": {
+                "allow-plugins": {
+                  "php-http/discovery": false
+                }
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\PhpHttpDiscovery\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

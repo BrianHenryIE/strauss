@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed to decide, file by file, whether each discovered file should be copied to the target
  * directory and whether its original should be deleted.
@@ -15,7 +16,6 @@ namespace BrianHenryIE\Strauss\Config;
  */
 interface FileCopyScannerConfigInterface
 {
-
     public function getAbsoluteVendorDirectory(): string;
 
     public function isTargetDirectoryVendor(): bool;

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Log level, filesystem
  *
@@ -180,7 +181,7 @@ abstract class AbstractRenamespacerCommand extends Command
         );
 
         try {
-        // Extends `LocalFilesystemAdapter`.
+            // Extends `LocalFilesystemAdapter`.
             $localFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
                 $localFsLocation,
                 $pathNormalizer,
@@ -373,8 +374,8 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->logger->debug(
             '{step} took {seconds}s',
             [
-            'step' => $step,
-            'seconds' => number_format(microtime(true) - $startedAt, 3),
+                'step' => $step,
+                'seconds' => number_format(microtime(true) - $startedAt, 3),
             ]
         );
     }
@@ -390,7 +391,7 @@ abstract class AbstractRenamespacerCommand extends Command
 
         $composerFilePath = $this->filesystem->makeAbsolute(
             $this->filesystem->normalizePath(
-                $this->workingDir . '/' .Factory::getComposerFile()
+                $this->workingDir . '/' . Factory::getComposerFile()
             )
         );
         $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/composer.json');
@@ -537,7 +538,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $licenser->addInformationToUpdatedFiles($modifiedFiles);
     }
 
-    protected function prefixComposerAutoloadFiles() : void
+    protected function prefixComposerAutoloadFiles(): void
     {
         $replacer = $this->replacer ?? new Prefixer($this->config, $this->filesystem, $this->logger);
 

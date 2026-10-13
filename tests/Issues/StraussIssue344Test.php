@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `update_call_sites: true` with the target directory in the project's `autoload` key double-prefixes docblocks.
  *
@@ -61,39 +62,39 @@ class StraussIssue344Test extends IntegrationTestCase
         string $prefixedFilePath
     ): void {
         $composerJsonString = <<<EOD
-{
-  "name": "strauss/issue344",
-  "require": {
-    "psr/log": "1.1.4"
-  },
-  "autoload": {
-    "classmap": $classmap
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "$targetDirectory",
-      "namespace_prefix": "Strauss\\\\Issue344\\\\",
-      "packages": ["psr/log"],
-      "update_call_sites": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue344",
+              "require": {
+                "psr/log": "1.1.4"
+              },
+              "autoload": {
+                "classmap": $classmap
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "$targetDirectory",
+                  "namespace_prefix": "Strauss\\\\Issue344\\\\",
+                  "packages": ["psr/log"],
+                  "update_call_sites": true
+                }
+              }
+            }
+            EOD;
 
         $projectFileString = <<<'EOD'
-<?php
+            <?php
 
-namespace My\Project;
+            namespace My\Project;
 
-use Psr\Log\LoggerInterface;
+            use Psr\Log\LoggerInterface;
 
-class Consumer
-{
-    public function __construct(LoggerInterface $logger)
-    {
-    }
-}
-EOD;
+            class Consumer
+            {
+                public function __construct(LoggerInterface $logger)
+                {
+                }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

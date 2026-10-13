@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed to generate the autoloader for the prefixed files and to include it from the project's
  * `vendor/autoload.php`.
@@ -18,7 +19,6 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
  */
 interface AutoloadConfigInterface
 {
-
     /**
      * The directory where the source files are located.
      *

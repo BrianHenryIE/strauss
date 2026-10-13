@@ -20,18 +20,18 @@ class AutoloadedEnumeratorFeatureTest extends IntegrationTestCase
     public function testNamespacePrefix(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/testdumpautoload",
-  "require": {
-    "nikic/php-parser": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/testdumpautoload",
+              "require": {
+                "nikic/php-parser": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+                }
+              }
+            }
+            EOD;
         // vendor/nikic/php-parser/lib/PhpParser/Node/Stmt/Namespace_.php
         // vendor-prefixed/nikic/php-parser/lib/PhpParser/Node/Stmt/Namespace_.php
 

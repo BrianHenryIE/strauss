@@ -17,30 +17,29 @@ use Mockery;
  */
 class FileEnumeratorIntegrationTest extends IntegrationTestCase
 {
-
     public function testBuildFileList(): void
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/fileenumeratorintegrationtest",
-  "require": {
-    "google/apiclient": "v2.16.1"
-  },
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_files": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/fileenumeratorintegrationtest",
+              "require": {
+                "google/apiclient": "v2.16.1"
+              },
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_files": false
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -92,18 +91,18 @@ EOD;
         $this->markTestSkippedOnPhpVersionBelow('8.1');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/exceludefromclassmap",
-  "require": {
-    "giggsey/libphonenumber-for-php-lite": "8.13.55"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/exceludefromclassmap",
+              "require": {
+                "giggsey/libphonenumber-for-php-lite": "8.13.55"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

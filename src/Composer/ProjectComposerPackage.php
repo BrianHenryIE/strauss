@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Extends ComposerPackage to return the typed Strauss config.
  *
@@ -57,7 +58,7 @@ class ProjectComposerPackage extends ComposerPackage
                 ),
                 '\\/'
             )
-            :  'vendor';
+            : 'vendor';
     }
 
     /**

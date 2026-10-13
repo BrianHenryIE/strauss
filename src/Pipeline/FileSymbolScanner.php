@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The purpose of this class is only to find changes that should be made.
  * i.e. classes and namespaces to change.
@@ -128,7 +129,7 @@ class FileSymbolScanner
             $this->logger->debug(
                 'Skipping built-in symbol {symbolName}, possible a polyfill.',
                 [
-                'symbolName' => $symbol->getOriginalLocalName(),
+                    'symbolName' => $symbol->getOriginalLocalName(),
                 ]
             );
             return;
@@ -144,7 +145,7 @@ class FileSymbolScanner
         $newText = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? '' : 'new ';
 
         $this->loggedSymbols[] = $symbol->getOriginalFqdnName();
-//        $this->loggedSymbols[$symbol->getOriginalFqdnName()] = true;
+        //        $this->loggedSymbols[$symbol->getOriginalFqdnName()] = true;
 
         $this->logger->log(
             $level,
@@ -174,13 +175,13 @@ class FileSymbolScanner
             if ($file instanceof FileWithDependency
                 && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))
             ) {
-                    /**
-                     * We will not prefix symbols found in this file because it is not in a default or listed package.
-                     *
-                     * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
-                     */
-                    $file->setDoPrefix(false);
-//                    continue;
+                /**
+                 * We will not prefix symbols found in this file because it is not in a default or listed package.
+                 *
+                 * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
+                 */
+                $file->setDoPrefix(false);
+                //                    continue;
             }
 
             if ($file instanceof FileWithDependency
@@ -197,7 +198,7 @@ class FileSymbolScanner
 
             if (!$file->isPhpFile()) {
                 $file->setDoPrefix(false);
-                $this->logger->debug("Skipping non-PHP file:::". $relativeFilePath);
+                $this->logger->debug("Skipping non-PHP file:::" . $relativeFilePath);
                 continue;
             }
 
@@ -213,8 +214,8 @@ class FileSymbolScanner
                     $this->logger->warning(
                         'Failed to parse file {filePath} with error: {errorMessage}',
                         [
-                        'filePath' => $file->getSourcePath(),
-                        'errorMessage' => $errorMessage ?? 'unknown',
+                            'filePath' => $file->getSourcePath(),
+                            'errorMessage' => $errorMessage ?? 'unknown',
                         ]
                     );
                 }
@@ -279,7 +280,7 @@ class FileSymbolScanner
             $this->logger->warning(
                 'Could not analyse files in parallel, continuing in this process: {errorMessage}',
                 [
-                'errorMessage' => $e->getMessage(),
+                    'errorMessage' => $e->getMessage(),
                 ]
             );
             $this->parallelResults = [];
@@ -469,7 +470,7 @@ class FileSymbolScanner
             $this->logger->debug(
                 'Skipping built-in symbol {symbolName}, possible a polyfill.',
                 [
-                'symbolName' => $fqdnClassname,
+                    'symbolName' => $fqdnClassname,
                 ]
             );
             return null;
@@ -539,7 +540,7 @@ class FileSymbolScanner
     {
         $builtins = include __DIR__ . '/FileSymbol/builtinsymbols.php';
 
-        $flatArray = array();
+        $flatArray = [];
         array_walk_recursive(
             $builtins,
             function ($array) use (&$flatArray) {

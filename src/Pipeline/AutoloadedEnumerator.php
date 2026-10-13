@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Use each package's autoload key to determine which files in the package are to be prefixed, apply exclusion rules.
  *
@@ -108,7 +109,7 @@ class AutoloadedEnumerator
                 continue;
             }
 
-            if (! ( $file instanceof FileWithDependency )) {
+            if (! ($file instanceof FileWithDependency)) {
                 continue;
             }
 
@@ -423,11 +424,11 @@ class AutoloadedEnumerator
 
 
     //    public function scanForAutoloadedFiles(DependenciesCollection $dependencies): void
-//    {
-//        foreach ($dependencies as $dependency) {
-//            $this->scanPackage($dependency);
-//        }
-//    }
+    //    {
+    //        foreach ($dependencies as $dependency) {
+    //            $this->scanPackage($dependency);
+    //        }
+    //    }
 
     /**
      * Read the autoload keys of the dependencies and marks the appropriate files to be prefixed
@@ -448,7 +449,7 @@ class AutoloadedEnumerator
         $this->logger->info("Scanning for autoloaded files in package {packageName}", [ 'packageName' => $dependency->getPackageName() ]);
 
         $dependencyAutoloadKey = $dependency->getAutoload();
-        $excludeFromClassmap   = isset($dependencyAutoloadKey['exclude_from_classmap']) ? $dependencyAutoloadKey['exclude_from_classmap'] : [];
+        $excludeFromClassmap   = $dependencyAutoloadKey['exclude_from_classmap'] ?? [];
 
         /**
          * Where $dependency->autoload is ~
@@ -505,8 +506,8 @@ class AutoloadedEnumerator
                             $this->logger->warning(
                                 "Expected discovered file at {relativePath} not found in package {packageName}",
                                 [
-                                'relativePath' => $filePackageRelativePath,
-                                'packageName'  => $dependency->getPackageName(),
+                                    'relativePath' => $filePackageRelativePath,
+                                    'packageName'  => $dependency->getPackageName(),
                                 ]
                             );
                         } else {
@@ -612,7 +613,7 @@ class AutoloadedEnumerator
             $this->logger->warning(
                 'Could not parse {file}: {message}',
                 [
-                'file' => $absoluteFilePath, 'message' => $e->getMessage(),
+                    'file' => $absoluteFilePath, 'message' => $e->getMessage(),
                 ]
             );
             return;
@@ -622,7 +623,7 @@ class AutoloadedEnumerator
             $this->logger->warning(
                 'Parsed {file} return null',
                 [
-                'file' => $absoluteFilePath,
+                    'file' => $absoluteFilePath,
                 ]
             );
             return;
@@ -638,7 +639,7 @@ class AutoloadedEnumerator
                 $this->logger->debug(
                     'Cannot statically resolve include expression in {file}',
                     [
-                    'file' => $absoluteFilePath,
+                        'file' => $absoluteFilePath,
                     ]
                 );
                 continue;
@@ -705,8 +706,8 @@ class AutoloadedEnumerator
                 $this->logger->warning(
                     "Expected discovered file at {relativePath} not found in package {packageName}",
                     [
-                    'relativePath' => $relativePath,
-                    'packageName' => $dependency->getPackageName(),
+                        'relativePath' => $relativePath,
+                        'packageName' => $dependency->getPackageName(),
                     ]
                 );
             } else {

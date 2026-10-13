@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Given two namespaces, sort them by the number of levels, then the length of the final part
  *
@@ -14,9 +15,8 @@ namespace BrianHenryIE\Strauss\Helpers;
  */
 class NamespaceSort
 {
-
-    const LONGEST = false;
-    const SHORTEST = true;
+    public const LONGEST = false;
+    public const SHORTEST = true;
 
     protected bool $order;
 

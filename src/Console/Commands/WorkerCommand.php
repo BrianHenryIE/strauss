@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Hidden command run by {@see WorkerPool}: reads requests from stdin, analyses the files, writes results to stdout.
  *
@@ -78,8 +79,8 @@ class WorkerCommand extends Command
         } catch (Throwable $e) {
             $this->write(
                 [
-                'action' => WorkerPool::ACTION_ERROR,
-                'message' => sprintf('%s: %s in %s:%d', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()),
+                    'action' => WorkerPool::ACTION_ERROR,
+                    'message' => sprintf('%s: %s in %s:%d', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()),
                 ]
             );
             return Command::FAILURE;

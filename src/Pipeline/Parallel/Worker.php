@@ -1,4 +1,5 @@
 <?php
+
 /**
  * One worker process and the state of the chunk it is working on.
  *

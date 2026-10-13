@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Error when composer.json is in a subdirectory of the project; a sibling diretcory of the vendor directory.
  *
@@ -20,22 +21,22 @@ class StraussIssue143Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-    "name": "strauss/issue143",
-    "require": {
-        "psr/log": "1.0.0"
-    },
-    "config": {
-        "vendor-dir": "../vendor/"
-    },
-    "extra": {
-      "strauss": {
-        "namespace_prefix": "Strauss\\Issue143\\",
-        "target_directory": "../vendor-prefixed"
-      }
-    }
-}
-EOD;
+            {
+                "name": "strauss/issue143",
+                "require": {
+                    "psr/log": "1.0.0"
+                },
+                "config": {
+                    "vendor-dir": "../vendor/"
+                },
+                "extra": {
+                  "strauss": {
+                    "namespace_prefix": "Strauss\\Issue143\\",
+                    "target_directory": "../vendor-prefixed"
+                  }
+                }
+            }
+            EOD;
 
         mkdir($this->testsWorkingDir . '/build');
         mkdir($this->testsWorkingDir . '/src');
@@ -86,23 +87,23 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-    "name": "strauss/issue143",
-    "require": {
-        "psr/log": "1.0.0"
-    },
-    "config": {
-        "vendor-dir": "../vendor/"
-    },
-    "extra": {
-      "strauss": {
-        "namespace_prefix": "Strauss\\Issue143\\",
-        "target_directory": "../vendor-prefixed",
-        "delete_vendor_packages": true
-      }
-    }
-}
-EOD;
+            {
+                "name": "strauss/issue143",
+                "require": {
+                    "psr/log": "1.0.0"
+                },
+                "config": {
+                    "vendor-dir": "../vendor/"
+                },
+                "extra": {
+                  "strauss": {
+                    "namespace_prefix": "Strauss\\Issue143\\",
+                    "target_directory": "../vendor-prefixed",
+                    "delete_vendor_packages": true
+                  }
+                }
+            }
+            EOD;
 
         mkdir($this->testsWorkingDir . '/build');
         mkdir($this->testsWorkingDir . '/src');
@@ -132,18 +133,18 @@ EOD;
         $this->markTestSkippedOnPhpVersionBelow('8.3');
 
         $composerJsonString = <<<'EOD'
-{
-    "name": "strauss/issue143",
-    "require": {
-        "symfony/console": "7.2.5"
-    },
-    "extra": {
-      "strauss": {
-        "namespace_prefix": "Strauss\\Issue143\\"
-      }
-    }
-}
-EOD;
+            {
+                "name": "strauss/issue143",
+                "require": {
+                    "symfony/console": "7.2.5"
+                },
+                "extra": {
+                  "strauss": {
+                    "namespace_prefix": "Strauss\\Issue143\\"
+                  }
+                }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
         chdir($this->testsWorkingDir);

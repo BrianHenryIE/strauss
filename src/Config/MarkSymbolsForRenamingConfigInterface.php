@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed to decide which discovered symbols (namespaces, classes, functions, constants) should be
  * renamed, after applying the prefix, copy and constant exclusion rules.
@@ -37,9 +38,9 @@ interface MarkSymbolsForRenamingConfigInterface
      */
     public function getExcludeNamespacesFromPrefixing(): array;
 
-   /**
-    * @return string[]
-    */
+    /**
+     * @return string[]
+     */
     public function getExcludePackagesFromCopy(): array;
 
     /**

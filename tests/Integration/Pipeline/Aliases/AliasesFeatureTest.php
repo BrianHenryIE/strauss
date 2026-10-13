@@ -10,7 +10,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class AliasesFeatureTest extends IntegrationTestCase
 {
-
     /**
      * Fatal error: Uncaught Error: Class "Psr\Log\Test\TestLogger" not found in /...project/vendor/brianhenryie/color-logger/src/ColorLogger.php on line 14
      *
@@ -25,23 +24,23 @@ class AliasesFeatureTest extends IntegrationTestCase
     public function test_happy_path(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/aliasfeaturetest",
-  "require": {
-    "psr/log": "1.1.4"
-  },
-  "require-dev": {
-    "brianhenryie/color-logger": "*",
-    "phpunit/phpunit": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "delete_vendor_files": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/aliasfeaturetest",
+              "require": {
+                "psr/log": "1.1.4"
+              },
+              "require-dev": {
+                "brianhenryie/color-logger": "*",
+                "phpunit/phpunit": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "delete_vendor_files": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -67,7 +66,7 @@ EOD;
         // TODO: This shows that the alias file does work.
         exec('php -r "require_once \'vendor-prefixed/autoload.php\'; require_once \'vendor/composer/autoload_aliases.php\'; require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
         // TODO: This would show that running `composer dump-autoload` doesn't break the loading of the alias file.
-//        exec('php -r "require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
+        //        exec('php -r "require_once \'vendor/autoload.php\'; new \BrianHenryIE\ColorLogger\ColorLogger();"', $output);
         $output = implode(PHP_EOL, $output);
 
         $this->assertEmpty($output, $output);
@@ -76,19 +75,19 @@ EOD;
     public function test_namespaced_files_alias(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/aliases-feature-test",
-  "require": {
-    "wp-forge/helpers": "2.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "delete_vendor_files": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/aliases-feature-test",
+              "require": {
+                "wp-forge/helpers": "2.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "delete_vendor_files": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -109,27 +108,27 @@ EOD;
     public function test_non_namespaced_files_alias(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/aliases-feature-test",
-  "require": {
-    "symfony/deprecation-contracts": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "function_prefix": "brianhenryie_strauss_",
-      "delete_vendor_files": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/aliases-feature-test",
+              "require": {
+                "symfony/deprecation-contracts": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "function_prefix": "brianhenryie_strauss_",
+                  "delete_vendor_files": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         $normalizedPath = $this->getFileSystem()->normalizePath($this->testsWorkingDir . '/composer.json');
 
         $directoryContents = implode(', ', glob($this->testsWorkingDir) ?: []);
-        $this->assertFileExists($this->testsWorkingDir . '/composer.json', 'Flysystem did not write: ' . $this->testsWorkingDir . '/composer.json (normalized '.$normalizedPath.'), directory contains: ' . $directoryContents);
+        $this->assertFileExists($this->testsWorkingDir . '/composer.json', 'Flysystem did not write: ' . $this->testsWorkingDir . '/composer.json (normalized ' . $normalizedPath . '), directory contains: ' . $directoryContents);
 
         chdir($this->testsWorkingDir);
 
@@ -147,20 +146,20 @@ EOD;
     public function test_disabled_function_renaming(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/aliases-feature-test",
-  "require": {
-    "symfony/deprecation-contracts": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "function_prefix": false,
-      "delete_vendor_files": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/aliases-feature-test",
+              "require": {
+                "symfony/deprecation-contracts": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "function_prefix": false,
+                  "delete_vendor_files": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -196,19 +195,19 @@ EOD;
     public function test_double_prefixing(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/aliases-feature-test",
-  "require": {
-    "myclabs/deep-copy": "1.13.4"
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "vendor",
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/aliases-feature-test",
+              "require": {
+                "myclabs/deep-copy": "1.13.4"
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "vendor",
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

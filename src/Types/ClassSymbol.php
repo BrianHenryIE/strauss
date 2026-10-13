@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A class definition discovered in a scanned file, which Strauss may prefix, and for which it records what is
  * needed to write an alias for the original class name in `autoload_aliases.php`.
@@ -79,13 +80,13 @@ class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
      */
     public function getAutoloadAliasArray(): array
     {
-        return array (
+        return  [
             'type' => 'class',
             'classname' => $this->getOriginalLocalName(),
             'isabstract' => $this->isAbstract,
             'namespace' => $this->namespace->getOriginalFqdnName(),
             'extends' => $this->getReplacementFqdnName(),
             'implements' => $this->interfaces,
-        );
+        ];
     }
 }

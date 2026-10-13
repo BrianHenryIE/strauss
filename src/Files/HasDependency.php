@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The contract for a file that belongs to a Composer package dependency, as opposed to a project or
  * `vendor/composer` file.
@@ -17,7 +18,6 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
  */
 interface HasDependency
 {
-
     public function getDependency(): ComposerPackage;
 
     /**

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * classmap prefix applied repeatedly
  *
@@ -14,23 +15,22 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue258Test extends IntegrationTestCase
 {
-
     public function test_class_name_double_prefixed(): void
     {
 
         $composerJsonString = <<<'EOD'
-{   
-    "require": {
-      "wp-media/wp-mixpanel": "1.4.0"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "Strauss\\Issue258\\",
-            "target_directory": "vendor"
-        }
-    }
-}
-EOD;
+            {   
+                "require": {
+                  "wp-media/wp-mixpanel": "1.4.0"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "Strauss\\Issue258\\",
+                        "target_directory": "vendor"
+                    }
+                }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

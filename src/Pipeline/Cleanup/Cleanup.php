@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Deletes source files and empty directories.
  *
@@ -160,8 +161,8 @@ class Cleanup
         $isOptimize = $this->isOptimizeAutoloaderEnabled();
         $generator->setClassMapAuthoritative($isOptimize);
         $generator->setRunScripts(false);
-//        $generator->setApcu($apcu, $apcuPrefix);
-//        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
+        //        $generator->setApcu($apcu, $apcuPrefix);
+        //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
         $installedJson = new JsonFile(
             $this->filesystem->makeAbsolute(
                 $this->config->getAbsoluteVendorDirectory() . '/composer/installed.json'
@@ -211,7 +212,7 @@ class Cleanup
             'autoload_real.php',
             'autoload_static.php',
             'autoload_classmap.php',
-            'ClassLoader.php'
+            'ClassLoader.php',
         ];
 
         /**
@@ -307,14 +308,14 @@ class Cleanup
             }
         }
 
-//        foreach ($this->filesystem->listContents($this->getAbsoluteVendorDir()) as $dirEntry) {
-//            if ($dirEntry->isDir() && $this->dirIsEmpty($dirEntry->path()) && !is_link($dirEntry->path())) {
-//                $this->logger->info('Deleting empty directory ' .  $dirEntry->path());
-//                $this->filesystem->deleteDirectory($dirEntry->path());
-//            } else {
-//                $this->logger->debug('Skipping non-empty directory ' . $dirEntry->path());
-//            }
-//        }
+        //        foreach ($this->filesystem->listContents($this->getAbsoluteVendorDir()) as $dirEntry) {
+        //            if ($dirEntry->isDir() && $this->dirIsEmpty($dirEntry->path()) && !is_link($dirEntry->path())) {
+        //                $this->logger->info('Deleting empty directory ' .  $dirEntry->path());
+        //                $this->filesystem->deleteDirectory($dirEntry->path());
+        //            } else {
+        //                $this->logger->debug('Skipping non-empty directory ' . $dirEntry->path());
+        //            }
+        //        }
         $this->logger->debug('Finished Cleanup::deleteEmptyDirectories()');
     }
 
@@ -328,18 +329,18 @@ class Cleanup
     {
         $this->logger->info('Deleting original vendor packages.');
 
-//        if ($this->isDeleteVendorPackages) {
-//            foreach ($flatDependencyTree as $packageName => $package) {
-//                if ($package->isDoDelete()) {
-//                    $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
-//                    $package->setDidDelete(true);
-////                $files = $package->getFiles();
-////                foreach($files as $file){
-////                    $file->setDidDelete(true);
-////                }
-//                }
-//            }
-//        }
+        //        if ($this->isDeleteVendorPackages) {
+        //            foreach ($flatDependencyTree as $packageName => $package) {
+        //                if ($package->isDoDelete()) {
+        //                    $this->filesystem->deleteDirectory($package->getPackageAbsolutePath());
+        //                    $package->setDidDelete(true);
+        ////                $files = $package->getFiles();
+        ////                foreach($files as $file){
+        ////                    $file->setDidDelete(true);
+        ////                }
+        //                }
+        //            }
+        //        }
 
         foreach ($flatDependencyTree as $package) {
             // Skip packages excluded from copy - they should remain in vendor/

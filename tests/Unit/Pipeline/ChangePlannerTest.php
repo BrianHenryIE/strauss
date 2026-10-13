@@ -32,7 +32,7 @@ class ChangePlannerTest extends TestCase
      */
     public function test_overlapping_positions_throw(): void
     {
-        $planner = new class () extends ChangePlanner {
+        $planner = new class extends ChangePlanner {
             protected function findConstantPositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
             {
                 return [
@@ -60,15 +60,15 @@ class ChangePlannerTest extends TestCase
     public function test_plan_is_stored_on_file(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Acme\Widgets;
+            namespace Acme\Widgets;
 
-use Acme\Widgets\Widget;
+            use Acme\Widgets\Widget;
 
-$w = new Widget();
-$name = 'Acme\Widgets\Widget';
-EOD;
+            $w = new Widget();
+            $name = 'Acme\Widgets\Widget';
+            EOD;
 
         $file = $this->getFile();
         $codeMap = (new PhpFileAnalyzer())->analyze($contents);
@@ -181,9 +181,9 @@ EOD;
         $discoveredSymbols = new DiscoveredSymbols($symbols);
 
         $contents = <<<'EOD'
-<?php
-$a = ['Own\\', 'Direct\\', 'Deep\\', 'Deepest\\', 'Unrelated\\', 'Suggested\\', 'Unknown\\'];
-EOD;
+            <?php
+            $a = ['Own\\', 'Direct\\', 'Deep\\', 'Deepest\\', 'Unrelated\\', 'Suggested\\', 'Unknown\\'];
+            EOD;
 
         $planFor = function (File $file) use ($contents, $discoveredSymbols): array {
             $codeMap = (new PhpFileAnalyzer())->analyze($contents);
@@ -238,9 +238,9 @@ EOD;
         }
 
         $contents = <<<'EOD'
-<?php
-$a = ['Provider\\', 'Replacer\\', 'Unrelated\\'];
-EOD;
+            <?php
+            $a = ['Provider\\', 'Replacer\\', 'Unrelated\\'];
+            EOD;
 
         $codeMap = (new PhpFileAnalyzer())->analyze($contents);
         $edits = (new ChangePlanner())->plan(new DiscoveredSymbols($symbols), $codeMap, $this->getPackageFile($discovery));

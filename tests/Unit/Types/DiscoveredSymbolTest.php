@@ -13,7 +13,6 @@ use BrianHenryIE\Strauss\TestCase;
  */
 class DiscoveredSymbolTest extends TestCase
 {
-
     /**
      * @covers ::__construct
      * @covers ::getOriginalFqdnName

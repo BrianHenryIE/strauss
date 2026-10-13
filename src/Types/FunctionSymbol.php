@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A function definition discovered in a scanned file, which Strauss may prefix.
  *
@@ -15,5 +16,4 @@ namespace BrianHenryIE\Strauss\Types;
  */
 class FunctionSymbol extends NamespacedSymbol
 {
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A file that belongs to one of the Composer packages Strauss is copying and prefixing.
  *
@@ -19,7 +20,6 @@ use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
  */
 class FileWithDependency extends File implements HasDependency
 {
-
     /**
      * @var string The path to the file relative to the package root.
      */
@@ -88,7 +88,7 @@ class FileWithDependency extends File implements HasDependency
      */
     public function addAutoloader(string $autoloaderType): void
     {
-        $this->autoloaderTypes = array_unique(array_merge($this->autoloaderTypes, array($autoloaderType)));
+        $this->autoloaderTypes = array_unique(array_merge($this->autoloaderTypes, [$autoloaderType]));
     }
 
     public function isFilesAutoloaderFile(): bool

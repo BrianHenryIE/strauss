@@ -10,65 +10,64 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MarkFilesExcludedFromChangesFeatureTest extends IntegrationTestCase
 {
-
     public function test_ClassLoader(): void
     {
         $composerJsonString = <<<'EOD'
-{
-    "name": "strauss/exclude-from-prefix",
-    "require": {
-        "composer/composer": "2.9.7"
-    },
-    "provide": {
-        "composer/ca-bundle": "*",
-        "composer/class-map-generator": "*",
-        "composer/metadata-minifier": "*",
-        "composer/pcre": "*",
-        "composer/semver": "*",
-        "composer/spdx-licenses": "*",
-        "composer/xdebug-handler": "*",
-        "justinrainbow/json-schema": "*",
-        "marc-mabe/php-enum": "*",
-        "psr/container": "*",
-        "psr/log": "*",
-        "react/promise": "*",
-        "seld/jsonlint": "*",
-        "seld/phar-utils": "*",
-        "seld/signal-handler": "*",
-        "symfony/console": "*",
-        "symfony/deprecation-contracts": "*",
-        "symfony/filesystem": "*",
-        "symfony/finder": "*",
-        "symfony/polyfill-ctype": "*",
-        "symfony/polyfill-intl-grapheme": "*",
-        "symfony/polyfill-intl-normalizer": "*",
-        "symfony/polyfill-mbstring": "*",
-        "symfony/polyfill-php73": "*",
-        "symfony/polyfill-php80": "*",
-        "symfony/polyfill-php81": "*",
-        "symfony/polyfill-php84": "*",
-        "symfony/process": "*",
-        "symfony/service-contracts": "*",
-        "symfony/string": "*"
-    },
-      "config": {
-        "audit": {
-          "block-insecure": false
-      }
-    },
-    "extra": {
-        "strauss": {
-            "target_directory": "vendor",
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\Vendor\\",
-            "exclude_files_from_update": {
-                "file_patterns": [
-                    "#ClassLoader.php#"
-                ]
+            {
+                "name": "strauss/exclude-from-prefix",
+                "require": {
+                    "composer/composer": "2.9.7"
+                },
+                "provide": {
+                    "composer/ca-bundle": "*",
+                    "composer/class-map-generator": "*",
+                    "composer/metadata-minifier": "*",
+                    "composer/pcre": "*",
+                    "composer/semver": "*",
+                    "composer/spdx-licenses": "*",
+                    "composer/xdebug-handler": "*",
+                    "justinrainbow/json-schema": "*",
+                    "marc-mabe/php-enum": "*",
+                    "psr/container": "*",
+                    "psr/log": "*",
+                    "react/promise": "*",
+                    "seld/jsonlint": "*",
+                    "seld/phar-utils": "*",
+                    "seld/signal-handler": "*",
+                    "symfony/console": "*",
+                    "symfony/deprecation-contracts": "*",
+                    "symfony/filesystem": "*",
+                    "symfony/finder": "*",
+                    "symfony/polyfill-ctype": "*",
+                    "symfony/polyfill-intl-grapheme": "*",
+                    "symfony/polyfill-intl-normalizer": "*",
+                    "symfony/polyfill-mbstring": "*",
+                    "symfony/polyfill-php73": "*",
+                    "symfony/polyfill-php80": "*",
+                    "symfony/polyfill-php81": "*",
+                    "symfony/polyfill-php84": "*",
+                    "symfony/process": "*",
+                    "symfony/service-contracts": "*",
+                    "symfony/string": "*"
+                },
+                  "config": {
+                    "audit": {
+                      "block-insecure": false
+                  }
+                },
+                "extra": {
+                    "strauss": {
+                        "target_directory": "vendor",
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\Vendor\\",
+                        "exclude_files_from_update": {
+                            "file_patterns": [
+                                "#ClassLoader.php#"
+                            ]
+                        }
+                    }
+                }
             }
-        }
-    }
-}
-EOD;
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

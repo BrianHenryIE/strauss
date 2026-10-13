@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Determines every change to make to each file, before any file is modified.
  *
@@ -95,7 +96,7 @@ class ChangePlanner
                 $this->logger->debug(
                     'No code map to plan changes against (unparsable or unscanned)::::{filePath}',
                     [
-                    'filePath' => $file->getSourcePath(),
+                        'filePath' => $file->getSourcePath(),
                     ]
                 );
                 continue;
@@ -584,8 +585,8 @@ class ChangePlanner
                 $discoveredSymbolsCount === 1 ? '' : 's'
             ),
             [
-            'filename' => basename($fileAbsolutePath ?? 'file'),
-            'count' => $discoveredSymbolsCount,
+                'filename' => basename($fileAbsolutePath ?? 'file'),
+                'count' => $discoveredSymbolsCount,
             ]
         );
 
@@ -779,15 +780,15 @@ class ChangePlanner
                             [\\\\]{0,2}
 )
                         ('
-                            . str_replace('\\', '[\\\\]{1,2}', $originalSymbolString) .
-                        ')(
+                            . str_replace('\\', '[\\\\]{1,2}', $originalSymbolString)
+                        . ')(
                         '
                       // This only applies to namespaces, `"My\\Namespace\\" . $var`.
                       // The trailing-backslashes-only alternative matches namespace prefix strings compared
                       // against FQDNs, e.g. `substr($className, 0, 16) === 'PHP_CodeSniffer\\'`.
-                      . ( $alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*|[\\\\]{1,2})?' : '' ) .
-                      ( $alsoSearchForStaticProperty ? '(:{2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
-                      '
+                      . ($alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*|[\\\\]{1,2})?' : '')
+                      . ($alsoSearchForStaticProperty ? '(:{2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '')
+                      . '
                             [\'"]
                             [^a-zA-Z0-9_\x7f-\xff\\\\]
 )
@@ -848,14 +849,14 @@ class ChangePlanner
     protected function findComposerClassLoaderPrefixPositions(string $contents, string $originalNamespace, string $replacementNamespace): array
     {
         // Must be concatenated so it is not unintentionally replaced!
-        $unprefixedNamespace = implode('\\', ['Comp'.'oser','Autoload']);
+        $unprefixedNamespace = implode('\\', ['Comp' . 'oser','Autoload']);
         $isComposerAutoloadNamespace = str_ends_with($originalNamespace, $unprefixedNamespace);
         $hasComposerAutoloadNamespace = str_contains($contents, $unprefixedNamespace);
         if (!$isComposerAutoloadNamespace || !$hasComposerAutoloadNamespace) {
             return [];
         }
 
-        $disguisedNamespaceString = implode("\\\\", ['Comp'.'oser','Autoload','ClassLoader']);
+        $disguisedNamespaceString = implode("\\\\", ['Comp' . 'oser','Autoload','ClassLoader']);
 
         // The string literal `"\0Composer\Autoload\ClassLoader\0"`.
         $pattern = "/\\\"\\\\0($disguisedNamespaceString)\\\\0\\\"/";
@@ -1233,7 +1234,7 @@ class ChangePlanner
         $this->logger->debug(
             'Searching {number_of_comments} comments for symbols',
             [
-            'number_of_comments' => count($docComments),
+                'number_of_comments' => count($docComments),
             ]
         );
 

@@ -98,11 +98,11 @@ class MarkSymbolsForRenaming
                 continue;
             }
 
-//            if ($this->isSymbolFoundInFileThatIsNotCopied($symbol)) {
-//                if (count($symbol->getSourceFiles())===1) {
-//                    $symbol->setDoRename(false);
-//                }
-//            }
+            //            if ($this->isSymbolFoundInFileThatIsNotCopied($symbol)) {
+            //                if (count($symbol->getSourceFiles())===1) {
+            //                    $symbol->setDoRename(false);
+            //                }
+            //            }
             /**
              * I'm not sure what this was added for, but psr-0 namespaces that are found when scanning autoload
              * keys are used to check do files exist under that directory.
@@ -129,8 +129,8 @@ class MarkSymbolsForRenaming
     {
         return $this->isExcludeFromPrefixPackage($symbol->getPackageName())
             || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles())
-            || ( $symbol instanceof NamespacedSymbol && $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName()))
-            || ( $symbol instanceof NamespaceSymbol && $this->isExcludeFromPrefixNamespace($symbol->getOriginalFqdnName()));
+            || ($symbol instanceof NamespacedSymbol && $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName()))
+            || ($symbol instanceof NamespaceSymbol && $this->isExcludeFromPrefixNamespace($symbol->getOriginalFqdnName()));
     }
 
     /**

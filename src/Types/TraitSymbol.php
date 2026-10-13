@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A trait definition discovered in a scanned file, which Strauss may prefix, and for which it records what is
  * needed to write an alias for the original trait name in `autoload_aliases.php`.
@@ -66,11 +67,11 @@ class TraitSymbol extends NamespacedSymbol implements AutoloadAliasInterface
      */
     public function getAutoloadAliasArray(): array
     {
-        return array (
+        return  [
             'type' => 'trait',
             'traitname' => $this->getOriginalLocalName(),
             'namespace' => $this->namespace->getOriginalFqdnName(),
             'use' => [$this->getReplacementFqdnName()],
-        );
+        ];
     }
 }

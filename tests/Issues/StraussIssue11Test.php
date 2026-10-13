@@ -1,4 +1,5 @@
 <?php
+
 /**
  * When users migrate from Mozart, the settings are only preserved when the extra "mozart" key
  * is still used. Let's change it so they're understood not matter what.
@@ -20,7 +21,6 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 class StraussIssue11Test extends IntegrationTestCase
 {
-
     /**
      * @author BrianHenryIE
      */
@@ -29,34 +29,34 @@ class StraussIssue11Test extends IntegrationTestCase
         $this->markTestSkippedLocally('too slow');
 
         $composerExtraStraussJson = <<<'EOD'
-{
-	"name": "brianhenryie/strauss-issue-8",
-	"extra": {
-		"mozart": {
-			"dep_namespace": "MZoo\\MBO_Sandbox\\Dependencies\\",
-			"dep_directory": "/src/Mozart/",
-			"packages": [
-				"ericmann/wp-session-manager",
-				"ericmann/sessionz"
-			],
-			"delete_vendor_files": false,
-			"override_autoload": {
-				"htmlburger/carbon-fields": {
-					"psr-4": {
-						"Carbon_Fields\\": "core/"
-					},
-					"files": [
-						"config.php",
-						"templates",
-						"assets",
-						"build"
-					]
-				}
-			}
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/strauss-issue-8",
+            	"extra": {
+            		"mozart": {
+            			"dep_namespace": "MZoo\\MBO_Sandbox\\Dependencies\\",
+            			"dep_directory": "/src/Mozart/",
+            			"packages": [
+            				"ericmann/wp-session-manager",
+            				"ericmann/sessionz"
+            			],
+            			"delete_vendor_files": false,
+            			"override_autoload": {
+            				"htmlburger/carbon-fields": {
+            					"psr-4": {
+            						"Carbon_Fields\\": "core/"
+            					},
+            					"files": [
+            						"config.php",
+            						"templates",
+            						"assets",
+            						"build"
+            					]
+            				}
+            			}
+            		}
+            	}
+            }
+            EOD;
 
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         $this->getFileSystem()->write($tmpfname, $composerExtraStraussJson);
@@ -84,40 +84,40 @@ EOD;
          *
          * Skipping Prefixing in src/Mozart/htmlburger/carbon-fields/templates/Container/comment_meta.php due to parse error: Syntax error, unexpected '<' on line 2
          */
-//        $this->expectWarningLogs();
+        //        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/strauss-issue-8",
-	"require":{
-	    "htmlburger/carbon-fields": "*"
-	},
-	"extra": {
-		"mozart": {
-			"dep_namespace": "MZoo\\MBO_Sandbox\\Dependencies\\",
-			"dep_directory": "/src/Mozart/",
-			"packages": [
-				"htmlburger/carbon-fields"
-			],
-			"delete_vendor_files": false,
-			"override_autoload": {
-				"htmlburger/carbon-fields": {
-					"psr-4": {
-						"Carbon_Fields\\": "core/"
-					},
-					"files": [
-						"config.php",
-						"templates",
-						"assets",
-						"build"
-					]
-				}
-			}
+            {
+            	"name": "brianhenryie/strauss-issue-8",
+            	"require":{
+            	    "htmlburger/carbon-fields": "*"
+            	},
+            	"extra": {
+            		"mozart": {
+            			"dep_namespace": "MZoo\\MBO_Sandbox\\Dependencies\\",
+            			"dep_directory": "/src/Mozart/",
+            			"packages": [
+            				"htmlburger/carbon-fields"
+            			],
+            			"delete_vendor_files": false,
+            			"override_autoload": {
+            				"htmlburger/carbon-fields": {
+            					"psr-4": {
+            						"Carbon_Fields\\": "core/"
+            					},
+            					"files": [
+            						"config.php",
+            						"templates",
+            						"assets",
+            						"build"
+            					]
+            				}
+            			}
 
-		}
-	}
-}
-EOD;
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -128,7 +128,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/src/Mozart/htmlburger/carbon-fields/core/Carbon_Fields.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/src/Mozart/htmlburger/carbon-fields/core/Carbon_Fields.php');
 
         // This was not being prefixed.
         self::assertStringNotContainsString('$ioc->register( new \Carbon_Fields\Provider\Container_Condition_Provider() );', $phpString);
@@ -148,40 +148,40 @@ EOD;
          *
          * [warning] Skipping Prefixing in src/Mozart/htmlburger/carbon-fields/templates/Container/comment_meta.php due to parse error: Syntax error, unexpected '<' on line 2
          */
-//        $this->expectWarningLogs();
+        //        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/strauss-issue-8",
-	"require":{
-	    "htmlburger/carbon-fields": "*"
-	},
-	"extra": {
-		"mozart": {
-			"dep_namespace": "MZoo\\MBO_Sandbox\\Dependencies\\",
-			"dep_directory": "/src/Mozart/",
-			"packages": [
-				"htmlburger/carbon-fields"
-			],
-			"delete_vendor_files": false,
-			"override_autoload": {
-				"htmlburger/carbon-fields": {
-					"psr-4": {
-						"Carbon_Fields\\": "core/"
-					},
-					"files": [
-						"config.php",
-						"templates",
-						"assets",
-						"build"
-					]
-				}
-			}
+            {
+            	"name": "brianhenryie/strauss-issue-8",
+            	"require":{
+            	    "htmlburger/carbon-fields": "*"
+            	},
+            	"extra": {
+            		"mozart": {
+            			"dep_namespace": "MZoo\\MBO_Sandbox\\Dependencies\\",
+            			"dep_directory": "/src/Mozart/",
+            			"packages": [
+            				"htmlburger/carbon-fields"
+            			],
+            			"delete_vendor_files": false,
+            			"override_autoload": {
+            				"htmlburger/carbon-fields": {
+            					"psr-4": {
+            						"Carbon_Fields\\": "core/"
+            					},
+            					"files": [
+            						"config.php",
+            						"templates",
+            						"assets",
+            						"build"
+            					]
+            				}
+            			}
 
-		}
-	}
-}
-EOD;
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -192,7 +192,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/src/Mozart/htmlburger/carbon-fields/core/Container.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/src/Mozart/htmlburger/carbon-fields/core/Container.php');
 
         // This was not being prefixed.
         $this->assertStringNotContainsString('@method static \Carbon_Fields\Container\Comment_Meta_Container', $phpString);

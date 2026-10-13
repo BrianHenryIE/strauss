@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Edit vendor/autoload.php to also load the vendor/composer/autoload_aliases.php file and the vendor-prefixed/autoload.php file.
  *
@@ -58,7 +59,7 @@ class VendorComposerAutoload
             $this->logger->info(
                 "No autoload.php found: {composerAutoloadPhpFilepath}",
                 [
-                'composerAutoloadPhpFilepath' => $composerAutoloadPhpFilepath
+                    'composerAutoloadPhpFilepath' => $composerAutoloadPhpFilepath,
                 ]
             );
             return;
@@ -71,7 +72,7 @@ class VendorComposerAutoload
             $this->logger->warning(
                 "No new autoload.php found: {newAutoloadPhpFilepath}",
                 [
-                'newAutoloadPhpFilepath' => $newAutoloadPhpFilepath
+                    'newAutoloadPhpFilepath' => $newAutoloadPhpFilepath,
                 ]
             );
         }
@@ -202,8 +203,7 @@ class VendorComposerAutoload
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(
-            new class() extends NodeVisitorAbstract {
-
+            new class extends NodeVisitorAbstract {
                 public function leaveNode(Node $node)
                 {
                     if (get_class($node) === \PhpParser\Node\Stmt\Expression::class) {
@@ -237,13 +237,13 @@ class VendorComposerAutoload
                             new \PhpParser\Node\Expr\FuncCall(
                                 new \PhpParser\Node\Name('file_exists'),
                                 [
-                                new \PhpParser\Node\Arg($path)
+                                    new \PhpParser\Node\Arg($path),
                                 ],
                             ),
                             [
-                            'stmts' => [
-                                $requireOnceAutoloadAliases
-                            ],
+                                'stmts' => [
+                                    $requireOnceAutoloadAliases,
+                                ],
                             ]
                         );
 
@@ -253,7 +253,7 @@ class VendorComposerAutoload
 
                         return [
                             $ifFileExistsRequireOnceAutoloadAliases,
-                            $node
+                            $node,
                         ];
                     }
                     return $node;
@@ -297,8 +297,7 @@ class VendorComposerAutoload
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(
-            new class($targetDirAutoload) extends NodeVisitorAbstract {
-
+            new class ($targetDirAutoload) extends NodeVisitorAbstract {
                 protected bool $added = false;
                 protected ?string $targetDirectoryAutoload;
                 public function __construct(?string $targetDirectoryAutoload)
@@ -317,7 +316,7 @@ class VendorComposerAutoload
                         $nodeText = $prettyPrinter->prettyPrintExpr($node->expr);
 
                         $targets = [
-                        "require_once __DIR__ . '/composer/autoload_real.php'",
+                            "require_once __DIR__ . '/composer/autoload_real.php'",
                         ];
 
                         if (!in_array($nodeText, $targets)) {
@@ -343,13 +342,13 @@ class VendorComposerAutoload
                             new \PhpParser\Node\Expr\FuncCall(
                                 new \PhpParser\Node\Name('file_exists'),
                                 [
-                                new \PhpParser\Node\Arg($path)
+                                    new \PhpParser\Node\Arg($path),
                                 ],
                             ),
                             [
-                            'stmts' => [
-                                $requireOnceStraussAutoload
-                            ],
+                                'stmts' => [
+                                    $requireOnceStraussAutoload,
+                                ],
                             ]
                         );
 
@@ -361,7 +360,7 @@ class VendorComposerAutoload
 
                         return [
                             $ifFileExistsRequireOnceStraussAutoload,
-                            $node
+                            $node,
                         ];
                     }
                     return $node;

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Should prefix modified classnames in phpdoc
  *
@@ -18,18 +19,18 @@ class StraussIssue111Test extends IntegrationTestCase
     public function test_phpdoc(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue111",
-  "require": {
-    "stripe/stripe-php": "16.1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue111\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue111",
+              "require": {
+                "stripe/stripe-php": "16.1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue111\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

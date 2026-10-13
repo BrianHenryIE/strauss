@@ -1,4 +1,5 @@
 <?php
+
 /**
  * With a worker pool set, files are parsed by the pool and the scanner only records what it returned.
  */

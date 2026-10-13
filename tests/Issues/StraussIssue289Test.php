@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `installed.json` package autoload key removed although it is not in `packages` list.
  *
@@ -16,48 +17,47 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue289Test extends IntegrationTestCase
 {
-
     public function test_do_not_remove_autoload_key(): void
     {
 
         $dependencyComposerJsonString = <<<'EOD'
-{
-  "name": "strauss/symlinked-package",
-  "autoload": {
-    "classmap": ["src"]
-  }
-}
+            {
+              "name": "strauss/symlinked-package",
+              "autoload": {
+                "classmap": ["src"]
+              }
+            }
 
-EOD;
+            EOD;
 
         $mainComposerJsonString = <<<'EOD'
-{
-  "name": "issue/289",
-  "minimum-stability": "dev",
-  "repositories": {
-    "strauss/symlinked-package": {
-      "url": "../dependency",
-      "type": "path",
-      "options": {
-        "symlink": true
-      }
-    }
-  },
-  "require": {
-    "strauss/symlinked-package": "*",
-    "psr/log": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Issue289\\",
-      "delete_vendor_packages": true,
-      "packages": [
-        "psr/log"
-      ]
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/289",
+              "minimum-stability": "dev",
+              "repositories": {
+                "strauss/symlinked-package": {
+                  "url": "../dependency",
+                  "type": "path",
+                  "options": {
+                    "symlink": true
+                  }
+                }
+              },
+              "require": {
+                "strauss/symlinked-package": "*",
+                "psr/log": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\Issue289\\",
+                  "delete_vendor_packages": true,
+                  "packages": [
+                    "psr/log"
+                  ]
+                }
+              }
+            }
+            EOD;
 
         mkdir($this->testsWorkingDir . '/dependency');
         $this->getFileSystem()->write($this->testsWorkingDir . '/dependency/composer.json', $dependencyComposerJsonString);

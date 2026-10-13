@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://www.php-fig.org/psr/psr-0/
  */
@@ -12,22 +13,21 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class Psr0FeatureTest extends IntegrationTestCase
 {
-
     public function test_adds_updated_directory_structure(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "pimple/pimple": "3.6.2"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "pimple/pimple": "3.6.2"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -62,24 +62,24 @@ EOD;
     public function test_handles_underscores(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "psr/feature0",
-  "require": {
-    "ezyang/htmlpurifier": "4.19.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_TestStrauss_"
-    }
-  },
-  "config": {
-    "platform": {
-        "php": "7.4"
-    }
-  }
-}
-EOD;
+            {
+              "name": "psr/feature0",
+              "require": {
+                "ezyang/htmlpurifier": "4.19.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_TestStrauss_"
+                }
+              },
+              "config": {
+                "platform": {
+                    "php": "7.4"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -123,25 +123,25 @@ EOD;
     public function test_pimple_files_are_moved(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "psr/feature0",
-  "require": {
-    "pimple/pimple": "3.6.2"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_TestStrauss_",
-      "target_directory": "vendor"
-    }
-  },
-  "config": {
-    "platform": {
-        "php": "7.4"
-    }
-  }
-}
-EOD;
+            {
+              "name": "psr/feature0",
+              "require": {
+                "pimple/pimple": "3.6.2"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_TestStrauss_",
+                  "target_directory": "vendor"
+                }
+              },
+              "config": {
+                "platform": {
+                    "php": "7.4"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

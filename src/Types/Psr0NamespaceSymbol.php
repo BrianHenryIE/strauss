@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A namespace read from a package's `autoload.psr-0` key, i.e. one whose classes may use underscore-separated
  * pseudo-namespaces rather than PHP namespaces.

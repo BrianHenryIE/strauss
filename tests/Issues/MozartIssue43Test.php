@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Root directories can not be deleted
  * @see https://github.com/coenjacobs/mozart/issues/43
@@ -17,7 +18,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue43Test extends IntegrationTestCase
 {
-
     /**
      * Issue 43. Needs "aws/aws-sdk-php".
      *
@@ -29,32 +29,32 @@ class MozartIssue43Test extends IntegrationTestCase
         self::markTestSkippedLocally('Very slow to run');
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-43",
-	"require": {
-		"aws/aws-sdk-php": "2.8.31"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M43\\",
-			"classmap_prefix": "BrianHenryIE_M43_",
-			"override_autoload": {
-				"guzzle/guzzle": {
-					"psr-4": {
-						"Guzzle": "src/"
-					}
-				}
-			}
-    },
-    "aws/aws-sdk-php": [
-        "S3"
-    ]
-  },
-  "scripts": {
-    "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
-  }
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-43",
+            	"require": {
+            		"aws/aws-sdk-php": "2.8.31"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M43\\",
+            			"classmap_prefix": "BrianHenryIE_M43_",
+            			"override_autoload": {
+            				"guzzle/guzzle": {
+            					"psr-4": {
+            						"Guzzle": "src/"
+            					}
+            				}
+            			}
+                },
+                "aws/aws-sdk-php": [
+                    "S3"
+                ]
+              },
+              "scripts": {
+                "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -68,7 +68,7 @@ EOD;
         /**
          * File path has changed since test was originally written – PSR-0 support moves files into subdir matching the namespace.
          */
-//        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Aws/Common/Aws.php');
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/BrianHenryIE/M43/Aws/Common/Aws.php');
+        //        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Aws/Common/Aws.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/BrianHenryIE/M43/Aws/Common/Aws.php');
     }
 }

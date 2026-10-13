@@ -1,4 +1,5 @@
 <?php
+
 /**
  * An interface definition discovered in a scanned file, which Strauss may prefix, and for which it records what is
  * needed to write an alias for the original interface name in `autoload_aliases.php`.
@@ -64,11 +65,11 @@ class InterfaceSymbol extends NamespacedSymbol implements AutoloadAliasInterface
      */
     public function getAutoloadAliasArray(): array
     {
-        return array (
+        return  [
             'type' => 'interface',
             'interfacename' => $this->getOriginalLocalName(),
             'namespace' => $this->namespace->getOriginalFqdnName(),
             'extends' => [$this->getReplacementFqdnName()] + $this->getExtends(),
-        );
+        ];
     }
 }

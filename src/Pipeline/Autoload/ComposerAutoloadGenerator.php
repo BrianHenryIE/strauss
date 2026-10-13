@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Extend Composer's `AutoloadGenerator` to override the `getFileIdentifier()` method's hash to provide true uniqueness.
  *

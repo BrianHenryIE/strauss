@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Build a list of files for the Composer packages.
  *
@@ -77,11 +78,11 @@ class FileEnumerator
                 continue;
             }
             $this->compileFileListForPaths([$dependencyPackageAbsolutePath], $dependency);
-//            $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths([$dependencyPackageAbsolutePath]);
-//
-//            foreach ($absoluteFilePaths as $sourceAbsolutePath) {
-//                $this->addFile($sourceAbsolutePath, $dependency);
-//            }
+            //            $absoluteFilePaths = $this->filesystem->findAllFilesAbsolutePaths([$dependencyPackageAbsolutePath]);
+            //
+            //            foreach ($absoluteFilePaths as $sourceAbsolutePath) {
+            //                $this->addFile($sourceAbsolutePath, $dependency);
+            //            }
         }
 
         $this->discoveredFiles->sort();
@@ -169,8 +170,8 @@ class FileEnumerator
                     $this->logger->warning(
                         "Could not read .gitignore at {path}: {message}",
                         [
-                        'path' => $normalizedBasePath,
-                        'message' => $e->getMessage(),
+                            'path' => $normalizedBasePath,
+                            'message' => $e->getMessage(),
                         ]
                     );
                 }
@@ -227,8 +228,8 @@ class FileEnumerator
                     $this->logger->warning(
                         "Could not check .gitignore for {path}: {message}",
                         [
-                        'path' => $sourceAbsolutePath,
-                        'message' => $e->getMessage(),
+                            'path' => $sourceAbsolutePath,
+                            'message' => $e->getMessage(),
                         ]
                     );
                 }
@@ -294,16 +295,16 @@ class FileEnumerator
                     $dependency,
                     FileSystem::normalizeDirSeparator($vendorRelativePath),
                     $this->filesystem->normalizePath($sourceAbsoluteFilepath),
-                    $this->config->getAbsoluteTargetDirectory(). '/' . $vendorRelativePath
+                    $this->config->getAbsoluteTargetDirectory() . '/' . $vendorRelativePath
                 );
 
-//            $f->setTargetAbsolutePath($this->config->getAbsoluteTargetDirectory() . '/' . $vendorRelativePath);
+            //            $f->setTargetAbsolutePath($this->config->getAbsoluteTargetDirectory() . '/' . $vendorRelativePath);
 
             $autoloaderType && $f->addAutoloader($autoloaderType);
 
-//            if ($isOutsideProjectDir) {
-//                $f->setDoDelete(false);
-//            }
+            //            if ($isOutsideProjectDir) {
+            //                $f->setDoDelete(false);
+            //            }
         } else {
             $vendorRelativePath = $this->filesystem->getRelativePath(
                 str_starts_with($sourceAbsoluteFilepath, $this->config->getAbsoluteVendorDirectory()) ? $this->config->getAbsoluteVendorDirectory() : $this->config->getAbsoluteTargetDirectory(),

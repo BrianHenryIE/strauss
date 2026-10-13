@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Error when `config.vendor-dir` is multiple directories deep.
  *
@@ -27,29 +28,29 @@ class StraussIssue133Test extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionBelow($minimum_php_version);
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "hirasso/rh-admin-utils",
-  "description": "A WordPress utility plugin 🥞",
-  "license": "GPL-2.0-or-later",
-  "config": {
-    "vendor-dir": "./lib/vendor"
-  },
-  "autoload": {
-    "psr-4": {
-      "RH\\AdminUtils\\": "lib/rh-admin-utils"
-    }
-  },
-  "type": "wordpress-plugin",
-  "minimum-stability": "dev",
-  "require": {
-    "php": ">=8.2",
-    "symfony/var-dumper": "^7.1"
-  },
-  "require-dev": {
-    "squizlabs/php_codesniffer": "*"
-  }
-}
-EOD;
+            {
+              "name": "hirasso/rh-admin-utils",
+              "description": "A WordPress utility plugin 🥞",
+              "license": "GPL-2.0-or-later",
+              "config": {
+                "vendor-dir": "./lib/vendor"
+              },
+              "autoload": {
+                "psr-4": {
+                  "RH\\AdminUtils\\": "lib/rh-admin-utils"
+                }
+              },
+              "type": "wordpress-plugin",
+              "minimum-stability": "dev",
+              "require": {
+                "php": ">=8.2",
+                "symfony/var-dumper": "^7.1"
+              },
+              "require-dev": {
+                "squizlabs/php_codesniffer": "*"
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Extension of DirectDependencies which represents all Composer Packages in the dependency tree.
  *
@@ -14,7 +15,6 @@ namespace BrianHenryIE\Strauss\Composer;
  */
 class DeepDependenciesCollection extends DependenciesCollection
 {
-
     /**
      * @param array<ComposerPackage> $dependencies Top-level packages whose dependency trees are flattened into this collection.
      */

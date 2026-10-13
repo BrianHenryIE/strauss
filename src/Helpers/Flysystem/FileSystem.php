@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This class extends Flysystem's Filesystem class to add some additional functionality, particularly around
  * symlinks which are not supported by Flysystem.
@@ -35,9 +36,9 @@ use League\Flysystem\StorageAttributes;
 class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixerInterface, FlysystemReaderBackCompatTraitInterface
 {
     use FlysystemReaderBackCompatTrait;
-//    use FlysystemReaderBackCompatTrait {
-//        FlysystemReaderBackCompatTrait::directoryExists as traitDirectoryExists;
-//    }
+    //    use FlysystemReaderBackCompatTrait {
+    //        FlysystemReaderBackCompatTrait::directoryExists as traitDirectoryExists;
+    //    }
 
     /**
      * @see LeagueFilesystem::$pathNormalizer
@@ -88,9 +89,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
         ?string $localFsLocation = null,
         ?string $workingDir = null
     ) {
-        $localFsLocation        = $localFsLocation ?? self::getFsRoot(Platform::getcwd());
-        $pathNormalizer         = $pathNormalizer ?? self::makePathNormalizer($localFsLocation);
-        $pathPrefixer           = $pathPrefixer ?? new PathPrefixer(
+        $localFsLocation ??= self::getFsRoot(Platform::getcwd());
+        $pathNormalizer ??= self::makePathNormalizer($localFsLocation);
+        $pathPrefixer ??= new PathPrefixer(
             $localFsLocation,
             DIRECTORY_SEPARATOR
         );
@@ -109,7 +110,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     public static function getFsRoot(string $path): string
     {
         if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path, $output_array)) {
-//        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?: getcwd(), $output_array)) {
+            //        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?: getcwd(), $output_array)) {
             return strtoupper($output_array[1]);
         }
         // Relative path.
@@ -128,9 +129,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
                     str_replace('/', '\\', FileSystem::getFsRoot($workingDir)),
                     FileSystem::getFsRoot(Platform::getcwd()),
                     FileSystem::normalizeDirSeparator(FileSystem::getFsRoot(Platform::getcwd())),
-                //                    FileSystem::getFsRoot($workingDir),
-                //                    FileSystem::getFsRoot(),
-                //                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
+                    //                    FileSystem::getFsRoot($workingDir),
+                    //                    FileSystem::getFsRoot(),
+                    //                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                     'c:\\',
                     'c:/',
                     'd:\\',
@@ -435,10 +436,10 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
 
         $prefixed = $this->prefixPath($this->normalizePath($path));
 
-//        if ($this->getAdapter() instanceof InMemoryFilesystemAdapter || $this->getAdapter() instanceof ReadOnlyFileSystem) {
-//        if ($this->flysystemAdapter instanceof ReadOnlyFileSystem) {
-//            return str_replace(':/', '://', $prefixed);
-//        }
+        //        if ($this->getAdapter() instanceof InMemoryFilesystemAdapter || $this->getAdapter() instanceof ReadOnlyFileSystem) {
+        //        if ($this->flysystemAdapter instanceof ReadOnlyFileSystem) {
+        //            return str_replace(':/', '://', $prefixed);
+        //        }
 
         return self::normalizeDirSeparator($prefixed, DIRECTORY_SEPARATOR);
     }
@@ -478,8 +479,8 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      * This `is_dir()` approach is bound to break the {@see ReadOnlyFileSystemAdapter} / `--dry-run` sometimes.
      * The change in #278 changes LocalFileSystemAdapter to follow symlinks.
      */
-//    public function directoryExists(string $path): bool
-//    {
-//        return $this->traitDirectoryExists($path) || is_dir("/$path");
-//    }
+    //    public function directoryExists(string $path): bool
+    //    {
+    //        return $this->traitDirectoryExists($path) || is_dir("/$path");
+    //    }
 }

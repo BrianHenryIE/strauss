@@ -14,7 +14,6 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
  */
 class FileSystemTest extends TestCase
 {
-
     /**
      * Am I crazy or is there no easy way to get a file's attributes with Flysystem?
      * So I'm doing a directory listing then filtering to the file I want.

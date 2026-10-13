@@ -1,4 +1,5 @@
 <?php
+
 /**
  * New `bootstrap.php` file to load the aliases file is incorrect
  *
@@ -16,7 +17,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  */
 class StraussIssue183Test extends IntegrationTestCase
 {
-
     public static function bootstrapDataProvider(): array
     {
         return [
@@ -33,30 +33,30 @@ class StraussIssue183Test extends IntegrationTestCase
     {
         $straussAbsoluteDir = dirname(__DIR__, 2);
         $composerJsonString = <<<EOD
-{
-  "name": "strauss/issue183",
-  "require": {
-    "psr/log": "*"
-  },
-  "require-dev": {
-    "brianhenryie/strauss": "dev-master"
-  },
-  "config": {
-    "audit": {
-      "ignore": {
-        "CVE-2026-102601": "league/flysytem 2.x"
-      }
-    }
-  },
-  "extra": {
-    "strauss": {
-$targetDirectoryJsonLine
-      "namespace_prefix": "Strauss\\\\Issue183\\\\",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue183",
+              "require": {
+                "psr/log": "*"
+              },
+              "require-dev": {
+                "brianhenryie/strauss": "dev-master"
+              },
+              "config": {
+                "audit": {
+                  "ignore": {
+                    "CVE-2026-102601": "league/flysytem 2.x"
+                  }
+                }
+              },
+              "extra": {
+                "strauss": {
+            $targetDirectoryJsonLine
+                  "namespace_prefix": "Strauss\\\\Issue183\\\\",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -94,19 +94,19 @@ EOD;
     public function test_allow_url_include(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue183",
-  "require": {
-    "psr/log": "1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue183\\",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue183",
+              "require": {
+                "psr/log": "1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue183\\",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -118,7 +118,7 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // vendor/composer/autoload_static.php
-        $autoloadStaticPhpString = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_static.php');
+        $autoloadStaticPhpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_static.php');
         $this->assertStringContainsString('public static $classMap =', $autoloadStaticPhpString, 'Classmap not in autoload_static.');
         $this->assertStringContainsString('Strauss\\\\Issue183\\\\Psr\\\\Log\\\\LoggerAwareTrait', $autoloadStaticPhpString, 'Classmap not in autoload_static.');
 

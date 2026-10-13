@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A logger that changes file paths to be relative to the project directory.
  *

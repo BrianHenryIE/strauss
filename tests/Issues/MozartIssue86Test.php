@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/coenjacobs/mozart/blob/3b1243ca8505fa6436569800dc34269178930f39/tests/replacers/ClassmapReplacerIntegrationTest.php
  */
@@ -14,7 +15,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue86Test extends IntegrationTestCase
 {
-
     /**
      * Issue #86 – "class as" appeared in a comment and later the keyword as was prefixed!
      *
@@ -26,27 +26,27 @@ class MozartIssue86Test extends IntegrationTestCase
         $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-86",
-	"require": {
-		"pear/pear-core-minimal": "v1.10.10"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M86\\",
-			"classmap_prefix": "BrianHenryIE_M86_",
-			"override_autoload": {
-				"pear/pear-core-minimal": {
-					"classmap": [
-						"src/"
-					]
-				},
-				"pear/console_getopt": {}
-			}
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-86",
+            	"require": {
+            		"pear/pear-core-minimal": "v1.10.10"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M86\\",
+            			"classmap_prefix": "BrianHenryIE_M86_",
+            			"override_autoload": {
+            				"pear/pear-core-minimal": {
+            					"classmap": [
+            						"src/"
+            					]
+            				},
+            				"pear/console_getopt": {}
+            			}
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -57,7 +57,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/pear/pear_exception/PEAR/Exception.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/pear/pear_exception/PEAR/Exception.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('foreach (self::$_observers Mozart_as $func) {', $php_string);
@@ -76,19 +76,19 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-86-2",
-	"require": {
-		"afragen/wp-dependency-installer": "3.1"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M86\\",
-			"classmap_prefix": "BrianHenryIE_M86_"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-86-2",
+            	"require": {
+            		"afragen/wp-dependency-installer": "3.1"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M86\\",
+            			"classmap_prefix": "BrianHenryIE_M86_"
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -99,7 +99,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/afragen/wp-dependency-installer/wp-dependency-installer.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/afragen/wp-dependency-installer/wp-dependency-installer.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('Path BrianHenryIE_M86_to plugin or theme', $php_string, 'Text in comment still prefixed.');

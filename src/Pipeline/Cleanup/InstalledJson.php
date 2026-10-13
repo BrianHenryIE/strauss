@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Changes "install-path" to point to vendor-prefixed target directory.
  *
@@ -75,8 +76,8 @@ class InstalledJson
         $this->logger->info(
             'Copying {sourcePath} to {targetPath}',
             [
-            'sourcePath' => $source,
-            'targetPath' => $target
+                'sourcePath' => $source,
+                'targetPath' => $target,
             ]
         );
 
@@ -88,8 +89,8 @@ class InstalledJson
         $this->logger->info(
             'Copied {sourcePath} to {targetPath}',
             [
-            'sourcePath' => $source,
-            'targetPath' => $target
+                'sourcePath' => $source,
+                'targetPath' => $target,
             ]
         );
     }
@@ -215,7 +216,7 @@ class InstalledJson
             if (!isset($packageArray['autoload'])) {
                 $this->logger->info(
                     'Package {packageName} has no autoload key in {installedJsonPath}',
-                    ['packageName' => $packageArray['name'],'installedJsonPath'=>$installedJsonPath]
+                    ['packageName' => $packageArray['name'],'installedJsonPath' => $installedJsonPath]
                 );
                 continue;
             }
@@ -226,7 +227,7 @@ class InstalledJson
             if (!$pathExists) {
                 $this->logger->info(
                     'Removing package autoload key from {installedJsonPath}: {packageName}',
-                    ['packageName' => $packageArray['name'],'installedJsonPath'=>$installedJsonPath]
+                    ['packageName' => $packageArray['name'],'installedJsonPath' => $installedJsonPath]
                 );
                 $packageArray['autoload'] = [];
             }
@@ -278,7 +279,7 @@ class InstalledJson
                     default:
                         $this->logger->warning(
                             'Unexpected autoload type in {installedJsonPath}: {type}',
-                            ['installedJsonPath'=>$installedJsonPath,'type'=>$type]
+                            ['installedJsonPath' => $installedJsonPath,'type' => $type]
                         );
                         break;
                 }
@@ -435,7 +436,7 @@ class InstalledJson
 
                             $trimmedOriginalNamespace = trim($originalNamespace, '\\');
 
-                            $this->logger->info('Checking '.$type.' namespace: ' . $trimmedOriginalNamespace);
+                            $this->logger->info('Checking ' . $type . ' namespace: ' . $trimmedOriginalNamespace);
 
                             if (isset($discoveredNamespaces[$trimmedOriginalNamespace])) {
                                 $namespaceSymbol = $discoveredNamespaces[$trimmedOriginalNamespace];
@@ -477,7 +478,7 @@ class InstalledJson
                             $this->logger->warning(
                                 'Unexpected autoloader type: {type} in {packageName}.',
                                 [
-                                'type' => $type, 'packageName' => $package['name']
+                                    'type' => $type, 'packageName' => $package['name'],
                                 ]
                             );
                         }

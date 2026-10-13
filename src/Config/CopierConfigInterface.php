@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed by the step which copies the discovered files into the target directory.
  *
@@ -13,6 +14,5 @@ namespace BrianHenryIE\Strauss\Config;
  */
 interface CopierConfigInterface
 {
-
     public function getAbsoluteTargetDirectory(): string;
 }

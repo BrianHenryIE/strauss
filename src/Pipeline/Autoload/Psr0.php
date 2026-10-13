@@ -1,4 +1,5 @@
 <?php
+
 /**
  * After a PSR-0 namespaced class is renamed, its directory structure must be updated to match the required format.
  *

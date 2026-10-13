@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The symbols marked for renaming, grouped and indexed once per run for {@see ChangePlanner}.
  *

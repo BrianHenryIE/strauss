@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Generate an `autoload.php` file in the root of the target directory.
  *

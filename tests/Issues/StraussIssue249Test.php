@@ -1,4 +1,5 @@
 <?php
+
 /**
  * [warning] Package directory unexpectedly DOES NOT exist: /path/to/vendor-prefixed/freemius/wordpress-sdk
  *
@@ -15,29 +16,28 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue249Test extends IntegrationTestCase
 {
-
     public function test_copy_all_freemius_files(): void
     {
 
         $composerJsonString = <<<'EOD'
-{
-    "require": {
-      "freemius/wordpress-sdk": "^2.13"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "PrintusSmartPrintTiming\\",
-            "classmap_prefix": "PrintusSmartPrintTiming_",
-            "constant_prefix": "PSPT_",
-            "exclude_from_copy": {
-                "packages": [
-                  "freemius/wordpress-sdk"
-                ]
+            {
+                "require": {
+                  "freemius/wordpress-sdk": "^2.13"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "PrintusSmartPrintTiming\\",
+                        "classmap_prefix": "PrintusSmartPrintTiming_",
+                        "constant_prefix": "PSPT_",
+                        "exclude_from_copy": {
+                            "packages": [
+                              "freemius/wordpress-sdk"
+                            ]
+                        }
+                    }
+                }
             }
-        }
-    }
-}
-EOD;
+            EOD;
 
         chdir($this->testsWorkingDir);
 

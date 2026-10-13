@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Parses a PHP file ONCE and produces everything Strauss needs to know about it as a {@see FileCodeMap}: the
  * symbols it defines, the namespaces it declares, and the location of every symbol usage, comment, string and
@@ -86,8 +87,8 @@ class PhpFileAnalyzer
             $this->logger->warning(
                 'Failed to parse file {filePath} with error: {errorMessage}',
                 [
-                'filePath' => $filePathForLogging ?? 'string',
-                'errorMessage' => $e->getMessage(),
+                    'filePath' => $filePathForLogging ?? 'string',
+                    'errorMessage' => $e->getMessage(),
                 ]
             );
             return null;
@@ -109,8 +110,8 @@ class PhpFileAnalyzer
             new NameResolver(
                 null,
                 [
-                'preserveOriginalNames' => true,
-                'replaceNodes' => false,
+                    'preserveOriginalNames' => true,
+                    'replaceNodes' => false,
                 ]
             )
         );

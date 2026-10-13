@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Namespaces in constants not replaced
  * @see https://github.com/coenjacobs/mozart/issues/13
@@ -16,7 +17,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue13Test extends IntegrationTestCase
 {
-
     /**
      *
      * "paypal/rest-api-sdk-php"
@@ -27,23 +27,23 @@ class MozartIssue13Test extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Skipped above 8.3 because: Fatal error: Allowed memory size of 134217728 bytes exhausted');
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-13",
-	"require": {
-		"paypal/rest-api-sdk-php": "1.14.0"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M13\\",
-			"classmap_prefix": "BrianHenryIE_M13_",
-			"exclude_from_prefix": {
-			    "file_patterns": [
-			    ]
-			}
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-13",
+            	"require": {
+            		"paypal/rest-api-sdk-php": "1.14.0"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M13\\",
+            			"classmap_prefix": "BrianHenryIE_M13_",
+            			"exclude_from_prefix": {
+            			    "file_patterns": [
+            			    ]
+            			}
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -54,7 +54,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/paypal/rest-api-sdk-php/lib/BrianHenryIE/M13/PayPal/Log/PayPalLogger.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/paypal/rest-api-sdk-php/lib/BrianHenryIE/M13/PayPal/Log/PayPalLogger.php');
 
         // Confirm solution is correct.
         self::assertStringContainsString('constant("\\\\BrianHenryIE\\\\M13\\\\Psr\\\\Log\\\\LogLevel::$loggingLevel")', $phpString);

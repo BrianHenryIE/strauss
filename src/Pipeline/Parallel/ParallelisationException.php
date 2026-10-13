@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Thrown when parallel file analysis cannot be completed, e.g. a worker process cannot be started, exits early,
  * times out or sends unexpected output.

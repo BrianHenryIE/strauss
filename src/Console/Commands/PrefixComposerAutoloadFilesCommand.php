@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Prefixes the classes in Composer's own runtime files in the target directory, e.g. `autoload_real.php`,
  * `ClassLoader.php` and `InstalledVersions.php`, so they do not conflict with another plugin's Composer autoloader.

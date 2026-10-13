@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/BrianHenryIE/strauss/issues/44
  */
@@ -13,7 +14,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue44Test extends IntegrationTestCase
 {
-
     /**
      * Unprefixed static function call in ternary operation.
      *
@@ -23,24 +23,24 @@ class StraussIssue44Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "name": "brianhenryie/strauss-issue-44",
-  "require": {
-    "guzzlehttp/guzzle": "7.4.5"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue44\\",
-      "classmap_prefix": "Strauss_Issue44_"
-    }
-  }
-}
-EOD;
+            {
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "name": "brianhenryie/strauss-issue-44",
+              "require": {
+                "guzzlehttp/guzzle": "7.4.5"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue44\\",
+                  "classmap_prefix": "Strauss_Issue44_"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

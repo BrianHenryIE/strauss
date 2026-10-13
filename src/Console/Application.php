@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The Symfony Console application behind the `strauss` executable, registering each Strauss command.
  *

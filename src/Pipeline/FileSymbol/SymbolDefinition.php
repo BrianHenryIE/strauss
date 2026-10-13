@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A symbol (namespace, class, interface, trait, enum, function, constant) defined in a PHP file, as found by
  * {@see PhpFileAnalyzer}. What the file "contains".

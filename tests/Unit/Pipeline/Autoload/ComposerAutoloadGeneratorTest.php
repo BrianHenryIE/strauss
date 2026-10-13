@@ -36,7 +36,7 @@ class ComposerAutoloadGeneratorTest extends \BrianHenryIE\Strauss\TestCase
 
         $packageMap = [
             [$rootPackage, ''],
-            [$package, 'my/package']
+            [$package, 'my/package'],
         ];
 
         $getFileIdentifier = function (string $projectUniqueString) use ($eventDispatcher, $packageMap, $rootPackage) {

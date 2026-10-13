@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Factory for the Monolog processor which aligns log message text following a `:::` marker into a column.
  *
@@ -16,7 +17,6 @@ use Monolog\Processor\ProcessorInterface;
  */
 class PadColonColumnsLogProcessor
 {
-
     public static function make(): ProcessorInterface
     {
         /**

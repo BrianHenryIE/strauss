@@ -28,7 +28,7 @@ class FileCopyScannerTest extends TestCase
         $dependency->expects('getPackageAbsolutePath')->andReturn('path/to/project/vendor/my/package');
         $dependency->expects('addFile');
         $dependency->expects('getPackageName')->andReturn('my/package');
-//        $dependency->expects('getRelativePath')->andReturn('my/package');
+        //        $dependency->expects('getRelativePath')->andReturn('my/package');
 
         $file = new FileWithDependency(
             $dependency,

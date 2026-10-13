@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Attempt to align text following `:` in a log message.
  *

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Symlink removed although it is in exclude_from_copy
  *
@@ -14,57 +15,56 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue262Test extends IntegrationTestCase
 {
-
     public function test_do_not_remove_symlink_exclude_from_copy(): void
     {
 
         $dependencyComposerJsonString = <<<'EOD'
-{
-	"name": "strausstest/dependency",
-	"autoload": {
-		"psr-4": {
-			"My\\Dependency\\": "src"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "strausstest/dependency",
+            	"autoload": {
+            		"psr-4": {
+            			"My\\Dependency\\": "src"
+            		}
+            	}
+            }
+            EOD;
 
         $dependencyPsr4AutoloadedString = <<<'EOD'
-<?php
+            <?php
 
-namespace My\Dependency;
+            namespace My\Dependency;
 
-class Psr4Autoloaded {
+            class Psr4Autoloaded {
 
-}
-EOD;
+            }
+            EOD;
 
         $mainComposerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue262",
-  "minimum-stability": "dev",
-  "repositories": {
-    "strausstest/dependency": {
-        "type": "path",
-        "url": "../dependency"
-    }
-  },
-  "require": {
-    "strausstest/dependency": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\S262\\",
-      "delete_vendor_packages": true,
-      "exclude_from_copy": {
-        "packages": [
-          "strausstest/dependency"
-        ]
-      }
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue262",
+              "minimum-stability": "dev",
+              "repositories": {
+                "strausstest/dependency": {
+                    "type": "path",
+                    "url": "../dependency"
+                }
+              },
+              "require": {
+                "strausstest/dependency": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\S262\\",
+                  "delete_vendor_packages": true,
+                  "exclude_from_copy": {
+                    "packages": [
+                      "strausstest/dependency"
+                    ]
+                  }
+                }
+              }
+            }
+            EOD;
 
         mkdir($this->testsWorkingDir . '/dependency');
         $this->getFileSystem()->write($this->testsWorkingDir . '/dependency/composer.json', $dependencyComposerJsonString);

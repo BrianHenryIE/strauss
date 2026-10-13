@@ -92,7 +92,7 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
             PrefixerConfigInterface::class,
             FileEnumeratorConfig::class
         );
-//        $filesystem = $this->getInMemoryFileSystem();
+        //        $filesystem = $this->getInMemoryFileSystem();
         $filesystem = $this->getFileSystem();
         $logger = $this->getLogger();
 
@@ -102,97 +102,97 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $config->expects('isTargetDirectoryVendor')->times(1)->andReturnFalse();
 
         $installedVersions = <<<EOD
-<?php // a core Composer file that is not unique per install.
-EOD;
+            <?php // a core Composer file that is not unique per install.
+            EOD;
         $filesystem->write('project/vendor/composer/InstalledVersions.php', $installedVersions);
 
         $installedPhp = <<<EOD
-<?php return array(
-    'root' => array(
-        'name' => '__root__',
-        'pretty_version' => 'dev-master',
-        'version' => 'dev-master',
-        'reference' => '6a42cdc603bb428cdc5eaa6ff088d7484d291537',
-        'type' => 'library',
-        'install_path' => __DIR__ . '/../../',
-        'aliases' => array(),
-        'dev' => true,
-    ),
-    'versions' => array(
-        '__root__' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'reference' => '6a42cdc603bb428cdc5eaa6ff088d7484d291537',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../../',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
-        'duck7000/imdb-graphql-php' => array(
-            'pretty_version' => 'dev-jcv',
-            'version' => 'dev-jcv',
-            'reference' => 'cfdc4a753dc61f1ffb0a3c742553f0bc83ffc687',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../duck7000/imdb-graphql-php',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
-        'monolog/monolog' => array(
-            'pretty_version' => '2.10.0',
-            'version' => '2.10.0.0',
-            'reference' => '5cf826f2991858b54d5c3809bee745560a1042a7',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../monolog/monolog',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
-        'psr/log' => array(
-            'pretty_version' => '1.1.0',
-            'version' => '1.1.0.0',
-            'reference' => '6c001f1daafa3a3ac1d8ff69ee4db8e799a654dd',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../psr/log',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
-        'psr/log-implementation' => array(
-            'dev_requirement' => false,
-            'provided' => array(
-                0 => '1.0.0 || 2.0.0 || 3.0.0',
-            ),
-        ),
-        'psr/simple-cache' => array(
-            'pretty_version' => '1.0.1',
-            'version' => '1.0.1.0',
-            'reference' => '408d5eafb83c57f6365a3ca330ff23aa4a5fa39b',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../psr/simple-cache',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
-        'twbs/bootstrap' => array(
-            'pretty_version' => 'v5.3.6',
-            'version' => '5.3.6.0',
-            'reference' => 'f849680d16a9695c9a6c9c062d6cff55ddcf071e',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../twbs/bootstrap',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
-        'twitter/bootstrap' => array(
-            'dev_requirement' => false,
-            'replaced' => array(
-                0 => 'v5.3.6',
-            ),
-        ),
-    ),
-);
-EOD;
+            <?php return array(
+                'root' => array(
+                    'name' => '__root__',
+                    'pretty_version' => 'dev-master',
+                    'version' => 'dev-master',
+                    'reference' => '6a42cdc603bb428cdc5eaa6ff088d7484d291537',
+                    'type' => 'library',
+                    'install_path' => __DIR__ . '/../../',
+                    'aliases' => array(),
+                    'dev' => true,
+                ),
+                'versions' => array(
+                    '__root__' => array(
+                        'pretty_version' => 'dev-master',
+                        'version' => 'dev-master',
+                        'reference' => '6a42cdc603bb428cdc5eaa6ff088d7484d291537',
+                        'type' => 'library',
+                        'install_path' => __DIR__ . '/../../',
+                        'aliases' => array(),
+                        'dev_requirement' => false,
+                    ),
+                    'duck7000/imdb-graphql-php' => array(
+                        'pretty_version' => 'dev-jcv',
+                        'version' => 'dev-jcv',
+                        'reference' => 'cfdc4a753dc61f1ffb0a3c742553f0bc83ffc687',
+                        'type' => 'library',
+                        'install_path' => __DIR__ . '/../duck7000/imdb-graphql-php',
+                        'aliases' => array(),
+                        'dev_requirement' => false,
+                    ),
+                    'monolog/monolog' => array(
+                        'pretty_version' => '2.10.0',
+                        'version' => '2.10.0.0',
+                        'reference' => '5cf826f2991858b54d5c3809bee745560a1042a7',
+                        'type' => 'library',
+                        'install_path' => __DIR__ . '/../monolog/monolog',
+                        'aliases' => array(),
+                        'dev_requirement' => false,
+                    ),
+                    'psr/log' => array(
+                        'pretty_version' => '1.1.0',
+                        'version' => '1.1.0.0',
+                        'reference' => '6c001f1daafa3a3ac1d8ff69ee4db8e799a654dd',
+                        'type' => 'library',
+                        'install_path' => __DIR__ . '/../psr/log',
+                        'aliases' => array(),
+                        'dev_requirement' => false,
+                    ),
+                    'psr/log-implementation' => array(
+                        'dev_requirement' => false,
+                        'provided' => array(
+                            0 => '1.0.0 || 2.0.0 || 3.0.0',
+                        ),
+                    ),
+                    'psr/simple-cache' => array(
+                        'pretty_version' => '1.0.1',
+                        'version' => '1.0.1.0',
+                        'reference' => '408d5eafb83c57f6365a3ca330ff23aa4a5fa39b',
+                        'type' => 'library',
+                        'install_path' => __DIR__ . '/../psr/simple-cache',
+                        'aliases' => array(),
+                        'dev_requirement' => false,
+                    ),
+                    'twbs/bootstrap' => array(
+                        'pretty_version' => 'v5.3.6',
+                        'version' => '5.3.6.0',
+                        'reference' => 'f849680d16a9695c9a6c9c062d6cff55ddcf071e',
+                        'type' => 'library',
+                        'install_path' => __DIR__ . '/../twbs/bootstrap',
+                        'aliases' => array(),
+                        'dev_requirement' => false,
+                    ),
+                    'twitter/bootstrap' => array(
+                        'dev_requirement' => false,
+                        'replaced' => array(
+                            0 => 'v5.3.6',
+                        ),
+                    ),
+                ),
+            );
+            EOD;
         $filesystem->write('project/vendor/composer/installed.php', $installedPhp);
 
         $packagesToCopy = [
-            'duck7000/imdb-graphql-php' => array(),
-            'monolog/monolog' => array(),
+            'duck7000/imdb-graphql-php' => [],
+            'monolog/monolog' => [],
         ];
         $config->expects('getPackagesToCopy')->once()->andReturn($packagesToCopy);
 
@@ -226,7 +226,7 @@ EOD;
 
         $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
 
-        $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory) extends DumpAutoload {
+        $sut = new class ($config, $filesystem, $logger, $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory) extends DumpAutoload {
             public function optimizeEnabledForTest(): bool
             {
                 return $this->isOptimizeAutoloaderEnabled();
@@ -251,7 +251,7 @@ EOD;
 
         $composerAutoloadGeneratorFactory = Mockery::mock(ComposerAutoloadGeneratorFactory::class);
 
-        $sut = new class($config, $filesystem, $logger, $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory) extends DumpAutoload {
+        $sut = new class ($config, $filesystem, $logger, $prefixer, $fileEnumerator, $composerAutoloadGeneratorFactory) extends DumpAutoload {
             public function optimizeEnabledForTest(): bool
             {
                 return $this->isOptimizeAutoloaderEnabled();

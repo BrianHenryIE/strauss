@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Converts between Flysystem-relative paths and absolute filesystem paths by adding or removing a base path prefix.
  *

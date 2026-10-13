@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `FlysystemAdapterBackCompatTrait` needs to normalize paths.
  *

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The default `strauss` command: copies the project's Composer dependencies to the target directory, prefixes their
  * namespaces, classes, functions and constants, and generates an autoloader for the result.
@@ -149,7 +150,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-//        $this->setLogger($this->getIOLogger($input, $output));
+        //        $this->setLogger($this->getIOLogger($input, $output));
 
         try {
             $this->logger->notice(
@@ -273,7 +274,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $symlinkedDependencies = array_filter(
             $this->flatDependencyTree->toArray(),
-            fn ($dependency) => !is_null($dependency->getRealPath()) && !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath())
+            fn($dependency) => !is_null($dependency->getRealPath()) && !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath())
         );
 
         if (!empty($symlinkedDependencies)

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A collection of `ComposerPackage`.
  *
@@ -18,7 +19,6 @@ use IteratorAggregate;
  */
 class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countable
 {
-
     /**
      * @var array<string,ComposerPackage>
      */

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `[error] Unable to realpath() absolute path` when both `delete_vendor_packages` and `delete_vendor_files` are enabled.
  *
@@ -22,26 +23,25 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue331Test extends IntegrationTestCase
 {
-
     public function test_delete_vendor_packages_and_delete_vendor_files_together(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue331",
-  "require": {
-    "psr/log": "1.1.4"
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "vendor-prefixed",
-      "namespace_prefix": "Strauss\\Issue331\\",
-      "classmap_prefix": "Strauss_Issue331_",
-      "delete_vendor_packages": true,
-      "delete_vendor_files": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue331",
+              "require": {
+                "psr/log": "1.1.4"
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "vendor-prefixed",
+                  "namespace_prefix": "Strauss\\Issue331\\",
+                  "classmap_prefix": "Strauss_Issue331_",
+                  "delete_vendor_packages": true,
+                  "delete_vendor_files": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

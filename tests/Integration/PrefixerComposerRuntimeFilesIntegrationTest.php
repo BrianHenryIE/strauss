@@ -1,4 +1,5 @@
 <?php
+
 /**
  * When the autoloader is regenerated without a `vendor` directory, Composer's `InstalledVersions.php` in the target
  * directory is the already prefixed copy from the earlier run.

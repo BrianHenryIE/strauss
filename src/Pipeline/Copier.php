@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Prepares the destination by deleting any files about to be copied.
  * Copies the files.

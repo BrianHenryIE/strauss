@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `FilesystemAdapter` interface v3 introduced `::directoryExists()`.
  *

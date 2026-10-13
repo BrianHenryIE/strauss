@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Minimal `.gitattributes` parser, used to determine which files a package marks `export-ignore`
  * (i.e. files `git archive` / Composer dist would strip from the distributed package).

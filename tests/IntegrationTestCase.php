@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Creates and deletes a temp directory for tests.
  *
@@ -138,7 +139,7 @@ class IntegrationTestCase extends TestCase
             $stderrFile = tempnam(sys_get_temp_dir(), 'strauss-phar-stderr');
 
             exec($env . ' php ' . $phpFlags . $this->projectDir . '/strauss.phar ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
-//            exec($env . ' php ' . $phpFlags . $this->projectDir . '/build/bin/strauss ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
+            //            exec($env . ' php ' . $phpFlags . $this->projectDir . '/build/bin/strauss ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
             $allOutput = implode(PHP_EOL, $output);
             echo $allOutput;
 
@@ -176,7 +177,7 @@ class IntegrationTestCase extends TestCase
                 unset($paramsSplit[0]);
                 break;
             default:
-                $strauss = new class() extends  DependenciesCommand {
+                $strauss = new class extends DependenciesCommand {
                     public Logger $monologLogger;
                     protected function getMonologLogger(InputInterface $input, OutputInterface $output): Logger
                     {
@@ -321,12 +322,12 @@ class IntegrationTestCase extends TestCase
         } else {
             $parentDirList        = $filesystem->listContents($parentDir)->toArray();
             $parentDirListStrings = array_map(
-                fn(StorageAttributes $dirEntry) => basename($dirEntry->path()) . ( $dirEntry->type() === 'dir' ? '/' : '' ),
+                fn(StorageAttributes $dirEntry) => basename($dirEntry->path()) . ($dirEntry->type() === 'dir' ? '/' : ''),
                 $parentDirList
             );
             $append               .= ', its parent directory contains: ' . implode(', ', array_slice($parentDirListStrings, 0, 3));
             if (count($parentDirList) > 3) {
-                $append .= ' +' . ( count($parentDirList) - 3 );
+                $append .= ' +' . (count($parentDirList) - 3);
             }
         }
         return $append;
@@ -361,8 +362,7 @@ class IntegrationTestCase extends TestCase
                 $pathPrefixer,
                 $localFsLocation,
                 $this->testsWorkingDir
-            )
-            extends FileSystem {
+            ) extends FileSystem {
                 /** @var array<int, array{location: string, deep: bool}> */
                 public array $listContentsCalls = [];
                 public function listContents(string $location, bool $deep = self::LIST_SHALLOW): \League\Flysystem\DirectoryListing
@@ -425,8 +425,8 @@ class IntegrationTestCase extends TestCase
 
         $pathPrefixer = new PathPrefixer('mem://', '/');
 
-        $this->readOnlyFileSystem =
-            new FileSystem(
+        $this->readOnlyFileSystem
+            = new FileSystem(
                 new ReadOnlyFileSystemAdapter(
                     $protectedFilesystemAdapter
                 ),

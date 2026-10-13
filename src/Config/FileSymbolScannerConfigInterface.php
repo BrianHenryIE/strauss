@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed while parsing each file to discover the symbols it declares and uses.
  *

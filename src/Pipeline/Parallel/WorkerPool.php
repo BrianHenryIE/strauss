@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Runs {@see \BrianHenryIE\Strauss\Console\Commands\WorkerCommand} processes and hands them chunks of files to
  * analyse.
@@ -79,8 +80,8 @@ class WorkerPool
         $this->logger->debug(
             'Analysing {fileCount} files with {workerCount} worker processes.',
             [
-            'fileCount' => count($queue),
-            'workerCount' => $processesToSpawn,
+                'fileCount' => count($queue),
+                'workerCount' => $processesToSpawn,
             ]
         );
 

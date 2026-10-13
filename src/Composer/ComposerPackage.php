@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Object for getting typed values from composer.json.
  *
@@ -203,7 +204,7 @@ class ComposerPackage
             /**
              * @see Platform::getCwd()
              */
-            throw new Exception('Could not determine working directory. Please comment out ~'.__LINE__.' in ' . __FILE__.' and see does it work regardless.');
+            throw new Exception('Could not determine working directory. Please comment out ~' . __LINE__ . ' in ' . __FILE__ . ' and see does it work regardless.');
         }
 
         $pathNormalizer = FileSystem::makePathNormalizer(Platform::getcwd());
@@ -245,9 +246,9 @@ class ComposerPackage
                 $this->vendorRelativePath  = $this->packageName;
                 //$this->packageAbsolutePath = $pathNormalizer->normalizePath(Platform::realpath($vendorAbsoluteDirectoryPath . '/' . $this->packageName));
                 // If the package is symlinked, the path will be outside the working directory.
-//        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
-//            $this->vendorRelativePath = $output_array[1];
-            } elseif (! ( $this instanceof ProjectComposerPackage ) && file_exists($packageAbsoluteDirectoryPath)) {
+                //        } elseif (0 !== strpos($fsComposerAbsoluteDirectoryPath, $fsCurrentWorkingDirectory) && 1 === preg_match('/.*[\/\\\\]([^\/\\\\]*[\/\\\\][^\/\\\\]*)[\/\\\\][^\/\\\\]*/', $vendorAbsoluteDirectoryPath, $output_array)) {
+                //            $this->vendorRelativePath = $output_array[1];
+            } elseif (! ($this instanceof ProjectComposerPackage) && file_exists($packageAbsoluteDirectoryPath)) {
                 $this->vendorRelativePath
                     = implode(
                         '/',
@@ -262,7 +263,7 @@ class ComposerPackage
                 $this->packageAbsolutePath = $pathNormalizer->normalizePath($packageAbsoluteDirectoryPath);
             } elseif (1 === preg_match('/.*[\/\\\\]([^\/\\\\]+[\/\\\\][^\/\\\\]+)[\/\\\\]composer.json/', $composerJsonFileAbsolute, $output_array)) {
                 // Not every package gets installed to a folder matching its name (crewlabs/unsplash).
-                if (! ( $this instanceof ProjectComposerPackage )) {
+                if (! ($this instanceof ProjectComposerPackage)) {
                     $this->vendorRelativePath = $output_array[1];
                 }
                 $this->packageAbsolutePath = dirname($composerJsonFileAbsolute);
@@ -380,7 +381,7 @@ class ComposerPackage
             );
     }
 
-    public function getLicense():string
+    public function getLicense(): string
     {
         return $this->license;
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Adds ~`require_once 'autoload_aliases.php'` to `vendor/autoload.php`.
  *

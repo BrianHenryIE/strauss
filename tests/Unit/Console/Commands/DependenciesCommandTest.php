@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Console\Commands;
@@ -22,9 +23,9 @@ class DependenciesCommandTest extends TestCase
         ?ConsoleOutputInterface $outputInterfaceMock = null,
         ?FileSystem $fileSystem = null,
         $logger = null
-    ):DependenciesCommand {
+    ): DependenciesCommand {
 
-        return new class(
+        return new class (
             $inputInterfaceMock ?? $this->createMock(InputInterface::class),
             $outputInterfaceMock ?? $this->createMock(ConsoleOutputInterface::class),
             $fileSystem ?? $this->getInMemoryFileSystem(),

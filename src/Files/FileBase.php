@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The interface pipeline steps use for every file Strauss handles, whether a project file, a
  * `vendor/composer` autoload file, or a file from a dependency.
@@ -18,7 +19,6 @@ use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
  */
 interface FileBase
 {
-
     public function getSourcePath(): string;
 
     public function getTargetAbsolutePath(): string;

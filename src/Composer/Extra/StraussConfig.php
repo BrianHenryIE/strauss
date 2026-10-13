@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The extra/strauss key in composer.json.
  *
@@ -113,7 +114,7 @@ class StraussConfig implements
      *
      * @var ?string[]
      */
-    protected ?array $updateCallSites = array();
+    protected ?array $updateCallSites = [];
 
     /**
      * Packages to copy and (maybe) prefix.
@@ -147,26 +148,26 @@ class StraussConfig implements
      *
      * @var array{packages?: string[], namespaces?: string[], file_patterns?: string[]}
      */
-    protected array $excludeFromCopy = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
+    protected array $excludeFromCopy = ['file_patterns' => [],'namespaces' => [],'packages' => []];
 
     /**
      * 'exclude_files_from_update' in composer/extra config. Make no changes to these files.
      *
      * @var array{packages?: string[], namespaces?: string[], file_patterns?: string[]}
      */
-    protected array $excludeFilesFromUpdates = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
+    protected array $excludeFilesFromUpdates = ['file_patterns' => [],'namespaces' => [],'packages' => []];
 
     /**
      * @var array{packages?: string[], namespaces?: string[], file_patterns?: string[]}
      */
-    protected array $excludeFromPrefix = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array());
+    protected array $excludeFromPrefix = ['file_patterns' => [],'namespaces' => [],'packages' => []];
 
     /**
      * Exclude constants from prefixing only (same shape as exclude_from_prefix).
      *
      * @var array{packages?: string[], namespaces?: string[], file_patterns?: string[], constants?: string[]}
      */
-    protected array $excludeConstants = array('file_patterns'=>array(),'namespaces'=>array(),'packages'=>array(),'constants'=>array());
+    protected array $excludeConstants = ['file_patterns' => [],'namespaces' => [],'packages' => [],'constants' => []];
 
     /**
      * Symbols which should still be renamed where they are used in code, but not where they appear inside strings.
@@ -177,7 +178,7 @@ class StraussConfig implements
      *
      * @var array{functions?: string[]}
      */
-    protected array $excludeFromStringRename = array('functions'=>array());
+    protected array $excludeFromStringRename = ['functions' => []];
 
     /**
      * An array of autoload keys to replace packages' existing autoload key.
@@ -213,7 +214,7 @@ class StraussConfig implements
      *
      * @var array<string, string> $namespaceReplacementPatterns
      */
-    protected array $namespaceReplacementPatterns = array();
+    protected array $namespaceReplacementPatterns = [];
 
     /**
      * Should a modified date be included in the header for modified files?
@@ -282,14 +283,14 @@ class StraussConfig implements
 
         // Backwards compatibility with Mozart.
         if (isset($composer, $composer->getPackage()->getExtra()['mozart'])) {
-            $configExtraSettings = (object)$composer->getPackage()->getExtra()['mozart'];
+            $configExtraSettings = (object) $composer->getPackage()->getExtra()['mozart'];
 
             // Default setting for Mozart.
             $this->setDeleteVendorFiles(true);
         }
 
         if (isset($composer, $composer->getPackage()->getExtra()['strauss'])) {
-            $configExtraSettings = (object)$composer->getPackage()->getExtra()['strauss'];
+            $configExtraSettings = (object) $composer->getPackage()->getExtra()['strauss'];
         }
 
         if (!is_null($configExtraSettings)) {
@@ -375,7 +376,7 @@ class StraussConfig implements
                     },
                     $classmapPrefix
                 ) ?? (function () {
-                        throw new \Exception(preg_last_error_msg(), preg_last_error());
+                    throw new \Exception(preg_last_error_msg(), preg_last_error());
                 })();
                 $classmapPrefix = str_replace("\\", "_", $classmapPrefix);
                 $this->setClassmapPrefix($classmapPrefix);
@@ -390,9 +391,9 @@ class StraussConfig implements
             }
         }
 
-//        if (!isset($this->namespacePrefix) || !isset($this->classmapPrefix)) {
-//            throw new Exception('Prefix not set. Please set `namespace_prefix`, `classmap_prefix` in composer.json/extra/strauss.');
-//        }
+        //        if (!isset($this->namespacePrefix) || !isset($this->classmapPrefix)) {
+        //            throw new Exception('Prefix not set. Please set `namespace_prefix`, `classmap_prefix` in composer.json/extra/strauss.');
+        //        }
 
         if (isset($composer) && empty($this->packages)) {
             $this->packages = array_map(
@@ -439,7 +440,7 @@ class StraussConfig implements
                     $this->updateCallSites = null;
                     break;
                 case (false === $configExtraSettings->updateCallSites):
-                    $this->updateCallSites = array();
+                    $this->updateCallSites = [];
                     break;
                 case (is_array($configExtraSettings->updateCallSites)):
                     // TODO: Should warn here if any values were invalid.
@@ -593,7 +594,7 @@ class StraussConfig implements
             $this->updateCallSites = null;
             return;
         } elseif (is_array($updateCallSites) && count($updateCallSites) === 1 && $updateCallSites[0] === false) {
-            $this->updateCallSites = array();
+            $this->updateCallSites = [];
             return;
         } elseif (is_array($updateCallSites) && isset($updateCallSites[0]) && !is_bool($updateCallSites[0])) {
             $this->updateCallSites = array_filter(
@@ -610,7 +611,7 @@ class StraussConfig implements
      */
     public function setExcludeFromCopy(array $excludeFromCopy): void
     {
-        foreach (array( 'packages', 'namespaces', 'file_patterns' ) as $key) {
+        foreach ([ 'packages', 'namespaces', 'file_patterns' ] as $key) {
             if (isset($excludeFromCopy[$key])) {
                 $this->excludeFromCopy[$key] = $excludeFromCopy[$key];
             }
@@ -622,7 +623,7 @@ class StraussConfig implements
      */
     public function getExcludePackagesFromCopy(): array
     {
-        return $this->excludeFromCopy['packages'] ?? array();
+        return $this->excludeFromCopy['packages'] ?? [];
     }
 
     /**
@@ -630,7 +631,7 @@ class StraussConfig implements
      */
     public function getExcludeNamespacesFromCopy(): array
     {
-        return $this->excludeFromCopy['namespaces'] ?? array();
+        return $this->excludeFromCopy['namespaces'] ?? [];
     }
 
     /**
@@ -638,7 +639,7 @@ class StraussConfig implements
      */
     public function getExcludeFilePatternsFromCopy(): array
     {
-        return $this->excludeFromCopy['file_patterns'] ?? array();
+        return $this->excludeFromCopy['file_patterns'] ?? [];
     }
 
 
@@ -647,7 +648,7 @@ class StraussConfig implements
      */
     public function setExcludeFilesFromUpdates(array $excludeFilesFromUpdates): void
     {
-        foreach (array( 'packages', 'namespaces', 'file_patterns' ) as $key) {
+        foreach ([ 'packages', 'namespaces', 'file_patterns' ] as $key) {
             if (isset($excludeFilesFromUpdates[$key])) {
                 $this->excludeFilesFromUpdates[$key] = $excludeFilesFromUpdates[$key];
             }
@@ -660,7 +661,7 @@ class StraussConfig implements
      */
     public function getExcludeFilesFromUpdatePackages(): array
     {
-        return $this->excludeFilesFromUpdates['packages'] ?? array();
+        return $this->excludeFilesFromUpdates['packages'] ?? [];
     }
 
     /**
@@ -668,7 +669,7 @@ class StraussConfig implements
      */
     public function getExcludeFileFromUpdateNamespaces(): array
     {
-        return $this->excludeFilesFromUpdates['namespaces'] ?? array();
+        return $this->excludeFilesFromUpdates['namespaces'] ?? [];
     }
 
     /**
@@ -676,7 +677,7 @@ class StraussConfig implements
      */
     public function getExcludeFilesFromUpdateFilePatterns(): array
     {
-        return $this->excludeFilesFromUpdates['file_patterns'] ?? array();
+        return $this->excludeFilesFromUpdates['file_patterns'] ?? [];
     }
 
     /**
@@ -729,7 +730,7 @@ class StraussConfig implements
      */
     public function getExcludeFilePatternsFromPrefixing(): array
     {
-        return $this->excludeFromPrefix['file_patterns'] ?? array();
+        return $this->excludeFromPrefix['file_patterns'] ?? [];
     }
 
     /**
@@ -1076,7 +1077,7 @@ class StraussConfig implements
             $updateCallSitesInput = $input->getOption('updateCallSites');
 
             if ('false' === $updateCallSitesInput) {
-                $this->updateCallSites = array();
+                $this->updateCallSites = [];
             } elseif ('true' === $updateCallSitesInput) {
                 $this->updateCallSites = null;
             } elseif (is_string($updateCallSitesInput)) {

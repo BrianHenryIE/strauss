@@ -1,4 +1,5 @@
 <?php
+
 /**
  * AWS not working after Mozart has been ran
  * @see https://github.com/coenjacobs/mozart/issues/62
@@ -27,7 +28,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue62Test extends IntegrationTestCase
 {
-
     /**
      * Just confirms `use Guzzle\Common\Collection;` is prefixed.
      */
@@ -36,24 +36,24 @@ class MozartIssue62Test extends IntegrationTestCase
         self::markTestSkippedLocally('Very slow to run.');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/mozart-issue-62",
-  "require": {
-    "aws/aws-sdk-php": "2.8.31"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\"
-    },
-    "aws/aws-sdk-php": [
-        "S3"
-    ]
-  },
-  "scripts": {
-    "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/mozart-issue-62",
+              "require": {
+                "aws/aws-sdk-php": "2.8.31"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\"
+                },
+                "aws/aws-sdk-php": [
+                    "S3"
+                ]
+              },
+              "scripts": {
+                "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -64,8 +64,8 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-//        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Aws/S3/S3Client.php');
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Strauss/Aws/S3/S3Client.php');
+        //        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Aws/S3/S3Client.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/Strauss/Aws/S3/S3Client.php');
 
         self::assertStringContainsString('use Strauss\\Guzzle\\Common\\Collection;', $phpString);
     }

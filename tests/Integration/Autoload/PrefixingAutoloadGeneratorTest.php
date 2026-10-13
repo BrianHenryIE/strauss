@@ -1,4 +1,5 @@
 <?php
+
 /**
  * When prefixing `AutoloadGenerator` for the phar, a string in it gets prefixed twice.
  *
@@ -21,7 +22,6 @@ use Mockery;
 
 class PrefixingAutoloadGeneratorTest extends IntegrationTestCase
 {
-
     public function test_prefix_autoload_generator(): void
     {
         $config = Mockery::mock(PrefixerConfigInterface::class);

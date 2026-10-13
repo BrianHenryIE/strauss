@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Don't fail when an autoloaded directory is missing.
  *
@@ -15,7 +16,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue261Test extends IntegrationTestCase
 {
-
     public function test_skip_missing_dir(): void
     {
         $this->markTestSkippedOnPhpVersionBelow('8.1.0');
@@ -28,19 +28,19 @@ class StraussIssue261Test extends IntegrationTestCase
         $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
-{
-    "name": "strauss/issue261",
-    "require": {
-        "respect/stringifier": "1.0.0"
-    },
-    "extra": {
-        "strauss": {
-            "target_directory": "vendor",
-            "namespace_prefix": "Project\\Prefix\\"
-        }
-    }
-}
-EOD;
+            {
+                "name": "strauss/issue261",
+                "require": {
+                    "respect/stringifier": "1.0.0"
+                },
+                "extra": {
+                    "strauss": {
+                        "target_directory": "vendor",
+                        "namespace_prefix": "Project\\Prefix\\"
+                    }
+                }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

@@ -11,7 +11,6 @@ use Mockery;
  */
 class FileWithDependencyTest extends TestCase
 {
-
     /**
      * @covers ::isDoDelete
      * @covers ::setDoDelete

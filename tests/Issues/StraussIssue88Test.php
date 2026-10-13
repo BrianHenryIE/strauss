@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `return (string) \Aws\serialize($command)->getUri();` not prefixed properly.
  *
@@ -21,34 +22,34 @@ class StraussIssue88Test extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/83",
-  "require": {
-    "aws/aws-sdk-php": "3.293.8"
-  },
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "exclude_from_copy": {
-		  "file_patterns": [
-		    "/^((?!aws\\/aws-sdk-php).)*$/"
-		  ]
-      }
-    },
-    "aws/aws-sdk-php": [
-        "S3"
-    ]
-  },
-  "scripts": {
-    "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
-  }
-}
-EOD;
+            {
+              "name": "issue/83",
+              "require": {
+                "aws/aws-sdk-php": "3.293.8"
+              },
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "exclude_from_copy": {
+            		  "file_patterns": [
+            		    "/^((?!aws\\/aws-sdk-php).)*$/"
+            		  ]
+                  }
+                },
+                "aws/aws-sdk-php": [
+                    "S3"
+                ]
+              },
+              "scripts": {
+                "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

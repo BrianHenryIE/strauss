@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed to decide, from each package's `autoload` key, which files are candidates for prefixing
  * and copying, after applying the `exclude_from_prefix` and `exclude_from_copy` rules.
@@ -31,9 +32,9 @@ interface AutoloadFilesEnumeratorConfigInterface
      * @return string[]
      */
     public function getExcludeNamespacesFromPrefixing(): array;
-   /**
-    * @return string[]
-    */
+    /**
+     * @return string[]
+     */
     public function getExcludePackagesFromCopy(): array;
 
     /**

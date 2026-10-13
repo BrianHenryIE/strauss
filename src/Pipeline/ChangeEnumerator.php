@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Determine the replacements to be made to the discovered symbols.
  *
@@ -77,9 +78,9 @@ class ChangeEnumerator
                 if (! is_null($namespacePrefix)) {
                     // This is being done elsewhere but is probably more appropriate here,
                     // I'm worried if I change it now it will affect the directory structure.
-//                    if ($symbol instanceof Psr0NamespaceSymbol) {
-//                        $namespacePrefix = str_replace('\\', '_', rtrim($namespacePrefix, '\\')).'_' ;
-//                    }
+                    //                    if ($symbol instanceof Psr0NamespaceSymbol) {
+                    //                        $namespacePrefix = str_replace('\\', '_', rtrim($namespacePrefix, '\\')).'_' ;
+                    //                    }
 
                     $stripPattern   = '~^(' . preg_quote($namespacePrefix, '~') . '\\\\*)*(.*)~';
                     $strippedSymbol = preg_replace(
@@ -129,7 +130,7 @@ class ChangeEnumerator
             // If we're a namespaced class/interface/trait, apply the fqdnchange.
             if (!$symbol->getNamespace()->isGlobal()) {
                 if ($discoveredNamespaces->has($symbol->getNamespace())) {
-//                if (isset($discoveredNamespaces[ $symbol->getNamespace() ])) {
+                    //                if (isset($discoveredNamespaces[ $symbol->getNamespace() ])) {
                     /**
  * @var NamespaceSymbol $newNamespace
 */

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A php-parser visitor which, in a single traversal, records the location of every symbol definition, symbol usage,
  * comment, string and inline HTML region in a file.

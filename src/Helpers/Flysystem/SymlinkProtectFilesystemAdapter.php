@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The idea is to prevent write/delete operations to symlinked files.
  *
@@ -219,7 +220,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         if (is_link($absoluteFilesystemPath)) {
             $realpath = realpath($absoluteFilesystemPath);
             if ($realpath === false) {
-//                return $this->getSymlinkInPath(dirname($absoluteFilesystemPath));
+                //                return $this->getSymlinkInPath(dirname($absoluteFilesystemPath));
                 throw new RuntimeException('symlink error');
             }
             $this->recordSymlink($absoluteFilesystemPath, $realpath);
@@ -482,6 +483,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
                     return;
                 }
+                // no break
             case SymlinkProtectFilesystemAdapter::THROW_LINKS:
             default:
                 throw UnableToDeleteFile::atLocation($path, 'symlink');
@@ -708,7 +710,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
                     array_merge(
                         [
                             'destination' => $destination,
-                            'operation' => __METHOD__
+                            'operation' => __METHOD__,
                         ],
                         (array) $destinationSymlinkDetails
                     )
@@ -889,11 +891,15 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         string $path,
         int $mode = RecursiveIteratorIterator::SELF_FIRST
     ): Generator {
-        $mode = in_array( $mode, [
-            RecursiveIteratorIterator::LEAVES_ONLY,
-            RecursiveIteratorIterator::SELF_FIRST,
-            RecursiveIteratorIterator::CHILD_FIRST,
-            ], true ) ? $mode : RecursiveIteratorIterator::SELF_FIRST;
+        $mode = in_array(
+            $mode,
+            [
+                RecursiveIteratorIterator::LEAVES_ONLY,
+                RecursiveIteratorIterator::SELF_FIRST,
+                RecursiveIteratorIterator::CHILD_FIRST,
+            ],
+            true
+        ) ? $mode : RecursiveIteratorIterator::SELF_FIRST;
         yield from new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
             $mode

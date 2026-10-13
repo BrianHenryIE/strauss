@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author https://github.com/coenjacobs
  * @author https://github.com/BrianHenryIE
@@ -51,17 +52,17 @@ class PrefixerTest extends TestCase
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Google;
+            namespace Google;
 
-use Google\Http\Batch;
-use TypeError;
+            use Google\Http\Batch;
+            use TypeError;
 
-class Service
-{
-}
-EOD;
+            class Service
+            {
+            }
+            EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $originalNamespace = 'Google\\Http';
@@ -106,17 +107,17 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Google;
+            namespace Google;
 
-use Google\Http\Batch;
-use TypeError;
+            use Google\Http\Batch;
+            use TypeError;
 
-class Service
-{
-}
-EOD;
+            class Service
+            {
+            }
+            EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $originalNamespace = 'Google\\Http';
@@ -160,25 +161,25 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-/*******************************************************************************
-* FPDF                                                                         *
-*                                                                              *
-* Version: 1.82                                                                *
-* Date:    2019-12-07                                                          *
-* Author:  Olivier PLATHEY                                                     *
-*******************************************************************************/
+            <?php
+            /*******************************************************************************
+            * FPDF                                                                         *
+            *                                                                              *
+            * Version: 1.82                                                                *
+            * Date:    2019-12-07                                                          *
+            * Author:  Olivier PLATHEY                                                     *
+            *******************************************************************************/
 
-define('FPDF_VERSION','1.82');
+            define('FPDF_VERSION','1.82');
 
-class FPDF
-{
-protected $page;               // current page number
-protected $n;                  // current object number
-protected $offsets;            // array of object offsets
-protected $buffer;             // buffer holding in-memory PDF
-}
-EOD;
+            class FPDF
+            {
+            protected $page;               // current page number
+            protected $n;                  // current object number
+            protected $offsets;            // array of object offsets
+            protected $buffer;             // buffer holding in-memory PDF
+            }
+            EOD;
 
         $originalClassname = "FPDF";
         $classnamePrefix = "Prefixer_Test_";
@@ -1059,19 +1060,19 @@ EOD;
     public function testItReplacesSlashedNamespaceInFunctionParameter(): void
     {
         $contents = <<<'EOD'
-class X {
-    public function __construct(\net\authorize\api\contract\v1\AnetApiRequestType $request, $responseType) {}
-}
-EOD;
+            class X {
+                public function __construct(\net\authorize\api\contract\v1\AnetApiRequestType $request, $responseType) {}
+            }
+            EOD;
 
         $originalNamespace = "net\\authorize\\api\\contract\\v1";
         $replacement = "Prefix\\net\\authorize\\api\\contract\\v1";
 
         $expected = <<<'EOD'
-class X {
-    public function __construct(\Prefix\net\authorize\api\contract\v1\AnetApiRequestType $request, $responseType) {}
-}
-EOD;
+            class X {
+                public function __construct(\Prefix\net\authorize\api\contract\v1\AnetApiRequestType $request, $responseType) {}
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -1189,7 +1190,7 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -1224,7 +1225,7 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -1264,7 +1265,7 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -1300,15 +1301,15 @@ EOD;
     {
 
         $contents = <<<'EOD'
-/**
- * @method static \Carbon_Fields\Container\Comment_Meta_Container';
- */
-EOD;
+            /**
+             * @method static \Carbon_Fields\Container\Comment_Meta_Container';
+             */
+            EOD;
         $expected = <<<'EOD'
-/**
- * @method static \BrianHenryIE\TestStrauss\Carbon_Fields\Container\Comment_Meta_Container';
- */
-EOD;
+            /**
+             * @method static \BrianHenryIE\TestStrauss\Carbon_Fields\Container\Comment_Meta_Container';
+             */
+            EOD;
 
         $originalNamespace = 'Carbon_Fields\Container';
         $replacement = 'BrianHenryIE\TestStrauss\Carbon_Fields\Container';
@@ -1510,26 +1511,26 @@ EOD;
     {
 
         $contents = <<<'EOD'
-/*******************************************************************************
- * FPDF                                                                         *
- *                                                                              *
- * Version: 1.83                                                                *
- * Date:    2021-04-18                                                          *
- * Author:  Olivier PLATHEY                                                     *
- *******************************************************************************
- */
+            /*******************************************************************************
+             * FPDF                                                                         *
+             *                                                                              *
+             * Version: 1.83                                                                *
+             * Date:    2021-04-18                                                          *
+             * Author:  Olivier PLATHEY                                                     *
+             *******************************************************************************
+             */
 
-define('FPDF_VERSION', '1.83');
+            define('FPDF_VERSION', '1.83');
 
-define('ANOTHER_CONSTANT', '/path/to/something');
+            define('ANOTHER_CONSTANT', '/path/to/something');
 
-class FPDF
-{
-  public function whatever() {
-    include ANOTHER_CONSTANT . '/file.php';
-  }
-}
-EOD;
+            class FPDF
+            {
+              public function whatever() {
+                include ANOTHER_CONSTANT . '/file.php';
+              }
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method('getConstantsPrefix')->willReturn('BHMP_');
@@ -1542,11 +1543,11 @@ EOD;
         );
 
         $discoveredSymbols = new DiscoveredSymbols();
-        $constants = array('FPDF_VERSION', 'ANOTHER_CONSTANT');
+        $constants = ['FPDF_VERSION', 'ANOTHER_CONSTANT'];
         foreach ($constants as $constant) {
             $constantSymbol = new ConstantSymbol($constant, $file, new NamespaceSymbol('\\'));
             $constantSymbol->setDoRename(true);
-            $constantSymbol->setLocalReplacement('BHMP_'.$constant);
+            $constantSymbol->setLocalReplacement('BHMP_' . $constant);
             $discoveredSymbols->add($constantSymbol);
         }
 
@@ -1563,15 +1564,15 @@ EOD;
     public function testReplaceConstantDoesNotCorruptPrefixSupersetConstant(): void
     {
         $contents = <<<'EOD'
-<?php
-if (!defined('FILTER_VALIDATE_BOOL') && defined('FILTER_VALIDATE_BOOLEAN')) {
-    define('FILTER_VALIDATE_BOOL', \FILTER_VALIDATE_BOOLEAN);
-}
-use const FILTER_VALIDATE_BOOL;
+            <?php
+            if (!defined('FILTER_VALIDATE_BOOL') && defined('FILTER_VALIDATE_BOOLEAN')) {
+                define('FILTER_VALIDATE_BOOL', \FILTER_VALIDATE_BOOLEAN);
+            }
+            use const FILTER_VALIDATE_BOOL;
 
-$enabled = filter_var($input, FILTER_VALIDATE_BOOL);
-$other = filter_var($input, FILTER_VALIDATE_BOOLEAN);
-EOD;
+            $enabled = filter_var($input, FILTER_VALIDATE_BOOL);
+            $other = filter_var($input, FILTER_VALIDATE_BOOLEAN);
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method('getConstantsPrefix')->willReturn('PREFIX_');
@@ -1610,14 +1611,14 @@ EOD;
     public function testReplaceConstantsWithLeadingCommentBeforePhpTag(): void
     {
         $contents = <<<'EOD'
-/*******************************************************************************
- * HTML / License header / text before PHP opening
- ******************************************************************************/
+            /*******************************************************************************
+             * HTML / License header / text before PHP opening
+             ******************************************************************************/
 
-<?php
+            <?php
 
-define('MY_CONSTANT', 'value');
-EOD;
+            define('MY_CONSTANT', 'value');
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method('getConstantsPrefix')->willReturn('PREFIX_');
@@ -1656,46 +1657,46 @@ EOD;
     public function testReplaceConstantDeclarationsUseConstAndDefined(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Vendor\Package;
+            <?php
+            namespace Vendor\Package;
 
-use Vendor\Other\SomeClass;
-use const MY_CONSTANT;
+            use Vendor\Other\SomeClass;
+            use const MY_CONSTANT;
 
-const MY_CONSTANT = 1;
-const OTHER_CONSTANT = 2, MY_CONSTANT_ALIAS = MY_CONSTANT;
+            const MY_CONSTANT = 1;
+            const OTHER_CONSTANT = 2, MY_CONSTANT_ALIAS = MY_CONSTANT;
 
-class Foo
-{
-    const MY_CONSTANT = 3;
+            class Foo
+            {
+                const MY_CONSTANT = 3;
 
-    public function bar(): bool
-    {
-        return defined('MY_CONSTANT') && self::MY_CONSTANT === MY_CONSTANT;
-    }
-}
-EOD;
+                public function bar(): bool
+                {
+                    return defined('MY_CONSTANT') && self::MY_CONSTANT === MY_CONSTANT;
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace Vendor\Package;
+            <?php
+            namespace Vendor\Package;
 
-use Vendor\Other\SomeClass;
-use const PREFIX_MY_CONSTANT;
+            use Vendor\Other\SomeClass;
+            use const PREFIX_MY_CONSTANT;
 
-const PREFIX_MY_CONSTANT = 1;
-const OTHER_CONSTANT = 2, MY_CONSTANT_ALIAS = PREFIX_MY_CONSTANT;
+            const PREFIX_MY_CONSTANT = 1;
+            const OTHER_CONSTANT = 2, MY_CONSTANT_ALIAS = PREFIX_MY_CONSTANT;
 
-class Foo
-{
-    const MY_CONSTANT = 3;
+            class Foo
+            {
+                const MY_CONSTANT = 3;
 
-    public function bar(): bool
-    {
-        return defined('PREFIX_MY_CONSTANT') && self::MY_CONSTANT === PREFIX_MY_CONSTANT;
-    }
-}
-EOD;
+                public function bar(): bool
+                {
+                    return defined('PREFIX_MY_CONSTANT') && self::MY_CONSTANT === PREFIX_MY_CONSTANT;
+                }
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method('getConstantsPrefix')->willReturn('PREFIX_');
@@ -1728,11 +1729,11 @@ EOD;
     public function testReplaceConstantsSkipsConstantsWithoutReplacement(): void
     {
         $contents = <<<'EOD'
-<?php
-define('MY_CONSTANT', 1);
-define('KEEP_CONSTANT', 2);
-$value = MY_CONSTANT + KEEP_CONSTANT;
-EOD;
+            <?php
+            define('MY_CONSTANT', 1);
+            define('KEEP_CONSTANT', 2);
+            $value = MY_CONSTANT + KEEP_CONSTANT;
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method('getConstantsPrefix')->willReturn('PREFIX_');
@@ -1765,10 +1766,10 @@ EOD;
     public function testReplaceConstantPrefixesFullyQualifiedGlobalConstant(): void
     {
         $contents = <<<'EOD'
-<?php
-define('MY_CONSTANT', 1);
-$value = \MY_CONSTANT;
-EOD;
+            <?php
+            define('MY_CONSTANT', 1);
+            $value = \MY_CONSTANT;
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method('getConstantsPrefix')->willReturn('PREFIX_');
@@ -1803,19 +1804,19 @@ EOD;
     {
 
         $contents = <<<'EOD'
-function __construct() {
-    new \ST\StraussTestPackage2();
-    \ST\StraussTestPackage2::hello();
-    new \ST\StraussTestPackage2();
-}
-EOD;
+            function __construct() {
+                new \ST\StraussTestPackage2();
+                \ST\StraussTestPackage2::hello();
+                new \ST\StraussTestPackage2();
+            }
+            EOD;
         $expected = <<<'EOD'
-function __construct() {
-    new \StraussTest\ST\StraussTestPackage2();
-    \StraussTest\ST\StraussTestPackage2::hello();
-    new \StraussTest\ST\StraussTestPackage2();
-}
-EOD;
+            function __construct() {
+                new \StraussTest\ST\StraussTestPackage2();
+                \StraussTest\ST\StraussTestPackage2::hello();
+                new \StraussTest\ST\StraussTestPackage2();
+            }
+            EOD;
 
         $originalNamespace = 'ST';
         $replacement = 'StraussTest\\ST';
@@ -1858,7 +1859,7 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -1899,7 +1900,7 @@ EOD;
         $contents = '\ST\StraussTestPackage2::hello();';
         $expected = '\StraussTest\ST\StraussTestPackage2::hello();';
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -1926,7 +1927,7 @@ EOD;
         $contents = '! \ST\StraussTestPackage2::hello();';
         $expected = '! \StraussTest\ST\StraussTestPackage2::hello();';
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -1966,7 +1967,7 @@ EOD;
         $contents = '$test1 = \ST\StraussTestPackage2::hello();';
         $expected = '$test1 = \StraussTest\ST\StraussTestPackage2::hello();';
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -1993,7 +1994,7 @@ EOD;
         $contents = '$test2 = ! \ST\StraussTestPackage2::hello();';
         $expected = '$test2 = ! \StraussTest\ST\StraussTestPackage2::hello();';
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2030,17 +2031,17 @@ EOD;
 
         // If condition: Single.
         $contents = <<<'EOD'
-if ( \ST\StraussTestClass::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( \ST\StraussTestClass::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
         $expected = <<<'EOD'
-if ( \StraussTest\ST\StraussTestClass::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( \StraussTest\ST\StraussTestClass::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2069,17 +2070,17 @@ EOD;
         $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
-if ( ! \ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( ! \ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
         $expected = <<<'EOD'
-if ( ! \StraussTest\ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( ! \StraussTest\ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2115,18 +2116,18 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-// If condition: Multiple (AND).
+        // If condition: Multiple (AND).
         $contents = <<<'EOD'
-if ( \ST\StraussTestPackage2::hello() && ! \ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( \ST\StraussTestPackage2::hello() && ! \ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
         $expected = <<<'EOD'
-if ( \StraussTest\ST\StraussTestPackage2::hello() && ! \StraussTest\ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
-                $filesystem = $this->getInMemoryFileSystem();
+            if ( \StraussTest\ST\StraussTestPackage2::hello() && ! \StraussTest\ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2151,17 +2152,17 @@ EOD;
         $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
-if ( ! \ST\StraussTestPackage2::hello() && \ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( ! \ST\StraussTestPackage2::hello() && \ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
         $expected = <<<'EOD'
-if ( ! \StraussTest\ST\StraussTestPackage2::hello() && \StraussTest\ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( ! \StraussTest\ST\StraussTestPackage2::hello() && \StraussTest\ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2197,18 +2198,18 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-// If condition: Multiple (OR).
+        // If condition: Multiple (OR).
         $contents = <<<'EOD'
-if ( \ST\StraussTestPackage2::hello() || ! \ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( \ST\StraussTestPackage2::hello() || ! \ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
         $expected = <<<'EOD'
-if ( \StraussTest\ST\StraussTestPackage2::hello() || ! \StraussTest\ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
-                $filesystem = $this->getInMemoryFileSystem();
+            if ( \StraussTest\ST\StraussTestPackage2::hello() || ! \StraussTest\ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2233,17 +2234,17 @@ EOD;
         $this->assertEqualsRN($expected, $result);
 
         $contents = <<<'EOD'
-if ( ! \ST\StraussTestPackage2::hello() || \ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( ! \ST\StraussTestPackage2::hello() || \ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
         $expected = <<<'EOD'
-if ( ! \StraussTest\ST\StraussTestPackage2::hello() || \StraussTest\ST\StraussTestPackage2::hello() ) {
-    echo 'hello world';
-}
-EOD;
+            if ( ! \StraussTest\ST\StraussTestPackage2::hello() || \StraussTest\ST\StraussTestPackage2::hello() ) {
+                echo 'hello world';
+            }
+            EOD;
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2279,21 +2280,21 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-// Array: Non-associative: Single.
+        // Array: Non-associative: Single.
         $contents = <<<'EOD'
-$arr1 = array(
-    \ST\StraussTestPackage2::hello(),
-    ! \ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $arr1 = array(
+                \ST\StraussTestPackage2::hello(),
+                ! \ST\StraussTestPackage2::hello(),
+            );
+            EOD;
         $expected = <<<'EOD'
-$arr1 = array(
-    \StraussTest\ST\StraussTestPackage2::hello(),
-    ! \StraussTest\ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $arr1 = array(
+                \StraussTest\ST\StraussTestPackage2::hello(),
+                ! \StraussTest\ST\StraussTestPackage2::hello(),
+            );
+            EOD;
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2329,21 +2330,21 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-// Array: Non-associative: Multiple (AND).
+        // Array: Non-associative: Multiple (AND).
         $contents = <<<'EOD'
-$arr2 = array(
-    \ST\StraussTestPackage2::hello() && ! \ST\StraussTestPackage2::hello(),
-    ! \ST\StraussTestPackage2::hello() && \ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $arr2 = array(
+                \ST\StraussTestPackage2::hello() && ! \ST\StraussTestPackage2::hello(),
+                ! \ST\StraussTestPackage2::hello() && \ST\StraussTestPackage2::hello(),
+            );
+            EOD;
         $expected = <<<'EOD'
-$arr2 = array(
-    \StraussTest\ST\StraussTestPackage2::hello() && ! \StraussTest\ST\StraussTestPackage2::hello(),
-    ! \StraussTest\ST\StraussTestPackage2::hello() && \StraussTest\ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $arr2 = array(
+                \StraussTest\ST\StraussTestPackage2::hello() && ! \StraussTest\ST\StraussTestPackage2::hello(),
+                ! \StraussTest\ST\StraussTestPackage2::hello() && \StraussTest\ST\StraussTestPackage2::hello(),
+            );
+            EOD;
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2379,21 +2380,21 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-// Array: Non-associative: Multiple (OR).
+        // Array: Non-associative: Multiple (OR).
         $contents = <<<'EOD'
-$arr3 = array(
-    \ST\StraussTestPackage2::hello() || ! \ST\StraussTestPackage2::hello(),
-    ! \ST\StraussTestPackage2::hello() || \ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $arr3 = array(
+                \ST\StraussTestPackage2::hello() || ! \ST\StraussTestPackage2::hello(),
+                ! \ST\StraussTestPackage2::hello() || \ST\StraussTestPackage2::hello(),
+            );
+            EOD;
         $expected = <<<'EOD'
-$arr3 = array(
-    \StraussTest\ST\StraussTestPackage2::hello() || ! \StraussTest\ST\StraussTestPackage2::hello(),
-    ! \StraussTest\ST\StraussTestPackage2::hello() || \StraussTest\ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $arr3 = array(
+                \StraussTest\ST\StraussTestPackage2::hello() || ! \StraussTest\ST\StraussTestPackage2::hello(),
+                ! \StraussTest\ST\StraussTestPackage2::hello() || \StraussTest\ST\StraussTestPackage2::hello(),
+            );
+            EOD;
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2429,21 +2430,21 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-// Array: Associative: Single.
+        // Array: Associative: Single.
         $contents = <<<'EOD'
-$assoc_arr1 = array(
-    'one' => \ST\StraussTestPackage2::hello(),
-    'two' => ! \ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $assoc_arr1 = array(
+                'one' => \ST\StraussTestPackage2::hello(),
+                'two' => ! \ST\StraussTestPackage2::hello(),
+            );
+            EOD;
         $expected = <<<'EOD'
-$assoc_arr1 = array(
-    'one' => \StraussTest\ST\StraussTestPackage2::hello(),
-    'two' => ! \StraussTest\ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $assoc_arr1 = array(
+                'one' => \StraussTest\ST\StraussTestPackage2::hello(),
+                'two' => ! \StraussTest\ST\StraussTestPackage2::hello(),
+            );
+            EOD;
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2479,20 +2480,20 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-// Array: Associative: Multiple (AND).
+        // Array: Associative: Multiple (AND).
         $contents = <<<'EOD'
-$assoc_arr1 = array(
-    'one' => \ST\StraussTestPackage2::hello() && ! \ST\StraussTestPackage2::hello(),
-    'two' => ! \ST\StraussTestPackage2::hello() && \ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $assoc_arr1 = array(
+                'one' => \ST\StraussTestPackage2::hello() && ! \ST\StraussTestPackage2::hello(),
+                'two' => ! \ST\StraussTestPackage2::hello() && \ST\StraussTestPackage2::hello(),
+            );
+            EOD;
         $expected = <<<'EOD'
-$assoc_arr1 = array(
-    'one' => \StraussTest\ST\StraussTestPackage2::hello() && ! \StraussTest\ST\StraussTestPackage2::hello(),
-    'two' => ! \StraussTest\ST\StraussTestPackage2::hello() && \StraussTest\ST\StraussTestPackage2::hello(),
-);
-EOD;
-                $filesystem = $this->getInMemoryFileSystem();
+            $assoc_arr1 = array(
+                'one' => \StraussTest\ST\StraussTestPackage2::hello() && ! \StraussTest\ST\StraussTestPackage2::hello(),
+                'two' => ! \StraussTest\ST\StraussTestPackage2::hello() && \StraussTest\ST\StraussTestPackage2::hello(),
+            );
+            EOD;
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2528,21 +2529,21 @@ EOD;
         $config = $this->createMock(PrefixerConfigInterface::class);
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-// Array: Associative: Multiple (OR).
+        // Array: Associative: Multiple (OR).
         $contents = <<<'EOD'
-$assoc_arr1 = array(
-    'one' => \ST\StraussTestPackage2::hello() || ! \ST\StraussTestPackage2::hello(),
-    'two' => ! \ST\StraussTestPackage2::hello() || \ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $assoc_arr1 = array(
+                'one' => \ST\StraussTestPackage2::hello() || ! \ST\StraussTestPackage2::hello(),
+                'two' => ! \ST\StraussTestPackage2::hello() || \ST\StraussTestPackage2::hello(),
+            );
+            EOD;
         $expected = <<<'EOD'
-$assoc_arr1 = array(
-    'one' => \StraussTest\ST\StraussTestPackage2::hello() || ! \StraussTest\ST\StraussTestPackage2::hello(),
-    'two' => ! \StraussTest\ST\StraussTestPackage2::hello() || \StraussTest\ST\StraussTestPackage2::hello(),
-);
-EOD;
+            $assoc_arr1 = array(
+                'one' => \StraussTest\ST\StraussTestPackage2::hello() || ! \StraussTest\ST\StraussTestPackage2::hello(),
+                'two' => ! \StraussTest\ST\StraussTestPackage2::hello() || \StraussTest\ST\StraussTestPackage2::hello(),
+            );
+            EOD;
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -2580,44 +2581,44 @@ EOD;
         $sut = new Prefixer($config, $this->getInMemoryFileSystem());
 
         $contents1 = <<<'EOD'
-namespace ST;
-class StraussTestPackage {
-	public function __construct() {
-	}
-}
-EOD;
+            namespace ST;
+            class StraussTestPackage {
+            	public function __construct() {
+            	}
+            }
+            EOD;
         $expected1 = <<<'EOD'
-namespace StraussTest\ST;
-class StraussTestPackage {
-	public function __construct() {
-	}
-}
-EOD;
+            namespace StraussTest\ST;
+            class StraussTestPackage {
+            	public function __construct() {
+            	}
+            }
+            EOD;
 
 
 
         $contents2 = <<<'EOD'
-namespace ST\Namespace;
-class StraussTestPackage2
-{
-    public function __construct()
-    {
-        $one = '\ST\Namespace';
-        $two = '\ST\Namespace\StraussTestPackage2';
-    }
-}
-EOD;
+            namespace ST\Namespace;
+            class StraussTestPackage2
+            {
+                public function __construct()
+                {
+                    $one = '\ST\Namespace';
+                    $two = '\ST\Namespace\StraussTestPackage2';
+                }
+            }
+            EOD;
         $expected2 = <<<'EOD'
-namespace StraussTest\ST\Namespace;
-class StraussTestPackage2
-{
-    public function __construct()
-    {
-        $one = '\StraussTest\ST\Namespace';
-        $two = '\StraussTest\ST\Namespace\StraussTestPackage2';
-    }
-}
-EOD;
+            namespace StraussTest\ST\Namespace;
+            class StraussTestPackage2
+            {
+                public function __construct()
+                {
+                    $one = '\StraussTest\ST\Namespace';
+                    $two = '\StraussTest\ST\Namespace\StraussTestPackage2';
+                }
+            }
+            EOD;
 
         $originalNamespace = 'ST\\Namespace';
         $replacement = 'StraussTest\\ST\\Namespace';
@@ -2661,12 +2662,12 @@ EOD;
     {
 
         $contents = <<<'EOD'
-namespace Symfony\Polyfill\Intl\Normalizer;
-class NA
-{
+            namespace Symfony\Polyfill\Intl\Normalizer;
+            class NA
+            {
 
-}
-EOD;
+            }
+            EOD;
 
         $originalClassname = 'Normalizer';
         $classnamePrefix = 'Prefixer_Test_';
@@ -2702,18 +2703,18 @@ EOD;
     {
 
         $contents = <<<'EOD'
-class Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
-{
+            class Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
+            {
 
-}
-EOD;
+            }
+            EOD;
 
         $expected = <<<'EOD'
-class Prefixer_Test_Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
-{
+            class Prefixer_Test_Normalizer extends Symfony\Polyfill\Intl\Normalizer\Foo
+            {
 
-}
-EOD;
+            }
+            EOD;
 
         $originalClassname = 'Normalizer';
         $classnamePrefix = 'Prefixer_Test_';
@@ -2749,18 +2750,18 @@ EOD;
     {
 
         $contents = <<<'EOD'
-class Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
-{
+            class Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
+            {
 
-}
-EOD;
+            }
+            EOD;
 
         $expected = <<<'EOD'
-class Prefixer_Test_Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
-{
+            class Prefixer_Test_Normalizer extends Symfony\Polyfill\Intl\Foo\Normalizer
+            {
 
-}
-EOD;
+            }
+            EOD;
 
         $originalClassname = 'Normalizer';
         $classnamePrefix = 'Prefixer_Test_';
@@ -2797,22 +2798,22 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-namespace Symfony\Polyfill\Intl\Normalizer;
+            <?php
+            namespace Symfony\Polyfill\Intl\Normalizer;
 
-class Normalizer
-{
-}
-EOD;
+            class Normalizer
+            {
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace Symfony\Polyfill\Intl\Normalizer;
+            <?php
+            namespace Symfony\Polyfill\Intl\Normalizer;
 
-class Normalizer
-{
-}
-EOD;
+            class Normalizer
+            {
+            }
+            EOD;
 
         $originalClassname = 'Normalizer';
         $classnamePrefix = 'Prefixer_Test_';
@@ -2847,13 +2848,13 @@ EOD;
     {
 
         $contents = <<<'EOD'
-namespace Symfony\Polyfill\Intl\Normalizer;
-class NA
-{
-	#[\ReturnTypeWillChange]
-    public function offsetGet(mixed $offset) {}
-}
-EOD;
+            namespace Symfony\Polyfill\Intl\Normalizer;
+            class NA
+            {
+            	#[\ReturnTypeWillChange]
+                public function offsetGet(mixed $offset) {}
+            }
+            EOD;
 
         $classnamePrefix = 'Normalizer_Test_';
 
@@ -2888,30 +2889,30 @@ EOD;
     {
 
         $contents = <<<'EOD'
-namespace ST;
-class StraussTestPackage {
-	public function __construct() {
-		$arr = array();
+            namespace ST;
+            class StraussTestPackage {
+            	public function __construct() {
+            		$arr = array();
 
-		$arr[ ( new \ST\StraussTestPackage2() )->test() ] = true;
+            		$arr[ ( new \ST\StraussTestPackage2() )->test() ] = true;
 
-		$arr[ \ST\StraussTestPackage2::test2() ] = true;
-	}
-}
-EOD;
+            		$arr[ \ST\StraussTestPackage2::test2() ] = true;
+            	}
+            }
+            EOD;
 
         $expected = <<<'EOD'
-namespace StraussTest\ST;
-class StraussTestPackage {
-	public function __construct() {
-		$arr = array();
+            namespace StraussTest\ST;
+            class StraussTestPackage {
+            	public function __construct() {
+            		$arr = array();
 
-		$arr[ ( new \StraussTest\ST\StraussTestPackage2() )->test() ] = true;
+            		$arr[ ( new \StraussTest\ST\StraussTestPackage2() )->test() ] = true;
 
-		$arr[ \StraussTest\ST\StraussTestPackage2::test2() ] = true;
-	}
-}
-EOD;
+            		$arr[ \StraussTest\ST\StraussTestPackage2::test2() ] = true;
+            	}
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -2951,48 +2952,48 @@ EOD;
     {
 
         $contents = <<<'EOD'
-namespace GuzzleHttp;
+            namespace GuzzleHttp;
 
-use Psr\Http\Message\MessageInterface;
+            use Psr\Http\Message\MessageInterface;
 
-final class BodySummarizer implements BodySummarizerInterface
-{
-    /**
-     * Returns a summarized message body.
-     */
-    public function summarize(MessageInterface $message): ?string
-    {
-        return $this->truncateAt === null
-            ? \GuzzleHttp\Psr7\Message::bodySummary($message)
-            : \GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
-    }
-}
-EOD;
+            final class BodySummarizer implements BodySummarizerInterface
+            {
+                /**
+                 * Returns a summarized message body.
+                 */
+                public function summarize(MessageInterface $message): ?string
+                {
+                    return $this->truncateAt === null
+                        ? \GuzzleHttp\Psr7\Message::bodySummary($message)
+                        : \GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-namespace StraussTest\GuzzleHttp;
+            namespace StraussTest\GuzzleHttp;
 
-use Psr\Http\Message\MessageInterface;
+            use Psr\Http\Message\MessageInterface;
 
-final class BodySummarizer implements BodySummarizerInterface
-{
-    /**
-     * Returns a summarized message body.
-     */
-    public function summarize(MessageInterface $message): ?string
-    {
-        return $this->truncateAt === null
-            ? \StraussTest\GuzzleHttp\Psr7\Message::bodySummary($message)
-            : \StraussTest\GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
-    }
-}
-EOD;
+            final class BodySummarizer implements BodySummarizerInterface
+            {
+                /**
+                 * Returns a summarized message body.
+                 */
+                public function summarize(MessageInterface $message): ?string
+                {
+                    return $this->truncateAt === null
+                        ? \StraussTest\GuzzleHttp\Psr7\Message::bodySummary($message)
+                        : \StraussTest\GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
+                }
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -3027,56 +3028,56 @@ EOD;
     public function testItPrefixesNamespacedFunctionUse(): void
     {
         $contents = <<<'EOD'
-namespace Aws\Endpoint\UseDualstackEndpoint;
+            namespace Aws\Endpoint\UseDualstackEndpoint;
 
-use Aws;
-use Aws\Endpoint\UseDualstackEndpoint\Exception\ConfigurationException;
+            use Aws;
+            use Aws\Endpoint\UseDualstackEndpoint\Exception\ConfigurationException;
 
-class Configuration implements ConfigurationInterface
-{
-    private $useDualstackEndpoint;
+            class Configuration implements ConfigurationInterface
+            {
+                private $useDualstackEndpoint;
 
-    public function __construct($useDualstackEndpoint, $region)
-    {
-        $this->useDualstackEndpoint = Aws\boolean_value($useDualstackEndpoint);
-        if (is_null($this->useDualstackEndpoint)) {
-            throw new ConfigurationException("'use_dual_stack_endpoint' config option"
-                . " must be a boolean value.");
-        }
-        if ($this->useDualstackEndpoint == true
-            && (strpos($region, "iso-") !== false || strpos($region, "-iso") !== false)
-        ) {
-            throw new ConfigurationException("Dual-stack is not supported in ISO regions");
-        }
-    }
-}
-EOD;
+                public function __construct($useDualstackEndpoint, $region)
+                {
+                    $this->useDualstackEndpoint = Aws\boolean_value($useDualstackEndpoint);
+                    if (is_null($this->useDualstackEndpoint)) {
+                        throw new ConfigurationException("'use_dual_stack_endpoint' config option"
+                            . " must be a boolean value.");
+                    }
+                    if ($this->useDualstackEndpoint == true
+                        && (strpos($region, "iso-") !== false || strpos($region, "-iso") !== false)
+                    ) {
+                        throw new ConfigurationException("Dual-stack is not supported in ISO regions");
+                    }
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-namespace StraussTest\Aws\Endpoint\UseDualstackEndpoint;
+            namespace StraussTest\Aws\Endpoint\UseDualstackEndpoint;
 
-use StraussTest\Aws;
-use StraussTest\Aws\Endpoint\UseDualstackEndpoint\Exception\ConfigurationException;
+            use StraussTest\Aws;
+            use StraussTest\Aws\Endpoint\UseDualstackEndpoint\Exception\ConfigurationException;
 
-class Configuration implements ConfigurationInterface
-{
-    private $useDualstackEndpoint;
+            class Configuration implements ConfigurationInterface
+            {
+                private $useDualstackEndpoint;
 
-    public function __construct($useDualstackEndpoint, $region)
-    {
-        $this->useDualstackEndpoint = \StraussTest\Aws\boolean_value($useDualstackEndpoint);
-        if (is_null($this->useDualstackEndpoint)) {
-            throw new ConfigurationException("'use_dual_stack_endpoint' config option"
-                . " must be a boolean value.");
-        }
-        if ($this->useDualstackEndpoint == true
-            && (strpos($region, "iso-") !== false || strpos($region, "-iso") !== false)
-        ) {
-            throw new ConfigurationException("Dual-stack is not supported in ISO regions");
-        }
-    }
-}
-EOD;
+                public function __construct($useDualstackEndpoint, $region)
+                {
+                    $this->useDualstackEndpoint = \StraussTest\Aws\boolean_value($useDualstackEndpoint);
+                    if (is_null($this->useDualstackEndpoint)) {
+                        throw new ConfigurationException("'use_dual_stack_endpoint' config option"
+                            . " must be a boolean value.");
+                    }
+                    if ($this->useDualstackEndpoint == true
+                        && (strpos($region, "iso-") !== false || strpos($region, "-iso") !== false)
+                    ) {
+                        throw new ConfigurationException("Dual-stack is not supported in ISO regions");
+                    }
+                }
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -3125,20 +3126,20 @@ EOD;
     {
 
         $contents = <<<'EOD'
-namespace Chophper;
+            namespace Chophper;
 
-use function Chophper\some_func;
+            use function Chophper\some_func;
 
-some_func();
-EOD;
+            some_func();
+            EOD;
 
         $expected = <<<'EOD'
-namespace StraussTest\Chophper;
+            namespace StraussTest\Chophper;
 
-use function StraussTest\Chophper\some_func;
+            use function StraussTest\Chophper\some_func;
 
-some_func();
-EOD;
+            some_func();
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -3182,18 +3183,18 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-namespace WPGraphQL\Registry\Utils;
+            <?php
+            namespace WPGraphQL\Registry\Utils;
 
-use WPGraphQL;
-EOD;
+            use WPGraphQL;
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace StraussTest\WPGraphQL\Registry\Utils;
+            <?php
+            namespace StraussTest\WPGraphQL\Registry\Utils;
 
-use StraussTest_WPGraphQL as WPGraphQL;
-EOD;
+            use StraussTest_WPGraphQL as WPGraphQL;
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method("getClassmapPrefix")->willReturn('StraussTest_');
@@ -3243,20 +3244,20 @@ EOD;
         $filesystem = $this->getInMemoryFileSystem();
 
         $contents = <<<'EOD'
-<?php namespace League\OAuth2\Client\Provider;
+            <?php namespace League\OAuth2\Client\Provider;
 
-use League\OAuth2\Client\Tool\ArrayAccessorTrait;
+            use League\OAuth2\Client\Tool\ArrayAccessorTrait;
 
-class MyClass {}
-EOD;
+            class MyClass {}
+            EOD;
 
         $expected = <<<'EOD'
-<?php namespace Company\Project\League\OAuth2\Client\Provider;
+            <?php namespace Company\Project\League\OAuth2\Client\Provider;
 
-use Company\Project\League\OAuth2\Client\Tool\ArrayAccessorTrait;
+            use Company\Project\League\OAuth2\Client\Tool\ArrayAccessorTrait;
 
-class MyClass {}
-EOD;
+            class MyClass {}
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -3271,7 +3272,7 @@ EOD;
 
         $discoveredSymbols = new DiscoveredSymbols();
 
-        $providerNamespaceSymbol =new NamespaceSymbol('League\\OAuth2\\Client\\Provider');
+        $providerNamespaceSymbol = new NamespaceSymbol('League\\OAuth2\\Client\\Provider');
         $providerNamespaceSymbol->setLocalReplacement('Company\\Project\\League\\OAuth2\\Client\\Provider');
         $providerNamespaceSymbol->setDoRename(true);
         $discoveredSymbols->add($providerNamespaceSymbol);
@@ -3308,32 +3309,32 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-namespace Company\Project;
+            <?php
+            namespace Company\Project;
 
-class Calendar {
-	/**
-	 * @return \Google_Client|WP_Error
-	 */
-	public function get_google_client() {
-		return $this->get_google_connection()->get_client();
-	}
-}
-EOD;
+            class Calendar {
+            	/**
+            	 * @return \Google_Client|WP_Error
+            	 */
+            	public function get_google_client() {
+            		return $this->get_google_connection()->get_client();
+            	}
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace Company\Project;
+            <?php
+            namespace Company\Project;
 
-class Calendar {
-	/**
-	 * @return \Prefixer_Test_Google_Client|WP_Error
-	 */
-	public function get_google_client() {
-		return $this->get_google_connection()->get_client();
-	}
-}
-EOD;
+            class Calendar {
+            	/**
+            	 * @return \Prefixer_Test_Google_Client|WP_Error
+            	 */
+            	public function get_google_client() {
+            		return $this->get_google_connection()->get_client();
+            	}
+            }
+            EOD;
 
         $originalClassname = 'Google_Client';
         $classnamePrefix = 'Prefixer_Test_';
@@ -3367,38 +3368,38 @@ EOD;
     public function testPrefixesFullNamespaceInInstanceOf(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Aws;
+            <?php
+            namespace Aws;
 
-class ClientResolver
-{
-	public static function _apply_user_agent($inputUserAgent, array &$args, HandlerList $list)
-    {
-            if (($args['endpoint_discovery'] instanceof \Aws\EndpointDiscovery\Configuration
-                && $args['endpoint_discovery']->isEnabled())
-            ) {
+            class ClientResolver
+            {
+            	public static function _apply_user_agent($inputUserAgent, array &$args, HandlerList $list)
+                {
+                        if (($args['endpoint_discovery'] instanceof \Aws\EndpointDiscovery\Configuration
+                            && $args['endpoint_discovery']->isEnabled())
+                        ) {
 
+                        }
+            	}
             }
-	}
-}
-EOD;
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace Company\Project\Aws;
+            <?php
+            namespace Company\Project\Aws;
 
-class ClientResolver
-{
-	public static function _apply_user_agent($inputUserAgent, array &$args, HandlerList $list)
-    {
-            if (($args['endpoint_discovery'] instanceof \Company\Project\Aws\EndpointDiscovery\Configuration
-                && $args['endpoint_discovery']->isEnabled())
-            ) {
+            class ClientResolver
+            {
+            	public static function _apply_user_agent($inputUserAgent, array &$args, HandlerList $list)
+                {
+                        if (($args['endpoint_discovery'] instanceof \Company\Project\Aws\EndpointDiscovery\Configuration
+                            && $args['endpoint_discovery']->isEnabled())
+                        ) {
 
+                        }
+            	}
             }
-	}
-}
-EOD;
+            EOD;
         $originalNamespace = 'Aws\\EndpointDiscovery';
         $replacement = 'Company\\Project\\Aws\\EndpointDiscovery';
 
@@ -3446,66 +3447,66 @@ EOD;
     public function testPrefixesFQDNWithMutedErrors(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Aws;
+            <?php
+            namespace Aws;
 
-class ConfigurationResolver
-{
-	public static function ini(
-        $key,
-        $expectedType,
-        $profile = null,
-        $filename = null,
-        $options = []
-    ){
-        $filename = $filename ?: (self::getDefaultConfigFilename());
-        $profile = $profile ?: (getenv(self::ENV_PROFILE) ?: 'default');
+            class ConfigurationResolver
+            {
+            	public static function ini(
+                    $key,
+                    $expectedType,
+                    $profile = null,
+                    $filename = null,
+                    $options = []
+                ){
+                    $filename = $filename ?: (self::getDefaultConfigFilename());
+                    $profile = $profile ?: (getenv(self::ENV_PROFILE) ?: 'default');
 
-        if (!@is_readable($filename)) {
-            return null;
-        }
-        // Use INI_SCANNER_NORMAL instead of INI_SCANNER_TYPED for PHP 5.5 compatibility
-        //TODO change after deprecation
-        $data = @\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);
+                    if (!@is_readable($filename)) {
+                        return null;
+                    }
+                    // Use INI_SCANNER_NORMAL instead of INI_SCANNER_TYPED for PHP 5.5 compatibility
+                    //TODO change after deprecation
+                    $data = @\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);
 
-		// ...
-    }
-}
-EOD;
+            		// ...
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace Company\Project\Aws;
+            <?php
+            namespace Company\Project\Aws;
 
-class ConfigurationResolver
-{
-	public static function ini(
-        $key,
-        $expectedType,
-        $profile = null,
-        $filename = null,
-        $options = []
-    ){
-        $filename = $filename ?: (self::getDefaultConfigFilename());
-        $profile = $profile ?: (getenv(self::ENV_PROFILE) ?: 'default');
+            class ConfigurationResolver
+            {
+            	public static function ini(
+                    $key,
+                    $expectedType,
+                    $profile = null,
+                    $filename = null,
+                    $options = []
+                ){
+                    $filename = $filename ?: (self::getDefaultConfigFilename());
+                    $profile = $profile ?: (getenv(self::ENV_PROFILE) ?: 'default');
 
-        if (!@is_readable($filename)) {
-            return null;
-        }
-        // Use INI_SCANNER_NORMAL instead of INI_SCANNER_TYPED for PHP 5.5 compatibility
-        //TODO change after deprecation
-        $data = @\Company\Project\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);
+                    if (!@is_readable($filename)) {
+                        return null;
+                    }
+                    // Use INI_SCANNER_NORMAL instead of INI_SCANNER_TYPED for PHP 5.5 compatibility
+                    //TODO change after deprecation
+                    $data = @\Company\Project\Aws\parse_ini_file($filename, true, INI_SCANNER_NORMAL);
 
-		// ...
-    }
-}
-EOD;
+            		// ...
+                }
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
         $replacer = new Prefixer($config, $this->getInMemoryFileSystem());
 
-                $filesystem = $this->getInMemoryFileSystem();
+        $filesystem = $this->getInMemoryFileSystem();
 
         $replacer = new Prefixer($config, $filesystem, $this->getLogger());
 
@@ -3535,23 +3536,23 @@ EOD;
     public function testPrefixesAliasedGlobalClass(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-use GlobalClass as Alias;
+            use GlobalClass as Alias;
 
-class MyClass {
+            class MyClass {
 
-}
-EOD;
+            }
+            EOD;
         $expected = <<<'EOD'
-<?php
+            <?php
 
-use Prefixer_Test_GlobalClass as Alias;
+            use Prefixer_Test_GlobalClass as Alias;
 
-class MyClass {
+            class MyClass {
 
-}
-EOD;
+            }
+            EOD;
 
         $originalClassname = "GlobalClass";
         $classnamePrefix = "Prefixer_Test_";
@@ -3581,61 +3582,61 @@ EOD;
     public function testReplaceFunctions(): void
     {
         $contents = <<<'EOD'
-<?php
-if (! function_exists('append_config')) {
-    function append_config(array $array)
-    {
-        return $array;
-    }
-}
+            <?php
+            if (! function_exists('append_config')) {
+                function append_config(array $array)
+                {
+                    return $array;
+                }
+            }
 
-// elsewhere
+            // elsewhere
 
-$value = append_config($myArray);
+            $value = append_config($myArray);
 
-// without assignment
- append_config($myArray);
+            // without assignment
+             append_config($myArray);
 
-// callable
-call_user_func('append_config', $myArray);
-call_user_func_array(
-	'append_config',
-	$myArray
-);
-forward_static_call('append_config', $myArray);
-forward_static_call_array('append_config', $myArray);
-register_shutdown_function('append_config');
-register_tick_function('append_config' , $myArray);
-unregister_tick_function( 'append_config');
-EOD;
+            // callable
+            call_user_func('append_config', $myArray);
+            call_user_func_array(
+            	'append_config',
+            	$myArray
+            );
+            forward_static_call('append_config', $myArray);
+            forward_static_call_array('append_config', $myArray);
+            register_shutdown_function('append_config');
+            register_tick_function('append_config' , $myArray);
+            unregister_tick_function( 'append_config');
+            EOD;
         $expected = <<<'EOD'
-<?php
-if (! function_exists('myprefix_append_config')) {
-    function myprefix_append_config(array $array)
-    {
-        return $array;
-    }
-}
+            <?php
+            if (! function_exists('myprefix_append_config')) {
+                function myprefix_append_config(array $array)
+                {
+                    return $array;
+                }
+            }
 
-// elsewhere
+            // elsewhere
 
-$value = myprefix_append_config($myArray);
+            $value = myprefix_append_config($myArray);
 
-// without assignment
- myprefix_append_config($myArray);
+            // without assignment
+             myprefix_append_config($myArray);
 
-// callable
-call_user_func('myprefix_append_config', $myArray);
-call_user_func_array(
-	'myprefix_append_config',
-	$myArray
-);
-forward_static_call('myprefix_append_config', $myArray);
-forward_static_call_array('myprefix_append_config', $myArray);
-register_shutdown_function('myprefix_append_config');
-register_tick_function('myprefix_append_config' , $myArray);
-unregister_tick_function( 'myprefix_append_config');
-EOD;
+            // callable
+            call_user_func('myprefix_append_config', $myArray);
+            call_user_func_array(
+            	'myprefix_append_config',
+            	$myArray
+            );
+            forward_static_call('myprefix_append_config', $myArray);
+            forward_static_call_array('myprefix_append_config', $myArray);
+            register_shutdown_function('myprefix_append_config');
+            register_tick_function('myprefix_append_config' , $myArray);
+            unregister_tick_function( 'myprefix_append_config');
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -3662,34 +3663,34 @@ EOD;
     public function testReplaceMultipleFunctionsAndKeepMethodsUntouched(): void
     {
         $contents = <<<'EOD'
-<?php
-if (! function_exists('first_fn')) {
-    function first_fn()
-    {
-        return 1;
-    }
-}
-if (! function_exists('second_fn')) {
-    function second_fn()
-    {
-        return 2;
-    }
-}
+            <?php
+            if (! function_exists('first_fn')) {
+                function first_fn()
+                {
+                    return 1;
+                }
+            }
+            if (! function_exists('second_fn')) {
+                function second_fn()
+                {
+                    return 2;
+                }
+            }
 
-class ExampleClass
-{
-    public function first_fn()
-    {
-        return 'method';
-    }
-}
+            class ExampleClass
+            {
+                public function first_fn()
+                {
+                    return 'method';
+                }
+            }
 
-$a = first_fn();
-$b = second_fn();
-call_user_func('first_fn');
-call_user_func_array('second_fn', []);
-$c = (new ExampleClass())->first_fn();
-EOD;
+            $a = first_fn();
+            $b = second_fn();
+            call_user_func('first_fn');
+            call_user_func_array('second_fn', []);
+            $c = (new ExampleClass())->first_fn();
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -3733,14 +3734,14 @@ EOD;
         $this->markTestIncomplete('Test is failing during cherry-pick, maybe it will work later. Does "PreservesLegacyCascadingBehavior" mean preserving a bug?!');
 
         $contents = <<<'EOD'
-<?php
-function foo() {}
-function pref_foo() {}
+            <?php
+            function foo() {}
+            function pref_foo() {}
 
-foo();
-pref_foo();
-call_user_func('foo');
-EOD;
+            foo();
+            pref_foo();
+            call_user_func('foo');
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -3785,16 +3786,16 @@ EOD;
     public function testReplaceFunctionsLeavesUnmappedCallableStringsUnchanged(): void
     {
         $contents = <<<'EOD'
-<?php
-function mapped_fn() {}
+            <?php
+            function mapped_fn() {}
 
-mapped_fn();
-function_exists('mapped_fn');
-call_user_func('mapped_fn');
+            mapped_fn();
+            function_exists('mapped_fn');
+            call_user_func('mapped_fn');
 
-function_exists('unmapped_fn');
-call_user_func('unmapped_fn');
-EOD;
+            function_exists('unmapped_fn');
+            call_user_func('unmapped_fn');
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -3900,10 +3901,10 @@ EOD;
     public function testReplaceNamespaceHandlesEscapedStringsThroughPrefilter(): void
     {
         $contents = <<<'EOD'
-<?php
-$singleEscaped = '\Vendor\Package\ClassName';
-$doubleEscaped = '\\Vendor\\Package\\ClassName';
-EOD;
+            <?php
+            $singleEscaped = '\Vendor\Package\ClassName';
+            $doubleEscaped = '\\Vendor\\Package\\ClassName';
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -3940,78 +3941,78 @@ EOD;
         $this->markTestSkipped('prepareRelativeNamespaces has been removed');
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Latte\Loaders;
+            namespace Latte\Loaders;
 
-use Latte;
+            use Latte;
 
-/**
- * Template loader.
- */
-class FileLoader implements Latte\Loader
-{
-	use Latte\Strict;
+            /**
+             * Template loader.
+             */
+            class FileLoader implements Latte\Loader
+            {
+            	use Latte\Strict;
 
-	/**
-	 * Returns template source code.
-	 */
-	public function getContent($fileName): string
-	{
-		$file = $this->baseDir . $fileName;
-		if ($this->baseDir && !Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
-			throw new Latte\RuntimeException("Template '$file' is not within the allowed path '{$this->baseDir}'.");
+            	/**
+            	 * Returns template source code.
+            	 */
+            	public function getContent($fileName): string
+            	{
+            		$file = $this->baseDir . $fileName;
+            		if ($this->baseDir && !Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
+            			throw new Latte\RuntimeException("Template '$file' is not within the allowed path '{$this->baseDir}'.");
 
-		} elseif (!is_file($file)) {
-			throw new Latte\RuntimeException("Missing template file '$file'.");
+            		} elseif (!is_file($file)) {
+            			throw new Latte\RuntimeException("Missing template file '$file'.");
 
-		} elseif ($this->isExpired($fileName, time())) {
-			if (@touch($file) === false) {
-				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
-			}
-		}
+            		} elseif ($this->isExpired($fileName, time())) {
+            			if (@touch($file) === false) {
+            				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
+            			}
+            		}
 
-		return $this->getFileSystem()->read($file);
-	}
-}
-EOD;
+            		return $this->getFileSystem()->read($file);
+            	}
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Latte\Loaders;
+            namespace Latte\Loaders;
 
-use Latte;
+            use Latte;
 
-/**
- * Template loader.
- */
-class FileLoader implements \Latte\Loader
-{
-	use \Latte\Strict;
+            /**
+             * Template loader.
+             */
+            class FileLoader implements \Latte\Loader
+            {
+            	use \Latte\Strict;
 
-	/**
-	 * Returns template source code.
-	 */
-	public function getContent($fileName): string
-	{
-		$file = $this->baseDir . $fileName;
-		if ($this->baseDir && !\Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
-			throw new \Latte\RuntimeException("Template '{$file}' is not within the allowed path '{$this->baseDir}'.");
+            	/**
+            	 * Returns template source code.
+            	 */
+            	public function getContent($fileName): string
+            	{
+            		$file = $this->baseDir . $fileName;
+            		if ($this->baseDir && !\Latte\Helpers::startsWith($this->normalizePath($file), $this->baseDir)) {
+            			throw new \Latte\RuntimeException("Template '{$file}' is not within the allowed path '{$this->baseDir}'.");
 
-		} elseif (!is_file($file)) {
-			throw new \Latte\RuntimeException("Missing template file '{$file}'.");
+            		} elseif (!is_file($file)) {
+            			throw new \Latte\RuntimeException("Missing template file '{$file}'.");
 
-		} elseif ($this->isExpired($fileName, time())) {
-			if (@touch($file) === false) {
-				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
-			}
-		}
+            		} elseif ($this->isExpired($fileName, time())) {
+            			if (@touch($file) === false) {
+            				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
+            			}
+            		}
 
-		return $this->getFileSystem()->read($file);
-	}
-}
-EOD;
+            		return $this->getFileSystem()->read($file);
+            	}
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4036,66 +4037,66 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace GuzzleHttp;
+            namespace GuzzleHttp;
 
-use Psr\Http\Message\MessageInterface;
+            use Psr\Http\Message\MessageInterface;
 
-final class BodySummarizer implements BodySummarizerInterface
-{
-    /**
-     * @var int|null
-     */
-    private $truncateAt;
+            final class BodySummarizer implements BodySummarizerInterface
+            {
+                /**
+                 * @var int|null
+                 */
+                private $truncateAt;
 
-    public function __construct(int $truncateAt = null)
-    {
-        $this->truncateAt = $truncateAt;
-    }
+                public function __construct(int $truncateAt = null)
+                {
+                    $this->truncateAt = $truncateAt;
+                }
 
-    /**
-     * Returns a summarized message body.
-     */
-    public function summarize(MessageInterface $message): ?string
-    {
-        return $this->truncateAt === null
-            ? \GuzzleHttp\Psr7\Message::bodySummary($message)
-            : \GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
-    }
-}
-EOD;
+                /**
+                 * Returns a summarized message body.
+                 */
+                public function summarize(MessageInterface $message): ?string
+                {
+                    return $this->truncateAt === null
+                        ? \GuzzleHttp\Psr7\Message::bodySummary($message)
+                        : \GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Strauss\Test\GuzzleHttp;
+            namespace Strauss\Test\GuzzleHttp;
 
-use Psr\Http\Message\MessageInterface;
+            use Psr\Http\Message\MessageInterface;
 
-final class BodySummarizer implements BodySummarizerInterface
-{
-    /**
-     * @var int|null
-     */
-    private $truncateAt;
+            final class BodySummarizer implements BodySummarizerInterface
+            {
+                /**
+                 * @var int|null
+                 */
+                private $truncateAt;
 
-    public function __construct(int $truncateAt = null)
-    {
-        $this->truncateAt = $truncateAt;
-    }
+                public function __construct(int $truncateAt = null)
+                {
+                    $this->truncateAt = $truncateAt;
+                }
 
-    /**
-     * Returns a summarized message body.
-     */
-    public function summarize(MessageInterface $message): ?string
-    {
-        return $this->truncateAt === null
-            ? \Strauss\Test\GuzzleHttp\Psr7\Message::bodySummary($message)
-            : \Strauss\Test\GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
-    }
-}
-EOD;
+                /**
+                 * Returns a summarized message body.
+                 */
+                public function summarize(MessageInterface $message): ?string
+                {
+                    return $this->truncateAt === null
+                        ? \Strauss\Test\GuzzleHttp\Psr7\Message::bodySummary($message)
+                        : \Strauss\Test\GuzzleHttp\Psr7\Message::bodySummary($message, $this->truncateAt);
+                }
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4128,38 +4129,38 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Latte\Macros;
+            namespace Latte\Macros;
 
-use Latte;
+            use Latte;
 
-class BlockMacros extends MacroSet
-{
+            class BlockMacros extends MacroSet
+            {
 
-	public static function install(Latte\Compiler $compiler): void
-	{
+            	public static function install(Latte\Compiler $compiler): void
+            	{
 
-	}
-}
-EOD;
+            	}
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Strauss\Test\Latte\Macros;
+            namespace Strauss\Test\Latte\Macros;
 
-use BH_Latte as Latte;
+            use BH_Latte as Latte;
 
-class BlockMacros extends MacroSet
-{
+            class BlockMacros extends MacroSet
+            {
 
-	public static function install(\Strauss\Test\Latte\Compiler $compiler): void
-	{
+            	public static function install(\Strauss\Test\Latte\Compiler $compiler): void
+            	{
 
-	}
-}
-EOD;
+            	}
+            }
+            EOD;
 
         $config = Mockery::mock(PrefixerConfigInterface::class);
         $config->expects('getConstantsPrefix')->andReturn('BH_')->zeroOrMoreTimes();
@@ -4207,46 +4208,46 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Latte\Macros;
+            namespace Latte\Macros;
 
-use Latte;
+            use Latte;
 
-class BlockMacros extends MacroSet
-{
-	public function macroBlock(MacroNode $node, PhpWriter $writer): string
-	{
-		if (Helpers::startsWith((string) $node->context[1], Latte\Compiler::CONTEXT_HTML_ATTRIBUTE)) {
-			$node->context[1] = '';
-			$node->modifiers .= '|escape';
-		} elseif ($node->modifiers) {
-			$node->modifiers .= '|escape';
-		}
-	}
-}
-EOD;
+            class BlockMacros extends MacroSet
+            {
+            	public function macroBlock(MacroNode $node, PhpWriter $writer): string
+            	{
+            		if (Helpers::startsWith((string) $node->context[1], Latte\Compiler::CONTEXT_HTML_ATTRIBUTE)) {
+            			$node->context[1] = '';
+            			$node->modifiers .= '|escape';
+            		} elseif ($node->modifiers) {
+            			$node->modifiers .= '|escape';
+            		}
+            	}
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Strauss\Test\Latte\Macros;
+            namespace Strauss\Test\Latte\Macros;
 
-use Strauss\Test\Latte;
+            use Strauss\Test\Latte;
 
-class BlockMacros extends MacroSet
-{
-	public function macroBlock(MacroNode $node, PhpWriter $writer): string
-	{
-		if (Helpers::startsWith((string) $node->context[1], \Strauss\Test\Latte\Compiler::CONTEXT_HTML_ATTRIBUTE)) {
-			$node->context[1] = '';
-			$node->modifiers .= '|escape';
-		} elseif ($node->modifiers) {
-			$node->modifiers .= '|escape';
-		}
-	}
-}
-EOD;
+            class BlockMacros extends MacroSet
+            {
+            	public function macroBlock(MacroNode $node, PhpWriter $writer): string
+            	{
+            		if (Helpers::startsWith((string) $node->context[1], \Strauss\Test\Latte\Compiler::CONTEXT_HTML_ATTRIBUTE)) {
+            			$node->context[1] = '';
+            			$node->modifiers .= '|escape';
+            		} elseif ($node->modifiers) {
+            			$node->modifiers .= '|escape';
+            		}
+            	}
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4280,36 +4281,36 @@ EOD;
         $this->markTestIncomplete('Deprecated: In prior regex based replacing, it was necessary to first ensure all namespaces were fqdn.');
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Latte\Macros;
+            namespace Latte\Macros;
 
-use Latte;
-use Latte\CompileException;
-use Latte\MacroNode;
+            use Latte;
+            use Latte\CompileException;
+            use Latte\MacroNode;
 
-class MacroSet implements Latte\Macro
-{
-	/** @var Latte\Compiler */
-	private $compiler;
-}
-EOD;
+            class MacroSet implements Latte\Macro
+            {
+            	/** @var Latte\Compiler */
+            	private $compiler;
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Strauss\Test\Latte\Macros;
+            namespace Strauss\Test\Latte\Macros;
 
-use Strauss\Test\Latte;
-use Strauss\Test\Latte\CompileException;
-use Strauss\Test\Latte\MacroNode;
+            use Strauss\Test\Latte;
+            use Strauss\Test\Latte\CompileException;
+            use Strauss\Test\Latte\MacroNode;
 
-class MacroSet implements \Strauss\Test\Latte\Macro
-{
-	/** @var \Strauss\Test\Latte\Compiler */
-	private $compiler;
-}
-EOD;
+            class MacroSet implements \Strauss\Test\Latte\Macro
+            {
+            	/** @var \Strauss\Test\Latte\Compiler */
+            	private $compiler;
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4345,40 +4346,40 @@ EOD;
     public function test_relative_return_type(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Latte\Macros;
+            namespace Latte\Macros;
 
-use Latte;
-use Latte\CompileException;
-use Latte\MacroNode;
+            use Latte;
+            use Latte\CompileException;
+            use Latte\MacroNode;
 
-class MacroSet implements Latte\Macro
-{
-	public function getCompiler(): Latte\Compiler
-	{
-		return $this->compiler;
-	}
-}
-EOD;
+            class MacroSet implements Latte\Macro
+            {
+            	public function getCompiler(): Latte\Compiler
+            	{
+            		return $this->compiler;
+            	}
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Strauss\Test\Latte\Macros;
+            namespace Strauss\Test\Latte\Macros;
 
-use Strauss\Test\Latte;
-use Strauss\Test\Latte\CompileException;
-use Strauss\Test\Latte\MacroNode;
+            use Strauss\Test\Latte;
+            use Strauss\Test\Latte\CompileException;
+            use Strauss\Test\Latte\MacroNode;
 
-class MacroSet implements \Strauss\Test\Latte\Macro
-{
-	public function getCompiler(): \Strauss\Test\Latte\Compiler
-	{
-		return $this->compiler;
-	}
-}
-EOD;
+            class MacroSet implements \Strauss\Test\Latte\Macro
+            {
+            	public function getCompiler(): \Strauss\Test\Latte\Compiler
+            	{
+            		return $this->compiler;
+            	}
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4411,79 +4412,79 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Latte\Runtime;
+            namespace Latte\Runtime;
 
-use Latte;
-use Latte\Engine;
-use Latte\RuntimeException;
-use Nette;
-use function is_array, is_string, count, strlen;
+            use Latte;
+            use Latte\Engine;
+            use Latte\RuntimeException;
+            use Nette;
+            use function is_array, is_string, count, strlen;
 
-class Filters
-{
-	public static function checkTagSwitch(string $orig, $new): void
-	{
-		$new = strtolower($new);
-		if (
-			$new === 'style' || $new === 'script'
-			|| isset(Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(Latte\Helpers::$emptyElements[$new])
-		) {
-			throw new Latte\RuntimeException("Forbidden tag <$orig> change to <$new>.");
-		}
-	}
-}
-EOD;
+            class Filters
+            {
+            	public static function checkTagSwitch(string $orig, $new): void
+            	{
+            		$new = strtolower($new);
+            		if (
+            			$new === 'style' || $new === 'script'
+            			|| isset(Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(Latte\Helpers::$emptyElements[$new])
+            		) {
+            			throw new Latte\RuntimeException("Forbidden tag <$orig> change to <$new>.");
+            		}
+            	}
+            }
+            EOD;
 
         // In prior regex based replacing, it was necessary to first ensure all namespaces were fqdn.
         $oldExpected = <<<'EOD'
-<?php
+            <?php
 
-namespace Strauss\Test\Latte\Runtime;
+            namespace Strauss\Test\Latte\Runtime;
 
-use Strauss\Test\Latte;
-use Strauss\Test\Latte\Engine;
-use Strauss\Test\Latte\RuntimeException;
-use Nette;
-use function is_array, is_string, count, strlen;
+            use Strauss\Test\Latte;
+            use Strauss\Test\Latte\Engine;
+            use Strauss\Test\Latte\RuntimeException;
+            use Nette;
+            use function is_array, is_string, count, strlen;
 
-class Filters
-{
-	public static function checkTagSwitch(string $orig, $new): void
-	{
-		$new = strtolower($new);
-		if ($new === 'style' || $new === 'script' || isset(\Strauss\Test\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\Strauss\Test\Latte\Helpers::$emptyElements[$new])) {
-			throw new \Strauss\Test\Latte\RuntimeException("Forbidden tag <{$orig}> change to <{$new}>.");
-		}
-	}
-}
-EOD;
+            class Filters
+            {
+            	public static function checkTagSwitch(string $orig, $new): void
+            	{
+            		$new = strtolower($new);
+            		if ($new === 'style' || $new === 'script' || isset(\Strauss\Test\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\Strauss\Test\Latte\Helpers::$emptyElements[$new])) {
+            			throw new \Strauss\Test\Latte\RuntimeException("Forbidden tag <{$orig}> change to <{$new}>.");
+            		}
+            	}
+            }
+            EOD;
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Strauss\Test\Latte\Runtime;
+            namespace Strauss\Test\Latte\Runtime;
 
-use Strauss\Test\Latte;
-use Strauss\Test\Latte\Engine;
-use Strauss\Test\Latte\RuntimeException;
-use Nette;
-use function is_array, is_string, count, strlen;
+            use Strauss\Test\Latte;
+            use Strauss\Test\Latte\Engine;
+            use Strauss\Test\Latte\RuntimeException;
+            use Nette;
+            use function is_array, is_string, count, strlen;
 
-class Filters
-{
-	public static function checkTagSwitch(string $orig, $new): void
-	{
-		$new = strtolower($new);
-		if (
-		$new === 'style' || $new === 'script'
-		 || isset(\Strauss\Test\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\Strauss\Test\Latte\Helpers::$emptyElements[$new])
-		 ) {
-			throw new \Strauss\Test\Latte\RuntimeException("Forbidden tag <$orig> change to <$new>.");
-		}
-	}
-}
-EOD;
+            class Filters
+            {
+            	public static function checkTagSwitch(string $orig, $new): void
+            	{
+            		$new = strtolower($new);
+            		if (
+            		$new === 'style' || $new === 'script'
+            		 || isset(\Strauss\Test\Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(\Strauss\Test\Latte\Helpers::$emptyElements[$new])
+            		 ) {
+            			throw new \Strauss\Test\Latte\RuntimeException("Forbidden tag <$orig> change to <$new>.");
+            		}
+            	}
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4516,44 +4517,44 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Latte\Tools;
+            namespace Latte\Tools;
 
-use Latte;
-use Nette;
+            use Latte;
+            use Nette;
 
-final class Linter
-{
-	use Latte\Strict;
+            final class Linter
+            {
+            	use Latte\Strict;
 
-	public function __construct(?Latte\Engine $engine = null, bool $debug = false)
-	{
-		$this->engine = $engine;
-		$this->debug = $debug;
-	}
-}
-EOD;
+            	public function __construct(?Latte\Engine $engine = null, bool $debug = false)
+            	{
+            		$this->engine = $engine;
+            		$this->debug = $debug;
+            	}
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Strauss\Test\Latte\Tools;
+            namespace Strauss\Test\Latte\Tools;
 
-use Strauss\Test\Latte;
-use Nette;
+            use Strauss\Test\Latte;
+            use Nette;
 
-final class Linter
-{
-	use \Strauss\Test\Latte\Strict;
+            final class Linter
+            {
+            	use \Strauss\Test\Latte\Strict;
 
-	public function __construct(?\Strauss\Test\Latte\Engine $engine = null, bool $debug = false)
-	{
-		$this->engine = $engine;
-		$this->debug = $debug;
-	}
-}
-EOD;
+            	public function __construct(?\Strauss\Test\Latte\Engine $engine = null, bool $debug = false)
+            	{
+            		$this->engine = $engine;
+            		$this->debug = $debug;
+            	}
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4586,68 +4587,68 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Latte\Tools;
+            namespace Latte\Tools;
 
-use Latte;
-use Nette;
+            use Latte;
+            use Nette;
 
-final class Linter
-{
-	use Latte\Strict;
+            final class Linter
+            {
+            	use Latte\Strict;
 
-	public function lintLatte(string $file): bool
-	{
-		try {
-			$code = $this->engine->compile($s);
+            	public function lintLatte(string $file): bool
+            	{
+            		try {
+            			$code = $this->engine->compile($s);
 
-		} catch (Latte\CompileException $e) {
-			if ($this->debug) {
-				echo $e;
-			}
-			$pos = $e->sourceLine ? ':' . $e->sourceLine : '';
-			fwrite(STDERR, "[ERROR]      {$file}{$pos}    {$e->getMessage()}\n");
-			return false;
+            		} catch (Latte\CompileException $e) {
+            			if ($this->debug) {
+            				echo $e;
+            			}
+            			$pos = $e->sourceLine ? ':' . $e->sourceLine : '';
+            			fwrite(STDERR, "[ERROR]      {$file}{$pos}    {$e->getMessage()}\n");
+            			return false;
 
-		} finally {
-			restore_error_handler();
-		}
-	}
-}
-EOD;
+            		} finally {
+            			restore_error_handler();
+            		}
+            	}
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Strauss\Test\Latte\Tools;
+            namespace Strauss\Test\Latte\Tools;
 
-use Strauss\Test\Latte;
-use Nette;
+            use Strauss\Test\Latte;
+            use Nette;
 
-final class Linter
-{
-	use \Strauss\Test\Latte\Strict;
+            final class Linter
+            {
+            	use \Strauss\Test\Latte\Strict;
 
-	public function lintLatte(string $file): bool
-	{
-		try {
-			$code = $this->engine->compile($s);
+            	public function lintLatte(string $file): bool
+            	{
+            		try {
+            			$code = $this->engine->compile($s);
 
-		} catch (\Strauss\Test\Latte\CompileException $e) {
-			if ($this->debug) {
-				echo $e;
-			}
-			$pos = $e->sourceLine ? ':' . $e->sourceLine : '';
-			fwrite(STDERR, "[ERROR]      {$file}{$pos}    {$e->getMessage()}\n");
-			return false;
+            		} catch (\Strauss\Test\Latte\CompileException $e) {
+            			if ($this->debug) {
+            				echo $e;
+            			}
+            			$pos = $e->sourceLine ? ':' . $e->sourceLine : '';
+            			fwrite(STDERR, "[ERROR]      {$file}{$pos}    {$e->getMessage()}\n");
+            			return false;
 
-		} finally {
-			restore_error_handler();
-		}
-	}
-}
-EOD;
+            		} finally {
+            			restore_error_handler();
+            		}
+            	}
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4683,46 +4684,46 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-if (!self::$raw) {
-  $name_canon = preg_replace("/[^a-z0-9]/", "", strtolower($tag));
+            if (!self::$raw) {
+              $name_canon = preg_replace("/[^a-z0-9]/", "", strtolower($tag));
 
-  $variableClass = "FontLib\\Table\\Type\\$name_canon";
-  $namespace = "FontLib\\Table\\Type";
+              $variableClass = "FontLib\\Table\\Type\\$name_canon";
+              $namespace = "FontLib\\Table\\Type";
 
-  if (!isset($this->directory[$tag]) || !@class_exists($class)) {
-    return;
-  }
-}
-else {
-  $class = "FontLib\\Table\\Type\\Table";
-}
+              if (!isset($this->directory[$tag]) || !@class_exists($class)) {
+                return;
+              }
+            }
+            else {
+              $class = "FontLib\\Table\\Type\\Table";
+            }
 
-$decorator  = "Dompdf\\FrameDecorator\\$decorator";
-$unchanged   = "Dompdf\\FrameReflower\\$reflower";
-EOD;
+            $decorator  = "Dompdf\\FrameDecorator\\$decorator";
+            $unchanged   = "Dompdf\\FrameReflower\\$reflower";
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-if (!self::$raw) {
-  $name_canon = preg_replace("/[^a-z0-9]/", "", strtolower($tag));
+            if (!self::$raw) {
+              $name_canon = preg_replace("/[^a-z0-9]/", "", strtolower($tag));
 
-  $variableClass = "Strauss\\Test\\FontLib\\Table\\Type\\$name_canon";
-  $namespace = "Strauss\\Test\\FontLib\\Table\\Type";
+              $variableClass = "Strauss\\Test\\FontLib\\Table\\Type\\$name_canon";
+              $namespace = "Strauss\\Test\\FontLib\\Table\\Type";
 
-  if (!isset($this->directory[$tag]) || !@class_exists($class)) {
-    return;
-  }
-}
-else {
-  $class = "Strauss\\Test\\FontLib\\Table\\Type\\Table";
-}
+              if (!isset($this->directory[$tag]) || !@class_exists($class)) {
+                return;
+              }
+            }
+            else {
+              $class = "Strauss\\Test\\FontLib\\Table\\Type\\Table";
+            }
 
-$decorator  = "Strauss\\Test\\Dompdf\\FrameDecorator\\$decorator";
-$unchanged   = "Dompdf\\FrameReflower\\$reflower";
-EOD;
+            $decorator  = "Strauss\\Test\\Dompdf\\FrameDecorator\\$decorator";
+            $unchanged   = "Dompdf\\FrameReflower\\$reflower";
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4770,52 +4771,52 @@ EOD;
     public function testForAbsenceOfFunctionPrefixInClass(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-if (! function_exists('my_function')) {
-    function my_function()
-    {
-        return 'global';
-    }
-}
+            if (! function_exists('my_function')) {
+                function my_function()
+                {
+                    return 'global';
+                }
+            }
 
-class MyClass
-{
-    public function my_function()
-    {
-        foreach (my_function() as $value) {
-        }
-        return 'method';
-    }
-}
+            class MyClass
+            {
+                public function my_function()
+                {
+                    foreach (my_function() as $value) {
+                    }
+                    return 'method';
+                }
+            }
 
-$value = my_function();
-$value2 = (new MyClass())->my_function();
-EOD;
+            $value = my_function();
+            $value2 = (new MyClass())->my_function();
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-if (! function_exists('myprefix_my_function')) {
-    function myprefix_my_function()
-    {
-        return 'global';
-    }
-}
+            if (! function_exists('myprefix_my_function')) {
+                function myprefix_my_function()
+                {
+                    return 'global';
+                }
+            }
 
-class MyClass
-{
-    public function my_function()
-    {
-        foreach (myprefix_my_function() as $value) {
-        }
-        return 'method';
-    }
-}
+            class MyClass
+            {
+                public function my_function()
+                {
+                    foreach (myprefix_my_function() as $value) {
+                    }
+                    return 'method';
+                }
+            }
 
-$value = myprefix_my_function();
-$value2 = (new MyClass())->my_function();
-EOD;
+            $value = myprefix_my_function();
+            $value2 = (new MyClass())->my_function();
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4844,34 +4845,34 @@ EOD;
     public function testInclude(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Carbon_Fields\Container;
+            namespace Carbon_Fields\Container;
 
-use Carbon_Fields\Helper\Helper;
+            use Carbon_Fields\Helper\Helper;
 
-class User_Meta_Container extends Container {
+            class User_Meta_Container extends Container {
 
-    public function t() {
-        include \Carbon_Fields\DIR . '/f.php';
-    }
-}
-EOD;
+                public function t() {
+                    include \Carbon_Fields\DIR . '/f.php';
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Prefix\Strauss\Carbon_Fields\Container;
+            namespace Prefix\Strauss\Carbon_Fields\Container;
 
-use Prefix\Strauss\Carbon_Fields\Helper\Helper;
+            use Prefix\Strauss\Carbon_Fields\Helper\Helper;
 
-class User_Meta_Container extends Container {
+            class User_Meta_Container extends Container {
 
-    public function t() {
-        include \Prefix\Strauss\Carbon_Fields\DIR . '/f.php';
-    }
-}
-EOD;
+                public function t() {
+                    include \Prefix\Strauss\Carbon_Fields\DIR . '/f.php';
+                }
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4918,52 +4919,52 @@ EOD;
     public function testRelativeInterfaceInImplementsNotPrefixed(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-declare(strict_types=1);
+            declare(strict_types=1);
 
-namespace Geocoder;
+            namespace Geocoder;
 
-use Geocoder\Model\Bounds;
-use Geocoder\Query\GeocodeQuery;
-use Geocoder\Query\ReverseQuery;
-use Geocoder\Provider\Provider;
+            use Geocoder\Model\Bounds;
+            use Geocoder\Query\GeocodeQuery;
+            use Geocoder\Query\ReverseQuery;
+            use Geocoder\Provider\Provider;
 
-/**
- * @author Tobias Nyholm <tobias.nyholm@gmail.com>
- */
-final class StatefulGeocoder implements Geocoder
-{
-    /**
-     * @var string|null
-     */
-    private $locale;
-}
-EOD;
+            /**
+             * @author Tobias Nyholm <tobias.nyholm@gmail.com>
+             */
+            final class StatefulGeocoder implements Geocoder
+            {
+                /**
+                 * @var string|null
+                 */
+                private $locale;
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-declare(strict_types=1);
+            declare(strict_types=1);
 
-namespace CommonsBooking\Geocoder;
+            namespace CommonsBooking\Geocoder;
 
-use CommonsBooking\Geocoder\Model\Bounds;
-use CommonsBooking\Geocoder\Query\GeocodeQuery;
-use CommonsBooking\Geocoder\Query\ReverseQuery;
-use CommonsBooking\Geocoder\Provider\Provider;
+            use CommonsBooking\Geocoder\Model\Bounds;
+            use CommonsBooking\Geocoder\Query\GeocodeQuery;
+            use CommonsBooking\Geocoder\Query\ReverseQuery;
+            use CommonsBooking\Geocoder\Provider\Provider;
 
-/**
- * @author Tobias Nyholm <tobias.nyholm@gmail.com>
- */
-final class StatefulGeocoder implements Geocoder
-{
-    /**
-     * @var string|null
-     */
-    private $locale;
-}
-EOD;
+            /**
+             * @author Tobias Nyholm <tobias.nyholm@gmail.com>
+             */
+            final class StatefulGeocoder implements Geocoder
+            {
+                /**
+                 * @var string|null
+                 */
+                private $locale;
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -4995,25 +4996,25 @@ EOD;
     {
 
         $contents = <<<'EOD'
-namespace Composer;
+            namespace Composer;
 
-class Factory
-{
-    public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer
-    {}
-}
-EOD;
+            class Factory
+            {
+                public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer
+                {}
+            }
+            EOD;
 
         // public static function create(IOInterface $io, $config =1 null, $disablePlugins = false, bool $disableScripts = false): BrianHenryIE\TestStrauss\Vendor\Composer
         $expected = <<<'EOD'
-namespace BrianHenryIE\TestStrauss\Vendor\Composer;
+            namespace BrianHenryIE\TestStrauss\Vendor\Composer;
 
-class Factory
-{
-    public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer
-    {}
-}
-EOD;
+            class Factory
+            {
+                public static function create(IOInterface $io, $config = null, $disablePlugins = false, bool $disableScripts = false): Composer
+                {}
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -5050,21 +5051,21 @@ EOD;
     public function test_namespace_of_file_excluded(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Composer\Autoload;
+            <?php
+            namespace Composer\Autoload;
 
-class Classloader {}
-EOD;
+            class Classloader {}
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace Composer\Autoload;
+            <?php
+            namespace Composer\Autoload;
 
-class Classloader {}
-EOD;
+            class Classloader {}
+            EOD;
 
         $config = Mockery::mock(PrefixerConfigInterface::class);
-//        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
+        //        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
         $config->expects('isTargetDirectoryVendor')->andReturnFalse();
         $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
         $config->allows('getNamespacePrefix')->andReturn('BrianHenryIE\\TestStraussTest\\');
@@ -5103,29 +5104,29 @@ EOD;
     public function test_use_class_as_alias(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace BrianHenryIE\TestStrauss\Console;
+            <?php
+            namespace BrianHenryIE\TestStrauss\Console;
 
-use Symfony\Component\Console\Application as BaseApplication;
+            use Symfony\Component\Console\Application as BaseApplication;
 
-class Application extends BaseApplication
-{
-}
-EOD;
+            class Application extends BaseApplication
+            {
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace BrianHenryIE\TestStrauss\Console;
+            <?php
+            namespace BrianHenryIE\TestStrauss\Console;
 
-use BrianHenryIE\TestStrauss\Vendor\Symfony\Component\Console\Application as BaseApplication;
+            use BrianHenryIE\TestStrauss\Vendor\Symfony\Component\Console\Application as BaseApplication;
 
-class Application extends BaseApplication
-{
-}
-EOD;
+            class Application extends BaseApplication
+            {
+            }
+            EOD;
 
         $config = Mockery::mock(PrefixerConfigInterface::class);
-//        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
+        //        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
         $config->expects('isTargetDirectoryVendor')->andReturnFalse();
         $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
 
@@ -5163,49 +5164,49 @@ EOD;
     public function test_classloaader(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Composer\Autoload;
+            namespace Composer\Autoload;
 
-/**
- * ClassLoader implements a PSR-0, PSR-4 and classmap class loader.
- *
- *     $loader = new \Composer\Autoload\ClassLoader();
- */
-class ClassLoader
-{
-}
-EOD;
+            /**
+             * ClassLoader implements a PSR-0, PSR-4 and classmap class loader.
+             *
+             *     $loader = new \Composer\Autoload\ClassLoader();
+             */
+            class ClassLoader
+            {
+            }
+            EOD;
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace Composer\Autoload;
+            namespace Composer\Autoload;
 
-/**
- * ClassLoader implements a PSR-0, PSR-4 and classmap class loader.
- *
- *     $loader = new \Composer\Autoload\ClassLoader();
- */
-class ClassLoader
-{
-}
-EOD;
+            /**
+             * ClassLoader implements a PSR-0, PSR-4 and classmap class loader.
+             *
+             *     $loader = new \Composer\Autoload\ClassLoader();
+             */
+            class ClassLoader
+            {
+            }
+            EOD;
 
         $contents2 = <<<'EOD'
-<?php declare(strict_types=1);
+            <?php declare(strict_types=1);
 
-namespace Composer\Autoload;
+            namespace Composer\Autoload;
 
-class AutoloadGenerator {}
-EOD;
+            class AutoloadGenerator {}
+            EOD;
 
         $expected2 = <<<'EOD'
-<?php declare(strict_types=1);
+            <?php declare(strict_types=1);
 
-namespace BrianHenryIE\TestStrauss\Composer\Autoload;
+            namespace BrianHenryIE\TestStrauss\Composer\Autoload;
 
-class AutoloadGenerator {}
-EOD;
+            class AutoloadGenerator {}
+            EOD;
 
         $config = Mockery::mock(PrefixerConfigInterface::class);
         $config->expects('isTargetDirectoryVendor')->andReturnFalse()->times(2);
@@ -5233,9 +5234,9 @@ EOD;
         $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Composer\Autoload');
         $discoveredSymbols->add($namespaceSymbol);
 
-//        $namespaceSymbol = new NamespaceSymbol('Composer', $file);
+        //        $namespaceSymbol = new NamespaceSymbol('Composer', $file);
         $namespaceSymbol->setDoRename(true);//        $namespaceSymbol->setLocalReplacement('BrianHenryIE\TestStrauss\Composer');
-//        $discoveredSymbols->add($namespaceSymbol);
+        //        $discoveredSymbols->add($namespaceSymbol);
 
         $classSymbol = new ClassSymbol('Composer\Autoload\AutoloadGenerator', $file, $namespaceSymbol);
         $classSymbol->setDoRename(true);
@@ -5266,21 +5267,21 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-use MyPackageNamespace\Namespace;
+            <?php
+            use MyPackageNamespace\Namespace;
 
-return 'whatever';
-EOD;
+            return 'whatever';
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-use BrianHenryIE\TestStrauss\MyPackageNamespace\Namespace;
+            <?php
+            use BrianHenryIE\TestStrauss\MyPackageNamespace\Namespace;
 
-return 'whatever';
-EOD;
+            return 'whatever';
+            EOD;
 
         $config = Mockery::mock(PrefixerConfigInterface::class);
-//        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
+        //        $config->expects('getClassmapPrefix')->andReturn('Prefix_');
         $config->expects('isTargetDirectoryVendor')->andReturnFalse();
         $config->expects('getConstantsPrefix')->andReturn('Prefix_')->zeroOrMoreTimes();
 
@@ -5321,20 +5322,20 @@ EOD;
     public function test_multiple_use_statements_all_renamed(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace SomePackage;
+            <?php
+            namespace SomePackage;
 
-use Composer\Config;
-use Composer\IO\IOInterface;
-EOD;
+            use Composer\Config;
+            use Composer\IO\IOInterface;
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace SomePackage;
+            <?php
+            namespace SomePackage;
 
-use Prefixed\Composer\Config;
-use Prefixed\Composer\IO\IOInterface;
-EOD;
+            use Prefixed\Composer\Config;
+            use Prefixed\Composer\IO\IOInterface;
+            EOD;
 
         $config = $this->getMockConfig();
 
@@ -5384,18 +5385,18 @@ EOD;
     public function test_global_class_use_prefers_classmap_prefix_over_namespace_prefix(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace WPGraphQL\Registry\Utils;
+            <?php
+            namespace WPGraphQL\Registry\Utils;
 
-use WPGraphQL;
-EOD;
+            use WPGraphQL;
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace WPGraphQL\Registry\Utils;
+            <?php
+            namespace WPGraphQL\Registry\Utils;
 
-use Prefix_WPGraphQL as WPGraphQL;
-EOD;
+            use Prefix_WPGraphQL as WPGraphQL;
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
         $config->method('getClassmapPrefix')->willReturn('Prefix_');
@@ -5435,7 +5436,7 @@ EOD;
         $config = Mockery::mock(PrefixerConfigInterface::class);
         $config->allows('isTargetDirectoryVendor')->andReturnFalse();
         $config->allows('getConstantsPrefix')->andReturn('BHTEST_');
-//        $config->expects('getNamespacePrefix')->andReturn('BH\\Test\\');
+        //        $config->expects('getNamespacePrefix')->andReturn('BH\\Test\\');
 
         $file = new File(
             'vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php',
@@ -5532,48 +5533,48 @@ EOD;
     public function test_classloader_null_character_example_in_doc_comment_does_not_overlap(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace BrianHenryIE\Strauss\Pipeline;
+            namespace BrianHenryIE\Strauss\Pipeline;
 
-class Prefixer
-{
-    /**
-     * Handle special case with null character `\0` in Composer's AutoloadGenerator.
-     *
-     * `$prefix = "\0Composer\Autoload\ClassLoader\0";` must become
-     * `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
-     *
-     * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\Composer\Autoload\ClassLoader\0";`
-     */
-    protected function findComposerClassLoaderPrefixPositions(): array
-    {
-        return [];
-    }
-}
-EOD;
+            class Prefixer
+            {
+                /**
+                 * Handle special case with null character `\0` in Composer's AutoloadGenerator.
+                 *
+                 * `$prefix = "\0Composer\Autoload\ClassLoader\0";` must become
+                 * `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
+                 *
+                 * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\Composer\Autoload\ClassLoader\0";`
+                 */
+                protected function findComposerClassLoaderPrefixPositions(): array
+                {
+                    return [];
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace BrianHenryIE\Strauss\Pipeline;
+            namespace BrianHenryIE\Strauss\Pipeline;
 
-class Prefixer
-{
-    /**
-     * Handle special case with null character `\0` in Composer's AutoloadGenerator.
-     *
-     * `$prefix = "\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";` must become
-     * `$prefix = "\0Project\Prefix\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
-     *
-     * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`
-     */
-    protected function findComposerClassLoaderPrefixPositions(): array
-    {
-        return [];
-    }
-}
-EOD;
+            class Prefixer
+            {
+                /**
+                 * Handle special case with null character `\0` in Composer's AutoloadGenerator.
+                 *
+                 * `$prefix = "\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";` must become
+                 * `$prefix = "\0Project\Prefix\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
+                 *
+                 * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`
+                 */
+                protected function findComposerClassLoaderPrefixPositions(): array
+                {
+                    return [];
+                }
+            }
+            EOD;
 
         $config = Mockery::mock(PrefixerConfigInterface::class);
         $config->allows('isTargetDirectoryVendor')->andReturnTrue();
@@ -5615,44 +5616,44 @@ EOD;
     public function test_fully_qualified_global_function_in_doc_comment_does_not_overlap(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace DeepClone;
+            namespace DeepClone;
 
-if (!\extension_loaded('deepclone')) {
-    /**
-     * Thrown by {@see \deepclone_from_array()} when the payload references a
-     * class that no longer exists in the running PHP process.
-     *
-     * @see \deepclone_from_array
-     * @uses deepclone_from_array()
-     * @see `\deepclone_from_array`
-     */
-    class ClassNotFoundException extends \InvalidArgumentException
-    {
-    }
-}
-EOD;
+            if (!\extension_loaded('deepclone')) {
+                /**
+                 * Thrown by {@see \deepclone_from_array()} when the payload references a
+                 * class that no longer exists in the running PHP process.
+                 *
+                 * @see \deepclone_from_array
+                 * @uses deepclone_from_array()
+                 * @see `\deepclone_from_array`
+                 */
+                class ClassNotFoundException extends \InvalidArgumentException
+                {
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-namespace DeepClone;
+            namespace DeepClone;
 
-if (!\extension_loaded('deepclone')) {
-    /**
-     * Thrown by {@see \myprefix_deepclone_from_array()} when the payload references a
-     * class that no longer exists in the running PHP process.
-     *
-     * @see \myprefix_deepclone_from_array
-     * @uses myprefix_deepclone_from_array()
-     * @see `\myprefix_deepclone_from_array`
-     */
-    class ClassNotFoundException extends \InvalidArgumentException
-    {
-    }
-}
-EOD;
+            if (!\extension_loaded('deepclone')) {
+                /**
+                 * Thrown by {@see \myprefix_deepclone_from_array()} when the payload references a
+                 * class that no longer exists in the running PHP process.
+                 *
+                 * @see \myprefix_deepclone_from_array
+                 * @uses myprefix_deepclone_from_array()
+                 * @see `\myprefix_deepclone_from_array`
+                 */
+                class ClassNotFoundException extends \InvalidArgumentException
+                {
+                }
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -5683,16 +5684,16 @@ EOD;
     public function testItReplacesNamespacedEnumDeclarationNamespace(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Company\Project;
+            namespace Company\Project;
 
-enum Status: string implements HasLabel
-{
-    case Ready = 'ready';
-    case Done = 'done';
-}
-EOD;
+            enum Status: string implements HasLabel
+            {
+                case Ready = 'ready';
+                case Done = 'done';
+            }
+            EOD;
 
         $config = $this->getMockConfig();
 
@@ -5731,20 +5732,20 @@ EOD;
     public function testItReplacesUseStatementOfNamespacedEnum(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Company\Consumer;
+            namespace Company\Consumer;
 
-use Company\Project\Status;
+            use Company\Project\Status;
 
-class Consumer
-{
-    public function isDone(Status $status): bool
-    {
-        return $status === Status::Done;
-    }
-}
-EOD;
+            class Consumer
+            {
+                public function isDone(Status $status): bool
+                {
+                    return $status === Status::Done;
+                }
+            }
+            EOD;
 
         $config = $this->getMockConfig();
 
@@ -5783,16 +5784,16 @@ EOD;
     public function testItReplacesGroupUseContainingEnum(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Company\Consumer;
+            namespace Company\Consumer;
 
-use Company\Project\{Status, Widget};
+            use Company\Project\{Status, Widget};
 
-class Consumer
-{
-}
-EOD;
+            class Consumer
+            {
+            }
+            EOD;
 
         $config = $this->getMockConfig();
 
@@ -5831,14 +5832,14 @@ EOD;
     public function testItReplacesGlobalEnumDeclaration(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-enum GlobalSuit: int
-{
-    case Hearts = 1;
-    case Spades = 2;
-}
-EOD;
+            enum GlobalSuit: int
+            {
+                case Hearts = 1;
+                case Spades = 2;
+            }
+            EOD;
 
         $config = $this->getMockConfig();
 
@@ -5873,20 +5874,20 @@ EOD;
     public function testItReplacesGlobalEnumReferences(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-class SuitConsumer
-{
-    public function isHearts(GlobalSuit $suit): bool
-    {
-        $default = GlobalSuit::Hearts;
-        if ($suit instanceof GlobalSuit) {
-            return $suit === $default;
-        }
-        return false;
-    }
-}
-EOD;
+            class SuitConsumer
+            {
+                public function isHearts(GlobalSuit $suit): bool
+                {
+                    $default = GlobalSuit::Hearts;
+                    if ($suit instanceof GlobalSuit) {
+                        return $suit === $default;
+                    }
+                    return false;
+                }
+            }
+            EOD;
 
         $config = $this->getMockConfig();
 
@@ -5923,22 +5924,22 @@ EOD;
     public function testItReplacesInterfaceImplementedByGlobalEnum(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-enum GlobalSuit: int implements SuitInterface
-{
-    case Hearts = 1;
-    case Spades = 2;
+            enum GlobalSuit: int implements SuitInterface
+            {
+                case Hearts = 1;
+                case Spades = 2;
 
-    public function color(): string
-    {
-        return match($this) {
-            self::Hearts => 'red',
-            self::Spades => 'black',
-        };
-    }
-}
-EOD;
+                public function color(): string
+                {
+                    return match($this) {
+                        self::Hearts => 'red',
+                        self::Spades => 'black',
+                    };
+                }
+            }
+            EOD;
 
         $config = $this->getMockConfig();
 
@@ -5980,23 +5981,23 @@ EOD;
     public function testItReplacesEnumUsedInMatch(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Company\Consumer;
+            namespace Company\Consumer;
 
-use Company\Project\Status;
+            use Company\Project\Status;
 
-class Reporter
-{
-    public function report(Status $status): string
-    {
-        return match($status) {
-            Status::Ready => 'ready',
-            Status::Done => 'done',
-        };
-    }
-}
-EOD;
+            class Reporter
+            {
+                public function report(Status $status): string
+                {
+                    return match($status) {
+                        Status::Ready => 'ready',
+                        Status::Done => 'done',
+                    };
+                }
+            }
+            EOD;
 
         $config = $this->getMockConfig();
 
@@ -6036,62 +6037,62 @@ EOD;
     public function test_prefixing_global_function_does_not_replace_bare_word_occurrences(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-if (! function_exists('value')) {
-    /**
-     * Return the default value of the given value.
-     *
-     * @param mixed $value
-     */
-    function value($value)
-    {
-        return $value;
-    }
-}
+            if (! function_exists('value')) {
+                /**
+                 * Return the default value of the given value.
+                 *
+                 * @param mixed $value
+                 */
+                function value($value)
+                {
+                    return $value;
+                }
+            }
 
-if (! function_exists('when')) {
-    /**
-     * Return a value by calling value() `value` when the given condition is true.
-     *
-     * @see value()
-     * @see value
-     */
-    function when($condition, $value)
-    {
-        return $condition ? value($value) : null;
-    }
-}
-EOD;
+            if (! function_exists('when')) {
+                /**
+                 * Return a value by calling value() `value` when the given condition is true.
+                 *
+                 * @see value()
+                 * @see value
+                 */
+                function when($condition, $value)
+                {
+                    return $condition ? value($value) : null;
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-if (! function_exists('myprefix_value')) {
-    /**
-     * Return the default value of the given value.
-     *
-     * @param mixed $value
-     */
-    function myprefix_value($value)
-    {
-        return $value;
-    }
-}
+            if (! function_exists('myprefix_value')) {
+                /**
+                 * Return the default value of the given value.
+                 *
+                 * @param mixed $value
+                 */
+                function myprefix_value($value)
+                {
+                    return $value;
+                }
+            }
 
-if (! function_exists('myprefix_when')) {
-    /**
-     * Return a value by calling myprefix_value() `myprefix_value` when the given condition is true.
-     *
-     * @see myprefix_value()
-     * @see myprefix_value
-     */
-    function myprefix_when($condition, $value)
-    {
-        return $condition ? myprefix_value($value) : null;
-    }
-}
-EOD;
+            if (! function_exists('myprefix_when')) {
+                /**
+                 * Return a value by calling myprefix_value() `myprefix_value` when the given condition is true.
+                 *
+                 * @see myprefix_value()
+                 * @see myprefix_value
+                 */
+                function myprefix_when($condition, $value)
+                {
+                    return $condition ? myprefix_value($value) : null;
+                }
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 
@@ -6130,32 +6131,32 @@ EOD;
     public function test_prefixing_global_function_does_not_replace_matching_array_key_string(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-function value($value)
-{
-    return $value;
-}
+            function value($value)
+            {
+                return $value;
+            }
 
-function check_content_type(array $content_type): bool
-{
-    return 'text/plain' === $content_type['value'];
-}
-EOD;
+            function check_content_type(array $content_type): bool
+            {
+                return 'text/plain' === $content_type['value'];
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-function myprefix_value($value)
-{
-    return $value;
-}
+            function myprefix_value($value)
+            {
+                return $value;
+            }
 
-function check_content_type(array $content_type): bool
-{
-    return 'text/plain' === $content_type['value'];
-}
-EOD;
+            function check_content_type(array $content_type): bool
+            {
+                return 'text/plain' === $content_type['value'];
+            }
+            EOD;
 
         $config = $this->createMock(PrefixerConfigInterface::class);
 

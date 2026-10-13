@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A range of text in a PHP file: a symbol definition, a symbol usage, or a region (comment, string, inline HTML)
  * that may contain symbol names as text.

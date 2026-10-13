@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Everything Strauss knows about one PHP file after parsing it once: the symbols it defines (by type), every
  * usage of a symbol (by type), and every comment, string and inline-HTML region that may contain symbol names

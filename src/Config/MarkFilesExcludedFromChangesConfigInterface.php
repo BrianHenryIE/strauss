@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed to mark files that match the `exclude_files_from_update` rules so they are not edited.
  *

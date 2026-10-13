@@ -70,9 +70,8 @@ class NamespacedSymbol extends DiscoveredSymbol
 
     public function isDoRename(): bool
     {
-        return parent::isDoRename()
-               && // If it has a non-global namespace, ensure that should be renamed.
-               ($this->namespace->isGlobal() || $this->namespace->isDoRename());
+        return parent::isDoRename() // If it has a non-global namespace, ensure that should be renamed.
+               && ($this->namespace->isGlobal() || $this->namespace->isDoRename());
     }
 
     public function isGlobal(): bool
@@ -95,7 +94,7 @@ class NamespacedSymbol extends DiscoveredSymbol
                 continue;
             }
             foreach ($this->getSourceFiles() as $file) {
-                if (! ( $file instanceof FileWithDependency )) {
+                if (! ($file instanceof FileWithDependency)) {
                     continue;
                 }
                 if ($file->getDependency()->getPackageName() === $dependency->getPackageName()) {

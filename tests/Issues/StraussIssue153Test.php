@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Partial matches. I.e. `$classname = "My_Project_" . $suffix"; class_exists( $classname );
  *
@@ -23,23 +24,23 @@ class StraussIssue153Test extends IntegrationTestCase
 
         // 4.0.4 but that might not load on PHP 7.4.
         $composerJsonString = <<<'EOD'
-{
-    "require": {
-        "squizlabs/php_codesniffer": "*"
-    },
-    "extra": {
-        "strauss": {
-            "classmap_prefix": "Strauss_Issue153_",
-            "namespace_prefix": "Strauss\\Issue153\\",
-            "override_autoload": {
-                "squizlabs/php_codesniffer": {
-                    "classmap": [ "." ]
+            {
+                "require": {
+                    "squizlabs/php_codesniffer": "*"
+                },
+                "extra": {
+                    "strauss": {
+                        "classmap_prefix": "Strauss_Issue153_",
+                        "namespace_prefix": "Strauss\\Issue153\\",
+                        "override_autoload": {
+                            "squizlabs/php_codesniffer": {
+                                "classmap": [ "." ]
+                            }
+                        }
+                    }
                 }
             }
-        }
-    }
-}
-EOD;
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -53,7 +54,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpStringAfter = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/squizlabs/php_codesniffer/autoload.php');
+        $phpStringAfter = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/squizlabs/php_codesniffer/autoload.php');
 
         // squizlabs/php_codesniffer/autoload.php:23
         // if (class_exists('PHP_CodeSniffer\Autoload', false) === false) {

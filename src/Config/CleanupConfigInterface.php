@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed by the cleanup step, which deletes the original vendor files or packages once they have
  * been copied and updates Composer's `installed.json` to match.

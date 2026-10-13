@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A constant, declared with `const` or `define()`, discovered in a scanned file and which Strauss may prefix.
  *
@@ -14,5 +15,4 @@ namespace BrianHenryIE\Strauss\Types;
  */
 class ConstantSymbol extends NamespacedSymbol
 {
-
 }

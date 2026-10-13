@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Strauss generated autoload doesn't respect `"platform-check": false`.
  *
@@ -18,26 +19,26 @@ class StraussIssue159Test extends IntegrationTestCase
     public function test_autoloader_does_not_include_platform_check(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue159",
-  "config": {
-		"platform": {
-			"php": "7.4.33"
-		},
-        "platform-check": false
-	},
-  "require": {
-    "php": ">=7.4",
-    "psr/log": "1.0.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Company_Project_"
-	}
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue159",
+              "config": {
+            		"platform": {
+            			"php": "7.4.33"
+            		},
+                    "platform-check": false
+            	},
+              "require": {
+                "php": ">=7.4",
+                "psr/log": "1.0.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Company_Project_"
+            	}
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * "unit" tests should not write to the filesystem.
  */
@@ -136,7 +137,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
              */
             $levelMessages = function (string $level): array {
                 if (!isset($this->getTestLogger()->recordsByLevel[$level])) {
-                    return array();
+                    return [];
                 }
                 return array_map(
                     /** @param array{level:string, message:string, context:array} $record */
@@ -312,8 +313,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
             $filesystem = new FileSystem(
                 $localFilesystemAdapter,
                 [
-                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ],
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
                 Filesystem::makePathNormalizer($workingDir),
                 null,
                 $workingDir,

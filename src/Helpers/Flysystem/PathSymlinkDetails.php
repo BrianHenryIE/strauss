@@ -1,9 +1,11 @@
 <?php
+
 /**
  * POJO with some convenience functions.
  *
  * @package brianhenryie/strauss
  */
+
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
 /**

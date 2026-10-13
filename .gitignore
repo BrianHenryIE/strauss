@@ -27,3 +27,4 @@ scripts/builtins.php
 !tests/Benchmark/composer.lock
 tests/Benchmark/vendor/
 tests/Benchmark/vendor-prefixed/
+.php-cs-fixer.cache

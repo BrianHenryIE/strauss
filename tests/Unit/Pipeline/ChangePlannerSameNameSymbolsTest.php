@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Symbols of different types may share a fully qualified name: an interface `Acme\Widget` and a namespace
  * `Acme\Widget\`, a global class `WPGraphQL` and a namespace `WPGraphQL\`, a function and a namespace, ...
@@ -75,36 +76,36 @@ class ChangePlannerSameNameSymbolsTest extends TestCase
         $symbols = new DiscoveredSymbols([$root, $widgetNamespace, $interface, $implementation]);
 
         $contents = <<<'EOD'
-<?php
-namespace Acme\SameName\Consumers;
+            <?php
+            namespace Acme\SameName\Consumers;
 
-use Acme\SameName\Widget;
-use Acme\SameName\Widget\{WidgetImplementation};
+            use Acme\SameName\Widget;
+            use Acme\SameName\Widget\{WidgetImplementation};
 
-trait WidgetFactoryTrait
-{
-    protected function createWidget(): Widget
-    {
-        return new WidgetImplementation();
-    }
-}
-EOD;
+            trait WidgetFactoryTrait
+            {
+                protected function createWidget(): Widget
+                {
+                    return new WidgetImplementation();
+                }
+            }
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace Prefix\Acme\SameName\Consumers;
+            <?php
+            namespace Prefix\Acme\SameName\Consumers;
 
-use Prefix\Acme\SameName\Widget;
-use Prefix\Acme\SameName\Widget\{WidgetImplementation};
+            use Prefix\Acme\SameName\Widget;
+            use Prefix\Acme\SameName\Widget\{WidgetImplementation};
 
-trait WidgetFactoryTrait
-{
-    protected function createWidget(): Widget
-    {
-        return new WidgetImplementation();
-    }
-}
-EOD;
+            trait WidgetFactoryTrait
+            {
+                protected function createWidget(): Widget
+                {
+                    return new WidgetImplementation();
+                }
+            }
+            EOD;
 
         self::assertSame($expected, $this->prefix($contents, $symbols));
     }
@@ -153,32 +154,32 @@ EOD;
         $symbols = new DiscoveredSymbols([$global, $namespace, $class, $router]);
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-use WPGraphQL\Router;
+            use WPGraphQL\Router;
 
-final class WPGraphQL {
-    public static function router(): Router {
-        return new \WPGraphQL\Router();
-    }
-}
+            final class WPGraphQL {
+                public static function router(): Router {
+                    return new \WPGraphQL\Router();
+                }
+            }
 
-$instance = new WPGraphQL();
-EOD;
+            $instance = new WPGraphQL();
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-use Prefix\WPGraphQL\Router;
+            use Prefix\WPGraphQL\Router;
 
-final class Prefix_WPGraphQL {
-    public static function router(): Router {
-        return new \Prefix\WPGraphQL\Router();
-    }
-}
+            final class Prefix_WPGraphQL {
+                public static function router(): Router {
+                    return new \Prefix\WPGraphQL\Router();
+                }
+            }
 
-$instance = new Prefix_WPGraphQL();
-EOD;
+            $instance = new Prefix_WPGraphQL();
+            EOD;
 
         self::assertSame($expected, $this->prefix($contents, $symbols));
     }
@@ -199,24 +200,24 @@ EOD;
         $symbols = new DiscoveredSymbols([$root, $helperNamespace, $function]);
 
         $contents = <<<'EOD'
-<?php
-namespace Acme\Consumer;
+            <?php
+            namespace Acme\Consumer;
 
-use function Acme\Util\helper;
-use Acme\Util\helper\{Thing};
+            use function Acme\Util\helper;
+            use Acme\Util\helper\{Thing};
 
-helper();
-EOD;
+            helper();
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-namespace Acme\Consumer;
+            <?php
+            namespace Acme\Consumer;
 
-use function Prefix\Acme\Util\helper;
-use Prefix\Acme\Util\helper\{Thing};
+            use function Prefix\Acme\Util\helper;
+            use Prefix\Acme\Util\helper\{Thing};
 
-helper();
-EOD;
+            helper();
+            EOD;
 
         self::assertSame($expected, $this->prefix($contents, $symbols));
     }

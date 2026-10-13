@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * @see https://github.com/coenjacobs/mozart/blob/3b1243ca8505fa6436569800dc34269178930f39/tests/replacers/NamespaceReplacerIntegrationTest.php
@@ -14,7 +15,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue124Test extends IntegrationTestCase
 {
-
     /**
      * After PR #84, running Mozart on Mpdf began prefixing the class name inside the namespaced file.
      *
@@ -31,19 +31,19 @@ class MozartIssue124Test extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionAbove('8.0.0');
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-124",
-	"require": {
-		"mpdf/mpdf": "8.0.10"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M124\\",
-			"classmap_prefix": "BrianHenryIE_M124_"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-124",
+            	"require": {
+            		"mpdf/mpdf": "8.0.10"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M124\\",
+            			"classmap_prefix": "BrianHenryIE_M124_"
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -54,7 +54,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/mpdf/mpdf/src/Mpdf.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/mpdf/mpdf/src/Mpdf.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BrianHenryIE\M124\Mpdf implements', $mpdf_php);
@@ -79,19 +79,19 @@ EOD;
         $this->markTestSkippedOnPhpVersionAbove('8.0.0');
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-124",
-	"require": {
-		"mpdf/mpdf": "8.0.10"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M124\\",
-			"classmap_prefix": "BrianHenryIE_M124_"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-124",
+            	"require": {
+            		"mpdf/mpdf": "8.0.10"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M124\\",
+            			"classmap_prefix": "BrianHenryIE_M124_"
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -102,7 +102,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/mpdf/mpdf/src/Conversion/DecToOther.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/mpdf/mpdf/src/Conversion/DecToOther.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('public function __construct(BrianHenryIE\M124\Mpdf $mpdf)', $mpdf_php);
@@ -124,19 +124,19 @@ EOD;
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.1.0');
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-124",
-	"require": {
-		"mpdf/mpdf": "8.0.10"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M124\\",
-			"classmap_prefix": "BrianHenryIE_M124_"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-124",
+            	"require": {
+            		"mpdf/mpdf": "8.0.10"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M124\\",
+            			"classmap_prefix": "BrianHenryIE_M124_"
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -147,7 +147,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/mpdf/mpdf/src/Barcode/BarcodeException.php');
+        $mpdf_php = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/mpdf/mpdf/src/Barcode/BarcodeException.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BarcodeException extends \Mpdf\MpdfException', $mpdf_php);

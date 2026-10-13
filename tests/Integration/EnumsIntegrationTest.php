@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PHP 8.1 enums: discovery, prefixing (namespaced and global), and `class_alias()`-based autoload aliases.
  */
@@ -23,120 +24,120 @@ class EnumsIntegrationTest extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionBelow('8.1');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/enums-integration-test",
-  "minimum-stability": "dev",
-  "repositories": {
-    "strauss-test/enum-fixture": {
-      "type": "path",
-      "url": "./enum-fixture",
-      "options": {
-        "symlink": false
-      }
-    }
-  },
-  "require": {
-    "strauss-test/enum-fixture": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestEnums\\",
-      "classmap_prefix": "BrianHenryIE_TestEnums_",
-      "delete_vendor_files": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/enums-integration-test",
+              "minimum-stability": "dev",
+              "repositories": {
+                "strauss-test/enum-fixture": {
+                  "type": "path",
+                  "url": "./enum-fixture",
+                  "options": {
+                    "symlink": false
+                  }
+                }
+              },
+              "require": {
+                "strauss-test/enum-fixture": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestEnums\\",
+                  "classmap_prefix": "BrianHenryIE_TestEnums_",
+                  "delete_vendor_files": true
+                }
+              }
+            }
+            EOD;
 
         $fixtureComposerJsonString = <<<'EOD'
-{
-  "name": "strauss-test/enum-fixture",
-  "require": {
-    "php": ">=8.1"
-  },
-  "autoload": {
-    "psr-4": {
-      "EnumFixture\\": "src/"
-    },
-    "classmap": [
-      "global/"
-    ]
-  }
-}
-EOD;
+            {
+              "name": "strauss-test/enum-fixture",
+              "require": {
+                "php": ">=8.1"
+              },
+              "autoload": {
+                "psr-4": {
+                  "EnumFixture\\": "src/"
+                },
+                "classmap": [
+                  "global/"
+                ]
+              }
+            }
+            EOD;
 
         $hasLabelPhpString = <<<'EOD'
-<?php
-namespace EnumFixture;
+            <?php
+            namespace EnumFixture;
 
-interface HasLabel
-{
-    public function label(): string;
-}
-EOD;
+            interface HasLabel
+            {
+                public function label(): string;
+            }
+            EOD;
 
         $statusPhpString = <<<'EOD'
-<?php
-namespace EnumFixture;
+            <?php
+            namespace EnumFixture;
 
-enum Status: string implements HasLabel
-{
-    const DEFAULT = self::Ready;
+            enum Status: string implements HasLabel
+            {
+                const DEFAULT = self::Ready;
 
-    case Ready = 'ready';
-    case Done = 'done';
+                case Ready = 'ready';
+                case Done = 'done';
 
-    public function label(): string
-    {
-        return match($this) {
-            Status::Ready => 'Ready',
-            Status::Done => 'Done',
-        };
-    }
-}
-EOD;
+                public function label(): string
+                {
+                    return match($this) {
+                        Status::Ready => 'Ready',
+                        Status::Done => 'Done',
+                    };
+                }
+            }
+            EOD;
 
         $directionPhpString = <<<'EOD'
-<?php
-namespace EnumFixture;
+            <?php
+            namespace EnumFixture;
 
-enum Direction
-{
-    case Up;
-    case Down;
-}
-EOD;
+            enum Direction
+            {
+                case Up;
+                case Down;
+            }
+            EOD;
 
         $consumerPhpString = <<<'EOD'
-<?php
-namespace EnumFixture;
+            <?php
+            namespace EnumFixture;
 
-use EnumFixture\Status;
+            use EnumFixture\Status;
 
-class Consumer
-{
-    public function report(Status $status): string
-    {
-        if (!($status instanceof Status)) {
-            return '';
-        }
-        return match($status) {
-            Status::Ready => 'consumer:ready',
-            Status::Done => 'consumer:done',
-        };
-    }
-}
-EOD;
+            class Consumer
+            {
+                public function report(Status $status): string
+                {
+                    if (!($status instanceof Status)) {
+                        return '';
+                    }
+                    return match($status) {
+                        Status::Ready => 'consumer:ready',
+                        Status::Done => 'consumer:done',
+                    };
+                }
+            }
+            EOD;
 
         $globalSuitPhpString = <<<'EOD'
-<?php
+            <?php
 
-enum GlobalSuit: int
-{
-    case Hearts = 1;
-    case Spades = 2;
-}
-EOD;
+            enum GlobalSuit: int
+            {
+                case Hearts = 1;
+                case Spades = 2;
+            }
+            EOD;
 
         $this->getFileSystem()->createDirectory($this->testsWorkingDir . '/enum-fixture');
         $this->getFileSystem()->createDirectory($this->testsWorkingDir . '/enum-fixture/src');

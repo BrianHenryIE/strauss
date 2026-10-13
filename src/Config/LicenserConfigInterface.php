@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The configuration needed to copy package licence files and annotate modified files' headers with a notice of the
  * change, as licences such as MIT and GPL require.

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Generates Composer's autoloader files (`autoload.php` and the `composer` directory) for the target directory,
  * and the `InstalledVersions.php` and `installed.php` files Composer's classmap expects to find there.
@@ -154,8 +155,8 @@ class DumpAutoload
         $generator->setDryRun($this->config->isDryRun());
         $generator->setClassMapAuthoritative($isOptimize);
         $generator->setRunScripts(false);
-//        $generator->setApcu($apcu, $apcuPrefix);
-//        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
+        //        $generator->setApcu($apcu, $apcuPrefix);
+        //        $generator->setPlatformRequirementFilter($this->getPlatformRequirementFilter($input));
 
         $installedJsonFile = new JsonFile(
             $this->filesystem->makeAbsolute($this->config->getAbsoluteTargetDirectory() . '/composer/installed.json')
@@ -234,7 +235,7 @@ class DumpAutoload
             $this->logger->debug(
                 'InstalledVersions.php does not exist at {sourcePath}, skipping copy.',
                 [
-                'sourcePath' => $sourcePath
+                    'sourcePath' => $sourcePath,
                 ]
             );
             return;
@@ -257,7 +258,7 @@ class DumpAutoload
 
         $installed['versions'] = array_filter(
             $installed['versions'],
-            fn (string $packageName): bool => in_array($packageName, $targetPackagesNames),
+            fn(string $packageName): bool => in_array($packageName, $targetPackagesNames),
             ARRAY_FILTER_USE_KEY
         );
 

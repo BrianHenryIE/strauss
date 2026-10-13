@@ -290,7 +290,7 @@ class WorkerPoolTest extends TestCase
      */
     public function test_worker_which_cannot_be_started_throws(): void
     {
-        $factory = new class () extends WorkerProcessFactory {
+        $factory = new class extends WorkerProcessFactory {
             public function create(): Process
             {
                 return new Process(['php'], '/strauss/directory/which/does/not/exist');
@@ -316,18 +316,18 @@ class WorkerPoolTest extends TestCase
     public function test_results_are_passed_to_the_callback(): void
     {
         $phpCode = <<<'PHP'
-while (false !== ($line = fgets(STDIN))) {
-    $request = json_decode($line, true);
-    if ('quit' === $request['action']) {
-        exit(0);
-    }
-    foreach ($request['files'] as $file) {
-        echo json_encode(['action' => 'result', 'file' => $file, 'error' => 'Failed: ' . basename($file)]), "\n";
-    }
-    echo json_encode(['action' => 'chunk-done']), "\n";
-}
-exit(1);
-PHP;
+            while (false !== ($line = fgets(STDIN))) {
+                $request = json_decode($line, true);
+                if ('quit' === $request['action']) {
+                    exit(0);
+                }
+                foreach ($request['files'] as $file) {
+                    echo json_encode(['action' => 'result', 'file' => $file, 'error' => 'Failed: ' . basename($file)]), "\n";
+                }
+                echo json_encode(['action' => 'chunk-done']), "\n";
+            }
+            exit(1);
+            PHP;
         $files = $this->getSourceFiles(5);
 
         // Two files per chunk: the worker is sent three chunks, then "quit".

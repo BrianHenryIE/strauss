@@ -18,7 +18,7 @@ class CleanupTest extends \BrianHenryIE\Strauss\TestCase
         $config->expects('isDeleteVendorFiles')->once()->andReturnFalse();
         $config->expects('isDeleteVendorPackages')->once()->andReturnFalse();
 
-        $sut = new class($config, $this->getFileSystem(), new NullLogger()) extends Cleanup {
+        $sut = new class ($config, $this->getFileSystem(), new NullLogger()) extends Cleanup {
             public function optimizeEnabledForTest(): bool
             {
                 return $this->isOptimizeAutoloaderEnabled();
@@ -38,7 +38,7 @@ class CleanupTest extends \BrianHenryIE\Strauss\TestCase
         $config->expects('isDeleteVendorPackages')->once()->andReturnFalse();
         $config->expects('isOptimizeAutoloader')->once()->andReturnFalse();
 
-        $sut = new class($config, $this->getFileSystem(), new NullLogger()) extends Cleanup {
+        $sut = new class ($config, $this->getFileSystem(), new NullLogger()) extends Cleanup {
             public function optimizeEnabledForTest(): bool
             {
                 return $this->isOptimizeAutoloaderEnabled();

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Applies the changes to each file.
  *
@@ -53,12 +54,12 @@ class Prefixer
      * it hardcodes (e.g. `Composer\InstalledVersions`) appear with this prefix and must be stripped before applying
      * the project's prefix.
      */
-    const SELF_NAMESPACE_PREFIX = 'BrianHenryIE\\Strauss\\';
+    public const SELF_NAMESPACE_PREFIX = 'BrianHenryIE\\Strauss\\';
 
     /**
      * The PHP files Composer writes to its `composer` directory.
      */
-    const COMPOSER_RUNTIME_FILES = [
+    public const COMPOSER_RUNTIME_FILES = [
         'autoload_classmap.php',
         'autoload_files.php',
         'autoload_namespaces.php',
@@ -81,7 +82,7 @@ class Prefixer
      *
      * @var array<string, ?ComposerPackage>
      */
-    protected array $changedFiles = array();
+    protected array $changedFiles = [];
 
     protected ?PhpFileAnalyzer $analyzer = null;
 
@@ -126,7 +127,7 @@ class Prefixer
             $this->logger->debug(
                 "is_dir() / nothing to do : {targetAbsolutePath}",
                 [
-                'targetAbsolutePath' => $file->getTargetAbsolutePath()
+                    'targetAbsolutePath' => $file->getTargetAbsolutePath(),
                 ]
             );
             return;
@@ -141,8 +142,8 @@ class Prefixer
             if (in_array(
                 $file->getTargetAbsolutePath(),
                 [
-                $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
-                $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
+                    $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
+                    $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
                 ],
                 true
             )
@@ -152,7 +153,7 @@ class Prefixer
             $this->logger->warning(
                 "Expected file does not exist: {targetAbsolutePath}",
                 [
-                'targetAbsolutePath' => $file->getTargetAbsolutePath()
+                    'targetAbsolutePath' => $file->getTargetAbsolutePath(),
                 ]
             );
             return;
@@ -161,7 +162,7 @@ class Prefixer
         $this->logger->debug(
             "Updating contents of file: {targetAbsolutePath}",
             [
-            'targetAbsolutePath' => $file->getTargetAbsolutePath()
+                'targetAbsolutePath' => $file->getTargetAbsolutePath(),
             ]
         );
 
@@ -179,14 +180,14 @@ class Prefixer
             $this->logger->info(
                 "Updated contents of file::::{targetAbsolutePath}",
                 [
-                'targetAbsolutePath' => $file->getTargetAbsolutePath()
+                    'targetAbsolutePath' => $file->getTargetAbsolutePath(),
                 ]
             );
         } else {
             $this->logger->debug(
                 "No changes to file::::{targetAbsolutePath}",
                 [
-                'targetAbsolutePath' => $file->getTargetAbsolutePath()
+                    'targetAbsolutePath' => $file->getTargetAbsolutePath(),
                 ]
             );
         }
@@ -215,7 +216,7 @@ class Prefixer
                 $this->logger->debug(
                     "is_dir() / nothing to do::::{relativeFilePath}",
                     [
-                    'relativeFilePath' => $relativeFilePath
+                        'relativeFilePath' => $relativeFilePath,
                     ]
                 );
                 continue;
@@ -226,8 +227,8 @@ class Prefixer
                 if (in_array(
                     $fileAbsolutePath,
                     [
-                    $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
-                    $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
+                        $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
+                        $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
                     ],
                     true
                 )
@@ -237,7 +238,7 @@ class Prefixer
                 $this->logger->warning(
                     "Expected file does not exist::::{relativeFilePath}",
                     [
-                    'relativeFilePath' => $relativeFilePath
+                        'relativeFilePath' => $relativeFilePath,
                     ]
                 );
                 continue;
@@ -246,7 +247,7 @@ class Prefixer
             $this->logger->debug(
                 "Updating contents of file (project)::::{fileAbsolutePath}",
                 [
-                'fileAbsolutePath' => $fileAbsolutePath,
+                    'fileAbsolutePath' => $fileAbsolutePath,
                 ]
             );
 
@@ -295,7 +296,7 @@ class Prefixer
             $this->logger->debug(
                 "Planning changes::::{filePath}",
                 [
-                'filePath' => is_null($file) ? 'file' : $file->getTargetAbsolutePath(),
+                    'filePath' => is_null($file) ? 'file' : $file->getTargetAbsolutePath(),
                 ]
             );
             $edits = $this->getPlanner()->plan($discoveredSymbols, $codeMap, $file);
@@ -343,7 +344,7 @@ class Prefixer
             $this->logger->debug(
                 "Code map does not match the file contents, re-analysing::::{filePath}",
                 [
-                'filePath' => $fileAbsolutePath ?? 'file',
+                    'filePath' => $fileAbsolutePath ?? 'file',
                 ]
             );
         }
@@ -351,7 +352,7 @@ class Prefixer
         $this->logger->info(
             "Parsing::::{filePath}",
             [
-            'filePath' => $fileAbsolutePath ?? 'file',
+                'filePath' => $fileAbsolutePath ?? 'file',
             ]
         );
 
@@ -362,8 +363,8 @@ class Prefixer
             $this->logger->warning(
                 "Skipping Prefixing in {filePath} due to parse error: {errorMessage}",
                 [
-                'filePath' => $fileAbsolutePath ?? 'file',
-                'errorMessage' => $this->getAnalyzer()->getLastErrorMessage(),
+                    'filePath' => $fileAbsolutePath ?? 'file',
+                    'errorMessage' => $this->getAnalyzer()->getLastErrorMessage(),
                 ]
             );
             return null;
@@ -525,7 +526,7 @@ class Prefixer
         $this->logger->debug(
             "Prefixing the Composer autoload files in {path}.",
             [
-            'path' => $absoluteDirectory,
+                'path' => $absoluteDirectory,
             ]
         );
 

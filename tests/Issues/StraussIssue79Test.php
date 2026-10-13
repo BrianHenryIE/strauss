@@ -1,4 +1,5 @@
 <?php
+
 /**
  * JsonException core PHP class, polyfilled by Symfony, incorrectly replaced
  *
@@ -21,25 +22,25 @@ class StraussIssue79Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/79",
-  "require": {
-    "json-mapper/json-mapper": "2.20.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Issue79\\",
-      "classmap_prefix": "BH_Strauss_Issue79_",
-      "exclude_from_copy": {
-        "file_patterns": [
-          "#\/tests\/#",
-          "#^symfony\/#"
-        ]
-      }
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/79",
+              "require": {
+                "json-mapper/json-mapper": "2.20.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\Issue79\\",
+                  "classmap_prefix": "BH_Strauss_Issue79_",
+                  "exclude_from_copy": {
+                    "file_patterns": [
+                      "#\/tests\/#",
+                      "#^symfony\/#"
+                    ]
+                  }
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
