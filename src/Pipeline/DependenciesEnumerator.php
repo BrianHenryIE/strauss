@@ -222,8 +222,8 @@ class DependenciesEnumerator
                 $composerLockPath = $this->config->getProjectAbsolutePath() . '/' . Factory::getLockFile(Factory::getComposerFile());
                 $composerLockString     = $this->filesystem->read($composerLockPath);
                 /**
- * @var null|array{packages:array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray}} $composerLockJsonArray
-*/
+                 * @var null|array{packages:array<array{name:string, type?:string, require?:array<string,string>, autoload?:AutoloadKeyArray}>} $composerLockJsonArray
+                 */
                 $composerLockJsonArray           = json_decode($composerLockString, true);
 
                 if (is_null($composerLockJsonArray)) {
@@ -231,12 +231,9 @@ class DependenciesEnumerator
                 }
 
                 /**
- * @var ?ComposerJsonArray $requiredPackageComposerJson
-*/
+                 * @var ?ComposerJsonArray $requiredPackageComposerJson
+                 */
                 $requiredPackageComposerJson = null;
-                /**
- * @var array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray} $packageJson
-*/
                 foreach ($composerLockJsonArray['packages'] as $packageJson) {
                     if ($requiredPackageName === $packageJson['name']) {
                         $requiredPackageComposerJson = $packageJson;
