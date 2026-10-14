@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--suppress XmlUnboundNsPrefix -->
 <ruleset name="strauss">
-    <description>Coding standard ruleset based on the PSR-2 coding standard.</description>
+    <description>Coding standard ruleset based on PEAR and PSR-12, deferring to PER-CS (php-cs-fixer, .php-cs-fixer.php) where they conflict.</description>
     <arg value="s"/> <!-- Show sniff error codes in all reports. -->
     <rule ref="PEAR">
         <!-- Don't require such verbose PhpDoc in every file. -->
@@ -27,12 +27,38 @@
             either always fails the other, so defer to PSR-12, which still checks indentation.
         -->
         <exclude name="PEAR.WhiteSpace.ScopeIndent"/>
+        <!--
+            Directly contradicts PSR-12 / PER-CS: PEAR wants the first condition of a multi-line `if (` on the same
+            line as the `(`, `PSR12.ControlStructures.ControlStructureSpacing` wants it on the next line. phpcbf
+            loops between the two. PSR-12 still checks the condition's indentation and the closing `)` line.
+        -->
+        <exclude name="PEAR.ControlStructures.MultiLineCondition"/>
         <!-- I prefer the @package in comments to match the Composer package name -->
         <exclude name="PEAR.Commenting.FileComment.InvalidPackage"/>
         <exclude-pattern>tests</exclude-pattern>
     </rule>
-    <rule ref="PSR2">
+    <rule ref="PSR12">
         <exclude name="Generic.Files.LineLength.TooLong"/>
+    </rule>
+    <!--
+        PER-CS `single_line_empty_body` (php-cs-fixer) writes empty class/function bodies as `{}` on the declaration
+        line, which these reject. php-cs-fixer's `braces_position` checks brace placement instead.
+        Severity 0 so they are off however they were included (PEAR, PSR12).
+    -->
+    <rule ref="PEAR.Classes.ClassDeclaration.OpenBraceNewLine">
+        <severity>0</severity>
+    </rule>
+    <rule ref="PSR2.Classes.ClassDeclaration.OpenBraceNewLine">
+        <severity>0</severity>
+    </rule>
+    <rule ref="PEAR.WhiteSpace.ScopeClosingBrace.Line">
+        <severity>0</severity>
+    </rule>
+    <rule ref="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore">
+        <severity>0</severity>
+    </rule>
+    <rule ref="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine">
+        <severity>0</severity>
     </rule>
     <rule ref="PSR1.Methods.CamelCapsMethodName.NotCamelCaps">
         <exclude-pattern>*/tests/*</exclude-pattern>
