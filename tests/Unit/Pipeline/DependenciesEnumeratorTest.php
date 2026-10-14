@@ -23,15 +23,15 @@ class DependenciesEnumeratorTest extends TestCase
         $packages = [];
         foreach (
             [
-            [
-                'name' => 'acme/app',
-                'require' => ['psr/log-implementation' => '*', 'acme/original' => '*', 'acme/real' => '*'],
-                'suggest' => ['acme/optional' => 'For optional things', 'acme/not-installed' => 'Absent'],
-            ],
-            ['name' => 'acme/logger', 'provide' => ['psr/log-implementation' => '1.0']],
-            ['name' => 'acme/fork', 'replace' => ['acme/original' => '*']],
-            ['name' => 'acme/real'],
-            ['name' => 'acme/optional'],
+                [
+                    'name' => 'acme/app',
+                    'require' => ['psr/log-implementation' => '*', 'acme/original' => '*', 'acme/real' => '*'],
+                    'suggest' => ['acme/optional' => 'For optional things', 'acme/not-installed' => 'Absent'],
+                ],
+                ['name' => 'acme/logger', 'provide' => ['psr/log-implementation' => '1.0']],
+                ['name' => 'acme/fork', 'replace' => ['acme/original' => '*']],
+                ['name' => 'acme/real'],
+                ['name' => 'acme/optional'],
             ] as $composerJsonArray
         ) {
             $packages[$composerJsonArray['name']] = ComposerPackage::fromComposerJsonArray($composerJsonArray);
@@ -51,9 +51,7 @@ class DependenciesEnumeratorTest extends TestCase
                 $this->flatDependencyArray = $packages;
             }
 
-            protected function recursiveGetAllDependencies(array $requiredPackageNames): void
-            {
-            }
+            protected function recursiveGetAllDependencies(array $requiredPackageNames): void {}
         };
 
         $sut->getAllDependencies();

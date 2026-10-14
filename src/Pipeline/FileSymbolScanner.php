@@ -172,7 +172,8 @@ class FileSymbolScanner
         $this->analyzeInParallel($files);
 
         foreach ($files->getFiles() as $file) {
-            if ($file instanceof FileWithDependency
+            if (
+                $file instanceof FileWithDependency
                 && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))
             ) {
                 /**
@@ -184,7 +185,8 @@ class FileSymbolScanner
                 //                    continue;
             }
 
-            if ($file instanceof FileWithDependency
+            if (
+                $file instanceof FileWithDependency
                 && !isset($packagesToPrefixLookup[$file->getDependency()->getPackageName()])
             ) {
                 $doPrefix = false;
@@ -341,14 +343,16 @@ class FileSymbolScanner
             );
 
             // Grouped by type, in the order the symbols have always been registered.
-            foreach ([
-                SymbolDefinition::TYPE_CLASS,
-                SymbolDefinition::TYPE_FUNCTION,
-                SymbolDefinition::TYPE_CONSTANT,
-                SymbolDefinition::TYPE_INTERFACE,
-                SymbolDefinition::TYPE_TRAIT,
-                SymbolDefinition::TYPE_ENUM,
-            ] as $type) {
+            foreach (
+                [
+                    SymbolDefinition::TYPE_CLASS,
+                    SymbolDefinition::TYPE_FUNCTION,
+                    SymbolDefinition::TYPE_CONSTANT,
+                    SymbolDefinition::TYPE_INTERFACE,
+                    SymbolDefinition::TYPE_TRAIT,
+                    SymbolDefinition::TYPE_ENUM,
+                ] as $type
+            ) {
                 foreach ($definitions as $definition) {
                     if ($type === $definition->getType()) {
                         $this->recordDefinition($definition, $file, $namespaceSymbol, $package);

@@ -539,7 +539,8 @@ class ChangePlanner
         $offset = 0;
         while (($pos = strpos($commentText, $searchStr, $offset)) !== false) {
             $nextPos = $pos + $searchLen;
-            if ($nextPos >= strlen($commentText)
+            if (
+                $nextPos >= strlen($commentText)
                 || !preg_match('/[a-zA-Z0-9_\x7f-\xff\\\\]/', $commentText[$nextPos])
             ) {
                 $positions[] = [
@@ -685,7 +686,8 @@ class ChangePlanner
             $symbols,
             function (DiscoveredSymbol $symbol) use ($availablePackageNames): bool {
                 $symbolPackages = $symbol->getDependencies()->toArray();
-                if (empty($symbolPackages)
+                if (
+                    empty($symbolPackages)
                     || !empty(array_intersect_key($symbolPackages, $availablePackageNames))
                 ) {
                     return true;
@@ -951,12 +953,14 @@ class ChangePlanner
 
         // In global namespace context (either implicit, or explicit `namespace {}`), replace
         // class/interface/trait/enum declarations and unqualified class name references.
-        foreach ($codeMap->getLocationsOfType(
-            CodeLocation::CLASS_DEFINITION,
-            CodeLocation::INTERFACE_DEFINITION,
-            CodeLocation::TRAIT_DEFINITION,
-            CodeLocation::ENUM_DEFINITION
-        ) as $definition) {
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::CLASS_DEFINITION,
+                CodeLocation::INTERFACE_DEFINITION,
+                CodeLocation::TRAIT_DEFINITION,
+                CodeLocation::ENUM_DEFINITION
+            ) as $definition
+        ) {
             if (!$definition->isInGlobalNamespace()) {
                 continue;
             }
@@ -1039,16 +1043,19 @@ class ChangePlanner
 
         $positions = [];
 
-        foreach ($codeMap->getLocationsOfType(
-            CodeLocation::CONST_FETCH,
-            CodeLocation::USE_NAME,
-            CodeLocation::CONST_DEFINITION,
-            CodeLocation::DEFINE_STRING_ARG
-        ) as $location) {
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::CONST_FETCH,
+                CodeLocation::USE_NAME,
+                CodeLocation::CONST_DEFINITION,
+                CodeLocation::DEFINE_STRING_ARG
+            ) as $location
+        ) {
             switch ($location->getType()) {
                 case CodeLocation::CONST_FETCH:
                     $name = $location->getName();
-                    if ((!$location->isFullyQualified() || 1 === $location->countNameParts())
+                    if (
+                        (!$location->isFullyQualified() || 1 === $location->countNameParts())
                         && isset($constantsToRename[$name])
                     ) {
                         $positions[] = [
@@ -1161,11 +1168,13 @@ class ChangePlanner
 
         $positions = [];
 
-        foreach ($codeMap->getLocationsOfType(
-            CodeLocation::FUNCTION_DEFINITION,
-            CodeLocation::FUNCTION_CALL,
-            CodeLocation::CALLABLE_STRING_ARG
-        ) as $location) {
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::FUNCTION_DEFINITION,
+                CodeLocation::FUNCTION_CALL,
+                CodeLocation::CALLABLE_STRING_ARG
+            ) as $location
+        ) {
             switch ($location->getType()) {
                 case CodeLocation::FUNCTION_DEFINITION:
                     // Function declarations (global only): the local name is looked up.

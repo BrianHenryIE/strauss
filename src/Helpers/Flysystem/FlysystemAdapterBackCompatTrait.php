@@ -78,7 +78,8 @@ trait FlysystemAdapterBackCompatTrait
         // Symlinks.
         // TODO: This should be moved into its own adapter.
         if (property_exists($this, 'pathPrefixer')) {
-            if (false !== realpath($this->pathPrefixer->prefixPath($path))
+            if (
+                false !== realpath($this->pathPrefixer->prefixPath($path))
                 && is_dir($this->pathPrefixer->prefixPath($path))
             ) {
                 return true;

@@ -172,7 +172,7 @@ class InstalledJsonTest extends \BrianHenryIE\Strauss\TestCase
         );
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container');
         $namespaceSymbol->setDoRename(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -230,7 +230,7 @@ class InstalledJsonTest extends \BrianHenryIE\Strauss\TestCase
         );
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container');
         $namespaceSymbol->setDoRename(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -335,7 +335,7 @@ class InstalledJsonTest extends \BrianHenryIE\Strauss\TestCase
 
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Log', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Log',);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Log');
         $namespaceSymbol->setDoRename(true);
 
         $discoveredSymbols = new DiscoveredSymbols();

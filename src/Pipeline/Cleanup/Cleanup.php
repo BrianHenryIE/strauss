@@ -103,12 +103,14 @@ class Cleanup
             $this->logger
         );
 
-        if (!$this->config->isTargetDirectoryVendor()
+        if (
+            !$this->config->isTargetDirectoryVendor()
             && !$this->config->isDeleteVendorFiles()
             && !$this->config->isDeleteVendorPackages()
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
-        } elseif (!$this->config->isTargetDirectoryVendor()
+        } elseif (
+            !$this->config->isTargetDirectoryVendor()
             && ($this->config->isDeleteVendorFiles() || $this->config->isDeleteVendorPackages())
         ) {
             $installedJson->cleanTargetDirInstalledJson($flatDependencyTree, $discoveredSymbols);
@@ -299,7 +301,8 @@ class Cleanup
             );
 
             foreach ($allFilePaths as $filePath) {
-                if ($this->filesystem->directoryExists($filePath)
+                if (
+                    $this->filesystem->directoryExists($filePath)
                     && $this->filesystem->isDirectoryEmpty($filePath)
                 ) {
                     $this->logger->debug('Deleting empty directory ' . $filePath);

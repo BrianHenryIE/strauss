@@ -58,8 +58,7 @@ class IntegrationTestCase extends TestCase
 
         $this->envBeforeTest = $_ENV;
 
-        set_error_handler(function () {
-        }, E_DEPRECATED | E_USER_DEPRECATED);
+        set_error_handler(function () {}, E_DEPRECATED | E_USER_DEPRECATED);
 
         $this->testsWorkingDir = FileSystem::normalizeDirSeparator(
             sprintf('%s/%s', sys_get_temp_dir(), uniqid('strausstestdir'))
@@ -344,8 +343,7 @@ class IntegrationTestCase extends TestCase
     protected function getFileSystem(): Filesystem
     {
         if (! isset($this->localFileSystem)) {
-            set_error_handler(function () {
-            }, E_DEPRECATED | E_USER_DEPRECATED);
+            set_error_handler(function () {}, E_DEPRECATED | E_USER_DEPRECATED);
 
             $localFsLocation = FileSystem::getFsRoot($this->testsWorkingDir);
             $pathNormalizer  = Filesystem::makePathNormalizer($this->testsWorkingDir);

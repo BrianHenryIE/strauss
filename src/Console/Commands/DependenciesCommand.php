@@ -277,7 +277,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             fn($dependency) => !is_null($dependency->getRealPath()) && !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath())
         );
 
-        if (!empty($symlinkedDependencies)
+        if (
+            !empty($symlinkedDependencies)
             && ($this->config->isDeleteVendorFiles() || ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()))
         ) {
             $list = implode(
@@ -555,7 +556,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function generateAutoloader(): void
     {
-        if (isset($this->projectComposerPackage->getAutoload()['classmap'])
+        if (
+            isset($this->projectComposerPackage->getAutoload()['classmap'])
             && in_array(
                 $this->config->getAbsoluteTargetDirectory(),
                 array_map(

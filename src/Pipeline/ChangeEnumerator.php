@@ -53,11 +53,12 @@ class ChangeEnumerator
             if ($symbol instanceof NamespaceSymbol) {
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
 
-                if (in_array(
-                    $symbol->getOriginalFqdnName(),
-                    $this->config->getExcludeNamespacesFromPrefixing(),
-                    true
-                )
+                if (
+                    in_array(
+                        $symbol->getOriginalFqdnName(),
+                        $this->config->getExcludeNamespacesFromPrefixing(),
+                        true
+                    )
                 ) {
                     $symbol->setDoRename(false);
                 }

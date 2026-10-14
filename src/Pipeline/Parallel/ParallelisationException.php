@@ -17,6 +17,4 @@ use RuntimeException;
  * A plain {@see RuntimeException} subclass, thrown by {@see WorkerPool} and {@see WorkerProcessFactory}, so callers
  * can catch parallelisation failures separately from other errors.
  */
-class ParallelisationException extends RuntimeException
-{
-}
+class ParallelisationException extends RuntimeException {}

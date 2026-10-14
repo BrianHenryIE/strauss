@@ -14,6 +14,4 @@ namespace BrianHenryIE\Strauss\Types;
  * functions prefix (functions in a namespace are renamed with their namespace) and can disable in-string
  * replacement for names listed in `exclude_functions_from_string_renaming`.
  */
-class FunctionSymbol extends NamespacedSymbol
-{
-}
+class FunctionSymbol extends NamespacedSymbol {}

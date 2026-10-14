@@ -161,12 +161,12 @@ class ChangePlannerTest extends TestCase
         $symbols = [];
         foreach (
             [
-            'Own' => $own,
-            'Direct' => $direct,
-            'Deep' => $deep,
-            'Deepest' => $deepest,
-            'Unrelated' => $unrelated,
-            'Suggested' => $suggested,
+                'Own' => $own,
+                'Direct' => $direct,
+                'Deep' => $deep,
+                'Deepest' => $deepest,
+                'Unrelated' => $unrelated,
+                'Suggested' => $suggested,
             ] as $namespaceName => $package
         ) {
             $namespace = new NamespaceSymbol($namespaceName, $this->getPackageFile($package));

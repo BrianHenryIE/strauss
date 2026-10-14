@@ -38,8 +38,8 @@ class MarkSymbolsForRenaming
 
     public function __construct(
         MarkSymbolsForRenamingConfigInterface $config,
-        FileSystem                            $filesystem,
-        LoggerInterface                       $logger
+        FileSystem $filesystem,
+        LoggerInterface $logger
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
@@ -107,7 +107,8 @@ class MarkSymbolsForRenaming
              * I'm not sure what this was added for, but psr-0 namespaces that are found when scanning autoload
              * keys are used to check do files exist under that directory.
              */
-            if (!$this->config->isTargetDirectoryVendor()
+            if (
+                !$this->config->isTargetDirectoryVendor()
                 && !$this->isSymbolFoundInFileThatIsCopied($symbol)
                 && !($symbol instanceof NamespaceSymbol)
             ) {
@@ -189,11 +190,12 @@ class MarkSymbolsForRenaming
             return false;
         }
 
-        if (in_array(
-            $packageName,
-            $this->config->getExcludePackagesFromPrefixing(),
-            true
-        )
+        if (
+            in_array(
+                $packageName,
+                $this->config->getExcludePackagesFromPrefixing(),
+                true
+            )
         ) {
             return true;
         }

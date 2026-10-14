@@ -57,8 +57,7 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
         $usedTraitImplementation = new stdClass();
         $usedTraitImplementation->calledDirectoryExists = false;
 
-        set_error_handler(function () {
-        }, E_DEPRECATED | E_USER_DEPRECATED);
+        set_error_handler(function () {}, E_DEPRECATED | E_USER_DEPRECATED);
 
         $sut = new class ($usedTraitImplementation) extends \League\Flysystem\InMemory\InMemoryFilesystemAdapter implements FlysystemAdapterBackCompatTraitInterface {
             use FlysystemAdapterBackCompatTrait;

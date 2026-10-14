@@ -247,8 +247,9 @@ class Aliases
 */
                 $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespaceName());
 
-                if (!($symbol instanceof FunctionSymbol
-                    
+                if (
+                    !($symbol instanceof FunctionSymbol
+
                     && $namespaceSymbol->isChangedNamespace())
                 ) {
                     $this->logger->debug("Skipping {$originalLocalSymbol} because it is not being changed.");

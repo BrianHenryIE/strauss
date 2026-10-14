@@ -393,10 +393,11 @@ class AutoloadedEnumerator
         $package = $file->getDependency();
         foreach ($package->getAutoload()['psr-4'] ?? [] as $namespaceString => $directories) {
             foreach ((array) $directories as $directory) {
-                if (str_starts_with(
-                    ltrim($file->getPackageRelativePath(), '\\/'),
-                    ltrim($directory, '\\/')
-                )
+                if (
+                    str_starts_with(
+                        ltrim($file->getPackageRelativePath(), '\\/'),
+                        ltrim($directory, '\\/')
+                    )
                 ) {
                     return true;
                 }
@@ -410,10 +411,11 @@ class AutoloadedEnumerator
         $package = $file->getDependency();
         foreach ($package->getAutoload()['psr-0'] ?? [] as $namespaceString => $directories) {
             foreach ((array) $directories as $directory) {
-                if (str_starts_with(
-                    ltrim($file->getPackageRelativePath(), '\\'),
-                    ltrim($directory, '\\')
-                )
+                if (
+                    str_starts_with(
+                        ltrim($file->getPackageRelativePath(), '\\'),
+                        ltrim($directory, '\\')
+                    )
                 ) {
                     return true;
                 }
@@ -674,7 +676,8 @@ class AutoloadedEnumerator
             $base = null;
             if ($left instanceof \PhpParser\Node\Scalar\MagicConst\Dir) {
                 $base = $includingDir;
-            } elseif ($left instanceof \PhpParser\Node\Expr\FuncCall
+            } elseif (
+                $left instanceof \PhpParser\Node\Expr\FuncCall
                 && $left->name instanceof \PhpParser\Node\Name
                 && strtolower((string) $left->name) === 'dirname'
             ) {

@@ -15,6 +15,4 @@ namespace BrianHenryIE\Strauss\Types;
  * {@see NamespaceSymbol} for `psr-0` keys. {@see DiscoveredSymbols} stores it in the namespace bucket alongside
  * PSR-4 namespaces.
  */
-class Psr0NamespaceSymbol extends NamespaceSymbol
-{
-}
+class Psr0NamespaceSymbol extends NamespaceSymbol {}

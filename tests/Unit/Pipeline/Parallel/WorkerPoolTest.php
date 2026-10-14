@@ -142,8 +142,7 @@ class WorkerPoolTest extends TestCase
         $this->expectException(ParallelisationException::class);
         $this->expectExceptionMessage('worker went wrong');
 
-        $pool->analyze($this->getSourceFiles(1), function (): void {
-        });
+        $pool->analyze($this->getSourceFiles(1), function (): void {});
     }
 
     /**
@@ -159,8 +158,7 @@ class WorkerPoolTest extends TestCase
         $this->expectException(ParallelisationException::class);
         $this->expectExceptionMessage('timed out');
 
-        $pool->analyze($this->getSourceFiles(1), function (): void {
-        });
+        $pool->analyze($this->getSourceFiles(1), function (): void {});
     }
 
     /**
@@ -176,8 +174,7 @@ class WorkerPoolTest extends TestCase
         $this->expectException(ParallelisationException::class);
         $this->expectExceptionMessage('Unexpected output');
 
-        $pool->analyze($this->getSourceFiles(1), function (): void {
-        });
+        $pool->analyze($this->getSourceFiles(1), function (): void {});
     }
 
     /**
@@ -197,8 +194,7 @@ class WorkerPoolTest extends TestCase
         $this->expectException(ParallelisationException::class);
         $this->expectExceptionMessage('analysing: ' . implode(', ', $files));
 
-        $pool->analyze($files, function (): void {
-        });
+        $pool->analyze($files, function (): void {});
     }
 
     /**
@@ -302,8 +298,7 @@ class WorkerPoolTest extends TestCase
         $this->expectException(ParallelisationException::class);
         $this->expectExceptionMessage('Could not start a worker process');
 
-        $pool->analyze($this->getSourceFiles(1), function (): void {
-        });
+        $pool->analyze($this->getSourceFiles(1), function (): void {});
     }
 
     /**

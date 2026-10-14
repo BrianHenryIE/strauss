@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This is used so NamespaceSymbol doesn't have a namespace property itself.
  * Objects/classes inheriting from this could just be in the global namespace.
  *
  * @package brianhenryie/strauss
  */
+
+declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Types;
 
@@ -107,10 +107,11 @@ class NamespacedSymbol extends DiscoveredSymbol
                      */
                     foreach ($dependency->getAutoload()['psr-0'] as $psr0namespace => $autoloadPackageRelativePaths) {
                         foreach ((array) $autoloadPackageRelativePaths as $autoloadPackageRelativePath) {
-                            if (str_starts_with(
-                                trim($file->getPackageRelativePath(), '\\/'),
-                                trim($autoloadPackageRelativePath, '\\/')
-                            )
+                            if (
+                                str_starts_with(
+                                    trim($file->getPackageRelativePath(), '\\/'),
+                                    trim($autoloadPackageRelativePath, '\\/')
+                                )
                             ) {
                                 return $psr0namespace;
                             }

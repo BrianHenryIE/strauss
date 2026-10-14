@@ -79,10 +79,11 @@ class Psr0
                 foreach ($allPackagesFiles as $file) {
                     $filePackageRelativePath = $file->getPackageRelativePath();
 
-                    if (! str_starts_with(
-                        $filePackageRelativePath,
-                        $packageRelativeNamespacePath
-                    )
+                    if (
+                        ! str_starts_with(
+                            $filePackageRelativePath,
+                            $packageRelativeNamespacePath
+                        )
                     ) {
                         continue;
                     }

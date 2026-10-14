@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * A PHP namespace discovered in a scanned file or in a package's PSR-0/PSR-4 autoload configuration, which Strauss
  * may rename.
@@ -10,6 +8,8 @@ declare(strict_types=1);
  *
  * @package brianhenryie/strauss
  */
+
+declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Types;
 

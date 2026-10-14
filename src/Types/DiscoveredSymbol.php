@@ -1,12 +1,12 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * A namespace, class, interface or trait discovered in the project.
  *
  * @package brianhenryie/strauss
  */
+
+declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Types;
 

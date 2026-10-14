@@ -13,6 +13,4 @@ namespace BrianHenryIE\Strauss\Types;
  * their own bucket (it routes on the concrete class) and lets {@see \BrianHenryIE\Strauss\Pipeline\ChangeEnumerator}
  * set the replacement to the configured `constant_prefix` followed by the original local name.
  */
-class ConstantSymbol extends NamespacedSymbol
-{
-}
+class ConstantSymbol extends NamespacedSymbol {}

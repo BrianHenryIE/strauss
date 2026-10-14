@@ -90,8 +90,8 @@ class Prefixer
 
     public function __construct(
         PrefixerConfigInterface $config,
-        FileSystem              $filesystem,
-        ?LoggerInterface        $logger = null
+        FileSystem $filesystem,
+        ?LoggerInterface $logger = null
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
@@ -113,7 +113,8 @@ class Prefixer
 
     protected function replaceInFile(DiscoveredSymbols $discoveredSymbols, FileBase $file): void
     {
-        if (!$this->config->isTargetDirectoryVendor()
+        if (
+            !$this->config->isTargetDirectoryVendor()
             && !$file->isDoCopy()
         ) {
             return;
@@ -139,14 +140,15 @@ class Prefixer
 
         if (!$this->filesystem->fileExists($file->getTargetAbsolutePath())) {
             // Some files are only sometimes present.
-            if (in_array(
-                $file->getTargetAbsolutePath(),
-                [
-                    $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
-                    $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
-                ],
-                true
-            )
+            if (
+                in_array(
+                    $file->getTargetAbsolutePath(),
+                    [
+                        $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
+                        $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
+                    ],
+                    true
+                )
             ) {
                 return;
             }
@@ -224,14 +226,15 @@ class Prefixer
 
             if (!$this->filesystem->fileExists($fileAbsolutePath)) {
                 // Some files are only sometimes present.
-                if (in_array(
-                    $fileAbsolutePath,
-                    [
-                        $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
-                        $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
-                    ],
-                    true
-                )
+                if (
+                    in_array(
+                        $fileAbsolutePath,
+                        [
+                            $this->config->getAbsoluteTargetDirectory() . '/composer/autoload_files.php',
+                            $this->config->getAbsoluteTargetDirectory() . '/composer/platform_check.php',
+                        ],
+                        true
+                    )
                 ) {
                     continue;
                 }
@@ -673,7 +676,8 @@ class Prefixer
              * the original name too so the classmap entry is renamed.
              */
             $namespacePrefix = rtrim($this->config->getNamespacePrefix() ?? '', '\\');
-            if (!is_null($namespaceString)
+            if (
+                !is_null($namespaceString)
                 && '' !== $namespacePrefix
                 && str_starts_with($namespaceString, $namespacePrefix . '\\')
             ) {

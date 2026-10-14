@@ -41,7 +41,8 @@ class MarkFilesExcludedFromChanges
     public function scanDiscoveredFiles(DiscoveredFiles $discoveredFiles): void
     {
         foreach ($discoveredFiles->getFiles() as $file) {
-            if ($this->fileMatchesFilePattern($file)
+            if (
+                $this->fileMatchesFilePattern($file)
                 || $this->fileMatchesNamespace($file)
                 || $this->fileMatchesPackage($file)
             ) {

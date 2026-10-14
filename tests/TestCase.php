@@ -294,8 +294,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getTestsWorkingDirectoryFileSystem(): FileSystem
     {
-        set_error_handler(function () {
-        }, E_DEPRECATED | E_USER_DEPRECATED);
+        set_error_handler(function () {}, E_DEPRECATED | E_USER_DEPRECATED);
 
         if (!isset($this->testsWorkingDir)) {
             $this->createTestsTempDir();
@@ -342,8 +341,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
-        set_error_handler(function () {
-        }, E_DEPRECATED | E_USER_DEPRECATED);
+        set_error_handler(function () {}, E_DEPRECATED | E_USER_DEPRECATED);
 
         $normalizer = FileSystem::makePathNormalizer('mem://');
 

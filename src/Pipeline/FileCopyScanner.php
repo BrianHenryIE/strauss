@@ -126,11 +126,12 @@ class FileCopyScanner
 
     protected function isPackageExcluded(ComposerPackage $package): bool
     {
-        if (in_array(
-            $package->getPackageName(),
-            $this->config->getExcludePackagesFromCopy(),
-            true
-        )
+        if (
+            in_array(
+                $package->getPackageName(),
+                $this->config->getExcludePackagesFromCopy(),
+                true
+            )
         ) {
             return true;
         }

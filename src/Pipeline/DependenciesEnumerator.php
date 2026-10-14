@@ -73,8 +73,8 @@ class DependenciesEnumerator
      * @param ?LoggerInterface $logger     Optional logger; a NullLogger is used when null.
      */
     public function __construct(
-        StraussConfig    $config,
-        FileSystem       $filesystem,
+        StraussConfig $config,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->overrideAutoload = $config->getOverrideAutoload();
@@ -257,7 +257,8 @@ class DependenciesEnumerator
                     ]
                 );
 
-                if (!isset($requiredPackageComposerJson['autoload'])
+                if (
+                    !isset($requiredPackageComposerJson['autoload'])
                     && empty($requiredPackageComposerJson['require'])
                     && (!isset($requiredPackageComposerJson['type']) || $requiredPackageComposerJson['type'] != 'metapackage')
                     && ! $this->filesystem->directoryExists(dirname($packageComposerFile))
@@ -272,7 +273,8 @@ class DependenciesEnumerator
                 $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
             }
 
-            if (isset($installedJsonPackages[$requiredPackageName])
+            if (
+                isset($installedJsonPackages[$requiredPackageName])
                 && is_null($requiredComposerPackage->getRealPath())
                 && $installedJsonPackages[$requiredPackageName]['dist']['type'] === 'path'
             ) {
