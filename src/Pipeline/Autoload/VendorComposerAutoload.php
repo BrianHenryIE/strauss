@@ -204,6 +204,14 @@ class VendorComposerAutoload
         $traverser = new NodeTraverser();
         $traverser->addVisitor(
             new class extends NodeVisitorAbstract {
+                /**
+                 * @param Node $node The node under inspection.
+                 *
+                 * @see NodeVisitor::leaveNode()
+                 * @see NodeVisitorAbstract::leaveNode()
+                 *
+                 * @return Node|array{0:\PhpParser\Node\Stmt\If_,1:Node}
+                 */
                 public function leaveNode(Node $node)
                 {
                     if (get_class($node) === \PhpParser\Node\Stmt\Expression::class) {
@@ -305,6 +313,14 @@ class VendorComposerAutoload
                     $this->targetDirectoryAutoload = $targetDirectoryAutoload;
                 }
 
+                /**
+                 * @param Node $node The node under inspection.
+                 *
+                 * @see NodeVisitor::leaveNode()
+                 * @see NodeVisitorAbstract::leaveNode()
+                 *
+                 * @return Node|array{0:\PhpParser\Node\Stmt\If_,1:Node}
+                 */
                 public function leaveNode(Node $node)
                 {
                     if ($this->added) {
