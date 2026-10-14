@@ -244,7 +244,8 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     protected function addCommentLocationsBefore(int $position): void
     {
-        while (isset($this->commentTokens[$this->nextCommentToken])
+        while (
+            isset($this->commentTokens[$this->nextCommentToken])
             && $this->commentTokens[$this->nextCommentToken]->pos < $position
         ) {
             $token = $this->commentTokens[$this->nextCommentToken++];

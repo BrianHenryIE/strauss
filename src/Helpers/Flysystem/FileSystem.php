@@ -36,6 +36,7 @@ use League\Flysystem\StorageAttributes;
 class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixerInterface, FlysystemReaderBackCompatTraitInterface
 {
     use FlysystemReaderBackCompatTrait;
+
     //    use FlysystemReaderBackCompatTrait {
     //        FlysystemReaderBackCompatTrait::directoryExists as traitDirectoryExists;
     //    }

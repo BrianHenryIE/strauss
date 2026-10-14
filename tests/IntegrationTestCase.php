@@ -119,11 +119,13 @@ class IntegrationTestCase extends TestCase
         // todo: lowercase
         $envLogLevel = trim(getenv('RENAMESPACER_LOG') ?: '', '-');
         if ($this->isTestingPhar()) {
-            if (! array_reduce(
-                ['--quiet','--warning','--info','--debug','--dry-run'],
-                fn(bool $carry, string $level) => $carry || str_contains($params, $level),
-                false
-            )) {
+            if (
+                ! array_reduce(
+                    ['--quiet','--warning','--info','--debug','--dry-run'],
+                    fn(bool $carry, string $level) => $carry || str_contains($params, $level),
+                    false
+                )
+            ) {
                 // Printing logs is slow.
                 $params .= (empty($envLogLevel) ? '' : ' --' . $envLogLevel);
             }

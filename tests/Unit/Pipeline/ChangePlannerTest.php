@@ -159,14 +159,16 @@ class ChangePlannerTest extends TestCase
         $own->addSuggestedPackage($suggested);
 
         $symbols = [];
-        foreach ([
+        foreach (
+            [
             'Own' => $own,
             'Direct' => $direct,
             'Deep' => $deep,
             'Deepest' => $deepest,
             'Unrelated' => $unrelated,
             'Suggested' => $suggested,
-        ] as $namespaceName => $package) {
+            ] as $namespaceName => $package
+        ) {
             $namespace = new NamespaceSymbol($namespaceName, $this->getPackageFile($package));
             $namespace->setDoRename(true);
             $namespace->setLocalReplacement('Prefix\\' . $namespaceName);

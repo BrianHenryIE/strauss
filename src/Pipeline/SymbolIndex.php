@@ -121,10 +121,12 @@ class SymbolIndex
         /**
  * @var DiscoveredSymbol $symbol
 */
-        foreach (array_merge(
-            array_values($this->namespacesToRename->toArray()),
-            array_values($this->namespacedToRename->toArray())
-        ) as $symbol) {
+        foreach (
+            array_merge(
+                array_values($this->namespacesToRename->toArray()),
+                array_values($this->namespacedToRename->toArray())
+            ) as $symbol
+        ) {
             if (!$symbol->isReplaceInString()) {
                 continue;
             }

@@ -75,9 +75,9 @@ class Licenser
      */
     public function __construct(
         LicenserConfigInterface $config,
-        DependenciesCollection  $dependencies,
-        string           $author,
-        FileSystem       $filesystem,
+        DependenciesCollection $dependencies,
+        string $author,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->dependencies = $dependencies;

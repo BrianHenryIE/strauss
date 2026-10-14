@@ -21,7 +21,8 @@ class DependenciesEnumeratorTest extends TestCase
     public function testProvideReplaceAndSuggestAreLinked(): void
     {
         $packages = [];
-        foreach ([
+        foreach (
+            [
             [
                 'name' => 'acme/app',
                 'require' => ['psr/log-implementation' => '*', 'acme/original' => '*', 'acme/real' => '*'],
@@ -31,7 +32,8 @@ class DependenciesEnumeratorTest extends TestCase
             ['name' => 'acme/fork', 'replace' => ['acme/original' => '*']],
             ['name' => 'acme/real'],
             ['name' => 'acme/optional'],
-        ] as $composerJsonArray) {
+            ] as $composerJsonArray
+        ) {
             $packages[$composerJsonArray['name']] = ComposerPackage::fromComposerJsonArray($composerJsonArray);
         }
 
