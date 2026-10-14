@@ -249,8 +249,8 @@ class DumpAutoload
         // This is just `<?php return array(...);`
         $installedPhpString = $this->filesystem->read($this->config->getAbsoluteVendorDirectory() . '/composer/installed.php');
         /**
- * @var array{root:array<string,string>, versions:array<string,array<string, string|array|bool>>} $installed
-*/
+         * @var array{root:array<string,string>, versions:array<string,array<string, string|array|bool>>} $installed
+         */
         $installed = eval(str_replace('<?php', '', $installedPhpString));
 
         $targetPackages = $this->config->getPackagesToCopy();
