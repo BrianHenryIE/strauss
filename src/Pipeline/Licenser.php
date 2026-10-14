@@ -253,9 +253,9 @@ class Licenser
     /**
      * Given a php file as a string, edit its header phpdoc, or add a header, to include:
      *
-     * "Modified by {author} on {date} using Strauss.
-     *
-     * @see https://github.com/BrianHenryIE/strauss"
+     * > Modified by {author} on {date} using Strauss.
+     * >
+     * > @see https://github.com/BrianHenryIE/strauss
      *
      * Should probably include the original license in each file since it'll often be a mix, with the parent
      * project often being a GPL WordPress plugin.
