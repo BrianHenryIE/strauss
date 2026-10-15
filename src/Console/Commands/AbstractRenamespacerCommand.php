@@ -206,19 +206,19 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->workingDir = $this->filesystem->normalizePath($workingDir);
     }
 
-//    public function setLogger(LoggerInterface $logger): void
-//    {
-//        $this->logger->pushHandler(new PsrHandler($logger));
-//    }
+    //    public function setLogger(LoggerInterface $logger): void
+    //    {
+    //        $this->logger->pushHandler(new PsrHandler($logger));
+    //    }
 
-//    public function configureLogger(LoggerInterface $logger): void
-//    {
-//        $this->logger->pushHandler(new PsrHandler($logger));
-//    }
+    //    public function configureLogger(LoggerInterface $logger): void
+    //    {
+    //        $this->logger->pushHandler(new PsrHandler($logger));
+    //    }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
+     * @param InputInterface  $input  The command-line options and arguments, used to build the config (e.g. `--dry-run`).
+     * @param OutputInterface $output The console output the logger writes to, at its verbosity.
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {

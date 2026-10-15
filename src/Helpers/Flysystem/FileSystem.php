@@ -449,7 +449,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     //    }
 
     /**
-     * @param string $path
+     * @param string $path Absolute path to convert to a path relative to the filesystem root (Flysystem path).
      */
     public function stripPrefix(string $path): string
     {
