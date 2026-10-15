@@ -43,6 +43,8 @@ use Symfony\Component\Console\Input\InputInterface;
  * project, e.g. the namespace and classmap prefixes from the first PSR-4/PSR-0 autoload key or the package name, and
  * `packages` from `require`. {@see self::updateFromCli()} then applies command-line overrides. It implements every
  * per-step config interface in `BrianHenryIE\Strauss\Config` so one object can be passed through the whole pipeline.
+ *
+ * @phpstan-import-type AutoloadKeyArray from ComposerPackage
  */
 class StraussConfig implements
     AliasesConfigInterface,
@@ -188,7 +190,7 @@ class StraussConfig implements
      * * A package specified both a PSR-4 and a classmap but only needs one
      * ...
      *
-     * @var array<string, array{files?:array<string>,classmap?:array<string>,"psr-4":array<string|array<string>>}>|array{} $overrideAutoload
+     * @var array<string, AutoloadKeyArray>|array{} $overrideAutoload
      */
     protected array $overrideAutoload = [];
 
@@ -806,7 +808,7 @@ class StraussConfig implements
     }
 
     /**
-     * @return array{}|array<string, array{files?:array<string>,classmap?:array<string>,"psr-4":array<string|array<string>>}> $overrideAutoload Dictionary of package name: autoload rules.
+     * @return array{}|array<string, AutoloadKeyArray> $overrideAutoload Dictionary of package name: autoload rules.
      */
     public function getOverrideAutoload(): array
     {
@@ -814,7 +816,7 @@ class StraussConfig implements
     }
 
     /**
-     * @param array<string, array{files?:array<string>,classmap?:array<string>,"psr-4":array<string|array<string>>}> $overrideAutoload Dictionary of package name: autoload rules.
+     * @param array<string, AutoloadKeyArray> $overrideAutoload Dictionary of package name: autoload rules.
      */
     public function setOverrideAutoload(array $overrideAutoload): void
     {

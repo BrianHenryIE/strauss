@@ -17,6 +17,8 @@ use Composer\IO\NullIO;
  * Loads the project's `composer.json` through Composer's {@see Factory} rather than from an already-installed package.
  * It records the first author's name (falling back to the vendor part of the package name) and the vendor directory
  * relative to the project, and builds a {@see StraussConfig} from the `extra.strauss` key on request.
+ *
+ * @phpstan-import-type AutoloadKeyArray from ComposerPackage
  */
 class ProjectComposerPackage extends ComposerPackage
 {
@@ -25,8 +27,8 @@ class ProjectComposerPackage extends ComposerPackage
     protected string $relativeVendorDirectory;
 
     /**
-     * @param string                                                                                           $absolutePathFile Absolute path to the project's composer.json file (or the directory containing it).
-     * @param ?array{files?:array<string>,classmap?:array<string>,"psr-4"?:array<string,string|array<string>>} $overrideAutoload Autoload rules to use instead of the project's own, or null to keep them.
+     * @param string            $absolutePathFile Absolute path to the project's composer.json file (or the directory containing it).
+     * @param ?AutoloadKeyArray $overrideAutoload Autoload rules to use instead of the project's own, or null to keep them.
      */
     public function __construct(string $absolutePathFile, ?array $overrideAutoload = null)
     {

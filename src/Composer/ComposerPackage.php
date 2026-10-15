@@ -22,7 +22,7 @@ use Composer\Util\Platform;
 use Exception;
 
 /**
- * @phpstan-type AutoloadKeyArray array{files?:array<string>, classmap?:array<string>, "psr-4"?:array<string,string|array<string>>, "psr-0"?:array<string,string|array<string>>, "exclude_from_classmap"?:array<string>}
+ * @phpstan-type AutoloadKeyArray array{files?:list<string>, classmap?:list<string>, "psr-4"?:array<string,string|array<string>>, "psr-0"?:array<string,string|array<string>>, "exclude_from_classmap"?:array<string>}
  * @phpstan-type ComposerConfigArray array{vendor-dir?:string}
  * @phpstan-type ComposerJsonArray array{name?:string, type?:string, license?:string, require?:array<string,string>, autoload?:AutoloadKeyArray, config?:ComposerConfigArray, repositories?:array<mixed>, provide?:array<string,string>}
  * @see          \Composer\Config::merge()
@@ -141,9 +141,9 @@ class ComposerPackage
     protected DiscoveredSymbols $discoveredSymbolsDeep;
 
     /**
-     * @param string                                                                                         $absolutePath     The absolute path to composer.json
-     * @param ?array{files?:array<string>, classmap?:array<string>, psr?:array<string,string|array<string>>} $overrideAutoload Optional configuration to replace the package's own autoload definition with
-     *                                                                                                                         another which Strauss can use.
+     * @param string            $absolutePath     The absolute path to composer.json
+     * @param ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with
+     *                                            another which Strauss can use.
      *
      * @return ComposerPackage
      * @throws Exception
