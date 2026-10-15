@@ -45,6 +45,7 @@ use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
+use League\Flysystem\StorageAttributes;
 use League\Flysystem\SymbolicLinkEncountered;
 use League\Flysystem\UnableToCopyFile;
 use League\Flysystem\UnableToCreateDirectory;
@@ -826,7 +827,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      *
      * @see LocalFilesystemAdapter::listContents()
      *
-     * @return iterable<FileAttributes>
+     * @return iterable<StorageAttributes>
      * @throws FilesystemException
      */
     public function listContents(string $path, bool $deep): iterable

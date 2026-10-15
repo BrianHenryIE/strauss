@@ -17,4 +17,6 @@ namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 interface PathPrefixerInterface
 {
     public function prefixPath(string $path): string;
+
+    public function stripPrefix(string $path): string;
 }
