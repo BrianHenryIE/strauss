@@ -6,7 +6,7 @@
 
 parameters:
 
-    level: 9
+    level: 10
 
     reportUnmatchedIgnoredErrors: false
 

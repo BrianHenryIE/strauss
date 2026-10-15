@@ -491,19 +491,19 @@ class FileSymbolScanner
     {
         $builtins = include __DIR__ . '/FileSymbol/builtinsymbols.php';
 
-        $flatArray = [];
+        if (!is_array($builtins)) {
+            return;
+        }
+
+        // `array_walk_recursive()` only calls back with leaf values, i.e. the symbol names.
         array_walk_recursive(
             $builtins,
-            function ($array) use (&$flatArray) {
-                if (is_array($array)) {
-                    $flatArray = array_merge($flatArray, array_values($array));
-                } else {
-                    $flatArray[] = $array;
+            function ($symbolName): void {
+                if (is_string($symbolName)) {
+                    $this->builtInsLookup[$symbolName] = true;
                 }
             }
         );
-
-        $this->builtInsLookup = array_fill_keys($flatArray, true);
     }
 
     protected function isBuiltInSymbol(string $symbolName): bool
