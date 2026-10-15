@@ -406,43 +406,6 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
         $prefixedNormalSchemlessPath = $this->prefixPath($normalSchemlessPath);
 
         return $prefixedNormalSchemlessPath;
-
-        $fsRoot = self::getFsRoot($this->localFsLocation);
-
-        // If this is already prefixed with the drive(fs) root.
-        if (stripos($path, $fsRoot) === 0 || stripos($path, self::normalizeDirSeparator($fsRoot)) === 0) {
-            return $path;
-        }
-
-        $normalizedPath = $this->normalizePath($path);
-
-        if (strtolower(self::getFsRoot($this->localFsLocation)) === strtolower(self::getFsRoot($normalizedPath))) {
-            return $path;
-        }
-
-        $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->localFsLocation));
-
-        if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
-            return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
-        }
-
-        /**
-         * TODO: Replace with `\Composer\Util\Filesystem::isStreamWrapperPath()` when Composer PR merged.
-         *
-         * @see https://github.com/composer/composer/pull/12396
-         */
-        if (1 === preg_match('/^[a-zA-Z]+:\/\//', $this->localFsLocation) && ! str_starts_with($this->localFsLocation, 'file://')) {
-            return $this->localFsLocation . $path;
-        }
-
-        $prefixed = $this->prefixPath($this->normalizePath($path));
-
-        //        if ($this->getAdapter() instanceof InMemoryFilesystemAdapter || $this->getAdapter() instanceof ReadOnlyFileSystem) {
-        //        if ($this->flysystemAdapter instanceof ReadOnlyFileSystem) {
-        //            return str_replace(':/', '://', $prefixed);
-        //        }
-
-        return self::normalizeDirSeparator($prefixed, DIRECTORY_SEPARATOR);
     }
 
     /**
