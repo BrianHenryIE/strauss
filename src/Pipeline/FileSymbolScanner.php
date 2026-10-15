@@ -414,19 +414,19 @@ class FileSymbolScanner
     }
 
     /**
-     * @param string               $fqdnClassname The class's fully qualified name, without leading backslash.
-     * @param bool                 $isAbstract    Whether the class is declared `abstract`.
-     * @param FileBase             $file          The file the class is defined in.
-     * @param ?string              $extends       FQDN of the parent class, without leading backslash; null if none.
-     * @param NamespaceSymbol|null $namespace     The namespace the class is declared in.
-     * @param string[]             $interfaces    FQDNs of the implemented interfaces, without leading backslashes.
+     * @param string          $fqdnClassname The class's fully qualified name, without leading backslash.
+     * @param bool            $isAbstract    Whether the class is declared `abstract`.
+     * @param FileBase        $file          The file the class is defined in.
+     * @param ?string         $extends       FQDN of the parent class, without leading backslash; null if none.
+     * @param NamespaceSymbol $namespace     The namespace the class is declared in.
+     * @param string[]        $interfaces    FQDNs of the implemented interfaces, without leading backslashes.
      */
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,
         FileBase $file,
         ?string $extends,
-        ?NamespaceSymbol $namespace,
+        NamespaceSymbol $namespace,
         array $interfaces
     ): ?ClassSymbol {
         // TODO: This should be included but marked not to prefix.

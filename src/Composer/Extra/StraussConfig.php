@@ -287,14 +287,14 @@ class StraussConfig implements
         $configExtraSettings = null;
 
         // Backwards compatibility with Mozart.
-        if (isset($composer, $composer->getPackage()->getExtra()['mozart'])) {
+        if (isset($composer) && isset($composer->getPackage()->getExtra()['mozart'])) {
             $configExtraSettings = (object) $composer->getPackage()->getExtra()['mozart'];
 
             // Default setting for Mozart.
             $this->setDeleteVendorFiles(true);
         }
 
-        if (isset($composer, $composer->getPackage()->getExtra()['strauss'])) {
+        if (isset($composer) && isset($composer->getPackage()->getExtra()['strauss'])) {
             $configExtraSettings = (object) $composer->getPackage()->getExtra()['strauss'];
         }
 
@@ -333,9 +333,9 @@ class StraussConfig implements
         // * Use PSR-0 autoloader key
         // * Use the package name
         if (! isset($this->namespacePrefix)) {
-            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4']) && !empty($composer->getPackage()->getAutoload()['psr-4'])) {
+            if (isset($composer) && isset($composer->getPackage()->getAutoload()['psr-4']) && !empty($composer->getPackage()->getAutoload()['psr-4'])) {
                 $this->setNamespacePrefix(array_key_first($composer->getPackage()->getAutoload()['psr-4']));
-            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0']) && !empty($composer->getPackage()->getAutoload()['psr-0'])) {
+            } elseif (isset($composer) && isset($composer->getPackage()->getAutoload()['psr-0']) && !empty($composer->getPackage()->getAutoload()['psr-0'])) {
                 $this->setNamespacePrefix(array_key_first($composer->getPackage()->getAutoload()['psr-0']));
             } elseif (isset($composer) && '__root__' !== $composer->getPackage()->getName()) {
                 $packageName = $composer->getPackage()->getName();
@@ -359,11 +359,11 @@ class StraussConfig implements
         // When no classmapPrefix is set, infer it from the psr-4 autoload key.
         // TODO: we don't want to use the first psr-4 key, we want to use the shortest?
         if (! isset($this->classmapPrefix)) {
-            if (isset($composer, $composer->getPackage()->getAutoload()['psr-4']) && !empty($composer->getPackage()->getAutoload()['psr-4'])) {
+            if (isset($composer) && isset($composer->getPackage()->getAutoload()['psr-4']) && !empty($composer->getPackage()->getAutoload()['psr-4'])) {
                 $autoloadKey = array_key_first($composer->getPackage()->getAutoload()['psr-4']);
                 $classmapPrefix = str_replace("\\", "_", $autoloadKey);
                 $this->setClassmapPrefix($classmapPrefix);
-            } elseif (isset($composer, $composer->getPackage()->getAutoload()['psr-0']) && !empty($composer->getPackage()->getAutoload()['psr-0'])) {
+            } elseif (isset($composer) && isset($composer->getPackage()->getAutoload()['psr-0']) && !empty($composer->getPackage()->getAutoload()['psr-0'])) {
                 $autoloadKey = array_key_first($composer->getPackage()->getAutoload()['psr-0']);
                 $classmapPrefix = str_replace("\\", "_", $autoloadKey);
                 $this->setClassmapPrefix($classmapPrefix);

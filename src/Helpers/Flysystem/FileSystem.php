@@ -395,7 +395,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     public function makeAbsolute(string $path): string
     {
         // Strip scheme:
-        $schemlessPath = preg_replace('/^[a-zA-Z]+:\/\//', '$1', $path);
+        $schemlessPath = preg_replace('/^[a-zA-Z]+:\/\//', '$1', $path) ?? $path;
 
         if (0 === stripos($schemlessPath, self::normalizeDirSeparator($this->localFsLocation))) {
             return $schemlessPath;
