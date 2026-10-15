@@ -190,7 +190,10 @@ class StraussConfig implements
      * * A package specified both a PSR-4 and a classmap but only needs one
      * ...
      *
-     * @var array<string, AutoloadKeyArray>|array{} $overrideAutoload
+     * `@var` is read by JsonMapper, which cannot resolve the phpstan type alias.
+     *
+     * @var         array<string, array<string, mixed>>|array{} $overrideAutoload
+     * @phpstan-var array<string, AutoloadKeyArray>|array{} $overrideAutoload
      */
     protected array $overrideAutoload = [];
 
