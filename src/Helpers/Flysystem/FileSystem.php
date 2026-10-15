@@ -448,8 +448,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     //        return $this->traitDirectoryExists($path) || is_dir("/$path");
     //    }
 
-    
-    public function stripPrefix( string $path ): string {
+
+    public function stripPrefix(string $path): string
+    {
         return $this->pathPrefixer->stripPrefix($path);
     }
 }
