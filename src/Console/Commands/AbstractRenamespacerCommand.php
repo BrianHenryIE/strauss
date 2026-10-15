@@ -56,7 +56,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class AbstractRenamespacerCommand extends Command
 {
     /**
-     * @var Logger&LoggerInterface
+     * @var Logger|LoggerInterface
      */
     protected $logger;
 
@@ -206,15 +206,15 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->workingDir = $this->filesystem->normalizePath($workingDir);
     }
 
-    public function setLogger(LoggerInterface $logger): void
-    {
-        $this->logger->pushHandler(new PsrHandler($logger));
-    }
+//    public function setLogger(LoggerInterface $logger): void
+//    {
+//        $this->logger->pushHandler(new PsrHandler($logger));
+//    }
 
-    public function configureLogger(LoggerInterface $logger): void
-    {
-        $this->logger->pushHandler(new PsrHandler($logger));
-    }
+//    public function configureLogger(LoggerInterface $logger): void
+//    {
+//        $this->logger->pushHandler(new PsrHandler($logger));
+//    }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
