@@ -216,6 +216,10 @@ abstract class AbstractRenamespacerCommand extends Command
 //        $this->logger->pushHandler(new PsrHandler($logger));
 //    }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!isset($this->config)) {
