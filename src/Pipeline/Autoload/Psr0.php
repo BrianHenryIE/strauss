@@ -65,7 +65,7 @@ class Psr0
              * @see            ComposerPackage::hasPsr0()
              * @phpstan-ignore offsetAccess.notFound
              */
-            foreach ($composerAutoloadKey['psr-0'] as $psrRootNamespace => $packageRelativeNamespacePath) {
+            foreach ($composerAutoloadKey['psr-0'] as $psrRootNamespace => $packageRelativeNamespacePaths) {
                 // TODO: we need to have already run "determine changes" so we can set the target directory based on exclusion rules etc.
                 $namespaceSymbol = $discoveredSymbols->getNamespace($psrRootNamespace);
 
@@ -74,47 +74,48 @@ class Psr0
                 }
 
                 /**
- * @var FileWithDependency $file
-*/
+                 * @var FileWithDependency $file
+                 */
                 foreach ($allPackagesFiles as $file) {
                     $filePackageRelativePath = $file->getPackageRelativePath();
 
-                    if (
-                        ! str_starts_with(
-                            $filePackageRelativePath,
-                            $packageRelativeNamespacePath
-                        )
-                    ) {
-                        continue;
+                    // A namespace may be autoloaded from one directory, `"Foo": "src/"`, or several, `"Foo": ["src/", "lib/"]`.
+                    foreach ((array) $packageRelativeNamespacePaths as $packageRelativeNamespacePath) {
+                        if (! str_starts_with($filePackageRelativePath, $packageRelativeNamespacePath)) {
+                            continue;
+                        }
+
+                        // It doesn't matter here whether we are using actual namespaces or underscored classnames, the target directory still changes.
+
+                        $originalNamespaceString    = $this->filesystem->normalizePath(
+                            $packageRelativeNamespacePath . '/' . $namespaceSymbol->getOriginalFqdnName()
+                        );
+                        $replacementNamespaceString = $this->filesystem->normalizePath(
+                            $packageRelativeNamespacePath . '/' . $namespaceSymbol->getReplacementFqdnName()
+                        );
+
+                        $updatedRelativePath = preg_replace(
+                            '#^' . $originalNamespaceString . '#',
+                            $replacementNamespaceString,
+                            $filePackageRelativePath
+                        ) ?? (function () {
+                            throw new \Exception(preg_last_error_msg(), preg_last_error());
+                        })();
+
+                        $updatedTargetPath = preg_replace(
+                            '#' . $filePackageRelativePath . '$#',
+                            $updatedRelativePath,
+                            $file->getTargetAbsolutePath()
+                        ) ?? (function () {
+                            throw new \Exception(preg_last_error_msg(), preg_last_error());
+                        })();
+
+                        $file->setTargetAbsolutePath($this->filesystem->normalizePath($updatedTargetPath));
+                        $file->addAutoloader('psr-0');
+
+                        // The file has been moved; another of the namespace's directories must not move it again.
+                        break;
                     }
-
-                    // It doesn't matter here whether we are using actual namespaces or underscored classnames, the target directory still changes.
-
-                    $originalNamespaceString    = $this->filesystem->normalizePath(
-                        $packageRelativeNamespacePath . '/' . $namespaceSymbol->getOriginalFqdnName()
-                    );
-                    $replacementNamespaceString = $this->filesystem->normalizePath(
-                        $packageRelativeNamespacePath . '/' . $namespaceSymbol->getReplacementFqdnName()
-                    );
-
-                    $updatedRelativePath = preg_replace(
-                        '#^' . $originalNamespaceString . '#',
-                        $replacementNamespaceString,
-                        $filePackageRelativePath
-                    ) ?? (function () {
-                        throw new \Exception(preg_last_error_msg(), preg_last_error());
-                    })();
-
-                    $updatedTargetPath = preg_replace(
-                        '#' . $filePackageRelativePath . '$#',
-                        $updatedRelativePath,
-                        $file->getTargetAbsolutePath()
-                    ) ?? (function () {
-                        throw new \Exception(preg_last_error_msg(), preg_last_error());
-                    })();
-
-                    $file->setTargetAbsolutePath($this->filesystem->normalizePath($updatedTargetPath));
-                    $file->addAutoloader('psr-0');
                 }
             }
         }

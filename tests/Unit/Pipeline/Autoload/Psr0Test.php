@@ -99,44 +99,107 @@ class Psr0Test extends TestCase
     }
 
     /**
+     * `"autoload": {"psr-0": {"Pimple": "src/"}}`: the namespace's single directory as a string.
+     *
      * @covers ::setTargetDirectory
      */
-    public function test_multiple_namespaces_logs_warning(): void
+    public function test_psr0_path_as_string(): void
     {
-        $this->markTestIncomplete('outdated after refactoring for underscores in classnames');
+        $namespaceSymbol = new NamespaceSymbol('Pimple');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Pimple');
+        $namespaceSymbol->setDoRename(true);
 
-        $this->expectWarningLogs();
+        $discoveredSymbols = new DiscoveredSymbols([$namespaceSymbol]);
 
-        $ns1 = new NamespaceSymbol('Pimple');
-        $ns1->setLocalReplacement('BrianHenryIE\Strauss\Pimple');
-        $ns2 = new NamespaceSymbol('Pimple\ServiceIterator');
-        $ns2->setLocalReplacement('BrianHenryIE\Strauss\Pimple\ServiceIterator');
-        $discoveredSymbols = new DiscoveredSymbols([$ns1, $ns2]);
+        $inPath = $this->getPsr0File('src/Pimple/Container.php');
+        $inPath->expects('setTargetAbsolutePath')
+            ->with('project/vendor-prefixed/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php')
+            ->once();
+        $inPath->expects('addAutoloader')->with('psr-0')->once();
 
-        $dependency = Mockery::mock(ComposerPackage::class);
-        $dependency->expects('getAutoload')->andReturn(['psr-0' => ['Pimple' => 'src/']]);
-        $dependency->allows('getPackageName')->andReturn('my/package');
-        $dependency->expects('hasPsr0')->andReturnTrue();
-
-        $file = Mockery::mock(FileWithDependency::class);
-        $file->allows('getSourcePath')->andReturn('vendor/pimple/pimple/src/Pimple/ServiceIterator.php');
-        $file->expects('isPhpFile')->andReturnTrue();
-        $file->expects('getDependency')->andReturn($dependency);
-        $file->expects('getNamespaces')->andReturn($discoveredSymbols);
-        $file->expects('getPackageRelativePath')->andReturn('src/Pimple/ServiceIterator.php');
-        $file->expects('getTargetAbsolutePath')->andReturn('vendor-prefixed/pimple/pimple/src/Pimple/ServiceIterator.php');
-        $file->expects('setTargetAbsolutePath')->once();
+        $notInPath = $this->getPsr0File('tests/Pimple/ContainerTest.php');
+        $notInPath->shouldNotReceive('setTargetAbsolutePath');
+        $notInPath->shouldNotReceive('addAutoloader');
 
         $discoveredFiles = new DiscoveredFiles();
-        $discoveredFiles->add($file);
+        $discoveredFiles->add($inPath);
+        $discoveredFiles->add($notInPath);
 
-        $dependency->expects('getFiles')->andReturn($discoveredFiles);
-
-        $dependencies = new DependenciesCollection([$dependency]);
+        $dependencies = $this->getPsr0Dependencies(['Pimple' => 'src/'], $discoveredFiles);
 
         $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
         $sut->setTargetDirectory($dependencies, $discoveredFiles, $discoveredSymbols);
+    }
 
-        $this->assertTrue($this->getTestLogger()->hasWarning('More than one namespace in PSR-0 file.'));
+    /**
+     * `"autoload": {"psr-0": {"Pimple": ["src/", "lib/"]}}`: the namespace's several directories as an array.
+     *
+     * @covers ::setTargetDirectory
+     */
+    public function test_psr0_paths_as_array(): void
+    {
+        $namespaceSymbol = new NamespaceSymbol('Pimple');
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\Strauss\Pimple');
+        $namespaceSymbol->setDoRename(true);
+
+        $discoveredSymbols = new DiscoveredSymbols([$namespaceSymbol]);
+
+        $inFirstPath = $this->getPsr0File('src/Pimple/Container.php');
+        $inFirstPath->expects('setTargetAbsolutePath')
+            ->with('project/vendor-prefixed/pimple/pimple/src/BrianHenryIE/Strauss/Pimple/Container.php')
+            ->once();
+        $inFirstPath->expects('addAutoloader')->with('psr-0')->once();
+
+        $inSecondPath = $this->getPsr0File('lib/Pimple/ServiceIterator.php');
+        $inSecondPath->expects('setTargetAbsolutePath')
+            ->with('project/vendor-prefixed/pimple/pimple/lib/BrianHenryIE/Strauss/Pimple/ServiceIterator.php')
+            ->once();
+        $inSecondPath->expects('addAutoloader')->with('psr-0')->once();
+
+        $notInPath = $this->getPsr0File('tests/Pimple/ContainerTest.php');
+        $notInPath->shouldNotReceive('setTargetAbsolutePath');
+        $notInPath->shouldNotReceive('addAutoloader');
+
+        $discoveredFiles = new DiscoveredFiles();
+        $discoveredFiles->add($inFirstPath);
+        $discoveredFiles->add($inSecondPath);
+        $discoveredFiles->add($notInPath);
+
+        $dependencies = $this->getPsr0Dependencies(['Pimple' => ['src/', 'lib/']], $discoveredFiles);
+
+        $sut = new Psr0($this->getInMemoryFileSystem(), $this->getLogger());
+        $sut->setTargetDirectory($dependencies, $discoveredFiles, $discoveredSymbols);
+    }
+
+    /**
+     * A file in the pimple/pimple package, copied to `project/vendor-prefixed/pimple/pimple/`.
+     *
+     * @param string $packageRelativePath The file's path inside the package, e.g. `src/Pimple/Container.php`.
+     *
+     * @return FileWithDependency&\Mockery\MockInterface
+     */
+    protected function getPsr0File(string $packageRelativePath)
+    {
+        $file = Mockery::mock(FileWithDependency::class);
+        $file->allows('getSourcePath')->andReturn('project/vendor/pimple/pimple/' . $packageRelativePath);
+        $file->allows('getPackageRelativePath')->andReturn($packageRelativePath);
+        $file->allows('getTargetAbsolutePath')->andReturn('project/vendor-prefixed/pimple/pimple/' . $packageRelativePath);
+
+        return $file;
+    }
+
+    /**
+     * @param array<string, string|string[]> $psr0            The package's `autoload.psr-0` key.
+     * @param DiscoveredFiles                $discoveredFiles The package's files.
+     */
+    protected function getPsr0Dependencies(array $psr0, DiscoveredFiles $discoveredFiles): DependenciesCollection
+    {
+        $dependency = Mockery::mock(ComposerPackage::class);
+        $dependency->expects('hasPsr0')->andReturnTrue();
+        $dependency->expects('getAutoload')->andReturn(['psr-0' => $psr0]);
+        $dependency->expects('getFiles')->andReturn($discoveredFiles);
+        $dependency->allows('getPackageName')->andReturn('pimple/pimple');
+
+        return new DependenciesCollection([$dependency]);
     }
 }
