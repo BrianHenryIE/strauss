@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/coenjacobs/mozart/issues/90
  */
@@ -14,7 +15,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue90Test extends IntegrationTestCase
 {
-
     /**
      * Issue 90. Needs "iio/libmergepdf".
      *
@@ -29,19 +29,19 @@ class MozartIssue90Test extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.0');
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-90",
-	"require": {
-		"iio/libmergepdf": "4.0.4"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M90\\",
-			"classmap_prefix": "BrianHenryIE_M90_"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-90",
+            	"require": {
+            		"iio/libmergepdf": "4.0.4"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M90\\",
+            			"classmap_prefix": "BrianHenryIE_M90_"
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -53,8 +53,8 @@ EOD;
         $this->assertEquals(0, $exitCode, $output);
 
         // This test would only fail on Windows?
-        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir .'/strauss/iio/libmergepdf/vendor/iio/libmergepdf/tcpdi');
+        $this->assertDirectoryNotExistsInFileSystem($this->testsWorkingDir . '/strauss/iio/libmergepdf/vendor/iio/libmergepdf/tcpdi');
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/iio/libmergepdf/tcpdi/tcpdi.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/iio/libmergepdf/tcpdi/tcpdi.php');
     }
 }

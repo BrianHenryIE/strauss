@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The Packagist named crewlabs/unsplash has the composer name unsplash/unsplash.
  */
@@ -14,7 +15,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue97Test extends IntegrationTestCase
 {
-
     /**
      * Issue 97. Package named "crewlabs/unsplash" is downloaded to `vendor/crewlabs/unsplash` but their composer.json
      * has the package name as "unsplash/unsplash".
@@ -25,19 +25,19 @@ class MozartIssue97Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-97",
-	"require": {
-		"crewlabs/unsplash": "3.1.0"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M97\\",
-			"classmap_prefix": "BrianHenryIE_M97_"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-97",
+            	"require": {
+            		"crewlabs/unsplash": "3.1.0"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M97\\",
+            			"classmap_prefix": "BrianHenryIE_M97_"
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

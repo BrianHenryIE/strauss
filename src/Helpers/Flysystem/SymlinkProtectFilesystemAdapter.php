@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The idea is to prevent write/delete operations to symlinked files.
  *
@@ -23,6 +24,8 @@
  * Your implementation of LoggerInterface can decide what to do with the log messages, e.g.
  * throw an exception on error, or just log them with an instruction on how to remedy the issue.
  *
+ * @package brianhenryie/strauss
+ *
  * @see \League\Flysystem\SymbolicLinkEncountered
  * @see \League\Flysystem\Local\LocalFilesystemAdapter::SKIP_LINKS
  * @see \League\Flysystem\Local\LocalFilesystemAdapter::DISALLOW_LINKS
@@ -42,6 +45,7 @@ use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\PathNormalizer;
+use League\Flysystem\StorageAttributes;
 use League\Flysystem\SymbolicLinkEncountered;
 use League\Flysystem\UnableToCopyFile;
 use League\Flysystem\UnableToCreateDirectory;
@@ -64,6 +68,13 @@ use RuntimeException;
 use SplFileInfo;
 use Throwable;
 
+/**
+ * Each write, copy, move, delete and visibility operation normalizes the path, prefixes it to an absolute path, then
+ * walks up its parent directories with `is_link()` to find any symlink, recording each one found with its `realpath()`
+ * target in `$symlinkTargetsMap`. If a symlink is involved, the configured link handling mode decides whether to skip,
+ * throw, or log a warning and continue; details are passed to the logger as a {@see PathSymlinkDetails}. Directory
+ * listing is reimplemented because the parent's iterator helpers are private.
+ */
 class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements FlysystemAdapterBackCompatTraitInterface
 {
     use FlysystemAdapterBackCompatTrait;
@@ -112,7 +123,14 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     protected array $symlinkTargetsMap = [];
 
     /**
-     * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer
+     * @param string                                               $location         Absolute filesystem path of the adapter root.
+     * @param ?PathNormalizer                                      $pathNormalizer   Normalizes paths before use; null for League's `WhitespacePathNormalizer`.
+     * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer     Converts adapter paths to absolute filesystem paths; null for one rooted at `$location`.
+     * @param ?LoggerInterface                                     $logger           Logs discovered and acted-upon symlinks; null for a `NullLogger`.
+     * @param ?VisibilityConverter                                 $visibility       Converts between permissions and visibility; null for a `PortableVisibilityConverter`.
+     * @param int                                                  $writeFlags       Flags passed to `file_put_contents()`, e.g. `LOCK_EX`.
+     * @param int                                                  $linkHandling     How to treat symlinks, one of the `LocalFilesystemAdapter::SKIP_LINKS`/`DISALLOW_LINKS` or `self::WARN_LINKS`/`THROW_LINKS` constants.
+     * @param ?MimeTypeDetector                                    $mimeTypeDetector Detects file MIME types; null for the parent's default.
      */
     public function __construct(
         string $location,
@@ -135,6 +153,8 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
     /**
      * Does anything exist at the path, including a symlink whose target is missing (`file_exists()` follows links).
+     *
+     * @param string $path Path relative to the adapter root.
      */
     protected function pathExists(string $path): bool
     {
@@ -144,7 +164,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     }
 
     /**
-     * @param string $path
+     * @param string $path Path relative to the adapter root.
      */
     protected function getSymlinkDetails(string $path): ?PathSymlinkDetails
     {
@@ -179,6 +199,8 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      *
      * Recursive function that runs `is_link()` on the path, drops the last part, loops until found or throws.
      *
+     * @param string $absoluteFilesystemPath Absolute filesystem path to check, along with each of its ancestor directories.
+     *
      * @see \SplFileInfo::isLink()
      *
      * @see https://github.com/php/php-src/issues/12118
@@ -199,7 +221,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
         if (is_link($absoluteFilesystemPath)) {
             $realpath = realpath($absoluteFilesystemPath);
             if ($realpath === false) {
-//                return $this->getSymlinkInPath(dirname($absoluteFilesystemPath));
+                //                return $this->getSymlinkInPath(dirname($absoluteFilesystemPath));
                 throw new RuntimeException('symlink error');
             }
             $this->recordSymlink($absoluteFilesystemPath, $realpath);
@@ -228,6 +250,8 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
     /**
      * Given the path to a file or folder, is it inside a symlinked directory?
+     *
+     * @param string $path Path relative to the adapter root; it is normalized first.
      */
     public function isSymlinked(string $path): bool
     {
@@ -250,8 +274,10 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      * `unlink()` will not work on Windows. `rmdir()` will not work if there are files in the directory.
      * "On Windows, take care that `is_link()` returns false for Junctions."
      *
-     * @see https://www.php.net/manual/en/function.is-link.php#113263
-     * @see https://stackoverflow.com/a/18262809/336146
+     * @param string $path Path of the symlink relative to the adapter root.
+     *
+     * @see    https://www.php.net/manual/en/function.is-link.php#113263
+     * @see    https://stackoverflow.com/a/18262809/336146
      * @throws FilesystemException
      */
     protected function removeSymlink(string $path): bool
@@ -280,6 +306,8 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     }
 
     /**
+     * @param string $path Path to normalize with the configured path normalizer.
+     *
      * @see FlysystemReaderBackCompatTrait::directoryExists()
      */
     public function normalizePath(string $path): string
@@ -288,7 +316,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     }
 
     /**
-     *
+     * @param string $path     Path of the file to write, relative to the adapter root.
+     * @param string $contents File contents to write.
+     * @param Config $config   Flysystem write config, e.g. visibility.
      *
      * @see FilesystemAdapter::write()
      * @see FilesystemAdapter::ensureDirectoryExists()
@@ -329,8 +359,12 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     }
 
     /**
+     * @param string   $path     Path of the file to write, relative to the adapter root.
+     * @param resource $contents Stream to read the file contents from.
+     * @param Config   $config   Flysystem write config, e.g. visibility.
+     *
      * @throws FilesystemException
-     * @see FilesystemAdapter::writeStream()
+     * @see    FilesystemAdapter::writeStream()
      */
     public function writeStream(string $path, $contents, Config $config): void
     {
@@ -450,6 +484,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
                     return;
                 }
+                // no break
             case SymlinkProtectFilesystemAdapter::THROW_LINKS:
             default:
                 throw UnableToDeleteFile::atLocation($path, 'symlink');
@@ -513,6 +548,10 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
     /**
      * Recursively create a directory.
+     *
+     * @param string $path   Path of the directory to create, relative to the adapter root.
+     * @param Config $config Flysystem config, e.g. directory visibility.
+     *
      * @throws FilesystemException
      */
     public function createDirectory(string $path, Config $config): void
@@ -672,7 +711,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
                     array_merge(
                         [
                             'destination' => $destination,
-                            'operation' => __METHOD__
+                            'operation' => __METHOD__,
                         ],
                         (array) $destinationSymlinkDetails
                     )
@@ -698,6 +737,8 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     }
 
     /**
+     * @param string $path Path of the file to read, relative to the adapter root.
+     *
      * @throws FilesystemException|UnableToReadFile
      */
     public function read(string $path): string
@@ -713,6 +754,8 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
     }
 
     /**
+     * @param string $path Path of the file to open for reading, relative to the adapter root.
+     *
      * @throws FilesystemException|UnableToReadFile
      */
     public function readStream(string $path)
@@ -779,12 +822,12 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      * This is the only method in the parent class which uses {@see LocalFilesystemAdapter::$linkHandling} – we don't
      * use that because its results will not include files/directories that are symlinks.
      *
+     * @param string $path Directory path relative to the adapter root.
+     * @param bool   $deep Recurse into subdirectories.
+     *
      * @see LocalFilesystemAdapter::listContents()
      *
-     * @param string $path
-     * @param bool $deep
-     *
-     * @return iterable
+     * @return iterable<StorageAttributes>
      * @throws FilesystemException
      */
     public function listContents(string $path, bool $deep): iterable
@@ -796,7 +839,9 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             return;
         }
 
-        /** @var Generator<SplFileInfo> $iterator */
+        /**
+         * @var Generator<SplFileInfo> $iterator
+         */
         $iterator = $deep ? $this->parentListDirectoryRecursively($location) : $this->parentListDirectory($location);
 
         foreach ($iterator as $fileInfo) {
@@ -820,7 +865,7 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
             $path = $this->pathPrefixer->stripPrefix($fileInfo->getPathname());
             $lastModified = $fileInfo->getMTime();
             $isDirectory = $fileInfo->isDir();
-            $permissions = octdec(substr(sprintf('%o', $fileInfo->getPerms()), -4));
+            $permissions = (int) octdec(substr(sprintf('%o', $fileInfo->getPerms()), -4));
             $visibility = $isDirectory ? $this->visibility->inverseForDirectory($permissions) : $this->visibility->inverseForFile($permissions);
 
             yield $isDirectory ? new DirectoryAttributes($path, $visibility, $lastModified) : new FileAttributes(
@@ -836,13 +881,26 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
      * (fn () => $this->protectedProperty)-›call ($object)
      *
      * Copied, unchanged, from parent due to private protection.
+     *
+     * @param string $path Absolute filesystem path of the directory to list.
+     * @param int    $mode `RecursiveIteratorIterator` mode, e.g. `SELF_FIRST` to yield directories before their contents.
+     *
      * @used-by ::listContents
-     * @see LocalFilesystemAdapter::listDirectoryRecursively()
+     * @see     LocalFilesystemAdapter::listDirectoryRecursively()
      */
     private function parentListDirectoryRecursively(
         string $path,
         int $mode = RecursiveIteratorIterator::SELF_FIRST
     ): Generator {
+        $mode = in_array(
+            $mode,
+            [
+                RecursiveIteratorIterator::LEAVES_ONLY,
+                RecursiveIteratorIterator::SELF_FIRST,
+                RecursiveIteratorIterator::CHILD_FIRST,
+            ],
+            true
+        ) ? $mode : RecursiveIteratorIterator::SELF_FIRST;
         yield from new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
             $mode
@@ -851,8 +909,11 @@ class SymlinkProtectFilesystemAdapter extends LocalFilesystemAdapter implements 
 
     /**
      * Copied, unchanged, from parent due to private protection.
+     *
+     * @param string $location Absolute filesystem path of the directory to list, non-recursively.
+     *
      * @used-by ::listContents
-     * @see LocalFilesystemAdapter::listDirectory()
+     * @see     LocalFilesystemAdapter::listDirectory()
      */
     private function parentListDirectory(string $location): Generator
     {

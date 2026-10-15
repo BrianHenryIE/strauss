@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Improper dealing with global namespaces
  *
@@ -18,23 +19,23 @@ class StraussIssue172Test extends IntegrationTestCase
     public function test_issue_172(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/80",
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "require": {
-    "guzzlehttp/guzzle": "7.9.3"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/80",
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "require": {
+                "guzzlehttp/guzzle": "7.9.3"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

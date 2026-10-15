@@ -1,4 +1,5 @@
 <?php
+
 /**
  * namespaced trait name
  *
@@ -19,19 +20,19 @@ class StraussIssue166Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/119",
-  "require": {
-    "stripe/stripe-php":"v17.2.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Company_Project_"
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/119",
+              "require": {
+                "stripe/stripe-php":"v17.2.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Company_Project_"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

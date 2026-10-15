@@ -21,7 +21,6 @@ use Mockery\MockInterface;
  */
 class FileSymbolScannerTest extends TestCase
 {
-
     // PREG_BACKTRACK_LIMIT_ERROR
 
     // Single implied global namespace.
@@ -60,12 +59,12 @@ class FileSymbolScannerTest extends TestCase
     {
 
         $contents = <<<'EOD'
-<?php
-namespace MyNamespace;
+            <?php
+            namespace MyNamespace;
 
-class MyClass {
-}
-EOD;
+            class MyClass {
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -96,12 +95,12 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-namespace {
-    class MyClass {
-    }
-}
-EOD;
+            <?php
+            namespace {
+                class MyClass {
+                }
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -129,16 +128,16 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-namespace MyNamespace {
-    class MyClass {
-    }
-}
-namespace {
-    class MyClass {
-    }
-}
-EOD;
+            <?php
+            namespace MyNamespace {
+                class MyClass {
+                }
+            }
+            namespace {
+                class MyClass {
+                }
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -168,17 +167,17 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace {
-    class MyClass {
-    }
-}
-namespace MyNamespace {
-    class MyOtherClass {
-    }
-}
-EOD;
+            namespace {
+                class MyClass {
+                }
+            }
+            namespace MyNamespace {
+                class MyOtherClass {
+                }
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -209,34 +208,34 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-/**
- * @todo Rewrite to use Interchange objects
- */
-class HTMLPurifier_Printer_ConfigForm extends HTMLPurifier_Printer
-{
+            /**
+             * @todo Rewrite to use Interchange objects
+             */
+            class HTMLPurifier_Printer_ConfigForm extends HTMLPurifier_Printer
+            {
 
-    /**
-     * Returns HTML output for a configuration form
-     * @param HTMLPurifier_Config|array $config Configuration object of current form state, or an array
-     *        where [0] has an HTML namespace and [1] is being rendered.
-     * @param array|bool $allowed Optional namespace(s) and directives to restrict form to.
-     * @param bool $render_controls
-     * @return string
-     */
-    public function render($config, $allowed = true, $render_controls = true)
-    {
+                /**
+                 * Returns HTML output for a configuration form
+                 * @param HTMLPurifier_Config|array $config Configuration object of current form state, or an array
+                 *        where [0] has an HTML namespace and [1] is being rendered.
+                 * @param array|bool $allowed Optional namespace(s) and directives to restrict form to.
+                 * @param bool $render_controls
+                 * @return string
+                 */
+                public function render($config, $allowed = true, $render_controls = true)
+                {
 
-        // blah
+                    // blah
 
-        return $ret;
-    }
+                    return $ret;
+                }
 
-}
+            }
 
-// vim: et sw=4 sts=4
-EOD;
+            // vim: et sw=4 sts=4
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -268,13 +267,13 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-class MyClass {
-}
-class MyOtherClass {
+            <?php
+            class MyClass {
+            }
+            class MyOtherClass {
 
-}
-EOD;
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -501,13 +500,13 @@ EOD;
     {
 
         $contents = <<<'EOD'
-                    <?php
-                    class WP_Dependency_Installer {
-                    	/**
-                    	 *
-                    	 */
-                    }
-                    EOD;
+            <?php
+            class WP_Dependency_Installer {
+            	/**
+            	 *
+            	 */
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -581,7 +580,7 @@ EOD;
 
         $config = $this->createMock(StraussConfig::class);
         $config->method('getExcludePackagesFromPrefixing')->willReturn(
-            array('brianhenryie/pdfhelpers')
+            ['brianhenryie/pdfhelpers']
         );
 
         $composerPackage = $this->createMock(ComposerPackage::class);
@@ -615,7 +614,7 @@ EOD;
 
         $config = $this->createMock(StraussConfig::class);
         $config->method('getExcludeFilePatternsFromPrefixing')->willReturn(
-            array('/to/')
+            ['/to/']
         );
 
         $composerPackage = $this->createMock(ComposerPackage::class);
@@ -659,7 +658,7 @@ EOD;
         $config = $this->createMock(StraussConfig::class);
         $config->method('getNamespacePrefix')->willReturn('BrianHenryIE\Prefix');
         $config->method('getNamespaceReplacementPatterns')->willReturn(
-            array('/BrianHenryIE\\\\(PdfHelpers)/'=>'BrianHenryIE\\Prefix\\\\$1')
+            ['/BrianHenryIE\\\\(PdfHelpers)/' => 'BrianHenryIE\\Prefix\\\\$1']
         );
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -685,28 +684,28 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-class TCPDF_STATIC
-{
+            class TCPDF_STATIC
+            {
 
-    /**
-     * Creates a copy of a class object
-     * @param $object (object) class object to be cloned
-     * @return cloned object
-     * @since 4.5.029 (2009-03-19)
-     * @public static
-     */
-    public static function objclone($object)
-    {
-        if (($object instanceof Imagick) and (version_compare(phpversion('imagick'), '3.0.1') !== 1)) {
-            // on the versions after 3.0.1 the clone() method was deprecated in favour of clone keyword
-            return @$object->clone();
-        }
-        return @clone($object);
-    }
-}
-EOD;
+                /**
+                 * Creates a copy of a class object
+                 * @param $object (object) class object to be cloned
+                 * @return cloned object
+                 * @since 4.5.029 (2009-03-19)
+                 * @public static
+                 */
+                public static function objclone($object)
+                {
+                    if (($object instanceof Imagick) and (version_compare(phpversion('imagick'), '3.0.1') !== 1)) {
+                        // on the versions after 3.0.1 the clone() method was deprecated in favour of clone keyword
+                        return @$object->clone();
+                    }
+                    return @clone($object);
+                }
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -734,23 +733,23 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-/*******************************************************************************
- * FPDF                                                                         *
- *                                                                              *
- * Version: 1.83                                                                *
- * Date:    2021-04-18                                                          *
- * Author:  Olivier PLATHEY                                                     *
- *******************************************************************************
- */
+            <?php
+            /*******************************************************************************
+             * FPDF                                                                         *
+             *                                                                              *
+             * Version: 1.83                                                                *
+             * Date:    2021-04-18                                                          *
+             * Author:  Olivier PLATHEY                                                     *
+             *******************************************************************************
+             */
 
-define('FPDF_VERSION', '1.83');
+            define('FPDF_VERSION', '1.83');
 
-define('ANOTHER_CONSTANT', '1.83');
+            define('ANOTHER_CONSTANT', '1.83');
 
-class FPDF
-{}
-EOD;
+            class FPDF
+            {}
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -781,23 +780,23 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-// Global. - namespace WPGraphQL;
+            // Global. - namespace WPGraphQL;
 
-use WPGraphQL\Utils\Preview;
+            use WPGraphQL\Utils\Preview;
 
-/**
- * Class WPGraphQL
- *
- * This is the one true WPGraphQL class
- *
- * @package WPGraphQL
- */
-final class WPGraphQL {
+            /**
+             * Class WPGraphQL
+             *
+             * This is the one true WPGraphQL class
+             *
+             * @package WPGraphQL
+             */
+            final class WPGraphQL {
 
-}
-EOD;
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -826,22 +825,22 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-function topFunction() {
-	return 'This should be recorded';
-}
+            function topFunction() {
+            	return 'This should be recorded';
+            }
 
-class MyClass {
-    function aMethod() {
-        // This should not be recorded
-	}
-}
+            class MyClass {
+                function aMethod() {
+                    // This should not be recorded
+            	}
+            }
 
-function lowerFunction() {
-	return 'This should be recorded';
-}
-EOD;
+            function lowerFunction() {
+            	return 'This should be recorded';
+            }
+            EOD;
 
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
@@ -873,20 +872,20 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-if (! function_exists('collect')) {
-    /**
-     * Create a collection from the given value.
-     *
-     * @param  mixed  $value
-     * @return \Custom\Prefix\Illuminate\Support\Collection
-     */
-    function collect($value = null)
-    {
-        return new Collection($value);
-    }
-}
-EOD;
+            <?php
+            if (! function_exists('collect')) {
+                /**
+                 * Create a collection from the given value.
+                 *
+                 * @param  mixed  $value
+                 * @return \Custom\Prefix\Illuminate\Support\Collection
+                 */
+                function collect($value = null)
+                {
+                    return new Collection($value);
+                }
+            }
+            EOD;
 
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
@@ -915,20 +914,20 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
-// Polyfill
-function mb_convert_case() {
-	return 'This should not be recorded';
-}
-// Polyfill
-function str_starts_with() {
-	return 'This should not be recorded';
-}
+            <?php
+            // Polyfill
+            function mb_convert_case() {
+            	return 'This should not be recorded';
+            }
+            // Polyfill
+            function str_starts_with() {
+            	return 'This should not be recorded';
+            }
 
-function lowerFunction() {
-	return 'This should be recorded';
-}
-EOD;
+            function lowerFunction() {
+            	return 'This should be recorded';
+            }
+            EOD;
 
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
@@ -965,21 +964,21 @@ EOD;
     {
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Twig\Extension {
-	final class CoreExtension extends AbstractExtension {
-		// Whatever.
-	}
-}
+            namespace Twig\Extension {
+            	final class CoreExtension extends AbstractExtension {
+            		// Whatever.
+            	}
+            }
 
-namespace {
-	function twig_cycle($values, $position)
-	{
-		// Also whatever.
-	}
-}
-EOD;
+            namespace {
+            	function twig_cycle($values, $position)
+            	{
+            		// Also whatever.
+            	}
+            }
+            EOD;
 
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
@@ -1010,16 +1009,16 @@ EOD;
     public function testTemplateFileWithPlaceholdersIsSkippedGracefully(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace %g_namespace%\AdminMenus;
+            namespace %g_namespace%\AdminMenus;
 
-use %g_use_libs%\AdminMenus\AbstractAdminMenu;
+            use %g_use_libs%\AdminMenus\AbstractAdminMenu;
 
-class AdminMenuExample extends AbstractAdminMenu
-{
-}
-EOD;
+            class AdminMenuExample extends AbstractAdminMenu
+            {
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -1049,22 +1048,22 @@ EOD;
     public function test_no_constant(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Safe;
+            namespace Safe;
 
-use Safe\Exceptions\MiscException;
+            use Safe\Exceptions\MiscException;
 
-function define(string $constant_name, $value, bool $case_insensitive = false): void
-{
-    error_clear_last();
-    $safeResult = \define($constant_name, $value, $case_insensitive);
-    if ($safeResult === false) {
-        throw MiscException::createFromPhpError();
-    }
-}
+            function define(string $constant_name, $value, bool $case_insensitive = false): void
+            {
+                error_clear_last();
+                $safeResult = \define($constant_name, $value, $case_insensitive);
+                if ($safeResult === false) {
+                    throw MiscException::createFromPhpError();
+                }
+            }
 
-EOD;
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -1091,27 +1090,27 @@ EOD;
     public function testEnumDiscovery(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace My\NS;
+            <?php
+            namespace My\NS;
 
-interface HasLabel {}
+            interface HasLabel {}
 
-enum Status: string implements HasLabel {
-    const DEFAULT_REGEX = '/^(ready|done)$/';
+            enum Status: string implements HasLabel {
+                const DEFAULT_REGEX = '/^(ready|done)$/';
 
-    case Ready = 'ready';
-    case Done = 'done';
+                case Ready = 'ready';
+                case Done = 'done';
 
-    public function label(): string {
-        return ucfirst($this->value);
-    }
-}
+                public function label(): string {
+                    return ucfirst($this->value);
+                }
+            }
 
-enum Direction {
-    case Up;
-    case Down;
-}
-EOD;
+            enum Direction {
+                case Up;
+                case Down;
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -1151,12 +1150,12 @@ EOD;
     public function testGlobalEnumDiscovery(): void
     {
         $contents = <<<'EOD'
-<?php
-enum GlobalSuit: int {
-    case Hearts = 1;
-    case Spades = 2;
-}
-EOD;
+            <?php
+            enum GlobalSuit: int {
+                case Hearts = 1;
+                case Spades = 2;
+            }
+            EOD;
 
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
         $filesystemReaderMock->expects('read')->once()->andReturn($contents);
@@ -1178,5 +1177,64 @@ EOD;
         $this->assertInstanceOf(EnumSymbol::class, $globalEnum);
         $this->assertSame('int', $globalEnum->getBackingType());
         $this->assertTrue($globalEnum->isGlobal());
+    }
+
+    /**
+     * A symbol defined in several files is logged once, when it is first found.
+     *
+     * @covers ::add
+     */
+    public function test_symbol_in_two_files_logged_once(): void
+    {
+        $filesystem = Mockery::mock(FileSystem::class);
+        $filesystem->shouldReceive('read')->andReturn("<?php\nnamespace Acme;\n");
+        $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
+
+        $config = $this->createMock(StraussConfig::class);
+        $config->method('getPackagesToPrefix')->willReturn([]);
+
+        $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([
+            new File('/a/one.php', 'one.php', '/a/one.php'),
+            new File('/a/two.php', 'two.php', '/a/two.php'),
+        ]);
+
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
+
+        $infos = array_column($this->getTestLogger()->recordsByLevel['info'], 'message');
+
+        $this->assertSame(1, count(array_keys($infos, 'Found new namespace:::Acme')));
+        $namespace = $discoveredSymbols->getNamespace('Acme');
+        $this->assertNotNull($namespace);
+        $this->assertCount(2, $namespace->getSourceFiles());
+    }
+
+    /**
+     * PHP built-in symbols, e.g. a polyfilled interface, are not recorded.
+     *
+     * @covers ::add
+     */
+    public function test_built_in_interface_not_recorded(): void
+    {
+        $filesystem = Mockery::mock(FileSystem::class);
+        $filesystem->shouldReceive('read')->andReturn("<?php\ninterface Stringable {}\ninterface NotBuiltIn {}\n");
+        $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
+
+        $config = $this->createMock(StraussConfig::class);
+        $config->method('getPackagesToPrefix')->willReturn([]);
+
+        $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([
+            new File('/a/polyfill.php', 'polyfill.php', '/a/polyfill.php'),
+        ]);
+
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
+
+        $this->assertNull($discoveredSymbols->getInterface('Stringable'));
+        $this->assertNotNull($discoveredSymbols->getInterface('NotBuiltIn'));
     }
 }

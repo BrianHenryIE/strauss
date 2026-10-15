@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Multiple paths inside PSR-4 key
  * @see https://github.com/coenjacobs/mozart/issues/48
@@ -16,7 +17,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue48Test extends IntegrationTestCase
 {
-
     /**
      * rubix/tensor
      *
@@ -27,11 +27,11 @@ class MozartIssue48Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-    "name": "brianhenryie/mozart-issue-48",
-    "require": { "rubix/tensor": "2.0.5" }
-}
-EOD;
+            {
+                "name": "brianhenryie/mozart-issue-48",
+                "require": { "rubix/tensor": "2.0.5" }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -50,7 +50,7 @@ EOD;
             $dir = new \RecursiveDirectoryIterator($folder);
             $ite = new \RecursiveIteratorIterator($dir);
             $files = new \RegexIterator($ite, $pattern, \RegexIterator::GET_MATCH);
-            $fileList = array();
+            $fileList = [];
             foreach ($files as $file) {
                 $fileList = array_merge($fileList, $file);
             }

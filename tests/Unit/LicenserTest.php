@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author BrianHenryIE
  */
@@ -30,7 +31,7 @@ class LicenserTest extends TestCase
     {
         $config = $this->createStub(StraussConfig::class);
 
-        $packagePath = __DIR__.'/vendor/developer-name/project-name/';
+        $packagePath = __DIR__ . '/vendor/developer-name/project-name/';
         $dependency = Mockery::mock(ComposerPackage::class);
         $dependency->allows('getPackageName')->andReturn('developer-name/project-name');
         $dependency->expects('getPackageAbsolutePath')->andReturn($packagePath);
@@ -40,22 +41,22 @@ class LicenserTest extends TestCase
         $filesystemMock = Mockery::mock(FileSystem::class);
 
         $file = Mockery::mock(FileAttributes::class);
-        $file->expects('path')->andReturn(__DIR__.'/vendor/developer-name/project-name/license.md');
-//        $file->expects('isFile')->andReturn(true);
+        $file->expects('path')->andReturn(__DIR__ . '/vendor/developer-name/project-name/license.md');
+        //        $file->expects('isFile')->andReturn(true);
 
         $fileWithLicenseInPath = Mockery::mock(FileAttributes::class);
-        $fileWithLicenseInPath->expects('path')->andReturn(__DIR__.'/vendor/developer-name/license-path/other-file.md');
-//        $fileWithLicenseInPath->expects('isFile')->andReturn(true);
+        $fileWithLicenseInPath->expects('path')->andReturn(__DIR__ . '/vendor/developer-name/license-path/other-file.md');
+        //        $fileWithLicenseInPath->expects('isFile')->andReturn(true);
 
-//        $directory = Mockery::mock(DirectoryAttributes::class);
-//        $directory->expects('isFile')->andReturn(false);
-//        // directories should be skipped before accessing path
-//        $directory->shouldNotReceive('path');
+        //        $directory = Mockery::mock(DirectoryAttributes::class);
+        //        $directory->expects('isFile')->andReturn(false);
+        //        // directories should be skipped before accessing path
+        //        $directory->shouldNotReceive('path');
 
-        $finderArrayIterator = new ArrayIterator(array(
+        $finderArrayIterator = new ArrayIterator([
             $file,
             $fileWithLicenseInPath,
-        ));
+        ]);
 
         $directoryListingMock = Mockery::mock(DirectoryListing::class);
         $directoryListingMock->expects('filter')->andReturn($directoryListingMock);
@@ -103,23 +104,23 @@ class LicenserTest extends TestCase
         $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace net\authorize\api\contract\v1;
-EOD;
+            namespace net\authorize\api\contract\v1;
+            EOD;
 
         //     "license": "proprietary",
 
         $expected = <<<'EOD'
-<?php
-/**
- * @license proprietary
- *
- * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
- */
+            <?php
+            /**
+             * @license proprietary
+             *
+             * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
+             */
 
-namespace net\authorize\api\contract\v1;
-EOD;
+            namespace net\authorize\api\contract\v1;
+            EOD;
 
         $actual = $sut->addChangeDeclarationToPhpString(
             $contents,
@@ -155,21 +156,21 @@ EOD;
         $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace net\authorize\api\contract\v1;
-EOD;
+            namespace net\authorize\api\contract\v1;
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-/**
- * @license proprietary
- *
- * Modified by BrianHenryIE using {@see https://github.com/BrianHenryIE/strauss}.
- */
+            <?php
+            /**
+             * @license proprietary
+             *
+             * Modified by BrianHenryIE using {@see https://github.com/BrianHenryIE/strauss}.
+             */
 
-namespace net\authorize\api\contract\v1;
-EOD;
+            namespace net\authorize\api\contract\v1;
+            EOD;
 
         $actual = $sut->addChangeDeclarationToPhpString(
             $contents,
@@ -196,21 +197,21 @@ EOD;
         $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace net\authorize\api\contract\v1;
-EOD;
+            namespace net\authorize\api\contract\v1;
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-/**
- * @license proprietary
- *
- * Modified using {@see https://github.com/BrianHenryIE/strauss}.
- */
+            <?php
+            /**
+             * @license proprietary
+             *
+             * Modified using {@see https://github.com/BrianHenryIE/strauss}.
+             */
 
-namespace net\authorize\api\contract\v1;
-EOD;
+            namespace net\authorize\api\contract\v1;
+            EOD;
 
         $actual = $sut->addChangeDeclarationToPhpString(
             $contents,
@@ -237,36 +238,36 @@ EOD;
         $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
-<?php // phpcs:ignore WordPress.Files.FileName
-/**
- * Handles dismissing admin notices.
- *
- * @package   WPTRT/admin-notices
- * @author    WPTRT <themes@wordpress.org>
- * @copyright 2019 WPTRT
- * @license   https://www.gnu.org/licenses/gpl-2.0.html GPL-2.0-or-later
- * @link      https://github.com/WPTRT/admin-notices
- */
+            <?php // phpcs:ignore WordPress.Files.FileName
+            /**
+             * Handles dismissing admin notices.
+             *
+             * @package   WPTRT/admin-notices
+             * @author    WPTRT <themes@wordpress.org>
+             * @copyright 2019 WPTRT
+             * @license   https://www.gnu.org/licenses/gpl-2.0.html GPL-2.0-or-later
+             * @link      https://github.com/WPTRT/admin-notices
+             */
 
-namespace Yeah;
-EOD;
+            namespace Yeah;
+            EOD;
 
         $expected = <<<'EOD'
-<?php // phpcs:ignore WordPress.Files.FileName
-/**
- * Handles dismissing admin notices.
- *
- * @package   WPTRT/admin-notices
- * @author    WPTRT <themes@wordpress.org>
- * @copyright 2019 WPTRT
- * @license   https://www.gnu.org/licenses/gpl-2.0.html GPL-2.0-or-later
- * @link      https://github.com/WPTRT/admin-notices
- *
- * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
- */
+            <?php // phpcs:ignore WordPress.Files.FileName
+            /**
+             * Handles dismissing admin notices.
+             *
+             * @package   WPTRT/admin-notices
+             * @author    WPTRT <themes@wordpress.org>
+             * @copyright 2019 WPTRT
+             * @license   https://www.gnu.org/licenses/gpl-2.0.html GPL-2.0-or-later
+             * @link      https://github.com/WPTRT/admin-notices
+             *
+             * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
+             */
 
-namespace Yeah;
-EOD;
+            namespace Yeah;
+            EOD;
 
         $actual = $sut->addChangeDeclarationToPhpString(
             $contents,
@@ -296,48 +297,48 @@ EOD;
         $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
-<?php
-/**
- * WP Dependency Installer
- *
- * A lightweight class to add to WordPress plugins or themes to automatically install
- * required plugin dependencies. Uses a JSON config file to declare plugin dependencies.
- * It can install a plugin from w.org, GitHub, Bitbucket, GitLab, Gitea or direct URL.
- *
- * @package   BH_WC_Auto_Print_Shipping_Labels_Receipts_WP_Dependency_Installer
- * @author    Andy Fragen, Matt Gibbs, Raruto
- * @license   MIT
- * @link      https://github.com/afragen/wp-dependency-installer
- */
+            <?php
+            /**
+             * WP Dependency Installer
+             *
+             * A lightweight class to add to WordPress plugins or themes to automatically install
+             * required plugin dependencies. Uses a JSON config file to declare plugin dependencies.
+             * It can install a plugin from w.org, GitHub, Bitbucket, GitLab, Gitea or direct URL.
+             *
+             * @package   BH_WC_Auto_Print_Shipping_Labels_Receipts_WP_Dependency_Installer
+             * @author    Andy Fragen, Matt Gibbs, Raruto
+             * @license   MIT
+             * @link      https://github.com/afragen/wp-dependency-installer
+             */
 
-/**
- * Exit if called directly.
- */
-if ( ! defined( 'WPINC' ) ) {
-EOD;
+            /**
+             * Exit if called directly.
+             */
+            if ( ! defined( 'WPINC' ) ) {
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-/**
- * WP Dependency Installer
- *
- * A lightweight class to add to WordPress plugins or themes to automatically install
- * required plugin dependencies. Uses a JSON config file to declare plugin dependencies.
- * It can install a plugin from w.org, GitHub, Bitbucket, GitLab, Gitea or direct URL.
- *
- * @package   BH_WC_Auto_Print_Shipping_Labels_Receipts_WP_Dependency_Installer
- * @author    Andy Fragen, Matt Gibbs, Raruto
- * @license   MIT
- * @link      https://github.com/afragen/wp-dependency-installer
- *
- * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
- */
+            <?php
+            /**
+             * WP Dependency Installer
+             *
+             * A lightweight class to add to WordPress plugins or themes to automatically install
+             * required plugin dependencies. Uses a JSON config file to declare plugin dependencies.
+             * It can install a plugin from w.org, GitHub, Bitbucket, GitLab, Gitea or direct URL.
+             *
+             * @package   BH_WC_Auto_Print_Shipping_Labels_Receipts_WP_Dependency_Installer
+             * @author    Andy Fragen, Matt Gibbs, Raruto
+             * @license   MIT
+             * @link      https://github.com/afragen/wp-dependency-installer
+             *
+             * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
+             */
 
-/**
- * Exit if called directly.
- */
-if ( ! defined( 'WPINC' ) ) {
-EOD;
+            /**
+             * Exit if called directly.
+             */
+            if ( ! defined( 'WPINC' ) ) {
+            EOD;
 
         foreach (range(0, 3) as $_) {
             $contents = $sut->addChangeDeclarationToPhpString(
@@ -366,33 +367,33 @@ EOD;
         $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
-<?php
-/*******************************************************************************
-* FPDF                                                                         *
-*                                                                              *
-* Version: 1.82                                                                *
-* Date:    2019-12-07                                                          *
-* Author:  Olivier PLATHEY                                                     *
-*******************************************************************************/
+            <?php
+            /*******************************************************************************
+            * FPDF                                                                         *
+            *                                                                              *
+            * Version: 1.82                                                                *
+            * Date:    2019-12-07                                                          *
+            * Author:  Olivier PLATHEY                                                     *
+            *******************************************************************************/
 
-define('FPDF_VERSION','1.82');
-EOD;
+            define('FPDF_VERSION','1.82');
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-/*******************************************************************************
-* FPDF                                                                         *
-*                                                                              *
-* Version: 1.82                                                                *
-* Date:    2019-12-07                                                          *
-* Author:  Olivier PLATHEY                                                     *
-*******************************************************************************
-* @license proprietary
-* Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
-*/
+            <?php
+            /*******************************************************************************
+            * FPDF                                                                         *
+            *                                                                              *
+            * Version: 1.82                                                                *
+            * Date:    2019-12-07                                                          *
+            * Author:  Olivier PLATHEY                                                     *
+            *******************************************************************************
+            * @license proprietary
+            * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
+            */
 
-define('FPDF_VERSION','1.82');
-EOD;
+            define('FPDF_VERSION','1.82');
+            EOD;
 
         foreach (range(0, 3) as $_) {
             $contents = $sut->addChangeDeclarationToPhpString(
@@ -421,42 +422,42 @@ EOD;
         $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-/**
- * Assert
- *
- * LICENSE
- *
- * This source file is subject to the MIT license that is bundled
- * with this package in the file LICENSE.txt.
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to kontakt@beberlei.de so I can send you a copy immediately.
- */
+            /**
+             * Assert
+             *
+             * LICENSE
+             *
+             * This source file is subject to the MIT license that is bundled
+             * with this package in the file LICENSE.txt.
+             * If you did not receive a copy of the license and are unable to
+             * obtain it through the world-wide-web, please send an email
+             * to kontakt@beberlei.de so I can send you a copy immediately.
+             */
 
-namespace Your_Domain\Assert;
-EOD;
+            namespace Your_Domain\Assert;
+            EOD;
 
         $expected = <<<'EOD'
-<?php
+            <?php
 
-/**
- * Assert
- *
- * LICENSE
- *
- * This source file is subject to the MIT license that is bundled
- * with this package in the file LICENSE.txt.
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to kontakt@beberlei.de so I can send you a copy immediately.
- *
- * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
- */
+            /**
+             * Assert
+             *
+             * LICENSE
+             *
+             * This source file is subject to the MIT license that is bundled
+             * with this package in the file LICENSE.txt.
+             * If you did not receive a copy of the license and are unable to
+             * obtain it through the world-wide-web, please send an email
+             * to kontakt@beberlei.de so I can send you a copy immediately.
+             *
+             * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
+             */
 
-namespace Your_Domain\Assert;
-EOD;
+            namespace Your_Domain\Assert;
+            EOD;
 
         foreach (range(0, 3) as $_) {
             $contents = $sut->addChangeDeclarationToPhpString(
@@ -490,27 +491,27 @@ EOD;
         $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
-<?php
-/**
- * WP Dependency Installer
- *
- * A lightweight class to add to WordPress plugins or themes to automatically install
- * required plugin dependencies. Uses a JSON config file to declare plugin dependencies.
- * It can install a plugin from w.org, GitHub, Bitbucket, GitLab, Gitea or direct URL.
- *
- * @package   BH_WC_Auto_Purchase_EasyPost_WP_Dependency_Installer
- * @author    Andy Fragen, Matt Gibbs, Raruto
- * @license   MIT
- * @link      https://github.com/afragen/wp-dependency-installer
- */
+            <?php
+            /**
+             * WP Dependency Installer
+             *
+             * A lightweight class to add to WordPress plugins or themes to automatically install
+             * required plugin dependencies. Uses a JSON config file to declare plugin dependencies.
+             * It can install a plugin from w.org, GitHub, Bitbucket, GitLab, Gitea or direct URL.
+             *
+             * @package   BH_WC_Auto_Purchase_EasyPost_WP_Dependency_Installer
+             * @author    Andy Fragen, Matt Gibbs, Raruto
+             * @license   MIT
+             * @link      https://github.com/afragen/wp-dependency-installer
+             */
 
-/**
- * Exit if called directly.
- */
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
-EOD;
+            /**
+             * Exit if called directly.
+             */
+            if ( ! defined( 'WPINC' ) ) {
+            	die;
+            }
+            EOD;
 
         // Attempt to replicate the failing test, since the contents seem the same but the input manner is different.
         $tmpfname = tempnam(sys_get_temp_dir(), 'Strauss-' . __CLASS__ . '-' . __FUNCTION__);
@@ -518,29 +519,29 @@ EOD;
         $contents = $this->getFileSystem()->read($tmpfname);
 
         $expected = <<<'EOD'
-<?php
-/**
- * WP Dependency Installer
- *
- * A lightweight class to add to WordPress plugins or themes to automatically install
- * required plugin dependencies. Uses a JSON config file to declare plugin dependencies.
- * It can install a plugin from w.org, GitHub, Bitbucket, GitLab, Gitea or direct URL.
- *
- * @package   BH_WC_Auto_Purchase_EasyPost_WP_Dependency_Installer
- * @author    Andy Fragen, Matt Gibbs, Raruto
- * @license   MIT
- * @link      https://github.com/afragen/wp-dependency-installer
- *
- * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
- */
+            <?php
+            /**
+             * WP Dependency Installer
+             *
+             * A lightweight class to add to WordPress plugins or themes to automatically install
+             * required plugin dependencies. Uses a JSON config file to declare plugin dependencies.
+             * It can install a plugin from w.org, GitHub, Bitbucket, GitLab, Gitea or direct URL.
+             *
+             * @package   BH_WC_Auto_Purchase_EasyPost_WP_Dependency_Installer
+             * @author    Andy Fragen, Matt Gibbs, Raruto
+             * @license   MIT
+             * @link      https://github.com/afragen/wp-dependency-installer
+             *
+             * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
+             */
 
-/**
- * Exit if called directly.
- */
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
-EOD;
+            /**
+             * Exit if called directly.
+             */
+            if ( ! defined( 'WPINC' ) ) {
+            	die;
+            }
+            EOD;
 
         $actual = $sut->addChangeDeclarationToPhpString(
             $contents,
@@ -567,29 +568,29 @@ EOD;
         $sut = new Licenser($config, $dependencies, $author, $this->getInMemoryFileSystem());
 
         $contents = <<<'EOD'
-<?php
+            <?php
 
-?>
+            ?>
 
-<?php
+            <?php
 
-?>
-EOD;
+            ?>
+            EOD;
 
         $expected = <<<'EOD'
-<?php
-/**
- * @license MIT
- *
- * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
- */
+            <?php
+            /**
+             * @license MIT
+             *
+             * Modified by BrianHenryIE on 25-April-2021 using {@see https://github.com/BrianHenryIE/strauss}.
+             */
 
-?>
+            ?>
 
-<?php
+            <?php
 
-?>
-EOD;
+            ?>
+            EOD;
 
         foreach (range(0, 3) as $_) {
             $contents = $sut->addChangeDeclarationToPhpString(

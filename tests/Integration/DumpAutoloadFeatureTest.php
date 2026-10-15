@@ -1,4 +1,5 @@
 <?php
+
 /**
  * After files have been copied and prefixed, we use Composer's tools to generate the autoload files.
  */
@@ -18,22 +19,22 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
     public function testDumpAutoload(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/testdumpautoload",
-  "require": {
-    "symfony/polyfill-ctype": "*"
-  },
-  "require-dev": {
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Dump_Autoload\\",
-      "classmap_prefix": "Dump_Autoload_",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/testdumpautoload",
+              "require": {
+                "symfony/polyfill-ctype": "*"
+              },
+              "require-dev": {
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\Dump_Autoload\\",
+                  "classmap_prefix": "Dump_Autoload_",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -49,10 +50,10 @@ EOD;
         $this->assertEquals(0, $composerDumpAutoloadExitCode, implode(PHP_EOL, $composerDumpAutoloadOutput));
 
         $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/composer/autoload_files.php');
-//        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_files.php');
+        //        $vendorAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_files.php');
         $vendorPrefixedAutoloadFilesPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_files.php');
 
         $this->assertStringContainsString('symfony/polyfill-ctype', $vendorPrefixedAutoloadFilesPhpString);
-//        $this->assertStringNotContainsString('symfony/polyfill-ctype', $vendorAutoloadFilesPhpString);
+        //        $this->assertStringNotContainsString('symfony/polyfill-ctype', $vendorAutoloadFilesPhpString);
     }
 }

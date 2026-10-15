@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/coenjacobs/mozart/blob/3b1243ca8505fa6436569800dc34269178930f39/tests/replacers/ClassmapReplacerIntegrationTest.php
  */
@@ -13,7 +14,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue106Test extends IntegrationTestCase
 {
-
     /**
      * Issue #106, multiple classmap prefixing.
      *
@@ -27,20 +27,20 @@ class MozartIssue106Test extends IntegrationTestCase
         self::markTestIncomplete('Polyfills are no longer prefixed.');
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-106",
-	"require": {
-		"symfony/polyfill-intl-idn":  "1.22.0",
-        "symfony/polyfill-intl-normalizer": "1.22.0"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M106\\",
-			"classmap_prefix": "BrianHenryIE_M106_"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-106",
+            	"require": {
+            		"symfony/polyfill-intl-idn":  "1.22.0",
+                    "symfony/polyfill-intl-normalizer": "1.22.0"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M106\\",
+            			"classmap_prefix": "BrianHenryIE_M106_"
+            		}
+            	}
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -51,7 +51,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BrianHenryIE_M106_BrianHenryIE_Strauss_Normalizer extends', $php_string, 'Double prefixing problem still present.');

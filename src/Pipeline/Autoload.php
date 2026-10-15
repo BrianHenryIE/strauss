@@ -1,6 +1,9 @@
 <?php
+
 /**
  * Generate an `autoload.php` file in the root of the target directory.
+ *
+ * @package brianhenryie/strauss
  *
  * @see \Composer\Autoload\ClassMapGenerator
  */
@@ -23,6 +26,12 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Seld\JsonLint\ParsingException;
 
+/**
+ * Does nothing unless classmap output is enabled. When the target directory is not `vendor`, first uses
+ * {@see InstalledJson} to rewrite the target directory's `composer/installed.json`, then runs {@see DumpAutoload}
+ * (built with a {@see Prefixer}, {@see FileEnumerator} and {@see ComposerAutoloadGeneratorFactory}) to write the
+ * autoloaders, and finally uses {@see Cleanup::stripPharPrefix()} on the generated `composer` directory.
+ */
 class Autoload
 {
     use LoggerAwareTrait;
@@ -45,8 +54,10 @@ class Autoload
     /**
      * Autoload constructor.
      *
-     * @param StraussConfig&AutoloadConfigInterface $config
-     * @param array<string, array<string>> $discoveredFilesAutoloaders
+     * @param StraussConfig&AutoloadConfigInterface $config                     Strauss config, used for target/vendor directories and classmap output settings.
+     * @param array<string, array<string>>          $discoveredFilesAutoloaders Package path => relative file paths of `files` autoloaders (currently unused; callers pass []).
+     * @param FileSystem                            $filesystem                 Used to read and write the autoload and `installed.json` files.
+     * @param ?LoggerInterface                      $logger                     Optional logger; a NullLogger is used when null.
      */
     public function __construct(
         StraussConfig $config,
@@ -61,7 +72,9 @@ class Autoload
     }
 
     /**
-     * @param DependenciesCollection $flatDependencyTree
+     * @param DependenciesCollection $flatDependencyTree All dependencies (flattened), used to update package paths in the target directory's installed.json.
+     * @param DiscoveredSymbols      $discoveredSymbols  Discovered symbols whose namespace replacements are applied to the installed.json autoload keys.
+     *
      * @throws FilesystemException
      * @throws ParsingException
      * @throws Exception

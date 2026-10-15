@@ -1,8 +1,11 @@
 <?php
+
 /**
  * One worker process and the state of the chunk it is working on.
  *
  * @internal Used by {@see WorkerPool}.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -12,19 +15,30 @@ namespace BrianHenryIE\Strauss\Pipeline\Parallel;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 
+/**
+ * Wraps a Symfony {@see Process} and the {@see InputStream} feeding its stdin. Holds the paths still pending in the
+ * current chunk and when that chunk started, so the pool can detect completion and timeouts, and buffers stdout so
+ * that {@see Worker::readLines()} only returns complete newline-terminated messages.
+ */
 class Worker
 {
     public Process $process;
 
     public InputStream $input;
 
-    /** @var array<string, true> Files sent in the current chunk, keyed by path, removed as results arrive. */
+    /**
+     * @var array<string, true> Files sent in the current chunk, keyed by path, removed as results arrive.
+     */
     public array $pendingFiles = [];
 
-    /** @var ?float Null when the worker has no outstanding chunk. */
+    /**
+     * @var ?float Null when the worker has no outstanding chunk.
+     */
     public ?float $chunkStartedAt = null;
 
-    /** Output received but not yet terminated by a newline. */
+    /**
+     * Output received but not yet terminated by a newline.
+     */
     public string $buffer = '';
 
     public function __construct(Process $process, InputStream $input)

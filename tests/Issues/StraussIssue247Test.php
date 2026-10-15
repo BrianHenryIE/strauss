@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Fix invalid constant replacements.
  *
@@ -15,7 +16,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue247Test extends IntegrationTestCase
 {
-
     public function test_return_type_double_prefixed(): void
     {
         $this->markTestSkippedOnPhpVersionBelow('8.1.0');
@@ -23,39 +23,39 @@ class StraussIssue247Test extends IntegrationTestCase
         /**
          * `Expected discovered file at ../../../../../../../stringify.php not found in package respect/stringifier`.
          */
-//        $this->expectWarningLogs();
+        //        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
-{
-    "name": "issue247/webfx-wordpress-plugin-pokemon",
-    "require": {
-        "codekaizen/wp-package-auto-updater": "2.0.2"
-    },
-    "autoload": {
-        "psr-4": {
-            "WebFX\\WebFXWordPressPluginPokemon\\": "includes/"
-        }
-    },
-    "extra": {
-        "strauss": {
-            "target_directory": "vendor",
-            "constant_prefix": "WEBFX_WORDPRESS_PLUGIN_POKEMON_DEPENDENCIES_",
-            "override_autoload": {
-                "respect/stringifier": {
+            {
+                "name": "issue247/webfx-wordpress-plugin-pokemon",
+                "require": {
+                    "codekaizen/wp-package-auto-updater": "2.0.2"
+                },
+                "autoload": {
                     "psr-4": {
-                        "Respect\\Stringifier\\": "src/"
-                    },
-                    "files": [
-                        "stringify.php"
-                    ]
-                }
+                        "WebFX\\WebFXWordPressPluginPokemon\\": "includes/"
+                    }
+                },
+                "extra": {
+                    "strauss": {
+                        "target_directory": "vendor",
+                        "constant_prefix": "WEBFX_WORDPRESS_PLUGIN_POKEMON_DEPENDENCIES_",
+                        "override_autoload": {
+                            "respect/stringifier": {
+                                "psr-4": {
+                                    "Respect\\Stringifier\\": "src/"
+                                },
+                                "files": [
+                                    "stringify.php"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "minimum-stability": "stable",
+                "prefer-stable": true
             }
-        }
-    },
-    "minimum-stability": "stable",
-    "prefer-stable": true
-}
-EOD;
+            EOD;
 
         chdir($this->testsWorkingDir);
 

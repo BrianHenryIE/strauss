@@ -4,6 +4,8 @@
  * Symbols found in autoloaded files should be prefixed, unless:
  * * The `exclude_from_prefix` rules apply to the discovered symbols.
  * * The file is in `exclude_from_copy`
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -20,6 +22,12 @@ use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Walks every {@see DiscoveredSymbol} in the {@see DiscoveredSymbols} and calls `setDoRename()` on it. A symbol starts
+ * as renamable if it is autoloaded or its namespace matches a `namespace_replacement_patterns` key, then the
+ * {@see MarkSymbolsForRenamingConfigInterface} package, namespace and file-pattern exclusions (and the constant-only
+ * `exclude_constants` rules for {@see ConstantSymbol}s) are checked against it.
+ */
 class MarkSymbolsForRenaming
 {
     use LoggerAwareTrait;
@@ -30,8 +38,8 @@ class MarkSymbolsForRenaming
 
     public function __construct(
         MarkSymbolsForRenamingConfigInterface $config,
-        FileSystem                            $filesystem,
-        LoggerInterface                       $logger
+        FileSystem $filesystem,
+        LoggerInterface $logger
     ) {
         $this->config = $config;
         $this->filesystem = $filesystem;
@@ -44,13 +52,17 @@ class MarkSymbolsForRenaming
      * If a namespace matches a namespace replacement pattern, then doRename needs to be set true.
      *
      * There are packages that have conditionally loaded classes, e.g. `art4/requests-psr18-adapter`'s `v1-compat`.
+     *
+     * @param DiscoveredSymbols $symbols All discovered symbols; each one's doRename flag is set.
      */
     public function scanSetDoRename(DiscoveredSymbols $symbols): void
     {
         $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
 
         $allSymbols = $symbols->getSymbols();
-        /** @var NamespaceSymbol|NamespacedSymbol $symbol */
+        /**
+ * @var NamespaceSymbol|NamespacedSymbol $symbol
+*/
         foreach ($allSymbols as $symbol) {
             if ($symbol instanceof NamespaceSymbol && $symbol->getOriginalFqdnName() === '\\') {
                 continue;
@@ -86,16 +98,17 @@ class MarkSymbolsForRenaming
                 continue;
             }
 
-//            if ($this->isSymbolFoundInFileThatIsNotCopied($symbol)) {
-//                if (count($symbol->getSourceFiles())===1) {
-//                    $symbol->setDoRename(false);
-//                }
-//            }
+            //            if ($this->isSymbolFoundInFileThatIsNotCopied($symbol)) {
+            //                if (count($symbol->getSourceFiles())===1) {
+            //                    $symbol->setDoRename(false);
+            //                }
+            //            }
             /**
              * I'm not sure what this was added for, but psr-0 namespaces that are found when scanning autoload
              * keys are used to check do files exist under that directory.
              */
-            if (!$this->config->isTargetDirectoryVendor()
+            if (
+                !$this->config->isTargetDirectoryVendor()
                 && !$this->isSymbolFoundInFileThatIsCopied($symbol)
                 && !($symbol instanceof NamespaceSymbol)
             ) {
@@ -110,13 +123,15 @@ class MarkSymbolsForRenaming
 
     /**
      * Check the `exclude_from_prefix` rules for this symbol's package name, namespace and file-paths.
+     *
+     * @param DiscoveredSymbol $symbol The symbol to check.
      */
     protected function excludeFromPrefix(DiscoveredSymbol $symbol): bool
     {
         return $this->isExcludeFromPrefixPackage($symbol->getPackageName())
             || $this->isExcludedFromPrefixFilePattern($symbol->getSourceFiles())
-            || ( $symbol instanceof NamespacedSymbol && $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName()))
-            || ( $symbol instanceof NamespaceSymbol && $this->isExcludeFromPrefixNamespace($symbol->getOriginalFqdnName()));
+            || ($symbol instanceof NamespacedSymbol && $this->isExcludeFromPrefixNamespace($symbol->getNamespaceName()))
+            || ($symbol instanceof NamespaceSymbol && $this->isExcludeFromPrefixNamespace($symbol->getOriginalFqdnName()));
     }
 
     /**
@@ -125,6 +140,8 @@ class MarkSymbolsForRenaming
      * `config.strauss.exclude_from_copy`.
      *
      * This requires {@see FileCopyScanner} to have been run first.
+     *
+     * @param DiscoveredSymbol $symbol The symbol whose source files are checked.
      */
     protected function isSymbolFoundInFileThatIsNotCopied(DiscoveredSymbol $symbol): bool
     {
@@ -154,6 +171,8 @@ class MarkSymbolsForRenaming
 
     /**
      * Config: `extra.strauss.exclude_from_copy.packages`.
+     *
+     * @param ?string $packageName The symbol's Composer package name, e.g. `vendor/package`; null when not from a package.
      */
     protected function isExcludeFromCopyPackage(?string $packageName): bool
     {
@@ -162,6 +181,8 @@ class MarkSymbolsForRenaming
 
     /**
      * Config: `extra.strauss.exclude_from_prefix.packages`.
+     *
+     * @param ?string $packageName The symbol's Composer package name, e.g. `vendor/package`; null when not from a package.
      */
     protected function isExcludeFromPrefixPackage(?string $packageName): bool
     {
@@ -169,11 +190,13 @@ class MarkSymbolsForRenaming
             return false;
         }
 
-        if (in_array(
-            $packageName,
-            $this->config->getExcludePackagesFromPrefixing(),
-            true
-        )) {
+        if (
+            in_array(
+                $packageName,
+                $this->config->getExcludePackagesFromPrefixing(),
+                true
+            )
+        ) {
             return true;
         }
 
@@ -182,6 +205,9 @@ class MarkSymbolsForRenaming
 
     /**
      * Config: `extra.strauss.exclude_from_prefix.namespaces`.
+     *
+     * @param ?string $namespace The symbol's namespace, matched by prefix against each excluded namespace; empty or
+     *                           null is never excluded.
      */
     protected function isExcludeFromPrefixNamespace(?string $namespace): bool
     {
@@ -203,11 +229,13 @@ class MarkSymbolsForRenaming
      *
      * Config: `extra.strauss.exclude_from_prefix.file_patterns`.
      *
-     * @param array<FileBase> $files
+     * @param array<FileBase> $files The files the symbol is defined in; a matching file is also marked not to be prefixed.
      */
     protected function isExcludedFromPrefixFilePattern(array $files): bool
     {
-        /** @var File $file */
+        /**
+ * @var File $file
+*/
         foreach ($files as $file) {
             $absoluteFilePath = $file->getTargetAbsolutePath();
             if (empty($absoluteFilePath)) {
@@ -227,6 +255,8 @@ class MarkSymbolsForRenaming
 
     /**
      * Config: extra.strauss.exclude_constants – applies only to constants.
+     *
+     * @param ConstantSymbol $symbol The constant to check.
      */
     protected function isExcludeConstants(ConstantSymbol $symbol): bool
     {
@@ -258,11 +288,13 @@ class MarkSymbolsForRenaming
     }
 
     /**
-     * @param array<FileBase> $files
+     * @param array<FileBase> $files The files the constant is defined in, matched by vendor-relative path.
      */
     protected function isExcludedConstantsFilePattern(array $files): bool
     {
-        /** @var File $file */
+        /**
+ * @var File $file
+*/
         foreach ($files as $file) {
             $absoluteFilePath = $file->getTargetAbsolutePath();
             if (empty($absoluteFilePath)) {
@@ -285,6 +317,9 @@ class MarkSymbolsForRenaming
 
     /**
      * TODO: This should be moved into the class parsing the config.
+     *
+     * @param string $pattern A regex from config, with or without delimiters; `#` delimiters are added when its first
+     *                        and last characters differ.
      */
     private function preparePattern(string $pattern): string
     {

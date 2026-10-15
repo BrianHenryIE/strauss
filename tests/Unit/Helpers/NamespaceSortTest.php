@@ -19,7 +19,7 @@ class NamespaceSortTest extends TestCase
                     'Company\\Project\\Foo\\Bar\\Baz\\Q',
                 ],
                 'order' => NamespaceSort::LONGEST,
-                'expectedFirst' => 'Company\\Project\\Foo\\Bar\\Baz\\Qux'
+                'expectedFirst' => 'Company\\Project\\Foo\\Bar\\Baz\\Qux',
             ],
             'more levels should ignore the string length' => [
                 'inputs' => [
@@ -27,7 +27,7 @@ class NamespaceSortTest extends TestCase
                     'Company\\ProjectFooFoo\\BarBar\\BazBaz\\Qux',
                 ],
                 'order' => NamespaceSort::LONGEST,
-                'expectedFirst' => 'Company\\Project\\Foo\\Bar\\Baz\\Qux'
+                'expectedFirst' => 'Company\\Project\\Foo\\Bar\\Baz\\Qux',
             ],
             'zero length input compared to a regular namespace' => [
                 'inputs' => [
@@ -71,6 +71,6 @@ class NamespaceSortTest extends TestCase
 
         $firstSorted = $inputs[0];
 
-        $this->assertEquals($expectedFirst, $firstSorted, $expectedFirst . ' should be ' . ( $order ? '`SHORTEST`' : '`LONGEST`' ) . ' in the sorted array');
+        $this->assertEquals($expectedFirst, $firstSorted, $expectedFirst . ' should be ' . ($order ? '`SHORTEST`' : '`LONGEST`') . ' in the sorted array');
     }
 }

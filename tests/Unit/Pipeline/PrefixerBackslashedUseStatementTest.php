@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `use \Bar\Baz;` — an import written with a leading backslash — parses as a plain name, not a fully-qualified one
  * (imports are inherently fully qualified). The replacement logic must treat it exactly like `use Bar\Baz;`, in
@@ -41,11 +42,11 @@ class PrefixerBackslashedUseStatementTest extends TestCase
     public function testBackslashedUseOfGlobalClassInNamespaceIsAliased(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Foo;
-use \GlobalThing;
-$a = new GlobalThing();
-EOD;
+            <?php
+            namespace Foo;
+            use \GlobalThing;
+            $a = new GlobalThing();
+            EOD;
 
         $file = new File('/a/path.php', 'path.php', '/a/path.php');
         $result = $this->buildPrefixer()->replaceInString($this->buildGlobalClassSymbols($file), $contents, $file);
@@ -59,10 +60,10 @@ EOD;
     public function testBackslashedUseOfGlobalClassInGlobalNamespaceIsRenamed(): void
     {
         $contents = <<<'EOD'
-<?php
-use \GlobalThing;
-$a = new GlobalThing();
-EOD;
+            <?php
+            use \GlobalThing;
+            $a = new GlobalThing();
+            EOD;
 
         $file = new File('/a/path.php', 'path.php', '/a/path.php');
         $result = $this->buildPrefixer()->replaceInString($this->buildGlobalClassSymbols($file), $contents, $file);

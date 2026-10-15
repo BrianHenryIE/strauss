@@ -6,10 +6,9 @@ use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 
 trait CustomIntegrationTestAssertionsTrait
 {
-
     protected function assertFileNotExistsInFileSystem(string $filePath, ?FileSystem $filesystem = null, ?string $message = null): void
     {
-        $filesystem = $filesystem ?? $this->getFileSystem();
+        $filesystem ??= $this->getFileSystem();
         $result = $filesystem->fileExists($filePath);
         $this->assertFalse(
             $result,
@@ -19,7 +18,7 @@ trait CustomIntegrationTestAssertionsTrait
 
     protected function assertFileExistsInFileSystem(string $filePath, ?FileSystem $filesystem = null, ?string $message = null): void
     {
-        $filesystem = $filesystem ?? $this->getFileSystem();
+        $filesystem ??= $this->getFileSystem();
 
         $result = $filesystem->fileExists($filePath);
 
@@ -33,7 +32,7 @@ trait CustomIntegrationTestAssertionsTrait
 
     protected function assertDirectoryNotExistsInFileSystem(string $directoryPath, ?FileSystem $filesystem = null, ?string $message = null): void
     {
-        $filesystem = $filesystem ?? $this->getFileSystem();
+        $filesystem ??= $this->getFileSystem();
         $result = $filesystem->directoryExists($directoryPath);
         $this->assertFalse(
             $result,
@@ -43,7 +42,7 @@ trait CustomIntegrationTestAssertionsTrait
 
     protected function assertDirectoryExistsInFileSystem(string $directoryPath, ?FileSystem $filesystem = null, ?string $message = null): void
     {
-        $filesystem = $filesystem ?? $this->getFileSystem();
+        $filesystem ??= $this->getFileSystem();
 
         $result = $filesystem->directoryExists($directoryPath);
 

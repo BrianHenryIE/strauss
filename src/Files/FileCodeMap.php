@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Everything Strauss knows about one PHP file after parsing it once: the symbols it defines (by type), every
  * usage of a symbol (by type), and every comment, string and inline-HTML region that may contain symbol names
@@ -10,6 +11,8 @@
  *
  * A value object: it describes one exact contents string ({@see self::matchesContent()}) and is never modified.
  * When the Prefixer changes the contents it builds a new map for the result.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -18,9 +21,17 @@ namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition;
 
+/**
+ * Holds the {@see CodeLocation}s sorted by start offset, the {@see SymbolDefinition}s in declaration order, the
+ * declared namespace names, and a CRC32 checksum of the contents. Definitions, usages and regions are read by
+ * filtering the one location list by type, and {@see self::matchesContent()} compares checksums to detect a
+ * stale map.
+ */
 class FileCodeMap
 {
-    /** @var CodeLocation[] Sorted by start position. */
+    /**
+     * @var CodeLocation[] Sorted by start position.
+     */
     protected array $locations;
 
     /**
@@ -44,9 +55,10 @@ class FileCodeMap
     protected int $contentsCrc32;
 
     /**
-     * @param CodeLocation[] $locations
-     * @param SymbolDefinition[] $definitions
-     * @param string[] $namespaceNames
+     * @param CodeLocation[]     $locations      Every definition, usage and text region found in the file, in any order.
+     * @param string             $contents       The file contents the locations were calculated for; only its CRC32 checksum is kept.
+     * @param SymbolDefinition[] $definitions    The symbols the file defines, in declaration order.
+     * @param string[]           $namespaceNames Declared namespace names, in source order; `\` for global. Empty means global.
      */
     public function __construct(array $locations, string $contents, array $definitions = [], array $namespaceNames = ['\\'])
     {
@@ -66,19 +78,25 @@ class FileCodeMap
     }
 
     /**
+     * @param string ...$types One or more {@see CodeLocation} type constants to match.
+     *
      * @return CodeLocation[]
      */
     public function getLocationsOfType(string ...$types): array
     {
         $typesLookup = array_fill_keys($types, true);
-        return array_values(array_filter(
-            $this->locations,
-            fn(CodeLocation $location) => isset($typesLookup[$location->getType()])
-        ));
+        return array_values(
+            array_filter(
+                $this->locations,
+                fn(CodeLocation $location) => isset($typesLookup[$location->getType()])
+            )
+        );
     }
 
     /**
      * The symbols this file defines, optionally of one {@see SymbolDefinition::TYPES} type.
+     *
+     * @param ?string $type A {@see SymbolDefinition::TYPES} type to filter by; null for all definitions.
      *
      * @return SymbolDefinition[]
      */
@@ -87,10 +105,12 @@ class FileCodeMap
         if (is_null($type)) {
             return $this->definitions;
         }
-        return array_values(array_filter(
-            $this->definitions,
-            fn(SymbolDefinition $definition) => $type === $definition->getType()
-        ));
+        return array_values(
+            array_filter(
+                $this->definitions,
+                fn(SymbolDefinition $definition) => $type === $definition->getType()
+            )
+        );
     }
 
     /**
@@ -109,6 +129,8 @@ class FileCodeMap
 
     /**
      * Every use of a symbol name in this file, optionally of one {@see CodeLocation::USAGE_TYPES} type.
+     *
+     * @param ?string $type A {@see CodeLocation::USAGE_TYPES} type to filter by; null for all usage types.
      *
      * @return CodeLocation[]
      */
@@ -169,6 +191,8 @@ class FileCodeMap
 
     /**
      * Do the given contents match the contents this map's positions were calculated for?
+     *
+     * @param string $contents The file contents to compare against, by CRC32 checksum.
      */
     public function matchesContent(string $contents): bool
     {

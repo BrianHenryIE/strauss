@@ -1,6 +1,9 @@
 <?php
+
 /**
  * A file without a dependency means the project src files and the vendor/composer autoload files.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Files;
@@ -8,6 +11,12 @@ namespace BrianHenryIE\Strauss\Files;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 
+/**
+ * Holds the source absolute path, the vendor-relative path (which cannot always be inferred through a symlink) and
+ * the target path, plus the copy/prefix/update/delete flags pipeline steps set on it. Collects the
+ * {@see DiscoveredSymbols} defined in the file, its {@see FileCodeMap} and the edits planned against that map;
+ * replacing the map discards the planned edits.
+ */
 class File implements FileBase
 {
     /**
@@ -89,7 +98,7 @@ class File implements FileBase
     /**
      * Some combination of file copy exclusions and vendor-dir == target-dir
      *
-     * @param bool $doCopy
+     * @param bool $doCopy True to copy the file to the target directory; false to leave it in place.
      */
     public function setDoCopy(bool $doCopy): void
     {
@@ -113,6 +122,8 @@ class File implements FileBase
 
     /**
      * Should symbols discovered in this file be prefixed. (i.e. class definitions etc., not usages)
+     *
+     * @param bool $doPrefix True if symbols defined in this file should be prefixed.
      */
     public function setDoPrefix(bool $doPrefix): void
     {
@@ -134,7 +145,7 @@ class File implements FileBase
      * For marking moved files to be deleted when delete_vendor_files is enabled. (should that be deprecated?)
      * For marking files that are symlinked as not-to-be-deleted.
      *
-     * @param bool $doDelete
+     * @param bool $doDelete True to delete the source file after copying; false to keep it.
      */
     public function setDoDelete(bool $doDelete): void
     {
@@ -152,6 +163,8 @@ class File implements FileBase
     }
 
     /**
+     * @param bool $didDelete Whether the file has been deleted from the vendor directory.
+     *
      * @see Cleanup::doIsDeleteVendorFiles()
      */
     public function setDidDelete(bool $didDelete): void
@@ -222,6 +235,8 @@ class File implements FileBase
 
     /**
      * Replacing the code map discards any planned edits: a plan is only valid for the map it was made against.
+     *
+     * @param ?FileCodeMap $codeMap The parsed code map for the file's current contents; null to clear it.
      */
     public function setCodeMap(?FileCodeMap $codeMap): void
     {

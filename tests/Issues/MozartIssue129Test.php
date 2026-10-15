@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Namespaces with escaped backslashes in strings are not replaced.
  *
@@ -30,7 +31,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  */
 class MozartIssue129Test extends TestCase
 {
-
     /**
      * @author BrianHenryIE
      *
@@ -78,59 +78,59 @@ class MozartIssue129Test extends TestCase
         $fromTo = [];
 
         $contents = <<<'EOD'
-$baseNamespace = "\Example\Sdk\Endpoints";
-EOD;
+            $baseNamespace = "\Example\Sdk\Endpoints";
+            EOD;
         $expected = <<<'EOD'
-$baseNamespace = "\Strauss\Example\Sdk\Endpoints";
-EOD;
+            $baseNamespace = "\Strauss\Example\Sdk\Endpoints";
+            EOD;
         $fromTo[] = [ $contents, $expected];
 
         $contents = <<<'EOD'
-$baseNamespace = "Example\\Sdk\\Endpoints";
-EOD;
+            $baseNamespace = "Example\\Sdk\\Endpoints";
+            EOD;
         $expected = <<<'EOD'
-$baseNamespace = "Strauss\\Example\\Sdk\\Endpoints";
-EOD;
+            $baseNamespace = "Strauss\\Example\\Sdk\\Endpoints";
+            EOD;
         $fromTo[] = [ $contents, $expected];
 
         $contents = <<<'EOD'
-$baseNamespace = "Example\Sdk\Endpoints";
-EOD;
+            $baseNamespace = "Example\Sdk\Endpoints";
+            EOD;
         $expected = <<<'EOD'
-$baseNamespace = "Strauss\Example\Sdk\Endpoints";
-EOD;
+            $baseNamespace = "Strauss\Example\Sdk\Endpoints";
+            EOD;
         $fromTo[] = [ $contents, $expected];
 
         $contents = <<<'EOD'
-$baseNamespace = '\\Example\\Sdk\\Endpoints';
-EOD;
+            $baseNamespace = '\\Example\\Sdk\\Endpoints';
+            EOD;
         $expected = <<<'EOD'
-$baseNamespace = '\\Strauss\\Example\\Sdk\\Endpoints';
-EOD;
+            $baseNamespace = '\\Strauss\\Example\\Sdk\\Endpoints';
+            EOD;
         $fromTo[] = [ $contents, $expected];
 
         $contents = <<<'EOD'
-$baseNamespace = '\Example\Sdk\Endpoints';
-EOD;
+            $baseNamespace = '\Example\Sdk\Endpoints';
+            EOD;
         $expected = <<<'EOD'
-$baseNamespace = '\Strauss\Example\Sdk\Endpoints';
-EOD;
+            $baseNamespace = '\Strauss\Example\Sdk\Endpoints';
+            EOD;
         $fromTo[] = [ $contents, $expected];
 
         $contents = <<<'EOD'
-$baseNamespace = 'Example\\Sdk\\Endpoints';
-EOD;
+            $baseNamespace = 'Example\\Sdk\\Endpoints';
+            EOD;
         $expected = <<<'EOD'
-$baseNamespace = 'Strauss\\Example\\Sdk\\Endpoints';
-EOD;
+            $baseNamespace = 'Strauss\\Example\\Sdk\\Endpoints';
+            EOD;
         $fromTo[] = [ $contents, $expected];
 
         $contents = <<<'EOD'
-$baseNamespace = 'Example\Sdk\Endpoints';
-EOD;
+            $baseNamespace = 'Example\Sdk\Endpoints';
+            EOD;
         $expected = <<<'EOD'
-$baseNamespace = 'Strauss\Example\Sdk\Endpoints';
-EOD;
+            $baseNamespace = 'Strauss\Example\Sdk\Endpoints';
+            EOD;
         $fromTo[] = [ $contents, $expected];
 
         return $fromTo;

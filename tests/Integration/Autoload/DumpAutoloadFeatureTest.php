@@ -91,38 +91,38 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
     public static function provider_optimize_autoloader_for_prefixed_autoload_real(): array
     {
         $defaultOptimize = <<<'EOD'
-{
-    "name": "brianhenryie/dump-autoload-feature-test-optimize-default",
-    "require": {
-        "psr/log": "*"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "classmap_prefix": "BrianHenryIE_Strauss_",
-            "target_directory": "vendor-prefixed",
-            "delete_vendor_packages": true
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/dump-autoload-feature-test-optimize-default",
+                "require": {
+                    "psr/log": "*"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "classmap_prefix": "BrianHenryIE_Strauss_",
+                        "target_directory": "vendor-prefixed",
+                        "delete_vendor_packages": true
+                    }
+                }
+            }
+            EOD;
         $disableOptimize = <<<'EOD'
-{
-    "name": "brianhenryie/dump-autoload-feature-test-optimize-disabled",
-    "require": {
-        "psr/log": "*"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "classmap_prefix": "BrianHenryIE_Strauss_",
-            "target_directory": "vendor-prefixed",
-            "delete_vendor_packages": true,
-            "optimize_autoloader": false
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/dump-autoload-feature-test-optimize-disabled",
+                "require": {
+                    "psr/log": "*"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "classmap_prefix": "BrianHenryIE_Strauss_",
+                        "target_directory": "vendor-prefixed",
+                        "delete_vendor_packages": true,
+                        "optimize_autoloader": false
+                    }
+                }
+            }
+            EOD;
         return [
             'key_omitted_defaults_to_optimized' => [$defaultOptimize, true],
             'explicit_false_disables_authoritative' => [$disableOptimize, false],
@@ -174,47 +174,47 @@ EOD;
     public static function provider_fix_double_loading_of_files_autoloaders(): array
     {
         $withoutRootAutoload = <<<'EOD'
-{
-    "name": "brianhenryie/dump-autoload-feature-test",
-    "autoload": {
-        "files": [
-            "src/DumpAutoloadFeatureTest.php"
-        ]
-    },
-    "require": {
-        "symfony/deprecation-contracts": "*"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "target_directory": "vendor-prefixed",
-            "delete_vendor_packages": true
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/dump-autoload-feature-test",
+                "autoload": {
+                    "files": [
+                        "src/DumpAutoloadFeatureTest.php"
+                    ]
+                },
+                "require": {
+                    "symfony/deprecation-contracts": "*"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "target_directory": "vendor-prefixed",
+                        "delete_vendor_packages": true
+                    }
+                }
+            }
+            EOD;
 
         $withRootAutoload = <<<'EOD'
-{
-    "name": "brianhenryie/dump-autoload-feature-test",
-    "autoload": {
-        "files": [
-            "src/DumpAutoloadFeatureTest.php"
-        ]
-    },
-    "require": {
-        "symfony/deprecation-contracts": "*"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "target_directory": "vendor-prefixed",
-            "delete_vendor_packages": true,
-            "include_root_autoload": true
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/dump-autoload-feature-test",
+                "autoload": {
+                    "files": [
+                        "src/DumpAutoloadFeatureTest.php"
+                    ]
+                },
+                "require": {
+                    "symfony/deprecation-contracts": "*"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "target_directory": "vendor-prefixed",
+                        "delete_vendor_packages": true,
+                        "include_root_autoload": true
+                    }
+                }
+            }
+            EOD;
 
         return [
             'withoutRootAutoload' => [$withoutRootAutoload, false],
@@ -237,12 +237,12 @@ EOD;
         mkdir($this->testsWorkingDir . '/src');
 
         $classContent = <<<'EOD'
-<?php
+            <?php
 
-namespace BrianHenryIE\Strauss;
+            namespace BrianHenryIE\Strauss;
 
-class DumpAutoloadFeatureTest {}
-EOD;
+            class DumpAutoloadFeatureTest {}
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/src/DumpAutoloadFeatureTest.php', $classContent);
 
@@ -276,69 +276,69 @@ EOD;
     public static function provider_option_include_root_autoload(): array
     {
         $rootAutoloadNotSet = <<<'EOD'
-{
-    "name": "brianhenryie/dump-autoload-feature-test",
-    "autoload": {
-        "psr-4": {
-            "BrianHenryIE\\TestStrauss\\": "src/"
-        }
-    },
-    "require": {
-        "symfony/deprecation-contracts": "*"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "target_directory": "vendor-prefixed",
-            "delete_vendor_packages": true
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/dump-autoload-feature-test",
+                "autoload": {
+                    "psr-4": {
+                        "BrianHenryIE\\TestStrauss\\": "src/"
+                    }
+                },
+                "require": {
+                    "symfony/deprecation-contracts": "*"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "target_directory": "vendor-prefixed",
+                        "delete_vendor_packages": true
+                    }
+                }
+            }
+            EOD;
 
         $rootAutoloadSetTrue = <<<'EOD'
-{
-    "name": "brianhenryie/dump-autoload-feature-test",
-    "autoload": {
-        "psr-4": {
-            "BrianHenryIE\\TestStrauss\\": "src/"
-        }
-    },
-    "require": {
-        "symfony/deprecation-contracts": "*"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "target_directory": "vendor-prefixed",
-            "delete_vendor_packages": true,
-            "include_root_autoload": true
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/dump-autoload-feature-test",
+                "autoload": {
+                    "psr-4": {
+                        "BrianHenryIE\\TestStrauss\\": "src/"
+                    }
+                },
+                "require": {
+                    "symfony/deprecation-contracts": "*"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "target_directory": "vendor-prefixed",
+                        "delete_vendor_packages": true,
+                        "include_root_autoload": true
+                    }
+                }
+            }
+            EOD;
 
         $rootAutoloadSetFalse = <<<'EOD'
-{
-    "name": "brianhenryie/dump-autoload-feature-test",
-    "autoload": {
-        "psr-4": {
-            "BrianHenryIE\\TestStrauss\\": "src/"
-        }
-    },
-    "require": {
-        "symfony/deprecation-contracts": "*"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "target_directory": "vendor-prefixed",
-            "delete_vendor_packages": true,
-            "include_root_autoload": false
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/dump-autoload-feature-test",
+                "autoload": {
+                    "psr-4": {
+                        "BrianHenryIE\\TestStrauss\\": "src/"
+                    }
+                },
+                "require": {
+                    "symfony/deprecation-contracts": "*"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "target_directory": "vendor-prefixed",
+                        "delete_vendor_packages": true,
+                        "include_root_autoload": false
+                    }
+                }
+            }
+            EOD;
 
         return [
             'rootAutoloadNotSet'   => [$rootAutoloadNotSet, false],
@@ -362,49 +362,49 @@ EOD;
     public function test_check_prefixed_autoloader_indirect(): void
     {
         $composerJsonString = <<<'EOD'
-{
-    "name": "brianhenryie/dump-autoload-feature-test-2",
-    "repositories": {
-	  "newfold": {
-		"type": "composer",
-		"url": "https://newfold-labs.github.io/satis/",
-		"only": [
-			"newfold-labs/*"
-		]
-      }
-    },
-    "config": {
-        "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true
-        }
-    },
-    "require": {
-        "newfold-labs/wp-module-mcp": "*"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "target_directory": "vendor-prefixed",
-            "packages": [
-                "wordpress/mcp-adapter"
-            ],
-            "delete_vendor_packages": true,
-	        "exclude_from_copy": {
-	          "file_patterns": [
-	            "wordpress/mcp-adapter/.github",
-	            "wordpress/mcp-adapter/docs",
-	            "wordpress/mcp-adapter/tests",
-	            "wordpress/mcp-adapter/CONTRIBUTING.md",
-	            "wordpress/mcp-adapter/phpcs.xml.dist",
-	            "wordpress/mcp-adapter/phpunit.xml.dist",
-	            "wordpress/mcp-adapter/README-INITIAL.md",
-	            "wordpress/mcp-adapter/phpstan.neon.dist"
-	          ]
-	        }
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/dump-autoload-feature-test-2",
+                "repositories": {
+            	  "newfold": {
+            		"type": "composer",
+            		"url": "https://newfold-labs.github.io/satis/",
+            		"only": [
+            			"newfold-labs/*"
+            		]
+                  }
+                },
+                "config": {
+                    "allow-plugins": {
+                        "dealerdirect/phpcodesniffer-composer-installer": true
+                    }
+                },
+                "require": {
+                    "newfold-labs/wp-module-mcp": "*"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "target_directory": "vendor-prefixed",
+                        "packages": [
+                            "wordpress/mcp-adapter"
+                        ],
+                        "delete_vendor_packages": true,
+            	        "exclude_from_copy": {
+            	          "file_patterns": [
+            	            "wordpress/mcp-adapter/.github",
+            	            "wordpress/mcp-adapter/docs",
+            	            "wordpress/mcp-adapter/tests",
+            	            "wordpress/mcp-adapter/CONTRIBUTING.md",
+            	            "wordpress/mcp-adapter/phpcs.xml.dist",
+            	            "wordpress/mcp-adapter/phpunit.xml.dist",
+            	            "wordpress/mcp-adapter/README-INITIAL.md",
+            	            "wordpress/mcp-adapter/phpstan.neon.dist"
+            	          ]
+            	        }
+                    }
+                }
+            }
+            EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);
@@ -432,18 +432,18 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "dump/autoload",
-  "require": {
-    "psr/log": "1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "dump/autoload",
+              "require": {
+                "psr/log": "1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -471,18 +471,18 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "dump/autoload",
-  "require": {
-    "psr/log": "1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "dump/autoload",
+              "require": {
+                "psr/log": "1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

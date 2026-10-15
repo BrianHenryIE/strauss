@@ -1,6 +1,9 @@
 <?php
+
 /**
  * Log level, filesystem
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Console\Commands;
@@ -42,14 +45,24 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Base class for the Strauss commands. {@see self::initialize()} sets up the working directory, a Monolog logger and a
+ * {@see FileSystem} over a {@see SymlinkProtectFilesystemAdapter}; {@see self::execute()} swaps in a
+ * {@see ReadOnlyFileSystemAdapter} for `--dry-run` and configures log levels from `--info`, `--debug` and `--silent`.
+ * Subclasses list method names in {@see self::getPipelineSteps()}, which {@see self::runPipeline()} calls in order and
+ * times. The shared steps (symbol scanning, optionally in a {@see WorkerPool}, renaming, change planning, prefixing,
+ * licensing and Composer autoload file prefixing) are implemented here.
+ */
 abstract class AbstractRenamespacerCommand extends Command
 {
     /**
-     * @var Logger&LoggerInterface
+     * @var Logger|LoggerInterface
      */
     protected $logger;
 
-    /** No trailing slash */
+    /**
+     * No trailing slash
+     */
     protected string $workingDir;
 
     protected FileSystem $filesystem;
@@ -60,7 +73,9 @@ abstract class AbstractRenamespacerCommand extends Command
 
     protected DependenciesCollection $flatDependencyTree;
 
-    /** @var Prefixer */
+    /**
+     * @var Prefixer
+     */
     protected Prefixer $replacer;
 
     /**
@@ -68,7 +83,6 @@ abstract class AbstractRenamespacerCommand extends Command
      *
      * Each object contains the file's relative and absolute paths, the package and autoloaders it came from,
      * and flags indicating should it / has it been copied / deleted etc.
-     *
      */
     protected DiscoveredFiles $discoveredFiles;
     protected DiscoveredSymbols $discoveredSymbols;
@@ -76,7 +90,7 @@ abstract class AbstractRenamespacerCommand extends Command
     /**
      * Set name and description, call parent class to add dry-run, verbosity options.
      *
-     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @used-by  \Symfony\Component\Console\Command\Command::__construct
      * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
      *
      * @return void
@@ -133,6 +147,9 @@ abstract class AbstractRenamespacerCommand extends Command
 
     /**
      * Symfony hook that runs before execute(). Sets working directory, filesystem and logger.
+     *
+     * @param InputInterface  $input  The command-line arguments and options.
+     * @param OutputInterface $output The console output the logger writes to.
      */
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
@@ -146,9 +163,12 @@ abstract class AbstractRenamespacerCommand extends Command
          * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
          * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
          */
-        set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-            return true;
-        }, E_DEPRECATED | E_USER_DEPRECATED);
+        set_error_handler(
+            function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+                return true;
+            },
+            E_DEPRECATED | E_USER_DEPRECATED
+        );
 
         $workingDir      = Platform::getcwd();
         $localFsLocation = FileSystem::getFsRoot($workingDir);
@@ -161,7 +181,7 @@ abstract class AbstractRenamespacerCommand extends Command
         );
 
         try {
-        // Extends `LocalFilesystemAdapter`.
+            // Extends `LocalFilesystemAdapter`.
             $localFilesystemAdapter = new SymlinkProtectFilesystemAdapter(
                 $localFsLocation,
                 $pathNormalizer,
@@ -186,16 +206,20 @@ abstract class AbstractRenamespacerCommand extends Command
         $this->workingDir = $this->filesystem->normalizePath($workingDir);
     }
 
-    public function setLogger(LoggerInterface $logger): void
-    {
-        $this->logger->pushHandler(new PsrHandler($logger));
-    }
+    //    public function setLogger(LoggerInterface $logger): void
+    //    {
+    //        $this->logger->pushHandler(new PsrHandler($logger));
+    //    }
 
-    public function configureLogger(LoggerInterface $logger): void
-    {
-        $this->logger->pushHandler(new PsrHandler($logger));
-    }
+    //    public function configureLogger(LoggerInterface $logger): void
+    //    {
+    //        $this->logger->pushHandler(new PsrHandler($logger));
+    //    }
 
+    /**
+     * @param InputInterface  $input  The command-line options and arguments, used to build the config (e.g. `--dry-run`).
+     * @param OutputInterface $output The console output the logger writes to, at its verbosity.
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!isset($this->config)) {
@@ -207,9 +231,12 @@ abstract class AbstractRenamespacerCommand extends Command
              * `league/flysystem` v2.x throws deprecation errors on newer PHP versions.
              * `league/flysystem` v3.x requires PHP ^8.02 and Strauss's backward compatibility promise keeps us at 7.4 until WordPress itself requires newer PHP.
              */
-            set_error_handler(function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
-                return true;
-            }, E_DEPRECATED | E_USER_DEPRECATED);
+            set_error_handler(
+                function (int $errNo, string $errstr, string $errFile, int $errLine): bool {
+                    return true;
+                },
+                E_DEPRECATED | E_USER_DEPRECATED
+            );
 
             $this->filesystem->setAdapter(
                 new ReadOnlyFileSystemAdapter(
@@ -221,7 +248,9 @@ abstract class AbstractRenamespacerCommand extends Command
 
             restore_error_handler();
 
-            /** @var FilesystemRegistry $registry */
+            /**
+ * @var FilesystemRegistry $registry
+*/
             $registry = \Elazar\Flystream\ServiceLocator::get(\Elazar\Flystream\FilesystemRegistry::class);
 
             // Register a file stream mem:// to handle file operations by third party libraries.
@@ -262,6 +291,9 @@ abstract class AbstractRenamespacerCommand extends Command
      * Build a logger honoring optional --info/--debug/--silent flags if present.
      *
      * TODO: maybe this should be called ~`::getConsoleLogger()`.
+     *
+     * @param InputInterface  $input  Checked for the `--info`, `--debug` and `--silent` options.
+     * @param OutputInterface $output The console output the logger writes to.
      */
     protected function getPsrLogger(InputInterface $input, OutputInterface $output): LoggerInterface
     {
@@ -334,6 +366,8 @@ abstract class AbstractRenamespacerCommand extends Command
 
     /**
      * Run one pipeline step and log how long it took, for finding where the time goes on large projects.
+     *
+     * @param string $step Name of the method on this command to run, from {@see self::getPipelineSteps()}.
      */
     protected function timed(string $step): void
     {
@@ -341,10 +375,13 @@ abstract class AbstractRenamespacerCommand extends Command
 
         $this->{$step}();
 
-        $this->logger->debug('{step} took {seconds}s', [
-            'step' => $step,
-            'seconds' => number_format(microtime(true) - $startedAt, 3),
-        ]);
+        $this->logger->debug(
+            '{step} took {seconds}s',
+            [
+                'step' => $step,
+                'seconds' => number_format(microtime(true) - $startedAt, 3),
+            ]
+        );
     }
 
     /**
@@ -358,7 +395,7 @@ abstract class AbstractRenamespacerCommand extends Command
 
         $composerFilePath = $this->filesystem->makeAbsolute(
             $this->filesystem->normalizePath(
-                $this->workingDir . '/' .Factory::getComposerFile()
+                $this->workingDir . '/' . Factory::getComposerFile()
             )
         );
         $defaultComposerFilePath = $this->filesystem->makeAbsolute($this->workingDir . '/composer.json');
@@ -462,8 +499,11 @@ abstract class AbstractRenamespacerCommand extends Command
         $changeEnumerator->determineReplacements($this->discoveredSymbols);
     }
 
-    // 5. Update namespaces and class names.
-    // Replace references to updated namespaces and classnames throughout the dependencies.
+    /**
+     * 5. Update namespaces and class names.
+     *
+     * Replace references to updated namespaces and classnames throughout the dependencies.
+     */
     protected function performReplacements(): void
     {
         $this->logger->notice('Performing replacements...');
@@ -502,7 +542,7 @@ abstract class AbstractRenamespacerCommand extends Command
         $licenser->addInformationToUpdatedFiles($modifiedFiles);
     }
 
-    protected function prefixComposerAutoloadFiles() : void
+    protected function prefixComposerAutoloadFiles(): void
     {
         $replacer = $this->replacer ?? new Prefixer($this->config, $this->filesystem, $this->logger);
 

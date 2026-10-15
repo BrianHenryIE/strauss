@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Improper dealing with global namespaces
  *
@@ -19,23 +20,23 @@ class StraussIssue188Test extends IntegrationTestCase
     public function test_issue_188_implements(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/188",
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "require": {
-    "guzzlehttp/guzzle": "7.9"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\PluginFramework\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/188",
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "require": {
+                "guzzlehttp/guzzle": "7.9"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\PluginFramework\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -61,18 +62,18 @@ EOD;
         $this->markTestSkippedLocally();
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/188",
-  "require": {
-    "mpdf/mpdf": "v8.2.6"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\PluginFramework\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/188",
+              "require": {
+                "mpdf/mpdf": "v8.2.6"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\PluginFramework\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

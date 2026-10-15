@@ -1,4 +1,5 @@
 <?php
+
 /**
  * After a file has its symbols prefixed, the File object's code map — its parsed data — is updated to reflect the
  * changes, rather than discarded, so the file never needs to be parsed again.
@@ -27,19 +28,19 @@ class PrefixerCodeMapTest extends TestCase
     public function testCodeMapIsStoredOnFileAndUpdatedAfterReplacements(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Vendor\Package;
+            namespace Vendor\Package;
 
-/**
- * @param Vendor\Package\MyClass $thing
- */
-class MyClass {
-    public function id(): string {
-        return 'Vendor\Package\MyClass';
-    }
-}
-EOD;
+            /**
+             * @param Vendor\Package\MyClass $thing
+             */
+            class MyClass {
+                public function id(): string {
+                    return 'Vendor\Package\MyClass';
+                }
+            }
+            EOD;
 
         $file = new File('/a/path.php', 'path.php', '/a/path.php');
 
@@ -88,10 +89,10 @@ EOD;
     public function testPlannedEditsAreAppliedWithoutParsing(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Vendor\Package;
-class MyClass {}
-EOD;
+            <?php
+            namespace Vendor\Package;
+            class MyClass {}
+            EOD;
 
         $file = new File('/a/path.php', 'path.php', '/a/path.php');
 
@@ -127,10 +128,10 @@ EOD;
     public function testSecondRunReusesUpdatedCodeMap(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Vendor\Package;
-class MyClass {}
-EOD;
+            <?php
+            namespace Vendor\Package;
+            class MyClass {}
+            EOD;
 
         $file = new File('/a/path.php', 'path.php', '/a/path.php');
 

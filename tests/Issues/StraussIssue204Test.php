@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/BrianHenryIE/strauss/issues/204
  */
@@ -18,41 +19,41 @@ class StraussIssue204Test extends IntegrationTestCase
         $this->markTestSkippedOnWindows();
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "saltus/interactive-globes",
-	"config": {
-		"vendor-dir": "../vendor/"
-	},
-	"require": {
-		"psr/log": "*",
-		"psr/container": "*"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "Saltus\\WP\\Plugin\\InteractiveGlobes\\",
-			"target_directory": "../vendor-prefixed"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "saltus/interactive-globes",
+            	"config": {
+            		"vendor-dir": "../vendor/"
+            	},
+            	"require": {
+            		"psr/log": "*",
+            		"psr/container": "*"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "Saltus\\WP\\Plugin\\InteractiveGlobes\\",
+            			"target_directory": "../vendor-prefixed"
+            		}
+            	}
+            }
+            EOD;
 
         $composerFreeJsonString = <<<'EOD'
-{
-	"name": "saltus/interactive-globes-free",
-	"config": {
-		"vendor-dir": "../vendor/"
-	},
-	"require": {
-		"psr/log": "*"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "Saltus\\WP\\Plugin\\InteractiveGlobes\\",
-			"target_directory": "../vendor-prefixed"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "saltus/interactive-globes-free",
+            	"config": {
+            		"vendor-dir": "../vendor/"
+            	},
+            	"require": {
+            		"psr/log": "*"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "Saltus\\WP\\Plugin\\InteractiveGlobes\\",
+            			"target_directory": "../vendor-prefixed"
+            		}
+            	}
+            }
+            EOD;
 
         mkdir($this->testsWorkingDir . '/projectdir');
         chdir($this->testsWorkingDir . '/projectdir');

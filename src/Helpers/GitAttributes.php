@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Minimal `.gitattributes` parser, used to determine which files a package marks `export-ignore`
  * (i.e. files `git archive` / Composer dist would strip from the distributed package).
@@ -6,7 +7,7 @@
  * Only the subset of `.gitattributes` needed by Strauss is implemented: line parsing into
  * pattern + attributes, and `export-ignore` path matching using gitignore-style globbing.
  *
- * @author Claude
+ * Originally written by Claude.
  *
  * @package brianhenryie/strauss
  */
@@ -16,6 +17,12 @@ namespace BrianHenryIE\Strauss\Helpers;
 use League\Flysystem\FilesystemException;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 
+/**
+ * Reads the `.gitattributes` file at the repository path via the {@see FileSystem}, lazily parsing it once into
+ * pattern/attributes entries which are cached. {@see self::isExportIgnored()} walks the entries in order, the last
+ * matching `export-ignore` rule winning, and matches patterns with `fnmatch()`: unanchored patterns against each
+ * path segment, anchored patterns against the full path and each of its ancestor directories.
+ */
 class GitAttributes
 {
     protected FileSystem $filesystem;
@@ -110,6 +117,8 @@ class GitAttributes
      *
      * The last matching pattern wins, so a later `-export-ignore` rule can re-include a path.
      *
+     * @param string $relativePath Path relative to the repository root; backslashes and a leading slash are tolerated.
+     *
      * @throws FilesystemException
      */
     public function isExportIgnored(string $relativePath): bool
@@ -136,6 +145,9 @@ class GitAttributes
      *
      * A pattern matches when it matches the path itself or one of its ancestor directories
      * (marking a directory `export-ignore` also excludes its contents).
+     *
+     * @param string $pattern      Pattern from a `.gitattributes` line; one containing a non-trailing `/` is anchored to the repository root.
+     * @param string $relativePath Forward-slash path relative to the repository root, without a leading slash.
      */
     protected function matchesPattern(string $pattern, string $relativePath): bool
     {

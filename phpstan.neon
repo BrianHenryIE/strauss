@@ -31,6 +31,7 @@ parameters:
         -
             message: '#Property.*excludePackages is unused#'
             path: src/Composer/Extra/StraussConfig.php
+
         - '#Cannot call method .* on Psr\\Log\\LoggerInterface\|null#'
         - '#.*expects Psr\\Log\\LoggerInterface, Psr\\Log\\LoggerInterface\|null given#'
 
@@ -44,3 +45,7 @@ parameters:
         -   # RandomException existing only in newer league/flysystem
             identifier: throws.notThrowable
             path: src/Pipeline/Autoload/DumpAutoload.php
+        -   # This trait doesn't mention SymlinkProtectFilesystemAdapter so I'm not sure how it's already narrowed.
+            # Call to function property_exists() with $this(BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter) and 'pathPrefixer' will always evaluate to true.
+            identifier: function.alreadyNarrowedType
+            path: src/Helpers/Flysystem/FlysystemAdapterBackCompatTrait.php

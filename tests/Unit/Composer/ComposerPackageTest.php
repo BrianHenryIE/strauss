@@ -11,7 +11,6 @@ use BrianHenryIE\Strauss\TestCase;
  */
 class ComposerPackageTest extends TestCase
 {
-
     /**
      * A simple test to check the getters all work.
      */
@@ -134,13 +133,13 @@ class ComposerPackageTest extends TestCase
     {
 
         $composerJson = <<<'EOD'
-{
-    "autoload": {
-        "psr-4": { "Monolog\\": ["src/", "lib/"] }
-    }
-}
+            {
+                "autoload": {
+                    "psr-4": { "Monolog\\": ["src/", "lib/"] }
+                }
+            }
 
-EOD;
+            EOD;
         $projectDir = 'project';
         $composerJsonPath = $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);

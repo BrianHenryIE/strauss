@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * The collection of files Strauss has found to process, built by {@see \BrianHenryIE\Strauss\Pipeline\FileEnumerator}
+ * and passed through the pipeline steps that copy, scan, prefix and delete them.
+ *
+ * @package brianhenryie/strauss
+ */
+
 namespace BrianHenryIE\Strauss\Files;
 
 use ArrayAccess;
@@ -15,11 +22,13 @@ use Traversable;
  */
 class DiscoveredFiles implements IteratorAggregate, ArrayAccess, Countable
 {
-    /** @var array<string,FileBase|File|FileWithDependency> */
+    /**
+     * @var array<string,FileBase|File|FileWithDependency>
+     */
     protected array $files = [];
 
     /**
-     * @param FileBase[] $files
+     * @param FileBase[] $files Initial files, keyed internally by their absolute source path.
      */
     public function __construct(array $files = [])
     {

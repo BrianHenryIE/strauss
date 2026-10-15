@@ -1,4 +1,5 @@
 <?php
+
 /**
  * When replacements are made in-situ in the vendor directory, add aliases for the original class fqdns so
  * dev dependencies can still be used.
@@ -50,8 +51,9 @@ class Aliases
     }
 
     /**
-     * @param array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray> $aliasesArray
-     * @param string|null $autoloadAliasesFunctionsString
+     * @param array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray> $aliasesArray                   Alias definitions keyed by original FQDN, without leading backslash.
+     * @param string|null                                                                       $autoloadAliasesFunctionsString PHP code aliasing functions and constants, inserted at the template's placeholder; empty or null for none.
+     *
      * @return string
      * @throws RuntimeException
      */
@@ -62,9 +64,9 @@ class Aliases
 
         $globalFunctionsString = !$autoloadAliasesFunctionsString ? ''
                 : <<<GLOBAL
-                // Functions and constants
-                $autoloadAliasesFunctionsString
-                GLOBAL;
+                    // Functions and constants
+                    $autoloadAliasesFunctionsString
+                    GLOBAL;
 
         $template = file_get_contents(__DIR__ . '/autoload_aliases.template.php');
 
@@ -129,6 +131,8 @@ class Aliases
     }
 
     /**
+     * @param DiscoveredSymbols $symbols The discovered symbols; only renamed classes, interfaces, traits and enums are aliased.
+     *
      * @return array<string, ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray>
      * @throws FilesystemException
      */
@@ -172,6 +176,7 @@ class Aliases
              * "define() will define constants exactly as specified.  So, if you want to define a constant in a
              * namespace, you will need to specify the namespace in your call to define(), even if you're calling
              * define() from within a namespace."
+             *
              * @see https://www.php.net/manual/en/function.define.php
              */
             if ($symbol instanceof ConstantSymbol) {
@@ -182,7 +187,9 @@ class Aliases
         if (!empty($symbolsByNamespace['\\'])) {
             $globalAliasesPhpString = 'namespace {' . PHP_EOL;
 
-            /** @var FunctionSymbol | ConstantSymbol $symbol */
+            /**
+ * @var FunctionSymbol | ConstantSymbol $symbol
+*/
             foreach ($symbolsByNamespace['\\'] as $symbol) {
                 $aliasesPhpString = '';
 
@@ -200,18 +207,16 @@ class Aliases
                         $aliasesPhpString = $this->aliasedFunctionTemplate($originalLocalSymbol, $replacementSymbol);
                         break;
                     case ConstantSymbol::class:
-                        /**
-                         * https://stackoverflow.com/questions/19740621/namespace-constants-and-use-as
-                         */
+                        // @see https://stackoverflow.com/questions/19740621/namespace-constants-and-use-as
                         // Ideally this would somehow be loaded after everything else.
                         // Maybe some Patchwork style redefining of `define()` to add the alias?
                         // Does it matter since all references to use the constant should have been updated to the new name anyway.
                         // TODO: global `const`.
                         $aliasesPhpString = <<<EOD
-        if(!defined('$originalLocalSymbol') && defined('$replacementSymbol')) {
-            define('$originalLocalSymbol', $replacementSymbol);
-        }
-        EOD;
+                            if(!defined('$originalLocalSymbol') && defined('$replacementSymbol')) {
+                                define('$originalLocalSymbol', $replacementSymbol);
+                            }
+                            EOD;
                         break;
                     default:
                         /**
@@ -237,12 +242,15 @@ class Aliases
             foreach ($symbols as $symbol) {
                 $originalLocalSymbol = $symbol->getOriginalLocalName();
 
-                /** @var NamespaceSymbol $namespaceSymbol */
+                /**
+ * @var NamespaceSymbol $namespaceSymbol
+*/
                 $namespaceSymbol = $discoveredSymbols->getNamespaceSymbolByString($symbol->getNamespaceName());
 
-                if (!($symbol instanceof FunctionSymbol
-                   &&
-                   $namespaceSymbol->isChangedNamespace())
+                if (
+                    !($symbol instanceof FunctionSymbol
+
+                    && $namespaceSymbol->isChangedNamespace())
                 ) {
                     $this->logger->debug("Skipping {$originalLocalSymbol} because it is not being changed.");
                     continue;
@@ -275,8 +283,8 @@ class Aliases
      *
      * Ensures the correct leading backslashes.
      *
-     * @param string $namespacedOriginalFunction
-     * @param string $namespacedReplacementFunction
+     * @param string $namespacedOriginalFunction    The original function name, fully qualified, with or without leading backslash.
+     * @param string $namespacedReplacementFunction The prefixed function name to call, with or without leading backslash.
      */
     protected function aliasedFunctionTemplate(
         string $namespacedOriginalFunction,
@@ -296,11 +304,11 @@ class Aliases
                                          })();
 
         return <<<EOD
-                    if(!function_exists('$namespacedOriginalFunction')){
-                        function $localOriginalFunction(...\$args) {
-                            return $namespacedReplacementFunction(...func_get_args());
-                        }
+                if(!function_exists('$namespacedOriginalFunction')){
+                    function $localOriginalFunction(...\$args) {
+                        return $namespacedReplacementFunction(...func_get_args());
                     }
-                EOD . PHP_EOL;
+                }
+            EOD . PHP_EOL;
     }
 }

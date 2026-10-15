@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Runs {@see \BrianHenryIE\Strauss\Console\Commands\WorkerCommand} processes and hands them chunks of files to
  * analyse.
@@ -7,6 +8,8 @@
  * file and then a "chunk done" message, at which point it gets the next chunk, so a fast worker takes more of the
  * work. Communication is newline-delimited JSON over the worker's stdin/stdout; a serialized {@see FileCodeMap} is
  * sent back base64-encoded.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -20,6 +23,12 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 
+/**
+ * Starts as many {@see Worker}s as {@see ParallelConfig::getProcessesToSpawn()} allows, using the
+ * {@see WorkerProcessFactory}, then polls them in a loop: reading `result`, `chunk-done` and `error` messages, sending
+ * the next chunk (or `quit` when the queue is empty), and throwing {@see ParallelisationException} on timeouts,
+ * non-zero exits or unexpected output. Any workers still running are stopped when the loop exits.
+ */
 class WorkerPool
 {
     use LoggerAwareTrait;
@@ -54,8 +63,8 @@ class WorkerPool
      *
      * Results arrive in no particular order.
      *
-     * @param string[] $absolutePaths
-     * @param callable(string $absolutePath, ?FileCodeMap $codeMap, ?string $errorMessage): void $onResult
+     * @param string[]                                      $absolutePaths Absolute paths of the PHP files to analyse.
+     * @param callable(string, ?FileCodeMap, ?string): void $onResult      Called with each file's absolute path, its code map (null on failure) and error message (null on success).
      *
      * @throws ParallelisationException When a worker fails, times out, or sends something unexpected.
      */
@@ -68,12 +77,17 @@ class WorkerPool
 
         $processesToSpawn = $this->config->getProcessesToSpawn(count($queue));
 
-        $this->logger->debug('Analysing {fileCount} files with {workerCount} worker processes.', [
-            'fileCount' => count($queue),
-            'workerCount' => $processesToSpawn,
-        ]);
+        $this->logger->debug(
+            'Analysing {fileCount} files with {workerCount} worker processes.',
+            [
+                'fileCount' => count($queue),
+                'workerCount' => $processesToSpawn,
+            ]
+        );
 
-        /** @var Worker[] $workers */
+        /**
+ * @var Worker[] $workers
+*/
         $workers = [];
         for ($i = 0; $i < $processesToSpawn; $i++) {
             $workers[] = $this->startWorker();
@@ -101,11 +115,13 @@ class WorkerPool
                     }
 
                     if ($worker->isChunkTimedOut($this->config->getChunkTimeoutSeconds())) {
-                        throw new ParallelisationException(sprintf(
-                            'Worker process timed out after %d seconds analysing: %s',
-                            $this->config->getChunkTimeoutSeconds(),
-                            implode(', ', array_keys($worker->pendingFiles))
-                        ));
+                        throw new ParallelisationException(
+                            sprintf(
+                                'Worker process timed out after %d seconds analysing: %s',
+                                $this->config->getChunkTimeoutSeconds(),
+                                implode(', ', array_keys($worker->pendingFiles))
+                            )
+                        );
                     }
                 }
 
@@ -136,7 +152,8 @@ class WorkerPool
     }
 
     /**
-     * @param string[] $queue
+     * @param Worker   $worker The worker process to send the chunk to; it is told to quit when the queue is empty.
+     * @param string[] $queue  Absolute paths still to be analysed; the next chunk is removed from the front.
      */
     protected function sendNextChunk(Worker $worker, array &$queue): void
     {
@@ -156,7 +173,8 @@ class WorkerPool
     }
 
     /**
-     * @param callable(string, ?FileCodeMap, ?string): void $onResult
+     * @param Worker                                        $worker   The worker process whose available output lines are read.
+     * @param callable(string, ?FileCodeMap, ?string): void $onResult Called with each file's absolute path, its code map (null on failure) and error message (null on success).
      */
     protected function readResults(Worker $worker, callable $onResult): void
     {
@@ -201,12 +219,14 @@ class WorkerPool
     protected function checkExited(Worker $worker): void
     {
         if (0 !== $worker->process->getExitCode() || !empty($worker->pendingFiles)) {
-            throw new ParallelisationException(sprintf(
-                'Worker process exited with code %s%s. %s',
-                (string) $worker->process->getExitCode(),
-                empty($worker->pendingFiles) ? '' : ' before analysing ' . implode(', ', array_keys($worker->pendingFiles)),
-                trim($worker->process->getErrorOutput() . "\n" . $worker->buffer)
-            ));
+            throw new ParallelisationException(
+                sprintf(
+                    'Worker process exited with code %s%s. %s',
+                    (string) $worker->process->getExitCode(),
+                    empty($worker->pendingFiles) ? '' : ' before analysing ' . implode(', ', array_keys($worker->pendingFiles)),
+                    trim($worker->process->getErrorOutput() . "\n" . $worker->buffer)
+                )
+            );
         }
     }
 

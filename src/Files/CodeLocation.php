@@ -1,15 +1,24 @@
 <?php
+
 /**
  * A range of text in a PHP file: a symbol definition, a symbol usage, or a region (comment, string, inline HTML)
  * that may contain symbol names as text.
  *
  * Positions are byte offsets into the file contents the {@see FileCodeMap} was built from.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Files;
 
+/**
+ * Stores a type (one of the definition, usage or region constants), byte start, length, the text as written and
+ * the enclosing namespace. For names, {@see \BrianHenryIE\Strauss\Pipeline\FileSymbol\FileCodeMapVisitor} also sets
+ * the resolved name, the normalized match name, whether the parser saw it as fully qualified and any `use`
+ * statement details. {@see self::setText()} updates the length and clears the name data derived from the old text.
+ */
 class CodeLocation
 {
     /**

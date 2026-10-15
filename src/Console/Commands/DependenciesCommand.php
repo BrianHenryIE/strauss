@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * The default `strauss` command: copies the project's Composer dependencies to the target directory, prefixes their
+ * namespaces, classes, functions and constants, and generates an autoloader for the result.
+ *
+ * @package brianhenryie/strauss
+ */
+
 namespace BrianHenryIE\Strauss\Console\Commands;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
@@ -31,6 +38,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Registered as `dependencies`. Merges the `extra.strauss` config with command-line options, then runs the full
+ * pipeline listed in {@see self::getPipelineSteps()}: {@see DependenciesEnumerator} builds the flat dependency tree,
+ * files are enumerated, scanned and marked for copying and renaming, changes are planned, files are copied and
+ * prefixed (including project call sites when configured), licences are added, originals cleaned up, and the
+ * autoloader, aliases file and prefixed Composer autoload files are written.
+ */
 class DependenciesCommand extends AbstractRenamespacerCommand
 {
     protected DependenciesEnumerator $dependenciesEnumerator;
@@ -38,7 +52,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     /**
      * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
      *
-     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @used-by  \Symfony\Component\Console\Command\Command::__construct
      * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
      *
      * @return void
@@ -128,19 +142,20 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
+     * @param InputInterface  $input  Command-line arguments and options.
+     * @param OutputInterface $output Console output for logging.
      *
      * @return int
-     * @see Command::execute()
-     *
+     * @see    Command::execute()
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-//        $this->setLogger($this->getIOLogger($input, $output));
+        //        $this->setLogger($this->getIOLogger($input, $output));
 
         try {
-            $this->logger->notice('Starting... '/** version */); // + PHP version
+            $this->logger->notice(
+                'Starting... '/* version */
+            ); // + PHP version
             $startedAt = microtime(true);
 
             $this->loadProjectComposerPackage();
@@ -235,10 +250,13 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
 
         $this->config->setPackagesToPrefix(
-            array_filter($this->flatDependencyTree->toArray(), function ($dependency) {
-                return !in_array($dependency, $this->config->getExcludePackagesFromPrefixing());
-            },
-            ARRAY_FILTER_USE_KEY)
+            array_filter(
+                $this->flatDependencyTree->toArray(),
+                function ($dependency) {
+                    return !in_array($dependency, $this->config->getExcludePackagesFromPrefixing());
+                },
+                ARRAY_FILTER_USE_KEY
+            )
         );
 
         foreach ($this->flatDependencyTree->toArray() as $dependency) {
@@ -256,11 +274,12 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $symlinkedDependencies = array_filter(
             $this->flatDependencyTree->toArray(),
-            fn ($dependency) => !is_null($dependency->getRealPath()) && !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath())
+            fn($dependency) => !is_null($dependency->getRealPath()) && !str_starts_with($dependency->getRealPath(), $this->config->getProjectAbsolutePath())
         );
 
-        if (!empty($symlinkedDependencies) &&
-            ($this->config->isDeleteVendorFiles() || ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()))
+        if (
+            !empty($symlinkedDependencies)
+            && ($this->config->isDeleteVendorFiles() || ($this->config->getAbsoluteTargetDirectory() === $this->config->getAbsoluteVendorDirectory()))
         ) {
             $list = implode(
                 ', ',
@@ -460,8 +479,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     protected function performReplacementsInProjectFiles(): void
     {
         // TODO: this doesn't do tests?!
-        $relativeCallSitePaths =
-            $this->config->getUpdateCallSites()
+        $relativeCallSitePaths
+            = $this->config->getUpdateCallSites()
             ?? $this->projectComposerPackage->getFlatAutoloadKey();
 
         if (empty($relativeCallSitePaths)) {
@@ -475,16 +494,18 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         // The files in the target directory have already been updated as the packages' own files. The project's
         // autoload key often lists it, e.g. `"classmap": ["vendor-prefixed"]`.
-        $callSitePaths = array_values(array_filter(
-            $callSitePaths,
-            function (string $path): bool {
-                if ($this->isInTargetDirectory($path)) {
-                    $this->logger->debug('Skipping target directory when updating call sites: {path}', ['path' => $path]);
-                    return false;
+        $callSitePaths = array_values(
+            array_filter(
+                $callSitePaths,
+                function (string $path): bool {
+                    if ($this->isInTargetDirectory($path)) {
+                        $this->logger->debug('Skipping target directory when updating call sites: {path}', ['path' => $path]);
+                        return false;
+                    }
+                    return true;
                 }
-                return true;
-            }
-        ));
+            )
+        );
 
         if (empty($callSitePaths)) {
             return;
@@ -503,10 +524,12 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
 
         // A call site path may also contain the target directory, e.g. `"classmap": ["."]`.
-        $projectFiles = new DiscoveredFiles(array_filter(
-            $fileEnumerator->compileFileListForPaths($callSitePaths)->getFiles(),
-            fn(FileBase $file): bool => !$this->isInTargetDirectory($file->getSourcePath())
-        ));
+        $projectFiles = new DiscoveredFiles(
+            array_filter(
+                $fileEnumerator->compileFileListForPaths($callSitePaths)->getFiles(),
+                fn(FileBase $file): bool => !$this->isInTargetDirectory($file->getSourcePath())
+            )
+        );
 
         // TODO: Warn when a file that was specified is not found
         // $this->logger->warning('Expected file not found from project autoload: ' . $absolutePath);
@@ -516,6 +539,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
     /**
      * Is the path the target directory, or a file or directory inside it?
+     *
+     * @param string $absolutePath Absolute path to a file or directory.
      */
     protected function isInTargetDirectory(string $absolutePath): bool
     {
@@ -531,7 +556,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function generateAutoloader(): void
     {
-        if (isset($this->projectComposerPackage->getAutoload()['classmap'])
+        if (
+            isset($this->projectComposerPackage->getAutoload()['classmap'])
             && in_array(
                 $this->config->getAbsoluteTargetDirectory(),
                 array_map(
@@ -587,7 +613,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
 
     /**
-     *
      * Delete source files if desired.
      * Delete empty directories in destination.
      */

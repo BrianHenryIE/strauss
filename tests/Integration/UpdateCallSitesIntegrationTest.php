@@ -9,7 +9,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class UpdateCallSitesIntegrationTest extends IntegrationTestCase
 {
-
     /**
      * @see https://github.com/twigphp/Twig/tree/v2.16.1
      * @see https://github.com/twigphp/Twig/blob/v2.16.1/src/Extension/CoreExtension.php
@@ -20,46 +19,46 @@ class UpdateCallSitesIntegrationTest extends IntegrationTestCase
         $this->markTestSkippedLocally('Exceptionally slow test');
 
         $file1 = <<<'EOD'
-<?php
-// strausstest
+            <?php
+            // strausstest
 
-$v = twig_cycle([1,2,3], 1);
-EOD;
+            $v = twig_cycle([1,2,3], 1);
+            EOD;
 
         $file2 = <<<'EOD'
-<?php
-// strausstest
+            <?php
+            // strausstest
 
-namespace Strauss\Tests;
+            namespace Strauss\Tests;
 
-use function twig_cycle as my_twig_cycle;
+            use function twig_cycle as my_twig_cycle;
 
-$v = my_twig_cycle([1,2,3], 1);
-EOD;
+            $v = my_twig_cycle([1,2,3], 1);
+            EOD;
 
         $composerJsonString = <<<'EOD'
-{
-  "require": {
-    "twig/twig": "v2.16.1"
-  },
-  "autoload": {
-    "files": ["file1.php", "file2.php"]
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BH_Strauss_",
-      "target_directory": "vendor",
-      "update_call_sites": true
-    }
-  },
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  }
-}
-EOD;
+            {
+              "require": {
+                "twig/twig": "v2.16.1"
+              },
+              "autoload": {
+                "files": ["file1.php", "file2.php"]
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BH_Strauss_",
+                  "target_directory": "vendor",
+                  "update_call_sites": true
+                }
+              },
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
         $this->getFileSystem()->write($this->testsWorkingDir . '/file1.php', $file1);
@@ -89,7 +88,7 @@ EOD;
         $this->assertStringContainsString('use function bh_strauss_twig_cycle as my_twig_cycle;', $project_file_php_string);
 
         // This test isn't the actual thing being tested but might as well include it as a regression test.
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/twig/twig/src/Extension/CoreExtension.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/twig/twig/src/Extension/CoreExtension.php');
         $this->assertStringNotContainsString('function twig_cycle(', $phpString);
         $this->assertStringContainsString('function bh_strauss_twig_cycle(', $phpString);
     }

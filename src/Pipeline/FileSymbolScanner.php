@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The purpose of this class is only to find changes that should be made.
  * i.e. classes and namespaces to change.
@@ -6,6 +7,8 @@
  *
  * Each PHP file is parsed exactly once, by {@see PhpFileAnalyzer}, producing a {@see FileCodeMap} of what the file
  * defines and every symbol it uses. The map is stored on the {@see File} for {@see ChangePlanner} and {@see Prefixer}.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -36,31 +39,22 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * Iterates the {@see DiscoveredFiles}, marking files outside the packages to prefix and non-PHP files not to prefix,
+ * then records each PHP file's {@see SymbolDefinition}s as {@see DiscoveredSymbol}s (namespaces, classes, functions,
+ * constants, interfaces, traits and enums) in the shared {@see DiscoveredSymbols}, skipping PHP built-ins listed in
+ * `FileSymbol/builtinsymbols.php`. When a {@see WorkerPool} is set, the files are first parsed in worker processes,
+ * falling back to parsing in this process if parallelisation fails.
+ */
 class FileSymbolScanner
 {
     use LoggerAwareTrait;
-
-    /**
-     * @var array<class-string<DiscoveredSymbol>,string>
-     */
-    private const SYMBOL_LOG_TYPES = [
-        ClassSymbol::class => 'class',
-        ConstantSymbol::class => 'constant',
-        EnumSymbol::class => 'enum',
-        FunctionSymbol::class => 'function',
-        InterfaceSymbol::class => 'interface',
-        NamespaceSymbol::class => 'namespace',
-        TraitSymbol::class => 'trait',
-    ];
 
     protected DiscoveredSymbols $discoveredSymbols;
 
     protected FileSystem $filesystem;
 
     protected FileSymbolScannerConfigInterface $config;
-
-    /** @var string[] */
-    protected array $builtIns = [];
 
     protected ?PhpFileAnalyzer $analyzer = null;
 
@@ -79,15 +73,15 @@ class FileSymbolScanner
     /**
      * @var array<string,bool>
      */
-    protected array $loggedSymbols = [];
-
-    /**
-     * @var array<string,bool>
-     */
     protected array $builtInsLookup = [];
 
     /**
      * FileScanner constructor.
+     *
+     * @param FileSymbolScannerConfigInterface $config            The packages to prefix and the project directory.
+     * @param DiscoveredSymbols                $discoveredSymbols The collection the found symbols are added to.
+     * @param FileSystem                       $filesystem        Reads the files and resolves their paths.
+     * @param ?LoggerInterface                 $logger            Logs each file scanned and symbol found; null for none.
      */
     public function __construct(
         FileSymbolScannerConfigInterface $config,
@@ -108,10 +102,13 @@ class FileSymbolScanner
 
     protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
     {
-        if (in_array($symbol->getOriginalFqdnName(), $this->getBuiltIns())) {
-            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
-                'symbolName' => $symbol->getOriginalLocalName(),
-            ]);
+        if ($this->isBuiltInSymbol($symbol->getOriginalFqdnName())) {
+            $this->logger->debug(
+                'Skipping built-in symbol {symbolName}, possible a polyfill.',
+                [
+                    'symbolName' => $symbol->getOriginalLocalName(),
+                ]
+            );
             return;
         }
 
@@ -121,17 +118,9 @@ class FileSymbolScanner
             $file->getDependency()->addDiscoveredSymbol($symbol);
         }
 
-        $level = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? 'debug' : 'info';
-        $newText = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? '' : 'new ';
-
-        $this->loggedSymbols[] = $symbol->getOriginalFqdnName();
-//        $this->loggedSymbols[$symbol->getOriginalFqdnName()] = true;
-
-        $this->logger->log(
-            $level,
+        $this->logger->info(
             sprintf(
-                "Found %s%s:::%s",
-                $newText,
+                "Found new %s:::%s",
                 // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
                 strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
                 $symbol->getOriginalFqdnName()
@@ -140,6 +129,8 @@ class FileSymbolScanner
     }
 
     /**
+     * @param DiscoveredFiles $files The project's and dependencies' files; PHP files are parsed and their maps stored.
+     *
      * @throws FilesystemException
      */
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
@@ -150,32 +141,26 @@ class FileSymbolScanner
         $this->analyzeInParallel($files);
 
         foreach ($files->getFiles() as $file) {
-            if ($file instanceof FileWithDependency
-                && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))) {
-                    /**
-                     * We will not prefix symbols found in this file because it is not in a default or listed package.
-                     *
-                     * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
-                     */
-                    $file->setDoPrefix(false);
-//                    continue;
-            }
-
-            if ($file instanceof FileWithDependency
+            if (
+                $file instanceof FileWithDependency
                 && !isset($packagesToPrefixLookup[$file->getDependency()->getPackageName()])
             ) {
-                $doPrefix = false;
-                $file->setDoPrefix($doPrefix);
+                /**
+                 * We will not prefix symbols found in this file because it is not in a default or listed package.
+                 *
+                 * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
+                 */
+                $file->setDoPrefix(false);
             }
 
-            $relativeFilePath =
-                $file instanceof FileWithDependency
+            $relativeFilePath
+                = $file instanceof FileWithDependency
                     ? $file->getVendorRelativePath()
                     : $this->filesystem->getRelativePath($projectDirectory, $file->getSourcePath());
 
             if (!$file->isPhpFile()) {
                 $file->setDoPrefix(false);
-                $this->logger->debug("Skipping non-PHP file:::". $relativeFilePath);
+                $this->logger->debug("Skipping non-PHP file:::" . $relativeFilePath);
                 continue;
             }
 
@@ -188,10 +173,13 @@ class FileSymbolScanner
                 unset($this->parallelResults[$file->getSourcePath()]);
                 if (is_null($codeMap)) {
                     // As {@see PhpFileAnalyzer::analyze()} logs it when parsing in this process.
-                    $this->logger->warning('Failed to parse file {filePath} with error: {errorMessage}', [
-                        'filePath' => $file->getSourcePath(),
-                        'errorMessage' => $errorMessage ?? 'unknown',
-                    ]);
+                    $this->logger->warning(
+                        'Failed to parse file {filePath} with error: {errorMessage}',
+                        [
+                            'filePath' => $file->getSourcePath(),
+                            'errorMessage' => $errorMessage ?? 'unknown',
+                        ]
+                    );
                 }
                 $this->record($codeMap, $file, $package);
                 continue;
@@ -216,6 +204,8 @@ class FileSymbolScanner
      * found. The loop's order, and so the order symbols are discovered and logged in, is unchanged.
      *
      * If the workers cannot be run, the files are parsed in this process as before.
+     *
+     * @param DiscoveredFiles $files The files to scan; only PHP files are analysed.
      */
     protected function analyzeInParallel(DiscoveredFiles $files): void
     {
@@ -223,7 +213,9 @@ class FileSymbolScanner
             return;
         }
 
-        /** @var array<string, string> $absolutePaths Keyed by source path. */
+        /**
+ * @var array<string, string> $absolutePaths Keyed by source path.
+*/
         $absolutePaths = [];
         foreach ($files->getFiles() as $file) {
             if (!$file->isPhpFile() || !($file instanceof File)) {
@@ -247,15 +239,22 @@ class FileSymbolScanner
                 }
             );
         } catch (ParallelisationException $e) {
-            $this->logger->warning('Could not analyse files in parallel, continuing in this process: {errorMessage}', [
-                'errorMessage' => $e->getMessage(),
-            ]);
+            $this->logger->warning(
+                'Could not analyse files in parallel, continuing in this process: {errorMessage}',
+                [
+                    'errorMessage' => $e->getMessage(),
+                ]
+            );
             $this->parallelResults = [];
         }
     }
 
     /**
      * Parse the file once, store the resulting map on the file, and register every symbol it defines.
+     *
+     * @param string           $contents The file's PHP source code.
+     * @param FileBase         $file     The file being scanned.
+     * @param ?ComposerPackage $package  The package the file belongs to; null for project files.
      */
     protected function find(string $contents, FileBase $file, ?ComposerPackage $package = null): void
     {
@@ -266,6 +265,10 @@ class FileSymbolScanner
 
     /**
      * Store the map on the file and register every symbol it defines. Null when the file could not be parsed.
+     *
+     * @param ?FileCodeMap     $codeMap The parsed map of the file; null when it could not be parsed.
+     * @param FileBase         $file    The file being scanned.
+     * @param ?ComposerPackage $package The package the file belongs to; null for project files.
      */
     protected function record(?FileCodeMap $codeMap, FileBase $file, ?ComposerPackage $package): void
     {
@@ -283,11 +286,15 @@ class FileSymbolScanner
     /**
      * Register each namespace and every symbol declared within it, at any depth, e.g. a function declared inside
      * `if (!function_exists(...))`.
+     *
+     * @param FileCodeMap      $codeMap The parsed map of the file.
+     * @param FileBase         $file    The file the symbols are defined in.
+     * @param ?ComposerPackage $package The package the file belongs to; null for project files.
      */
     protected function recordDefinitions(FileCodeMap $codeMap, FileBase $file, ?ComposerPackage $package = null): void
     {
         foreach ($codeMap->getNamespaceNames() as $namespaceName) {
-            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
+            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file);
 
             $definitions = array_filter(
                 $codeMap->getDefinitions(),
@@ -296,14 +303,16 @@ class FileSymbolScanner
             );
 
             // Grouped by type, in the order the symbols have always been registered.
-            foreach ([
-                SymbolDefinition::TYPE_CLASS,
-                SymbolDefinition::TYPE_FUNCTION,
-                SymbolDefinition::TYPE_CONSTANT,
-                SymbolDefinition::TYPE_INTERFACE,
-                SymbolDefinition::TYPE_TRAIT,
-                SymbolDefinition::TYPE_ENUM,
-            ] as $type) {
+            foreach (
+                [
+                    SymbolDefinition::TYPE_CLASS,
+                    SymbolDefinition::TYPE_FUNCTION,
+                    SymbolDefinition::TYPE_CONSTANT,
+                    SymbolDefinition::TYPE_INTERFACE,
+                    SymbolDefinition::TYPE_TRAIT,
+                    SymbolDefinition::TYPE_ENUM,
+                ] as $type
+            ) {
                 foreach ($definitions as $definition) {
                     if ($type === $definition->getType()) {
                         $this->recordDefinition($definition, $file, $namespaceSymbol, $package);
@@ -405,12 +414,12 @@ class FileSymbolScanner
     }
 
     /**
-     * @param string $fqdnClassname
-     * @param bool $isAbstract
-     * @param FileBase $file
-     * @param ?string $extends
-     * @param NamespaceSymbol|null $namespace
-     * @param string[] $interfaces
+     * @param string               $fqdnClassname The class's fully qualified name, without leading backslash.
+     * @param bool                 $isAbstract    Whether the class is declared `abstract`.
+     * @param FileBase             $file          The file the class is defined in.
+     * @param ?string              $extends       FQDN of the parent class, without leading backslash; null if none.
+     * @param NamespaceSymbol|null $namespace     The namespace the class is declared in.
+     * @param string[]             $interfaces    FQDNs of the implemented interfaces, without leading backslashes.
      */
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
@@ -422,9 +431,12 @@ class FileSymbolScanner
     ): ?ClassSymbol {
         // TODO: This should be included but marked not to prefix.
         if ($this->isBuiltInSymbol($fqdnClassname)) {
-            $this->logger->debug('Skipping built-in symbol {symbolName}, possible a polyfill.', [
-                'symbolName' => $fqdnClassname,
-            ]);
+            $this->logger->debug(
+                'Skipping built-in symbol {symbolName}, possible a polyfill.',
+                [
+                    'symbolName' => $fqdnClassname,
+                ]
+            );
             return null;
         }
 
@@ -440,7 +452,7 @@ class FileSymbolScanner
         return $classSymbol;
     }
 
-    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file, ?ComposerPackage $package = null): NamespaceSymbol
+    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file): NamespaceSymbol
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($fqdnNamespace);
         if (is_null($namespaceObj)) {
@@ -455,7 +467,8 @@ class FileSymbolScanner
     }
 
     /**
-     * Get a list of PHP built-in classes etc. so they are not prefixed.
+     * Load the file containing the built-in PHP classes etc. so they are not prefixed, and flatten it to a lookup of
+     * their names.
      *
      * Polyfilled classes were being prefixed, but the polyfills are only active when the PHP version is below X,
      * so calls to those prefixed polyfilled classnames would fail on newer PHP versions.
@@ -473,26 +486,12 @@ class FileSymbolScanner
      *   }
      * );
      * ```
-     *
-     * @return string[]
-     */
-    protected function getBuiltIns(): array
-    {
-        if (empty($this->builtIns)) {
-            $this->loadBuiltIns();
-        }
-
-        return $this->builtIns;
-    }
-
-    /**
-     * Load the file containing the built-in PHP classes etc. and flatten to a single array of strings and store.
      */
     protected function loadBuiltIns(): void
     {
         $builtins = include __DIR__ . '/FileSymbol/builtinsymbols.php';
 
-        $flatArray = array();
+        $flatArray = [];
         array_walk_recursive(
             $builtins,
             function ($array) use (&$flatArray) {
@@ -504,8 +503,7 @@ class FileSymbolScanner
             }
         );
 
-        $this->builtIns = $flatArray;
-        $this->builtInsLookup = array_fill_keys($this->builtIns, true);
+        $this->builtInsLookup = array_fill_keys($flatArray, true);
     }
 
     protected function isBuiltInSymbol(string $symbolName): bool

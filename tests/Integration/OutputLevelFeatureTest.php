@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Test --info, --debug, --quiet, etc.
  */
@@ -19,20 +20,20 @@ class OutputLevelFeatureTest extends IntegrationTestCase
         $this->logger = null;
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_files": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_files": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

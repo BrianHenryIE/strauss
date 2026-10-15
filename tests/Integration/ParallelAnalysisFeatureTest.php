@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Analysing files in worker processes (`--parallel`) must produce exactly the same output as in one process.
  *
@@ -75,19 +76,19 @@ class ParallelAnalysisFeatureTest extends IntegrationTestCase
     public function test_parallel_output_matches_sequential(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/parallel-parity",
-  "require": {
-    "nikic/php-parser": "5.3.1"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Parity\\",
-      "classmap_prefix": "Strauss_Parity_"
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/parallel-parity",
+              "require": {
+                "nikic/php-parser": "5.3.1"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Parity\\",
+                  "classmap_prefix": "Strauss_Parity_"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
@@ -114,15 +115,15 @@ EOD;
         mkdir($packageDir . '/src', 0777, true);
 
         $this->getFileSystem()->write($packageDir . '/composer.json', <<<'EOD'
-{
-  "name": "strauss-test/symlinked-package",
-  "autoload": {
-    "psr-4": {
-      "Symlinked\\Package\\": "src/"
-    }
-  }
-}
-EOD);
+            {
+              "name": "strauss-test/symlinked-package",
+              "autoload": {
+                "psr-4": {
+                  "Symlinked\\Package\\": "src/"
+                }
+              }
+            }
+            EOD);
         // More files than one chunk, so the workers are used.
         for ($i = 0; $i < 30; $i++) {
             $this->getFileSystem()->write(
@@ -132,27 +133,27 @@ EOD);
         }
 
         $this->getFileSystem()->write($projectDir . '/composer.json', <<<'EOD'
-{
-  "name": "strauss-test/project",
-  "repositories": [
-    {
-      "type": "path",
-      "url": "../symlinked-package",
-      "options": {
-        "symlink": true
-      }
-    }
-  ],
-  "require": {
-    "strauss-test/symlinked-package": "@dev"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Parity\\"
-    }
-  }
-}
-EOD);
+            {
+              "name": "strauss-test/project",
+              "repositories": [
+                {
+                  "type": "path",
+                  "url": "../symlinked-package",
+                  "options": {
+                    "symlink": true
+                  }
+                }
+              ],
+              "require": {
+                "strauss-test/symlinked-package": "@dev"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Parity\\"
+                }
+              }
+            }
+            EOD);
 
         chdir($projectDir);
         exec('composer install');

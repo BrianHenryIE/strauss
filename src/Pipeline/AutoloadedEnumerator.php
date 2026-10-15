@@ -1,6 +1,9 @@
 <?php
+
 /**
  * Use each package's autoload key to determine which files in the package are to be prefixed, apply exclusion rules.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -52,12 +55,14 @@ class AutoloadedEnumerator
      *
      * If a file is in a `files` or `classmap` key, mark all its symbols as autoloaded.
      *
-     * @param DiscoveredFiles $discoveredFiles
-     * @param DiscoveredSymbols $discoveredSymbols
+     * @param DiscoveredFiles   $discoveredFiles   All files found in the dependencies, to be marked autoloaded or not.
+     * @param DiscoveredSymbols $discoveredSymbols All symbols found in those files, whose namespaces are checked against psr-0/psr-4 keys.
      */
     public function scanSetIsAutoloaded(DiscoveredFiles $discoveredFiles, DiscoveredSymbols $discoveredSymbols): void
     {
-        /** @var NamespaceSymbol $namespaceSymbol */
+        /**
+ * @var NamespaceSymbol $namespaceSymbol
+*/
         foreach ($discoveredSymbols->getNamespaces() as $namespaceSymbol) {
             /**
              * A namespace may have already been marked as autoloaded when read from the autoload key itself.
@@ -70,7 +75,9 @@ class AutoloadedEnumerator
                     $this->logger->info($namespaceSymbol->getPackageName() . ' ' . $namespaceSymbol->getOriginalLocalName() . ' namespace marked autoloaded by psr-4');
                     $namespaceSymbol->setIsAutoloaded(true);
                 }
-                /** @var FileWithDependency $file */
+                /**
+ * @var FileWithDependency $file
+*/
                 foreach ($namespaceSymbol->getSourceFiles() as $file) {
                     if (!$file->isAutoloaded()) {
                         $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it contains autoloaded psr-4 namespace ' . $namespaceSymbol->getOriginalLocalName());
@@ -84,7 +91,9 @@ class AutoloadedEnumerator
                     $namespaceSymbol->setIsAutoloaded(true);
                 }
 
-                /** @var FileWithDependency $file */
+                /**
+ * @var FileWithDependency $file
+*/
                 foreach ($namespaceSymbol->getSourceFiles() as $file) {
                     if (!$file->isAutoloaded()) {
                         $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it contains autoloaded psr-0 namespace ' . $namespaceSymbol->getOriginalLocalName());
@@ -100,7 +109,7 @@ class AutoloadedEnumerator
                 continue;
             }
 
-            if (! ( $file instanceof FileWithDependency )) {
+            if (! ($file instanceof FileWithDependency)) {
                 continue;
             }
 
@@ -115,7 +124,9 @@ class AutoloadedEnumerator
             }
 
             if (! $file->isAutoloaded()) {
-                /** @var NamespacedSymbol $namespacedSymbol */
+                /**
+ * @var NamespacedSymbol $namespacedSymbol
+*/
                 foreach ($file->getDiscoveredSymbols()->getNamespacedSymbols() as $namespacedSymbol) {
                     if ($namespacedSymbol->isAutoloaded()) {
                         $this->logger->info($file->getVendorRelativePath() . ' marked autoloaded because it contains autoloaded symbol ' . $namespacedSymbol->getOriginalLocalName());
@@ -153,7 +164,9 @@ class AutoloadedEnumerator
                 }
             }
 
-            /** @var DiscoveredSymbol $symbol */
+            /**
+ * @var DiscoveredSymbol $symbol
+*/
             foreach ($file->getDiscoveredSymbols() as $symbol) {
                 if (! $symbol->isAutoloaded() && $file->isAutoloaded()) {
                     $this->logger->info($symbol->getOriginalLocalName() . ' marked autoloaded because it is in autoloaded file ' . $file->getPackageRelativePath());
@@ -174,7 +187,9 @@ class AutoloadedEnumerator
                     continue;
                 }
 
-                /** @var FileWithDependency $file */
+                /**
+ * @var FileWithDependency $file
+*/
                 foreach ($symbol->getSourceFiles() as $file) {
                     if (!$file->isAutoloaded()) {
                         // Not relevant.
@@ -208,7 +223,9 @@ class AutoloadedEnumerator
     protected function isNamespaceInPsr0Autoloader(NamespaceSymbol $namespaceSymbol): bool
     {
         foreach ($namespaceSymbol->getDependencies() as $package) {
-            /** @var AutoloadKeyArray $packageAutoload */
+            /**
+ * @var AutoloadKeyArray $packageAutoload
+*/
             $packageAutoload = $package->getAutoload();
 
             foreach ($packageAutoload['psr-0'] ?? [] as $namespaceString => $directories) {
@@ -223,7 +240,9 @@ class AutoloadedEnumerator
     protected function isNamespaceInPsr4Autoloader(NamespaceSymbol $namespaceSymbol): bool
     {
         foreach ($namespaceSymbol->getDependencies() as $package) {
-            /** @var AutoloadKeyArray $packageAutoload */
+            /**
+ * @var AutoloadKeyArray $packageAutoload
+*/
             $packageAutoload = $package->getAutoload();
 
             /**
@@ -243,7 +262,9 @@ class AutoloadedEnumerator
     protected function isFileInFilesAutoloader(FileWithDependency $file): bool
     {
         $package = $file->getDependency();
-        /** @var AutoloadKeyArray $packageAutoload */
+        /**
+ * @var AutoloadKeyArray $packageAutoload
+*/
         $packageAutoload = $package->getAutoload();
 
         // if a file is in a `files` list
@@ -262,7 +283,9 @@ class AutoloadedEnumerator
     protected function isFileInClassmapAutoloader(FileWithDependency $file): bool
     {
         $package = $file->getDependency();
-        /** @var AutoloadKeyArray $packageAutoload */
+        /**
+ * @var AutoloadKeyArray $packageAutoload
+*/
         $packageAutoload = $package->getAutoload();
 
         // if a file is in a `classmap` list
@@ -296,7 +319,9 @@ class AutoloadedEnumerator
     protected function isSymbolInFilesAutoloader(NamespacedSymbol $symbol): bool
     {
         foreach ($symbol->getDependencies() as $package) {
-            /** @var AutoloadKeyArray $packageAutoload */
+            /**
+ * @var AutoloadKeyArray $packageAutoload
+*/
             $packageAutoload = $package->getAutoload();
 
             // if a file is in a `files` list
@@ -322,7 +347,9 @@ class AutoloadedEnumerator
     protected function isSymbolInClassmapAutoloader(NamespacedSymbol $symbol): bool
     {
         foreach ($symbol->getDependencies() as $package) {
-            /** @var AutoloadKeyArray $packageAutoload */
+            /**
+ * @var AutoloadKeyArray $packageAutoload
+*/
             $packageAutoload = $package->getAutoload();
 
             // Does the package have a `autoload`.`classmap` array at all?
@@ -334,7 +361,9 @@ class AutoloadedEnumerator
             // TODO: are these entries strictly directories?
             $classmapPaths = $packageAutoload['classmap'];
             $excludeClassmapPaths = $packageAutoload['exclude_from_classmap'] ?? [];
-            /** @var FileWithDependency $symbolFile */
+            /**
+ * @var FileWithDependency $symbolFile
+*/
             foreach ($symbol->getSourceFiles() as $symbolFile) {
                 foreach ($classmapPaths as $path) {
                     // TODO: Does this need `trim()`?
@@ -364,10 +393,12 @@ class AutoloadedEnumerator
         $package = $file->getDependency();
         foreach ($package->getAutoload()['psr-4'] ?? [] as $namespaceString => $directories) {
             foreach ((array) $directories as $directory) {
-                if (str_starts_with(
-                    ltrim($file->getPackageRelativePath(), '\\/'),
-                    ltrim($directory, '\\/')
-                )) {
+                if (
+                    str_starts_with(
+                        ltrim($file->getPackageRelativePath(), '\\/'),
+                        ltrim($directory, '\\/')
+                    )
+                ) {
                     return true;
                 }
             }
@@ -380,10 +411,12 @@ class AutoloadedEnumerator
         $package = $file->getDependency();
         foreach ($package->getAutoload()['psr-0'] ?? [] as $namespaceString => $directories) {
             foreach ((array) $directories as $directory) {
-                if (str_starts_with(
-                    ltrim($file->getPackageRelativePath(), '\\'),
-                    ltrim($directory, '\\')
-                )) {
+                if (
+                    str_starts_with(
+                        ltrim($file->getPackageRelativePath(), '\\'),
+                        ltrim($directory, '\\')
+                    )
+                ) {
                     return true;
                 }
             }
@@ -393,14 +426,17 @@ class AutoloadedEnumerator
 
 
     //    public function scanForAutoloadedFiles(DependenciesCollection $dependencies): void
-//    {
-//        foreach ($dependencies as $dependency) {
-//            $this->scanPackage($dependency);
-//        }
-//    }
+    //    {
+    //        foreach ($dependencies as $dependency) {
+    //            $this->scanPackage($dependency);
+    //        }
+    //    }
 
     /**
      * Read the autoload keys of the dependencies and marks the appropriate files to be prefixed
+     *
+     * @param ComposerPackage $dependency The package whose autoload key is read; meta packages are skipped.
+     *
      * @throws FilesystemException
      */
     protected function scanPackage(ComposerPackage $dependency): void
@@ -415,18 +451,23 @@ class AutoloadedEnumerator
         $this->logger->info("Scanning for autoloaded files in package {packageName}", [ 'packageName' => $dependency->getPackageName() ]);
 
         $dependencyAutoloadKey = $dependency->getAutoload();
-        $excludeFromClassmap   = isset($dependencyAutoloadKey['exclude_from_classmap']) ? $dependencyAutoloadKey['exclude_from_classmap'] : [];
+        $excludeFromClassmap   = $dependencyAutoloadKey['exclude_from_classmap'] ?? [];
 
         /**
          * Where $dependency->autoload is ~
          *
          * [ "psr-4" => [ "BrianHenryIE\Strauss" => "src" ] ]
          * Exclude "exclude-from-classmap"
+         *
          * @see https://getcomposer.org/doc/04-schema.md#exclude-files-from-classmaps
          */
-        $autoloaders = array_filter($dependencyAutoloadKey, function ($type) {
-            return 'exclude_from_classmap' !== $type;
-        }, ARRAY_FILTER_USE_KEY);
+        $autoloaders = array_filter(
+            $dependencyAutoloadKey,
+            function ($type) {
+                return 'exclude_from_classmap' !== $type;
+            },
+            ARRAY_FILTER_USE_KEY
+        );
 
         $dependencyPackageAbsolutePath   = $this->filesystem->makeAbsolute($dependency->getPackageAbsolutePath());
         $fsDependencyPackageAbsolutePath = $this->filesystem->makeAbsolute($dependencyPackageAbsolutePath);
@@ -445,7 +486,9 @@ class AutoloadedEnumerator
 
             $classMapGenerator = new ClassMapGenerator();
 
-            /** @var ?string $namespace */
+            /**
+ * @var ?string $namespace
+*/
             $namespace = null;
 
             switch ($autoloaderType) {
@@ -462,10 +505,13 @@ class AutoloadedEnumerator
                         );
                         $file                    = $dependency->getFile(FileSystem::normalizeDirSeparator($filePackageRelativePath));
                         if (! $file) {
-                            $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
-                                'relativePath' => $filePackageRelativePath,
-                                'packageName'  => $dependency->getPackageName(),
-                            ]);
+                            $this->logger->warning(
+                                "Expected discovered file at {relativePath} not found in package {packageName}",
+                                [
+                                    'relativePath' => $filePackageRelativePath,
+                                    'packageName'  => $dependency->getPackageName(),
+                                ]
+                            );
                         } else {
                             $file->addAutoloaderType('files');
                             $file->setDoPrefix(true);
@@ -538,10 +584,10 @@ class AutoloadedEnumerator
     }
 
     /**
-     * @param string $absoluteFilePath
-     * @param ComposerPackage $dependency
-     * @param string $packageAbsolutePath
-     * @param array<string,bool> $visited
+     * @param string             $absoluteFilePath    Absolute path of the file whose `include`/`require` statements are followed.
+     * @param ComposerPackage    $dependency          The package the file belongs to; included files are looked up in it.
+     * @param string             $packageAbsolutePath Absolute path of the package directory; includes outside it are ignored.
+     * @param array<string,bool> $visited             Absolute paths already processed, to prevent infinite recursion.
      *
      * @return void
      * @throws FilesystemException
@@ -566,16 +612,22 @@ class AutoloadedEnumerator
         try {
             $ast = $parser->parse($contents);
         } catch (\PhpParser\Error $e) {
-            $this->logger->warning('Could not parse {file}: {message}', [
-                'file' => $absoluteFilePath, 'message' => $e->getMessage(),
-            ]);
+            $this->logger->warning(
+                'Could not parse {file}: {message}',
+                [
+                    'file' => $absoluteFilePath, 'message' => $e->getMessage(),
+                ]
+            );
             return;
         }
 
         if (is_null($ast)) {
-            $this->logger->warning('Parsed {file} return null', [
-                'file' => $absoluteFilePath,
-            ]);
+            $this->logger->warning(
+                'Parsed {file} return null',
+                [
+                    'file' => $absoluteFilePath,
+                ]
+            );
             return;
         }
 
@@ -586,9 +638,12 @@ class AutoloadedEnumerator
         foreach ($includeNodes as $node) {
             $resolvedPath = $this->resolveIncludePath($node->expr, $includingDir);
             if ($resolvedPath === null) {
-                $this->logger->debug('Cannot statically resolve include expression in {file}', [
-                    'file' => $absoluteFilePath,
-                ]);
+                $this->logger->debug(
+                    'Cannot statically resolve include expression in {file}',
+                    [
+                        'file' => $absoluteFilePath,
+                    ]
+                );
                 continue;
             }
 
@@ -621,7 +676,8 @@ class AutoloadedEnumerator
             $base = null;
             if ($left instanceof \PhpParser\Node\Scalar\MagicConst\Dir) {
                 $base = $includingDir;
-            } elseif ($left instanceof \PhpParser\Node\Expr\FuncCall
+            } elseif (
+                $left instanceof \PhpParser\Node\Expr\FuncCall
                 && $left->name instanceof \PhpParser\Node\Name
                 && strtolower((string) $left->name) === 'dirname'
             ) {
@@ -650,10 +706,13 @@ class AutoloadedEnumerator
             $relativePath = $this->filesystem->getRelativePath($packageAbsolutePath, $fileAbsolutePath);
             $file = $dependency->getFile($relativePath);
             if (!$file) {
-                $this->logger->warning("Expected discovered file at {relativePath} not found in package {packageName}", [
-                    'relativePath' => $relativePath,
-                    'packageName' => $dependency->getPackageName(),
-                ]);
+                $this->logger->warning(
+                    "Expected discovered file at {relativePath} not found in package {packageName}",
+                    [
+                        'relativePath' => $relativePath,
+                        'packageName' => $dependency->getPackageName(),
+                    ]
+                );
             } else {
                 /**
                  * We are assuming at this point that we will rename all autoloaded PHP files. Rules will be applied later.

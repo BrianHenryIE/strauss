@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  *
@@ -56,12 +57,9 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
         $usedTraitImplementation = new stdClass();
         $usedTraitImplementation->calledDirectoryExists = false;
 
-        set_error_handler(function () {
-        }, E_DEPRECATED | E_USER_DEPRECATED);
+        set_error_handler(function () {}, E_DEPRECATED | E_USER_DEPRECATED);
 
-        $sut = new class($usedTraitImplementation) extends \League\Flysystem\InMemory\InMemoryFilesystemAdapter
-                           implements FlysystemAdapterBackCompatTraitInterface
-        {
+        $sut = new class ($usedTraitImplementation) extends \League\Flysystem\InMemory\InMemoryFilesystemAdapter implements FlysystemAdapterBackCompatTraitInterface {
             use FlysystemAdapterBackCompatTrait;
 
             /** @var stdClass{calledDirectoryExists: bool} $usedTraitImplementation */
@@ -101,9 +99,7 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
     public function test_implementation(): void
     {
 
-        $sut = new class() extends \League\Flysystem\InMemory\InMemoryFilesystemAdapter
-            implements FlysystemAdapterBackCompatTraitInterface
-        {
+        $sut = new class extends \League\Flysystem\InMemory\InMemoryFilesystemAdapter implements FlysystemAdapterBackCompatTraitInterface {
             use FlysystemAdapterBackCompatTrait;
 
             protected PathNormalizer $normalizer;
@@ -123,7 +119,7 @@ class FlysystemAdapterBackCompatTraitTest extends \BrianHenryIE\Strauss\TestCase
             /*
              * Don't use {@see FlysystemAdapterBackCompatTrait::directoryExists()`.
              */
-            public function directoryExists(string $location) : bool
+            public function directoryExists(string $location): bool
             {
                 return $this->directoryExistsImplementation($location);
             }

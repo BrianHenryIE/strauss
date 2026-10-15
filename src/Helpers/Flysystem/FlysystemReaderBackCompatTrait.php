@@ -7,6 +7,9 @@
  * v3 is installed, the genuine parent methods are used, when v2 is installed the trait provides implementations.
  *
  * directoryExists, has
+ *
+ * @package brianhenryie/strauss
+ *
  * @see https://github.com/thephpleague/flysystem/blob/2.x/src/FilesystemReader.php
  * @see https://github.com/thephpleague/flysystem/blob/3.x/src/FilesystemReader.php
  *
@@ -18,6 +21,8 @@
 
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
 
+use League\Flysystem\FilesystemException;
+
 /**
  * @mixin FlysystemReaderBackCompatTraitInterface
  *
@@ -28,10 +33,9 @@ trait FlysystemReaderBackCompatTrait
     use FlysystemAdapterBackCompatTrait;
 
     /**
-     * @param string $location
+     * @param string $location File or directory path to check.
      *
-     * @return bool
-     * @throws \League\Flysystem\FilesystemException
+     * @throws FilesystemException
      */
     public function has(string $location): bool
     {
@@ -39,8 +43,10 @@ trait FlysystemReaderBackCompatTrait
          * @phpstan-ignore booleanAnd.leftAlwaysTrue
          */
         if (get_parent_class(self::class) && method_exists(get_parent_class(self::class), 'has')) {
-            /** @phpstan-ignore staticMethod.notFound */
-            return parent::has($location);
+            /**
+             * @phpstan-ignore staticMethod.notFound
+             */
+            return (bool) parent::has($location);
         }
 
         // Can we assume ::fileExists and ::directoryExists will ::normalizePath anyway?!

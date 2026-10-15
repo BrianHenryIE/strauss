@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `strauss dump-autoload` regenerates the target directory's autoloader without copying or prefixing again.
  */
@@ -19,26 +20,26 @@ class DumpAutoloadCommandFeatureTest extends IntegrationTestCase
     public function test_adds_new_root_classmap_class(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/testdumpautoloadcommand",
-  "require": {
-    "psr/log": "1.1.4"
-  },
-  "autoload": {
-    "classmap": [
-      "src"
-    ]
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Dump_Autoload\\",
-      "classmap_prefix": "Dump_Autoload_",
-      "include_root_autoload": true,
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/testdumpautoloadcommand",
+              "require": {
+                "psr/log": "1.1.4"
+              },
+              "autoload": {
+                "classmap": [
+                  "src"
+                ]
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\Dump_Autoload\\",
+                  "classmap_prefix": "Dump_Autoload_",
+                  "include_root_autoload": true,
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
         $this->getFileSystem()->write($this->testsWorkingDir . '/src/First.php', '<?php class My_First_Class {}');
@@ -91,26 +92,26 @@ EOD;
     public function test_works_without_vendor_directory(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/testdumpautoloadcommand",
-  "require": {
-    "psr/log": "1.1.4"
-  },
-  "autoload": {
-    "classmap": [
-      "src"
-    ]
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Dump_Autoload\\",
-      "classmap_prefix": "Dump_Autoload_",
-      "include_root_autoload": true,
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/testdumpautoloadcommand",
+              "require": {
+                "psr/log": "1.1.4"
+              },
+              "autoload": {
+                "classmap": [
+                  "src"
+                ]
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\Dump_Autoload\\",
+                  "classmap_prefix": "Dump_Autoload_",
+                  "include_root_autoload": true,
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
         $this->getFileSystem()->write($this->testsWorkingDir . '/src/First.php', '<?php class My_First_Class {}');

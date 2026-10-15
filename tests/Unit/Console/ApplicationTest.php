@@ -10,7 +10,6 @@ use BrianHenryIE\Strauss\TestCase;
  */
 class ApplicationTest extends TestCase
 {
-
     /**
      * Test the Symfony\Component\Console\Application instance contains the Compose command.
      */

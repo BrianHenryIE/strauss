@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Converts between Flysystem-relative paths and absolute filesystem paths by adding or removing a base path prefix.
+ *
+ * Strauss's own version of {@see \League\Flysystem\PathPrefixer}, implementing {@see PathPrefixerInterface}.
+ *
+ * @package brianhenryie/strauss
+ */
+
 declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;
@@ -8,6 +16,11 @@ use function rtrim;
 use function strlen;
 use function substr;
 
+/**
+ * Stores the prefix with any trailing slash replaced by the configured separator. Unlike League's implementation,
+ * {@see self::prefixPath()} does not double-prefix a path which already starts with the prefix, and an empty prefix
+ * (relative paths) stays empty rather than becoming a lone separator.
+ */
 class PathPrefixer implements PathPrefixerInterface
 {
     /**

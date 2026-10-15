@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/BrianHenryIE/strauss/pull/200
  */
@@ -17,21 +18,21 @@ class StraussIssue200Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "require": {
-    "psr/log": "*"
-  },
-  "require-dev": {
-    "psr/simple-cache": "*"
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "vendor",
-      "namespace_prefix": "Company\\Project\\"
-    }
-  }
-}
-EOD;
+            {
+              "require": {
+                "psr/log": "*"
+              },
+              "require-dev": {
+                "psr/simple-cache": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "vendor",
+                  "namespace_prefix": "Company\\Project\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

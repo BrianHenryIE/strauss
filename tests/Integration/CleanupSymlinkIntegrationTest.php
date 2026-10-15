@@ -67,56 +67,56 @@ final class CleanupSymlinkIntegrationTest extends IntegrationTestCase
     private function packageComposerFile(): string
     {
         return <<<JSON
-{
-	"repositories": [
-		{
-			"type": "path",
-			"url": "../symlinked-package",
-			"options": {
-				"symlink": true
-			}
-		}
-	],
-	"name": "strauss-test/main-package",
-	"require": {
-		"strauss-test/symlinked-package": "@dev"
-	},
-	"extra": {
-		"strauss": {
-			"target_directory": "vendor_prefixed",
-			"namespace_prefix": "Prefixed\\\\",
-			"classmap_prefix": "Prefixed_",
-			"delete_vendor_packages": true
-		}
-	}
-}
-JSON;
+            {
+            	"repositories": [
+            		{
+            			"type": "path",
+            			"url": "../symlinked-package",
+            			"options": {
+            				"symlink": true
+            			}
+            		}
+            	],
+            	"name": "strauss-test/main-package",
+            	"require": {
+            		"strauss-test/symlinked-package": "@dev"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"target_directory": "vendor_prefixed",
+            			"namespace_prefix": "Prefixed\\\\",
+            			"classmap_prefix": "Prefixed_",
+            			"delete_vendor_packages": true
+            		}
+            	}
+            }
+            JSON;
     }
 
     private function symlinkedComposerFile(): string
     {
         return <<<JSON
-{
-	"name": "strauss-test/symlinked-package",
-	"autoload": {
-		"psr-4": {
-			"Internal\\\\Package\\\\": "src/"
-		}
-	}
-}
-JSON;
+            {
+            	"name": "strauss-test/symlinked-package",
+            	"autoload": {
+            		"psr-4": {
+            			"Internal\\\\Package\\\\": "src/"
+            		}
+            	}
+            }
+            JSON;
     }
 
     private function symlinkedPhpFile(): string
     {
         return <<<PHP
-<?php
+            <?php
 
-namespace Internal\Package;
+            namespace Internal\Package;
 
-final class File {
-}
+            final class File {
+            }
 
-PHP;
+            PHP;
     }
 }

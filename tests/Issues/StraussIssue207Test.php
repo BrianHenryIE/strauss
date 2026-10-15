@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copy all files in Fremius / Action Scheduler / Plugin Update Checker packages.
  *
@@ -20,18 +21,18 @@ class StraussIssue207Test extends IntegrationTestCase
     public function test_fremius_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
-{
-	"name": "test/package-with-custom-autoloader",
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "Strauss\\Issue207\\"
-        }
-    },
-    "require": {
-        "freemius/wordpress-sdk": "2.12"
-    }
-}
-EOD;
+            {
+            	"name": "test/package-with-custom-autoloader",
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "Strauss\\Issue207\\"
+                    }
+                },
+                "require": {
+                    "freemius/wordpress-sdk": "2.12"
+                }
+            }
+            EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
@@ -53,18 +54,18 @@ EOD;
     public function test_action_scheduler_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
-{
-	"name": "test/package-with-custom-autoloader",
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "Strauss\\Issue207_2\\"
-        }
-    },
-    "require": {
-        "woocommerce/action-scheduler": "3.9.3"
-    }
-}
-EOD;
+            {
+            	"name": "test/package-with-custom-autoloader",
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "Strauss\\Issue207_2\\"
+                    }
+                },
+                "require": {
+                    "woocommerce/action-scheduler": "3.9.3"
+                }
+            }
+            EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
@@ -83,18 +84,18 @@ EOD;
     public function test_plugin_update_checker_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
-{
-	"name": "test/package-with-custom-autoloader",
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "Strauss\\Issue207_3\\"
-        }
-    },
-    "require": {
-        "yahnis-elsts/plugin-update-checker": "v5.6"
-    }
-}
-EOD;
+            {
+            	"name": "test/package-with-custom-autoloader",
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "Strauss\\Issue207_3\\"
+                    }
+                },
+                "require": {
+                    "yahnis-elsts/plugin-update-checker": "v5.6"
+                }
+            }
+            EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
@@ -115,18 +116,18 @@ EOD;
     public function test_abilities_api_files_are_copied(): void
     {
         $packageComposerJson = <<<'EOD'
-{
-	"name": "test/abilities-api-uses-bootstrap-in-files-autoloader",
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "Strauss\\Issue207_4\\"
-        }
-    },
-    "require": {
-        "wordpress/abilities-api": "0.4.0"
-    }
-}
-EOD;
+            {
+            	"name": "test/abilities-api-uses-bootstrap-in-files-autoloader",
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "Strauss\\Issue207_4\\"
+                    }
+                },
+                "require": {
+                    "wordpress/abilities-api": "0.4.0"
+                }
+            }
+            EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $packageComposerJson);
 
         chdir($this->testsWorkingDir);
@@ -140,7 +141,7 @@ EOD;
         // Although `wordpress/abilities-api/includes/bootstrap.php` guards against loading classes etc that are already
         // defined, I don't see a way to decide if that is adequate. The plugin developer might have to explicitly
         // exclude the files from prefixing if that's what they (reasonably) want.
-//        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
-//        $this->assertStringContainsString("function wp_register_ability(", $php_string);
+        //        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/wordpress/abilities-api/includes/abilities-api.php');
+        //        $this->assertStringContainsString("function wp_register_ability(", $php_string);
     }
 }

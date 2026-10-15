@@ -21,7 +21,6 @@ use Psr\Log\NullLogger;
  */
 class FileCopyScannerIntegrationTest extends IntegrationTestCase
 {
-
     /**
      * Given a list of files, find all the global classes and the namespaces.
      */
@@ -29,25 +28,25 @@ class FileCopyScannerIntegrationTest extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/filescannerintegrationtest",
-  "require": {
-    "google/apiclient": "v2.16.1"
-  },
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_files": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/filescannerintegrationtest",
+              "require": {
+                "google/apiclient": "v2.16.1"
+              },
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_files": false
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -93,9 +92,9 @@ EOD;
         $config = $this->createStub(StraussConfig::class);
 
         $config->method('getNamespacePrefix')->willReturn("Prefix");
-        $config->method('getExcludeNamespacesFromPrefixing')->willReturn(array());
-        $config->method('getExcludePackagesFromPrefixing')->willReturn(array());
-        $config->method('getPackagesToPrefix')->willReturn(array('google/apiclient'=>''));
+        $config->method('getExcludeNamespacesFromPrefixing')->willReturn([]);
+        $config->method('getExcludePackagesFromPrefixing')->willReturn([]);
+        $config->method('getPackagesToPrefix')->willReturn(['google/apiclient' => '']);
 
         $discoveredSymbols = new DiscoveredSymbols();
 
@@ -122,32 +121,32 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-    "name": "brianhenryie/file-copy-scanner",
-    "require": {
-        "wordpress/mcp-adapter": "0.3.0"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "target_directory": "vendor-prefixed",
-            "delete_vendor_packages": true,
-	        "exclude_from_copy": {
-	          "file_patterns": [
-	            "wordpress/mcp-adapter/.github",
-	            "wordpress/mcp-adapter/docs",
-	            "wordpress/mcp-adapter/tests",
-	            "wordpress/mcp-adapter/CONTRIBUTING.md",
-	            "wordpress/mcp-adapter/phpcs.xml.dist",
-	            "wordpress/mcp-adapter/phpunit.xml.dist",
-	            "wordpress/mcp-adapter/README-INITIAL.md",
-	            "wordpress/mcp-adapter/phpstan.neon.dist"
-	          ]
-	        }
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/file-copy-scanner",
+                "require": {
+                    "wordpress/mcp-adapter": "0.3.0"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "target_directory": "vendor-prefixed",
+                        "delete_vendor_packages": true,
+            	        "exclude_from_copy": {
+            	          "file_patterns": [
+            	            "wordpress/mcp-adapter/.github",
+            	            "wordpress/mcp-adapter/docs",
+            	            "wordpress/mcp-adapter/tests",
+            	            "wordpress/mcp-adapter/CONTRIBUTING.md",
+            	            "wordpress/mcp-adapter/phpcs.xml.dist",
+            	            "wordpress/mcp-adapter/phpunit.xml.dist",
+            	            "wordpress/mcp-adapter/README-INITIAL.md",
+            	            "wordpress/mcp-adapter/phpstan.neon.dist"
+            	          ]
+            	        }
+                    }
+                }
+            }
+            EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
         chdir($this->testsWorkingDir);

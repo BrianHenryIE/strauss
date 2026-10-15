@@ -1,6 +1,9 @@
 <?php
+
 /**
  * Build a list of ComposerPackage objects for all dependencies.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -35,12 +38,16 @@ class DependenciesEnumerator
 
     protected FileSystem $filesystem;
 
-    /** @var string[]  */
-    protected array $virtualPackages = array(
-        'php-http/client-implementation'
-    );
+    /**
+     * @var string[]
+     */
+    protected array $virtualPackages = [
+        'php-http/client-implementation',
+    ];
 
-    /** @var array<string,ComposerPackage> */
+    /**
+     * @var array<string,ComposerPackage>
+     */
     protected array $flatDependencyArray = [];
 
     /**
@@ -55,15 +62,19 @@ class DependenciesEnumerator
     /**
      * @var array{}|array<string, AutoloadKeyArray> $overrideAutoload
      */
-    protected array $overrideAutoload = array();
+    protected array $overrideAutoload = [];
     protected StraussConfig $config;
 
     /**
      * Constructor.
+     *
+     * @param StraussConfig    $config     The required packages, autoload overrides, and project and vendor directories.
+     * @param FileSystem       $filesystem Used to read `composer.json`, `composer.lock` and packages' `composer.json` files.
+     * @param ?LoggerInterface $logger     Optional logger; a NullLogger is used when null.
      */
     public function __construct(
-        StraussConfig    $config,
-        FileSystem       $filesystem,
+        StraussConfig $config,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->overrideAutoload = $config->getOverrideAutoload();
@@ -83,7 +94,9 @@ class DependenciesEnumerator
     {
         $this->recursiveGetAllDependencies($this->requiredPackageNames);
 
-        /** @var array<string, ComposerPackage[]> $providers The packages which `provide` or `replace` each name. */
+        /**
+ * @var array<string, ComposerPackage[]> $providers The packages which `provide` or `replace` each name.
+*/
         $providers = [];
         foreach ($this->flatDependencyArray as $composerPackage) {
             foreach ($composerPackage->getProvidesNames() as $providesName) {
@@ -116,14 +129,15 @@ class DependenciesEnumerator
     }
 
     /**
-     * @param string[] $requiredPackageNames
+     * @param string[] $requiredPackageNames Composer package names, e.g. `psr/log`; virtual packages (php, ext-*) are filtered out.
+     *
      * @throws FilesystemException
      * @throws JsonException
      * @throws Exception
      */
     protected function recursiveGetAllDependencies(array $requiredPackageNames): void
     {
-        $requiredPackageNames = array_filter($requiredPackageNames, array( $this, 'removeVirtualPackagesFilter' ));
+        $requiredPackageNames = array_filter($requiredPackageNames, [ $this, 'removeVirtualPackagesFilter' ]);
 
         $installedJsonPath = $this->filesystem->makeAbsolute(
             sprintf(
@@ -132,7 +146,9 @@ class DependenciesEnumerator
             )
         );
         $installedJsonTxt = $this->filesystem->read($installedJsonPath);
-        /** @var InstalledJsonArray $installedJson */
+        /**
+ * @var InstalledJsonArray $installedJson
+*/
         $installedJson = json_decode($installedJsonTxt, true);
         $installedJsonPackages = [];
         foreach ($installedJson['packages'] as $package) {
@@ -154,6 +170,7 @@ class DependenciesEnumerator
             /**
              * 1. Remove `mem://`
              * 2. Add `c:\` or `/`
+             *
              * @see https://github.com/composer/composer/pull/12396
              */
             $packageComposerFile = $this->filesystem->normalizePath($packageComposerFile);
@@ -162,9 +179,12 @@ class DependenciesEnumerator
             $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
 
             if ($this->filesystem->fileExists($packageComposerFile)) {
-                $this->logger->debug('Loading ComposerPackage::fromFile {packageComposerFilePath}', [
-                    'packageComposerFilePath' => $packageComposerFile,
-                ]);
+                $this->logger->debug(
+                    'Loading ComposerPackage::fromFile {packageComposerFilePath}',
+                    [
+                        'packageComposerFilePath' => $packageComposerFile,
+                    ]
+                );
 
                 /**
                  * TODO: Calling `::makeAbsolute()` should be unnecessary when Composer PR merged.
@@ -189,7 +209,9 @@ class DependenciesEnumerator
 
                 // TODO: These (.json, .lock) should be read once and reused.
                 $composerJsonString = $this->filesystem->read($this->config->getProjectAbsolutePath() . '/' . Factory::getComposerFile());
-                /** @var ComposerJsonArray $composerJson */
+                /**
+ * @var ComposerJsonArray $composerJson
+*/
                 $composerJson       = json_decode($composerJsonString, true, 512, JSON_THROW_ON_ERROR);
 
                 if (isset($composerJson['provide']) && in_array($requiredPackageName, array_keys($composerJson['provide']))) {
@@ -199,16 +221,19 @@ class DependenciesEnumerator
 
                 $composerLockPath = $this->config->getProjectAbsolutePath() . '/' . Factory::getLockFile(Factory::getComposerFile());
                 $composerLockString     = $this->filesystem->read($composerLockPath);
-                /** @var null|array{packages:array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray}} $composerLockJsonArray */
+                /**
+                 * @var null|array{packages:array<array{name:string, type?:string, require?:array<string,string>, autoload?:AutoloadKeyArray}>} $composerLockJsonArray
+                 */
                 $composerLockJsonArray           = json_decode($composerLockString, true);
 
                 if (is_null($composerLockJsonArray)) {
                     continue;
                 }
 
-                /** @var ?ComposerJsonArray $requiredPackageComposerJson */
+                /**
+                 * @var ?ComposerJsonArray $requiredPackageComposerJson
+                 */
                 $requiredPackageComposerJson = null;
-                /** @var array{name:string, type:string, requires?:array<string,string>, autoload?:AutoloadKeyArray} $packageJson */
                 foreach ($composerLockJsonArray['packages'] as $packageJson) {
                     if ($requiredPackageName === $packageJson['name']) {
                         $requiredPackageComposerJson = $packageJson;
@@ -222,11 +247,15 @@ class DependenciesEnumerator
                     continue;
                 }
 
-                $this->logger->info('Found {requiredPackageName} in composer.lock.', [
-                    'requiredPackageName' => $requiredPackageName,
-                ]);
+                $this->logger->info(
+                    'Found {requiredPackageName} in composer.lock.',
+                    [
+                        'requiredPackageName' => $requiredPackageName,
+                    ]
+                );
 
-                if (!isset($requiredPackageComposerJson['autoload'])
+                if (
+                    !isset($requiredPackageComposerJson['autoload'])
                     && empty($requiredPackageComposerJson['require'])
                     && (!isset($requiredPackageComposerJson['type']) || $requiredPackageComposerJson['type'] != 'metapackage')
                     && ! $this->filesystem->directoryExists(dirname($packageComposerFile))
@@ -241,16 +270,18 @@ class DependenciesEnumerator
                 $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
             }
 
-            if (isset($installedJsonPackages[$requiredPackageName])
+            if (
+                isset($installedJsonPackages[$requiredPackageName])
                 && is_null($requiredComposerPackage->getRealPath())
-                && $installedJsonPackages[$requiredPackageName]['dist']['type'] === 'path') {
+                && $installedJsonPackages[$requiredPackageName]['dist']['type'] === 'path'
+            ) {
                 $installedPackage = $installedJsonPackages[$requiredPackageName];
                 $path = $installedPackage['dist']['url'];
 
                 $packageRealPath = $this->filesystem->normalizePath(
                     Platform::realpath(
                         $this->filesystem->makeAbsolute(
-                            $this->config->getProjectAbsolutePath() . '/'.  $path
+                            $this->config->getProjectAbsolutePath() . '/' . $path
                         )
                     )
                 );
@@ -282,11 +313,13 @@ class DependenciesEnumerator
 
             $newPackagesString = implode(', ', $newPackages);
             if (!empty($newPackagesString)) {
-                $this->logger->debug(sprintf(
-                    'New packages: %s%s',
-                    str_repeat(' ', strlen($packageRequiresString) - strlen('New packages: ')),
-                    $newPackagesString
-                ));
+                $this->logger->debug(
+                    sprintf(
+                        'New packages: %s%s',
+                        str_repeat(' ', strlen($packageRequiresString) - strlen('New packages: ')),
+                        $newPackagesString
+                    )
+                );
             } else {
                 $this->logger->debug('No new packages.');
                 continue;
@@ -303,7 +336,7 @@ class DependenciesEnumerator
      */
     public function getAllFilesAutoloaders(): array
     {
-        $filesAutoloaders = array();
+        $filesAutoloaders = [];
         foreach ($this->flatDependencyArray as $packageName => $composerPackage) {
             if (isset($composerPackage->getAutoload()['files'])) {
                 $filesAutoloaders[$packageName] = $composerPackage->getAutoload()['files'];
@@ -314,6 +347,8 @@ class DependenciesEnumerator
 
     /**
      * Unset PHP, ext-*, ...
+     *
+     * @param string $requiredPackageName A package name from a `require` list, e.g. `php`, `ext-json` or `psr/log`.
      */
     protected function removeVirtualPackagesFilter(string $requiredPackageName): bool
     {

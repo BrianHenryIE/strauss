@@ -15,102 +15,102 @@ class ScanningParityFeatureTest extends IntegrationTestCase
     public function test_scanning_changes_do_not_change_transformed_output(): void
     {
         $dependencyComposerJson = <<<'JSON'
-{
-  "name": "local/scan-fixture",
-  "version": "1.0.0",
-  "autoload": {
-    "psr-4": {
-      "LocalScan\\": "src/"
-    },
-    "files": [
-      "src/globals.php",
-      "src/multi.php"
-    ]
-  }
-}
-JSON;
+            {
+              "name": "local/scan-fixture",
+              "version": "1.0.0",
+              "autoload": {
+                "psr-4": {
+                  "LocalScan\\": "src/"
+                },
+                "files": [
+                  "src/globals.php",
+                  "src/multi.php"
+                ]
+              }
+            }
+            JSON;
 
         $namedPhp = <<<'PHP'
-<?php
-namespace LocalScan;
+            <?php
+            namespace LocalScan;
 
-class NamedClass {}
-PHP;
+            class NamedClass {}
+            PHP;
 
         $globalsPhp = <<<'PHP'
-<?php
-namespace {
-    class GlobalClass {}
+            <?php
+            namespace {
+                class GlobalClass {}
 
-    function global_helper() {
-        return 'ok';
-    }
+                function global_helper() {
+                    return 'ok';
+                }
 
-    const GLOBAL_CONST = 'global';
-}
-PHP;
+                const GLOBAL_CONST = 'global';
+            }
+            PHP;
 
         $consumerPhp = <<<'PHP'
-<?php
-namespace LocalScan;
+            <?php
+            namespace LocalScan;
 
-class Consumer {
-    public function run(): array {
-        $class = new \GlobalClass();
-        $value = \global_helper();
-        $const = \GLOBAL_CONST;
-        return [$class::class, $value, $const];
-    }
-}
-PHP;
+            class Consumer {
+                public function run(): array {
+                    $class = new \GlobalClass();
+                    $value = \global_helper();
+                    $const = \GLOBAL_CONST;
+                    return [$class::class, $value, $const];
+                }
+            }
+            PHP;
 
         $multiPhp = <<<'PHP'
-<?php
-namespace LocalScan\PartA {
-    class Alpha {}
-}
+            <?php
+            namespace LocalScan\PartA {
+                class Alpha {}
+            }
 
-namespace {
-    function shared_helper() {
-        return true;
-    }
-}
+            namespace {
+                function shared_helper() {
+                    return true;
+                }
+            }
 
-namespace LocalScan\PartB {
-    class Beta {}
-}
-PHP;
+            namespace LocalScan\PartB {
+                class Beta {}
+            }
+            PHP;
 
         $projectComposerJson = <<<'JSON'
-{
-  "name": "local/scanning-parity-project",
-  "version": "1.0.0",
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "repositories": [
-    {
-      "type": "path",
-      "url": "../scan-fixture",
-      "options": {
-        "symlink": false
-      }
-    }
-  ],
-  "require": {
-    "local/scan-fixture": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "MyPrefix\\",
-      "classmap_prefix": "MyPrefix_",
-      "functions_prefix": "myprefix_",
-      "constants_prefix": "MYPREFIX_",
-      "target_directory": "vendor-prefixed",
-      "classmap_output": false
-    }
-  }
-}
-JSON;
+            {
+              "name": "local/scanning-parity-project",
+              "version": "1.0.0",
+              "minimum-stability": "dev",
+              "prefer-stable": true,
+              "repositories": [
+                {
+                  "type": "path",
+                  "url": "../scan-fixture",
+                  "options": {
+                    "symlink": false
+                  }
+                }
+              ],
+              "require": {
+                "local/scan-fixture": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "MyPrefix\\",
+                  "classmap_prefix": "MyPrefix_",
+                  "functions_prefix": "myprefix_",
+                  "constants_prefix": "MYPREFIX_",
+                  "target_directory": "vendor-prefixed",
+                  "classmap_output": false
+                }
+              }
+            }
+            JSON;
 
         mkdir($this->testsWorkingDir . '/scan-fixture/src', 0777, true);
         $this->getFileSystem()->write($this->testsWorkingDir . '/scan-fixture/composer.json', $dependencyComposerJson);

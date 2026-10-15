@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `use GlobalClass as Alias;` should be replaced with `use Prefixed_GlobalClass as Alias;`.
  *
@@ -20,44 +21,44 @@ class StraussIssue108Test extends IntegrationTestCase
     public function test_a(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue108",
-  "require": {
-    "erusev/parsedown": "1.7.4"
-  },
-  "autoload": {
-    "classmap": [
-	  "src/"
-	]
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue108\\",
-      "classmap_prefix": "Prefixed_",
-	  "override_autoload": {
-		"erusev/parsedown": {
-	  	  "classmap": [
-		    "."
-		  ]
-		}
-	  },
-	  "update_call_sites": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue108",
+              "require": {
+                "erusev/parsedown": "1.7.4"
+              },
+              "autoload": {
+                "classmap": [
+            	  "src/"
+            	]
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue108\\",
+                  "classmap_prefix": "Prefixed_",
+            	  "override_autoload": {
+            		"erusev/parsedown": {
+            	  	  "classmap": [
+            		    "."
+            		  ]
+            		}
+            	  },
+            	  "update_call_sites": true
+                }
+              }
+            }
+            EOD;
 
         $replacementfile = <<<'EOD'
-<?php
+            <?php
 
-use Parsedown as MarkdownParser;
+            use Parsedown as MarkdownParser;
 
-class MyClass {
-	public function myFunction() {
-		$parsedown = new MarkdownParser();
-	}
-}
-EOD;
+            class MyClass {
+            	public function myFunction() {
+            		$parsedown = new MarkdownParser();
+            	}
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

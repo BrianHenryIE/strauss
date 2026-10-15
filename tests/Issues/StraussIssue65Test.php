@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/BrianHenryIE/strauss/issues/65
  */
@@ -13,7 +14,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue65Test extends IntegrationTestCase
 {
-
     /**
      * This passes on 8.4 but fails on 7.4 with an infinite loop in php-parser.
      */
@@ -26,25 +26,25 @@ class StraussIssue65Test extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-issue-65-aws-prefixed-functions",
-  "require": {
-    "aws/aws-sdk-php": "3.268.17"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Issue65\\",
-      "classmap_prefix": "BH_Strauss_Issue65_"
-    },
-    "aws/aws-sdk-php": [
-        "S3"
-    ]
-  },
-  "scripts": {
-    "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-issue-65-aws-prefixed-functions",
+              "require": {
+                "aws/aws-sdk-php": "3.268.17"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\Issue65\\",
+                  "classmap_prefix": "BH_Strauss_Issue65_"
+                },
+                "aws/aws-sdk-php": [
+                    "S3"
+                ]
+              },
+              "scripts": {
+                "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -57,7 +57,7 @@ EOD;
 
         // vendor/aws/aws-sdk-php/src/Endpoint/UseDualstackEndpoint/Configuration.php
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/aws/aws-sdk-php/src/Endpoint/UseDualstackEndpoint/Configuration.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/aws/aws-sdk-php/src/Endpoint/UseDualstackEndpoint/Configuration.php');
 
         self::assertStringNotContainsString('$this->useDualstackEndpoint = Aws\boolean_value($useDualstackEndpoint);', $php_string);
         self::assertStringNotContainsString('$this->useDualstackEndpoint = BrianHenryIE\Issue65\Aws\boolean_value($useDualstackEndpoint);', $php_string);

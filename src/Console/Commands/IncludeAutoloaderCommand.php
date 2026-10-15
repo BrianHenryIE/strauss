@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Adds ~`require_once 'autoload_aliases.php'` to `vendor/autoload.php`.
  *
@@ -21,12 +22,17 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Registered as `include-autoloader`. Loads the project's {@see \BrianHenryIE\Strauss\Composer\ProjectComposerPackage}
+ * and its {@see \BrianHenryIE\Strauss\Composer\Extra\StraussConfig}, then calls {@see VendorComposerAutoload} to add
+ * the `autoload_aliases.php` and target directory `autoload.php` requires to `vendor/autoload.php`.
+ */
 class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
 {
     /**
      * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
      *
-     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @used-by  \Symfony\Component\Console\Command\Command::__construct
      * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
      *
      * @return void
@@ -40,11 +46,10 @@ class IncludeAutoloaderCommand extends AbstractRenamespacerCommand
     }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
+     * @param InputInterface  $input  Command-line arguments and options.
+     * @param OutputInterface $output Console output for logging.
      *
      * @see Command::execute()
-     *
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {

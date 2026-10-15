@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see \BrianHenryIE\Strauss\Pipeline\Prefixer::prefixComposerAutoloadFiles()
  */
@@ -10,25 +11,24 @@ namespace BrianHenryIE\Strauss;
  */
 class PrefixComposerAutoloadFilesFeatureTest extends IntegrationTestCase
 {
-
     public function test_correct_renaming_in_composer_autoloader_files(): void
     {
         $this->markTestSkippedOnPhpVersionBelow('8.0.0');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue183",
-  "require": {
-    "psr/log": "2.0.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Prefixed\\",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue183",
+              "require": {
+                "psr/log": "2.0.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Prefixed\\",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -50,7 +50,7 @@ EOD;
          * if ('Composer\Autoload\ClassLoader' === $class) {
          * call_user_func(\Composer\Autoload\ComposerStaticInit
          */
-        $autoloadRealPhpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_real.php');
+        $autoloadRealPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_real.php');
         $this->assertStringNotContainsString("('Composer\Autoload\ClassLoader' === \$class)", $autoloadRealPhpString);
         $this->assertStringContainsString('Strauss\Prefixed\Composer\Autoload\ClassLoader', $autoloadRealPhpString);
         $this->assertStringNotContainsString("call_user_func(\Composer\Autoload\ComposerStaticInit", $autoloadRealPhpString);
@@ -61,7 +61,7 @@ EOD;
          *
          * namespace Composer\Autoload;
          */
-        $autoloadStaticPhpString = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_static.php');
+        $autoloadStaticPhpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_static.php');
         $this->assertStringNotContainsString('namespace Composer\Autoload;', $autoloadStaticPhpString);
         $this->assertStringContainsString('namespace Strauss\Prefixed\Composer\Autoload;', $autoloadStaticPhpString);
 
@@ -70,7 +70,7 @@ EOD;
          *
          * namespace Composer\Autoload;
          */
-        $classLoaderPhpString = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/ClassLoader.php');
+        $classLoaderPhpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/ClassLoader.php');
         $this->assertStringNotContainsString('namespace Composer\Autoload;', $classLoaderPhpString);
         $this->assertStringContainsString('namespace Strauss\Prefixed\Composer\Autoload;', $classLoaderPhpString);
 
@@ -79,7 +79,7 @@ EOD;
          *
          * namespace Composer\Autoload;
          */
-        $installedVersionsPhpString = file_get_contents($this->testsWorkingDir .'/vendor-prefixed/composer/InstalledVersions.php');
+        $installedVersionsPhpString = file_get_contents($this->testsWorkingDir . '/vendor-prefixed/composer/InstalledVersions.php');
         $this->assertStringNotContainsString('namespace Composer;', $installedVersionsPhpString);
         $this->assertStringContainsString('namespace Strauss\Prefixed\Composer;', $installedVersionsPhpString);
     }
@@ -107,19 +107,19 @@ EOD;
     {
         $classmapOutputJson = $classmapOutput ? 'true' : 'false';
         $composerJsonString = <<<EOD
-{
-  "name": "strauss/composer-runtime-references",
-  "require": {
-    "psr/log": "1.1.4"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\\\Prefixed\\\\",
-      "classmap_output": $classmapOutputJson
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/composer-runtime-references",
+              "require": {
+                "psr/log": "1.1.4"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\\\Prefixed\\\\",
+                  "classmap_output": $classmapOutputJson
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -128,18 +128,18 @@ EOD;
         exec('composer install');
 
         $usesRuntimePhpString = <<<'EOD'
-<?php
+            <?php
 
-namespace Psr\Log;
+            namespace Psr\Log;
 
-class UsesRuntime
-{
-    public function version(): ?string
-    {
-        return \Composer\InstalledVersions::getVersion('psr/log');
-    }
-}
-EOD;
+            class UsesRuntime
+            {
+                public function version(): ?string
+                {
+                    return \Composer\InstalledVersions::getVersion('psr/log');
+                }
+            }
+            EOD;
         $this->getFileSystem()->write($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/UsesRuntime.php', $usesRuntimePhpString);
 
         $exitCode = $this->runStrauss($output);

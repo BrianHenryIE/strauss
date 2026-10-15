@@ -1,6 +1,9 @@
 <?php
+
 /**
  * A logger that changes file paths to be relative to the project directory.
+ *
+ * @package brianhenryie/strauss
  *
  * @see \BrianHenryIE\Strauss\Helpers\FileSystem::getProjectRelativePath()
  */
@@ -11,6 +14,10 @@ use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 
+/**
+ * For each string context value whose key contains `path` (case-insensitive), replaces it with
+ * {@see FileSystem::getProjectRelativePath()}. Operates on the Monolog v3 {@see LogRecord}, returning a copy via `LogRecord::with()` only when a value changed.
+ */
 class RelativeFilepathLogProcessor3 implements ProcessorInterface
 {
     protected FileSystem $fileSystem;
@@ -25,6 +32,7 @@ class RelativeFilepathLogProcessor3 implements ProcessorInterface
      * Checks all context values for keys containing 'path' modifies their values to be
      * relative to the project root.
      *
+     * @param LogRecord $record Monolog log record whose `context` values may hold absolute paths.
      */
     public function __invoke(LogRecord $record): LogRecord
     {

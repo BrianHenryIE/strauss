@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/BrianHenryIE/strauss/issues/14
  */
@@ -13,7 +14,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue14Test extends IntegrationTestCase
 {
-
     /**
      * Looks like the exclude_from_prefix regex for psr is not specific enough.
      *
@@ -23,18 +23,18 @@ class StraussIssue14Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-issue-14",
-  "require":{
-    "guzzlehttp/psr7": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Issue14\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-issue-14",
+              "require":{
+                "guzzlehttp/psr7": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\Issue14\\"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -45,7 +45,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/guzzlehttp/psr7/src/AppendStream.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/guzzlehttp/psr7/src/AppendStream.php');
 
         // was namespace GuzzleHttp\Psr7;
 
@@ -57,18 +57,18 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-issue-14",
-  "require":{
-    "guzzlehttp/psr7": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\Issue14\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-issue-14",
+              "require":{
+                "guzzlehttp/psr7": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\Issue14\\"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -79,6 +79,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_files.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_files.php');
     }
 }

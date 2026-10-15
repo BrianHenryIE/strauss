@@ -1,8 +1,11 @@
 <?php
+
 /**
  * Rename a namespace in files. (in-place renaming)
  *
- * strauss replace --from "YourCompany\\Project" --to "BrianHenryIE\\MyProject" --paths "includes,my-plugin.php"
+ * Usage: `strauss replace --from "YourCompany\\Project" --to "BrianHenryIE\\MyProject" --paths "includes,my-plugin.php"`
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Console\Commands;
@@ -18,6 +21,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Registered as `replace`. The `--from`/`--to` pair becomes a single namespace replacement pattern and `--paths` the
+ * update call sites on the {@see ReplaceConfigInterface} config. It then runs the shared renaming pipeline from
+ * {@see AbstractRenamespacerCommand} over the files {@see FileEnumerator} finds in those paths, with no copying, cleanup
+ * or autoloader steps, in this process (no worker pool). Licence headers credit the Git user or the system user, since
+ * there may be no `composer.json`.
+ */
 class ReplaceCommand extends AbstractRenamespacerCommand
 {
     protected function getConfig(): ReplaceConfigInterface
@@ -28,7 +38,7 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     /**
      * Set name and description, add CLI arguments, call parent class to add dry-run, verbosity options.
      *
-     * @used-by \Symfony\Component\Console\Command\Command::__construct
+     * @used-by  \Symfony\Component\Console\Command\Command::__construct
      * @override {@see \Symfony\Component\Console\Command\Command::configure()} empty method.
      *
      * @return void
@@ -65,11 +75,10 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
+     * @param InputInterface  $input  Command-line arguments and options.
+     * @param OutputInterface $output Console output for logging.
      *
      * @see Command::execute()
-     *
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -116,10 +125,14 @@ class ReplaceCommand extends AbstractRenamespacerCommand
     {
         $this->logger->notice('Loading cli config...');
 
-        /** @var string $inputFrom */
+        /**
+ * @var string $inputFrom
+*/
         $inputFrom = $input->getOption('from');
 
-        /** @var string $inputTo */
+        /**
+ * @var string $inputTo
+*/
         $inputTo = $input->getOption('to');
 
         // TODO: validate input exists.
@@ -127,7 +140,9 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         // TODO:
         $this->config->setNamespaceReplacementPatterns([$inputFrom => $inputTo]);
 
-        /** @var string $inputPaths */
+        /**
+ * @var string $inputPaths
+*/
         $inputPaths = $input->getOption('paths');
         $paths = explode(',', $inputPaths);
 
@@ -142,7 +157,7 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         $this->logger->info('Enumerating files...');
         $relativeUpdateCallSites = $config->getUpdateCallSites() ?? [];
         $updateCallSites = array_map(
-            fn($path) => false !== strpos($path, $this->workingDir) ? $path : $this->workingDir . '/'.$path,
+            fn($path) => false !== strpos($path, $this->workingDir) ? $path : $this->workingDir . '/' . $path,
             $relativeUpdateCallSites
         );
         $fileEnumerator = new FileEnumerator($config, $this->filesystem, $this->logger);
@@ -168,7 +183,7 @@ class ReplaceCommand extends AbstractRenamespacerCommand
         }
 
         $callSitePaths = array_map(
-            fn($path) => false !== strpos($path, $this->workingDir) ? $path : $this->workingDir . '/'. $path,
+            fn($path) => false !== strpos($path, $this->workingDir) ? $path : $this->workingDir . '/' . $path,
             $relativeCallSitePaths
         );
 

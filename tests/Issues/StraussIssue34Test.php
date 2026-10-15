@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Don't double prefix when updating project code on repeated runs.
  *
@@ -15,41 +16,40 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue34Test extends IntegrationTestCase
 {
-
     public function test_no_double_prefix_after_second_run(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-34",
-  "minimum-stability": "dev",
-  "autoload": {
-    "classmap": [
-      "src/"
-    ]
-  },
-  "require": {
-    "psr/log": "1"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\S34\\",
-      "classmap_prefix": "BH_Strauss_",
-      "target_directory": "vendor",
-      "update_call_sites": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-34",
+              "minimum-stability": "dev",
+              "autoload": {
+                "classmap": [
+                  "src/"
+                ]
+              },
+              "require": {
+                "psr/log": "1"
+              },
+              "require-dev": {
+                "phpunit/phpunit": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\S34\\",
+                  "classmap_prefix": "BH_Strauss_",
+                  "target_directory": "vendor",
+                  "update_call_sites": true
+                }
+              }
+            }
+            EOD;
         $phpFileJsonString = <<<'EOD'
-<?php
+            <?php
 
-namespace My_Namespace\My_Project;
+            namespace My_Namespace\My_Project;
 
-use Psr\Log\LoggerInterface;
-EOD;
+            use Psr\Log\LoggerInterface;
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
         @mkdir($this->testsWorkingDir . '/src');

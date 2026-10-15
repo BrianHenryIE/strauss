@@ -1,9 +1,12 @@
 <?php
+
 /**
  * How many worker processes to run, and how much work to hand each one at a time.
  *
  * Modelled on PHP-CS-Fixer's `ParallelConfig`: workers pull chunks of files, so a fast worker takes more of them,
  * and a chunk that takes longer than the timeout is treated as a hung worker.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -12,6 +15,12 @@ namespace BrianHenryIE\Strauss\Pipeline\Parallel;
 
 use InvalidArgumentException;
 
+/**
+ * Immutable value object holding the maximum process count, files per chunk and chunk timeout, all validated as
+ * positive. {@see ParallelConfig::detect()} sizes the pool from the CPU count (from `NUMBER_OF_PROCESSORS`,
+ * `/proc/cpuinfo` or `sysctl hw.ncpu`) minus one for the parent, and {@see ParallelConfig::getProcessesToSpawn()}
+ * caps the worker count at the number of chunks.
+ */
 class ParallelConfig
 {
     public const DEFAULT_FILES_PER_CHUNK = 20;
@@ -103,6 +112,8 @@ class ParallelConfig
 
     /**
      * How many workers are worth starting for this many files: never more than there are chunks.
+     *
+     * @param int $fileCount The number of files to be analysed.
      */
     public function getProcessesToSpawn(int $fileCount): int
     {

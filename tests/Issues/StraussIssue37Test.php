@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * @see https://github.com/BrianHenryIE/strauss/issues/37
@@ -14,28 +15,27 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue37Test extends IntegrationTestCase
 {
-
     /**
      */
     public function test_can_handle_psr_namespace_with_path_array(): void
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-psr-4-path-array",
-  "minimum-stability": "dev",
-  "require": {
-    "automattic/woocommerce": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\S34\\",
-      "classmap_prefix": "BH_Strauss_"
-    }
-  }
-}
+            {
+              "name": "brianhenryie/strauss-psr-4-path-array",
+              "minimum-stability": "dev",
+              "require": {
+                "automattic/woocommerce": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\S34\\",
+                  "classmap_prefix": "BH_Strauss_"
+                }
+              }
+            }
 
-EOD;
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

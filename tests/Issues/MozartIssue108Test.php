@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This is interesting for two reasons.
  *
@@ -23,7 +24,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue108Test extends IntegrationTestCase
 {
-
     /**
      * WooCommerce Action Scheduler ... has no autoload key. But also needs some Mozart patches to work correctly.
      */
@@ -31,27 +31,27 @@ class MozartIssue108Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "require": {
-    "woocommerce/action-scheduler": "3.1.6",
-    "deliciousbrains/wp-background-processing": "1.0.2"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss",
-      "override_autoload": {
-        "woocommerce/action-scheduler": {
-            "classmap": [
-                "classes/",
-                "deprecated/",
-                "lib/"
-            ]
-        }
-      }
-    }
-  }
-}
-EOD;
+            {
+              "require": {
+                "woocommerce/action-scheduler": "3.1.6",
+                "deliciousbrains/wp-background-processing": "1.0.2"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss",
+                  "override_autoload": {
+                    "woocommerce/action-scheduler": {
+                        "classmap": [
+                            "classes/",
+                            "deprecated/",
+                            "lib/"
+                        ]
+                    }
+                  }
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -65,16 +65,16 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_contents = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/deliciousbrains/wp-background-processing/classes/wp-async-request.php');
+        $php_contents = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/deliciousbrains/wp-background-processing/classes/wp-async-request.php');
         self::assertStringContainsString('abstract class Strauss_WP_Async_Request', $php_contents);
 
-//        $pdf_contents = $this->getFileSystem()->read($this->testsWorkingDir .'/strauss/mtdowling/cron-expression/src/Cron/CronExpression.php');
-//        self::assertStringContainsString('namespace Strauss\\CronExpression', $pdf_contents);
+        //        $pdf_contents = $this->getFileSystem()->read($this->testsWorkingDir .'/strauss/mtdowling/cron-expression/src/Cron/CronExpression.php');
+        //        self::assertStringContainsString('namespace Strauss\\CronExpression', $pdf_contents);
 
-        $php_contents = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/woocommerce/action-scheduler/lib/cron-expression/CronExpression.php');
+        $php_contents = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/woocommerce/action-scheduler/lib/cron-expression/CronExpression.php');
         self::assertStringContainsString('class Strauss_CronExpression', $php_contents);
 
-        $php_contents = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/woocommerce/action-scheduler/classes/schedules/ActionScheduler_CronSchedule.php');
+        $php_contents = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/woocommerce/action-scheduler/classes/schedules/ActionScheduler_CronSchedule.php');
         self::assertStringContainsString('if ( ! is_a( $recurrence, \'Strauss_CronExpression\' ) ) {', $php_contents);
     }
 }

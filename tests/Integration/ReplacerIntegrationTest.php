@@ -11,41 +11,40 @@ use BrianHenryIE\Strauss\Pipeline\Prefixer;
  */
 class ReplacerIntegrationTest extends IntegrationTestCase
 {
-
     public function testReplaceNamespace(): void
     {
         $this->markTestIncomplete('Ironically, this is failing because it downloads a newer psr/log but strauss has already loaded an older one.');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/replacerintegrationtest",
-  "require": {
-    "google/apiclient": "v2.16.1"
-  },
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_"
-    },
-    "google/apiclient-services": [
-	  "Calendar"
-	]
-  },
-  "scripts": {
-    "pre-autoload-dump": [
-      "@delete-unused-google-apis"
-    ],
-    "delete-unused-google-apis": [
-        "Google\\Task\\Composer::cleanup"
-    ]
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/replacerintegrationtest",
+              "require": {
+                "google/apiclient": "v2.16.1"
+              },
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_"
+                },
+                "google/apiclient-services": [
+            	  "Calendar"
+            	]
+              },
+              "scripts": {
+                "pre-autoload-dump": [
+                  "@delete-unused-google-apis"
+                ],
+                "delete-unused-google-apis": [
+                    "Google\\Task\\Composer::cleanup"
+                ]
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -69,20 +68,20 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "setasign/fpdf": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_files": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "setasign/fpdf": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_files": false
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -93,7 +92,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/' . 'setasign/fpdf/fpdf.php');
+        $updatedFile = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/' . 'setasign/fpdf/fpdf.php');
 
         self::assertStringContainsString('class BrianHenryIE_Strauss_FPDF', $updatedFile);
     }
@@ -102,22 +101,22 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "brianhenryie/bh-wp-logger": "0.1"
-  },
-  "minimum-stability": "dev",
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\MyProject\\",
-      "namespace_replacement_patterns": {
-        "~BrianHenryIE\\\\(.*)~" : "BrianHenryIE\\MyProject\\\\$1"
-      }
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "brianhenryie/bh-wp-logger": "0.1"
+              },
+              "minimum-stability": "dev",
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\MyProject\\",
+                  "namespace_replacement_patterns": {
+                    "~BrianHenryIE\\\\(.*)~" : "BrianHenryIE\\MyProject\\\\$1"
+                  }
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -137,22 +136,22 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "brianhenryie/bh-wp-logger": "0.1"
-  },
-  "minimum-stability": "dev",
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\MyProject\\",
-      "namespace_replacement_patterns": {
-        "~BrianHenryIE\\\\WP_Logger~" : "AnotherProject\\Logger"
-      }
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "brianhenryie/bh-wp-logger": "0.1"
+              },
+              "minimum-stability": "dev",
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\MyProject\\",
+                  "namespace_replacement_patterns": {
+                    "~BrianHenryIE\\\\WP_Logger~" : "AnotherProject\\Logger"
+                  }
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -172,22 +171,22 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "brianhenryie/bh-wp-logger": "0.1"
-  },
-  "minimum-stability": "dev",
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\MyProject\\",
-      "namespace_replacement_patterns": {
-        "~BrianHenryIE\\\\([^\\\\]*)(\\\\.*)?~" : "AnotherProject\\\\$1\\\\MyProject$2"
-      }
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "brianhenryie/bh-wp-logger": "0.1"
+              },
+              "minimum-stability": "dev",
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\MyProject\\",
+                  "namespace_replacement_patterns": {
+                    "~BrianHenryIE\\\\([^\\\\]*)(\\\\.*)?~" : "AnotherProject\\\\$1\\\\MyProject$2"
+                  }
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -211,25 +210,25 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strausstest",
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "require": {
-    "brianhenryie/bh-wp-logger": "0.1"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\MyProject\\",
-      "exclude_from_copy": {
-        "file_patterns": [
-          "#[^/]*/[^/]*/tests/#"
-        ]
-      }
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strausstest",
+              "minimum-stability": "dev",
+              "prefer-stable": true,
+              "require": {
+                "brianhenryie/bh-wp-logger": "0.1"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\MyProject\\",
+                  "exclude_from_copy": {
+                    "file_patterns": [
+                      "#[^/]*/[^/]*/tests/#"
+                    ]
+                  }
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -250,58 +249,58 @@ EOD;
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.6');
 
         $pdfHelpersComposer = <<<'JSON'
-{
-    "name": "brianhenryie/pdf-helpers",
-    "autoload": {
-        "psr-4": {
-            "BrianHenryIE\\\\PdfHelpers\\\\": "src"
-        }
-    },
-    "require": {
-        "setasign/fpdi": "^2.3"
-    }
-}
-JSON;
+            {
+                "name": "brianhenryie/pdf-helpers",
+                "autoload": {
+                    "psr-4": {
+                        "BrianHenryIE\\\\PdfHelpers\\\\": "src"
+                    }
+                },
+                "require": {
+                    "setasign/fpdi": "^2.3"
+                }
+            }
+            JSON;
 
         $pdfHelpersPhp = <<<'PHP'
-<?php
+            <?php
 
-namespace BrianHenryIE\PdfHelpers;
+            namespace BrianHenryIE\PdfHelpers;
 
-use Mpdf\Mpdf;
+            use Mpdf\Mpdf;
 
-class MpdfCrop extends Mpdf {
+            class MpdfCrop extends Mpdf {
 
-	public function clipRect( $x, $y, $width, $height ) {
-		$this->pages[ $this->page ] .= $this->_setClippingPath( $x, $y, $width, $height );
-	}
+            	public function clipRect( $x, $y, $width, $height ) {
+            		$this->pages[ $this->page ] .= $this->_setClippingPath( $x, $y, $width, $height );
+            	}
 
-}
-PHP;
+            }
+            PHP;
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "repositories": {
-    "brianhenryie/pdf-helpers": {
-        "type": "path",
-        "url": "../bh-pdf-helpers"
-    }
-  },
-  "require": {
-    "brianhenryie/pdf-helpers": "*"
-  },
-  "minimum-stability": "dev",
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\MyProject\\",
-      "namespace_replacement_patterns": {
-        "/BrianHenryIE\\\\(.*)/": "BrianHenryIE\\MyProject\\\\$1"
-      }
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "repositories": {
+                "brianhenryie/pdf-helpers": {
+                    "type": "path",
+                    "url": "../bh-pdf-helpers"
+                }
+              },
+              "require": {
+                "brianhenryie/pdf-helpers": "*"
+              },
+              "minimum-stability": "dev",
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\MyProject\\",
+                  "namespace_replacement_patterns": {
+                    "/BrianHenryIE\\\\(.*)/": "BrianHenryIE\\MyProject\\\\$1"
+                  }
+                }
+              }
+            }
+            EOD;
 
         mkdir($this->testsWorkingDir . '/bh-pdf-helpers/src', 0777, true);
         $this->getFileSystem()->write($this->testsWorkingDir . '/bh-pdf-helpers/composer.json', $pdfHelpersComposer);
@@ -310,7 +309,7 @@ EOD;
         mkdir($this->testsWorkingDir . '/project', 0777, true);
         $this->getFileSystem()->write($this->testsWorkingDir . '/project/composer.json', $composerJsonString);
 
-        chdir($this->testsWorkingDir.'/project/');
+        chdir($this->testsWorkingDir . '/project/');
 
         exec('composer install');
 
@@ -333,15 +332,15 @@ EOD;
     public function test_replace_namespace_string(): void
     {
         $composerJsonString = <<<'JSON'
-{
-    "name": "brianhenryie/test-replace-namespace-string",
-    "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-    }
-  }
-}
-JSON;
+            {
+                "name": "brianhenryie/test-replace-namespace-string",
+                "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+                }
+              }
+            }
+            JSON;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -368,18 +367,18 @@ JSON;
     public function test_replace_string(): void
     {
         $composerJsonString = <<<'JSON'
-{
-    "name": "brianhenryie/test-replace-string",
-    "require": {
-      "justinrainbow/json-schema": "6.8.0"
-    },
-    "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-    }
-  }
-}
-JSON;
+            {
+                "name": "brianhenryie/test-replace-string",
+                "require": {
+                  "justinrainbow/json-schema": "6.8.0"
+                },
+                "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+                }
+              }
+            }
+            JSON;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -409,56 +408,56 @@ JSON;
         $this->markTestSkippedLocally();
 
         $composerJsonString = <<<'EOD'
-{
-    "name": "strauss/exclude-from-prefix",
-    "require": {
-        "composer/composer": "2.9.7"
-    },
-    "provide": {
-        "composer/ca-bundle": "*",
-        "composer/class-map-generator": "*",
-        "composer/metadata-minifier": "*",
-        "composer/pcre": "*",
-        "composer/semver": "*",
-        "composer/spdx-licenses": "*",
-        "composer/xdebug-handler": "*",
-        "justinrainbow/json-schema": "*",
-        "marc-mabe/php-enum": "*",
-        "psr/container": "*",
-        "psr/log": "*",
-        "react/promise": "*",
-        "seld/jsonlint": "*",
-        "seld/phar-utils": "*",
-        "seld/signal-handler": "*",
-        "symfony/console": "*",
-        "symfony/deprecation-contracts": "*",
-        "symfony/filesystem": "*",
-        "symfony/finder": "*",
-        "symfony/polyfill-ctype": "*",
-        "symfony/polyfill-intl-grapheme": "*",
-        "symfony/polyfill-intl-normalizer": "*",
-        "symfony/polyfill-mbstring": "*",
-        "symfony/polyfill-php73": "*",
-        "symfony/polyfill-php80": "*",
-        "symfony/polyfill-php81": "*",
-        "symfony/polyfill-php84": "*",
-        "symfony/process": "*",
-        "symfony/service-contracts": "*",
-        "symfony/string": "*"
-    },
-    "config": {
-        "audit": {
-          "block-insecure": false
-        }
-    },
-    "extra": {
-        "strauss": {
-            "target_directory": "vendor",
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-        }
-    }
-}
-EOD;
+            {
+                "name": "strauss/exclude-from-prefix",
+                "require": {
+                    "composer/composer": "2.9.7"
+                },
+                "provide": {
+                    "composer/ca-bundle": "*",
+                    "composer/class-map-generator": "*",
+                    "composer/metadata-minifier": "*",
+                    "composer/pcre": "*",
+                    "composer/semver": "*",
+                    "composer/spdx-licenses": "*",
+                    "composer/xdebug-handler": "*",
+                    "justinrainbow/json-schema": "*",
+                    "marc-mabe/php-enum": "*",
+                    "psr/container": "*",
+                    "psr/log": "*",
+                    "react/promise": "*",
+                    "seld/jsonlint": "*",
+                    "seld/phar-utils": "*",
+                    "seld/signal-handler": "*",
+                    "symfony/console": "*",
+                    "symfony/deprecation-contracts": "*",
+                    "symfony/filesystem": "*",
+                    "symfony/finder": "*",
+                    "symfony/polyfill-ctype": "*",
+                    "symfony/polyfill-intl-grapheme": "*",
+                    "symfony/polyfill-intl-normalizer": "*",
+                    "symfony/polyfill-mbstring": "*",
+                    "symfony/polyfill-php73": "*",
+                    "symfony/polyfill-php80": "*",
+                    "symfony/polyfill-php81": "*",
+                    "symfony/polyfill-php84": "*",
+                    "symfony/process": "*",
+                    "symfony/service-contracts": "*",
+                    "symfony/string": "*"
+                },
+                "config": {
+                    "audit": {
+                      "block-insecure": false
+                    }
+                },
+                "extra": {
+                    "strauss": {
+                        "target_directory": "vendor",
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+                    }
+                }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -469,7 +468,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         assert($exitCode === 0, $output);
 
-        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
+        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir . '/vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php');
         $this->assertStringNotContainsString('$prefix = "\\0Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
         $this->assertStringContainsString('$prefix = "\\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\\0";', $autoloadGeneratorString);
 
@@ -491,19 +490,19 @@ EOD;
         $this->markTestSkippedLocally();
 
         $composerJsonString = <<<'EOD'
-{
-    "name": "strauss/react-promise-functions",
-    "require": {
-        "react/promise": "3.3.0"
-    },
-    "extra": {
-        "strauss": {
-            "target_directory": "vendor",
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-        }
-    }
-}
-EOD;
+            {
+                "name": "strauss/react-promise-functions",
+                "require": {
+                    "react/promise": "3.3.0"
+                },
+                "extra": {
+                    "strauss": {
+                        "target_directory": "vendor",
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+                    }
+                }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -515,7 +514,7 @@ EOD;
         assert($exitCode === 0, $output);
 
         // vendor/react/promise/src/Internal/RejectedPromise.php
-        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir .'/vendor/react/promise/src/Internal/RejectedPromise.php');
+        $autoloadGeneratorString = file_get_contents($this->testsWorkingDir . '/vendor/react/promise/src/Internal/RejectedPromise.php');
         $this->assertStringNotContainsString('use function React\Promise\resolve;', $autoloadGeneratorString);
         $this->assertStringContainsString('use function BrianHenryIE\TestStrauss\React\Promise\resolve;', $autoloadGeneratorString);
     }
@@ -530,72 +529,72 @@ EOD;
     public function test_prefixing_global_function_does_not_replace_bare_word_occurrences(): void
     {
         $helpersComposer = <<<'JSON'
-{
-    "name": "brianhenryie/global-functions",
-    "autoload": {
-        "files": ["helpers.php"]
-    }
-}
-JSON;
+            {
+                "name": "brianhenryie/global-functions",
+                "autoload": {
+                    "files": ["helpers.php"]
+                }
+            }
+            JSON;
 
         $helpersPhp = <<<'PHP'
-<?php
+            <?php
 
-if (! function_exists('value')) {
-    /**
-     * Return the default value of the given value.
-     *
-     * @param mixed $value
-     */
-    function value($value)
-    {
-        return $value;
-    }
-}
+            if (! function_exists('value')) {
+                /**
+                 * Return the default value of the given value.
+                 *
+                 * @param mixed $value
+                 */
+                function value($value)
+                {
+                    return $value;
+                }
+            }
 
-if (! function_exists('when')) {
-    /**
-     * Return a value when the given condition is true.
-     */
-    function when($condition, $value)
-    {
-        return $condition ? value($value) : null;
-    }
-}
+            if (! function_exists('when')) {
+                /**
+                 * Return a value when the given condition is true.
+                 */
+                function when($condition, $value)
+                {
+                    return $condition ? value($value) : null;
+                }
+            }
 
-function check_content_type(array $content_type): bool
-{
-    return 'text/plain' === $content_type['value'];
-}
-PHP;
+            function check_content_type(array $content_type): bool
+            {
+                return 'text/plain' === $content_type['value'];
+            }
+            PHP;
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "repositories": {
-    "brianhenryie/global-functions": {
-        "type": "path",
-        "url": "../global-functions"
-    }
-  },
-  "require": {
-    "brianhenryie/global-functions": "*"
-  },
-  "minimum-stability": "dev",
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\MyProject\\",
-      "classmap_prefix": "BrianHenryIE_MyProject_",
-      "exclude_from_string_rename": {
-        "functions": [
-          "value",
-          "when"
-        ]
-      }
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "repositories": {
+                "brianhenryie/global-functions": {
+                    "type": "path",
+                    "url": "../global-functions"
+                }
+              },
+              "require": {
+                "brianhenryie/global-functions": "*"
+              },
+              "minimum-stability": "dev",
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\MyProject\\",
+                  "classmap_prefix": "BrianHenryIE_MyProject_",
+                  "exclude_from_string_rename": {
+                    "functions": [
+                      "value",
+                      "when"
+                    ]
+                  }
+                }
+              }
+            }
+            EOD;
 
         mkdir($this->testsWorkingDir . '/global-functions', 0777, true);
         $this->getFileSystem()->write($this->testsWorkingDir . '/global-functions/composer.json', $helpersComposer);

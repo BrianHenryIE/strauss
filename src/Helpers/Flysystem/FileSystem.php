@@ -1,7 +1,10 @@
 <?php
+
 /**
  * This class extends Flysystem's Filesystem class to add some additional functionality, particularly around
  * symlinks which are not supported by Flysystem.
+ *
+ * @package brianhenryie/strauss
  *
  * @see https://github.com/thephpleague/flysystem/issues/599
  */
@@ -23,12 +26,20 @@ use League\Flysystem\PathNormalizer;
 use League\Flysystem\PathPrefixer;
 use League\Flysystem\StorageAttributes;
 
+/**
+ * Wraps a {@see FilesystemAdapter} (typically {@see SymlinkProtectFilesystemAdapter}) and keeps its own copies of the
+ * path normalizer (by default {@see StripFsRootPathNormalizer} inside a `mem://`-stripping normalizer), a
+ * {@see PathPrefixer} for the local filesystem location, and the working directory. These are used to convert
+ * between Flysystem-relative and absolute paths, compute project-relative paths for logging, and detect symlinked
+ * paths with `is_link()`/`realpath()`. Flysystem v2/v3 differences are covered by {@see FlysystemReaderBackCompatTrait}.
+ */
 class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixerInterface, FlysystemReaderBackCompatTraitInterface
 {
     use FlysystemReaderBackCompatTrait;
-//    use FlysystemReaderBackCompatTrait {
-//        FlysystemReaderBackCompatTrait::directoryExists as traitDirectoryExists;
-//    }
+
+    //    use FlysystemReaderBackCompatTrait {
+    //        FlysystemReaderBackCompatTrait::directoryExists as traitDirectoryExists;
+    //    }
 
     /**
      * @see LeagueFilesystem::$pathNormalizer
@@ -64,10 +75,12 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      *
      * TODO: Check are any of these methods unused
      *
-     * @param FilesystemAdapter $adapter
-     * @param array{visibility?:string} $config
-     * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer
-     * @param PathNormalizer|null $pathNormalizer
+     * @param FilesystemAdapter                                    $adapter         Underlying storage adapter.
+     * @param array{visibility?:string}                            $config          Flysystem config, e.g. default visibility.
+     * @param PathNormalizer|null                                  $pathNormalizer  Normalizes paths before use; null for one which strips the filesystem root.
+     * @param \League\Flysystem\PathPrefixer|PathPrefixerInterface $pathPrefixer    Converts Flysystem paths to real filesystem paths; null for one rooted at `$localFsLocation`.
+     * @param ?string                                              $localFsLocation Absolute filesystem location the Flysystem is rooted at, used to build absolute paths; null for the root of the current working directory, e.g. `/` or `C:/`.
+     * @param ?string                                              $workingDir      Absolute path of the project directory which logged paths are made relative to; null to use `$localFsLocation`.
      */
     public function __construct(
         FilesystemAdapter $adapter,
@@ -77,9 +90,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
         ?string $localFsLocation = null,
         ?string $workingDir = null
     ) {
-        $localFsLocation        = $localFsLocation ?? self::getFsRoot(Platform::getcwd());
-        $pathNormalizer         = $pathNormalizer ?? self::makePathNormalizer($localFsLocation);
-        $pathPrefixer           = $pathPrefixer ?? new PathPrefixer(
+        $localFsLocation ??= self::getFsRoot(Platform::getcwd());
+        $pathNormalizer ??= self::makePathNormalizer($localFsLocation);
+        $pathPrefixer ??= new PathPrefixer(
             $localFsLocation,
             DIRECTORY_SEPARATOR
         );
@@ -98,7 +111,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     public static function getFsRoot(string $path): string
     {
         if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path, $output_array)) {
-//        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?: getcwd(), $output_array)) {
+            //        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?: getcwd(), $output_array)) {
             return strtoupper($output_array[1]);
         }
         // Relative path.
@@ -117,9 +130,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
                     str_replace('/', '\\', FileSystem::getFsRoot($workingDir)),
                     FileSystem::getFsRoot(Platform::getcwd()),
                     FileSystem::normalizeDirSeparator(FileSystem::getFsRoot(Platform::getcwd())),
-                //                    FileSystem::getFsRoot($workingDir),
-                //                    FileSystem::getFsRoot(),
-                //                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
+                    //                    FileSystem::getFsRoot($workingDir),
+                    //                    FileSystem::getFsRoot(),
+                    //                    FileSystem::normalizeDirSeparator(FileSystem::getFsRoot()),
                     'c:\\',
                     'c:/',
                     'd:\\',
@@ -136,11 +149,15 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     {
         $parentAdapterProperty = new \ReflectionProperty(\League\Flysystem\Filesystem::class, 'adapter');
         PHP_VERSION_ID < 80100 && $parentAdapterProperty->setAccessible(true);
-        /** @var FilesystemAdapter */
+        /**
+ * @var FilesystemAdapter
+*/
         return $parentAdapterProperty->getValue($this);
     }
 
     /**
+     * @param FilesystemAdapter $flysystemAdapter Storage adapter to replace the parent's private adapter with.
+     *
      * @see \League\Flysystem\Filesystem::$adapter
      */
     public function setAdapter(FilesystemAdapter $flysystemAdapter): void
@@ -155,6 +172,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      *
      * PHP native functions (realpath, getcwd, dirname) return backslashes on Windows,
      * but Flysystem always uses forward slashes. This method ensures consistency.
+     *
+     * @param string $path    Path whose directory separators should be converted.
+     * @param string $slashTo Separator to convert to: `/` (default) converts backslashes, anything else converts forward slashes.
      */
     public static function normalizeDirSeparator(string $path, string $slashTo = '/'): string
     {
@@ -164,7 +184,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     }
 
     /**
-     * @param string[] $fileAndDirPaths
+     * @param string[] $fileAndDirPaths    Absolute paths; files are returned as-is, directories are expanded to their contents.
+     * @param bool     $excludeDirectories Omit directories found while expanding directories, returning only files.
+     * @param bool     $deep               Recurse into subdirectories when expanding directories.
      *
      * @return string[]
      * @throws FilesystemException
@@ -190,7 +212,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
                 $deep
             );
 
-            /** @var FileAttributes[] $fileAttributesArray */
+            /**
+ * @var FileAttributes[] $fileAttributesArray
+*/
             $fileAttributesArray = $directoryListing->toArray();
 
             $paths = array_map(
@@ -209,6 +233,8 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     }
 
     /**
+     * @param string $absolutePath Absolute path of the file or directory to find in its parent directory's listing.
+     *
      * @throws FilesystemException
      */
     public function getAttributes(string $absolutePath): ?StorageAttributes
@@ -221,6 +247,7 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
         /**
          * Unsupported symbolic link encountered at location //home
          * \League\Flysystem\SymbolicLinkEncountered
+         *
          * @see \League\Flysystem\Filesystem::listContents()
          */
         $dirList = $this->listContents($fileDirectory)->toArray();
@@ -236,6 +263,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     /**
      * TODO: rename to ::has()
      * TODO: extract symlink handling to adapter.
+     *
+     * @param string $location Absolute or Flysystem path; also true if it resolves via `realpath()`, e.g. through a symlink.
+     *
      * @throws FilesystemException
      */
     public function exists(string $location): bool
@@ -247,12 +277,12 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
 
 
     /**
-     *
      * /path/to/this/dir, /path/to/file.php => ../../file.php
      * /path/to/here, /path/to/here/dir/file.php => dir/file.php
      *
-     * @param string $fromAbsoluteDirectory
-     * @param string $toAbsolutePath
+     * @param string $fromAbsoluteDirectory Absolute directory the result is relative to.
+     * @param string $toAbsolutePath        Absolute file or directory path to express relatively.
+     *
      * @return string
      */
     public function getRelativePath(string $fromAbsoluteDirectory, string $toAbsolutePath): string
@@ -274,8 +304,8 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
             }
         }
 
-        $relativePath =
-            str_repeat('../', count($fromDirectoryParts))
+        $relativePath
+            = str_repeat('../', count($fromDirectoryParts))
             . implode('/', $toPathParts);
 
         return rtrim($relativePath, '\\/');
@@ -295,6 +325,8 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
     /**
      * Check does the filepath point to a file outside the working directory.
      * Check is a file under a symlinked path.
+     *
+     * @param string $path Absolute or Flysystem path which must exist.
      *
      * @throws FilesystemException
      * @throws Exception
@@ -324,6 +356,9 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
 
     /**
      * Does the subDir path start with the dir path?
+     *
+     * @param string $dir    Parent directory path.
+     * @param string $subDir Path to check is within `$dir`; both are normalized before the prefix comparison.
      */
     public function isSubDirOf(string $dir, string $subDir): bool
     {
@@ -354,6 +389,8 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      *
      * - On Unix: prepends '/' if not present
      * - On Windows: paths already have drive letters (e.g., 'C:/...') so no prefix needed
+     *
+     * @param string $path Flysystem-relative or absolute path, optionally with a stream wrapper scheme such as `mem://`.
      */
     public function makeAbsolute(string $path): string
     {
@@ -369,49 +406,14 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
         $prefixedNormalSchemlessPath = $this->prefixPath($normalSchemlessPath);
 
         return $prefixedNormalSchemlessPath;
-
-        $fsRoot = self::getFsRoot($this->localFsLocation);
-
-        // If this is already prefixed with the drive(fs) root.
-        if (stripos($path, $fsRoot) === 0 || stripos($path, self::normalizeDirSeparator($fsRoot)) === 0) {
-            return $path;
-        }
-
-        $normalizedPath = $this->normalizePath($path);
-
-        if (strtolower(self::getFsRoot($this->localFsLocation)) === strtolower(self::getFsRoot($normalizedPath))) {
-            return $path;
-        }
-
-        $normalizedRoot = self::normalizeDirSeparator(self::getFsRoot($this->localFsLocation));
-
-        if (str_starts_with(strtoupper($normalizedPath), $normalizedRoot)) {
-            return self::normalizeDirSeparator($path, DIRECTORY_SEPARATOR);
-        }
-
-        /**
-         * TODO: Replace with `\Composer\Util\Filesystem::isStreamWrapperPath()` when Composer PR merged.
-         *
-         * @see https://github.com/composer/composer/pull/12396
-         */
-        if (1 === preg_match('/^[a-zA-Z]+:\/\//', $this->localFsLocation) && ! str_starts_with($this->localFsLocation, 'file://')) {
-            return $this->localFsLocation . $path;
-        }
-
-        $prefixed = $this->prefixPath($this->normalizePath($path));
-
-//        if ($this->getAdapter() instanceof InMemoryFilesystemAdapter || $this->getAdapter() instanceof ReadOnlyFileSystem) {
-//        if ($this->flysystemAdapter instanceof ReadOnlyFileSystem) {
-//            return str_replace(':/', '://', $prefixed);
-//        }
-
-        return self::normalizeDirSeparator($prefixed, DIRECTORY_SEPARATOR);
     }
 
     /**
+     * @param string $dirPath Absolute or Flysystem path of the directory to check.
+     *
      * @throws FilesystemException
      * @throws Exception
-     * @see LeagueFilesystem::listContents()
+     * @see    LeagueFilesystem::listContents()
      */
     public function isDirectoryEmpty(string $dirPath): bool
     {
@@ -441,8 +443,16 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
      * This `is_dir()` approach is bound to break the {@see ReadOnlyFileSystemAdapter} / `--dry-run` sometimes.
      * The change in #278 changes LocalFileSystemAdapter to follow symlinks.
      */
-//    public function directoryExists(string $path): bool
-//    {
-//        return $this->traitDirectoryExists($path) || is_dir("/$path");
-//    }
+    //    public function directoryExists(string $path): bool
+    //    {
+    //        return $this->traitDirectoryExists($path) || is_dir("/$path");
+    //    }
+
+    /**
+     * @param string $path Absolute path to convert to a path relative to the filesystem root (Flysystem path).
+     */
+    public function stripPrefix(string $path): string
+    {
+        return $this->pathPrefixer->stripPrefix($path);
+    }
 }

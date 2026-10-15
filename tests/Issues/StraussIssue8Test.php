@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/BrianHenryIE/strauss/issues/8
  */
@@ -14,7 +15,6 @@ use BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup;
  */
 class StraussIssue8Test extends IntegrationTestCase
 {
-
     /**
      * @author BrianHenryIE
      * @see Cleanup::deleteFiles()
@@ -24,18 +24,18 @@ class StraussIssue8Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-issue-8",
-  "require": {
-    "psr/log": "1"
-  },
-  "extra": {
-    "strauss":{
-      "delete_vendor_files": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-issue-8",
+              "require": {
+                "psr/log": "1"
+              },
+              "extra": {
+                "strauss":{
+                  "delete_vendor_files": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -43,11 +43,11 @@ EOD;
 
         exec('composer install');
 
-        assert(file_exists($this->testsWorkingDir. '/vendor/psr/log/Psr/Log/LogLevel.php'));
+        assert(file_exists($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LogLevel.php'));
 
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir. '/vendor/psr/log/Psr/Log/LogLevel.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/psr/log/Psr/Log/LogLevel.php');
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The planner looks up the names written in a comment or string in a {@see SymbolIndex}, rather than searching
  * each for every symbol. The names it finds, and the ones it leaves alone, must be the same as before.
@@ -87,27 +88,27 @@ class ChangePlannerSymbolIndexTest extends TestCase
     public function test_doc_comment_names_are_looked_up(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-/**
- * @param \Acme\Lib\Widget|\Other\Thing|null $widget
- * @return Acme\Lib\Widget[]
- */
-function make($widget) {
-}
-EOD;
+            /**
+             * @param \Acme\Lib\Widget|\Other\Thing|null $widget
+             * @return Acme\Lib\Widget[]
+             */
+            function make($widget) {
+            }
+            EOD;
         $expected = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-/**
- * @param \Prefix\Acme\Lib\Widget|\Other\Thing|null $widget
- * @return Prefix\Acme\Lib\Widget[]
- */
-function make($widget) {
-}
-EOD;
+            /**
+             * @param \Prefix\Acme\Lib\Widget|\Other\Thing|null $widget
+             * @return Prefix\Acme\Lib\Widget[]
+             */
+            function make($widget) {
+            }
+            EOD;
 
         self::assertSame($expected, $this->prefix($contents, $this->getSymbols()));
     }
@@ -120,31 +121,31 @@ EOD;
     public function test_doc_comment_functions_are_only_replaced_as_references(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-/**
- * Makes a widget from a value.
- *
- * @see \Acme\Lib\helper()
- * @see value()
- */
-function make() {
-}
-EOD;
+            /**
+             * Makes a widget from a value.
+             *
+             * @see \Acme\Lib\helper()
+             * @see value()
+             */
+            function make() {
+            }
+            EOD;
         $expected = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-/**
- * Makes a widget from a value.
- *
- * @see \Prefix\Acme\Lib\helper()
- * @see prefix_value()
- */
-function make() {
-}
-EOD;
+            /**
+             * Makes a widget from a value.
+             *
+             * @see \Prefix\Acme\Lib\helper()
+             * @see prefix_value()
+             */
+            function make() {
+            }
+            EOD;
 
         self::assertSame($expected, $this->prefix($contents, $this->getSymbols()));
     }
@@ -158,27 +159,27 @@ EOD;
     public function test_global_symbols_in_comments_are_looked_up(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-/**
- * @param \GlobalThing|\GlobalThingy $thing A \GlobalThing, twice: \GlobalThing.
- */
-function make($thing) {
-    // A \GlobalThing in a line comment, and \Unrelated.
-}
-EOD;
+            /**
+             * @param \GlobalThing|\GlobalThingy $thing A \GlobalThing, twice: \GlobalThing.
+             */
+            function make($thing) {
+                // A \GlobalThing in a line comment, and \Unrelated.
+            }
+            EOD;
         $expected = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-/**
- * @param \Prefix_GlobalThing|\GlobalThingy $thing A \Prefix_GlobalThing, twice: \Prefix_GlobalThing.
- */
-function make($thing) {
-    // A \Prefix_GlobalThing in a line comment, and \Unrelated.
-}
-EOD;
+            /**
+             * @param \Prefix_GlobalThing|\GlobalThingy $thing A \Prefix_GlobalThing, twice: \Prefix_GlobalThing.
+             */
+            function make($thing) {
+                // A \Prefix_GlobalThing in a line comment, and \Unrelated.
+            }
+            EOD;
 
         self::assertSame($expected, $this->prefix($contents, $this->getSymbols()));
     }
@@ -191,17 +192,17 @@ EOD;
     public function test_strings_are_searched_for_the_symbols_they_could_contain(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-return ['GlobalThing', 'GlobalThingy', 'Acme\\Lib\\Widget', 'Unrelated\\Name'];
-EOD;
+            return ['GlobalThing', 'GlobalThingy', 'Acme\\Lib\\Widget', 'Unrelated\\Name'];
+            EOD;
         $expected = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-return ['Prefix_GlobalThing', 'GlobalThingy', 'Prefix\\Acme\\Lib\\Widget', 'Unrelated\\Name'];
-EOD;
+            return ['Prefix_GlobalThing', 'GlobalThingy', 'Prefix\\Acme\\Lib\\Widget', 'Unrelated\\Name'];
+            EOD;
 
         self::assertSame($expected, $this->prefix($contents, $this->getSymbols()));
     }
@@ -212,16 +213,16 @@ EOD;
     public function test_nothing_is_planned_when_no_symbol_is_named(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-/**
- * @param \Unrelated\Name $name Not a widget.
- */
-function make($name) {
-    return 'Lib\\Widget';
-}
-EOD;
+            /**
+             * @param \Unrelated\Name $name Not a widget.
+             */
+            function make($name) {
+                return 'Lib\\Widget';
+            }
+            EOD;
         $codeMap = (new PhpFileAnalyzer())->analyze($contents);
         self::assertNotNull($codeMap);
 
@@ -235,7 +236,7 @@ EOD;
      */
     public function test_index_is_reused_for_the_same_symbols_and_rebuilt_for_others(): void
     {
-        $planner = new class () extends ChangePlanner {
+        $planner = new class extends ChangePlanner {
             public function getIndex(DiscoveredSymbols $discoveredSymbols): SymbolIndex
             {
                 return parent::getIndex($discoveredSymbols);
@@ -265,19 +266,19 @@ EOD;
     public function test_planner_reused_with_different_symbols(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-/** @var \Acme\Lib\Widget $widget */
-$widget = new \Acme\Lib\Widget();
-EOD;
+            /** @var \Acme\Lib\Widget $widget */
+            $widget = new \Acme\Lib\Widget();
+            EOD;
         $expected = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-/** @var \Prefix\Acme\Lib\Widget $widget */
-$widget = new \Prefix\Acme\Lib\Widget();
-EOD;
+            /** @var \Prefix\Acme\Lib\Widget $widget */
+            $widget = new \Prefix\Acme\Lib\Widget();
+            EOD;
 
         $planner = new ChangePlanner();
 
@@ -320,27 +321,27 @@ EOD;
     public function test_use_statements_in_nested_namespaces(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-use Acme\Lib\Widget;
-use Acme\Lib\Unknown;
-use Acme\Lib\Widget\Deeper\Thing;
-use Acme\Lib\{Widget as W, Other};
-use Unrelated\Acme\Lib\Widget as U;
-use AcmeNot\Lib\Widget as N;
-EOD;
+            use Acme\Lib\Widget;
+            use Acme\Lib\Unknown;
+            use Acme\Lib\Widget\Deeper\Thing;
+            use Acme\Lib\{Widget as W, Other};
+            use Unrelated\Acme\Lib\Widget as U;
+            use AcmeNot\Lib\Widget as N;
+            EOD;
         $expected = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-use Prefix\Acme\Lib\Widget;
-use Prefix\Acme\Lib\Unknown;
-use Prefix\Acme\Lib\Widget\Deeper\Thing;
-use Prefix\Acme\Lib\{Widget as W, Other};
-use Unrelated\Acme\Lib\Widget as U;
-use AcmeNot\Lib\Widget as N;
-EOD;
+            use Prefix\Acme\Lib\Widget;
+            use Prefix\Acme\Lib\Unknown;
+            use Prefix\Acme\Lib\Widget\Deeper\Thing;
+            use Prefix\Acme\Lib\{Widget as W, Other};
+            use Unrelated\Acme\Lib\Widget as U;
+            use AcmeNot\Lib\Widget as N;
+            EOD;
 
         self::assertSame($expected, $this->prefix($contents, $this->getNestedSymbols()));
     }
@@ -355,19 +356,19 @@ EOD;
     public function test_strings_naming_a_namespace_and_class_with_the_same_name(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-$a = ['Acme\\Lib\\Widget', 'Acme\\Lib\\Widget\\', "Acme\Lib\Widget\\$name", 'Acme\Lib\Widget::$instance'];
-$b = ['Acme\\Lib\\WidgetFactory', 'the Acme\\Lib\\Widget class', 'Lib\\Widget'];
-EOD;
+            $a = ['Acme\\Lib\\Widget', 'Acme\\Lib\\Widget\\', "Acme\Lib\Widget\\$name", 'Acme\Lib\Widget::$instance'];
+            $b = ['Acme\\Lib\\WidgetFactory', 'the Acme\\Lib\\Widget class', 'Lib\\Widget'];
+            EOD;
         $expected = <<<'EOD'
-<?php
-namespace Consumer;
+            <?php
+            namespace Consumer;
 
-$a = ['Prefix\\Acme\\Lib\\Widget', 'Prefix\\Acme\\Lib\\Widget\\', "Prefix\Acme\Lib\Widget\\$name", 'Prefix\Acme\Lib\Widget::$instance'];
-$b = ['Acme\\Lib\\WidgetFactory', 'the Acme\\Lib\\Widget class', 'Lib\\Widget'];
-EOD;
+            $a = ['Prefix\\Acme\\Lib\\Widget', 'Prefix\\Acme\\Lib\\Widget\\', "Prefix\Acme\Lib\Widget\\$name", 'Prefix\Acme\Lib\Widget::$instance'];
+            $b = ['Acme\\Lib\\WidgetFactory', 'the Acme\\Lib\\Widget class', 'Lib\\Widget'];
+            EOD;
 
         self::assertSame($expected, $this->prefix($contents, $this->getNestedSymbols()));
     }
@@ -380,7 +381,7 @@ EOD;
      */
     public function test_strings_are_only_searched_for_quoted_names(): void
     {
-        $planner = new class () extends ChangePlanner {
+        $planner = new class extends ChangePlanner {
             /** @var string[] */
             public array $searchedFor = [];
 
@@ -392,14 +393,14 @@ EOD;
         };
 
         $contents = <<<'EOD'
-<?php
-/*
- * This file is part of the Acme package. See Acme\Lib and Acme\Root.
- */
-namespace Consumer;
+            <?php
+            /*
+             * This file is part of the Acme package. See Acme\Lib and Acme\Root.
+             */
+            namespace Consumer;
 
-return is_a($thing, 'Acme\\Lib\\Widget\\Part');
-EOD;
+            return is_a($thing, 'Acme\\Lib\\Widget\\Part');
+            EOD;
 
         $this->prefix($contents, $this->getNestedSymbols(), $planner);
 

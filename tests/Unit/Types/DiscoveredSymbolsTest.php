@@ -10,7 +10,6 @@ use BrianHenryIE\Strauss\TestCase;
  */
 class DiscoveredSymbolsTest extends TestCase
 {
-
     /**
      * @covers ::add
      * @covers ::getSymbols

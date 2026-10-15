@@ -1,4 +1,5 @@
 <?php
+
 namespace BrianHenryIE\Strauss\Tests\Integration;
 
 use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
@@ -53,36 +54,36 @@ class CleanupIntegrationTest extends IntegrationTestCase
     public static function provider_optimize_autoloader_for_vendor_autoload_real(): array
     {
         $defaultOptimize = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-cleanup-optimize-default",
-  "require": {
-    "psr/log": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-cleanup-optimize-default",
+              "require": {
+                "psr/log": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
         $disableOptimize = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-cleanup-optimize-disabled",
-  "require": {
-    "psr/log": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_packages": true,
-      "optimize_autoloader": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-cleanup-optimize-disabled",
+              "require": {
+                "psr/log": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_packages": true,
+                  "optimize_autoloader": false
+                }
+              }
+            }
+            EOD;
         return [
             'key_omitted_defaults_to_optimized' => [$defaultOptimize, true],
             'explicit_false_disables_authoritative' => [$disableOptimize, false],
@@ -95,20 +96,20 @@ EOD;
     public function testFilesAutoloaderCleaned(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "symfony/polyfill-php80": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "symfony/polyfill-php80": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
         chdir($this->testsWorkingDir);
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
@@ -120,7 +121,7 @@ EOD;
         $exitCode = $this->runStrauss();
         $this->assertSame(0, $exitCode);
 
-        $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/installed.json');
+        $installedJsonFile = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
         /** @var InstalledJsonArray $installedJson */
         $installedJson = json_decode($installedJsonFile, true);
         $entry = array_reduce($installedJson['packages'], function ($carry, $item) {
@@ -135,15 +136,15 @@ EOD;
             $this->assertNull($entry, json_encode($installedJson, JSON_PRETTY_PRINT));
         }
 
-        $autoloadStaticPhp = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/autoload_static.php');
+        $autoloadStaticPhp = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_static.php');
         $this->assertStringNotContainsString("__DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php'", $autoloadStaticPhp);
 
-        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir .'/vendor/composer/autoload_files.php');
+        $this->assertFileNotExistsInFileSystem($this->testsWorkingDir . '/vendor/composer/autoload_files.php');
 
-        $autoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_files.php');
+        $autoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("\$vendorDir . '/symfony/polyfill-php80/bootstrap.php'", $autoloadFilesPhp);
 
-        $newAutoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor-prefixed/composer/autoload_files.php');
+        $newAutoloadFilesPhp = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/composer/autoload_files.php');
         $this->assertStringContainsString("/symfony/polyfill-php80/bootstrap.php'", $newAutoloadFilesPhp);
     }
 
@@ -156,23 +157,23 @@ EOD;
         $this->markTestSkippedOnWindows('symlinks');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "test/exclude-delete-bug",
-  "require": {
-    "psr/log": "^1.1",
-    "psr/container": "^1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Test\\",
-      "exclude_from_copy": {
-        "packages": ["psr/log"]
-      },
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "test/exclude-delete-bug",
+              "require": {
+                "psr/log": "^1.1",
+                "psr/container": "^1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Test\\",
+                  "exclude_from_copy": {
+                    "packages": ["psr/log"]
+                  },
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
         file_put_contents($this->testsWorkingDir . '/composer.json', $composerJsonString);

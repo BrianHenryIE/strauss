@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Attempt to align text following `:` in a log message.
  *
@@ -17,11 +18,14 @@ use Monolog\Processor\ProcessorInterface;
  */
 class PadColonColumnsLogProcessor2 implements ProcessorInterface
 {
-    /** @var int $padLength */
+    /**
+     * @var int $padLength
+     */
     protected int $padLength = 0;
 
     /**
-     * @param MonologRecordArray $record
+     * @param MonologRecordArray $record Log record whose message may contain a `:::` column separator.
+     *
      * @return MonologRecordArray
      */
     public function __invoke(array $record): array

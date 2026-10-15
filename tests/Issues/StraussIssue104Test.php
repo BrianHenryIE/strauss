@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `vendor-prefixed` directory permissions changed after Flysystem update.
  *
@@ -20,18 +21,18 @@ class StraussIssue104Test extends IntegrationTestCase
         $this->markTestSkippedOnWindows('Expected 0755, Actual 0777');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue104",
-  "require": {
-    "psr/log": "1.0.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue104\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue104",
+              "require": {
+                "psr/log": "1.0.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue104\\"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

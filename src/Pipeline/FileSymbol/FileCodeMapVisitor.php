@@ -1,10 +1,13 @@
 <?php
+
 /**
- * php-parser visitor which, in a single traversal, records the location of every symbol definition, symbol usage,
+ * A php-parser visitor which, in a single traversal, records the location of every symbol definition, symbol usage,
  * comment, string and inline HTML region in a file.
  *
  * Run after {@see \PhpParser\NodeVisitor\NameResolver} (with `replaceNodes` disabled) so `resolvedName` attributes
  * are available.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -34,6 +37,13 @@ use PhpParser\Node\UseItem;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\Token;
 
+/**
+ * In `enterNode()`, records a {@see CodeLocation} for each `use` item, group-use prefix, constant fetch, function call
+ * (including string arguments to functions such as `function_exists()` and `define()`), name, string and inline HTML
+ * node, and a {@see SymbolDefinition} for each namespace, class-like, function and constant declaration. Name nodes
+ * already recorded with a specific role are tracked by object id so they are not recorded again as plain names.
+ * Comments are read from the parser's tokens, rather than from nodes, so none are missed.
+ */
 class FileCodeMapVisitor extends NodeVisitorAbstract
 {
     /**
@@ -60,19 +70,29 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     protected string $contents;
 
-    /** @var CodeLocation[] */
+    /**
+     * @var CodeLocation[]
+     */
     protected array $locations = [];
 
-    /** @var SymbolDefinition[] In declaration order. */
+    /**
+     * @var SymbolDefinition[] In declaration order.
+     */
     protected array $definitions = [];
 
-    /** @var array<string,bool> Namespace names in declaration order (`\` for global). */
+    /**
+     * @var array<string,bool> Namespace names in declaration order (`\` for global).
+     */
     protected array $namespaceNames = [];
 
-    /** @var ?string Current namespace, null when global. */
+    /**
+     * @var ?string Current namespace, null when global.
+     */
     protected ?string $currentNamespace = null;
 
-    /** @var array<int,bool> spl_object_id of Name nodes already recorded with a specific role. */
+    /**
+     * @var array<int,bool> spl_object_id of Name nodes already recorded with a specific role.
+     */
     protected array $claimedNames = [];
 
     /**
@@ -83,19 +103,24 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
      */
     protected array $commentTokens = [];
 
-    /** Index in {@see self::$commentTokens} of the next comment to record. */
+    /**
+     * Index in {@see self::$commentTokens} of the next comment to record.
+     */
     protected int $nextCommentToken = 0;
 
     /**
-     * @param Token[] $tokens The tokens of the contents: {@see \PhpParser\Parser::getTokens()}.
+     * @param string  $contents The PHP source code being traversed; location texts are read from it.
+     * @param Token[] $tokens   The tokens of the contents: {@see \PhpParser\Parser::getTokens()}.
      */
     public function __construct(string $contents, array $tokens = [])
     {
         $this->contents = $contents;
-        $this->commentTokens = array_values(array_filter(
-            $tokens,
-            fn(Token $token): bool => $token->is([T_COMMENT, T_DOC_COMMENT])
-        ));
+        $this->commentTokens = array_values(
+            array_filter(
+                $tokens,
+                fn(Token $token): bool => $token->is([T_COMMENT, T_DOC_COMMENT])
+            )
+        );
     }
 
     /**
@@ -208,6 +233,8 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     /**
      * Comments after the last node.
+     *
+     * @param Node[] $nodes The file's top-level nodes (unused).
      */
     public function afterTraverse(array $nodes)
     {
@@ -217,7 +244,8 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     protected function addCommentLocationsBefore(int $position): void
     {
-        while (isset($this->commentTokens[$this->nextCommentToken])
+        while (
+            isset($this->commentTokens[$this->nextCommentToken])
             && $this->commentTokens[$this->nextCommentToken]->pos < $position
         ) {
             $token = $this->commentTokens[$this->nextCommentToken++];
@@ -291,7 +319,7 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * @param Class_|Interface_|Trait_|Enum_ $node
+     * @param Class_|Interface_|Trait_|Enum_ $node The class-like declaration being entered; anonymous classes are ignored.
      */
     protected function enterClassLike(Node $node): void
     {
@@ -352,6 +380,8 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     /**
      * `const NAME = ...;` (class constants are `ClassConst`, not `Const_`).
+     *
+     * @param Const_ $node The constant declaration statement, which may declare several constants.
      */
     protected function enterConst(Const_ $node): void
     {
@@ -454,6 +484,8 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
 
     /**
      * The fully qualified name, without leading `\`, of a class name in `extends` or `implements`.
+     *
+     * @param Name $name The name as written; its `resolvedName` attribute is used when set by the name resolver.
      */
     protected function resolveName(Name $name): string
     {
@@ -465,7 +497,7 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * @param Class_|Interface_|Trait_|Enum_ $node
+     * @param Class_|Interface_|Trait_|Enum_ $node The class-like declaration whose name location is being recorded.
      */
     protected function getDefinitionLocationType(Node $node): string
     {
@@ -482,7 +514,7 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * @param Class_|Interface_|Trait_|Enum_ $node
+     * @param Class_|Interface_|Trait_|Enum_ $node The class-like declaration being recorded as a definition.
      */
     protected function getDefinitionSymbolType(Node $node): string
     {

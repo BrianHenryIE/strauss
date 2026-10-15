@@ -1,8 +1,9 @@
 <?php
+
 /**
- *
  * Flysystem 3.x requires PHP 8.
  *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Helpers\Flysystem;

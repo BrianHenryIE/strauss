@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Parses a PHP file ONCE and produces everything Strauss needs to know about it as a {@see FileCodeMap}: the
  * symbols it defines, the namespaces it declares, and the location of every symbol usage, comment, string and
@@ -7,6 +8,8 @@
  * This is the only place php-parser is used for symbol scanning and replacement. Downstream steps
  * ({@see \BrianHenryIE\Strauss\Pipeline\ChangePlanner}, {@see \BrianHenryIE\Strauss\Pipeline\Prefixer}) work from
  * the map and never parse.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -24,6 +27,12 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * Discards anything before the first `<?` (or prepends `<?php` to a fragment), parses with php-parser's newest
+ * supported version, then traverses the AST with a {@see NameResolver} (preserving the original nodes) followed by a
+ * {@see FileCodeMapVisitor}. Recorded positions are shifted back to the original contents' offsets, and a file with no
+ * `namespace` statement is given the global namespace. Parse errors are logged and returned as null.
+ */
 class PhpFileAnalyzer
 {
     use LoggerAwareTrait;
@@ -46,8 +55,8 @@ class PhpFileAnalyzer
     }
 
     /**
-     * @param string $contents The file contents. May be a fragment without a `<?php` opener, or begin with HTML.
-     * @param ?string $filePathForLogging
+     * @param string  $contents           The file contents. May be a fragment without a `<?php` opener, or begin with HTML.
+     * @param ?string $filePathForLogging Path of the file, only used in log messages; null logs "string".
      *
      * @return ?FileCodeMap Null if the file could not be parsed (e.g. a `.blade.php` template).
      */
@@ -75,10 +84,13 @@ class PhpFileAnalyzer
         } catch (Error $e) {
             // E.g. template files with placeholders: `namespace %g_namespace%\AdminMenus;`, or `x.blade.php`.
             $this->lastErrorMessage = $e->getMessage();
-            $this->logger->warning('Failed to parse file {filePath} with error: {errorMessage}', [
-                'filePath' => $filePathForLogging ?? 'string',
-                'errorMessage' => $e->getMessage(),
-            ]);
+            $this->logger->warning(
+                'Failed to parse file {filePath} with error: {errorMessage}',
+                [
+                    'filePath' => $filePathForLogging ?? 'string',
+                    'errorMessage' => $e->getMessage(),
+                ]
+            );
             return null;
         }
 
@@ -94,27 +106,34 @@ class PhpFileAnalyzer
          * Sets `resolvedName` attributes on names (e.g. in `extends` and `implements`) without replacing the nodes,
          * so positions and texts are those of the source.
          */
-        $traverser->addVisitor(new NameResolver(null, [
-            'preserveOriginalNames' => true,
-            'replaceNodes' => false,
-        ]));
+        $traverser->addVisitor(
+            new NameResolver(
+                null,
+                [
+                    'preserveOriginalNames' => true,
+                    'replaceNodes' => false,
+                ]
+            )
+        );
         $traverser->addVisitor($visitor);
         $traverser->traverse($ast);
 
         $locations = $visitor->getLocations();
 
         if (0 !== $offset) {
-            $locations = array_values(array_filter(
-                array_map(
-                    function (CodeLocation $location) use ($offset): CodeLocation {
-                        $location->setStart($location->getStart() + $offset);
-                        return $location;
-                    },
-                    $locations
-                ),
-                // Only the prepended opener itself can be at a negative position.
-                fn(CodeLocation $location) => $location->getStart() >= 0
-            ));
+            $locations = array_values(
+                array_filter(
+                    array_map(
+                        function (CodeLocation $location) use ($offset): CodeLocation {
+                            $location->setStart($location->getStart() + $offset);
+                            return $location;
+                        },
+                        $locations
+                    ),
+                    // Only the prepended opener itself can be at a negative position.
+                    fn(CodeLocation $location) => $location->getStart() >= 0
+                )
+            );
         }
 
         $namespaceNames = $visitor->getNamespaceNames();

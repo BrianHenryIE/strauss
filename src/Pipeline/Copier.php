@@ -1,14 +1,15 @@
 <?php
+
 /**
  * Prepares the destination by deleting any files about to be copied.
  * Copies the files.
  *
  * TODO: Exclude files list.
  *
- * @author CoenJacobs
- * @author BrianHenryIE
- *
- * @license MIT
+ * @package brianhenryie/strauss
+ * @author  Coen Jacobs <coenjacobs@gmail.com>
+ * @author  Brian Henry <BrianHenryIE@gmail.com>
+ * @license MIT https://opensource.org/licenses/MIT
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -21,6 +22,12 @@ use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Iterates the {@see DiscoveredFiles}, skipping any {@see File} not marked `isDoCopy()`. {@see Copier::prepareTarget()}
+ * creates the target directory and deletes existing files at the target paths, then {@see Copier::copy()} creates
+ * directories and copies files through the {@see FileSystem}; a source file which no longer exists is logged and
+ * marked not to be prefixed.
+ */
 class Copier
 {
     use LoggerAwareTrait;
@@ -34,10 +41,10 @@ class Copier
     /**
      * Copier constructor.
      *
-     * @param DiscoveredFiles $files Contains a collections of Files with source and target paths.
-     * @param CopierConfigInterface $config
-     * @param FileSystem $filesystem A filesystem instance.
-     * @param LoggerInterface $logger A logger implementation.
+     * @param DiscoveredFiles       $files      Contains a collections of Files with source and target paths.
+     * @param CopierConfigInterface $config     Provides the target directory to copy into.
+     * @param FileSystem            $filesystem A filesystem instance.
+     * @param LoggerInterface       $logger     A logger implementation.
      */
     public function __construct(
         DiscoveredFiles $files,

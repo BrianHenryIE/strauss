@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Changes "install-path" to point to vendor-prefixed target directory.
  *
@@ -7,11 +8,11 @@
  * * when delete is enabled, remove dead entries in the original vendor/composer/installed.json
  * * update psr-0 autoload keys to have matching classmap entries
  *
- * @see vendor/composer/installed.json
- *
  * TODO: when delete_vendor_files is used, the original directory still exists so the paths are not updated.
  *
  * @package brianhenryie/strauss
+ *
+ * @see vendor/composer/installed.json
  */
 
 namespace BrianHenryIE\Strauss\Pipeline\Cleanup;
@@ -72,23 +73,31 @@ class InstalledJson
         $source = $this->config->getAbsoluteVendorDirectory() . '/composer/installed.json';
         $target = $this->config->getAbsoluteTargetDirectory() . '/composer/installed.json';
 
-        $this->logger->info('Copying {sourcePath} to {targetPath}', [
-            'sourcePath' => $source,
-            'targetPath' => $target
-        ]);
+        $this->logger->info(
+            'Copying {sourcePath} to {targetPath}',
+            [
+                'sourcePath' => $source,
+                'targetPath' => $target,
+            ]
+        );
 
         $this->filesystem->copy(
             $source,
             $target
         );
 
-        $this->logger->info('Copied {sourcePath} to {targetPath}', [
-            'sourcePath' => $source,
-            'targetPath' => $target
-        ]);
+        $this->logger->info(
+            'Copied {sourcePath} to {targetPath}',
+            [
+                'sourcePath' => $source,
+                'targetPath' => $target,
+            ]
+        );
     }
 
     /**
+     * @param string $vendorDir Path to a vendor directory (vendor or target), which contains `composer/installed.json`.
+     *
      * @throws JsonValidationException
      * @throws ParsingException
      * @throws Exception
@@ -119,9 +128,12 @@ class InstalledJson
     }
 
     /**
-     * @param InstalledJsonArray $installedJsonArray
-     * @param DependenciesCollection $flatDependencyTree
-     * @param string[] $excludedPackageNames
+     * @param InstalledJsonArray     $installedJsonArray   The parsed contents of `composer/installed.json`.
+     * @param DependenciesCollection $flatDependencyTree   All dependencies Strauss considered; other packages are left unchanged.
+     * @param string                 $path                 Absolute path to the vendor directory the `installed.json` belongs to.
+     * @param DiscoveredSymbols      $discoveredSymbols    Unused.
+     * @param string[]               $excludedPackageNames Names of packages to remove from the list entirely.
+     *
      * @return InstalledJsonArray
      */
     protected function updatePackagePaths(
@@ -172,9 +184,12 @@ class InstalledJson
     }
 
     /**
-     * @param array{install-path: string, ...} $packageArray Typically {@see InstalledJsonPackageArray}, but only
-     *                                                       `install-path` is used, and modifying the autoload key
-     *                                                       in loops widens the inferred type beyond that alias.
+     * @param string                     $vendorDir    Absolute path to the vendor directory containing `composer/`.
+     * @param array{install-path:string} $packageArray Typically {@see InstalledJsonPackageArray}, but only
+     *                                                 `install-path` is used, and modifying the autoload key
+     *                                                 in loops widens the inferred type beyond that alias.
+     * @param string                     $relativePath File or directory path relative to the package's install path.
+     *
      * @throws FilesystemException
      */
     protected function pathExistsInPackage(string $vendorDir, array $packageArray, string $relativePath): bool
@@ -187,7 +202,11 @@ class InstalledJson
     /**
      * Remove autoload key entries from `installed.json` whose file or directory does not exist after deleting.
      *
-     * @param InstalledJsonArray $installedJsonArray
+     * @param InstalledJsonArray $installedJsonArray The parsed contents of `composer/installed.json`.
+     * @param string             $vendorDir          Absolute path to the vendor directory containing `composer/installed.json`.
+     * @param string             $installedJsonPath  Path to the `installed.json` file, used in log messages.
+     * @param DiscoveredSymbols  $discoveredSymbols  Unused.
+     *
      * @return InstalledJsonArray
      * @throws FilesystemException
      */
@@ -197,7 +216,7 @@ class InstalledJson
             if (!isset($packageArray['autoload'])) {
                 $this->logger->info(
                     'Package {packageName} has no autoload key in {installedJsonPath}',
-                    ['packageName' => $packageArray['name'],'installedJsonPath'=>$installedJsonPath]
+                    ['packageName' => $packageArray['name'],'installedJsonPath' => $installedJsonPath]
                 );
                 continue;
             }
@@ -208,7 +227,7 @@ class InstalledJson
             if (!$pathExists) {
                 $this->logger->info(
                     'Removing package autoload key from {installedJsonPath}: {packageName}',
-                    ['packageName' => $packageArray['name'],'installedJsonPath'=>$installedJsonPath]
+                    ['packageName' => $packageArray['name'],'installedJsonPath' => $installedJsonPath]
                 );
                 $packageArray['autoload'] = [];
             }
@@ -260,7 +279,7 @@ class InstalledJson
                     default:
                         $this->logger->warning(
                             'Unexpected autoload type in {installedJsonPath}: {type}',
-                            ['installedJsonPath'=>$installedJsonPath,'type'=>$type]
+                            ['installedJsonPath' => $installedJsonPath,'type' => $type]
                         );
                         break;
                 }
@@ -283,8 +302,10 @@ class InstalledJson
      *
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      *
-     * @param InstalledJsonArray $installedJsonArray
-     * @param DependenciesCollection $flatDependencyTree
+     * @param InstalledJsonArray     $installedJsonArray The parsed contents of the vendor directory's `composer/installed.json`.
+     * @param DependenciesCollection $flatDependencyTree All dependencies Strauss considered, used to check which were deleted.
+     * @param string                 $installedJsonPath  Path to the `installed.json` file, used in log messages.
+     *
      * @return InstalledJsonArray
      */
     protected function removeMovedPackagesAutoloadKeyFromVendorDirInstalledJson(array $installedJsonArray, DependenciesCollection $flatDependencyTree, string $installedJsonPath): array
@@ -318,8 +339,10 @@ class InstalledJson
      *
      * E.g. after the file is copied to the target directory, this will remove dev dependencies and unmodified dependencies from the second installed.json
      *
-     * @param InstalledJsonArray $installedJsonArray
-     * @param DependenciesCollection $flatDependencyTree
+     * @param InstalledJsonArray     $installedJsonArray The parsed contents of the target directory's `composer/installed.json`.
+     * @param DependenciesCollection $flatDependencyTree All dependencies Strauss considered, used to check which were copied.
+     * @param string                 $installedJsonPath  Path to the `installed.json` file, used in log messages.
+     *
      * @return InstalledJsonArray
      */
     protected function removeMovedPackagesAutoloadKeyFromTargetDirInstalledJson(array $installedJsonArray, DependenciesCollection $flatDependencyTree, string $installedJsonPath): array
@@ -361,7 +384,9 @@ class InstalledJson
     }
 
     /**
-     * @param InstalledJsonArray $installedJsonArray
+     * @param InstalledJsonArray $installedJsonArray The parsed contents of `composer/installed.json`.
+     * @param DiscoveredSymbols  $discoveredSymbols  Discovered symbols whose namespace replacements are applied to the psr-0/psr-4 keys.
+     *
      * @return InstalledJsonArray
      */
     protected function updateNamespaces(array $installedJsonArray, DiscoveredSymbols $discoveredSymbols): array
@@ -388,7 +413,7 @@ class InstalledJson
                         // Intentionally fall through
                     case 'psr-4':
                         /**
-                         * e.g.
+                         * E.g.
                          * * {"psr-4":{"Psr\\Log\\":"Psr\/Log\/"}}
                          * * {"psr-4":{"":"src\/"}}
                          * * {"psr-4":{"Symfony\\Polyfill\\Mbstring\\":""}}
@@ -411,7 +436,7 @@ class InstalledJson
 
                             $trimmedOriginalNamespace = trim($originalNamespace, '\\');
 
-                            $this->logger->info('Checking '.$type.' namespace: ' . $trimmedOriginalNamespace);
+                            $this->logger->info('Checking ' . $type . ' namespace: ' . $trimmedOriginalNamespace);
 
                             if (isset($discoveredNamespaces[$trimmedOriginalNamespace])) {
                                 $namespaceSymbol = $discoveredNamespaces[$trimmedOriginalNamespace];
@@ -450,9 +475,12 @@ class InstalledJson
                          * Custom autoloader types might.
                          */
                         if (!in_array($type, ['files', 'classmap', 'exclude-from-classmap'])) {
-                            $this->logger->warning('Unexpected autoloader type: {type} in {packageName}.', [
-                                'type' => $type, 'packageName' => $package['name']
-                            ]);
+                            $this->logger->warning(
+                                'Unexpected autoloader type: {type} in {packageName}.',
+                                [
+                                    'type' => $type, 'packageName' => $package['name'],
+                                ]
+                            );
                         }
                         break;
                 }
@@ -475,6 +503,9 @@ class InstalledJson
 
     /**
      * TODO: This runs twice but should only run once.
+     *
+     * @param DependenciesCollection $flatDependencyTree All dependencies Strauss considered; others are removed from the file.
+     * @param DiscoveredSymbols      $discoveredSymbols  Discovered symbols whose namespace replacements are applied to the autoload keys.
      *
      * @throws Exception
      * @throws FilesystemException
@@ -543,6 +574,9 @@ class InstalledJson
      * When `delete-vendor-packages` or `delete-vendor-files` is true, files and directories which have been deleted
      * must also be removed from `installed.json` or Composer will throw an error.
      *
+     * @param DependenciesCollection $flatDependencyTree All dependencies Strauss considered, used to check which were deleted.
+     * @param DiscoveredSymbols      $discoveredSymbols  Discovered symbols whose namespace replacements are applied to the autoload keys.
+     *
      * @throws Exception
      * @throws FilesystemException
      */
@@ -585,7 +619,8 @@ class InstalledJson
     }
 
     /**
-     * @param InstalledJsonArray $installedJsonArray
+     * @param InstalledJsonArray $installedJsonArray The parsed contents of `composer/installed.json`.
+     *
      * @return InstalledJsonArray
      */
     private function reindexPackagesList(array $installedJsonArray): array

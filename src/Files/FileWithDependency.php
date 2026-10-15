@@ -1,14 +1,25 @@
 <?php
 
+/**
+ * A file that belongs to one of the Composer packages Strauss is copying and prefixing.
+ *
+ * @package brianhenryie/strauss
+ */
+
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming;
 
+/**
+ * Extends {@see File} with the owning {@see ComposerPackage}, the path relative to the package root (derived by
+ * stripping the package's absolute path from the source path) and the autoload types that reference the file.
+ * `doDelete` starts as null so {@see self::isDoDelete()} defers to the package's setting until set explicitly.
+ * The constructor registers the file on its package with {@see ComposerPackage::addFile()}.
+ */
 class FileWithDependency extends File implements HasDependency
 {
-
     /**
      * @var string The path to the file relative to the package root.
      */
@@ -41,7 +52,9 @@ class FileWithDependency extends File implements HasDependency
 
         $this->dependency = $dependency;
 
-        /** @var string $packageAbsolutePath */
+        /**
+ * @var string $packageAbsolutePath
+*/
         $packageAbsolutePath = $dependency->getPackageAbsolutePath();
 
         $this->vendorRelativePath = $vendorRelativePath;
@@ -70,10 +83,12 @@ class FileWithDependency extends File implements HasDependency
 
     /**
      * Record the autoloader it is found in. Which could be all of them.
+     *
+     * @param string $autoloaderType The autoload key the file was found under, e.g. `psr-4`, `psr-0`, `classmap` or `files`.
      */
     public function addAutoloader(string $autoloaderType): void
     {
-        $this->autoloaderTypes = array_unique(array_merge($this->autoloaderTypes, array($autoloaderType)));
+        $this->autoloaderTypes = array_unique(array_merge($this->autoloaderTypes, [$autoloaderType]));
     }
 
     public function isFilesAutoloaderFile(): bool
@@ -97,7 +112,7 @@ class FileWithDependency extends File implements HasDependency
     }
 
     /**
-     * @param string[] $autoloaderTypes
+     * @param string[] $autoloaderTypes Composer autoload keys the file is loaded under, e.g. `psr-4`, `classmap`, `files`.
      */
     public function setAutoloaderTypes(array $autoloaderTypes): void
     {

@@ -1,10 +1,13 @@
 <?php
+
 /**
  * The symbols marked for renaming, grouped and indexed once per run for {@see ChangePlanner}.
  *
  * Planning a file must not cost O(symbols): a large project has tens of thousands of symbols and files. The
  * planner finds the names present in a file (or comment, or string) and looks them up here, rather than looking
  * for every symbol in every file.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -18,11 +21,19 @@ use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Exception;
 
+/**
+ * Built from a {@see DiscoveredSymbols} collection, it splits the symbols to rename into namespaces, namespaced
+ * symbols, global classes/interfaces/traits, functions and constants, and keeps hash maps by FQDN or name for
+ * constant-time lookups. Namespaces sorted longest first and the names to search for in strings are computed lazily,
+ * and static helpers extract quoted names and qualified-name candidates from a piece of text.
+ */
 class SymbolIndex
 {
     protected DiscoveredSymbols $discoveredSymbols;
 
-    /** Every namespace, including those not being renamed. */
+    /**
+     * Every namespace, including those not being renamed.
+     */
     protected DiscoveredSymbols $namespaces;
 
     protected int $symbolCount;
@@ -50,13 +61,19 @@ class SymbolIndex
 
     protected DiscoveredSymbols $constantsToRename;
 
-    /** @var array<string, NamespacedSymbol> Namespaced (incl. global) symbols to rename, except functions, by FQDN. */
+    /**
+     * @var array<string, NamespacedSymbol> Namespaced (incl. global) symbols to rename, except functions, by FQDN.
+     */
     protected array $namespacedToRenameByFqdn = [];
 
-    /** @var array<string, FunctionSymbol> By FQDN. */
+    /**
+     * @var array<string, FunctionSymbol> By FQDN.
+     */
     protected array $functionsToRenameByFqdn = [];
 
-    /** @var array<string, NamespacedSymbol> Global classes, interfaces, traits and enums to rename, by name. */
+    /**
+     * @var array<string, NamespacedSymbol> Global classes, interfaces, traits and enums to rename, by name.
+     */
     protected array $globalClassesInterfacesTraitsToRenameByName = [];
 
     /**
@@ -101,11 +118,15 @@ class SymbolIndex
         }
 
         // By value: a namespace and a class may share a name, and merging by key would drop the namespace.
-        /** @var DiscoveredSymbol $symbol */
-        foreach (array_merge(
-            array_values($this->namespacesToRename->toArray()),
-            array_values($this->namespacedToRename->toArray())
-        ) as $symbol) {
+        /**
+ * @var DiscoveredSymbol $symbol
+*/
+        foreach (
+            array_merge(
+                array_values($this->namespacesToRename->toArray()),
+                array_values($this->namespacedToRename->toArray())
+            ) as $symbol
+        ) {
             if (!$symbol->isReplaceInString()) {
                 continue;
             }
@@ -151,7 +172,9 @@ class SymbolIndex
     {
         if (is_null($this->namespacesToRenameByName)) {
             $byName = [];
-            /** @var NamespaceSymbol $symbol */
+            /**
+ * @var NamespaceSymbol $symbol
+*/
             foreach ($this->namespacesToRename as $symbol) {
                 $name = rtrim($symbol->getOriginalFqdnName(), '\\');
                 if (isset($byName[$name])) {
@@ -174,7 +197,9 @@ class SymbolIndex
     {
         if (is_null($this->activeNamespaceReplacements)) {
             $active = [];
-            /** @var NamespacedSymbol $symbol */
+            /**
+ * @var NamespacedSymbol $symbol
+*/
             foreach ($this->namespacedToRenameNotGlobal->toArray() as $symbol) {
                 $namespace = $symbol->getNamespace();
                 $active[rtrim($namespace->getOriginalFqdnName(), '\\')] = rtrim($namespace->getReplacementFqdnName(), '\\');
@@ -261,6 +286,8 @@ class SymbolIndex
      * The text need not be PHP: any quote character counts, so this finds at least every name that
      * {@see ChangePlanner::findSymbolPositionsInStrings()} can match.
      *
+     * @param string $text The text to search, e.g. the joined string, comment and inline HTML regions of a file.
+     *
      * @return array<string, true> Keyed by name.
      */
     public static function getQuotedNames(string $text): array
@@ -283,6 +310,8 @@ class SymbolIndex
      * Every qualified-name-shaped candidate in the text: for each run of identifier characters and backslashes,
      * every segment-aligned substring, e.g. `\Foo\Bar\Baz` gives `Foo`, `Foo\Bar`, `Foo\Bar\Baz`, `Bar`,
      * `Bar\Baz`, `Baz`.
+     *
+     * @param string $text The text to search, e.g. a doc comment.
      *
      * @return array<string, true> Keyed by candidate name.
      */

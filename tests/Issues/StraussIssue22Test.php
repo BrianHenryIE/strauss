@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Metapackages!
  *
@@ -15,7 +16,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue22Test extends IntegrationTestCase
 {
-
     /**
      * "Virtual packages are a way to specify the dependency on an implementation of an interface-only
      * repository without forcing a specific implementation. For HTTPlug, the virtual packages are
@@ -32,24 +32,24 @@ class StraussIssue22Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-issue-22",
-  "require": {
-    "omnipay/common": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue22\\",
-      "classmap_prefix": "Strauss_Issue22_"
-    }
-  },
-  "config": {
-    "allow-plugins": {
-      "php-http/discovery": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-issue-22",
+              "require": {
+                "omnipay/common": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue22\\",
+                  "classmap_prefix": "Strauss_Issue22_"
+                }
+              },
+              "config": {
+                "allow-plugins": {
+                  "php-http/discovery": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -83,24 +83,24 @@ EOD;
         $this->markTestSkippedOnPhpVersionAbove('8.2', 'Fatal error: Allowed memory size of 134217728 bytes exhausted');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-issue-22",
-  "require": {
-    "league/omnipay": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue22\\",
-      "classmap_prefix": "Strauss_Issue22_"
-    }
-  },
-  "config": {
-    "allow-plugins": {
-      "php-http/discovery": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-issue-22",
+              "require": {
+                "league/omnipay": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue22\\",
+                  "classmap_prefix": "Strauss_Issue22_"
+                }
+              },
+              "config": {
+                "allow-plugins": {
+                  "php-http/discovery": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

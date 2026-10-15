@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Incorrectly not prefixing when the word "namespace" is on the same line as `<?php `.
  *
@@ -18,26 +19,25 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class StraussIssue80Test extends IntegrationTestCase
 {
-
     /**
      */
     public function test_issue_80(): void
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/80",
-  "require": {
-    "league/oauth2-linkedin": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Issue_80_"
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/80",
+              "require": {
+                "league/oauth2-linkedin": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Issue_80_"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -61,51 +61,51 @@ EOD;
         $this->markTestSkippedLocally('Slow test. Was for double \\ inside strings.');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/81",
-  "require": {
-    "google/apiclient": "2.15.1"
-  },
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Prefix_",
-      "exclude_from_copy": {
-        "packages": [
-          "firebase/php-jwt",
-          "guzzlehttp/guzzle",
-          "guzzlehttp/promises",
-          "guzzlehttp/psr7",
-          "psr/log",
-          "psr/cache",
-          "psr/http-client",
-          "psr/http-message",
-          "psr/http-factory",
-          "monolog/monolog",
-          "paragonie/constant_time_encoding",
-          "paragonie/random_compat",
-          "phpseclib/phpseclib",
-          "ralouphie/getallheaders",
-          "symfony/deprecation-contracts"
-          ]
-       }
-    },
-	"google/apiclient-services": [
-	  "Calendar"
-	]
-  },
-  "scripts": {
-    "delete-unused-google-apis": [
-        "Google\\Task\\Composer::cleanup"
-    ]
-  }
-}
-EOD;
+            {
+              "name": "issue/81",
+              "require": {
+                "google/apiclient": "2.15.1"
+              },
+              "config": {
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Prefix_",
+                  "exclude_from_copy": {
+                    "packages": [
+                      "firebase/php-jwt",
+                      "guzzlehttp/guzzle",
+                      "guzzlehttp/promises",
+                      "guzzlehttp/psr7",
+                      "psr/log",
+                      "psr/cache",
+                      "psr/http-client",
+                      "psr/http-message",
+                      "psr/http-factory",
+                      "monolog/monolog",
+                      "paragonie/constant_time_encoding",
+                      "paragonie/random_compat",
+                      "phpseclib/phpseclib",
+                      "ralouphie/getallheaders",
+                      "symfony/deprecation-contracts"
+                      ]
+                   }
+                },
+            	"google/apiclient-services": [
+            	  "Calendar"
+            	]
+              },
+              "scripts": {
+                "delete-unused-google-apis": [
+                    "Google\\Task\\Composer::cleanup"
+                ]
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Delete operations to symlinks should be changed to unlink.
  */

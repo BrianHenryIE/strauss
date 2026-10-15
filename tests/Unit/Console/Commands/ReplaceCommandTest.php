@@ -19,7 +19,7 @@ class ReplaceCommandTest extends TestCase
      */
     protected function getSut(): ReplaceCommand
     {
-        return new class () extends ReplaceCommand {
+        return new class extends ReplaceCommand {
             public function getPipelineSteps(): array
             {
                 return parent::getPipelineSteps();

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Carbon Fields, including non-class files
  * @see https://github.com/coenjacobs/mozart/issues/130
@@ -19,7 +20,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue130Test extends IntegrationTestCase
 {
-
     /**
      * @author BrianHenryIE
      */
@@ -32,35 +32,35 @@ class MozartIssue130Test extends IntegrationTestCase
          *
          * Skipping Prefixing in src/Mozart/htmlburger/carbon-fields/templates/Container/comment_meta.php due to parse error: Syntax error, unexpected '<' on line 2
          */
-//        $this->expectWarningLogs();
+        //        $this->expectWarningLogs();
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/mozart-issue-130",
-  "require": {
-    "htmlburger/carbon-fields": "v3.3.3"
-  },
-  "extra": {
-    "mozart":{
-      "dep_namespace": "MZoo\\MzMboAccess\\",
-      "dep_directory": "/strauss/",
-      "override_autoload": {
-        "htmlburger/carbon-fields": {
-          "psr-4": {
-            "Carbon_Fields\\": "core/"
-          },
-          "files": [
-            "config.php",
-            "templates",
-            "assets",
-            "build"
-          ]
-        }
-      }
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/mozart-issue-130",
+              "require": {
+                "htmlburger/carbon-fields": "v3.3.3"
+              },
+              "extra": {
+                "mozart":{
+                  "dep_namespace": "MZoo\\MzMboAccess\\",
+                  "dep_directory": "/strauss/",
+                  "override_autoload": {
+                    "htmlburger/carbon-fields": {
+                      "psr-4": {
+                        "Carbon_Fields\\": "core/"
+                      },
+                      "files": [
+                        "config.php",
+                        "templates",
+                        "assets",
+                        "build"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -71,6 +71,6 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileExistsInFileSystem($this->testsWorkingDir .'/strauss/htmlburger/carbon-fields/config.php');
+        $this->assertFileExistsInFileSystem($this->testsWorkingDir . '/strauss/htmlburger/carbon-fields/config.php');
     }
 }

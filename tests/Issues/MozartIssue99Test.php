@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A PSR-0 test.
  *
@@ -20,7 +21,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class MozartIssue99Test extends IntegrationTestCase
 {
-
     /**
      *
      */
@@ -29,19 +29,19 @@ class MozartIssue99Test extends IntegrationTestCase
         $this->markTestIncomplete('found mustache/mustache[v2.13.0] but these were not loaded, because they are affected by security advisories.');
 
         $composerJsonString = <<<'EOD'
-{
-  "require": {
-    "mustache/mustache": "2.13.0"
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "strauss",
-      "namespace_prefix": "Strauss\\",
-      "classmap_prefix": "Strauss_"
-    }
-  }
-}
-EOD;
+            {
+              "require": {
+                "mustache/mustache": "2.13.0"
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "strauss",
+                  "namespace_prefix": "Strauss\\",
+                  "classmap_prefix": "Strauss_"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

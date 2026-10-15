@@ -79,12 +79,12 @@ class EnumSymbolTest extends TestCase
         $sut->setDoRename(true);
 
         $this->assertSame(
-            array(
+            [
                 'type' => 'enum',
                 'enumname' => 'Status',
                 'namespace' => 'Foo\Bar',
                 'concrete' => 'Prefix\Foo\Bar\Status',
-            ),
+            ],
             $sut->getAutoloadAliasArray()
         );
     }
@@ -105,12 +105,12 @@ class EnumSymbolTest extends TestCase
         $sut->setDoRename(true);
 
         $this->assertSame(
-            array(
+            [
                 'type' => 'enum',
                 'enumname' => 'Status',
                 'namespace' => '\\',
                 'concrete' => 'Prefix_Status',
-            ),
+            ],
             $sut->getAutoloadAliasArray()
         );
     }

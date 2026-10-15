@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * An enum definition discovered in a scanned file, which Strauss may prefix, and for which it records what is
+ * needed to write an alias for the original enum name in `autoload_aliases.php`.
+ *
+ * @package brianhenryie/strauss
+ */
+
 namespace BrianHenryIE\Strauss\Types;
 
 use BrianHenryIE\Strauss\Files\FileBase;
@@ -20,11 +27,11 @@ class EnumSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     protected array $interfaces;
 
     /**
-     * @param string $fqdnEnumName
-     * @param FileBase $sourceFile
-     * @param NamespaceSymbol $namespace
-     * @param ?string $backingType
-     * @param string[] $interfaces
+     * @param string          $fqdnEnumName Fully qualified enum name, without leading backslash.
+     * @param FileBase        $sourceFile   The file the enum was first discovered in.
+     * @param NamespaceSymbol $namespace    The namespace the enum is declared in (may be the global namespace).
+     * @param ?string         $backingType  The backing type, 'string' or 'int'; null for a pure enum.
+     * @param string[]        $interfaces   FQDNs of implemented interfaces, without leading backslashes.
      */
     public function __construct(
         string $fqdnEnumName,
@@ -66,11 +73,11 @@ class EnumSymbol extends NamespacedSymbol implements AutoloadAliasInterface
      */
     public function getAutoloadAliasArray(): array
     {
-        return array (
+        return  [
             'type' => 'enum',
             'enumname' => $this->getOriginalLocalName(),
             'namespace' => $this->namespace->getOriginalFqdnName(),
             'concrete' => $this->getReplacementFqdnName(),
-        );
+        ];
     }
 }

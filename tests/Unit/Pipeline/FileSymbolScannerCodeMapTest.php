@@ -1,4 +1,5 @@
 <?php
+
 /**
  * After scanning, each File carries a code map: the symbols it defines and every symbol it uses, by type, from a
  * single parse. This is the data the rest of the pipeline works from.
@@ -27,35 +28,35 @@ class FileSymbolScannerCodeMapTest extends TestCase
     public function testFileCodeMapListsDefinitionsAndUsagesByType(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace Acme\Widgets;
+            namespace Acme\Widgets;
 
-use Acme\Base\Model;
-use function Acme\Helpers\format;
-use const Acme\Helpers\VERSION;
+            use Acme\Base\Model;
+            use function Acme\Helpers\format;
+            use const Acme\Helpers\VERSION;
 
-interface HasName {}
-trait Named {}
-enum Kind: string { case A = 'a'; }
-const DEFAULT_KIND = 'a';
-define('ACME_LOADED', true);
+            interface HasName {}
+            trait Named {}
+            enum Kind: string { case A = 'a'; }
+            const DEFAULT_KIND = 'a';
+            define('ACME_LOADED', true);
 
-class Widget extends Model implements HasName, \Countable
-{
-    use Named;
+            class Widget extends Model implements HasName, \Countable
+            {
+                use Named;
 
-    public function count(): int
-    {
-        return format(VERSION) + \strlen(Kind::A->value);
-    }
-}
+                public function count(): int
+                {
+                    return format(VERSION) + \strlen(Kind::A->value);
+                }
+            }
 
-function make(): Widget
-{
-    return new Widget();
-}
-EOD;
+            function make(): Widget
+            {
+                return new Widget();
+            }
+            EOD;
 
         $filesystem = Mockery::mock(FileSystem::class);
         $filesystem->expects('read')->once()->andReturn($contents);

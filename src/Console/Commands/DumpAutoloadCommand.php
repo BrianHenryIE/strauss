@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Regenerates the autoloader in the target directory, without copying or prefixing any files again.
  *
@@ -24,6 +25,12 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Registered as `dump-autoload` (alias `dumpautoload`). Rather than enumerating the vendor directory, it rebuilds the
+ * copy and prefix package lists from the target directory's `composer/installed.json` via
+ * {@see ComposerPackage::fromComposerJsonArray()}, then runs only the {@see Autoload} generation and Composer autoload
+ * file prefixing steps of the pipeline.
+ */
 class DumpAutoloadCommand extends AbstractRenamespacerCommand
 {
     /**
@@ -92,7 +99,9 @@ class DumpAutoloadCommand extends AbstractRenamespacerCommand
             );
         }
 
-        /** @var array{packages?: array<array{name: string}>} $installedJson */
+        /**
+ * @var array{packages?: array<array{name: string}>} $installedJson
+*/
         $installedJson = json_decode($this->filesystem->read($installedJsonPath), true, 512, JSON_THROW_ON_ERROR);
 
         $packages = [];

@@ -1,13 +1,24 @@
 <?php
 
+/**
+ * The interface pipeline steps use for every file Strauss handles, whether a project file, a
+ * `vendor/composer` autoload file, or a file from a dependency.
+ *
+ * @package brianhenryie/strauss
+ */
+
 namespace BrianHenryIE\Strauss\Files;
 
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 
+/**
+ * Implemented by {@see File} and {@see FileWithDependency}. Declares accessors for the source, target and
+ * vendor-relative paths, the copy/prefix/update/delete flags that pipeline steps set and later read, and the
+ * {@see DiscoveredSymbols} defined in the file.
+ */
 interface FileBase
 {
-
     public function getSourcePath(): string;
 
     public function getTargetAbsolutePath(): string;
@@ -33,7 +44,7 @@ interface FileBase
      * Used to mark files that should be deleted after moving when `delete_vendor_files` is enabled.
      * Used to mark files that are symlinked as not-to-be-deleted.
      *
-     * @param bool $doDelete
+     * @param bool $doDelete True to delete the source file after copying; false to keep it.
      *
      * @return void
      */

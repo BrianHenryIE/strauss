@@ -15,14 +15,14 @@ class GitAttributesTest extends TestCase
     public function test_parse_returns_patterns_and_attributes(): void
     {
         $gitAttributes = <<<'EOD'
-# A comment line which should be ignored.
+            # A comment line which should be ignored.
 
-/tests       export-ignore
-phpunit.xml  export-ignore
-*.dist       export-ignore
-src/Keep.php -export-ignore
-* text=auto
-EOD;
+            /tests       export-ignore
+            phpunit.xml  export-ignore
+            *.dist       export-ignore
+            src/Keep.php -export-ignore
+            * text=auto
+            EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write('mem://package/.gitattributes', $gitAttributes);
@@ -61,10 +61,10 @@ EOD;
     public function test_is_export_ignored_matches_directories_files_and_wildcards(): void
     {
         $gitAttributes = <<<'EOD'
-/tests      export-ignore
-phpunit.xml export-ignore
-*.dist      export-ignore
-EOD;
+            /tests      export-ignore
+            phpunit.xml export-ignore
+            *.dist      export-ignore
+            EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write('mem://package/.gitattributes', $gitAttributes);
@@ -89,9 +89,9 @@ EOD;
     public function test_is_export_ignored_later_unset_reincludes_path(): void
     {
         $gitAttributes = <<<'EOD'
-/tests           export-ignore
-/tests/Keep.php  -export-ignore
-EOD;
+            /tests           export-ignore
+            /tests/Keep.php  -export-ignore
+            EOD;
 
         $filesystem = $this->getInMemoryFileSystem();
         $filesystem->write('mem://package/.gitattributes', $gitAttributes);

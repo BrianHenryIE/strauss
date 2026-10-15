@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/BrianHenryIE/strauss/pull/213
  */
@@ -20,22 +21,22 @@ class StraussIssue213Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "require": {
-    "wp-forge/helpers": "2.0.0"
-  },
-  "require-dev": {
-    "wp-forge/wp-loop": "1.0.0"
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "lib/packages",
-      "namespace_prefix": "Company\\Project\\",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "require": {
+                "wp-forge/helpers": "2.0.0"
+              },
+              "require-dev": {
+                "wp-forge/wp-loop": "1.0.0"
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "lib/packages",
+                  "namespace_prefix": "Company\\Project\\",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

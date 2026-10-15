@@ -1,4 +1,5 @@
 <?php
+
 /**
  */
 
@@ -18,34 +19,34 @@ class StraussIssue163Test extends IntegrationTestCase
     public function test_multiple_autoloaders_breaks_autoloading(): void
     {
         $composerJsonString1 = <<<'EOD'
-{
-  "name": "strauss/issue163",
-  "require": {
-    "php": ">=7.4",
-    "wp-forge/helpers": "2.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project1\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue163",
+              "require": {
+                "php": ">=7.4",
+                "wp-forge/helpers": "2.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project1\\"
+                }
+              }
+            }
+            EOD;
 
         $composerJsonString2 = <<<'EOD'
-{
-  "name": "strauss/issue163",
-  "require": {
-    "php": ">=7.4",
-    "wp-forge/helpers": "2.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project2\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue163",
+              "require": {
+                "php": ">=7.4",
+                "wp-forge/helpers": "2.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project2\\"
+                }
+              }
+            }
+            EOD;
 
         mkdir($this->testsWorkingDir . '/project1');
         $this->getFileSystem()->write($this->testsWorkingDir . '/project1/composer.json', $composerJsonString1);

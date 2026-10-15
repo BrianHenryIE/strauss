@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * @see https://github.com/BrianHenryIE/strauss/issues/173
@@ -20,65 +21,65 @@ class StraussIssue173Test extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionBelow('8.2.0');
 
         $composerJsonString = <<<'EOD'
-{
-  "require": {
-    "filp/whoops": "2.18.0",
-    "guzzlehttp/guzzle": "7.9.3",
-    "kucrut/vite-for-wp": "0.10.0",
-    "laravel/framework": "11.44.7",
-    "livewire/livewire": "3.6.4",
-    "spatie/color": "1.8.0",
-    "spatie/invade": "2.1.0",
-    "spatie/laravel-ignition": "2.9.1",
-    "staudenmeir/eloquent-has-many-deep": "1.20.7",
-    "vlucas/phpdotenv": "5.6.2",
-    "yahnis-elsts/plugin-update-checker": "5.5"
-  },
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "optimize-autoloader": true,
-  "config": {
-    "allow-plugins": {
-      "composer/installers": true
-    },
-    "audit": {
-      "block-insecure": false
-    },
-    "classmap-authoritative": true,
-    "optimize-autoloader": true,
-    "sort-packages": true,
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "vendor",
-      "namespace_prefix": "WPSoup\\Vendor\\",
-      "constant_prefix": "WPSV_",
-      "packages": ["psr/log"],
-      "override_autoload": {
-        "nesbot/carbon": {
-          "autoload": {
-            "psr-4": {
-              "Carbon\\": "src/Carbon/"
+            {
+              "require": {
+                "filp/whoops": "2.18.0",
+                "guzzlehttp/guzzle": "7.9.3",
+                "kucrut/vite-for-wp": "0.10.0",
+                "laravel/framework": "11.44.7",
+                "livewire/livewire": "3.6.4",
+                "spatie/color": "1.8.0",
+                "spatie/invade": "2.1.0",
+                "spatie/laravel-ignition": "2.9.1",
+                "staudenmeir/eloquent-has-many-deep": "1.20.7",
+                "vlucas/phpdotenv": "5.6.2",
+                "yahnis-elsts/plugin-update-checker": "5.5"
+              },
+              "minimum-stability": "dev",
+              "prefer-stable": true,
+              "optimize-autoloader": true,
+              "config": {
+                "allow-plugins": {
+                  "composer/installers": true
+                },
+                "audit": {
+                  "block-insecure": false
+                },
+                "classmap-authoritative": true,
+                "optimize-autoloader": true,
+                "sort-packages": true,
+                "audit": {
+                  "block-insecure": false
+                }
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "vendor",
+                  "namespace_prefix": "WPSoup\\Vendor\\",
+                  "constant_prefix": "WPSV_",
+                  "packages": ["psr/log"],
+                  "override_autoload": {
+                    "nesbot/carbon": {
+                      "autoload": {
+                        "psr-4": {
+                          "Carbon\\": "src/Carbon/"
+                        }
+                      },
+                      "classmap": ["lazy"]
+                    }
+                  },
+                  "exclude_from_prefix": {
+                    "packages": [],
+                    "namespaces": [],
+                    "file_patterns": []
+                  },
+                  "update_call_sites": true,
+                  "include_modified_date": false,
+                  "include_author": false
+                }
+              }
             }
-          },
-          "classmap": ["lazy"]
-        }
-      },
-      "exclude_from_prefix": {
-        "packages": [],
-        "namespaces": [],
-        "file_patterns": []
-      },
-      "update_call_sites": true,
-      "include_modified_date": false,
-      "include_author": false
-    }
-  }
-}
-EOD;
+            EOD;
 
         chdir($this->testsWorkingDir);
 

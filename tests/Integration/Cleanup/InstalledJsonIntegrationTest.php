@@ -59,19 +59,19 @@ class InstalledJsonIntegrationTest extends IntegrationTestCase
     public function testComposerDumpAutoloadOnTargetDirectory(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/testcomposerdumpautoloadontargetdirectory",
-  "require": {
-    "chillerlan/php-qrcode": "^4"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/testcomposerdumpautoloadontargetdirectory",
+              "require": {
+                "chillerlan/php-qrcode": "^4"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -96,19 +96,19 @@ EOD;
     public function testComposerDumpAutoloadOnTargetDirectoryIsVendorDir(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/testcomposerdumpautoloadontargetdirectoryisvendordir",
-  "require": {
-    "chillerlan/php-qrcode": "^4"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "target_directory": "vendor"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/testcomposerdumpautoloadontargetdirectoryisvendordir",
+              "require": {
+                "chillerlan/php-qrcode": "^4"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "target_directory": "vendor"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -128,21 +128,21 @@ EOD;
     public function testComposerDumpAutoloadWithDeleteFalse(): void
     {
         $composerJsonString = <<<'EOD'
-{
-    "name": "brianhenryie/testcomposerdumpautoloadwithdeletefalse",
-    "require": {
-        "chillerlan/php-qrcode": "^4"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-            "delete_vendor_packages": false,
-            "delete_vendor_files": false,
-            "target_directory": "vendor-prefixed"
-        }
-    }
-}
-EOD;
+            {
+                "name": "brianhenryie/testcomposerdumpautoloadwithdeletefalse",
+                "require": {
+                    "chillerlan/php-qrcode": "^4"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                        "delete_vendor_packages": false,
+                        "delete_vendor_files": false,
+                        "target_directory": "vendor-prefixed"
+                    }
+                }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -173,24 +173,24 @@ EOD;
         $this->markTestIncomplete('Not really sure if there is a true problem here.');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "installedjson/testemptynamespace",
-  "require": {
-    "nesbot/carbon": "1.39.1"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "delete_vendor_packages": true
-    }
-  },
-  "config": {
-    "allow-plugins": {
-      "kylekatarnls/update-helper": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "installedjson/testemptynamespace",
+              "require": {
+                "nesbot/carbon": "1.39.1"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "delete_vendor_packages": true
+                }
+              },
+              "config": {
+                "allow-plugins": {
+                  "kylekatarnls/update-helper": true
+                }
+              }
+            }
+            EOD;
 
         // "autoload": {
         //   "psr-4": {

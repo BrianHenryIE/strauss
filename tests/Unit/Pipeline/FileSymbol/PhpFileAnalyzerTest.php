@@ -39,19 +39,19 @@ class PhpFileAnalyzerTest extends TestCase
     public function testRecordsDefinitionsAndUsagesWithPositions(): void
     {
         $contents = <<<'EOD'
-<?php
+            <?php
 
-namespace My\Ns;
+            namespace My\Ns;
 
-use Other\Package\TheirClass;
-use function Other\Package\their_function;
+            use Other\Package\TheirClass;
+            use function Other\Package\their_function;
 
-class MyClass extends TheirClass implements \Countable {
-    public function count(): int {
-        return \Other\Package\CONSTANT + their_function();
-    }
-}
-EOD;
+            class MyClass extends TheirClass implements \Countable {
+                public function count(): int {
+                    return \Other\Package\CONSTANT + their_function();
+                }
+            }
+            EOD;
 
         $map = $this->analyze($contents);
         $this->assertLocationsMatchContents($map, $contents);
@@ -114,13 +114,13 @@ EOD;
     public function testRecordsCommentsAndStrings(): void
     {
         $contents = <<<'EOD'
-<?php
-// A line comment mentioning \My\Ns\MyClass.
-/** A doc comment. */
-$a = 'My\Ns\MyClass';
-$b = "interpolated $a string";
-$c = 'My\Ns\\' . $a . 'suffix';
-EOD;
+            <?php
+            // A line comment mentioning \My\Ns\MyClass.
+            /** A doc comment. */
+            $a = 'My\Ns\MyClass';
+            $b = "interpolated $a string";
+            $c = 'My\Ns\\' . $a . 'suffix';
+            EOD;
 
         $map = $this->analyze($contents);
         $this->assertLocationsMatchContents($map, $contents);
@@ -147,30 +147,30 @@ EOD;
     public function testRecordsEveryCommentAndString(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace A;
-// c1 leading
-$x = foo(
-    'arg', // c2 trailing in args
-    /* c3 before close */
-);
-$a = [
-    'k' => "v {$b['inner']} w", // c4 after item
-    // c5 last in array
-];
-function f() {
-    return 1;
-    // c6 end of block
-}
-$h = <<<EOT
-heredoc
-EOT;
-$n = <<<'EOT'
-nowdoc
-EOT;
-echo `shell 'cmd'`;
-/** c7 doc at end of file */
-EOD;
+            <?php
+            namespace A;
+            // c1 leading
+            $x = foo(
+                'arg', // c2 trailing in args
+                /* c3 before close */
+            );
+            $a = [
+                'k' => "v {$b['inner']} w", // c4 after item
+                // c5 last in array
+            ];
+            function f() {
+                return 1;
+                // c6 end of block
+            }
+            $h = <<<EOT
+            heredoc
+            EOT;
+            $n = <<<'EOT'
+            nowdoc
+            EOT;
+            echo `shell 'cmd'`;
+            /** c7 doc at end of file */
+            EOD;
 
         $codeMap = $this->analyze($contents);
         $this->assertLocationsMatchContents($codeMap, $contents);
@@ -214,18 +214,18 @@ EOD;
     public function testCommentNamespaces(): void
     {
         $contents = <<<'EOD'
-<?php
-// before
-namespace A {
-    $a = [
-        1, // in a
-    ];
-}
-// between
-namespace B {
-    // in b
-}
-EOD;
+            <?php
+            // before
+            namespace A {
+                $a = [
+                    1, // in a
+                ];
+            }
+            // between
+            namespace B {
+                // in b
+            }
+            EOD;
 
         $codeMap = $this->analyze($contents);
 
@@ -292,12 +292,12 @@ EOD;
     public function testDefineIsRecordedAsConstantDefinition(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace My\Ns;
-define('MY_DEFINED', 1);
-const MY_CONST = 2;
-if (!defined('OTHER')) {}
-EOD;
+            <?php
+            namespace My\Ns;
+            define('MY_DEFINED', 1);
+            const MY_CONST = 2;
+            if (!defined('OTHER')) {}
+            EOD;
 
         $map = $this->analyze($contents);
 
@@ -321,13 +321,13 @@ EOD;
     public function testEnumAndInterfaceDefinitions(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace My\Ns;
-interface HasLabel extends \Stringable {}
-enum Status: string implements HasLabel { case Ready = 'ready'; }
-trait Loggable {}
-function helper() {}
-EOD;
+            <?php
+            namespace My\Ns;
+            interface HasLabel extends \Stringable {}
+            enum Status: string implements HasLabel { case Ready = 'ready'; }
+            trait Loggable {}
+            function helper() {}
+            EOD;
 
         $map = $this->analyze($contents);
 

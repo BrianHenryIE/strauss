@@ -25,7 +25,7 @@ class AutoloadTest extends TestCase
         $config->expects('isDryRun')->andReturnTrue()->once();
 
         $absoluteWorkingDir = '/';
-        $discoveredFilesAutoloaders = array();
+        $discoveredFilesAutoloaders = [];
         $filesystem = $this->getInMemoryFileSystem();
         $logger = new TestLogger();
 
@@ -47,7 +47,7 @@ class AutoloadTest extends TestCase
 
         $autoloadClassmap = $filesystem->read('vendor-prefixed/autoload-classmap.php');
 
-        $this->assertStringContainsString("'Psr\Log\Test\TestLogger' => \$strauss_src . '/psr/log/Psr/Log/Test/TestLogger.php',". PHP_EOL, $autoloadClassmap);
+        $this->assertStringContainsString("'Psr\Log\Test\TestLogger' => \$strauss_src . '/psr/log/Psr/Log/Test/TestLogger.php'," . PHP_EOL, $autoloadClassmap);
     }
 
     /**
@@ -66,7 +66,7 @@ class AutoloadTest extends TestCase
         $config->expects('isDryRun')->andReturnTrue()->once();
 
         $absoluteWorkingDir = '/path/to/myproject/build/';
-        $discoveredFilesAutoloaders = array();
+        $discoveredFilesAutoloaders = [];
         $filesystem = $this->getInMemoryFileSystem();
         $logger = new TestLogger();
 
@@ -88,7 +88,7 @@ class AutoloadTest extends TestCase
 
         $autoloadClassmap = $filesystem->read('path/to/myproject/vendor-prefixed/autoload-classmap.php');
 
-        $this->assertStringContainsString("'Psr\Log\Test\TestLogger' => \$strauss_src . '/psr/log/Psr/Log/Test/TestLogger.php',". PHP_EOL, $autoloadClassmap);
+        $this->assertStringContainsString("'Psr\Log\Test\TestLogger' => \$strauss_src . '/psr/log/Psr/Log/Test/TestLogger.php'," . PHP_EOL, $autoloadClassmap);
     }
 
     /**
@@ -105,12 +105,12 @@ class AutoloadTest extends TestCase
         $config->expects('isDryRun')->andReturnTrue()->once();
 
         $absoluteWorkingDir = '/';
-        $discoveredFilesAutoloaders = array (
-            'rubix/tensor' =>
-                array (
-                    0 => 'src/constants.php',
-                ),
-        );
+        $discoveredFilesAutoloaders =  [
+            'rubix/tensor'
+                 => [
+                     0 => 'src/constants.php',
+                 ],
+        ];
         $filesystem = $this->getInMemoryFileSystem();
         $logger = new TestLogger();
 

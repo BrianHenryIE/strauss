@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see VendorComposerAutoload
  */
@@ -12,24 +13,23 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class VendorComposerAutoloadFeatureTest extends IntegrationTestCase
 {
-
     public function testHappyPath(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -50,20 +50,20 @@ EOD;
     public function testInstallNoDev(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -83,20 +83,20 @@ EOD;
     public function testRepeatedlyRunningOnlyAddsAutoloadOnce(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -129,20 +129,20 @@ EOD;
     public function testRepeatedlyRunningOnlyAddsAutoloadAliasesOnce(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -171,21 +171,21 @@ EOD;
     public function test_does_not_edit_autoloader_namespaces_when_not_deleting_files(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "target_directory": "vendor-prefixed",
-      "delete_vendor_packages": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "target_directory": "vendor-prefixed",
+                  "delete_vendor_packages": false
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -212,21 +212,21 @@ EOD;
     public function test_does_edit_autoloader_namespaces_when_deleting_files(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "target_directory": "vendor-prefixed",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "target_directory": "vendor-prefixed",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -254,21 +254,21 @@ EOD;
     public function test_does_edit_autoloader_namespaces_when_target_is_vendor(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "target_directory": "vendor",
-      "delete_vendor_packages": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "target_directory": "vendor",
+                  "delete_vendor_packages": false
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

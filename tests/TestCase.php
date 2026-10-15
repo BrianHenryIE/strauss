@@ -1,4 +1,5 @@
 <?php
+
 /**
  * "unit" tests should not write to the filesystem.
  */
@@ -90,7 +91,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
          * @see \Composer\Util\Filesystem::$streamWrappersRegex
          * @see \Composer\Util\Filesystem::isStreamWrapperPath()
          */
-        if (!in_array('mem', stream_get_wrappers())
+        if (
+            !in_array('mem', stream_get_wrappers())
             && method_exists(\Composer\Util\Filesystem::class, 'isStreamWrapperPath')
         ) {
             stream_wrapper_register('mem', stdClass::class);
@@ -136,7 +138,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
              */
             $levelMessages = function (string $level): array {
                 if (!isset($this->getTestLogger()->recordsByLevel[$level])) {
-                    return array();
+                    return [];
                 }
                 return array_map(
                     /** @param array{level:string, message:string, context:array} $record */
@@ -292,8 +294,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function getTestsWorkingDirectoryFileSystem(): FileSystem
     {
-        set_error_handler(function () {
-        }, E_DEPRECATED | E_USER_DEPRECATED);
+        set_error_handler(function () {}, E_DEPRECATED | E_USER_DEPRECATED);
 
         if (!isset($this->testsWorkingDir)) {
             $this->createTestsTempDir();
@@ -312,8 +313,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
             $filesystem = new FileSystem(
                 $localFilesystemAdapter,
                 [
-                        Config::OPTION_DIRECTORY_VISIBILITY => 'public',
-                    ],
+                    Config::OPTION_DIRECTORY_VISIBILITY => 'public',
+                ],
                 Filesystem::makePathNormalizer($workingDir),
                 null,
                 $workingDir,
@@ -340,8 +341,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function getNewInMemoryFileSystem(): FileSystem
     {
-        set_error_handler(function () {
-        }, E_DEPRECATED | E_USER_DEPRECATED);
+        set_error_handler(function () {}, E_DEPRECATED | E_USER_DEPRECATED);
 
         $normalizer = FileSystem::makePathNormalizer('mem://');
 

@@ -20,24 +20,24 @@ class FileSymbolScannerPerformanceTest extends TestCase
     public function test_parser_reuse_does_not_leak_namespaces_across_files(): void
     {
         $contentsOne = <<<'EOD'
-<?php
-namespace FirstNs {
-    class FirstNamespaced {}
-}
-namespace {
-    class FirstGlobal {}
-}
-EOD;
+            <?php
+            namespace FirstNs {
+                class FirstNamespaced {}
+            }
+            namespace {
+                class FirstGlobal {}
+            }
+            EOD;
 
         $contentsTwo = <<<'EOD'
-<?php
-namespace SecondNs {
-    class SecondNamespaced {}
-}
-namespace {
-    class SecondGlobal {}
-}
-EOD;
+            <?php
+            namespace SecondNs {
+                class SecondNamespaced {}
+            }
+            namespace {
+                class SecondGlobal {}
+            }
+            EOD;
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
         $config->method('getProjectAbsolutePath')->willReturn('project');
@@ -72,13 +72,13 @@ EOD;
     public function test_string_containing_namespace_keyword_is_ignored(): void
     {
         $contents = <<<'EOD'
-<?php
-$statement = "namespace Fake\Namespace;";
+            <?php
+            $statement = "namespace Fake\Namespace;";
 
-function keep_global() {
-    return true;
-}
-EOD;
+            function keep_global() {
+                return true;
+            }
+            EOD;
 
         $result = $this->scanContentForSymbols($contents);
 
@@ -89,13 +89,13 @@ EOD;
     public function test_namespace_operator_does_not_create_additional_namespace(): void
     {
         $contents = <<<'EOD'
-<?php
-namespace Demo;
+            <?php
+            namespace Demo;
 
-function read_length(string $input): int {
-    return namespace\strlen($input);
-}
-EOD;
+            function read_length(string $input): int {
+                return namespace\strlen($input);
+            }
+            EOD;
 
         $result = $this->scanContentForSymbols($contents);
 
@@ -139,44 +139,44 @@ EOD;
         return [
             'heredoc and nowdoc text' => [
                 <<<'PHP'
-<?php
-$heredoc = <<<TXT
-namespace Fake\Heredoc;
-TXT;
-$nowdoc = <<<'TXT'
-namespace Fake\Nowdoc;
-TXT;
-function keep_template_text() {
-    return true;
-}
-PHP,
+                    <?php
+                    $heredoc = <<<TXT
+                    namespace Fake\Heredoc;
+                    TXT;
+                    $nowdoc = <<<'TXT'
+                    namespace Fake\Nowdoc;
+                    TXT;
+                    function keep_template_text() {
+                        return true;
+                    }
+                    PHP,
                 [],
                 ['Fake\\Heredoc', 'Fake\\Nowdoc'],
                 ['keep_template_text'],
             ],
             'attribute argument string' => [
                 <<<'PHP'
-<?php
-namespace AttrDemo;
-#[Marker("namespace Fake\Attribute;")]
-class WithAttribute {}
-function attr_helper() {
-    return true;
-}
-PHP,
+                    <?php
+                    namespace AttrDemo;
+                    #[Marker("namespace Fake\Attribute;")]
+                    class WithAttribute {}
+                    function attr_helper() {
+                        return true;
+                    }
+                    PHP,
                 ['AttrDemo'],
                 ['Fake\\Attribute'],
                 ['AttrDemo\\attr_helper'],
             ],
             'declare before namespace' => [
                 <<<'PHP'
-<?php
-declare(strict_types=1);
-namespace DeclaredDemo;
-function declared_helper() {
-    return true;
-}
-PHP,
+                    <?php
+                    declare(strict_types=1);
+                    namespace DeclaredDemo;
+                    function declared_helper() {
+                        return true;
+                    }
+                    PHP,
                 ['DeclaredDemo'],
                 [],
                 ['DeclaredDemo\\declared_helper'],
@@ -187,11 +187,11 @@ PHP,
     public function test_dependency_file_outside_packages_to_prefix_sets_do_prefix_false(): void
     {
         $contents = <<<'EOD'
-<?php
-function scan_me() {
-    return true;
-}
-EOD;
+            <?php
+            function scan_me() {
+                return true;
+            }
+            EOD;
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
         $config->method('getProjectAbsolutePath')->willReturn('project');
@@ -230,11 +230,11 @@ EOD;
     public function test_dependency_file_inside_packages_to_prefix_does_not_set_do_prefix_false(): void
     {
         $contents = <<<'EOD'
-<?php
-function scan_me_too() {
-    return true;
-}
-EOD;
+            <?php
+            function scan_me_too() {
+                return true;
+            }
+            EOD;
 
         /** @var ComposerPackage&\Mockery\MockInterface $dependency */
         $dependency = Mockery::mock(ComposerPackage::class);

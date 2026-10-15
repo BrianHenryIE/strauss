@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Strauss does not remove namespaced classes from the composer classmap files when optimize-autoloader is enabled
  *
@@ -19,24 +20,24 @@ class StraussIssue87Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-	"require": {
-		"psr/container": "^1.1"
-	},
-	"extra": {
-		"strauss": {
-			"target_directory": "vendor-prefixed",
-			"classmap_prefix": "Class_Prefix_",
-			"constant_prefix": "Constant_",
-			"namespace_prefix": "New\\Namespace",
-			"delete_vendor_files": true,
-			"packages": [
-				"psr/container"
-			]
-		}
-	}
-}
-EOD;
+            {
+            	"require": {
+            		"psr/container": "^1.1"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"target_directory": "vendor-prefixed",
+            			"classmap_prefix": "Class_Prefix_",
+            			"constant_prefix": "Constant_",
+            			"namespace_prefix": "New\\Namespace",
+            			"delete_vendor_files": true,
+            			"packages": [
+            				"psr/container"
+            			]
+            		}
+            	}
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

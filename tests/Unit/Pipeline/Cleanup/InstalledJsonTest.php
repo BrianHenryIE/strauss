@@ -18,8 +18,6 @@ use Psr\Log\NullLogger;
  */
 class InstalledJsonTest extends \BrianHenryIE\Strauss\TestCase
 {
-
-
     public function test_remove_dead_file_entries(): void
     {
         $this->markTestIncomplete('TODO');
@@ -44,8 +42,8 @@ class InstalledJsonTest extends \BrianHenryIE\Strauss\TestCase
         $this->markTestIncomplete('TODO');
 
         $installedJson = <<<'EOD'
-{"packages":[{"name":"psr\/container","version":"1.1.2","version_normalized":"1.1.2.0","source":{"type":"git","url":"https:\/\/github.com\/php-fig\/container.git","reference":"513e0666f7216c7459170d56df27dfcefe1689ea"},"dist":{"type":"zip","url":"https:\/\/api.github.com\/repos\/php-fig\/container\/zipball\/513e0666f7216c7459170d56df27dfcefe1689ea","reference":"513e0666f7216c7459170d56df27dfcefe1689ea","shasum":""},"require":{"php":">=7.4.0"},"time":"2021-11-05T16:50:12+00:00","type":"library","installation-source":"dist","autoload":{"psr-4":{"Psr\\Container\\":"src\/"}},"notification-url":"https:\/\/packagist.org\/downloads\/","license":["MIT"],"authors":[{"name":"PHP-FIG","homepage":"https:\/\/www.php-fig.org\/"}],"description":"Common Container Interface (PHP FIG PSR-11)","homepage":"https:\/\/github.com\/php-fig\/container","keywords":["PSR-11","container","container-interface","container-interop","psr"],"support":{"issues":"https:\/\/github.com\/php-fig\/container\/issues","source":"https:\/\/github.com\/php-fig\/container\/tree\/1.1.2"},"install-path":"..\/psr\/container"}],"dev":true,"dev-package-names":[]}
-EOD;
+            {"packages":[{"name":"psr\/container","version":"1.1.2","version_normalized":"1.1.2.0","source":{"type":"git","url":"https:\/\/github.com\/php-fig\/container.git","reference":"513e0666f7216c7459170d56df27dfcefe1689ea"},"dist":{"type":"zip","url":"https:\/\/api.github.com\/repos\/php-fig\/container\/zipball\/513e0666f7216c7459170d56df27dfcefe1689ea","reference":"513e0666f7216c7459170d56df27dfcefe1689ea","shasum":""},"require":{"php":">=7.4.0"},"time":"2021-11-05T16:50:12+00:00","type":"library","installation-source":"dist","autoload":{"psr-4":{"Psr\\Container\\":"src\/"}},"notification-url":"https:\/\/packagist.org\/downloads\/","license":["MIT"],"authors":[{"name":"PHP-FIG","homepage":"https:\/\/www.php-fig.org\/"}],"description":"Common Container Interface (PHP FIG PSR-11)","homepage":"https:\/\/github.com\/php-fig\/container","keywords":["PSR-11","container","container-interface","container-interop","psr"],"support":{"issues":"https:\/\/github.com\/php-fig\/container\/issues","source":"https:\/\/github.com\/php-fig\/container\/tree\/1.1.2"},"install-path":"..\/psr\/container"}],"dev":true,"dev-package-names":[]}
+            EOD;
 
         $fileSystem = $this->getFileSystem();
 
@@ -79,64 +77,64 @@ EOD;
     {
 
         $installedJson = <<<'EOD'
-{
-    "packages": [
-        {
-            "name": "psr\/container",
-            "version": "1.1.2",
-            "version_normalized": "1.1.2.0",
-            "source": {
-                "type": "git",
-                "url": "https:\/\/github.com\/php-fig\/container.git",
-                "reference": "513e0666f7216c7459170d56df27dfcefe1689ea"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https:\/\/api.github.com\/repos\/php-fig\/container\/zipball\/513e0666f7216c7459170d56df27dfcefe1689ea",
-                "reference": "513e0666f7216c7459170d56df27dfcefe1689ea",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.4.0"
-            },
-            "time": "2021-11-05T16:50:12+00:00",
-            "type": "library",
-            "installation-source": "dist",
-            "autoload": {
-                "psr-4": {
-                    "Psr\\Container\\": "src\/"
-                }
-            },
-            "notification-url": "https:\/\/packagist.org\/downloads\/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PHP-FIG",
-                    "homepage": "https:\/\/www.php-fig.org\/"
-                }
-            ],
-            "description": "Common Container Interface (PHP FIG PSR-11)",
-            "homepage": "https:\/\/github.com\/php-fig\/container",
-            "keywords": [
-                "PSR-11",
-                "container",
-                "container-interface",
-                "container-interop",
-                "psr"
-            ],
-            "support": {
-                "issues": "https:\/\/github.com\/php-fig\/container\/issues",
-                "source": "https:\/\/github.com\/php-fig\/container\/tree\/1.1.2"
-            },
-            "install-path": "..\/psr\/container"
-        }
-    ],
-    "dev": true,
-    "dev-package-names": []
-}
-EOD;
+            {
+                "packages": [
+                    {
+                        "name": "psr\/container",
+                        "version": "1.1.2",
+                        "version_normalized": "1.1.2.0",
+                        "source": {
+                            "type": "git",
+                            "url": "https:\/\/github.com\/php-fig\/container.git",
+                            "reference": "513e0666f7216c7459170d56df27dfcefe1689ea"
+                        },
+                        "dist": {
+                            "type": "zip",
+                            "url": "https:\/\/api.github.com\/repos\/php-fig\/container\/zipball\/513e0666f7216c7459170d56df27dfcefe1689ea",
+                            "reference": "513e0666f7216c7459170d56df27dfcefe1689ea",
+                            "shasum": ""
+                        },
+                        "require": {
+                            "php": ">=7.4.0"
+                        },
+                        "time": "2021-11-05T16:50:12+00:00",
+                        "type": "library",
+                        "installation-source": "dist",
+                        "autoload": {
+                            "psr-4": {
+                                "Psr\\Container\\": "src\/"
+                            }
+                        },
+                        "notification-url": "https:\/\/packagist.org\/downloads\/",
+                        "license": [
+                            "MIT"
+                        ],
+                        "authors": [
+                            {
+                                "name": "PHP-FIG",
+                                "homepage": "https:\/\/www.php-fig.org\/"
+                            }
+                        ],
+                        "description": "Common Container Interface (PHP FIG PSR-11)",
+                        "homepage": "https:\/\/github.com\/php-fig\/container",
+                        "keywords": [
+                            "PSR-11",
+                            "container",
+                            "container-interface",
+                            "container-interop",
+                            "psr"
+                        ],
+                        "support": {
+                            "issues": "https:\/\/github.com\/php-fig\/container\/issues",
+                            "source": "https:\/\/github.com\/php-fig\/container\/tree\/1.1.2"
+                        },
+                        "install-path": "..\/psr\/container"
+                    }
+                ],
+                "dev": true,
+                "dev-package-names": []
+            }
+            EOD;
 
         $fileSystem = $this->getFileSystem();
 
@@ -164,7 +162,7 @@ EOD;
         $composerPackageMock->expects('addFile')->once();
         $composerPackageMock->allows('getPackageName')->andReturn('package/name');
 
-        $flatDependencyTree = new DependenciesCollection(['psr/container'=> $composerPackageMock]);
+        $flatDependencyTree = new DependenciesCollection(['psr/container' => $composerPackageMock]);
 
         $file = new FileWithDependency(
             $composerPackageMock,
@@ -174,7 +172,7 @@ EOD;
         );
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container');
         $namespaceSymbol->setDoRename(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -194,8 +192,8 @@ EOD;
     {
 
         $installedJson = <<<'EOD'
-{"packages":[{"name":"psr\/container","version":"1.1.2","version_normalized":"1.1.2.0","source":{"type":"git","url":"https:\/\/github.com\/php-fig\/container.git","reference":"513e0666f7216c7459170d56df27dfcefe1689ea"},"dist":{"type":"zip","url":"https:\/\/api.github.com\/repos\/php-fig\/container\/zipball\/513e0666f7216c7459170d56df27dfcefe1689ea","reference":"513e0666f7216c7459170d56df27dfcefe1689ea","shasum":""},"require":{"php":">=7.4.0"},"time":"2021-11-05T16:50:12+00:00","type":"library","installation-source":"dist","autoload":{"psr-4":{"Psr\\Container\\":"src\/"}},"notification-url":"https:\/\/packagist.org\/downloads\/","license":["MIT"],"authors":[{"name":"PHP-FIG","homepage":"https:\/\/www.php-fig.org\/"}],"description":"Common Container Interface (PHP FIG PSR-11)","homepage":"https:\/\/github.com\/php-fig\/container","keywords":["PSR-11","container","container-interface","container-interop","psr"],"support":{"issues":"https:\/\/github.com\/php-fig\/container\/issues","source":"https:\/\/github.com\/php-fig\/container\/tree\/1.1.2"},"install-path":"..\/psr\/container"}],"dev":true,"dev-package-names":[]}
-EOD;
+            {"packages":[{"name":"psr\/container","version":"1.1.2","version_normalized":"1.1.2.0","source":{"type":"git","url":"https:\/\/github.com\/php-fig\/container.git","reference":"513e0666f7216c7459170d56df27dfcefe1689ea"},"dist":{"type":"zip","url":"https:\/\/api.github.com\/repos\/php-fig\/container\/zipball\/513e0666f7216c7459170d56df27dfcefe1689ea","reference":"513e0666f7216c7459170d56df27dfcefe1689ea","shasum":""},"require":{"php":">=7.4.0"},"time":"2021-11-05T16:50:12+00:00","type":"library","installation-source":"dist","autoload":{"psr-4":{"Psr\\Container\\":"src\/"}},"notification-url":"https:\/\/packagist.org\/downloads\/","license":["MIT"],"authors":[{"name":"PHP-FIG","homepage":"https:\/\/www.php-fig.org\/"}],"description":"Common Container Interface (PHP FIG PSR-11)","homepage":"https:\/\/github.com\/php-fig\/container","keywords":["PSR-11","container","container-interface","container-interop","psr"],"support":{"issues":"https:\/\/github.com\/php-fig\/container\/issues","source":"https:\/\/github.com\/php-fig\/container\/tree\/1.1.2"},"install-path":"..\/psr\/container"}],"dev":true,"dev-package-names":[]}
+            EOD;
 
         $fileSystem = $this->getFileSystem();
 
@@ -222,7 +220,7 @@ EOD;
         $composerPackageMock->expects('addFile')->once();
         $composerPackageMock->allows('getPackageName')->andReturn('psr/container');
 
-        $flatDependencyTree = new DependenciesCollection(['psr/container'=> $composerPackageMock]);
+        $flatDependencyTree = new DependenciesCollection(['psr/container' => $composerPackageMock]);
 
         $file = new FileWithDependency(
             $composerPackageMock,
@@ -232,7 +230,7 @@ EOD;
         );
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Container', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container',);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Container');
         $namespaceSymbol->setDoRename(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -248,58 +246,58 @@ EOD;
     public function test_updates_psr0_entry(): void
     {
         $installedJson = <<<'EOD'
-{
-    "packages": [
-        {
-            "name": "psr/log",
-            "version": "1.0.0",
-            "version_normalized": "1.0.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-fig/log.git",
-                "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/fe0936ee26643249e916849d48e3a51d5f5e278b",
-                "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b",
-                "shasum": ""
-            },
-            "time": "2012-12-21T11:40:51+00:00",
-            "type": "library",
-            "installation-source": "dist",
-            "autoload": {
-                "psr-0": {
-                    "Psr\\Log\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PHP-FIG",
-                    "homepage": "http://www.php-fig.org/"
-                }
-            ],
-            "description": "Common interface for logging libraries",
-            "keywords": [
-                "log",
-                "psr",
-                "psr-3"
-            ],
-            "support": {
-                "issues": "https://github.com/php-fig/log/issues",
-                "source": "https://github.com/php-fig/log/tree/1.0.0"
-            },
-            "install-path": "../psr/log"
-        }
-    ],
-    "dev": false,
-    "dev-package-names": []
-}
-EOD;
+            {
+                "packages": [
+                    {
+                        "name": "psr/log",
+                        "version": "1.0.0",
+                        "version_normalized": "1.0.0.0",
+                        "source": {
+                            "type": "git",
+                            "url": "https://github.com/php-fig/log.git",
+                            "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b"
+                        },
+                        "dist": {
+                            "type": "zip",
+                            "url": "https://api.github.com/repos/php-fig/log/zipball/fe0936ee26643249e916849d48e3a51d5f5e278b",
+                            "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b",
+                            "shasum": ""
+                        },
+                        "time": "2012-12-21T11:40:51+00:00",
+                        "type": "library",
+                        "installation-source": "dist",
+                        "autoload": {
+                            "psr-0": {
+                                "Psr\\Log\\": ""
+                            }
+                        },
+                        "notification-url": "https://packagist.org/downloads/",
+                        "license": [
+                            "MIT"
+                        ],
+                        "authors": [
+                            {
+                                "name": "PHP-FIG",
+                                "homepage": "http://www.php-fig.org/"
+                            }
+                        ],
+                        "description": "Common interface for logging libraries",
+                        "keywords": [
+                            "log",
+                            "psr",
+                            "psr-3"
+                        ],
+                        "support": {
+                            "issues": "https://github.com/php-fig/log/issues",
+                            "source": "https://github.com/php-fig/log/tree/1.0.0"
+                        },
+                        "install-path": "../psr/log"
+                    }
+                ],
+                "dev": false,
+                "dev-package-names": []
+            }
+            EOD;
 
         $fileSystem = $this->getFileSystem();
 
@@ -326,7 +324,7 @@ EOD;
         $composerPackageMock->expects('addFile')->once();
         $composerPackageMock->allows('getPackageName')->andReturn('psr/log');
 
-        $flatDependencyTree = new DependenciesCollection(['psr/log'=> $composerPackageMock]);
+        $flatDependencyTree = new DependenciesCollection(['psr/log' => $composerPackageMock]);
 
         $file = new FileWithDependency(
             $composerPackageMock,
@@ -337,7 +335,7 @@ EOD;
 
 
         $namespaceSymbol = new NamespaceSymbol('Psr\\Log', $file);
-        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Log',);
+        $namespaceSymbol->setLocalReplacement('BrianHenryIE\\Tests\\Psr\\Log');
         $namespaceSymbol->setDoRename(true);
 
         $discoveredSymbols = new DiscoveredSymbols();
@@ -358,26 +356,26 @@ EOD;
     public function test_excluded_package_removed_from_target_installed_json_but_retained_in_vendor_installed_json(): void
     {
         $installedJson = <<<'EOD'
-{
-    "packages": [
-        {
-            "name": "psr/log",
-            "version": "1.1.4",
-            "version_normalized": "1.1.4.0",
-            "type": "library",
-            "installation-source": "dist",
-            "autoload": {
-                "psr-4": {
-                    "Psr\\Log\\": ""
-                }
-            },
-            "install-path": "../psr/log"
-        }
-    ],
-    "dev": false,
-    "dev-package-names": []
-}
-EOD;
+            {
+                "packages": [
+                    {
+                        "name": "psr/log",
+                        "version": "1.1.4",
+                        "version_normalized": "1.1.4.0",
+                        "type": "library",
+                        "installation-source": "dist",
+                        "autoload": {
+                            "psr-4": {
+                                "Psr\\Log\\": ""
+                            }
+                        },
+                        "install-path": "../psr/log"
+                    }
+                ],
+                "dev": false,
+                "dev-package-names": []
+            }
+            EOD;
 
         $fileSystem = $this->getFileSystem();
         $fileSystem->createDirectory('vendor/composer');

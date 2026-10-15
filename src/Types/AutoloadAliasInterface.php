@@ -1,9 +1,11 @@
 <?php
+
 /**
  * After files are modified, an `autoload_aliases.php` file is created so the previous classnames continue to
  * work. Autoloading only applies to classes, interfaces, traits and enums, who this interface is applied to.
  *
- * @see \BrianHenryIE\Strauss\Pipeline\Aliases\Aliases
+ * @package brianhenryie/strauss
+ * @see     \BrianHenryIE\Strauss\Pipeline\Aliases\Aliases
  */
 
 namespace BrianHenryIE\Strauss\Types;

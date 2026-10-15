@@ -1,4 +1,5 @@
 <?php
+
 /**
  * `class final` appears in `symfony/console/CHANGELOG.md` causing `symfony/polyfill-php80/Resources/stubs/Attribute.php`
  * `final` keyword to be prefixed
@@ -20,19 +21,19 @@ class StraussIssue119Test extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/119",
-  "require": {
-    "symfony/polyfill-php80": "v1.31.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Company_Project_"
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/119",
+              "require": {
+                "symfony/polyfill-php80": "v1.31.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Company_Project_"
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

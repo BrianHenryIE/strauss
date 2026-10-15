@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Was over-eagerly deleting autoload keys.
  *
@@ -18,23 +19,23 @@ class StraussIssue101Test extends IntegrationTestCase
     public function test_does_not_delete_autoload_keys(): void
     {
         $composerJsonString = <<<'EOD'
-{
-    "require-dev": {
-        "phpmd/phpmd": "2.15.0"
-    },
-    "scripts": {
-        "phpmd": "./vendor/bin/phpmd src/ text phpmd-ruleset.xml"
-    },
-    "extra": {
-        "strauss": {
-            "namespace_prefix": "Ademti\\Test\\Dependencies",
-            "classmap_prefix": "Ademti_Test_Dependencies",
-            "delete_vendor_packages": true,
-            "delete_vendor_files": true
-        }
-    }
-}
-EOD;
+            {
+                "require-dev": {
+                    "phpmd/phpmd": "2.15.0"
+                },
+                "scripts": {
+                    "phpmd": "./vendor/bin/phpmd src/ text phpmd-ruleset.xml"
+                },
+                "extra": {
+                    "strauss": {
+                        "namespace_prefix": "Ademti\\Test\\Dependencies",
+                        "classmap_prefix": "Ademti_Test_Dependencies",
+                        "delete_vendor_packages": true,
+                        "delete_vendor_files": true
+                    }
+                }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -51,7 +52,7 @@ EOD;
         $installed_json_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
         $installed_json = json_decode($installed_json_string, true);
 
-        $autoload = array();
+        $autoload = [];
         foreach ($installed_json['packages'] as $package) {
             if ($package['name'] === 'phpmd/phpmd') {
                 $autoload = $package['autoload'];

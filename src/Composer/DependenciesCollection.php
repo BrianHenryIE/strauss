@@ -1,6 +1,9 @@
 <?php
+
 /**
  * A collection of `ComposerPackage`.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Composer;
@@ -16,14 +19,13 @@ use IteratorAggregate;
  */
 class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countable
 {
-
     /**
      * @var array<string,ComposerPackage>
      */
     protected array $dependencies = [];
 
     /**
-     * @param array<ComposerPackage> $dependencies
+     * @param array<ComposerPackage> $dependencies Packages to store, re-keyed by their package name.
      */
     public function __construct(
         array $dependencies
@@ -48,6 +50,8 @@ class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countabl
     }
 
     /**
+     * @param string $offset The Composer package name, e.g. `vendor/package`.
+     *
      * @return bool
      */
     #[\ReturnTypeWillChange]
@@ -57,6 +61,8 @@ class DependenciesCollection implements IteratorAggregate, ArrayAccess, Countabl
     }
 
     /**
+     * @param string $offset The Composer package name, e.g. `vendor/package`.
+     *
      * @return ?ComposerPackage
      */
     #[\ReturnTypeWillChange]

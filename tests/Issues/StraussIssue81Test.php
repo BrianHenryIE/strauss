@@ -1,4 +1,5 @@
 <?php
+
 /**
  * How to handle prefixed dependencies also used by dev-dependencies
  *
@@ -15,7 +16,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue81Test extends IntegrationTestCase
 {
-
     /**
      * TODO: figure out what to do for delete_vendor_files
      */
@@ -25,44 +25,44 @@ class StraussIssue81Test extends IntegrationTestCase
 
         // `psr/log` isn't a good example to use because it uses PHPUnit without declaring it as a dependency.
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/81",
-  "require": {
-    "brianhenryie/bh-wc-logger": "0.1.1"
-  },
-  "require-dev": {
-    "psr/log": "1.1.4",
-    "phpunit/phpunit": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Issue\\I81\\",
-      "delete_vendor_packages": true
-    }
-  },
-  "config": {
-    "classmap-authoritative": true,
-    "optimize-autoloader": true
-  }
-}
-EOD;
+            {
+              "name": "issue/81",
+              "require": {
+                "brianhenryie/bh-wc-logger": "0.1.1"
+              },
+              "require-dev": {
+                "psr/log": "1.1.4",
+                "phpunit/phpunit": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Issue\\I81\\",
+                  "delete_vendor_packages": true
+                }
+              },
+              "config": {
+                "classmap-authoritative": true,
+                "optimize-autoloader": true
+              }
+            }
+            EOD;
 
         $file1 = <<<'EOD'
-<?php
+            <?php
 
-namespace Whatever;
+            namespace Whatever;
 
-require_once __DIR__ . '/vendor-prefixed/autoload.php';
-require_once __DIR__ . '/vendor/composer/autoload_aliases.php';
-require_once __DIR__ . '/vendor/autoload.php';
+            require_once __DIR__ . '/vendor-prefixed/autoload.php';
+            require_once __DIR__ . '/vendor/composer/autoload_aliases.php';
+            require_once __DIR__ . '/vendor/autoload.php';
 
-new \Psr\Log\NullLogger();
+            new \Psr\Log\NullLogger();
 
-new \Issue\I81\Psr\Log\NullLogger();
+            new \Issue\I81\Psr\Log\NullLogger();
 
-return 0;
+            return 0;
 
-EOD;
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -77,7 +77,7 @@ EOD;
         $exitCode = $this->runStrauss($output, 'include-autoloader');
         $this->assertEquals(0, $exitCode, $output);
 
-        $phpString = $this->getFileSystem()->read($this->testsWorkingDir .'/vendor/composer/autoload_aliases.php');
+        $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
         $this->assertStringContainsString("'extends' => 'Issue\\\\I81\\\\Psr\\\\Log\\\\NullLogger'", $phpString);
 
         exec('composer dump-autoload');
@@ -98,20 +98,20 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/80",
-  "require": {
-    "psr/log": "1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Issue_81_",
-      "delete_vendor_packages": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/80",
+              "require": {
+                "psr/log": "1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Issue_81_",
+                  "delete_vendor_packages": false
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -129,20 +129,20 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/80",
-  "require": {
-    "psr/log": "1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Issue_81_",
-      "delete_vendor_packages": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/80",
+              "require": {
+                "psr/log": "1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Issue_81_",
+                  "delete_vendor_packages": false
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -160,20 +160,20 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/80",
-  "require": {
-    "psr/log": "1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Issue_81_",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/80",
+              "require": {
+                "psr/log": "1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Issue_81_",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -191,20 +191,20 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/80",
-  "require": {
-    "psr/log": "1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Issue_81_",
-      "delete_vendor_packages": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/80",
+              "require": {
+                "psr/log": "1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Issue_81_",
+                  "delete_vendor_packages": false
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -221,20 +221,20 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/80",
-  "require": {
-    "psr/log": "1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Issue_81_",
-      "delete_vendor_packages": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/80",
+              "require": {
+                "psr/log": "1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Issue_81_",
+                  "delete_vendor_packages": false
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 
@@ -252,20 +252,20 @@ EOD;
     {
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "issue/80",
-  "require": {
-    "psr/log": "1.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Issue_81_",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "issue/80",
+              "require": {
+                "psr/log": "1.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Issue_81_",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

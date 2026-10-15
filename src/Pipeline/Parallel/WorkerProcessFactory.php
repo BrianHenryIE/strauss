@@ -1,7 +1,10 @@
 <?php
+
 /**
  * Builds the command line which starts a worker: the same PHP binary and the same Strauss script as the parent,
  * so it works for `bin/strauss`, `vendor/bin/strauss` and `strauss.phar`.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -12,6 +15,11 @@ use BrianHenryIE\Strauss\Console\Commands\WorkerCommand;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
+/**
+ * Finds the PHP binary with {@see PhpExecutableFinder}, passes on the parent's `memory_limit`, and resolves the main
+ * script from the running phar, then `bin/strauss` relative to this file, then `argv[0]`. The resulting
+ * {@see Process} runs {@see WorkerCommand} with no timeout, since chunk timeouts are enforced by {@see WorkerPool}.
+ */
 class WorkerProcessFactory
 {
     /**

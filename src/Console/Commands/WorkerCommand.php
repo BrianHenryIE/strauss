@@ -1,8 +1,11 @@
 <?php
+
 /**
  * Hidden command run by {@see WorkerPool}: reads requests from stdin, analyses the files, writes results to stdout.
  *
  * Nothing else may write to stdout; logs go to stderr and are only shown by the parent when a worker fails.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -17,6 +20,12 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
+/**
+ * Reads newline-delimited JSON requests from stdin: `analyze` requests list file paths, each of which is read and
+ * parsed by a {@see PhpFileAnalyzer}, and the {@see WorkerPool::encodeCodeMap()}-encoded code map (or an error) is written
+ * back as one JSON line per file, followed by a chunk-done message. A `quit` request ends the loop; any exception is
+ * reported as an error message and the command exits with failure.
+ */
 class WorkerCommand extends Command
 {
     public const NAME = 'worker';
@@ -68,10 +77,12 @@ class WorkerCommand extends Command
                 $this->write(['action' => WorkerPool::ACTION_CHUNK_DONE]);
             }
         } catch (Throwable $e) {
-            $this->write([
-                'action' => WorkerPool::ACTION_ERROR,
-                'message' => sprintf('%s: %s in %s:%d', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()),
-            ]);
+            $this->write(
+                [
+                    'action' => WorkerPool::ACTION_ERROR,
+                    'message' => sprintf('%s: %s in %s:%d', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()),
+                ]
+            );
             return Command::FAILURE;
         }
 
@@ -79,6 +90,9 @@ class WorkerCommand extends Command
     }
 
     /**
+     * @param PhpFileAnalyzer $analyzer Parses the file contents into a code map.
+     * @param string          $path     Absolute path of the PHP file to read and analyse.
+     *
      * @return array{action:string, file:string, map:?string, error:?string}
      */
     protected function analyzeFile(PhpFileAnalyzer $analyzer, string $path): array
@@ -104,7 +118,7 @@ class WorkerCommand extends Command
     }
 
     /**
-     * @param array<string, mixed> $message
+     * @param array<string, mixed> $message Response to the parent process, keyed by `action`; JSON-encoded as a single line to STDOUT.
      */
     protected function write(array $message): void
     {

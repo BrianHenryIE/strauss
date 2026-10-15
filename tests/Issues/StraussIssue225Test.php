@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * @see https://github.com/BrianHenryIE/strauss/issues/225
@@ -14,59 +15,58 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue225Test extends IntegrationTestCase
 {
-
     public function test_non_autoloaded_template_file_has_namespace_updated(): void
     {
 
         $dependencyComposerJsonString = <<<'EOD'
-{
-	"name": "strausstest/dependency",
-	"autoload": {
-		"psr-4": {
-			"My\\Dependency\\": "src"
-		}
-	}
-}
-EOD;
+            {
+            	"name": "strausstest/dependency",
+            	"autoload": {
+            		"psr-4": {
+            			"My\\Dependency\\": "src"
+            		}
+            	}
+            }
+            EOD;
 
         $dependencyPsr4AutoloadedString = <<<'EOD'
-<?php
+            <?php
 
-namespace My\Dependency;
+            namespace My\Dependency;
 
-class Psr4Autoloaded {
+            class Psr4Autoloaded {
 
-}
-EOD;
+            }
+            EOD;
 
         $dependencyNotAutoloadedString = <<<'EOD'
-<?php
+            <?php
 
-namespace My\Dependency;
+            namespace My\Dependency;
 
-echo "template";
-EOD;
+            echo "template";
+            EOD;
 
         $mainComposerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue225",
-  "minimum-stability": "dev",
-  "repositories": {
-    "strausstest/dependency": {
-        "type": "path",
-        "url": "../dependency"
-    }
-  },
-  "require": {
-    "strausstest/dependency": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\S225\\"
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue225",
+              "minimum-stability": "dev",
+              "repositories": {
+                "strausstest/dependency": {
+                    "type": "path",
+                    "url": "../dependency"
+                }
+              },
+              "require": {
+                "strausstest/dependency": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\S225\\"
+                }
+              }
+            }
+            EOD;
 
         mkdir($this->testsWorkingDir . '/dependency');
         $this->getFileSystem()->write($this->testsWorkingDir . '/dependency/composer.json', $dependencyComposerJsonString);

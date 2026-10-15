@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Error when `config.vendor-dir` is multiple directories deep.
  *
@@ -23,50 +24,50 @@ class StraussIssue136Test extends IntegrationTestCase
         $this->markTestSkippedOnPhpVersionBelow('8.0.0');
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue136",
-  "autoload": {
-    "psr-4": {
-      "BrianHenryIE\\S136\\": "src"
-    }
-  },
-  "require": {
-    "symfony/var-dumper": "^6.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Company\\Project\\",
-      "classmap_prefix": "Company_Project_"
-	}
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue136",
+              "autoload": {
+                "psr-4": {
+                  "BrianHenryIE\\S136\\": "src"
+                }
+              },
+              "require": {
+                "symfony/var-dumper": "^6.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Company\\Project\\",
+                  "classmap_prefix": "Company_Project_"
+            	}
+              }
+            }
+            EOD;
 
-        $phpString =<<<'EOD'
-<?php
+        $phpString = <<<'EOD'
+            <?php
 
-namespace BrianHenryIE\Strauss;
+            namespace BrianHenryIE\Strauss;
 
-class Whatever {
+            class Whatever {
 
-	public function execute(): void {
-		$var = new \Symfony\Component\VarDumper\VarDumper();
-	}
-}
-EOD;
+            	public function execute(): void {
+            		$var = new \Symfony\Component\VarDumper\VarDumper();
+            	}
+            }
+            EOD;
 
-        $expectedPhpString =<<<'EOD'
-<?php
+        $expectedPhpString = <<<'EOD'
+            <?php
 
-namespace BrianHenryIE\Strauss;
+            namespace BrianHenryIE\Strauss;
 
-class Whatever {
+            class Whatever {
 
-	public function execute(): void {
-		$var = new \Symfony\Component\VarDumper\VarDumper();
-	}
-}
-EOD;
+            	public function execute(): void {
+            		$var = new \Symfony\Component\VarDumper\VarDumper();
+            	}
+            }
+            EOD;
 
 
         chdir($this->testsWorkingDir);

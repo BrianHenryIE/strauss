@@ -1,8 +1,11 @@
 <?php
+
 /**
  * Determine the replacements to be made to the discovered symbols.
  *
  * Typically, this will just be a prefix, but more complex rules allow for replacements specific to individual symbols/namespaces.
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -16,6 +19,13 @@ use BrianHenryIE\Strauss\Types\Psr0NamespaceSymbol;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Sets the local replacement on each {@see DiscoveredSymbols} entry marked for renaming: namespaces via the first
+ * matching `namespace_replacement_patterns` regex (with `namespace_prefix` added as a catch-all pattern that avoids
+ * double-prefixing); namespaced classes, interfaces, traits and enums by swapping in their namespace's replacement;
+ * global ones with `classmap_prefix`; global functions with `function_prefix` (handling PSR-0 underscored names);
+ * and constants with `constant_prefix`, all read from the {@see ChangeEnumeratorConfigInterface}.
+ */
 class ChangeEnumerator
 {
     use LoggerAwareTrait;
@@ -43,11 +53,13 @@ class ChangeEnumerator
             if ($symbol instanceof NamespaceSymbol) {
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
 
-                if (in_array(
-                    $symbol->getOriginalFqdnName(),
-                    $this->config->getExcludeNamespacesFromPrefixing(),
-                    true
-                )) {
+                if (
+                    in_array(
+                        $symbol->getOriginalFqdnName(),
+                        $this->config->getExcludeNamespacesFromPrefixing(),
+                        true
+                    )
+                ) {
                     $symbol->setDoRename(false);
                 }
 
@@ -67,9 +79,9 @@ class ChangeEnumerator
                 if (! is_null($namespacePrefix)) {
                     // This is being done elsewhere but is probably more appropriate here,
                     // I'm worried if I change it now it will affect the directory structure.
-//                    if ($symbol instanceof Psr0NamespaceSymbol) {
-//                        $namespacePrefix = str_replace('\\', '_', rtrim($namespacePrefix, '\\')).'_' ;
-//                    }
+                    //                    if ($symbol instanceof Psr0NamespaceSymbol) {
+                    //                        $namespacePrefix = str_replace('\\', '_', rtrim($namespacePrefix, '\\')).'_' ;
+                    //                    }
 
                     $stripPattern   = '~^(' . preg_quote($namespacePrefix, '~') . '\\\\*)*(.*)~';
                     $strippedSymbol = preg_replace(
@@ -80,7 +92,7 @@ class ChangeEnumerator
                         throw new \Exception(preg_last_error_msg(), preg_last_error());
                     })();
                     $namespaceReplacementPatterns[ "~(" . preg_quote($namespacePrefix, '~') . '\\\\*)*' . preg_quote($strippedSymbol, '~') . '~' ]
-                                    = "{$namespacePrefix}\\{$strippedSymbol}";
+                        = "{$namespacePrefix}\\{$strippedSymbol}";
                     unset($stripPattern, $strippedSymbol);
                 }
 
@@ -112,13 +124,17 @@ class ChangeEnumerator
             $discoveredSymbols->getAllClasses()->toArray()
         );
 
-        /** @var NamespacedSymbol $symbol */
+        /**
+ * @var NamespacedSymbol $symbol
+*/
         foreach ($classesTraitsInterfaces as $symbol) {
             // If we're a namespaced class/interface/trait, apply the fqdnchange.
             if (!$symbol->getNamespace()->isGlobal()) {
                 if ($discoveredNamespaces->has($symbol->getNamespace())) {
-//                if (isset($discoveredNamespaces[ $symbol->getNamespace() ])) {
-                    /** @var NamespaceSymbol $newNamespace */
+                    //                if (isset($discoveredNamespaces[ $symbol->getNamespace() ])) {
+                    /**
+ * @var NamespaceSymbol $newNamespace
+*/
                     $newNamespace = $discoveredNamespaces->get($symbol->getNamespace()->getOriginalFqdnName());
                     $replacement  = $this->determineNamespaceReplacement(
                         $newNamespace->getOriginalFqdnName(),
@@ -153,7 +169,9 @@ class ChangeEnumerator
         $functionsSymbols = $discoveredSymbols->getDiscoveredFunctions();
         $excludeFunctionsFromStringRenaming = $this->config->getExcludeFunctionsFromStringRenaming();
 
-        /** @var FunctionSymbol $symbol */
+        /**
+ * @var FunctionSymbol $symbol
+*/
         foreach ($functionsSymbols as $symbol) {
             // Don't prefix functions in a namespace – that will be addressed by the namespace prefix.
             if (!$symbol->getNamespace()->isGlobal()) {
@@ -185,7 +203,7 @@ class ChangeEnumerator
     {
         if ($symbol->isPsr0Autoloaded()) {
             /**
-             * @var Psr0NamespaceSymbol $psr0Namespace
+             * @var            Psr0NamespaceSymbol $psr0Namespace
              *
              * `::isPsr0Autoloaded()` proves it is not null.
              * @phpstan-ignore argument.type
@@ -215,7 +233,11 @@ class ChangeEnumerator
     }
 
     /**
-     *`str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
+     * `str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
+     *
+     * @param string $originalNamespace The namespace being replaced, without leading backslash.
+     * @param string $newNamespace      The prefixed namespace to replace it with.
+     * @param string $fqdnClassname     The class's fully qualified name, without leading backslash.
      */
     protected function determineNamespaceReplacement(string $originalNamespace, string $newNamespace, string $fqdnClassname): string
     {

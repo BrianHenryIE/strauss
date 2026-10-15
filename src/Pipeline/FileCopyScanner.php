@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Loop over the discovered files and mark the file to be copied or not.
  *
@@ -12,6 +13,8 @@
  *   ]
  * },
  * ```
+ *
+ * @package brianhenryie/strauss
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -27,6 +30,12 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * For each {@see FileBase} in the {@see DiscoveredFiles}, checks the {@see FileCopyScannerConfigInterface} excluded
+ * packages, namespaces and file-path regex patterns, then calls `setDoCopy()` and, when copying, sets the target path
+ * under the target directory. It also marks files for deletion when `delete_vendor_files` is set and the file is not
+ * symlinked, and stops files that will not be copied from being prefixed in place.
+ */
 class FileCopyScanner
 {
     use LoggerAwareTrait;
@@ -48,7 +57,9 @@ class FileCopyScanner
 
     public function scanFiles(DiscoveredFiles $files): void
     {
-        /** @var FileBase $file */
+        /**
+ * @var FileBase $file
+*/
         foreach ($files->getFiles() as $file) {
             $copy = true;
 
@@ -60,9 +71,12 @@ class FileCopyScanner
             if ($file instanceof FileWithDependency) {
                 if ($this->isPackageExcluded($file->getDependency())) {
                     $copy = false;
-                    $this->logger->debug("File {sourcePath} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.", [
-                        'sourcePath' => $file->getSourcePath(),
-                    ]);
+                    $this->logger->debug(
+                        "File {sourcePath} will not be copied because {$file->getDependency()->getPackageName()} is excluded from copy.",
+                        [
+                            'sourcePath' => $file->getSourcePath(),
+                        ]
+                    );
                 }
             }
 
@@ -74,17 +88,17 @@ class FileCopyScanner
                 $copy = false;
             }
 
-//            if ($copy) {
-//                $this->logger->debug("Marking file {relativeFilePath} to be copied.", [
-//                    'relativeFilePath' => $this->filesystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $file->getSourcePath()),
-//                ]);
-//            }
+            //            if ($copy) {
+            //                $this->logger->debug("Marking file {relativeFilePath} to be copied.", [
+            //                    'relativeFilePath' => $this->filesystem->getRelativePath($this->config->getAbsoluteVendorDirectory(), $file->getSourcePath()),
+            //                ]);
+            //            }
 
             $file->setDoCopy($copy);
 
             if ($copy) {
                 $target = $file instanceof FileWithDependency
-                    ?  $this->config->getAbsoluteTargetDirectory() . '/' . $file->getDependency()->getRelativePath() . '/'. $file->getPackageRelativePath()
+                    ? $this->config->getAbsoluteTargetDirectory() . '/' . $file->getDependency()->getRelativePath() . '/' . $file->getPackageRelativePath()
                     : $file->getSourcePath();
                 $file->setTargetAbsolutePath(FileSystem::normalizeDirSeparator($target));
             }
@@ -96,15 +110,15 @@ class FileCopyScanner
             if (!$file->isDoCopy() && !$this->config->isTargetDirectoryVendor()) {
                 $file->setDoPrefix(false);
             }
-//            // If the file is marked not to copy, mark the symbol not to be renamed
-//            if (!$copy && !$this->config->isTargetDirectoryVendor()) {
-//                foreach ($file->getDiscoveredSymbols() as $symbol) {
-//                    // Only make this change if the symbol is only in one file (i.e. namespaces will be in many).
-//                    if (count($symbol->getSourceFiles()) === 1) {
-//                        $symbol->setDoRename(false);
-//                    }
-//                }
-//            }
+            //            // If the file is marked not to copy, mark the symbol not to be renamed
+            //            if (!$copy && !$this->config->isTargetDirectoryVendor()) {
+            //                foreach ($file->getDiscoveredSymbols() as $symbol) {
+            //                    // Only make this change if the symbol is only in one file (i.e. namespaces will be in many).
+            //                    if (count($symbol->getSourceFiles()) === 1) {
+            //                        $symbol->setDoRename(false);
+            //                    }
+            //                }
+            //            }
             // To make step-debugging easier.
             unset($copy, $target, $shouldDelete);
         };
@@ -112,11 +126,13 @@ class FileCopyScanner
 
     protected function isPackageExcluded(ComposerPackage $package): bool
     {
-        if (in_array(
-            $package->getPackageName(),
-            $this->config->getExcludePackagesFromCopy(),
-            true
-        )) {
+        if (
+            in_array(
+                $package->getPackageName(),
+                $this->config->getExcludePackagesFromCopy(),
+                true
+            )
+        ) {
             return true;
         }
         return false;
@@ -127,7 +143,9 @@ class FileCopyScanner
         if (!$file->isPhpFile()) {
             return false;
         }
-        /** @var string[] $namespaceStringsInFile */
+        /**
+ * @var string[] $namespaceStringsInFile
+*/
         $namespaceStringsInFile = array_map(
             fn(DiscoveredSymbol $symbol): string => $symbol->getOriginalFqdnName(),
             $file->getDiscoveredSymbols()->getNamespaces()->notGlobal()->toArray()
@@ -135,7 +153,9 @@ class FileCopyScanner
         foreach ($this->config->getExcludeNamespacesFromCopy() as $excludedNamespaceString) {
             $excludedNamespaceString = rtrim($excludedNamespaceString, '\\');
 
-            /** @var string[] $excludedNamespaceStringsInFile */
+            /**
+ * @var string[] $excludedNamespaceStringsInFile
+*/
             $excludedNamespaceStringsInFile = array_reduce(
                 $namespaceStringsInFile,
                 // TODO: use case insensitive check instead. People might write BrianHenryIE\API instead of BrianHenryIE\Api.
@@ -144,9 +164,12 @@ class FileCopyScanner
                 []
             );
             if (!empty($excludedNamespaceStringsInFile)) {
-                $this->logger->debug("File {sourcePath} will not be copied because namespace {$excludedNamespaceString} is excluded from copy.", [
-                    'sourcePath' => $file->getSourcePath(),
-                ]);
+                $this->logger->debug(
+                    "File {sourcePath} will not be copied because namespace {$excludedNamespaceString} is excluded from copy.",
+                    [
+                        'sourcePath' => $file->getSourcePath(),
+                    ]
+                );
                 return true;
             }
         }
@@ -158,7 +181,7 @@ class FileCopyScanner
      *
      * I.e. `my/package/src/file.php`.
      *
-     * @param FileBase $file
+     * @param FileBase $file The file whose vendor-relative path is matched against the patterns.
      */
     protected function isFilePathExcluded(FileBase $file): bool
     {
@@ -168,9 +191,12 @@ class FileCopyScanner
             $escapedPattern = $this->preparePattern($pattern);
             $match = preg_match($escapedPattern, $path);
             if (1 === $match) {
-                $this->logger->debug("File {path} will not be copied because it matches pattern {$pattern}.", [
-                    'path' => $path
-                ]);
+                $this->logger->debug(
+                    "File {path} will not be copied because it matches pattern {$pattern}.",
+                    [
+                        'path' => $path,
+                    ]
+                );
                 return true;
             }
             if (false === $match) {

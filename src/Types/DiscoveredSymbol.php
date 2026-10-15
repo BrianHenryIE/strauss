@@ -1,10 +1,12 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * A namespace, class, interface or trait discovered in the project.
+ *
+ * @package brianhenryie/strauss
  */
+
+declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Types;
 
@@ -16,6 +18,13 @@ use BrianHenryIE\Strauss\Pipeline\ChangeEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use Composer\Package\PackageInterface;
 
+/**
+ * Holds the original fully qualified and local names, an optional local replacement and a `doRename` flag; the
+ * replacement getters return the original names until the symbol is marked for renaming. Source files are kept
+ * keyed by vendor-relative path, and each {@see FileWithDependency} source adds its package to a
+ * {@see DependenciesCollection}. The constructor also registers the symbol on its source file via
+ * {@see FileBase::addDiscoveredSymbol()}. Subclasses decide whether the symbol is global and/or autoloaded.
+ */
 abstract class DiscoveredSymbol
 {
     /**
@@ -48,8 +57,9 @@ abstract class DiscoveredSymbol
     protected bool $replaceInString = true;
 
     /**
-     * @param string $fqdnSymbol The classname / namespace etc.
-     * @param ?FileBase $sourceFile The file it was discovered in. Unneeded for global namespace and some (Composer) predictable files.
+     * @param string           $fqdnSymbol      The classname / namespace etc.
+     * @param ?FileBase        $sourceFile      The file it was discovered in. Unneeded for global namespace and some (Composer) predictable files.
+     * @param ?ComposerPackage $composerPackage The package the symbol belongs to, added as a dependency; null if unknown or none.
      */
     public function __construct(
         string $fqdnSymbol,
@@ -108,6 +118,8 @@ abstract class DiscoveredSymbol
     }
 
     /**
+     * @param FileBase $sourceFile A file the symbol was discovered in; its package, if any, is added as a dependency.
+     *
      * @see FileSymbolScanner
      */
     public function addSourceFile(FileBase $sourceFile): void
@@ -153,14 +165,20 @@ abstract class DiscoveredSymbol
      */
     public function getPackages(): array
     {
-        return array_values(array_unique(array_filter(array_map(
-            function (FileBase $file) {
-                return $file instanceof FileWithDependency
-                    ? $file->getDependency()
-                    : null;
-            },
-            $this->getSourceFiles()
-        ))));
+        return array_values(
+            array_unique(
+                array_filter(
+                    array_map(
+                        function (FileBase $file) {
+                            return $file instanceof FileWithDependency
+                                ? $file->getDependency()
+                                : null;
+                        },
+                        $this->getSourceFiles()
+                    )
+                )
+            )
+        );
     }
 
     public function getPackageName(): ?string
@@ -174,6 +192,8 @@ abstract class DiscoveredSymbol
     }
 
     /**
+     * @param string $classPrefix The class prefix to repeatedly remove from the start of the original symbol name.
+     *
      * @deprecated This is only being called in {@see Prefixer::findSymbolPositionsInStrings()}, the actual determination should be made in {@see ChangeEnumerator}.
      */
     public function getOriginalSymbolStripPrefix(string $classPrefix): string
@@ -181,7 +201,7 @@ abstract class DiscoveredSymbol
         $symbolName = $this->fqdnOriginalSymbol;
 
         while (str_starts_with($symbolName, $classPrefix) && trim($classPrefix, '_') !== trim($symbolName, '_')) {
-            $symbolName = preg_replace('/^'.preg_quote($classPrefix, '/') . '/', '', $symbolName) ?? $symbolName;
+            $symbolName = preg_replace('/^' . preg_quote($classPrefix, '/') . '/', '', $symbolName) ?? $symbolName;
         }
 
         return trim($symbolName, '_');

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * A class definition discovered in a scanned file, which Strauss may prefix, and for which it records what is
+ * needed to write an alias for the original class name in `autoload_aliases.php`.
+ *
+ * @package brianhenryie/strauss
+ */
+
 namespace BrianHenryIE\Strauss\Types;
 
 use BrianHenryIE\Strauss\Files\FileBase;
@@ -18,12 +25,12 @@ class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     protected array $interfaces;
 
     /**
-     * @param string $fqdnClassname
-     * @param FileBase $sourceFile
-     * @param NamespaceSymbol $namespace
-     * @param bool $isAbstract
-     * @param ?string $extends
-     * @param string[] $interfaces
+     * @param string          $fqdnClassname Fully qualified class name, without leading backslash.
+     * @param FileBase        $sourceFile    The file the class was first discovered in.
+     * @param NamespaceSymbol $namespace     The namespace the class is declared in (may be the global namespace).
+     * @param bool            $isAbstract    Whether the class is declared `abstract`.
+     * @param ?string         $extends       FQDN of the parent class, without leading backslash; null if none.
+     * @param string[]        $interfaces    FQDNs of implemented interfaces, without leading backslashes.
      */
     public function __construct(
         string $fqdnClassname,
@@ -73,13 +80,13 @@ class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
      */
     public function getAutoloadAliasArray(): array
     {
-        return array (
+        return  [
             'type' => 'class',
             'classname' => $this->getOriginalLocalName(),
             'isabstract' => $this->isAbstract,
             'namespace' => $this->namespace->getOriginalFqdnName(),
             'extends' => $this->getReplacementFqdnName(),
             'implements' => $this->interfaces,
-        );
+        ];
     }
 }

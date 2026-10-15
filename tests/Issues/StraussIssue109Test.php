@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Defined CLI arguments are breaking the extra.strauss config even when they are not present.
  *
@@ -18,19 +19,19 @@ class StraussIssue109Test extends IntegrationTestCase
     public function test_absent_cli_argument_parsing_does_not_overwrite_config(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue109",
-  "require": {
-    "psr/log": "1.0.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue109\\",
-      "delete_vendor_packages": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue109",
+              "require": {
+                "psr/log": "1.0.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue109\\",
+                  "delete_vendor_packages": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

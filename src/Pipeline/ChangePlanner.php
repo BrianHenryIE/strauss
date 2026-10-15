@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Determines every change to make to each file, before any file is modified.
  *
@@ -6,6 +7,8 @@
  * comment and string recorded when {@see FileSymbolScanner} parsed the file — so planning needs neither the file
  * contents nor a parser. The result, a list of (start, end, replacement) edits, is stored on the file
  * ({@see File::setPlannedEdits()}) for {@see Prefixer} to apply.
+ *
+ * @package brianhenryie/strauss
  */
 
 declare(strict_types=1);
@@ -30,6 +33,13 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * Looks up the {@see CodeLocation}s of each file against a {@see SymbolIndex} (built once per
+ * {@see DiscoveredSymbols} collection) with a separate finder per kind of change: `use` statements, namespaces,
+ * functions, doc comments, namespaced and global constants, global classes, and symbol names inside strings. The
+ * positions are merged and de-duplicated by start offset, and an overlap throws. Symbols in strings are only replaced
+ * when they come from a package available to the file's package (its dependency tree, or packages it suggests).
+ */
 class ChangePlanner
 {
     use LoggerAwareTrait;
@@ -54,6 +64,8 @@ class ChangePlanner
     /**
      * The symbols to rename, grouped and indexed, for the given collection. Rebuilt when a different collection is
      * passed (e.g. {@see \BrianHenryIE\Strauss\Pipeline\Prefixer::replaceInString()} on demand).
+     *
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols; the index is cached until a different collection is passed.
      */
     protected function getIndex(DiscoveredSymbols $discoveredSymbols): SymbolIndex
     {
@@ -68,7 +80,8 @@ class ChangePlanner
      *
      * Files without a code map (non-PHP, unparsable, or never scanned) are skipped.
      *
-     * @param iterable<FileBase> $files
+     * @param DiscoveredSymbols  $discoveredSymbols All discovered symbols; those marked for renaming are planned.
+     * @param iterable<FileBase> $files             The files to plan; the edits are stored on each file.
      *
      * @throws Exception
      */
@@ -80,9 +93,12 @@ class ChangePlanner
             }
             $codeMap = $file->getCodeMap();
             if (is_null($codeMap)) {
-                $this->logger->debug('No code map to plan changes against (unparsable or unscanned)::::{filePath}', [
-                    'filePath' => $file->getSourcePath(),
-                ]);
+                $this->logger->debug(
+                    'No code map to plan changes against (unparsable or unscanned)::::{filePath}',
+                    [
+                        'filePath' => $file->getSourcePath(),
+                    ]
+                );
                 continue;
             }
             $file->setPlannedEdits($this->plan($discoveredSymbols, $codeMap, $file));
@@ -91,6 +107,12 @@ class ChangePlanner
 
     /**
      * Determine all changes for one file.
+     *
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols; those marked for renaming are planned.
+     * @param FileCodeMap       $codeMap           The locations of symbols, comments and strings in the file's contents.
+     * @param ?FileBase         $file              The file being planned, for its prefixing setting, package and path in
+     *                                             log/exception messages; null plans as though prefixing is enabled and
+     *                                             searches strings for every symbol.
      *
      * @return array<array{start:int,end:int,replacement:string}> The planned edits, ascending by start.
      *
@@ -128,14 +150,16 @@ class ChangePlanner
         $cursor = PHP_INT_MAX;
         foreach ($edits as $edit) {
             if ($edit['end'] > $cursor) {
-                throw new Exception(sprintf(
-                    'Overlapping replacement in %s at %d-%d ("%s") overlaps a replacement starting at %d.',
-                    $fileAbsolutePath ?? 'file',
-                    $edit['start'],
-                    $edit['end'],
-                    $edit['replacement'],
-                    $cursor
-                ));
+                throw new Exception(
+                    sprintf(
+                        'Overlapping replacement in %s at %d-%d ("%s") overlaps a replacement starting at %d.',
+                        $fileAbsolutePath ?? 'file',
+                        $edit['start'],
+                        $edit['end'],
+                        $edit['replacement'],
+                        $cursor
+                    )
+                );
             }
             $cursor = $edit['start'];
         }
@@ -144,6 +168,10 @@ class ChangePlanner
     }
 
     /**
+     * @param DiscoveredSymbols $symbols All discovered symbols; fully qualified constant fetches in their namespaces
+     *                                   are renamed.
+     * @param FileCodeMap       $codeMap The locations in the file's contents.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findPositionsOfUsesOfNamespacedConstants(DiscoveredSymbols $symbols, FileCodeMap $codeMap): array
@@ -191,6 +219,9 @@ class ChangePlanner
      * in the namespace, namespace-prefix replacement is applied.
      * Namespaces with no registered ClassSymbol are left alone.
      *
+     * @param FileCodeMap       $codeMap           The locations in the file's contents.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findUseStatementPositionsForNamespacedClasses(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
@@ -221,7 +252,9 @@ class ChangePlanner
                     $original = implode('\\', array_slice($nameParts, 0, $length));
                     if (isset($activeNamespaces[$original])) {
                         $replacement = $activeNamespaces[$original];
-                        /** @var ?NamespacedSymbol $classSymbol */
+                        /**
+ * @var ?NamespacedSymbol $classSymbol
+*/
                         $classSymbol = $namespacedSymbols->get($nameStr);
                         if ($classSymbol && $classSymbol->isDoRename()) {
                             $nsReplacement = rtrim($classSymbol->getNamespace()->getReplacementFqdnName(), '\\');
@@ -252,6 +285,12 @@ class ChangePlanner
     }
 
     /**
+     * @param FileCodeMap       $codeMap           The locations in the file's contents.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     * @param ?FileBase         $file              The file being planned; when it is not to be prefixed, its namespace
+     *                                             declarations and references to its own symbols are left alone. Null
+     *                                             is treated as prefixed.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findNamespacePositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols, ?FileBase $file): array
@@ -269,7 +308,9 @@ class ChangePlanner
         // When the file's own symbols are not being prefixed, references to them within the file are left alone.
         $unprefixedFileSymbols = $isDoPrefix ? null : $file->getDiscoveredSymbols();
 
-        /** @var NamespaceSymbol[] $symbolMap indexed by exact original symbol (no trailing \) */
+        /**
+ * @var NamespaceSymbol[] $symbolMap indexed by exact original symbol (no trailing \)
+*/
         $symbolMap = $index->getNamespacesToRenameByName();
 
         $positions = [];
@@ -283,7 +324,9 @@ class ChangePlanner
          * @param string[] $parts
          */
         $findPrefixSymbol = function (array $parts) use ($symbolMap): ?array {
-            /** @var string[] $parts */
+            /**
+ * @var string[] $parts
+*/
             for ($len = count($parts) - 1; $len >= 1; $len--) {
                 $prefix = implode('\\', array_slice($parts, 0, $len));
 
@@ -455,6 +498,10 @@ class ChangePlanner
     }
 
     /**
+     * @param CodeLocation      $comment       A comment or doc comment location, with its text.
+     * @param DiscoveredSymbols $globalSymbols All discovered symbols; the global classes, interfaces, traits and enums
+     *                                         marked for renaming are looked up.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findGlobalSymbolsPositionsInComment(CodeLocation $comment, DiscoveredSymbols $globalSymbols): array
@@ -475,6 +522,9 @@ class ChangePlanner
     }
 
     /**
+     * @param CodeLocation     $comment      A comment or doc comment location, with its text.
+     * @param DiscoveredSymbol $globalSymbol The global symbol whose `\Name` references are replaced.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findGlobalSymbolPositionInComment(CodeLocation $comment, DiscoveredSymbol $globalSymbol): array
@@ -489,7 +539,8 @@ class ChangePlanner
         $offset = 0;
         while (($pos = strpos($commentText, $searchStr, $offset)) !== false) {
             $nextPos = $pos + $searchLen;
-            if ($nextPos >= strlen($commentText)
+            if (
+                $nextPos >= strlen($commentText)
                 || !preg_match('/[a-zA-Z0-9_\x7f-\xff\\\\]/', $commentText[$nextPos])
             ) {
                 $positions[] = [
@@ -517,6 +568,11 @@ class ChangePlanner
      *
      * TODO: optionally filter to only namespaces of more than a single depth.
      *
+     * @param FileCodeMap       $codeMap           The string, comment and inline HTML regions of the file's contents.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     * @param ?FileBase         $file              The file being planned, to limit the symbols to its package's; null
+     *                                             searches for every symbol.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findSymbolsPositionsInStrings(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols, ?FileBase $file): array
@@ -524,13 +580,16 @@ class ChangePlanner
         $fileAbsolutePath = is_null($file) ? null : $file->getTargetAbsolutePath();
 
         $discoveredSymbolsCount = $this->getIndex($discoveredSymbols)->getSymbolCount();
-        $this->logger->debug(sprintf(
-            'Searching in {filename} for {count} symbol%s as string',
-            $discoveredSymbolsCount === 1 ? '' : 's'
-        ), [
-            'filename' => basename($fileAbsolutePath ?? 'file'),
-            'count' => $discoveredSymbolsCount,
-        ]);
+        $this->logger->debug(
+            sprintf(
+                'Searching in {filename} for {count} symbol%s as string',
+                $discoveredSymbolsCount === 1 ? '' : 's'
+            ),
+            [
+                'filename' => basename($fileAbsolutePath ?? 'file'),
+                'count' => $discoveredSymbolsCount,
+            ]
+        );
 
         $regions = $codeMap->getRegions();
 
@@ -542,7 +601,9 @@ class ChangePlanner
         // at the edges of a region the way they matched the code around a string in the whole file. The pattern
         // consumes the boundary character after a match, so adjacent regions need a space each.
         $bufferParts = [];
-        /** @var int[] $bufferStarts Offset of each region's text in the buffer. */
+        /**
+ * @var int[] $bufferStarts Offset of each region's text in the buffer.
+*/
         $bufferStarts = [];
         $offset = 0;
         foreach ($regions as $region) {
@@ -608,7 +669,8 @@ class ChangePlanner
      * them (as with `composer-runtime-api`): implementations are discovered by name without being required, e.g.
      * php-http/discovery's `'Nyholm\Psr7\Factory\Psr17Factory'`.
      *
-     * @param DiscoveredSymbol[] $symbols
+     * @param DiscoveredSymbol[] $symbols Candidate symbols whose names appear in the file's strings.
+     * @param ?FileBase          $file    The file whose strings are searched; only a file with a package is filtered.
      *
      * @return DiscoveredSymbol[]
      */
@@ -624,8 +686,10 @@ class ChangePlanner
             $symbols,
             function (DiscoveredSymbol $symbol) use ($availablePackageNames): bool {
                 $symbolPackages = $symbol->getDependencies()->toArray();
-                if (empty($symbolPackages)
-                    || !empty(array_intersect_key($symbolPackages, $availablePackageNames))) {
+                if (
+                    empty($symbolPackages)
+                    || !empty(array_intersect_key($symbolPackages, $availablePackageNames))
+                ) {
                     return true;
                 }
                 foreach ($symbolPackages as $symbolPackage) {
@@ -640,6 +704,8 @@ class ChangePlanner
 
     /**
      * The package itself, every package in its dependency tree, and the packages it suggests with theirs.
+     *
+     * @param ComposerPackage $package The package of the file being searched; the result is cached by its name.
      *
      * @return array<string, mixed> Keyed by package name.
      */
@@ -661,8 +727,9 @@ class ChangePlanner
      * Find a single symbol inside quoted strings, e.g. `is_a( $recurrence, 'CronExpression' )`,
      * `"My\\Namespace\\" . $var` and `'My\Namespace\Classname::$staticProperty'`.
      *
-     * @param string $contents The joined text of the file's string, comment and inline HTML regions, never the whole
-     *                         file: {@see self::findSymbolsPositionsInStrings()}.
+     * @param string           $contents The joined text of the file's string, comment and inline HTML regions, never the whole
+     *                                   file: {@see self::findSymbolsPositionsInStrings()}.
+     * @param DiscoveredSymbol $symbol   A namespace or namespaced symbol to search for, by its original name.
      *
      * @return array<array{start:int,end:int,replacement:string}>
      * @throws Exception
@@ -715,15 +782,15 @@ class ChangePlanner
                             [\\\\]{0,2}
 )
                         ('
-                            . str_replace('\\', '[\\\\]{1,2}', $originalSymbolString) .
-                        ')(
+                            . str_replace('\\', '[\\\\]{1,2}', $originalSymbolString)
+                        . ')(
                         '
                       // This only applies to namespaces, `"My\\Namespace\\" . $var`.
                       // The trailing-backslashes-only alternative matches namespace prefix strings compared
                       // against FQDNs, e.g. `substr($className, 0, 16) === 'PHP_CodeSniffer\\'`.
-                      . ( $alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*|[\\\\]{1,2})?' : '' ) .
-                      ( $alsoSearchForStaticProperty ? '(:{2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '' ) .
-                      '
+                      . ($alsoSearchForVariableClassname ? '([\\\\]{1,2}\$[a-zA-Z0-9_\x7f-\xff]*|[\\\\]{1,2})?' : '')
+                      . ($alsoSearchForStaticProperty ? '(:{2}\$[a-zA-Z0-9_\x7f-\xff]*)?' : '')
+                      . '
                             [\'"]
                             [^a-zA-Z0-9_\x7f-\xff\\\\]
 )
@@ -769,6 +836,11 @@ class ChangePlanner
      * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\Composer\Autoload\ClassLoader\0";`
      * but in vendor-prefixed/composer/... of a prefixed project, it should be `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`
      *
+     * @param string $contents             The joined text of the file's string, comment and inline HTML regions.
+     * @param string $originalNamespace    The namespace being replaced, without leading backslash; only one ending
+     *                                     in `Composer\Autoload` is matched.
+     * @param string $replacementNamespace The prefixed namespace, without leading or trailing backslash.
+     *
      * @see \Composer\Autoload\AutoloadGenerator
      * @see vendor/composer/composer/src/Composer/Autoload/AutoloadGenerator.php
      * @see strauss.phar/src/Pipeline/Prefixer.php
@@ -779,14 +851,14 @@ class ChangePlanner
     protected function findComposerClassLoaderPrefixPositions(string $contents, string $originalNamespace, string $replacementNamespace): array
     {
         // Must be concatenated so it is not unintentionally replaced!
-        $unprefixedNamespace = implode('\\', ['Comp'.'oser','Autoload']);
+        $unprefixedNamespace = implode('\\', ['Comp' . 'oser','Autoload']);
         $isComposerAutoloadNamespace = str_ends_with($originalNamespace, $unprefixedNamespace);
         $hasComposerAutoloadNamespace = str_contains($contents, $unprefixedNamespace);
         if (!$isComposerAutoloadNamespace || !$hasComposerAutoloadNamespace) {
             return [];
         }
 
-        $disguisedNamespaceString = implode("\\\\", ['Comp'.'oser','Autoload','ClassLoader']);
+        $disguisedNamespaceString = implode("\\\\", ['Comp' . 'oser','Autoload','ClassLoader']);
 
         // The string literal `"\0Composer\Autoload\ClassLoader\0"`.
         $pattern = "/\\\"\\\\0($disguisedNamespaceString)\\\\0\\\"/";
@@ -813,6 +885,9 @@ class ChangePlanner
      *
      * In a global namespace:
      * * new Classname()
+     *
+     * @param FileCodeMap       $codeMap           The locations in the file's contents.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
      *
      * @return array<array{start:int,end:int,replacement:string}>
      */
@@ -878,12 +953,14 @@ class ChangePlanner
 
         // In global namespace context (either implicit, or explicit `namespace {}`), replace
         // class/interface/trait/enum declarations and unqualified class name references.
-        foreach ($codeMap->getLocationsOfType(
-            CodeLocation::CLASS_DEFINITION,
-            CodeLocation::INTERFACE_DEFINITION,
-            CodeLocation::TRAIT_DEFINITION,
-            CodeLocation::ENUM_DEFINITION
-        ) as $definition) {
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::CLASS_DEFINITION,
+                CodeLocation::INTERFACE_DEFINITION,
+                CodeLocation::TRAIT_DEFINITION,
+                CodeLocation::ENUM_DEFINITION
+            ) as $definition
+        ) {
             if (!$definition->isInGlobalNamespace()) {
                 continue;
             }
@@ -920,6 +997,9 @@ class ChangePlanner
      * Return whichever of class/interface/trait/enum is found first by name, or null.
      *
      * There should just be one of any global name: `use MyABC;` (a class) is indistinguishable from `use MyABC;` (an interface).
+     *
+     * @param string            $name              The symbol's fully qualified name, without leading backslash.
+     * @param DiscoveredSymbols $discoveredSymbols The symbols to look in.
      */
     protected function getGlobalSymbolByName(string $name, DiscoveredSymbols $discoveredSymbols): ?DiscoveredSymbol
     {
@@ -937,15 +1017,22 @@ class ChangePlanner
      *
      * Class constants (`self::MY_CONST`) and namespaced constant fetches are not matched here.
      *
+     * @param FileCodeMap       $codeMap           The locations in the file's contents.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols; the constants marked for renaming are matched.
+     *
      * @see self::findPositionsOfUsesOfNamespacedConstants()
      *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findConstantPositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
     {
-        /** @var array<string,string> $constantsToRename original name => replacement name */
+        /**
+ * @var array<string,string> $constantsToRename original name => replacement name
+*/
         $constantsToRename = [];
-        /** @var ConstantSymbol $constant */
+        /**
+ * @var ConstantSymbol $constant
+*/
         foreach ($this->getIndex($discoveredSymbols)->getConstantsToRename() as $constant) {
             $constantsToRename[$constant->getOriginalFqdnName()] = $constant->getReplacementFqdnName();
         }
@@ -956,16 +1043,19 @@ class ChangePlanner
 
         $positions = [];
 
-        foreach ($codeMap->getLocationsOfType(
-            CodeLocation::CONST_FETCH,
-            CodeLocation::USE_NAME,
-            CodeLocation::CONST_DEFINITION,
-            CodeLocation::DEFINE_STRING_ARG
-        ) as $location) {
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::CONST_FETCH,
+                CodeLocation::USE_NAME,
+                CodeLocation::CONST_DEFINITION,
+                CodeLocation::DEFINE_STRING_ARG
+            ) as $location
+        ) {
             switch ($location->getType()) {
                 case CodeLocation::CONST_FETCH:
                     $name = $location->getName();
-                    if ((!$location->isFullyQualified() || 1 === $location->countNameParts())
+                    if (
+                        (!$location->isFullyQualified() || 1 === $location->countNameParts())
                         && isset($constantsToRename[$name])
                     ) {
                         $positions[] = [
@@ -1022,6 +1112,9 @@ class ChangePlanner
      *
      * Bare words (`the default value`), variables (`$value`) and method calls (`->value()`, `::value()`) are ignored.
      *
+     * @param CodeLocation   $doc    A doc comment location, with its text.
+     * @param FunctionSymbol $symbol The function marked for renaming whose references are replaced.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findFunctionPositionsInDocComment(CodeLocation $doc, FunctionSymbol $symbol): array
@@ -1062,6 +1155,9 @@ class ChangePlanner
     /**
      * Look for declared functions, function calls, and built-in functions that accept a function as their parameter.
      *
+     * @param FileCodeMap       $codeMap           The locations in the file's contents.
+     * @param DiscoveredSymbols $discoveredSymbols The functions to rename: {@see SymbolIndex::getFunctionsToRename()}.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findFunctionPositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
@@ -1072,11 +1168,13 @@ class ChangePlanner
 
         $positions = [];
 
-        foreach ($codeMap->getLocationsOfType(
-            CodeLocation::FUNCTION_DEFINITION,
-            CodeLocation::FUNCTION_CALL,
-            CodeLocation::CALLABLE_STRING_ARG
-        ) as $location) {
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::FUNCTION_DEFINITION,
+                CodeLocation::FUNCTION_CALL,
+                CodeLocation::CALLABLE_STRING_ARG
+            ) as $location
+        ) {
             switch ($location->getType()) {
                 case CodeLocation::FUNCTION_DEFINITION:
                     // Function declarations (global only): the local name is looked up.
@@ -1124,6 +1222,10 @@ class ChangePlanner
     /**
      * Doc comments: scan for \OriginalNamespace references in @param/@return/etc.
      *
+     * @param FileCodeMap       $codeMap           The doc comment locations in the file's contents.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols; functions and namespaced symbols marked for
+     *                                             renaming are matched.
+     *
      * @return array<array{start:int,end:int,replacement:string}>
      */
     protected function findDocCommentPositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
@@ -1138,9 +1240,12 @@ class ChangePlanner
 
         $index = $this->getIndex($discoveredSymbols);
 
-        $this->logger->debug('Searching {number_of_comments} comments for symbols', [
-            'number_of_comments' => count($docComments),
-        ]);
+        $this->logger->debug(
+            'Searching {number_of_comments} comments for symbols',
+            [
+                'number_of_comments' => count($docComments),
+            ]
+        );
 
         foreach ($docComments as $doc) {
             $text = $doc->getText();

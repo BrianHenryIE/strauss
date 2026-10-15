@@ -16,23 +16,23 @@ class FileSymbolScannerIntegrationTest extends IntegrationTestCase
     {
 
         $composerJsonString = <<<'EOD'
-{
-	"require": {
-		"myclabs/php-enum": "1.8.5"
-	},
-    "config": {
-		"platform": {
-			"php": "7.4"
-		}
-    },
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "New\\Namespace",
-			"classmap_prefix": "Class_Prefix_"
-		}
-	}
-}
-EOD;
+            {
+            	"require": {
+            		"myclabs/php-enum": "1.8.5"
+            	},
+                "config": {
+            		"platform": {
+            			"php": "7.4"
+            		}
+                },
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "New\\Namespace",
+            			"classmap_prefix": "Class_Prefix_"
+            		}
+            	}
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

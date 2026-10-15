@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  */
@@ -21,7 +22,6 @@ use Mockery;
  */
 class StraussIssue33Test extends IntegrationTestCase
 {
-
     /**
      */
     public function test_backtrack_limit_exhausted(): void
@@ -31,23 +31,23 @@ class StraussIssue33Test extends IntegrationTestCase
         $this->markTestSkippedLocally();
 
         $composerJsonString = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-backtrack-limit-exhausted",
-  "minimum-stability": "dev",
-  "require": {
-    "afragen/wp-dependency-installer": "^3.1",
-    "mpdf/mpdf": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss_Backtrack_Limit_Exhausted\\",
-      "target_directory": "/strauss/",
-      "classmap_prefix": "BH_Strauss_Backtrack_Limit_Exhausted_"
-    }
-  }
-}
+            {
+              "name": "brianhenryie/strauss-backtrack-limit-exhausted",
+              "minimum-stability": "dev",
+              "require": {
+                "afragen/wp-dependency-installer": "^3.1",
+                "mpdf/mpdf": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss_Backtrack_Limit_Exhausted\\",
+                  "target_directory": "/strauss/",
+                  "classmap_prefix": "BH_Strauss_Backtrack_Limit_Exhausted_"
+                }
+              }
+            }
 
-EOD;
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -69,7 +69,7 @@ EOD;
     {
         $this->markTestSkippedLocally();
 
-        $contents = $this->getFileSystem()->read(__DIR__.'/data/Mpdf.php');
+        $contents = $this->getFileSystem()->read(__DIR__ . '/data/Mpdf.php');
 
         $originalClassname = 'WP_Dependency_Installer';
 

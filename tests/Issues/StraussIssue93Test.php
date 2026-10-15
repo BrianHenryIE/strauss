@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Cleanup vendor/composer/installed.json after delete-vendor-directories
  *
@@ -18,19 +19,19 @@ class StraussIssue93Test extends IntegrationTestCase
     public function test_removes_entries_from_installed_json(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue93",
-  "require": {
-    "symfony/polyfill-php80": "v1.29.0"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue93\\",
-      "delete_vendor_files": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue93",
+              "require": {
+                "symfony/polyfill-php80": "v1.29.0"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue93\\",
+                  "delete_vendor_files": true
+                }
+              }
+            }
+            EOD;
 
         chdir($this->testsWorkingDir);
 

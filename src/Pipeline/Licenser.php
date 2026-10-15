@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copies license files from original folders.
  * Edits Phpdoc to record the file was changed.
@@ -9,9 +10,10 @@
  * GPL states: "You must cause the modified files to carry prominent notices stating
  * that you changed the files and the date of any change."
  *
- * @see https://github.com/coenjacobs/mozart/issues/87
+ * @package brianhenryie/strauss
+ * @author  Brian Henry <BrianHenryIE@gmail.com>
  *
- * @author BrianHenryIE
+ * @see https://github.com/coenjacobs/mozart/issues/87
  */
 
 namespace BrianHenryIE\Strauss\Pipeline;
@@ -28,6 +30,12 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * Searches each package in the {@see DependenciesCollection} for files whose name matches `licen.e`, and copies them
+ * from the vendor directory to the matching target directory when that directory exists. For each modified file it
+ * then adds (or extends) the header docblock with the package's `@license` and a "Modified by ... using Strauss"
+ * line, the author and date being included according to the {@see LicenserConfigInterface}.
+ */
 class Licenser
 {
     use LoggerAwareTrait;
@@ -50,7 +58,7 @@ class Licenser
      *
      * @var string[]
      */
-    protected array $discoveredLicenseFiles = array();
+    protected array $discoveredLicenseFiles = [];
 
     protected FileSystem $filesystem;
 
@@ -59,14 +67,17 @@ class Licenser
     /**
      * Licenser constructor.
      *
-     * @param DependenciesCollection $dependencies Whose folders are searched for existing license.txt files.
-     * @param string $author To add to each modified file's header
+     * @param LicenserConfigInterface $config       Whether to include the author and modified date, and the vendor and target directories.
+     * @param DependenciesCollection  $dependencies Whose folders are searched for existing license.txt files.
+     * @param string                  $author       To add to each modified file's header
+     * @param FileSystem              $filesystem   Used to find, copy and update license and PHP files.
+     * @param ?LoggerInterface        $logger       Optional logger; a NullLogger is used when null.
      */
     public function __construct(
         LicenserConfigInterface $config,
-        DependenciesCollection  $dependencies,
-        string           $author,
-        FileSystem       $filesystem,
+        DependenciesCollection $dependencies,
+        string $author,
+        FileSystem $filesystem,
         ?LoggerInterface $logger = null
     ) {
         $this->dependencies = $dependencies;
@@ -100,21 +111,25 @@ class Licenser
 
             // Don't try copy it if it's already there.
             if ($this->filesystem->fileExists($targetLicenseFile)) {
-                $this->logger->debug(sprintf(
-                    "Skipping %s because it already exists at %s",
-                    basename($licenseFile),
-                    $targetLicenseFile
-                ));
+                $this->logger->debug(
+                    sprintf(
+                        "Skipping %s because it already exists at %s",
+                        basename($licenseFile),
+                        $targetLicenseFile
+                    )
+                );
                 continue;
             }
 
             // Don't add licenses to non-existent directories – there were no files copied there!
             if (! $this->filesystem->directoryExists($targetLicenseFileDir)) {
-                $this->logger->debug(sprintf(
-                    "Skipping %s because the directory %s does not exist",
-                    basename($licenseFile),
-                    $targetLicenseFileDir
-                ));
+                $this->logger->debug(
+                    sprintf(
+                        "Skipping %s because the directory %s does not exist",
+                        basename($licenseFile),
+                        $targetLicenseFileDir
+                    )
+                );
                 continue;
             }
 
@@ -139,7 +154,9 @@ class Licenser
     {
         // Include all license files in the dependency path.
 
-        /** @var ComposerPackage $dependency */
+        /**
+ * @var ComposerPackage $dependency
+*/
         foreach ($this->dependencies as $dependency) {
             $packagePath = $dependency->getPackageAbsolutePath();
             // Meta packages.
@@ -149,15 +166,20 @@ class Licenser
             $packagePath = $this->filesystem->normalizePath($packagePath);
 
             if (!$packagePath) {
-                $this->logger->debug('Dependency {dependency} had no package path?', [
-                    'dependency' => $dependency->getPackageName()
-                ]);
+                $this->logger->debug(
+                    'Dependency {dependency} had no package path?',
+                    [
+                        'dependency' => $dependency->getPackageName(),
+                    ]
+                );
                 continue;
             }
 
             $files = $this->filesystem->listContents($packagePath, true)
-                ->filter(fn (StorageAttributes $attributes) => $attributes->isFile());
-            /** @var FileAttributes $file */
+                ->filter(fn(StorageAttributes $attributes) => $attributes->isFile());
+            /**
+ * @var FileAttributes $file
+*/
             foreach ($files as $file) {
                 $filePath = $this->filesystem->makeAbsolute($file->path());
 
@@ -201,7 +223,7 @@ class Licenser
                 continue;
             }
 
-            $filepath = $this->config->getAbsoluteTargetDirectory() . '/'.$relativeFilePath;
+            $filepath = $this->config->getAbsoluteTargetDirectory() . '/' . $relativeFilePath;
 
             if (!$this->filesystem->fileExists($filepath)) {
                 continue;
@@ -217,9 +239,12 @@ class Licenser
             );
 
             if ($updatedContents !== $contents) {
-                $this->logger->info("Adding change declaration to {filepath}", [
-                    'filepath' => $filepath
-                ]);
+                $this->logger->info(
+                    "Adding change declaration to {filepath}",
+                    [
+                        'filepath' => $filepath,
+                    ]
+                );
                 $this->filesystem->write($filepath, $updatedContents);
             }
         }
@@ -228,8 +253,9 @@ class Licenser
     /**
      * Given a php file as a string, edit its header phpdoc, or add a header, to include:
      *
-     * "Modified by {author} on {date} using Strauss.
-     * @see https://github.com/BrianHenryIE/strauss"
+     * > Modified by {author} on {date} using Strauss.
+     * >
+     * > @see https://github.com/BrianHenryIE/strauss
      *
      * Should probably include the original license in each file since it'll often be a mix, with the parent
      * project often being a GPL WordPress plugin.
@@ -242,14 +268,17 @@ class Licenser
      * If there is no mention in the header of the license already, add it.
      * Add a note that changes have been made.
      *
-     * @param string $phpString Code.
+     * @param string $phpString      Code.
+     * @param string $modifiedDate   The date to include in the declaration, e.g. "25-April-2021".
+     * @param string $packageName    The Composer package name the file came from, e.g. `psr/log`.
+     * @param string $packageLicense The package's license identifier, added as an `@license` tag.
      */
     public function addChangeDeclarationToPhpString(
         string $phpString,
         string $modifiedDate,
         string $packageName,
         string $packageLicense
-    ) : string {
+    ): string {
 
         $author = $this->author;
 
@@ -304,12 +333,14 @@ class Licenser
             $licenseDeclaration,
             $modifiedDeclaration
         ) {
-            /** @var array<int,string> $matches */
+            /**
+ * @var array<int,string> $matches
+*/
 
             // Find the line prefix and use it, i.e. could be none, asterisk or space-asterisk.
             $commentLines = explode("\n", $matches[2]);
 
-            if (isset($commentLines[1])&& 1 === preg_match('/^([\s\\\*]*)/', $commentLines[1], $output_array)) {
+            if (isset($commentLines[1]) && 1 === preg_match('/^([\s\\\*]*)/', $commentLines[1], $output_array)) {
                 $lineStart = $output_array[1];
             } else {
                 $lineStart = ' * ';
@@ -324,7 +355,7 @@ class Licenser
 
             $appendString .= "{$lineStart}{$modifiedDeclaration}\n";
 
-            $commentEnd =  rtrim(rtrim($lineStart, ' '), '*').'*/';
+            $commentEnd =  rtrim(rtrim($lineStart, ' '), '*') . '*/';
 
             return $matches[1] . $matches[2] . $appendString . $commentEnd;
         };
@@ -332,7 +363,7 @@ class Licenser
         // If it's a simple case where there is no existing header, add the existing license.
         if (1 === preg_match($noCommentBetweenPhpOpenAndFirstCodePattern, $phpString)) {
             $modifiedComment = "/**\n * {$licenseDeclaration}\n *\n * {$modifiedDeclaration}\n */";
-            $updatedPhpString = preg_replace('~<\?php~', "<?php\n". $modifiedComment, $phpString, 1);
+            $updatedPhpString = preg_replace('~<\?php~', "<?php\n" . $modifiedComment, $phpString, 1);
         } else {
             $updatedPhpString = preg_replace_callback(
                 $multilineCommentCapturePattern,

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Problem with too many replacements due to common class, domain, namespace names, "Normalizer".
  *
@@ -15,7 +16,6 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
  */
 class StraussIssue27Test extends IntegrationTestCase
 {
-
     /**
      */
     public function test_virtual_package(): void
@@ -26,18 +26,18 @@ class StraussIssue27Test extends IntegrationTestCase
         self::markTestIncomplete('Polyfills are no longer prefixed.');
 
         $composerJsonString = <<<'EOD'
-{
-  "require": {
-    "symfony/polyfill-intl-normalizer": "1.23"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Normalizer_Test\\",
-      "classmap_prefix": "Normalizer_Test_"
-    }
-  }
-}
-EOD;
+            {
+              "require": {
+                "symfony/polyfill-intl-normalizer": "1.23"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Normalizer_Test\\",
+                  "classmap_prefix": "Normalizer_Test_"
+                }
+              }
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 

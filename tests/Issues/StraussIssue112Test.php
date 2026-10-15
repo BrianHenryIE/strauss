@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Strings matching classname were replaced.
  *
@@ -20,44 +21,44 @@ class StraussIssue112Test extends IntegrationTestCase
     public function test_dont_replace_in_string(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "strauss/issue112",
-  "config": {
-    "allow-plugins": {
-        "php-http/discovery": true
-    }
-  },
-  "classmap": [
-    "src"
-  ],
-  "require": {
-        "mailgun/mailgun-php": "^4.2",
-        "nyholm/psr7": "^1.8"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "Strauss\\Issue112\\",
-      "update_call_sites": true
-    }
-  }
-}
-EOD;
+            {
+              "name": "strauss/issue112",
+              "config": {
+                "allow-plugins": {
+                    "php-http/discovery": true
+                }
+              },
+              "classmap": [
+                "src"
+              ],
+              "require": {
+                    "mailgun/mailgun-php": "^4.2",
+                    "nyholm/psr7": "^1.8"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "Strauss\\Issue112\\",
+                  "update_call_sites": true
+                }
+              }
+            }
+            EOD;
         $phpFileString = <<<'EOD'
-<?php
+            <?php
 
-namespace Dartui\StraussPrefixError;
+            namespace Dartui\StraussPrefixError;
 
-use Mailgun\Mailgun;
+            use Mailgun\Mailgun;
 
-class Test
-{
-    public function __construct()
-    {
-        $this->mailgun = Mailgun::create();
-        $this->title = 'Mailgun';
-    }
-}
-EOD;
+            class Test
+            {
+                public function __construct()
+                {
+                    $this->mailgun = Mailgun::create();
+                    $this->title = 'Mailgun';
+                }
+            }
+            EOD;
 
 
         chdir($this->testsWorkingDir);

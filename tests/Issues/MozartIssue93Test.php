@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/coenjacobs/mozart/blob/3b1243ca8505fa6436569800dc34269178930f39/tests/replacers/ClassmapReplacerIntegrationTest.php#L67-L109
  */
@@ -28,24 +29,24 @@ class MozartIssue93Test extends IntegrationTestCase
         $this->markTestIncomplete('Not respecting the pinned commit.');
 
         $composerJsonString = <<<'EOD'
-{
-	"name": "brianhenryie/mozart-issue-93",
-	"repositories": [{
-		"url": "https://github.com/BrianHenryIE/bh-wp-logger",
-		"type": "git"
-	}],
-	"require": {
-		"brianhenryie/wp-logger": "dev-master#dd2bb0665e01e11b282178e76a2334198d3860c5"
-	},
-	"extra": {
-		"strauss": {
-			"namespace_prefix": "BrianHenryIE\\M93\\",
-			"classmap_prefix": "BrianHenryIE_M93_"
-		}
-	},
-	"minimum-stability": "dev"
-}
-EOD;
+            {
+            	"name": "brianhenryie/mozart-issue-93",
+            	"repositories": [{
+            		"url": "https://github.com/BrianHenryIE/bh-wp-logger",
+            		"type": "git"
+            	}],
+            	"require": {
+            		"brianhenryie/wp-logger": "dev-master#dd2bb0665e01e11b282178e76a2334198d3860c5"
+            	},
+            	"extra": {
+            		"strauss": {
+            			"namespace_prefix": "BrianHenryIE\\M93\\",
+            			"classmap_prefix": "BrianHenryIE_M93_"
+            		}
+            	},
+            	"minimum-stability": "dev"
+            }
+            EOD;
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
@@ -56,7 +57,7 @@ EOD;
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $php_string = $this->getFileSystem()->read($this->testsWorkingDir .'/strauss/brianhenryie/wp-logger/src/class-logger.php');
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/strauss/brianhenryie/wp-logger/src/class-logger.php');
 
         // Confirm problem is gone.
         self::assertStringNotContainsString('class BrianHenryIE_M93_Logger extends', $php_string);

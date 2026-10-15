@@ -1,6 +1,11 @@
 <?php
+
 /**
- * @see \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
+ * The collection of symbols discovered in the scanned files and autoload configuration, which the pipeline
+ * filters to decide what to rename and to generate aliases and autoloaders.
+ *
+ * @package brianhenryie/strauss
+ * @see     \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner
  */
 
 declare(strict_types=1);
@@ -47,7 +52,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     ];
 
     /**
-     * @param DiscoveredSymbol[] $symbols
+     * @param DiscoveredSymbol[] $symbols Initial symbols, each added via {@see self::add()}.
      */
     public function __construct(array $symbols = [])
     {
@@ -59,7 +64,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     /**
      * TODO: This should merge the symbols instead of overwriting them.
      *
-     * @param DiscoveredSymbol $symbol
+     * @param DiscoveredSymbol $symbol Symbol to store, keyed by its original FQDN under its type.
      */
     public function add(DiscoveredSymbol $symbol): void
     {
@@ -119,14 +124,18 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
+     * @param string $fqdnName The symbol's original fully qualified name, as returned by {@see DiscoveredSymbol::getOriginalFqdnName()}.
+     *
      * @deprecated Can cause false positives when duplicate names exist.
      */
     public function get(string $fqdnName): ?DiscoveredSymbol
     {
-        /** @var DiscoveredSymbol[] $found */
+        /**
+ * @var DiscoveredSymbol[] $found
+*/
         $found = array_reduce(
             $this->types,
-            fn (array $carry, array $symbol) => isset($symbol[$fqdnName]) ? array_merge($carry, [$symbol[$fqdnName]]) : $carry,
+            fn(array $carry, array $symbol) => isset($symbol[$fqdnName]) ? array_merge($carry, [$symbol[$fqdnName]]) : $carry,
             []
         );
 
@@ -136,7 +145,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
         if (count($found) > 1) {
             $names = array_map(
-                fn (DiscoveredSymbol $symbol):string => $symbol->getOriginalLocalName(),
+                fn(DiscoveredSymbol $symbol): string => $symbol->getOriginalLocalName(),
                 $found
             );
             // E.g. an interface and class have the same name.
@@ -348,7 +357,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param int|string $offset
+     * @param int|string $offset Original FQDN of the symbol to look for, across all symbol types.
      *
      * @return bool
      */
@@ -372,7 +381,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param string $offset
+     * @param string $offset Original FQDN of the symbol to return.
      *
      * @return DiscoveredSymbol|null
      */
@@ -385,8 +394,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param string $offset
-     * @param DiscoveredSymbol$value
+     * @param string           $offset Unused; setting by offset is not supported.
+     * @param DiscoveredSymbol $value  Unused; use {@see self::add()} instead.
      *
      * @return void
      */
@@ -397,7 +406,7 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * @param string $offset
+     * @param string $offset Unused; unsetting by offset is not supported.
      *
      * @return void
      */
@@ -424,7 +433,9 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     public function notGlobal(): self
     {
-        /** @var DiscoveredSymbol[] $all */
+        /**
+ * @var DiscoveredSymbol[] $all
+*/
         $all = [];
         /**
          * @var array<string, DiscoveredSymbol> $types

@@ -218,12 +218,12 @@ class ExcludeFromCopyAutoloadIntegrationTest extends IntegrationTestCase
         $autoloadPath = str_replace('\\', '/', $this->testsWorkingDir . '/vendor/autoload.php');
         $phpCode = sprintf(
             <<<'PHP'
-require %s;
-$ok = defined('ACME_PRESERVED_BOOTSTRAPPED')
-    && class_exists('Acme\\Preserved\\Thing')
-    && \Acme\Preserved\Thing::value() === 'preserved';
-exit($ok ? 0 : 1);
-PHP,
+                require %s;
+                $ok = defined('ACME_PRESERVED_BOOTSTRAPPED')
+                    && class_exists('Acme\\Preserved\\Thing')
+                    && \Acme\Preserved\Thing::value() === 'preserved';
+                exit($ok ? 0 : 1);
+                PHP,
             var_export($autoloadPath, true)
         );
 

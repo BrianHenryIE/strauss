@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Really an issue in brianhenryie/simple-php-code-parser; this is a regression test
  *
@@ -20,22 +21,22 @@ class StraussIssue191Test extends IntegrationTestCase
     public function test_fatal(): void
     {
         $composerJsonString = <<<'EOD'
-{
-  "name": "adam/strauss-error",
-  "description": "Minimal example for bug report",
-  "type": "project",
-  "license": "MIT",
-  "autoload": {
-    "psr-4": {
-      "Adam\\StraussError\\": "src/"
-    }
-  },
-  "require": {
-    "league/mime-type-detection": "*"
-  }
-}
+            {
+              "name": "adam/strauss-error",
+              "description": "Minimal example for bug report",
+              "type": "project",
+              "license": "MIT",
+              "autoload": {
+                "psr-4": {
+                  "Adam\\StraussError\\": "src/"
+                }
+              },
+              "require": {
+                "league/mime-type-detection": "*"
+              }
+            }
 
-EOD;
+            EOD;
 
         chdir($this->testsWorkingDir);
 

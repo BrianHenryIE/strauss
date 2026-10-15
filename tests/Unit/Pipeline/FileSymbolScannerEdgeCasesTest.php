@@ -39,23 +39,23 @@ class FileSymbolScannerEdgeCasesTest extends TestCase
         return [
             'single namespace' => [
                 <<<'PHP'
-<?php
-namespace Example\Pkg;
+                    <?php
+                    namespace Example\Pkg;
 
-interface ParentContract {}
-interface ChildContract extends ParentContract {}
+                    interface ParentContract {}
+                    interface ChildContract extends ParentContract {}
 
-abstract class BaseService implements ChildContract {}
-class ConcreteService extends BaseService {}
+                    abstract class BaseService implements ChildContract {}
+                    class ConcreteService extends BaseService {}
 
-trait LocalTrait {}
+                    trait LocalTrait {}
 
-function helper_fn() {
-    return true;
-}
+                    function helper_fn() {
+                        return true;
+                    }
 
-const LOCAL_CONST = 123;
-PHP,
+                    const LOCAL_CONST = 123;
+                    PHP,
                 [
                     'namespaces' => ['Example\Pkg'],
                     'classes' => [
@@ -71,25 +71,25 @@ PHP,
             ],
             'multiple namespaces including explicit global' => [
                 <<<'PHP'
-<?php
-namespace One\Ns {
-    interface InterfaceA {}
-    class ClassA implements InterfaceA {}
-}
+                    <?php
+                    namespace One\Ns {
+                        interface InterfaceA {}
+                        class ClassA implements InterfaceA {}
+                    }
 
-namespace {
-    class GlobalClass {}
-    function global_helper() {
-        return true;
-    }
-    const GLOBAL_CONST = 1;
-}
+                    namespace {
+                        class GlobalClass {}
+                        function global_helper() {
+                            return true;
+                        }
+                        const GLOBAL_CONST = 1;
+                    }
 
-namespace Two\Ns {
-    trait TraitB {}
-    class ClassB {}
-}
-PHP,
+                    namespace Two\Ns {
+                        trait TraitB {}
+                        class ClassB {}
+                    }
+                    PHP,
                 [
                     'namespaces' => ['One\Ns', '\\', 'Two\Ns'],
                     'classes' => [
@@ -106,14 +106,14 @@ PHP,
             ],
             'namespace keyword in string and namespace operator' => [
                 <<<'PHP'
-<?php
-namespace Edge\One;
-class Subject {}
-function inspect_namespace_operator() {
-    $txt = "namespace Edge\\Fake should not count";
-    return namespace\Subject::class . $txt;
-}
-PHP,
+                    <?php
+                    namespace Edge\One;
+                    class Subject {}
+                    function inspect_namespace_operator() {
+                        $txt = "namespace Edge\\Fake should not count";
+                        return namespace\Subject::class . $txt;
+                    }
+                    PHP,
                 [
                     'namespaces' => ['Edge\One'],
                     'classes' => [
@@ -128,15 +128,15 @@ PHP,
             ],
             'explicit global namespace with define, const and class constant' => [
                 <<<'PHP'
-<?php
-namespace {
-    define('EDGE_DEFINED', 'ok');
-    const EDGE_CONST = 'c';
-    class GlobalEdge {
-        public const LOCAL = 'x';
-    }
-}
-PHP,
+                    <?php
+                    namespace {
+                        define('EDGE_DEFINED', 'ok');
+                        const EDGE_CONST = 'c';
+                        class GlobalEdge {
+                            public const LOCAL = 'x';
+                        }
+                    }
+                    PHP,
                 [
                     'namespaces' => ['\\'],
                     'classes' => [
@@ -151,14 +151,14 @@ PHP,
             ],
             'interface inheritance chain and implementation' => [
                 <<<'PHP'
-<?php
-namespace Edge\Two;
-interface A {}
-interface B extends A {}
-interface C extends B {}
-abstract class Core implements C {}
-class Child extends Core {}
-PHP,
+                    <?php
+                    namespace Edge\Two;
+                    interface A {}
+                    interface B extends A {}
+                    interface C extends B {}
+                    abstract class Core implements C {}
+                    class Child extends Core {}
+                    PHP,
                 [
                     'namespaces' => ['Edge\Two'],
                     'classes' => [
@@ -174,15 +174,15 @@ PHP,
             ],
             'extends and implements are resolved through use statement aliases' => [
                 <<<'PHP'
-<?php
-namespace Edge\Three;
-use Vendor\Package\ExternalClass as ExternalAlias;
-class LocalOne extends ExternalAlias implements \Countable, LocalInterface {}
-class LocalTwo extends LocalOne {}
-function takes_alias(ExternalAlias $a): string {
-    return LocalTwo::class;
-}
-PHP,
+                    <?php
+                    namespace Edge\Three;
+                    use Vendor\Package\ExternalClass as ExternalAlias;
+                    class LocalOne extends ExternalAlias implements \Countable, LocalInterface {}
+                    class LocalTwo extends LocalOne {}
+                    function takes_alias(ExternalAlias $a): string {
+                        return LocalTwo::class;
+                    }
+                    PHP,
                 [
                     'namespaces' => ['Edge\Three'],
                     'classes' => [
@@ -198,13 +198,13 @@ PHP,
             ],
             'anonymous class is ignored' => [
                 <<<'PHP'
-<?php
-namespace Edge\Four;
-$v = new class () {
-    public function x(): string { return 'y'; }
-};
-class NamedAfterAnonymous {}
-PHP,
+                    <?php
+                    namespace Edge\Four;
+                    $v = new class () {
+                        public function x(): string { return 'y'; }
+                    };
+                    class NamedAfterAnonymous {}
+                    PHP,
                 [
                     'namespaces' => ['Edge\Four'],
                     'classes' => [
@@ -219,20 +219,20 @@ PHP,
             ],
             'traits in namespace blocks' => [
                 <<<'PHP'
-<?php
-namespace Edge\Five\A {
-    trait SharedA {}
-    class UseA {
-        use SharedA;
-    }
-}
-namespace Edge\Five\B {
-    trait SharedB {}
-    class UseB {
-        use SharedB;
-    }
-}
-PHP,
+                    <?php
+                    namespace Edge\Five\A {
+                        trait SharedA {}
+                        class UseA {
+                            use SharedA;
+                        }
+                    }
+                    namespace Edge\Five\B {
+                        trait SharedB {}
+                        class UseB {
+                            use SharedB;
+                        }
+                    }
+                    PHP,
                 [
                     'namespaces' => ['Edge\Five\A', 'Edge\Five\B'],
                     'classes' => [
@@ -248,20 +248,20 @@ PHP,
             ],
             'attributes, union types and match' => [
                 <<<'PHP'
-<?php
-namespace Edge\Six;
-#[\Attribute]
-class Marker {}
-#[Marker]
-class Advanced {
-    public function run(int|string $x): string {
-        return match (true) {
-            is_int($x) => 'int',
-            default => 'string',
-        };
-    }
-}
-PHP,
+                    <?php
+                    namespace Edge\Six;
+                    #[\Attribute]
+                    class Marker {}
+                    #[Marker]
+                    class Advanced {
+                        public function run(int|string $x): string {
+                            return match (true) {
+                                is_int($x) => 'int',
+                                default => 'string',
+                            };
+                        }
+                    }
+                    PHP,
                 [
                     'namespaces' => ['Edge\Six'],
                     'classes' => [
@@ -277,17 +277,17 @@ PHP,
             ],
             'backed enum implementing interface and readonly class' => [
                 <<<'PHP'
-<?php
-namespace Edge\Seven;
-interface HasLabel {}
-enum Status: string implements HasLabel {
-    const DEFAULT_REGEX = '/^(ready|done)$/';
-    case READY = 'ready';
-}
-readonly class Holder {
-    public function __construct(public string $id) {}
-}
-PHP,
+                    <?php
+                    namespace Edge\Seven;
+                    interface HasLabel {}
+                    enum Status: string implements HasLabel {
+                        const DEFAULT_REGEX = '/^(ready|done)$/';
+                        case READY = 'ready';
+                    }
+                    readonly class Holder {
+                        public function __construct(public string $id) {}
+                    }
+                    PHP,
                 [
                     'namespaces' => ['Edge\Seven'],
                     'classes' => [
@@ -304,12 +304,12 @@ PHP,
             ],
             'global pure enum' => [
                 <<<'PHP'
-<?php
-enum GlobalSuit {
-    case Hearts;
-    case Spades;
-}
-PHP,
+                    <?php
+                    enum GlobalSuit {
+                        case Hearts;
+                        case Spades;
+                    }
+                    PHP,
                 [
                     'namespaces' => ['\\'],
                     'classes' => [],
@@ -324,23 +324,23 @@ PHP,
             ],
             'conditional declarations, nested declarations and define variants' => [
                 <<<'PHP'
-<?php
-namespace Foo;
-if (!function_exists('Foo\bar')) {
-    function bar() {}
-}
-if (!class_exists('Foo\Baz')) {
-    class Baz extends \Exception implements \Countable, Qux {}
-}
-define('IN_NS', 1);
-\define('IN_NS2', 1);
-define('Foo\IN_NS3', 1);
-define($dynamic, 1);
-const A = 1, B = 2;
-function inner() {
-    class InFunc {}
-}
-PHP,
+                    <?php
+                    namespace Foo;
+                    if (!function_exists('Foo\bar')) {
+                        function bar() {}
+                    }
+                    if (!class_exists('Foo\Baz')) {
+                        class Baz extends \Exception implements \Countable, Qux {}
+                    }
+                    define('IN_NS', 1);
+                    \define('IN_NS2', 1);
+                    define('Foo\IN_NS3', 1);
+                    define($dynamic, 1);
+                    const A = 1, B = 2;
+                    function inner() {
+                        class InFunc {}
+                    }
+                    PHP,
                 [
                     'namespaces' => ['Foo'],
                     'classes' => [
@@ -356,14 +356,14 @@ PHP,
             ],
             'declare and comments before namespace' => [
                 <<<'PHP'
-<?php
-/**
- * File comment mentioning namespace Fake\Comment;
- */
-declare(strict_types=1);
-namespace DeclaredDemo;
-function declared_helper() {}
-PHP,
+                    <?php
+                    /**
+                     * File comment mentioning namespace Fake\Comment;
+                     */
+                    declare(strict_types=1);
+                    namespace DeclaredDemo;
+                    function declared_helper() {}
+                    PHP,
                 [
                     'namespaces' => ['DeclaredDemo'],
                     'classes' => [],
@@ -404,10 +404,10 @@ PHP,
             ],
             'template file with placeholders is a parse error and discovers nothing' => [
                 <<<'PHP'
-<?php
-namespace %g_namespace%\AdminMenus;
-class AdminMenuExample {}
-PHP,
+                    <?php
+                    namespace %g_namespace%\AdminMenus;
+                    class AdminMenuExample {}
+                    PHP,
                 [
                     'namespaces' => [],
                     'classes' => [],

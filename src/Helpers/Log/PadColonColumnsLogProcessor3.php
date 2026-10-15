@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Align text following `:` in a log message.
  *
@@ -16,13 +17,21 @@ use DateTimeInterface;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 
+/**
+ * Splits the message on the first `:::`, tracks the longest prefix seen so far across all records, and pads the
+ * prefix to that width with a single `:` appended after it. Returns a copy of the immutable record via
+ * `LogRecord::with()`; messages without `:::` are returned unchanged.
+ */
 class PadColonColumnsLogProcessor3 implements ProcessorInterface
 {
-    /** @var int $padLength */
+    /**
+     * @var int $padLength
+     */
     protected int $padLength = 0;
 
     /**
-     * @param LogRecord $record
+     * @param LogRecord $record Log record whose message may contain a `:::` column separator.
+     *
      * @return LogRecord
      */
     public function __invoke(LogRecord $record): LogRecord
@@ -40,7 +49,7 @@ class PadColonColumnsLogProcessor3 implements ProcessorInterface
 
         $messageParts[0] = $this->pad($messageParts[0], $this->padLength);
 
-        return $record->with(...['message'=> implode('', $messageParts)]);
+        return $record->with(...['message' => implode('', $messageParts)]);
     }
 
     private function pad(string $text, int $padLength): string

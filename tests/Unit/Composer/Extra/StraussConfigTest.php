@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Should accept Strauss config and Mozart config.
  *
@@ -48,35 +49,35 @@ class StraussConfigTest extends TestCase
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "/target_directory/",
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "packages": [
-        "pimple/pimple"
-      ],
-      "exclude_prefix_packages": [
-        "psr/container"
-      ],
-      "override_autoload": {
-        "clancats/container": {
-          "classmap": [
-            "src/"
-          ]
-        }
-      },
-      "delete_vendor_files": false
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "/target_directory/",
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "packages": [
+                    "pimple/pimple"
+                  ],
+                  "exclude_prefix_packages": [
+                    "psr/container"
+                  ],
+                  "override_autoload": {
+                    "clancats/container": {
+                      "classmap": [
+                        "src/"
+                      ]
+                    }
+                  },
+                  "delete_vendor_files": false
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath = 'project/composer.json';
@@ -114,36 +115,36 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "/target_directory/",
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "packages": [
-        "pimple/pimple"
-      ],
-      "exclude_prefix_packages": [
-        "psr/container"
-      ],
-      "override_autoload": {
-        "clancats/container": {
-          "classmap": [
-            "src/"
-          ]
-        }
-      },
-      "delete_vendor_files": false,
-      "unexpected_key": "here"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "/target_directory/",
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "packages": [
+                    "pimple/pimple"
+                  ],
+                  "exclude_prefix_packages": [
+                    "psr/container"
+                  ],
+                  "override_autoload": {
+                    "clancats/container": {
+                      "classmap": [
+                        "src/"
+                      ]
+                    }
+                  },
+                  "delete_vendor_files": false,
+                  "unexpected_key": "here"
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -174,35 +175,35 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "exclude_prefix_packages": [
-        "psr/container"
-      ],
-      "override_autoload": {
-        "clancats/container": {
-          "classmap": [
-            "src/"
-          ]
-        }
-      },
-      "delete_vendor_files": false,
-      "unexpected_key": "here"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "exclude_prefix_packages": [
+                    "psr/container"
+                  ],
+                  "override_autoload": {
+                    "clancats/container": {
+                      "classmap": [
+                        "src/"
+                      ]
+                    }
+                  },
+                  "delete_vendor_files": false,
+                  "unexpected_key": "here"
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
-        $composerJsonPath = $projectDir .'/composer.json';
+        $composerJsonPath = $projectDir . '/composer.json';
         $this->getFileSystem()->write($composerJsonPath, $composerJson);
 
         $composer = (new Factory())->createComposer(
@@ -227,20 +228,20 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  },
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              },
 
-  "autoload": {
-    "psr-4": {
-      "BrianHenryIE\\TestStrauss\\": "src"
-    }
-  }
-}
-EOD;
+              "autoload": {
+                "psr-4": {
+                  "BrianHenryIE\\TestStrauss\\": "src"
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -262,20 +263,20 @@ EOD;
     public function testDefaultNamespacePrefixFromAutoloaderPsr0(): void
     {
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  },
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              },
 
-  "autoload": {
-    "psr-0": {
-      "BrianHenryIE\\TestStrauss\\": "lib/"
-    }
-  }
-}
-EOD;
+              "autoload": {
+                "psr-0": {
+                  "BrianHenryIE\\TestStrauss\\": "lib/"
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -300,14 +301,14 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/teststrauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/teststrauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -330,20 +331,20 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  },
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              },
 
-  "autoload": {
-    "psr-4": {
-      "BrianHenryIE\\TestStrauss\\": "src"
-    }
-  }
-}
-EOD;
+              "autoload": {
+                "psr-4": {
+                  "BrianHenryIE\\TestStrauss\\": "src"
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -366,20 +367,20 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  },
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              },
 
-  "autoload": {
-    "psr-0": {
-      "BrianHenryIE\\TestStrauss\\": "lib/"
-    }
-  }
-}
-EOD;
+              "autoload": {
+                "psr-0": {
+                  "BrianHenryIE\\TestStrauss\\": "lib/"
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -404,15 +405,15 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  }
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              }
 
-}
-EOD;
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -434,36 +435,36 @@ EOD;
     public function testGetPackagesFromConfig(): void
     {
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "target_directory": "/target_directory/",
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "packages": [
-        "pimple/pimple"
-      ],
-      "exclude_prefix_packages": [
-        "psr/container"
-      ],
-      "override_autoload": {
-        "clancats/container": {
-          "classmap": [
-            "src/"
-          ]
-        }
-      },
-      "delete_vendor_files": false
-    }
-  }
-}
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "target_directory": "/target_directory/",
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "packages": [
+                    "pimple/pimple"
+                  ],
+                  "exclude_prefix_packages": [
+                    "psr/container"
+                  ],
+                  "override_autoload": {
+                    "clancats/container": {
+                      "classmap": [
+                        "src/"
+                      ]
+                    }
+                  },
+                  "delete_vendor_files": false
+                }
+              }
+            }
 
-EOD;
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -485,19 +486,19 @@ EOD;
         $this->markTestIncomplete('Currently needs a reflectable property in the target object');
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "extra": {
-    "strauss": {
-      "exclude_prefix_packages": [
-        "psr/container"
-      ]
-    }
-  }
-}
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "extra": {
+                "strauss": {
+                  "exclude_prefix_packages": [
+                    "psr/container"
+                  ]
+                }
+              }
+            }
 
-EOD;
+            EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         $this->getFileSystem()->write($tmpfname, $composerJson);
 
@@ -513,21 +514,21 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "extra": {
-    "strauss": {
-        "exclude_from_prefix": {
-            "packages": [
-                "psr/container"
-            ]
-        }
-    }
-  }
-}
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "extra": {
+                "strauss": {
+                    "exclude_from_prefix": {
+                        "packages": [
+                            "psr/container"
+                        ]
+                    }
+                }
+              }
+            }
 
-EOD;
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -548,12 +549,12 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0"
-}
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0"
+            }
 
-EOD;
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -579,19 +580,19 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "extra": {
-    "strauss": {
-        "exclude_from_prefix": {
-            "packages": ["yahnis-elsts/plugin-update-checker","erusev/parsedown"]
-        }
-    }
-  }
-}
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "extra": {
+                "strauss": {
+                    "exclude_from_prefix": {
+                        "packages": ["yahnis-elsts/plugin-update-checker","erusev/parsedown"]
+                    }
+                }
+              }
+            }
 
-EOD;
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -615,32 +616,32 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "name": "brianhenryie/strauss-config-test",
-  "version": "1.0.0",
-  "require": {
-    "league/container": "*"
-  },
-  "extra": {
-    "strauss": {
-      "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-      "classmap_prefix": "BrianHenryIE_Strauss_",
-      "exclude_prefix_packages": [
-        "psr/container"
-      ],
-      "override_autoload": {
-        "clancats/container": {
-          "classmap": [
-            "src/"
-          ]
-        }
-      },
-      "delete_vendor_files": false,
-      "unexpected_key": "here"
-    }
-  }
-}
-EOD;
+            {
+              "name": "brianhenryie/strauss-config-test",
+              "version": "1.0.0",
+              "require": {
+                "league/container": "*"
+              },
+              "extra": {
+                "strauss": {
+                  "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+                  "classmap_prefix": "BrianHenryIE_Strauss_",
+                  "exclude_prefix_packages": [
+                    "psr/container"
+                  ],
+                  "override_autoload": {
+                    "clancats/container": {
+                      "classmap": [
+                        "src/"
+                      ]
+                    }
+                  },
+                  "delete_vendor_files": false,
+                  "unexpected_key": "here"
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -663,30 +664,30 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "extra": {
-    "mozart": {
-      "dep_namespace": "My_Mozart_Config\\",
-      "dep_directory": "/dep_directory/",
-      "classmap_prefix": "My_Mozart_Config_",
-      "classmap_directory": "/classmap_directory/",
-      "packages": [
-        "pimple/pimple"
-      ],
-      "exclude_packages": [
-        "psr/container"
-      ],
-      "override_autoload": {
-        "clancats/container": {
-          "classmap": [
-            "src/"
-          ]
-        }
-      }
-    }
-  }
-}
-EOD;
+            {
+              "extra": {
+                "mozart": {
+                  "dep_namespace": "My_Mozart_Config\\",
+                  "dep_directory": "/dep_directory/",
+                  "classmap_prefix": "My_Mozart_Config_",
+                  "classmap_directory": "/classmap_directory/",
+                  "packages": [
+                    "pimple/pimple"
+                  ],
+                  "exclude_packages": [
+                    "psr/container"
+                  ],
+                  "override_autoload": {
+                    "clancats/container": {
+                      "classmap": [
+                        "src/"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -730,14 +731,14 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
-  "extra": {
-    "mozart": {
-      "dep_namespace": "My_Mozart_Config\\"
-    }
-  }
-}
-EOD;
+            {
+              "extra": {
+                "mozart": {
+                  "dep_namespace": "My_Mozart_Config\\"
+                }
+              }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -757,14 +758,14 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -789,15 +790,15 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "include_modified_date": false
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "include_modified_date": false
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -818,14 +819,14 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -846,15 +847,15 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "include_author": false
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "include_author": false
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -874,15 +875,15 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "delete_vendor_packages": true
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "delete_vendor_packages": true
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -903,16 +904,16 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "delete_vendor_packages": true,
-   "update_call_sites": true
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "delete_vendor_packages": true,
+               "update_call_sites": true
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -932,16 +933,16 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "delete_vendor_packages": true,
-   "update_call_sites": false
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "delete_vendor_packages": true,
+               "update_call_sites": false
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -963,16 +964,16 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "delete_vendor_packages": true,
-   "update_call_sites": [ "src", "templates" ]
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "delete_vendor_packages": true,
+               "update_call_sites": [ "src", "templates" ]
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -994,16 +995,16 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "delete_vendor_packages": true,
-   "update_call_sites": false
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "delete_vendor_packages": true,
+               "update_call_sites": false
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -1026,16 +1027,16 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "delete_vendor_packages": true,
-   "update_call_sites": true
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "delete_vendor_packages": true,
+               "update_call_sites": true
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -1060,16 +1061,16 @@ EOD;
     {
 
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "delete_vendor_packages": true,
-   "update_call_sites": false
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "delete_vendor_packages": true,
+               "update_call_sites": false
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -1092,15 +1093,15 @@ EOD;
     public function test_functions_prefix(): void
     {
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "functions_prefix": "brianhenryie_strauss_"
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "functions_prefix": "brianhenryie_strauss_"
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -1121,15 +1122,15 @@ EOD;
     public function test_functions_prefix_disabled(): void
     {
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "functions_prefix": false
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "functions_prefix": false
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -1151,15 +1152,15 @@ EOD;
     public function test_functions_not_set(): void
     {
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "classmap_prefix": "brianhenryie_strauss_function_prefix_not_set_"
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "classmap_prefix": "brianhenryie_strauss_function_prefix_not_set_"
+              }
+             }
+            }
+            EOD;
 
         $projectDir = 'project';
         $composerJsonPath =  $projectDir . '/composer.json';
@@ -1180,14 +1181,14 @@ EOD;
     public function testConstantPrefixIsMappedFromComposerExtra(): void
     {
         $composerJson = <<<'EOD'
-    {
-     "extra":{
-      "strauss": {
-       "constant_prefix": "ST_TEST_"
-      }
-     }
-    }
-    EOD;
+            {
+             "extra":{
+              "strauss": {
+               "constant_prefix": "ST_TEST_"
+              }
+             }
+            }
+            EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         file_put_contents($tmpfname, $composerJson);
 
@@ -1203,14 +1204,14 @@ EOD;
     public function test_optimize_autoloader_default_true(): void
     {
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\"
+              }
+             }
+            }
+            EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
             file_put_contents($tmpfname, $composerJson);
@@ -1225,15 +1226,15 @@ EOD;
     public function test_optimize_autoloader_false(): void
     {
         $composerJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
-   "optimize_autoloader": false
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\TestStrauss\\",
+               "optimize_autoloader": false
+              }
+             }
+            }
+            EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
             file_put_contents($tmpfname, $composerJson);
@@ -1272,15 +1273,15 @@ EOD;
     public function test_parallel(string $parallelJson, ?int $expected): void
     {
         $composerJson = <<<EOD
-{
- "extra":{
-  "strauss": {
-   $parallelJson
-   "namespace_prefix": "BrianHenryIE\\\\TestStrauss\\\\"
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               $parallelJson
+               "namespace_prefix": "BrianHenryIE\\\\TestStrauss\\\\"
+              }
+             }
+            }
+            EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
             file_put_contents($tmpfname, $composerJson);
@@ -1323,15 +1324,15 @@ EOD;
     public function test_parallel_cli(string $parallelJson, string $cli, ?int $expected): void
     {
         $composerJson = <<<EOD
-{
- "extra":{
-  "strauss": {
-   $parallelJson
-   "namespace_prefix": "BrianHenryIE\\\\TestStrauss\\\\"
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               $parallelJson
+               "namespace_prefix": "BrianHenryIE\\\\TestStrauss\\\\"
+              }
+             }
+            }
+            EOD;
         // As {@see \BrianHenryIE\Strauss\Console\Commands\DependenciesCommand::configure()} defines it.
         $inputDefinition = new \Symfony\Component\Console\Input\InputDefinition();
         $inputDefinition->addOption(new InputOption('parallel', null, InputOption::VALUE_OPTIONAL, '', false));
@@ -1352,14 +1353,14 @@ EOD;
     public function test_exclude_git_files_default_true(): void
     {
         $composerExtraStraussJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\"
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\Strauss\\"
+              }
+             }
+            }
+            EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
             file_put_contents($tmpfname, $composerExtraStraussJson);
@@ -1374,15 +1375,15 @@ EOD;
     public function test_exclude_git_files_false(): void
     {
         $composerExtraStraussJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
-   "exclude_git_files": false
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\Strauss\\",
+               "exclude_git_files": false
+              }
+             }
+            }
+            EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
             file_put_contents($tmpfname, $composerExtraStraussJson);
@@ -1397,14 +1398,14 @@ EOD;
     public function test_exclude_from_string_rename_default_empty(): void
     {
         $composerExtraStraussJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\"
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\Strauss\\"
+              }
+             }
+            }
+            EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
             file_put_contents($tmpfname, $composerExtraStraussJson);
@@ -1419,17 +1420,17 @@ EOD;
     public function test_exclude_from_string_rename_functions(): void
     {
         $composerExtraStraussJson = <<<'EOD'
-{
- "extra":{
-  "strauss": {
-   "namespace_prefix": "BrianHenryIE\\Strauss\\",
-   "exclude_from_string_rename": {
-     "functions": [ "value", "when" ]
-   }
-  }
- }
-}
-EOD;
+            {
+             "extra":{
+              "strauss": {
+               "namespace_prefix": "BrianHenryIE\\Strauss\\",
+               "exclude_from_string_rename": {
+                 "functions": [ "value", "when" ]
+               }
+              }
+             }
+            }
+            EOD;
         $tmpfname = tempnam(sys_get_temp_dir(), 'strauss-test-');
         try {
             file_put_contents($tmpfname, $composerExtraStraussJson);
