@@ -50,29 +50,11 @@ class FileSymbolScanner
 {
     use LoggerAwareTrait;
 
-    /**
-     * @var array<class-string<DiscoveredSymbol>,string>
-     */
-    private const SYMBOL_LOG_TYPES = [
-        ClassSymbol::class => 'class',
-        ConstantSymbol::class => 'constant',
-        EnumSymbol::class => 'enum',
-        FunctionSymbol::class => 'function',
-        InterfaceSymbol::class => 'interface',
-        NamespaceSymbol::class => 'namespace',
-        TraitSymbol::class => 'trait',
-    ];
-
     protected DiscoveredSymbols $discoveredSymbols;
 
     protected FileSystem $filesystem;
 
     protected FileSymbolScannerConfigInterface $config;
-
-    /**
-     * @var string[]
-     */
-    protected array $builtIns = [];
 
     protected ?PhpFileAnalyzer $analyzer = null;
 
@@ -87,11 +69,6 @@ class FileSymbolScanner
      * @var array<string, array{0:?FileCodeMap, 1:?string}>
      */
     protected array $parallelResults = [];
-
-    /**
-     * @var array<string,bool>
-     */
-    protected array $loggedSymbols = [];
 
     /**
      * @var array<string,bool>
@@ -125,7 +102,7 @@ class FileSymbolScanner
 
     protected function add(DiscoveredSymbol $symbol, ?FileBase $file = null): void
     {
-        if (in_array($symbol->getOriginalFqdnName(), $this->getBuiltIns())) {
+        if ($this->isBuiltInSymbol($symbol->getOriginalFqdnName())) {
             $this->logger->debug(
                 'Skipping built-in symbol {symbolName}, possible a polyfill.',
                 [
@@ -141,17 +118,9 @@ class FileSymbolScanner
             $file->getDependency()->addDiscoveredSymbol($symbol);
         }
 
-        $level = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? 'debug' : 'info';
-        $newText = in_array($symbol->getOriginalFqdnName(), $this->loggedSymbols) ? '' : 'new ';
-
-        $this->loggedSymbols[] = $symbol->getOriginalFqdnName();
-        //        $this->loggedSymbols[$symbol->getOriginalFqdnName()] = true;
-
-        $this->logger->log(
-            $level,
+        $this->logger->info(
             sprintf(
-                "Found %s%s:::%s",
-                $newText,
+                "Found new %s:::%s",
                 // From `BrianHenryIE\Strauss\Types\TraitSymbol` -> `trait`
                 strtolower(str_replace('Symbol', '', array_reverse(explode('\\', get_class($symbol)))[0])),
                 $symbol->getOriginalFqdnName()
@@ -174,7 +143,7 @@ class FileSymbolScanner
         foreach ($files->getFiles() as $file) {
             if (
                 $file instanceof FileWithDependency
-                && !in_array($file->getDependency()->getPackageName(), array_keys($this->config->getPackagesToPrefix()))
+                && !isset($packagesToPrefixLookup[$file->getDependency()->getPackageName()])
             ) {
                 /**
                  * We will not prefix symbols found in this file because it is not in a default or listed package.
@@ -182,15 +151,6 @@ class FileSymbolScanner
                  * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
                  */
                 $file->setDoPrefix(false);
-                //                    continue;
-            }
-
-            if (
-                $file instanceof FileWithDependency
-                && !isset($packagesToPrefixLookup[$file->getDependency()->getPackageName()])
-            ) {
-                $doPrefix = false;
-                $file->setDoPrefix($doPrefix);
             }
 
             $relativeFilePath
@@ -334,7 +294,7 @@ class FileSymbolScanner
     protected function recordDefinitions(FileCodeMap $codeMap, FileBase $file, ?ComposerPackage $package = null): void
     {
         foreach ($codeMap->getNamespaceNames() as $namespaceName) {
-            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file, $package);
+            $namespaceSymbol = $this->addDiscoveredNamespaceChange($namespaceName, $file);
 
             $definitions = array_filter(
                 $codeMap->getDefinitions(),
@@ -492,7 +452,7 @@ class FileSymbolScanner
         return $classSymbol;
     }
 
-    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file, ?ComposerPackage $package = null): NamespaceSymbol
+    protected function addDiscoveredNamespaceChange(string $fqdnNamespace, FileBase $file): NamespaceSymbol
     {
         $namespaceObj = $this->discoveredSymbols->getNamespace($fqdnNamespace);
         if (is_null($namespaceObj)) {
@@ -507,7 +467,8 @@ class FileSymbolScanner
     }
 
     /**
-     * Get a list of PHP built-in classes etc. so they are not prefixed.
+     * Load the file containing the built-in PHP classes etc. so they are not prefixed, and flatten it to a lookup of
+     * their names.
      *
      * Polyfilled classes were being prefixed, but the polyfills are only active when the PHP version is below X,
      * so calls to those prefixed polyfilled classnames would fail on newer PHP versions.
@@ -525,20 +486,6 @@ class FileSymbolScanner
      *   }
      * );
      * ```
-     *
-     * @return string[]
-     */
-    protected function getBuiltIns(): array
-    {
-        if (empty($this->builtIns)) {
-            $this->loadBuiltIns();
-        }
-
-        return $this->builtIns;
-    }
-
-    /**
-     * Load the file containing the built-in PHP classes etc. and flatten to a single array of strings and store.
      */
     protected function loadBuiltIns(): void
     {
@@ -556,8 +503,7 @@ class FileSymbolScanner
             }
         );
 
-        $this->builtIns = $flatArray;
-        $this->builtInsLookup = array_fill_keys($this->builtIns, true);
+        $this->builtInsLookup = array_fill_keys($flatArray, true);
     }
 
     protected function isBuiltInSymbol(string $symbolName): bool

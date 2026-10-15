@@ -1178,4 +1178,63 @@ class FileSymbolScannerTest extends TestCase
         $this->assertSame('int', $globalEnum->getBackingType());
         $this->assertTrue($globalEnum->isGlobal());
     }
+
+    /**
+     * A symbol defined in several files is logged once, when it is first found.
+     *
+     * @covers ::add
+     */
+    public function test_symbol_in_two_files_logged_once(): void
+    {
+        $filesystem = Mockery::mock(FileSystem::class);
+        $filesystem->shouldReceive('read')->andReturn("<?php\nnamespace Acme;\n");
+        $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
+
+        $config = $this->createMock(StraussConfig::class);
+        $config->method('getPackagesToPrefix')->willReturn([]);
+
+        $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([
+            new File('/a/one.php', 'one.php', '/a/one.php'),
+            new File('/a/two.php', 'two.php', '/a/two.php'),
+        ]);
+
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
+
+        $infos = array_column($this->getTestLogger()->recordsByLevel['info'], 'message');
+
+        $this->assertSame(1, count(array_keys($infos, 'Found new namespace:::Acme')));
+        $namespace = $discoveredSymbols->getNamespace('Acme');
+        $this->assertNotNull($namespace);
+        $this->assertCount(2, $namespace->getSourceFiles());
+    }
+
+    /**
+     * PHP built-in symbols, e.g. a polyfilled interface, are not recorded.
+     *
+     * @covers ::add
+     */
+    public function test_built_in_interface_not_recorded(): void
+    {
+        $filesystem = Mockery::mock(FileSystem::class);
+        $filesystem->shouldReceive('read')->andReturn("<?php\ninterface Stringable {}\ninterface NotBuiltIn {}\n");
+        $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
+
+        $config = $this->createMock(StraussConfig::class);
+        $config->method('getPackagesToPrefix')->willReturn([]);
+
+        $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([
+            new File('/a/polyfill.php', 'polyfill.php', '/a/polyfill.php'),
+        ]);
+
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
+
+        $this->assertNull($discoveredSymbols->getInterface('Stringable'));
+        $this->assertNotNull($discoveredSymbols->getInterface('NotBuiltIn'));
+    }
 }
