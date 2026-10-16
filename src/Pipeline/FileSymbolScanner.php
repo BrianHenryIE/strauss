@@ -414,19 +414,19 @@ class FileSymbolScanner
     }
 
     /**
-     * @param string               $fqdnClassname The class's fully qualified name, without leading backslash.
-     * @param bool                 $isAbstract    Whether the class is declared `abstract`.
-     * @param FileBase             $file          The file the class is defined in.
-     * @param ?string              $extends       FQDN of the parent class, without leading backslash; null if none.
-     * @param NamespaceSymbol|null $namespace     The namespace the class is declared in.
-     * @param string[]             $interfaces    FQDNs of the implemented interfaces, without leading backslashes.
+     * @param string          $fqdnClassname The class's fully qualified name, without leading backslash.
+     * @param bool            $isAbstract    Whether the class is declared `abstract`.
+     * @param FileBase        $file          The file the class is defined in.
+     * @param ?string         $extends       FQDN of the parent class, without leading backslash; null if none.
+     * @param NamespaceSymbol $namespace     The namespace the class is declared in.
+     * @param string[]        $interfaces    FQDNs of the implemented interfaces, without leading backslashes.
      */
     protected function addDiscoveredClassChange(
         string $fqdnClassname,
         bool $isAbstract,
         FileBase $file,
         ?string $extends,
-        ?NamespaceSymbol $namespace,
+        NamespaceSymbol $namespace,
         array $interfaces
     ): ?ClassSymbol {
         // TODO: This should be included but marked not to prefix.
@@ -491,19 +491,19 @@ class FileSymbolScanner
     {
         $builtins = include __DIR__ . '/FileSymbol/builtinsymbols.php';
 
-        $flatArray = [];
+        if (!is_array($builtins)) {
+            return;
+        }
+
+        // `array_walk_recursive()` only calls back with leaf values, i.e. the symbol names.
         array_walk_recursive(
             $builtins,
-            function ($array) use (&$flatArray) {
-                if (is_array($array)) {
-                    $flatArray = array_merge($flatArray, array_values($array));
-                } else {
-                    $flatArray[] = $array;
+            function ($symbolName): void {
+                if (is_string($symbolName)) {
+                    $this->builtInsLookup[$symbolName] = true;
                 }
             }
         );
-
-        $this->builtInsLookup = array_fill_keys($flatArray, true);
     }
 
     protected function isBuiltInSymbol(string $symbolName): bool

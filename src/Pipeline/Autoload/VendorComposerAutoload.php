@@ -200,6 +200,9 @@ class VendorComposerAutoload
             $this->logger->error("Parse error: {$error->getMessage()}");
             return $code;
         }
+        if (is_null($ast)) {
+            return $code;
+        }
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(
@@ -302,13 +305,16 @@ class VendorComposerAutoload
             $this->logger->error("Parse error: {$error->getMessage()}");
             return $code;
         }
+        if (is_null($ast)) {
+            return $code;
+        }
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(
             new class ($targetDirAutoload) extends NodeVisitorAbstract {
                 protected bool $added = false;
-                protected ?string $targetDirectoryAutoload;
-                public function __construct(?string $targetDirectoryAutoload)
+                protected string $targetDirectoryAutoload;
+                public function __construct(string $targetDirectoryAutoload)
                 {
                     $this->targetDirectoryAutoload = $targetDirectoryAutoload;
                 }

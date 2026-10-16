@@ -1237,4 +1237,33 @@ class FileSymbolScannerTest extends TestCase
         $this->assertNull($discoveredSymbols->getInterface('Stringable'));
         $this->assertNotNull($discoveredSymbols->getInterface('NotBuiltIn'));
     }
+
+    /**
+     * PHP built-in classes, e.g. a polyfilled exception, are not recorded.
+     *
+     * @covers ::addDiscoveredClassChange
+     * @covers ::isBuiltInSymbol
+     * @covers ::loadBuiltIns
+     */
+    public function test_built_in_class_not_recorded(): void
+    {
+        $filesystem = Mockery::mock(FileSystem::class);
+        $filesystem->shouldReceive('read')->andReturn("<?php\nclass ArgumentCountError extends TypeError {}\nclass NotBuiltIn {}\n");
+        $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
+
+        $config = $this->createMock(StraussConfig::class);
+        $config->method('getPackagesToPrefix')->willReturn([]);
+
+        $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
+
+        $discoveredFiles = Mockery::mock(DiscoveredFiles::class);
+        $discoveredFiles->shouldReceive('getFiles')->andReturn([
+            new File('/a/polyfill.php', 'polyfill.php', '/a/polyfill.php'),
+        ]);
+
+        $discoveredSymbols = $sut->findInFiles($discoveredFiles);
+
+        $this->assertNull($discoveredSymbols->getClass('ArgumentCountError'));
+        $this->assertNotNull($discoveredSymbols->getClass('NotBuiltIn'));
+    }
 }
