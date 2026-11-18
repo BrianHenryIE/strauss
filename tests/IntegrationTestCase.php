@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Console\Commands\DumpAutoloadCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\PrefixComposerAutoloadFilesCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
+use BrianHenryIE\Strauss\Console\Commands\SymbolsCommand;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer;
 use BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter;
@@ -172,6 +173,10 @@ class IntegrationTestCase extends TestCase
             case 'dump-autoload':
                 $strauss = new DumpAutoloadCommand();
                 unset($paramsSplit[0]);
+                break;
+            case 'symbols':
+                // Keep the command name: the Application's definition adds a `command` argument before `paths`.
+                $strauss = new SymbolsCommand();
                 break;
             case 'prefix-vendor-autoload':
                 $strauss = new PrefixComposerAutoloadFilesCommand();
