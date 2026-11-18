@@ -20,7 +20,7 @@ use Mockery\MockInterface;
 /**
  * @coversDefaultClass \BrianHenryIE\Strauss\Types\DiscoveredSymbols
  */
-class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
+class DiscoveredSymbolsInverseReplacementSymbolsTest extends TestCase
 {
     /**
      * @return ComposerPackage&MockInterface
@@ -61,7 +61,7 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
         $namespace = new NamespaceSymbol('Prefix\Psr\Log', $file);
         $namespace->setDoRename(true);
         $namespace->setLocalReplacement('Prefix\Psr\Log');
-        $namespace->setUnprefixedFqdnName('Psr\Log');
+        $namespace->setInverseReplacement('Psr\Log');
 
         $loggerInterface = new InterfaceSymbol('Prefix\Psr\Log\LoggerInterface', $file, $namespace);
         $loggerInterface->setDoRename(true);
@@ -91,14 +91,14 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
     /**
      * When the namespace before renaming was not discovered, e.g. from the package's `autoload` key, it is created.
      *
-     * @covers ::getUnprefixedSymbols
-     * @covers ::getUnprefixedNamespace
+     * @covers ::getInverseReplacementSymbols
+     * @covers ::getInverseReplacementNamespace
      */
-    public function test_unprefixed_symbols_are_renamed_to_the_current_names(): void
+    public function test_inverse_replacement_symbols_are_renamed_to_the_current_names(): void
     {
         [$sut] = $this->getAlreadyPrefixedPsrLog();
 
-        $result = $sut->getUnprefixedSymbols(['psr/log']);
+        $result = $sut->getInverseReplacementSymbols(['psr/log']);
 
         self::assertSame(
             [
@@ -119,15 +119,15 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
      * The copies are only for planning: neither they nor their namespaces are added to the files' symbols, and the
      * discovered symbols are unchanged.
      *
-     * @covers ::getUnprefixedSymbols
-     * @covers ::getUnprefixedNamespace
+     * @covers ::getInverseReplacementSymbols
+     * @covers ::getInverseReplacementNamespace
      */
     public function test_discovered_symbols_and_files_are_unchanged(): void
     {
         [$sut, $namespace, $file] = $this->getAlreadyPrefixedPsrLog();
         $fileSymbolsBefore = $file->getDiscoveredSymbols();
 
-        $sut->getUnprefixedSymbols(['psr/log']);
+        $sut->getInverseReplacementSymbols(['psr/log']);
 
         self::assertSame($fileSymbolsBefore, $file->getDiscoveredSymbols());
         self::assertNull($sut->getNamespace('Psr\Log'));
@@ -139,9 +139,9 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
     /**
      * E.g. the namespace from the package's `autoload.psr-4` key, renamed to the current namespace.
      *
-     * @covers ::getUnprefixedNamespace
+     * @covers ::getInverseReplacementNamespace
      */
-    public function test_discovered_unprefixed_namespace_is_reused(): void
+    public function test_discovered_inverse_replacement_namespace_is_reused(): void
     {
         [$sut] = $this->getAlreadyPrefixedPsrLog();
 
@@ -150,7 +150,7 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
         $autoloadNamespace->setLocalReplacement('Prefix\Psr\Log');
         $sut->add($autoloadNamespace);
 
-        $result = $sut->getUnprefixedSymbols(['psr/log']);
+        $result = $sut->getInverseReplacementSymbols(['psr/log']);
 
         self::assertCount(2, $result);
         foreach ($result as $symbol) {
@@ -160,7 +160,7 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
     }
 
     /**
-     * @covers ::getUnprefixedNamespace
+     * @covers ::getInverseReplacementNamespace
      */
     public function test_discovered_namespace_renamed_to_something_else_is_left_alone(): void
     {
@@ -171,15 +171,15 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
         $otherNamespace->setLocalReplacement('Other\Psr\Log');
         $sut->add($otherNamespace);
 
-        self::assertSame([], $sut->getUnprefixedSymbols(['psr/log']));
+        self::assertSame([], $sut->getInverseReplacementSymbols(['psr/log']));
     }
 
     /**
-     * E.g. the package was reinstalled, so its unprefixed symbols were discovered too.
+     * E.g. the package was reinstalled, so its symbols with the original names were discovered too.
      *
-     * @covers ::getUnprefixedSymbols
+     * @covers ::getInverseReplacementSymbols
      */
-    public function test_discovered_unprefixed_symbol_is_not_copied(): void
+    public function test_discovered_inverse_replacement_symbol_is_not_copied(): void
     {
         [$sut, , $file] = $this->getAlreadyPrefixedPsrLog();
 
@@ -194,22 +194,22 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
 
         self::assertSame(
             [ClassSymbol::class . ' Psr\Log\NullLogger' => 'Prefix\Psr\Log\NullLogger'],
-            $this->getRenames($sut->getUnprefixedSymbols(['psr/log']))
+            $this->getRenames($sut->getInverseReplacementSymbols(['psr/log']))
         );
     }
 
     /**
-     * @covers ::getUnprefixedSymbols
+     * @covers ::getInverseReplacementSymbols
      */
     public function test_packages_not_being_prefixed_are_ignored(): void
     {
         [$sut] = $this->getAlreadyPrefixedPsrLog('other/package');
 
-        self::assertSame([], $sut->getUnprefixedSymbols(['psr/log']));
+        self::assertSame([], $sut->getInverseReplacementSymbols(['psr/log']));
     }
 
     /**
-     * @covers ::getUnprefixedSymbols
+     * @covers ::getInverseReplacementSymbols
      */
     public function test_symbols_not_to_rename_are_ignored(): void
     {
@@ -219,27 +219,27 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
             $symbol->setDoRename(false);
         }
 
-        self::assertSame([], $sut->getUnprefixedSymbols(['psr/log']));
+        self::assertSame([], $sut->getInverseReplacementSymbols(['psr/log']));
     }
 
     /**
      * Without a name before renaming, e.g. a namespace renamed now, or not prefixing in place.
      *
-     * @covers ::getUnprefixedSymbols
+     * @covers ::getInverseReplacementSymbols
      */
-    public function test_namespace_without_unprefixed_name_is_ignored(): void
+    public function test_namespace_without_inverse_replacement_is_ignored(): void
     {
         [$sut, $namespace] = $this->getAlreadyPrefixedPsrLog();
 
-        $namespace->setUnprefixedFqdnName(null);
+        $namespace->setInverseReplacement(null);
 
-        self::assertSame([], $sut->getUnprefixedSymbols(['psr/log']));
+        self::assertSame([], $sut->getInverseReplacementSymbols(['psr/log']));
     }
 
     /**
      * Each type of namespaced symbol is copied as the same type.
      *
-     * @covers ::getUnprefixedSymbols
+     * @covers ::getInverseReplacementSymbols
      */
     public function test_each_type_is_copied(): void
     {
@@ -256,7 +256,7 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
             $sut->add($symbol);
         }
 
-        $result = $sut->getUnprefixedSymbols(['psr/log']);
+        $result = $sut->getInverseReplacementSymbols(['psr/log']);
 
         self::assertSame(
             [
@@ -276,11 +276,11 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
     }
 
     /**
-     * A namespace within the renamed one gets its own unprefixed namespace, e.g. `Prefix\Psr\Log\Test` was
+     * A namespace within the renamed one gets its own inverse replacement namespace, e.g. `Prefix\Psr\Log\Test` was
      * `Psr\Log\Test`.
      *
-     * @covers ::getUnprefixedSymbols
-     * @covers ::getUnprefixedNamespace
+     * @covers ::getInverseReplacementSymbols
+     * @covers ::getInverseReplacementNamespace
      */
     public function test_sub_namespace(): void
     {
@@ -289,14 +289,14 @@ class DiscoveredSymbolsUnprefixedSymbolsTest extends TestCase
         $subNamespace = new NamespaceSymbol('Prefix\Psr\Log\Test', $file);
         $subNamespace->setDoRename(true);
         $subNamespace->setLocalReplacement('Prefix\Psr\Log\Test');
-        $subNamespace->setUnprefixedFqdnName('Psr\Log\Test');
+        $subNamespace->setInverseReplacement('Psr\Log\Test');
         $sut->add($subNamespace);
 
         $testLogger = new ClassSymbol('Prefix\Psr\Log\Test\TestLogger', $file, $subNamespace);
         $testLogger->setDoRename(true);
         $sut->add($testLogger);
 
-        $renames = $this->getRenames($sut->getUnprefixedSymbols(['psr/log']));
+        $renames = $this->getRenames($sut->getInverseReplacementSymbols(['psr/log']));
 
         self::assertSame('Prefix\Psr\Log\Test\TestLogger', $renames[ClassSymbol::class . ' Psr\Log\Test\TestLogger']);
         self::assertSame('Prefix\Psr\Log\Test', $renames[NamespaceSymbol::class . ' Psr\Log\Test']);

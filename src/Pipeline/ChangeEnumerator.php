@@ -52,7 +52,7 @@ class ChangeEnumerator
             // This line seems redundant.
             if ($symbol instanceof NamespaceSymbol) {
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
-                $unprefixedName = null;
+                $inverseReplacement = null;
 
                 if (
                     in_array(
@@ -97,7 +97,7 @@ class ChangeEnumerator
 
                     // Already prefixed, e.g. by an earlier run in place.
                     if (str_starts_with($symbol->getOriginalFqdnName(), trim($namespacePrefix, '\\') . '\\')) {
-                        $unprefixedName = $strippedSymbol;
+                        $inverseReplacement = $strippedSymbol;
                     }
                     unset($stripPattern, $strippedSymbol);
                 }
@@ -121,8 +121,8 @@ class ChangeEnumerator
 
                 // When prefixing in place, a namespace renamed by an earlier run and not found in its package's
                 // `autoload` key, e.g. only autoloaded by `classmap`: {@see self::keepAlreadyRenamedNamespaces()}.
-                if (!is_null($unprefixedName) && $this->config->isTargetDirectoryVendor()) {
-                    $symbol->setUnprefixedFqdnName($unprefixedName);
+                if (!is_null($inverseReplacement) && $this->config->isTargetDirectoryVendor()) {
+                    $symbol->setInverseReplacement($inverseReplacement);
                 }
             }
         }
@@ -254,7 +254,7 @@ class ChangeEnumerator
      *
      * Their names before renaming, found by renaming forwards, so it works with patterns whose back-references can't
      * be reversed, are kept, so uses of them, e.g. in packages installed since, are updated: e.g. `Acme\Log\Test` was
-     * `Psr\Log\Test`. See {@see DiscoveredSymbols::getUnprefixedSymbols()}.
+     * `Psr\Log\Test`. See {@see DiscoveredSymbols::getInverseReplacementSymbols()}.
      *
      * @param DiscoveredSymbols $discoveredSymbols All discovered symbols, after the namespaces' replacements are set.
      *
@@ -289,7 +289,7 @@ class ChangeEnumerator
                     }
                     $namespace->setLocalReplacement($namespaceName);
                     if ($this->config->isTargetDirectoryVendor()) {
-                        $namespace->setUnprefixedFqdnName(
+                        $namespace->setInverseReplacement(
                             $originalNamespace->getOriginalFqdnName() . substr($namespaceName, strlen($replacementName))
                         );
                     }

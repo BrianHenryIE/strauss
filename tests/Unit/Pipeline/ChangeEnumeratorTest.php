@@ -265,10 +265,10 @@ class ChangeEnumeratorTest extends TestCase
         $this->assertSame('Default\Prefix\Other\Package', $otherNamespace->getReplacementFqdnName());
 
         // Their names before renaming, so uses of those are updated.
-        $this->assertNull($autoloadNamespace->getUnprefixedFqdnName());
-        $this->assertSame('Psr\Log', $renamedNamespace->getUnprefixedFqdnName());
-        $this->assertSame('Psr\Log\Test', $renamedSubNamespace->getUnprefixedFqdnName());
-        $this->assertNull($otherNamespace->getUnprefixedFqdnName());
+        $this->assertNull($autoloadNamespace->getInverseReplacement());
+        $this->assertSame('Psr\Log', $renamedNamespace->getInverseReplacement());
+        $this->assertSame('Psr\Log\Test', $renamedSubNamespace->getInverseReplacement());
+        $this->assertNull($otherNamespace->getInverseReplacement());
     }
 
     /**
@@ -320,7 +320,7 @@ class ChangeEnumeratorTest extends TestCase
      * @covers ::determineReplacements
      * @covers ::keepAlreadyRenamedNamespaces
      */
-    public function testUnprefixedNameWithBackReferencePattern(): void
+    public function testInverseReplacementWithBackReferencePattern(): void
     {
         $sut = new ChangeEnumerator(
             $this->getNamespaceConfig('Default\Prefix', ['~Psr\\\\(.*)~' => 'Acme\\Psr\\\\$1']),
@@ -332,14 +332,14 @@ class ChangeEnumeratorTest extends TestCase
         $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
 
         $this->assertSame('Acme\Psr\Log', $namespaces['Psr\Log']->getReplacementFqdnName());
-        $this->assertNull($namespaces['Psr\Log']->getUnprefixedFqdnName());
+        $this->assertNull($namespaces['Psr\Log']->getInverseReplacement());
 
         // Not `Acme\Psr\Acme\Psr\Log`.
         $this->assertSame('Acme\Psr\Log', $namespaces['Acme\Psr\Log']->getReplacementFqdnName());
-        $this->assertSame('Psr\Log', $namespaces['Acme\Psr\Log']->getUnprefixedFqdnName());
+        $this->assertSame('Psr\Log', $namespaces['Acme\Psr\Log']->getInverseReplacement());
 
         $this->assertSame('Acme\Psr\Log\Test', $namespaces['Acme\Psr\Log\Test']->getReplacementFqdnName());
-        $this->assertSame('Psr\Log\Test', $namespaces['Acme\Psr\Log\Test']->getUnprefixedFqdnName());
+        $this->assertSame('Psr\Log\Test', $namespaces['Acme\Psr\Log\Test']->getInverseReplacement());
     }
 
     /**
@@ -348,7 +348,7 @@ class ChangeEnumeratorTest extends TestCase
      *
      * @covers ::determineReplacements
      */
-    public function testUnprefixedNameByRemovingNamespacePrefix(): void
+    public function testInverseReplacementByRemovingNamespacePrefix(): void
     {
         $sut = new ChangeEnumerator($this->getNamespaceConfig('Prefix\\'), $this->getTestLogger());
 
@@ -357,14 +357,14 @@ class ChangeEnumeratorTest extends TestCase
         $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
 
         $this->assertSame('Prefix\Psr\Log', $namespaces['Prefix\Psr\Log']->getReplacementFqdnName());
-        $this->assertSame('Psr\Log', $namespaces['Prefix\Psr\Log']->getUnprefixedFqdnName());
+        $this->assertSame('Psr\Log', $namespaces['Prefix\Psr\Log']->getInverseReplacement());
 
         // Only begins with the same characters.
-        $this->assertNull($namespaces['PrefixOther\Package']->getUnprefixedFqdnName());
+        $this->assertNull($namespaces['PrefixOther\Package']->getInverseReplacement());
 
         // Being renamed now.
         $this->assertSame('Prefix\Other\Package', $namespaces['Other\Package']->getReplacementFqdnName());
-        $this->assertNull($namespaces['Other\Package']->getUnprefixedFqdnName());
+        $this->assertNull($namespaces['Other\Package']->getInverseReplacement());
     }
 
     /**
@@ -372,7 +372,7 @@ class ChangeEnumeratorTest extends TestCase
      *
      * @covers ::determineReplacements
      */
-    public function testNoUnprefixedNameWhenRenamedByPattern(): void
+    public function testNoInverseReplacementWhenRenamedByPattern(): void
     {
         $sut = new ChangeEnumerator(
             $this->getNamespaceConfig('Prefix', ['~Prefix\\\\Psr~' => 'Other\\Psr']),
@@ -384,7 +384,7 @@ class ChangeEnumeratorTest extends TestCase
         $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
 
         $this->assertSame('Other\Psr\Log', $namespaces['Prefix\Psr\Log']->getReplacementFqdnName());
-        $this->assertNull($namespaces['Prefix\Psr\Log']->getUnprefixedFqdnName());
+        $this->assertNull($namespaces['Prefix\Psr\Log']->getInverseReplacement());
     }
 
     /**
@@ -394,7 +394,7 @@ class ChangeEnumeratorTest extends TestCase
      * @covers ::determineReplacements
      * @covers ::keepAlreadyRenamedNamespaces
      */
-    public function testNoUnprefixedNameWhenTargetDirectoryIsNotVendor(): void
+    public function testNoInverseReplacementWhenTargetDirectoryIsNotVendor(): void
     {
         $sut = new ChangeEnumerator(
             $this->getNamespaceConfig('Prefix', ['~Psr\\\\Log~' => 'Acme\\Log'], false),
@@ -406,7 +406,7 @@ class ChangeEnumeratorTest extends TestCase
         $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
 
         foreach ($namespaces as $namespace) {
-            $this->assertNull($namespace->getUnprefixedFqdnName(), $namespace->getOriginalFqdnName());
+            $this->assertNull($namespace->getInverseReplacement(), $namespace->getOriginalFqdnName());
         }
     }
 }

@@ -458,17 +458,17 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      * an earlier run, which are only needed to plan the changes.
      *
      * @see self::getDiscoveredSymbolsWithComposerRuntime()
-     * @see DiscoveredSymbols::getUnprefixedSymbols()
+     * @see DiscoveredSymbols::getInverseReplacementSymbols()
      */
     protected function getDiscoveredSymbolsForPlanning(): DiscoveredSymbols
     {
         $symbols = $this->getDiscoveredSymbolsWithComposerRuntime();
 
-        $unprefixedSymbols = $this->discoveredSymbols->getUnprefixedSymbols(
+        $inverseReplacementSymbols = $this->discoveredSymbols->getInverseReplacementSymbols(
             array_keys($this->config->getPackagesToPrefix())
         );
 
-        if (0 === count($unprefixedSymbols)) {
+        if (0 === count($inverseReplacementSymbols)) {
             return $symbols;
         }
 
@@ -477,14 +477,14 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $symbols = clone $this->discoveredSymbols;
         }
 
-        foreach ($unprefixedSymbols as $unprefixedSymbol) {
-            $symbols->add($unprefixedSymbol);
-            if ($unprefixedSymbol instanceof NamespacedSymbol) {
+        foreach ($inverseReplacementSymbols as $inverseReplacementSymbol) {
+            $symbols->add($inverseReplacementSymbol);
+            if ($inverseReplacementSymbol instanceof NamespacedSymbol) {
                 $this->logger->info(
                     'Already prefixed: {originalName} will be renamed to {prefixedName}',
                     [
-                        'originalName' => $unprefixedSymbol->getOriginalFqdnName(),
-                        'prefixedName' => $unprefixedSymbol->getReplacementFqdnName(),
+                        'originalName' => $inverseReplacementSymbol->getOriginalFqdnName(),
+                        'prefixedName' => $inverseReplacementSymbol->getReplacementFqdnName(),
                     ]
                 );
             }

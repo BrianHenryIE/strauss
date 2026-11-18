@@ -20,29 +20,29 @@ class NamespacedSymbolTest extends TestCase
     /**
      * Its name before renaming is its namespace's, so only namespaces need it set.
      *
-     * @covers ::getUnprefixedFqdnName
+     * @covers ::getInverseReplacement
      */
-    public function test_unprefixed_name_is_in_the_namespace_unprefixed_name(): void
+    public function test_inverse_replacement_is_in_the_namespace_inverse_replacement(): void
     {
         $namespace = new NamespaceSymbol('Prefix\Psr\Log', $this->getFile());
         $sut = new InterfaceSymbol('Prefix\Psr\Log\LoggerInterface', $this->getFile(), $namespace);
 
-        self::assertNull($sut->getUnprefixedFqdnName());
+        self::assertNull($sut->getInverseReplacement());
 
-        $namespace->setUnprefixedFqdnName('Psr\Log');
+        $namespace->setInverseReplacement('Psr\Log');
 
-        self::assertSame('Psr\Log\LoggerInterface', $sut->getUnprefixedFqdnName());
+        self::assertSame('Psr\Log\LoggerInterface', $sut->getInverseReplacement());
     }
 
     /**
-     * @covers ::getUnprefixedFqdnName
+     * @covers ::getInverseReplacement
      */
-    public function test_global_symbol_has_no_unprefixed_name(): void
+    public function test_global_symbol_has_no_inverse_replacement(): void
     {
         $sut = new ClassSymbol('Prefix_Logger', $this->getFile(), new NamespaceSymbol('\\'));
-        $sut->setUnprefixedFqdnName('Logger');
+        $sut->setInverseReplacement('Logger');
 
-        self::assertNull($sut->getUnprefixedFqdnName());
+        self::assertNull($sut->getInverseReplacement());
     }
 
     /**
@@ -54,23 +54,23 @@ class NamespacedSymbolTest extends TestCase
 
         $namespace = new NamespaceSymbol('Prefix\Psr\Log', $file);
         $namespace->setDoRename(true);
-        $namespace->setUnprefixedFqdnName('Psr\Log');
+        $namespace->setInverseReplacement('Psr\Log');
 
         $sut = new ClassSymbol('Prefix\Psr\Log\NullLogger', $file, $namespace, true);
         $sut->setDoRename(true);
 
-        $unprefixedNamespace = new NamespaceSymbol('Psr\Log');
-        $unprefixedNamespace->setDoRename(true);
-        $unprefixedNamespace->setLocalReplacement('Prefix\Psr\Log');
+        $inverseReplacementNamespace = new NamespaceSymbol('Psr\Log');
+        $inverseReplacementNamespace->setDoRename(true);
+        $inverseReplacementNamespace->setLocalReplacement('Prefix\Psr\Log');
 
-        $copy = $sut->withNamespace($unprefixedNamespace);
+        $copy = $sut->withNamespace($inverseReplacementNamespace);
 
         self::assertSame(ClassSymbol::class, get_class($copy));
         self::assertTrue($copy->isAbstract());
-        self::assertSame($unprefixedNamespace, $copy->getNamespace());
+        self::assertSame($inverseReplacementNamespace, $copy->getNamespace());
         self::assertSame('Psr\Log\NullLogger', $copy->getOriginalFqdnName());
         self::assertSame('Prefix\Psr\Log\NullLogger', $copy->getReplacementFqdnName());
-        self::assertNull($copy->getUnprefixedFqdnName());
+        self::assertNull($copy->getInverseReplacement());
 
         // The original is unchanged, and the copy is not one of the file's symbols.
         self::assertSame($namespace, $sut->getNamespace());

@@ -227,24 +227,24 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      *
      * @return DiscoveredSymbol[] The copies, and the namespaces they are in which were not discovered.
      *
-     * @see DiscoveredSymbol::getUnprefixedFqdnName()
+     * @see DiscoveredSymbol::getInverseReplacement()
      * @see https://github.com/BrianHenryIE/strauss/issues/343
      */
-    public function getUnprefixedSymbols(array $packageNames): array
+    public function getInverseReplacementSymbols(array $packageNames): array
     {
-        $unprefixedSymbols = [];
+        $inverseReplacementSymbols = [];
 
         /**
- * @var array<string, ?NamespaceSymbol> $unprefixedNamespaces By the renamed namespace's name.
+ * @var array<string, ?NamespaceSymbol> $inverseReplacementNamespaces By the renamed namespace's name.
 */
-        $unprefixedNamespaces = [];
+        $inverseReplacementNamespaces = [];
 
         foreach ($this->getNamespacedSymbols()->toArray() as $symbol) {
             if (
                 !($symbol instanceof NamespacedSymbol)
                 || $symbol->isGlobal()
                 || !$symbol->isDoRename()
-                || is_null($symbol->getUnprefixedFqdnName())
+                || is_null($symbol->getInverseReplacement())
                 || !in_array($symbol->getPackageName(), $packageNames, true)
             ) {
                 continue;
@@ -253,29 +253,29 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
             $namespace = $symbol->getNamespace();
             $namespaceName = $namespace->getOriginalFqdnName();
 
-            if (!array_key_exists($namespaceName, $unprefixedNamespaces)) {
-                $unprefixedNamespaces[$namespaceName] = $this->getUnprefixedNamespace($namespace, $symbol);
-                if (!is_null($unprefixedNamespaces[$namespaceName]) && !$this->has($unprefixedNamespaces[$namespaceName])) {
-                    $unprefixedSymbols[] = $unprefixedNamespaces[$namespaceName];
+            if (!array_key_exists($namespaceName, $inverseReplacementNamespaces)) {
+                $inverseReplacementNamespaces[$namespaceName] = $this->getInverseReplacementNamespace($namespace, $symbol);
+                if (!is_null($inverseReplacementNamespaces[$namespaceName]) && !$this->has($inverseReplacementNamespaces[$namespaceName])) {
+                    $inverseReplacementSymbols[] = $inverseReplacementNamespaces[$namespaceName];
                 }
             }
 
-            $unprefixedNamespace = $unprefixedNamespaces[$namespaceName];
-            if (is_null($unprefixedNamespace)) {
+            $inverseReplacementNamespace = $inverseReplacementNamespaces[$namespaceName];
+            if (is_null($inverseReplacementNamespace)) {
                 continue;
             }
 
-            $unprefixedSymbol = $symbol->withNamespace($unprefixedNamespace);
+            $inverseReplacementSymbol = $symbol->withNamespace($inverseReplacementNamespace);
 
             // E.g. the package was reinstalled, so its original symbols were discovered too.
-            if ($this->has($unprefixedSymbol)) {
+            if ($this->has($inverseReplacementSymbol)) {
                 continue;
             }
 
-            $unprefixedSymbols[] = $unprefixedSymbol;
+            $inverseReplacementSymbols[] = $inverseReplacementSymbol;
         }
 
-        return $unprefixedSymbols;
+        return $inverseReplacementSymbols;
     }
 
     /**
@@ -287,11 +287,11 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
      *
      * @return ?NamespaceSymbol Null when the discovered namespace is renamed to something else.
      */
-    protected function getUnprefixedNamespace(NamespaceSymbol $namespace, NamespacedSymbol $symbol): ?NamespaceSymbol
+    protected function getInverseReplacementNamespace(NamespaceSymbol $namespace, NamespacedSymbol $symbol): ?NamespaceSymbol
     {
-        $unprefixedName = (string) $namespace->getUnprefixedFqdnName();
+        $inverseReplacement = (string) $namespace->getInverseReplacement();
 
-        $discoveredNamespace = $this->getNamespace($unprefixedName);
+        $discoveredNamespace = $this->getNamespace($inverseReplacement);
         if (!is_null($discoveredNamespace)) {
             return $discoveredNamespace->getReplacementFqdnName() === $namespace->getOriginalFqdnName()
                 ? $discoveredNamespace
@@ -299,14 +299,14 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         }
 
         // Not added to the file's symbols.
-        $unprefixedNamespace = new NamespaceSymbol($unprefixedName);
+        $inverseReplacementNamespace = new NamespaceSymbol($inverseReplacement);
         foreach ($symbol->getSourceFiles() as $sourceFile) {
-            $unprefixedNamespace->addSourceFile($sourceFile);
+            $inverseReplacementNamespace->addSourceFile($sourceFile);
         }
-        $unprefixedNamespace->setLocalReplacement($namespace->getOriginalFqdnName());
-        $unprefixedNamespace->setDoRename(true);
+        $inverseReplacementNamespace->setLocalReplacement($namespace->getOriginalFqdnName());
+        $inverseReplacementNamespace->setDoRename(true);
 
-        return $unprefixedNamespace;
+        return $inverseReplacementNamespace;
     }
 
     /**

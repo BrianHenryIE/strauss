@@ -61,17 +61,17 @@ class NamespacedSymbol extends DiscoveredSymbol
     /**
      * In its namespace's name before an earlier run renamed it.
      */
-    public function getUnprefixedFqdnName(): ?string
+    public function getInverseReplacement(): ?string
     {
         if ($this->namespace->isGlobal()) {
             return null;
         }
 
-        $unprefixedNamespaceName = $this->namespace->getUnprefixedFqdnName();
+        $inverseReplacementNamespaceName = $this->namespace->getInverseReplacement();
 
-        return is_null($unprefixedNamespaceName)
+        return is_null($inverseReplacementNamespaceName)
             ? null
-            : $unprefixedNamespaceName . '\\' . $this->getOriginalLocalName();
+            : $inverseReplacementNamespaceName . '\\' . $this->getOriginalLocalName();
     }
 
     public function getNamespace(): NamespaceSymbol
@@ -92,7 +92,7 @@ class NamespacedSymbol extends DiscoveredSymbol
         $copy = clone $this;
         $copy->namespace = $namespace;
         $copy->fqdnOriginalSymbol = $namespace->getOriginalFqdnName() . '\\' . $this->getOriginalLocalName();
-        $copy->unprefixedFqdnName = null;
+        $copy->inverseReplacement = null;
 
         return $copy;
     }

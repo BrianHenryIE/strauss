@@ -49,7 +49,7 @@ abstract class DiscoveredSymbol
      *
      * @see https://github.com/BrianHenryIE/strauss/issues/343
      */
-    protected ?string $unprefixedFqdnName = null;
+    protected ?string $inverseReplacement = null;
 
     // Possibly empty.
     protected DependenciesCollection $dependencies;
@@ -161,17 +161,17 @@ abstract class DiscoveredSymbol
     /**
      * @see ChangeEnumerator::keepAlreadyRenamedNamespaces()
      */
-    public function getUnprefixedFqdnName(): ?string
+    public function getInverseReplacement(): ?string
     {
-        return $this->unprefixedFqdnName;
+        return $this->inverseReplacement;
     }
 
     /**
-     * @param ?string $unprefixedFqdnName The name before an earlier run renamed it; null when not already renamed.
+     * @param ?string $inverseReplacement The name before an earlier run renamed it; null when not already renamed.
      */
-    public function setUnprefixedFqdnName(?string $unprefixedFqdnName): void
+    public function setInverseReplacement(?string $inverseReplacement): void
     {
-        $this->unprefixedFqdnName = $unprefixedFqdnName;
+        $this->inverseReplacement = $inverseReplacement;
     }
 
     public function setDoRename(bool $doRename): void
