@@ -215,6 +215,101 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
+     * When prefixing in place, a package renamed by an earlier run and not reinstalled since already declares the
+     * renamed names, e.g. `Acme\Log\LoggerInterface`, while packages installed since use the original ones, e.g.
+     * `Psr\Log\LoggerInterface`. For each symbol to rename with a name from before it was renamed, a copy with that
+     * name, renamed to its current name, so those uses are updated.
+     *
+     * Only for planning changes: the copies are not added to their source files' symbols, so no aliases etc. are
+     * created for them.
+     *
+     * @param string[] $packageNames The packages being prefixed.
+     *
+     * @return DiscoveredSymbol[] The copies, and the namespaces they are in which were not discovered.
+     *
+     * @see DiscoveredSymbol::getUnprefixedFqdnName()
+     * @see https://github.com/BrianHenryIE/strauss/issues/343
+     */
+    public function getUnprefixedSymbols(array $packageNames): array
+    {
+        $unprefixedSymbols = [];
+
+        /**
+ * @var array<string, ?NamespaceSymbol> $unprefixedNamespaces By the renamed namespace's name.
+*/
+        $unprefixedNamespaces = [];
+
+        foreach ($this->getNamespacedSymbols()->toArray() as $symbol) {
+            if (
+                !($symbol instanceof NamespacedSymbol)
+                || $symbol->isGlobal()
+                || !$symbol->isDoRename()
+                || is_null($symbol->getUnprefixedFqdnName())
+                || !in_array($symbol->getPackageName(), $packageNames, true)
+            ) {
+                continue;
+            }
+
+            $namespace = $symbol->getNamespace();
+            $namespaceName = $namespace->getOriginalFqdnName();
+
+            if (!array_key_exists($namespaceName, $unprefixedNamespaces)) {
+                $unprefixedNamespaces[$namespaceName] = $this->getUnprefixedNamespace($namespace, $symbol);
+                if (!is_null($unprefixedNamespaces[$namespaceName]) && !$this->has($unprefixedNamespaces[$namespaceName])) {
+                    $unprefixedSymbols[] = $unprefixedNamespaces[$namespaceName];
+                }
+            }
+
+            $unprefixedNamespace = $unprefixedNamespaces[$namespaceName];
+            if (is_null($unprefixedNamespace)) {
+                continue;
+            }
+
+            $unprefixedSymbol = $symbol->withNamespace($unprefixedNamespace);
+
+            // E.g. the package was reinstalled, so its original symbols were discovered too.
+            if ($this->has($unprefixedSymbol)) {
+                continue;
+            }
+
+            $unprefixedSymbols[] = $unprefixedSymbol;
+        }
+
+        return $unprefixedSymbols;
+    }
+
+    /**
+     * The namespace a renamed namespace had before it was renamed, renamed to it: the discovered one, e.g. from the
+     * package's `autoload` key, or a new one.
+     *
+     * @param NamespaceSymbol  $namespace The renamed namespace, with its name before renaming.
+     * @param NamespacedSymbol $symbol    A symbol in it, whose source file the new namespace is given.
+     *
+     * @return ?NamespaceSymbol Null when the discovered namespace is renamed to something else.
+     */
+    protected function getUnprefixedNamespace(NamespaceSymbol $namespace, NamespacedSymbol $symbol): ?NamespaceSymbol
+    {
+        $unprefixedName = (string) $namespace->getUnprefixedFqdnName();
+
+        $discoveredNamespace = $this->getNamespace($unprefixedName);
+        if (!is_null($discoveredNamespace)) {
+            return $discoveredNamespace->getReplacementFqdnName() === $namespace->getOriginalFqdnName()
+                ? $discoveredNamespace
+                : null;
+        }
+
+        // Not added to the file's symbols.
+        $unprefixedNamespace = new NamespaceSymbol($unprefixedName);
+        foreach ($symbol->getSourceFiles() as $sourceFile) {
+            $unprefixedNamespace->addSourceFile($sourceFile);
+        }
+        $unprefixedNamespace->setLocalReplacement($namespace->getOriginalFqdnName());
+        $unprefixedNamespace->setDoRename(true);
+
+        return $unprefixedNamespace;
+    }
+
+    /**
      * Get all symbols that may have a namespace (i.e. no classes, interfaces etc.).
      */
     public function getNamespacedSymbols(): DiscoveredSymbols

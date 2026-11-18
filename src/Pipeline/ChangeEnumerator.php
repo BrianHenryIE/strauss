@@ -52,6 +52,7 @@ class ChangeEnumerator
             // This line seems redundant.
             if ($symbol instanceof NamespaceSymbol) {
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
+                $unprefixedName = null;
 
                 if (
                     in_array(
@@ -93,6 +94,11 @@ class ChangeEnumerator
                     })();
                     $namespaceReplacementPatterns[ "~(" . preg_quote($namespacePrefix, '~') . '\\\\*)*' . preg_quote($strippedSymbol, '~') . '~' ]
                         = "{$namespacePrefix}\\{$strippedSymbol}";
+
+                    // Already prefixed, e.g. by an earlier run in place.
+                    if (str_starts_with($symbol->getOriginalFqdnName(), trim($namespacePrefix, '\\') . '\\')) {
+                        $unprefixedName = $strippedSymbol;
+                    }
                     unset($stripPattern, $strippedSymbol);
                 }
 
@@ -112,6 +118,12 @@ class ChangeEnumerator
                     }
                 }
                 $this->logger->debug("Namespace {$symbol->getOriginalFqdnName()} not changed.");
+
+                // When prefixing in place, a namespace renamed by an earlier run and not found in its package's
+                // `autoload` key, e.g. only autoloaded by `classmap`: {@see self::keepAlreadyRenamedNamespaces()}.
+                if (!is_null($unprefixedName) && $this->config->isTargetDirectoryVendor()) {
+                    $symbol->setUnprefixedFqdnName($unprefixedName);
+                }
             }
         }
 
@@ -235,17 +247,14 @@ class ChangeEnumerator
     }
 
     /**
-     * `str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
-     *
-     * @param string $originalNamespace The namespace being replaced, without leading backslash.
-     * @param string $newNamespace      The prefixed namespace to replace it with.
-     * @param string $fqdnClassname     The class's fully qualified name, without leading backslash.
-     */
-    /**
      * When prefixing in place, a package renamed by an earlier run and not reinstalled since already declares the
      * renamed namespace, e.g. `Acme\Log`, while its `autoload` key still gives the original, `Psr\Log`, which is
      * renamed to it. The renamed namespace, and those within it, must not be renamed again, e.g. by the default
      * `namespace_prefix` when a `namespace_replacement_patterns` pattern no longer matches it.
+     *
+     * Their names before renaming, found by renaming forwards, so it works with patterns whose back-references can't
+     * be reversed, are kept, so uses of them, e.g. in packages installed since, are updated: e.g. `Acme\Log\Test` was
+     * `Psr\Log\Test`. See {@see DiscoveredSymbols::getUnprefixedSymbols()}.
      *
      * @param DiscoveredSymbols $discoveredSymbols All discovered symbols, after the namespaces' replacements are set.
      *
@@ -279,12 +288,24 @@ class ChangeEnumerator
                         );
                     }
                     $namespace->setLocalReplacement($namespaceName);
+                    if ($this->config->isTargetDirectoryVendor()) {
+                        $namespace->setUnprefixedFqdnName(
+                            $originalNamespace->getOriginalFqdnName() . substr($namespaceName, strlen($replacementName))
+                        );
+                    }
                     continue 2;
                 }
             }
         }
     }
 
+    /**
+     * `str_replace` was replacing multiple. This stops after one. Maybe should be tied to start of string.
+     *
+     * @param string $originalNamespace The namespace being replaced, without leading backslash.
+     * @param string $newNamespace      The prefixed namespace to replace it with.
+     * @param string $fqdnClassname     The class's fully qualified name, without leading backslash.
+     */
     protected function determineNamespaceReplacement(string $originalNamespace, string $newNamespace, string $fqdnClassname): string
     {
         $search = '/' . preg_quote($originalNamespace, '/') . '/';

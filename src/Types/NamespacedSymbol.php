@@ -58,9 +58,43 @@ class NamespacedSymbol extends DiscoveredSymbol
             : trim($this->namespace->getLocalReplacement() . '\\' . $this->getOriginalLocalName(), '\\');
     }
 
+    /**
+     * In its namespace's name before an earlier run renamed it.
+     */
+    public function getUnprefixedFqdnName(): ?string
+    {
+        if ($this->namespace->isGlobal()) {
+            return null;
+        }
+
+        $unprefixedNamespaceName = $this->namespace->getUnprefixedFqdnName();
+
+        return is_null($unprefixedNamespaceName)
+            ? null
+            : $unprefixedNamespaceName . '\\' . $this->getOriginalLocalName();
+    }
+
     public function getNamespace(): NamespaceSymbol
     {
         return $this->namespace;
+    }
+
+    /**
+     * A copy in another namespace, e.g. the one it had before an earlier run renamed it, for planning changes. It is
+     * not added to its source files' symbols.
+     *
+     * @param NamespaceSymbol $namespace The namespace of the copy.
+     *
+     * @return static
+     */
+    public function withNamespace(NamespaceSymbol $namespace): self
+    {
+        $copy = clone $this;
+        $copy->namespace = $namespace;
+        $copy->fqdnOriginalSymbol = $namespace->getOriginalFqdnName() . '\\' . $this->getOriginalLocalName();
+        $copy->unprefixedFqdnName = null;
+
+        return $copy;
     }
 
     public function getNamespaceName(): string

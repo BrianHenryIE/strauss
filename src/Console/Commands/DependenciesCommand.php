@@ -17,7 +17,6 @@ use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
-use BrianHenryIE\Strauss\Pipeline\AlreadyPrefixedSymbols;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -33,6 +32,7 @@ use BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Pipeline\SymbolMentionFilter;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\Psr0NamespaceSymbol;
 use Exception;
@@ -458,16 +458,17 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      * an earlier run, which are only needed to plan the changes.
      *
      * @see self::getDiscoveredSymbolsWithComposerRuntime()
-     * @see AlreadyPrefixedSymbols
+     * @see DiscoveredSymbols::getUnprefixedSymbols()
      */
     protected function getDiscoveredSymbolsForPlanning(): DiscoveredSymbols
     {
         $symbols = $this->getDiscoveredSymbolsWithComposerRuntime();
 
-        $originalSymbols = (new AlreadyPrefixedSymbols($this->config, $this->logger))
-            ->getOriginalSymbols($this->discoveredSymbols);
+        $unprefixedSymbols = $this->discoveredSymbols->getUnprefixedSymbols(
+            array_keys($this->config->getPackagesToPrefix())
+        );
 
-        if (0 === count($originalSymbols)) {
+        if (0 === count($unprefixedSymbols)) {
             return $symbols;
         }
 
@@ -476,8 +477,17 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $symbols = clone $this->discoveredSymbols;
         }
 
-        foreach ($originalSymbols->toArray() as $originalSymbol) {
-            $symbols->add($originalSymbol);
+        foreach ($unprefixedSymbols as $unprefixedSymbol) {
+            $symbols->add($unprefixedSymbol);
+            if ($unprefixedSymbol instanceof NamespacedSymbol) {
+                $this->logger->info(
+                    'Already prefixed: {originalName} will be renamed to {prefixedName}',
+                    [
+                        'originalName' => $unprefixedSymbol->getOriginalFqdnName(),
+                        'prefixedName' => $unprefixedSymbol->getReplacementFqdnName(),
+                    ]
+                );
+            }
         }
 
         return $symbols;

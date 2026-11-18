@@ -230,6 +230,7 @@ class ChangeEnumeratorTest extends TestCase
         $config->allows('getNamespacePrefix')->andReturn('Default\Prefix');
         $config->allows('getNamespaceReplacementPatterns')->andReturn(['~Psr\\\\Log~' => 'Acme\\Log']);
         $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->allows('isTargetDirectoryVendor')->andReturnTrue();
         $config->allows('getClassmapPrefix')->andReturnNull();
         $config->allows('getFunctionsPrefix')->andReturnNull();
         $config->allows('getConstantsPrefix')->andReturnNull();
@@ -262,5 +263,150 @@ class ChangeEnumeratorTest extends TestCase
         $this->assertSame('Acme\Log', $renamedNamespace->getReplacementFqdnName());
         $this->assertSame('Acme\Log\Test', $renamedSubNamespace->getReplacementFqdnName());
         $this->assertSame('Default\Prefix\Other\Package', $otherNamespace->getReplacementFqdnName());
+
+        // Their names before renaming, so uses of those are updated.
+        $this->assertNull($autoloadNamespace->getUnprefixedFqdnName());
+        $this->assertSame('Psr\Log', $renamedNamespace->getUnprefixedFqdnName());
+        $this->assertSame('Psr\Log\Test', $renamedSubNamespace->getUnprefixedFqdnName());
+        $this->assertNull($otherNamespace->getUnprefixedFqdnName());
+    }
+
+    /**
+     * @param array<string,string> $namespaceReplacementPatterns
+     *
+     * @return MockInterface&ChangeEnumeratorConfigInterface
+     */
+    protected function getNamespaceConfig(
+        ?string $namespacePrefix,
+        array $namespaceReplacementPatterns = [],
+        bool $isTargetDirectoryVendor = true
+    ): ChangeEnumeratorConfigInterface {
+        /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
+        $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
+        $config->allows('getNamespacePrefix')->andReturn($namespacePrefix);
+        $config->allows('getNamespaceReplacementPatterns')->andReturn($namespaceReplacementPatterns);
+        $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->allows('isTargetDirectoryVendor')->andReturn($isTargetDirectoryVendor);
+        $config->allows('getClassmapPrefix')->andReturnNull();
+        $config->allows('getFunctionsPrefix')->andReturnNull();
+        $config->allows('getConstantsPrefix')->andReturnNull();
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
+
+        return $config;
+    }
+
+    /**
+     * @param string[] $namespaceNames
+     *
+     * @return array<string, NamespaceSymbol>
+     */
+    protected function getNamespacesToRename(array $namespaceNames): array
+    {
+        $file = new File('/vendor/psr/log/src/LoggerInterface.php', 'psr/log/src/LoggerInterface.php', '/vendor/psr/log/src/LoggerInterface.php');
+
+        $namespaces = [];
+        foreach ($namespaceNames as $namespaceName) {
+            $namespaces[$namespaceName] = new NamespaceSymbol($namespaceName, $file);
+            $namespaces[$namespaceName]->setDoRename(true);
+        }
+
+        return $namespaces;
+    }
+
+    /**
+     * Found by renaming the namespace from the package's `autoload` key forwards, so a pattern's back-references
+     * need not be reversed.
+     *
+     * @covers ::determineReplacements
+     * @covers ::keepAlreadyRenamedNamespaces
+     */
+    public function testUnprefixedNameWithBackReferencePattern(): void
+    {
+        $sut = new ChangeEnumerator(
+            $this->getNamespaceConfig('Default\Prefix', ['~Psr\\\\(.*)~' => 'Acme\\Psr\\\\$1']),
+            $this->getTestLogger()
+        );
+
+        $namespaces = $this->getNamespacesToRename(['Psr\Log', 'Acme\Psr\Log', 'Acme\Psr\Log\Test']);
+
+        $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
+
+        $this->assertSame('Acme\Psr\Log', $namespaces['Psr\Log']->getReplacementFqdnName());
+        $this->assertNull($namespaces['Psr\Log']->getUnprefixedFqdnName());
+
+        // Not `Acme\Psr\Acme\Psr\Log`.
+        $this->assertSame('Acme\Psr\Log', $namespaces['Acme\Psr\Log']->getReplacementFqdnName());
+        $this->assertSame('Psr\Log', $namespaces['Acme\Psr\Log']->getUnprefixedFqdnName());
+
+        $this->assertSame('Acme\Psr\Log\Test', $namespaces['Acme\Psr\Log\Test']->getReplacementFqdnName());
+        $this->assertSame('Psr\Log\Test', $namespaces['Acme\Psr\Log\Test']->getUnprefixedFqdnName());
+    }
+
+    /**
+     * A namespace not in its package's `autoload` key, e.g. only autoloaded by `classmap`, which already begins with
+     * `namespace_prefix`.
+     *
+     * @covers ::determineReplacements
+     */
+    public function testUnprefixedNameByRemovingNamespacePrefix(): void
+    {
+        $sut = new ChangeEnumerator($this->getNamespaceConfig('Prefix\\'), $this->getTestLogger());
+
+        $namespaces = $this->getNamespacesToRename(['Prefix\Psr\Log', 'PrefixOther\Package', 'Other\Package']);
+
+        $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
+
+        $this->assertSame('Prefix\Psr\Log', $namespaces['Prefix\Psr\Log']->getReplacementFqdnName());
+        $this->assertSame('Psr\Log', $namespaces['Prefix\Psr\Log']->getUnprefixedFqdnName());
+
+        // Only begins with the same characters.
+        $this->assertNull($namespaces['PrefixOther\Package']->getUnprefixedFqdnName());
+
+        // Being renamed now.
+        $this->assertSame('Prefix\Other\Package', $namespaces['Other\Package']->getReplacementFqdnName());
+        $this->assertNull($namespaces['Other\Package']->getUnprefixedFqdnName());
+    }
+
+    /**
+     * A namespace which begins with `namespace_prefix` but is renamed now by a pattern was not renamed before.
+     *
+     * @covers ::determineReplacements
+     */
+    public function testNoUnprefixedNameWhenRenamedByPattern(): void
+    {
+        $sut = new ChangeEnumerator(
+            $this->getNamespaceConfig('Prefix', ['~Prefix\\\\Psr~' => 'Other\\Psr']),
+            $this->getTestLogger()
+        );
+
+        $namespaces = $this->getNamespacesToRename(['Prefix\Psr\Log']);
+
+        $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
+
+        $this->assertSame('Other\Psr\Log', $namespaces['Prefix\Psr\Log']->getReplacementFqdnName());
+        $this->assertNull($namespaces['Prefix\Psr\Log']->getUnprefixedFqdnName());
+    }
+
+    /**
+     * With another target directory, the packages in `vendor` are never renamed, so a namespace which begins with
+     * the prefix, or with another's replacement, is the package's own.
+     *
+     * @covers ::determineReplacements
+     * @covers ::keepAlreadyRenamedNamespaces
+     */
+    public function testNoUnprefixedNameWhenTargetDirectoryIsNotVendor(): void
+    {
+        $sut = new ChangeEnumerator(
+            $this->getNamespaceConfig('Prefix', ['~Psr\\\\Log~' => 'Acme\\Log'], false),
+            $this->getTestLogger()
+        );
+
+        $namespaces = $this->getNamespacesToRename(['Psr\Log', 'Acme\Log', 'Prefix\Other']);
+
+        $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
+
+        foreach ($namespaces as $namespace) {
+            $this->assertNull($namespace->getUnprefixedFqdnName(), $namespace->getOriginalFqdnName());
+        }
     }
 }

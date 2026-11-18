@@ -10,7 +10,6 @@ namespace BrianHenryIE\Strauss\Composer\Extra;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
-use BrianHenryIE\Strauss\Config\AlreadyPrefixedSymbolsConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
@@ -49,7 +48,6 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 class StraussConfig implements
     AliasesConfigInterface,
-    AlreadyPrefixedSymbolsConfigInterface,
     AutoloadConfigInterface,
     AutoloadFilesEnumeratorConfigInterface,
     ChangeEnumeratorConfigInterface,

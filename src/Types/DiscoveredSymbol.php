@@ -43,6 +43,14 @@ abstract class DiscoveredSymbol
 
     protected bool $doRename = false;
 
+    /**
+     * When prefixing in place, the name the symbol had before an earlier run renamed it, so uses of that name, e.g. in
+     * packages installed since, are updated. Null when it was not already renamed.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/343
+     */
+    protected ?string $unprefixedFqdnName = null;
+
     // Possibly empty.
     protected DependenciesCollection $dependencies;
 
@@ -148,6 +156,22 @@ abstract class DiscoveredSymbol
         $fqdnParts = explode('\\', $this->fqdnOriginalSymbol);
         $localSymbol = array_pop($fqdnParts);
         return $localSymbol;
+    }
+
+    /**
+     * @see ChangeEnumerator::keepAlreadyRenamedNamespaces()
+     */
+    public function getUnprefixedFqdnName(): ?string
+    {
+        return $this->unprefixedFqdnName;
+    }
+
+    /**
+     * @param ?string $unprefixedFqdnName The name before an earlier run renamed it; null when not already renamed.
+     */
+    public function setUnprefixedFqdnName(?string $unprefixedFqdnName): void
+    {
+        $this->unprefixedFqdnName = $unprefixedFqdnName;
     }
 
     public function setDoRename(bool $doRename): void
