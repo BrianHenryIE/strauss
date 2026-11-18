@@ -263,15 +263,21 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             )
         );
 
-        $this->config->setUnprefixedPackages(
-            array_filter(
-                $this->flatDependencyTree->toArray(),
-                function ($dependency) {
-                    return in_array($dependency, $this->config->getExcludePackagesFromPrefixing());
-                },
-                ARRAY_FILTER_USE_KEY
-            )
+        $unprefixedPackages = array_filter(
+            $this->flatDependencyTree->toArray(),
+            function ($dependency) {
+                return in_array($dependency, $this->config->getExcludePackagesFromPrefixing());
+            },
+            ARRAY_FILTER_USE_KEY
         );
+
+        // In place, the other non-dev packages in `vendor`, outside the dependency tree, use the prefixed symbols, so
+        // their files must be updated too.
+        if ($this->config->isTargetDirectoryVendor()) {
+            $unprefixedPackages += $this->dependenciesEnumerator->getUnprefixedPackages($this->config->getPackagesToPrefix());
+        }
+
+        $this->config->setUnprefixedPackages($unprefixedPackages);
 
         foreach ($this->flatDependencyTree->toArray() as $dependency) {
             // Sort of duplicating the logic above.
