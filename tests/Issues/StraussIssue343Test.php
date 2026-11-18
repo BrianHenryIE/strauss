@@ -36,29 +36,56 @@ class StraussIssue343Test extends IntegrationTestCase
      */
     protected const UNPREFIXED_REFERENCE_PATTERN = '/(^|[^\\\\A-Za-z])Psr\\\\Log\\\\/m';
 
-    protected function getComposerJsonString(string $monologVersion): string
+    /**
+     * @param array<string, mixed> $straussConfig How to rename `psr/log`: `namespace_prefix` or
+     *                                            `namespace_replacement_patterns`.
+     */
+    protected function getComposerJsonString(string $monologVersion, array $straussConfig): string
     {
-        $composerJsonString = <<<'EOD'
-            {
-                "name": "example/strauss-repro",
-                "require": {
-                    "psr/log": "3.0.2",
-                    "monolog/monolog": "MONOLOG_VERSION"
-                },
-                "config": { "classmap-authoritative": true },
-                "autoload": { "classmap": ["vendor"] },
-                "extra": {
-                    "strauss": {
-                        "target_directory": "vendor",
-                        "namespace_prefix": "Prefix\\",
-                        "packages": ["psr/log"],
-                        "update_call_sites": true
-                    }
-                }
-            }
-            EOD;
+        $composerJson = [
+            'name' => 'example/strauss-repro',
+            'require' => [
+                'psr/log' => '3.0.2',
+                'monolog/monolog' => $monologVersion,
+            ],
+            'config' => ['classmap-authoritative' => true],
+            'autoload' => ['classmap' => ['vendor']],
+            'extra' => [
+                'strauss' => array_merge(
+                    [
+                        'target_directory' => 'vendor',
+                        'packages' => ['psr/log'],
+                        'update_call_sites' => true,
+                    ],
+                    $straussConfig
+                ),
+            ],
+        ];
 
-        return str_replace('MONOLOG_VERSION', $monologVersion, $composerJsonString);
+        return (string) json_encode($composerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * @return array<string, array{0:array<string, mixed>, 1:string}> The Strauss config, the namespace psr/log's
+     *                                                                 `Psr\Log` is renamed to.
+     */
+    public static function renamingProvider(): array
+    {
+        return [
+            'namespace_prefix' => [
+                ['namespace_prefix' => 'Prefix\\'],
+                'Prefix\Psr\Log',
+            ],
+            'namespace_replacement_patterns' => [
+                ['namespace_replacement_patterns' => ['~Psr\\\\Log~' => 'Acme\\Log']],
+                'Acme\Log',
+            ],
+            // On a second run, the pattern also matches the already renamed `Acme\Psr\Log`.
+            'namespace_replacement_patterns with a back-reference' => [
+                ['namespace_replacement_patterns' => ['~Psr\\\\(.*)~' => 'Acme\\Psr\\\\$1']],
+                'Acme\Psr\Log',
+            ],
+        ];
     }
 
     /**
@@ -120,13 +147,20 @@ class StraussIssue343Test extends IntegrationTestCase
         return [$exitCode, implode(PHP_EOL, $output)];
     }
 
-    public function test_343(): void
+    /**
+     * @dataProvider renamingProvider
+     *
+     * @param array<string, mixed> $straussConfig       How to rename `psr/log`.
+     * @param string               $renamedNamespace The namespace `Psr\Log` is renamed to.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('renamingProvider')]
+    public function test_343(array $straussConfig, string $renamedNamespace): void
     {
         $this->markTestSkippedOnPhpVersionBelow('8.1');
 
         chdir($this->testsWorkingDir);
 
-        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $this->getComposerJsonString('3.9.0'));
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $this->getComposerJsonString('3.9.0', $straussConfig));
 
         exec('composer install 2>&1', $installOutput, $installExitCode);
         $this->assertEquals(0, $installExitCode, implode(PHP_EOL, $installOutput));
@@ -136,7 +170,7 @@ class StraussIssue343Test extends IntegrationTestCase
         // The first install is prefixed correctly.
 
         $loggerInterfaceString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/src/LoggerInterface.php');
-        $this->assertStringContainsString('namespace Prefix\Psr\Log;', $loggerInterfaceString);
+        $this->assertStringContainsString('namespace ' . $renamedNamespace . ';', $loggerInterfaceString);
 
         $this->assertEmpty(
             $this->findFilesWithUnprefixedReferences($this->testsWorkingDir . '/vendor/monolog'),
@@ -148,12 +182,16 @@ class StraussIssue343Test extends IntegrationTestCase
 
         // Update monolog only: psr/log is not reinstalled, so its files are already prefixed.
 
-        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $this->getComposerJsonString('3.10.0'));
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $this->getComposerJsonString('3.10.0', $straussConfig));
 
         exec('composer update monolog/monolog 2>&1', $updateOutput, $updateExitCode);
         $this->assertEquals(0, $updateExitCode, implode(PHP_EOL, $updateOutput));
 
         $this->runStraussAndDumpAutoload();
+
+        // Not renamed a second time.
+        $loggerInterfaceString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/src/LoggerInterface.php');
+        $this->assertStringContainsString('namespace ' . $renamedNamespace . ';', $loggerInterfaceString);
 
         $filesWithUnprefixedReferences = $this->findFilesWithUnprefixedReferences($this->testsWorkingDir . '/vendor/monolog');
         $this->assertEmpty(

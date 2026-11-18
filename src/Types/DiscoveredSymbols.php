@@ -190,6 +190,31 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
+     * The namespaces being renamed, keyed by the name they are renamed to, longest first, so the first match of a
+     * name or its parent namespace is the most specific.
+     *
+     * @return array<string, NamespaceSymbol> Replacement name => the original namespace.
+     */
+    public function getNamespaceRenames(): array
+    {
+        $namespaceRenames = [];
+        foreach ($this->types[self::NAMESPACE_SYMBOL] as $namespace) {
+            if (
+                $namespace->isGlobal()
+                || !$namespace->isDoRename()
+                || $namespace->getReplacementFqdnName() === $namespace->getOriginalFqdnName()
+            ) {
+                continue;
+            }
+            $namespaceRenames[$namespace->getReplacementFqdnName()] = $namespace;
+        }
+
+        uksort($namespaceRenames, fn(string $a, string $b): int => strlen($b) - strlen($a));
+
+        return $namespaceRenames;
+    }
+
+    /**
      * Get all symbols that may have a namespace (i.e. no classes, interfaces etc.).
      */
     public function getNamespacedSymbols(): DiscoveredSymbols

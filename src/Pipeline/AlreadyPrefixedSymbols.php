@@ -30,9 +30,18 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
- * For each symbol to rename, from a package to prefix, whose namespace already begins with `namespace_prefix`, creates
- * the symbol with the prefix removed, renamed to the existing name, e.g. `Psr\Log\LoggerInterface` renamed to
- * `Prefix\Psr\Log\LoggerInterface`, so uses of the original name are updated.
+ * For each symbol to rename, from a package to prefix, whose namespace was already renamed, creates the symbol in the
+ * original namespace, renamed to the existing name, e.g. `Psr\Log\LoggerInterface` renamed to
+ * `Acme\Log\LoggerInterface`, so uses of the original name are updated.
+ *
+ * The original namespace is found by renaming forwards, not by reversing the renaming, so it works with
+ * `namespace_replacement_patterns` (whose back-references cannot be reversed) as well as `namespace_prefix`: Strauss
+ * does not edit a package's own `composer.json`, so the original namespaces in its `autoload` key are discovered, and
+ * {@see ChangeEnumerator} renames them, e.g. `Psr\Log` to `Acme\Log`. A symbol in `Acme\Log`, or a namespace within
+ * it, was already renamed from `Psr\Log`.
+ *
+ * Namespaces not in a `psr-4` or `psr-0` key, i.e. only autoloaded by `classmap` or `files`, are only recognised by
+ * removing `namespace_prefix` from their start, so are not supported with `namespace_replacement_patterns`.
  *
  * Only used when planning changes, so no aliases etc. are created for them.
  */
@@ -62,14 +71,14 @@ class AlreadyPrefixedSymbols
     {
         $originalSymbols = new DiscoveredSymbols();
 
-        $namespacePrefix = trim($this->config->getNamespacePrefix() ?? '', '\\');
-
         // A previous run in another directory leaves the packages in `vendor` unprefixed.
-        if (!$this->config->isTargetDirectoryVendor() || '' === $namespacePrefix) {
+        if (!$this->config->isTargetDirectoryVendor()) {
             return $originalSymbols;
         }
 
+        $namespacePrefix = trim($this->config->getNamespacePrefix() ?? '', '\\');
         $packagesToPrefix = $this->config->getPackagesToPrefix();
+        $namespaceRenames = $discoveredSymbols->getNamespaceRenames();
 
         $namespacedSymbols = array_merge(
             array_values($discoveredSymbols->getAllClasses()->toArray()),
@@ -92,11 +101,17 @@ class AlreadyPrefixedSymbols
 
             $prefixedNamespaceName = $prefixedSymbol->getNamespace()->getOriginalFqdnName();
 
-            if (!str_starts_with($prefixedNamespaceName, $namespacePrefix . '\\')) {
+            // Its namespace is being renamed now: the package has not been renamed before.
+            if ($prefixedSymbol->getNamespace()->getReplacementFqdnName() !== $prefixedNamespaceName) {
                 continue;
             }
 
-            $originalNamespaceName = substr($prefixedNamespaceName, strlen($namespacePrefix) + 1);
+            $originalNamespaceName = $this->getOriginalNamespaceName($prefixedNamespaceName, $namespaceRenames, $namespacePrefix);
+
+            if (is_null($originalNamespaceName)) {
+                continue;
+            }
+
             $originalFqdnName = $originalNamespaceName . '\\' . $prefixedSymbol->getOriginalLocalName();
 
             // E.g. the package was reinstalled, so its original symbols were discovered too.
@@ -129,6 +144,33 @@ class AlreadyPrefixedSymbols
         }
 
         return $originalSymbols;
+    }
+
+    /**
+     * @param string                         $prefixedNamespaceName The already renamed namespace, e.g. `Acme\Log\Test`.
+     * @param array<string, NamespaceSymbol> $namespaceRenames      Replacement name => the original namespace, longest
+     *                                                              first: {@see DiscoveredSymbols::getNamespaceRenames()}.
+     * @param string                         $namespacePrefix       `namespace_prefix`, without slashes; empty if none.
+     *
+     * @return ?string The original namespace, e.g. `Psr\Log\Test`; null when it was not renamed.
+     */
+    protected function getOriginalNamespaceName(string $prefixedNamespaceName, array $namespaceRenames, string $namespacePrefix): ?string
+    {
+        foreach ($namespaceRenames as $replacementName => $originalNamespace) {
+            if (
+                $prefixedNamespaceName === $replacementName
+                || str_starts_with($prefixedNamespaceName, $replacementName . '\\')
+            ) {
+                return $originalNamespace->getOriginalFqdnName() . substr($prefixedNamespaceName, strlen($replacementName));
+            }
+        }
+
+        // E.g. a namespace only autoloaded by `classmap`, so its original name was not discovered.
+        if ('' !== $namespacePrefix && str_starts_with($prefixedNamespaceName, $namespacePrefix . '\\')) {
+            return substr($prefixedNamespaceName, strlen($namespacePrefix) + 1);
+        }
+
+        return null;
     }
 
     /**

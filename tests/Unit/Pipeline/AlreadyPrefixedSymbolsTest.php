@@ -280,4 +280,127 @@ class AlreadyPrefixedSymbolsTest extends TestCase
 
         self::assertCount(0, $sut->getOriginalSymbols($discoveredSymbols));
     }
+
+    /**
+     * @return array{0:DiscoveredSymbols, 1:ComposerPackage, 2:NamespaceSymbol}
+     */
+    protected function getAlreadyRenamedPsrLog(string $renamedNamespaceName, string $originalNamespaceName = 'Psr\Log'): array
+    {
+        $package = $this->getPackage('psr/log');
+        $file = $this->getFile($package, 'src/LoggerInterface.php');
+
+        // From the package's `autoload.psr-4` key, renamed by the replacement pattern.
+        $autoloadNamespace = new NamespaceSymbol($originalNamespaceName);
+        $autoloadNamespace->setDoRename(true);
+        $autoloadNamespace->setLocalReplacement($renamedNamespaceName);
+
+        // Declared in the files; {@see ChangeEnumerator::keepAlreadyRenamedNamespaces()} leaves it.
+        $renamedNamespace = new NamespaceSymbol($renamedNamespaceName, $file);
+        $renamedNamespace->setDoRename(true);
+
+        $loggerInterface = new InterfaceSymbol($renamedNamespaceName . '\LoggerInterface', $file, $renamedNamespace);
+        $loggerInterface->setDoRename(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($autoloadNamespace);
+        $discoveredSymbols->add($renamedNamespace);
+        $discoveredSymbols->add($loggerInterface);
+
+        return [$discoveredSymbols, $package, $autoloadNamespace];
+    }
+
+    /**
+     * `namespace_replacement_patterns` cannot be reversed; the original namespace is the one renamed to it.
+     *
+     * @covers ::getOriginalSymbols
+     * @covers ::getOriginalNamespaceName
+     */
+    public function test_replacement_pattern_without_namespace_prefix(): void
+    {
+        [$discoveredSymbols, $package, $autoloadNamespace] = $this->getAlreadyRenamedPsrLog('Acme\Log');
+
+        $sut = new AlreadyPrefixedSymbols($this->getConfig(['psr/log' => $package], true, null));
+
+        $result = $sut->getOriginalSymbols($discoveredSymbols);
+
+        $loggerInterface = $result->getInterface('Psr\Log\LoggerInterface');
+        self::assertNotNull($loggerInterface);
+        self::assertSame($autoloadNamespace, $loggerInterface->getNamespace());
+        self::assertSame('Acme\Log\LoggerInterface', $loggerInterface->getReplacementFqdnName());
+    }
+
+    /**
+     * E.g. `"~Psr\\\\(.*)~": "Acme\\Psr\\\\$1"`.
+     *
+     * @covers ::getOriginalNamespaceName
+     */
+    public function test_replacement_pattern_with_back_reference(): void
+    {
+        [$discoveredSymbols, $package] = $this->getAlreadyRenamedPsrLog('Acme\Psr\Log');
+
+        $sut = new AlreadyPrefixedSymbols($this->getConfig(['psr/log' => $package], true, 'Default\Prefix'));
+
+        $result = $sut->getOriginalSymbols($discoveredSymbols);
+
+        $loggerInterface = $result->getInterface('Psr\Log\LoggerInterface');
+        self::assertNotNull($loggerInterface);
+        self::assertSame('Acme\Psr\Log\LoggerInterface', $loggerInterface->getReplacementFqdnName());
+    }
+
+    /**
+     * A namespace within the renamed one, e.g. `Psr\Log\Test`, is not in the `autoload` key.
+     *
+     * @covers ::getOriginalNamespaceName
+     * @covers ::getOriginalNamespace
+     */
+    public function test_sub_namespace(): void
+    {
+        [$discoveredSymbols, $package] = $this->getAlreadyRenamedPsrLog('Acme\Log');
+
+        $file = $this->getFile($package, 'src/Test/TestLogger.php');
+        $renamedSubNamespace = new NamespaceSymbol('Acme\Log\Test', $file);
+        $renamedSubNamespace->setDoRename(true);
+        $testLogger = new ClassSymbol('Acme\Log\Test\TestLogger', $file, $renamedSubNamespace);
+        $testLogger->setDoRename(true);
+        $discoveredSymbols->add($renamedSubNamespace);
+        $discoveredSymbols->add($testLogger);
+
+        $sut = new AlreadyPrefixedSymbols($this->getConfig(['psr/log' => $package], true, null));
+
+        $result = $sut->getOriginalSymbols($discoveredSymbols);
+
+        $originalSubNamespace = $result->getNamespace('Psr\Log\Test');
+        self::assertNotNull($originalSubNamespace);
+        self::assertSame('Acme\Log\Test', $originalSubNamespace->getReplacementFqdnName());
+
+        $originalTestLogger = $result->getClass('Psr\Log\Test\TestLogger');
+        self::assertNotNull($originalTestLogger);
+        self::assertSame('Acme\Log\Test\TestLogger', $originalTestLogger->getReplacementFqdnName());
+    }
+
+    /**
+     * On the first run, the files declare `Psr\Log`, which is being renamed: nothing to add.
+     *
+     * @covers ::getOriginalSymbols
+     */
+    public function test_namespace_being_renamed_now_is_ignored(): void
+    {
+        $package = $this->getPackage('psr/log');
+        $file = $this->getFile($package, 'src/LoggerInterface.php');
+
+        $namespace = new NamespaceSymbol('Psr\Log', $file);
+        $namespace->setDoRename(true);
+        $namespace->setLocalReplacement('Acme\Log');
+
+        $loggerInterface = new InterfaceSymbol('Psr\Log\LoggerInterface', $file, $namespace);
+        $loggerInterface->setDoRename(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($namespace);
+        $discoveredSymbols->add($loggerInterface);
+
+        $sut = new AlreadyPrefixedSymbols($this->getConfig(['psr/log' => $package], true, 'Acme'));
+
+        self::assertCount(0, $sut->getOriginalSymbols($discoveredSymbols));
+    }
 }

@@ -115,6 +115,8 @@ class ChangeEnumerator
             }
         }
 
+        $this->keepAlreadyRenamedNamespaces($discoveredSymbols);
+
         $classmapPrefix = $this->config->getClassmapPrefix();
 
         $classesTraitsInterfaces = array_merge(
@@ -239,6 +241,50 @@ class ChangeEnumerator
      * @param string $newNamespace      The prefixed namespace to replace it with.
      * @param string $fqdnClassname     The class's fully qualified name, without leading backslash.
      */
+    /**
+     * When prefixing in place, a package renamed by an earlier run and not reinstalled since already declares the
+     * renamed namespace, e.g. `Acme\Log`, while its `autoload` key still gives the original, `Psr\Log`, which is
+     * renamed to it. The renamed namespace, and those within it, must not be renamed again, e.g. by the default
+     * `namespace_prefix` when a `namespace_replacement_patterns` pattern no longer matches it.
+     *
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols, after the namespaces' replacements are set.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/343
+     */
+    protected function keepAlreadyRenamedNamespaces(DiscoveredSymbols $discoveredSymbols): void
+    {
+        $namespaceRenames = $discoveredSymbols->getNamespaceRenames();
+
+        foreach ($discoveredSymbols->getNamespaces() as $namespace) {
+            if (!($namespace instanceof NamespaceSymbol) || !$namespace->isDoRename() || $namespace->isGlobal()) {
+                continue;
+            }
+
+            $namespaceName = $namespace->getOriginalFqdnName();
+
+            foreach ($namespaceRenames as $replacementName => $originalNamespace) {
+                if ($originalNamespace === $namespace) {
+                    continue;
+                }
+
+                if ($namespaceName === $replacementName || str_starts_with($namespaceName, $replacementName . '\\')) {
+                    if ($namespace->getReplacementFqdnName() !== $namespaceName) {
+                        $this->logger->debug(
+                            'Namespace {namespace} is already renamed from {originalNamespace}, not renaming to {replacement}.',
+                            [
+                                'namespace' => $namespaceName,
+                                'originalNamespace' => $originalNamespace->getOriginalFqdnName(),
+                                'replacement' => $namespace->getReplacementFqdnName(),
+                            ]
+                        );
+                    }
+                    $namespace->setLocalReplacement($namespaceName);
+                    continue 2;
+                }
+            }
+        }
+    }
+
     protected function determineNamespaceReplacement(string $originalNamespace, string $newNamespace, string $fqdnClassname): string
     {
         $search = '/' . preg_quote($originalNamespace, '/') . '/';

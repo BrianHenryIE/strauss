@@ -170,4 +170,39 @@ class DiscoveredSymbolsTest extends TestCase
         $firstResult = array_pop($result);
         $this->assertEquals('myClass', $firstResult->getOriginalFqdnName());
     }
+
+    /**
+     * @covers ::getNamespaceRenames
+     */
+    public function testGetNamespaceRenames(): void
+    {
+        $file = new File('/vendor/acme/file.php', 'acme/file.php', '/vendor/acme/file.php');
+
+        $renamed = new NamespaceSymbol('Psr\Log', $file);
+        $renamed->setDoRename(true);
+        $renamed->setLocalReplacement('Acme\Log');
+
+        $renamedLonger = new NamespaceSymbol('Psr\Log\Test', $file);
+        $renamedLonger->setDoRename(true);
+        $renamedLonger->setLocalReplacement('Acme\Log\Testing');
+
+        $notToRename = new NamespaceSymbol('Not\Renamed', $file);
+        $notToRename->setLocalReplacement('Prefix\Not\Renamed');
+
+        $unchanged = new NamespaceSymbol('Acme\Log', $file);
+        $unchanged->setDoRename(true);
+
+        $sut = new DiscoveredSymbols();
+        foreach ([$renamed, $renamedLonger, $notToRename, $unchanged, new NamespaceSymbol('\\', $file)] as $namespace) {
+            $sut->add($namespace);
+        }
+
+        $this->assertSame(
+            [
+                'Acme\Log\Testing' => $renamedLonger,
+                'Acme\Log' => $renamed,
+            ],
+            $sut->getNamespaceRenames()
+        );
+    }
 }

@@ -214,4 +214,53 @@ class ChangeEnumeratorTest extends TestCase
         $this->assertEquals('functions_prefix_other_fn', $otherSymbol->getLocalReplacement());
         $this->assertTrue($otherSymbol->isReplaceInString());
     }
+
+    /**
+     * Prefixing in place a second time: the package's `autoload` key gives `Psr\Log`, its files already declare
+     * `Acme\Log`. The pattern no longer matches `Acme\Log`, so without the guard the default `namespace_prefix` would
+     * rename it again.
+     *
+     * @covers ::determineReplacements
+     * @covers ::keepAlreadyRenamedNamespaces
+     */
+    public function testAlreadyRenamedNamespaceIsNotRenamedAgain(): void
+    {
+        /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
+        $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
+        $config->allows('getNamespacePrefix')->andReturn('Default\Prefix');
+        $config->allows('getNamespaceReplacementPatterns')->andReturn(['~Psr\\\\Log~' => 'Acme\\Log']);
+        $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->allows('getClassmapPrefix')->andReturnNull();
+        $config->allows('getFunctionsPrefix')->andReturnNull();
+        $config->allows('getConstantsPrefix')->andReturnNull();
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
+
+        $sut = new ChangeEnumerator($config, $this->getTestLogger());
+
+        $file = new File('/vendor/psr/log/src/LoggerInterface.php', 'psr/log/src/LoggerInterface.php', '/vendor/psr/log/src/LoggerInterface.php');
+
+        $autoloadNamespace = new NamespaceSymbol('Psr\Log');
+        $autoloadNamespace->setDoRename(true);
+
+        $renamedNamespace = new NamespaceSymbol('Acme\Log', $file);
+        $renamedNamespace->setDoRename(true);
+
+        $renamedSubNamespace = new NamespaceSymbol('Acme\Log\Test', $file);
+        $renamedSubNamespace->setDoRename(true);
+
+        $otherNamespace = new NamespaceSymbol('Other\Package', $file);
+        $otherNamespace->setDoRename(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        foreach ([$autoloadNamespace, $renamedNamespace, $renamedSubNamespace, $otherNamespace] as $namespace) {
+            $discoveredSymbols->add($namespace);
+        }
+
+        $sut->determineReplacements($discoveredSymbols);
+
+        $this->assertSame('Acme\Log', $autoloadNamespace->getReplacementFqdnName());
+        $this->assertSame('Acme\Log', $renamedNamespace->getReplacementFqdnName());
+        $this->assertSame('Acme\Log\Test', $renamedSubNamespace->getReplacementFqdnName());
+        $this->assertSame('Default\Prefix\Other\Package', $otherNamespace->getReplacementFqdnName());
+    }
 }
