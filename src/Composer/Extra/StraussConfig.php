@@ -125,7 +125,7 @@ class StraussConfig implements
      *
      * @var string[]
      */
-    protected array $packages = [];
+    protected array $packageNames = [];
 
     /**
      * @var array<string,ComposerPackage>
@@ -407,8 +407,8 @@ class StraussConfig implements
         //            throw new Exception('Prefix not set. Please set `namespace_prefix`, `classmap_prefix` in composer.json/extra/strauss.');
         //        }
 
-        if (isset($composer) && empty($this->packages)) {
-            $this->packages = array_map(
+        if (isset($composer) && empty($this->packageNames)) {
+            $this->packageNames = array_map(
                 function (Link $element) {
                     return $element->getTarget();
                 },
@@ -886,17 +886,17 @@ class StraussConfig implements
     /**
      * @return string[]
      */
-    public function getPackages(): array
+    public function getPackageNames(): array
     {
-        return $this->packages;
+        return $this->packageNames;
     }
 
     /**
-     * @param string[] $packages Composer package names (`vendor/package`) to copy; empty to use the project's `require` list.
+     * @param string[] $packageNames Composer package names (`vendor/package`) to copy; empty to use the project's `require` list.
      */
-    public function setPackages(array $packages): void
+    public function setPackageNames(array $packageNames): void
     {
-        $this->packages = $packages;
+        $this->packageNames = $packageNames;
     }
 
     /**

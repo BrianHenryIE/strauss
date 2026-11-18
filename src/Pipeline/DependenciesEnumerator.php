@@ -79,7 +79,7 @@ class DependenciesEnumerator
         ?LoggerInterface $logger = null
     ) {
         $this->overrideAutoload = $config->getOverrideAutoload();
-        $this->requiredPackageNames = $config->getPackages();
+        $this->requiredPackageNames = $config->getPackageNames();
 
         $this->filesystem = $filesystem;
         $this->config = $config;

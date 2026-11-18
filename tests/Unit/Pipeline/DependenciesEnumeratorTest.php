@@ -39,7 +39,7 @@ class DependenciesEnumeratorTest extends TestCase
 
         $config = Mockery::mock(StraussConfig::class);
         $config->shouldReceive('getOverrideAutoload')->andReturn([]);
-        $config->shouldReceive('getPackages')->andReturn(['acme/app']);
+        $config->shouldReceive('getPackageNames')->andReturn(['acme/app']);
 
         $sut = new class ($config, $this->getInMemoryFileSystem(), $packages) extends DependenciesEnumerator {
             /**
@@ -104,7 +104,7 @@ class DependenciesEnumeratorTest extends TestCase
 
         $config = Mockery::mock(StraussConfig::class);
         $config->shouldReceive('getOverrideAutoload')->andReturn([]);
-        $config->shouldReceive('getPackages')->andReturn(['psr/log']);
+        $config->shouldReceive('getPackageNames')->andReturn(['psr/log']);
 
         $sut = new class ($config, $this->getInMemoryFileSystem(), $installedJson, ['acme/excluded' => $excluded], ['monolog/monolog' => $monolog, 'acme/metapackage' => $metapackage]) extends DependenciesEnumerator {
             /** @var array<string, mixed> */
