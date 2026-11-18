@@ -17,6 +17,7 @@ use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
+use BrianHenryIE\Strauss\Pipeline\AlreadyPrefixedSymbols;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
 use BrianHenryIE\Strauss\Pipeline\Autoload\VendorComposerAutoload;
@@ -259,6 +260,13 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             )
         );
 
+        // In place, the other packages in `vendor` use the prefixed symbols, so their files must be updated too.
+        if ($this->config->isTargetDirectoryVendor()) {
+            $this->config->setUnprefixedPackages(
+                $this->dependenciesEnumerator->getUnprefixedPackages($this->config->getPackagesToPrefix())
+            );
+        }
+
         foreach ($this->flatDependencyTree->toArray() as $dependency) {
             // Sort of duplicating the logic above.
             $dependency->setCopy(
@@ -313,6 +321,17 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
 
         $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);
+
+        // The packages not already enumerated as part of the dependency tree, e.g. not those excluded from prefixing.
+        $unprefixedPackagesOutsideTree = array_diff_key(
+            $this->config->getUnprefixedPackages(),
+            $this->flatDependencyTree->toArray()
+        );
+        if (!empty($unprefixedPackagesOutsideTree)) {
+            $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies(
+                new DependenciesCollection($unprefixedPackagesOutsideTree)
+            );
+        }
     }
 
     protected function enumeratePsrNamespaces(): void
@@ -359,9 +378,39 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $changePlanner = new ChangePlanner($this->logger);
         $changePlanner->planInFiles(
-            $this->getDiscoveredSymbolsWithComposerRuntime(),
+            $this->getDiscoveredSymbolsForPlanning(),
             $this->discoveredFiles->getFiles()
         );
+    }
+
+    /**
+     * The discovered symbols, plus Composer's runtime classes and the original names of symbols already prefixed by
+     * an earlier run, which are only needed to plan the changes.
+     *
+     * @see self::getDiscoveredSymbolsWithComposerRuntime()
+     * @see AlreadyPrefixedSymbols
+     */
+    protected function getDiscoveredSymbolsForPlanning(): DiscoveredSymbols
+    {
+        $symbols = $this->getDiscoveredSymbolsWithComposerRuntime();
+
+        $originalSymbols = (new AlreadyPrefixedSymbols($this->config, $this->logger))
+            ->getOriginalSymbols($this->discoveredSymbols);
+
+        if (0 === count($originalSymbols)) {
+            return $symbols;
+        }
+
+        // Only seen by planning: see `::getDiscoveredSymbolsWithComposerRuntime()`.
+        if ($symbols === $this->discoveredSymbols) {
+            $symbols = clone $this->discoveredSymbols;
+        }
+
+        foreach ($originalSymbols->toArray() as $originalSymbol) {
+            $symbols->add($originalSymbol);
+        }
+
+        return $symbols;
     }
 
     /**

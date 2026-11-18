@@ -1441,4 +1441,20 @@ class StraussConfigTest extends TestCase
             unlink($tmpfname);
         }
     }
+
+    /**
+     * @covers ::getUnprefixedPackages
+     * @covers ::setUnprefixedPackages
+     */
+    public function testUnprefixedPackages(): void
+    {
+        $sut = new StraussConfig();
+
+        $this->assertSame([], $sut->getUnprefixedPackages());
+
+        $package = \BrianHenryIE\Strauss\Composer\ComposerPackage::fromComposerJsonArray(['name' => 'monolog/monolog']);
+        $sut->setUnprefixedPackages(['monolog/monolog' => $package]);
+
+        $this->assertSame(['monolog/monolog' => $package], $sut->getUnprefixedPackages());
+    }
 }

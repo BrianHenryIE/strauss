@@ -143,6 +143,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getExcludeNamespacesFromConstantPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeFilePatternsFromConstantPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeConstantNames')->andReturn(['WP_PLUGIN_DIR', 'ABSPATH']);
+        $config->shouldReceive('getUnprefixedPackages')->andReturn([]);
         $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('vendor');
         $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('vendor');
         $config->shouldReceive('isTargetDirectoryVendor')->andReturnFalse();
@@ -178,5 +179,48 @@ class MarkSymbolsForRenamingTest extends TestCase
         $sut->scanSetDoRename($discoveredSymbols);
 
         $this->assertFalse($symbol->isDoRename(), 'Constant in exclude_constants.constants should have doRename=false');
+    }
+
+    /**
+     * When prefixing in place, the other installed packages are scanned so their uses of the prefixed symbols are
+     * updated, but their own symbols are not renamed, even though they are autoloaded.
+     *
+     * @covers ::scanSetDoRename
+     * @covers ::isExcludeFromPrefixPackage
+     */
+    public function testUnprefixedPackageSymbolsNotMarkedForRenaming(): void
+    {
+        $package = Mockery::mock(ComposerPackage::class);
+        $package->shouldReceive('getPackageName')->andReturn('monolog/monolog');
+        $package->shouldReceive('getPackageAbsolutePath')->andReturn('project/vendor/monolog/monolog');
+        $package->shouldReceive('addFile');
+
+        $config = Mockery::mock(MarkSymbolsForRenamingConfigInterface::class);
+        $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
+        $config->shouldReceive('getExcludePackagesFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getUnprefixedPackages')->andReturn(['monolog/monolog' => $package]);
+        $config->shouldReceive('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeFilePatternsFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeConstantNames')->andReturn([]);
+        $config->shouldReceive('isTargetDirectoryVendor')->andReturnTrue();
+        $config->shouldReceive('getNamespaceReplacementPatterns')->andReturn([]);
+
+        $sut = new MarkSymbolsForRenaming($config, Mockery::mock(FileSystem::class), $this->getTestLogger());
+
+        $file = new FileWithDependency(
+            $package,
+            'monolog/monolog/src/Monolog/Logger.php',
+            'project/vendor/monolog/monolog/src/Monolog/Logger.php',
+            'project/vendor/monolog/monolog/src/Monolog/Logger.php'
+        );
+        $symbol = new NamespaceSymbol('Monolog', $file);
+        $symbol->setIsAutoloaded(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($symbol);
+
+        $sut->scanSetDoRename($discoveredSymbols);
+
+        $this->assertFalse($symbol->isDoRename());
     }
 }

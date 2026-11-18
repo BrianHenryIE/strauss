@@ -10,6 +10,7 @@ namespace BrianHenryIE\Strauss\Composer\Extra;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
+use BrianHenryIE\Strauss\Config\AlreadyPrefixedSymbolsConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
@@ -48,6 +49,7 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 class StraussConfig implements
     AliasesConfigInterface,
+    AlreadyPrefixedSymbolsConfigInterface,
     AutoloadConfigInterface,
     AutoloadFilesEnumeratorConfigInterface,
     ChangeEnumeratorConfigInterface,
@@ -137,6 +139,13 @@ class StraussConfig implements
      * @var array<string,ComposerPackage>
      */
     protected array $packagesToPrefix = [];
+
+    /**
+     * The non-dev installed packages which are not being prefixed, set only when the target directory is `vendor`.
+     *
+     * @var array<string,ComposerPackage>
+     */
+    protected array $unprefixedPackages = [];
 
     /**
      * Back-compatibility with Mozart.
@@ -925,6 +934,27 @@ class StraussConfig implements
     public function setPackagesToPrefix(array $packagesToPrefix): void
     {
         $this->packagesToPrefix = $packagesToPrefix;
+    }
+
+    /**
+     * The non-dev installed packages which are not being prefixed. When the target directory is `vendor`, their uses
+     * of the prefixed symbols are updated but their own symbols are not renamed. Empty otherwise.
+     *
+     * @return array<string,ComposerPackage>
+     */
+    public function getUnprefixedPackages(): array
+    {
+        return $this->unprefixedPackages;
+    }
+
+    /**
+     * @param array<string,ComposerPackage> $unprefixedPackages Resolved packages, keyed by package name.
+     *
+     * @used-by DependenciesCommand::buildDependencyList()
+     */
+    public function setUnprefixedPackages(array $unprefixedPackages): void
+    {
+        $this->unprefixedPackages = $unprefixedPackages;
     }
     /**
      * TODO: Can we name this `isClassmapOutputEnabled`?

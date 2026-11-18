@@ -68,4 +68,88 @@ class DependenciesEnumeratorTest extends TestCase
 
         self::assertSame(['acme/optional'], array_keys($app->getSuggestedPackages()));
     }
+
+    /**
+     * Every non-dev installed package not being prefixed: those already loaded as dependencies (e.g. excluded from
+     * prefixing) are reused, others are loaded. Dev, platform and metapackages, and Strauss itself, are not included.
+     *
+     * @covers ::getUnprefixedPackages
+     * @covers ::getNonDevInstalledPackageNames
+     */
+    public function testGetUnprefixedPackages(): void
+    {
+        $psrLog = ComposerPackage::fromComposerJsonArray(['name' => 'psr/log']);
+        $excluded = Mockery::mock(ComposerPackage::class);
+        $excluded->shouldReceive('getPackageAbsolutePath')->andReturn('/project/vendor/acme/excluded');
+        $monolog = Mockery::mock(ComposerPackage::class);
+        $monolog->shouldReceive('getPackageAbsolutePath')->andReturn('/project/vendor/monolog/monolog');
+        $metapackage = Mockery::mock(ComposerPackage::class);
+        $metapackage->shouldReceive('getPackageAbsolutePath')->andReturnNull();
+
+        $installedJson = [
+            'packages' => array_map(
+                fn(string $name): array => ['name' => $name],
+                [
+                    'psr/log',
+                    'acme/excluded',
+                    'monolog/monolog',
+                    'acme/metapackage',
+                    'acme/not-loadable',
+                    'brianhenryie/strauss',
+                    'phpunit/phpunit',
+                ]
+            ),
+            'dev-package-names' => ['phpunit/phpunit'],
+        ];
+
+        $config = Mockery::mock(StraussConfig::class);
+        $config->shouldReceive('getOverrideAutoload')->andReturn([]);
+        $config->shouldReceive('getPackages')->andReturn(['psr/log']);
+
+        $sut = new class ($config, $this->getInMemoryFileSystem(), $installedJson, ['acme/excluded' => $excluded], ['monolog/monolog' => $monolog, 'acme/metapackage' => $metapackage]) extends DependenciesEnumerator {
+            /** @var array<string, mixed> */
+            protected array $installedJson;
+
+            /** @var array<string, ComposerPackage> */
+            protected array $loadablePackages;
+
+            /** @var string[] */
+            public array $loaded = [];
+
+            /**
+             * @param array<string, mixed>           $installedJson
+             * @param array<string, ComposerPackage> $flatDependencyArray
+             * @param array<string, ComposerPackage> $loadablePackages
+             */
+            public function __construct($config, $filesystem, array $installedJson, array $flatDependencyArray, array $loadablePackages)
+            {
+                parent::__construct($config, $filesystem);
+                $this->installedJson = $installedJson;
+                $this->flatDependencyArray = $flatDependencyArray;
+                $this->loadablePackages = $loadablePackages;
+            }
+
+            protected function readInstalledJson(): array
+            {
+                /** @phpstan-ignore return.type */
+                return $this->installedJson;
+            }
+
+            protected function getInstalledJsonPackages(): array
+            {
+                return [];
+            }
+
+            protected function loadPackage(string $requiredPackageName, array $installedJsonPackages): ?ComposerPackage
+            {
+                $this->loaded[] = $requiredPackageName;
+                return $this->loadablePackages[$requiredPackageName] ?? null;
+            }
+        };
+
+        $result = $sut->getUnprefixedPackages(['psr/log' => $psrLog]);
+
+        self::assertSame(['acme/excluded' => $excluded, 'monolog/monolog' => $monolog], $result);
+        self::assertSame(['monolog/monolog', 'acme/metapackage', 'acme/not-loadable'], $sut->loaded);
+    }
 }

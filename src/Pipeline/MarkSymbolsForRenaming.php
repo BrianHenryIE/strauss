@@ -180,7 +180,8 @@ class MarkSymbolsForRenaming
     }
 
     /**
-     * Config: `extra.strauss.exclude_from_prefix.packages`.
+     * Config: `extra.strauss.exclude_from_prefix.packages`, and the packages in
+     * {@see MarkSymbolsForRenamingConfigInterface::getUnprefixedPackages()}.
      *
      * @param ?string $packageName The symbol's Composer package name, e.g. `vendor/package`; null when not from a package.
      */
@@ -200,7 +201,8 @@ class MarkSymbolsForRenaming
             return true;
         }
 
-        return false;
+        // When prefixing in place, the other installed packages are scanned only so their uses can be updated.
+        return isset($this->config->getUnprefixedPackages()[$packageName]);
     }
 
     /**

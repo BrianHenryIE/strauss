@@ -83,4 +83,11 @@ interface MarkSymbolsForRenamingConfigInterface
      * @return array<string, string>
      */
     public function getNamespaceReplacementPatterns(): array;
+
+    /**
+     * The non-dev installed packages which are not being prefixed, when the target directory is `vendor`.
+     *
+     * @return array<string,\BrianHenryIE\Strauss\Composer\ComposerPackage> Keyed by package name.
+     */
+    public function getUnprefixedPackages(): array;
 }

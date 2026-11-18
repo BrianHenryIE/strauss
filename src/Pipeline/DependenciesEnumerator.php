@@ -24,6 +24,7 @@ use Psr\Log\NullLogger;
 
 /**
  * @phpstan-import-type InstalledJsonArray from InstalledJson
+ * @phpstan-import-type InstalledJsonPackageArray from InstalledJson
  * @phpstan-import-type ComposerJsonArray from ComposerPackage
  * @phpstan-import-type AutoloadKeyArray from ComposerPackage
  */
@@ -139,21 +140,7 @@ class DependenciesEnumerator
     {
         $requiredPackageNames = array_filter($requiredPackageNames, [ $this, 'removeVirtualPackagesFilter' ]);
 
-        $installedJsonPath = $this->filesystem->makeAbsolute(
-            sprintf(
-                "%s/composer/installed.json",
-                $this->config->getAbsoluteVendorDirectory()
-            )
-        );
-        $installedJsonTxt = $this->filesystem->read($installedJsonPath);
-        /**
- * @var InstalledJsonArray $installedJson
-*/
-        $installedJson = json_decode($installedJsonTxt, true);
-        $installedJsonPackages = [];
-        foreach ($installedJson['packages'] as $package) {
-            $installedJsonPackages[$package['name']] = $package;
-        }
+        $installedJsonPackages = $this->getInstalledJsonPackages();
 
         foreach ($requiredPackageNames as $requiredPackageName) {
             // Avoid infinite recursion.
@@ -161,140 +148,11 @@ class DependenciesEnumerator
                 continue;
             }
 
-            $packageComposerFile = sprintf(
-                '%s/%s/composer.json',
-                $this->config->getAbsoluteVendorDirectory(),
-                $requiredPackageName
-            );
-
-            /**
-             * 1. Remove `mem://`
-             * 2. Add `c:\` or `/`
-             *
-             * @see https://github.com/composer/composer/pull/12396
-             */
-            $packageComposerFile = $this->filesystem->normalizePath($packageComposerFile);
-            $packageComposerFile = $this->filesystem->makeAbsolute($packageComposerFile);
-
-            $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
-
-            if ($this->filesystem->fileExists($packageComposerFile)) {
-                $this->logger->debug(
-                    'Loading ComposerPackage::fromFile {packageComposerFilePath}',
-                    [
-                        'packageComposerFilePath' => $packageComposerFile,
-                    ]
-                );
-
-                /**
-                 * TODO: Calling `::makeAbsolute()` should be unnecessary when Composer PR merged.
-                 *
-                 * @see https://github.com/composer/composer/pull/12396
-                 */
-                $requiredComposerPackage = ComposerPackage::fromFile(
-                    $this->filesystem->makeAbsolute($packageComposerFile),
-                    $overrideAutoload
-                );
-                $requiredComposerPackage->setRealpath(
-                    $this->filesystem->normalizePath(
-                        Platform::realpath(
-                            $this->filesystem->makeAbsolute($packageComposerFile)
-                        )
-                    )
-                );
-            } else {
-                // Some packages download with NO `composer.json`! E.g. woocommerce/action-scheduler.
-                // Some packages download to a different directory than the package name.
-                $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock: ' . $packageComposerFile);
-
-                // TODO: These (.json, .lock) should be read once and reused.
-                $composerJsonString = $this->filesystem->read($this->config->getProjectAbsolutePath() . '/' . Factory::getComposerFile());
-                /**
- * @var ComposerJsonArray $composerJson
-*/
-                $composerJson       = json_decode($composerJsonString, true, 512, JSON_THROW_ON_ERROR);
-
-                if (isset($composerJson['provide']) && in_array($requiredPackageName, array_keys($composerJson['provide']))) {
-                    $this->logger->info('Skipping ' . $requiredPackageName . ' as it is in the composer.json provide list');
-                    continue;
-                }
-
-                $composerLockPath = $this->config->getProjectAbsolutePath() . '/' . Factory::getLockFile(Factory::getComposerFile());
-                $composerLockString     = $this->filesystem->read($composerLockPath);
-                /**
-                 * @var null|array{packages:array<array{name:string, type?:string, require?:array<string,string>, autoload?:AutoloadKeyArray}>} $composerLockJsonArray
-                 */
-                $composerLockJsonArray           = json_decode($composerLockString, true);
-
-                if (is_null($composerLockJsonArray)) {
-                    continue;
-                }
-
-                /**
-                 * @var ?ComposerJsonArray $requiredPackageComposerJson
-                 */
-                $requiredPackageComposerJson = null;
-                foreach ($composerLockJsonArray['packages'] as $packageJson) {
-                    if ($requiredPackageName === $packageJson['name']) {
-                        $requiredPackageComposerJson = $packageJson;
-                        break;
-                    }
-                }
-
-                if (is_null($requiredPackageComposerJson)) {
-                    // e.g. composer-plugin-api, composer-runtime-api
-                    $this->logger->info('Skipping ' . $requiredPackageName . ' as it is not in composer.lock');
-                    continue;
-                }
-
-                $this->logger->info(
-                    'Found {requiredPackageName} in composer.lock.',
-                    [
-                        'requiredPackageName' => $requiredPackageName,
-                    ]
-                );
-
-                if (
-                    !isset($requiredPackageComposerJson['autoload'])
-                    && empty($requiredPackageComposerJson['require'])
-                    && (!isset($requiredPackageComposerJson['type']) || $requiredPackageComposerJson['type'] != 'metapackage')
-                    && ! $this->filesystem->directoryExists(dirname($packageComposerFile))
-                ) {
-                    // e.g. symfony/polyfill-php72 when installed on PHP 7.2 or later.
-                    $this->logger->info('Skipping ' . $requiredPackageName . ' as it is has no autoload key (possibly a polyfill unnecessary for this version of PHP).');
-                    continue;
-                }
-
-                $projectVendorAbsoluteDir = $this->config->getAbsoluteVendorDirectory();
-
-                $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
+            $requiredComposerPackage = $this->loadPackage($requiredPackageName, $installedJsonPackages);
+            if (is_null($requiredComposerPackage)) {
+                continue;
             }
 
-            if (
-                isset($installedJsonPackages[$requiredPackageName])
-                && is_null($requiredComposerPackage->getRealPath())
-                && $installedJsonPackages[$requiredPackageName]['dist']['type'] === 'path'
-            ) {
-                $installedPackage = $installedJsonPackages[$requiredPackageName];
-                $path = $installedPackage['dist']['url'];
-
-                $packageRealPath = $this->filesystem->normalizePath(
-                    Platform::realpath(
-                        $this->filesystem->makeAbsolute(
-                            $this->config->getProjectAbsolutePath() . '/' . $path
-                        )
-                    )
-                );
-                $requiredComposerPackage->setRealpath(
-                    $packageRealPath
-                );
-            }
-            unset($installedPackage);
-            $requiredComposerPackage->setProjectVendorDirectory(
-                $this->filesystem->normalizePath(
-                    $this->config->getAbsoluteVendorDirectory()
-                )
-            );
 
             $this->logger->info('Analysing package ' . $requiredComposerPackage->getPackageName());
             $this->flatDependencyArray[$requiredComposerPackage->getPackageName()] = $requiredComposerPackage;
@@ -327,6 +185,264 @@ class DependenciesEnumerator
 
             $this->recursiveGetAllDependencies($newPackages);
         }
+    }
+
+    /**
+     * The non-dev packages installed in the vendor directory which are not being prefixed, e.g. packages which use the
+     * prefixed packages but are not themselves listed in `packages`, and those in `exclude_from_prefix.packages`.
+     *
+     * When the target directory is the vendor directory, these stay where they are, so their uses of the prefixed
+     * symbols must be updated, while their own symbols are not renamed.
+     *
+     * Call after {@see self::getAllDependencies()} so the packages already loaded are reused.
+     *
+     * @param array<string, ComposerPackage> $packagesToPrefix Keyed by package name.
+     *
+     * @return array<string, ComposerPackage> Keyed by package name.
+     *
+     * @throws FilesystemException
+     * @throws JsonException
+     */
+    public function getUnprefixedPackages(array $packagesToPrefix): array
+    {
+        $installedJsonPackages = $this->getInstalledJsonPackages();
+
+        $unprefixedPackages = [];
+        foreach ($this->getNonDevInstalledPackageNames() as $packageName) {
+            if (
+                isset($packagesToPrefix[$packageName])
+                || 'brianhenryie/strauss' === $packageName
+                || !$this->removeVirtualPackagesFilter($packageName)
+            ) {
+                continue;
+            }
+
+            $package = $this->flatDependencyArray[$packageName]
+                ?? $this->loadPackage($packageName, $installedJsonPackages);
+
+            if (is_null($package) || is_null($package->getPackageAbsolutePath())) {
+                continue;
+            }
+
+            $unprefixedPackages[$packageName] = $package;
+        }
+
+        $this->logger->debug(
+            'Unprefixed packages: {packageNames}',
+            [
+                'packageNames' => implode(', ', array_keys($unprefixedPackages)),
+            ]
+        );
+
+        return $unprefixedPackages;
+    }
+
+    /**
+     * The packages in `vendor/composer/installed.json`, except those in its `dev-package-names`.
+     *
+     * @return string[]
+     * @throws FilesystemException
+     */
+    protected function getNonDevInstalledPackageNames(): array
+    {
+        $installedJson = $this->readInstalledJson();
+
+        return array_values(
+            array_diff(
+                array_map(
+                    fn(array $package): string => $package['name'],
+                    $installedJson['packages']
+                ),
+                $installedJson['dev-package-names']
+            )
+        );
+    }
+
+    /**
+     * @return InstalledJsonArray
+     * @throws FilesystemException
+     */
+    protected function readInstalledJson(): array
+    {
+        $installedJsonPath = $this->filesystem->makeAbsolute(
+            sprintf(
+                "%s/composer/installed.json",
+                $this->config->getAbsoluteVendorDirectory()
+            )
+        );
+        $installedJsonTxt = $this->filesystem->read($installedJsonPath);
+        /**
+         * @var InstalledJsonArray $installedJson
+         */
+        $installedJson = json_decode($installedJsonTxt, true);
+
+        return $installedJson;
+    }
+
+    /**
+     * @return array<string, InstalledJsonPackageArray> The `installed.json` package entries, keyed by package name.
+     * @throws FilesystemException
+     */
+    protected function getInstalledJsonPackages(): array
+    {
+        $installedJsonPackages = [];
+        foreach ($this->readInstalledJson()['packages'] as $package) {
+            $installedJsonPackages[$package['name']] = $package;
+        }
+        return $installedJsonPackages;
+    }
+
+    /**
+     * Load one installed package from its `composer.json`, falling back to `composer.lock`.
+     *
+     * @param string                                   $requiredPackageName   The package's name, e.g. `psr/log`.
+     * @param array<string, InstalledJsonPackageArray> $installedJsonPackages The `installed.json` package entries, keyed by package name.
+     *
+     * @return ?ComposerPackage Null when the package is provided by the project, is not in `composer.lock`, or is
+     *                          an unnecessary polyfill.
+     *
+     * @throws FilesystemException
+     * @throws JsonException
+     * @throws Exception
+     */
+    protected function loadPackage(string $requiredPackageName, array $installedJsonPackages): ?ComposerPackage
+    {
+        $packageComposerFile = sprintf(
+            '%s/%s/composer.json',
+            $this->config->getAbsoluteVendorDirectory(),
+            $requiredPackageName
+        );
+
+        /**
+         * 1. Remove `mem://`
+         * 2. Add `c:\` or `/`
+         *
+         * @see https://github.com/composer/composer/pull/12396
+         */
+        $packageComposerFile = $this->filesystem->normalizePath($packageComposerFile);
+        $packageComposerFile = $this->filesystem->makeAbsolute($packageComposerFile);
+
+        $overrideAutoload = $this->overrideAutoload[ $requiredPackageName ] ?? null;
+
+        if ($this->filesystem->fileExists($packageComposerFile)) {
+            $this->logger->debug(
+                'Loading ComposerPackage::fromFile {packageComposerFilePath}',
+                [
+                    'packageComposerFilePath' => $packageComposerFile,
+                ]
+            );
+
+            /**
+             * TODO: Calling `::makeAbsolute()` should be unnecessary when Composer PR merged.
+             *
+             * @see https://github.com/composer/composer/pull/12396
+             */
+            $requiredComposerPackage = ComposerPackage::fromFile(
+                $this->filesystem->makeAbsolute($packageComposerFile),
+                $overrideAutoload
+            );
+            $requiredComposerPackage->setRealpath(
+                $this->filesystem->normalizePath(
+                    Platform::realpath(
+                        $this->filesystem->makeAbsolute($packageComposerFile)
+                    )
+                )
+            );
+        } else {
+            // Some packages download with NO `composer.json`! E.g. woocommerce/action-scheduler.
+            // Some packages download to a different directory than the package name.
+            $this->logger->debug('Could not find ' . $requiredPackageName . '\'s composer.json in vendor dir, trying composer.lock: ' . $packageComposerFile);
+
+            // TODO: These (.json, .lock) should be read once and reused.
+            $composerJsonString = $this->filesystem->read($this->config->getProjectAbsolutePath() . '/' . Factory::getComposerFile());
+            /**
+ * @var ComposerJsonArray $composerJson
+*/
+            $composerJson       = json_decode($composerJsonString, true, 512, JSON_THROW_ON_ERROR);
+
+            if (isset($composerJson['provide']) && in_array($requiredPackageName, array_keys($composerJson['provide']))) {
+                $this->logger->info('Skipping ' . $requiredPackageName . ' as it is in the composer.json provide list');
+                return null;
+            }
+
+            $composerLockPath = $this->config->getProjectAbsolutePath() . '/' . Factory::getLockFile(Factory::getComposerFile());
+            $composerLockString     = $this->filesystem->read($composerLockPath);
+            /**
+             * @var null|array{packages:array<array{name:string, type?:string, require?:array<string,string>, autoload?:AutoloadKeyArray}>} $composerLockJsonArray
+             */
+            $composerLockJsonArray           = json_decode($composerLockString, true);
+
+            if (is_null($composerLockJsonArray)) {
+                return null;
+            }
+
+            /**
+             * @var ?ComposerJsonArray $requiredPackageComposerJson
+             */
+            $requiredPackageComposerJson = null;
+            foreach ($composerLockJsonArray['packages'] as $packageJson) {
+                if ($requiredPackageName === $packageJson['name']) {
+                    $requiredPackageComposerJson = $packageJson;
+                    break;
+                }
+            }
+
+            if (is_null($requiredPackageComposerJson)) {
+                // e.g. composer-plugin-api, composer-runtime-api
+                $this->logger->info('Skipping ' . $requiredPackageName . ' as it is not in composer.lock');
+                return null;
+            }
+
+            $this->logger->info(
+                'Found {requiredPackageName} in composer.lock.',
+                [
+                    'requiredPackageName' => $requiredPackageName,
+                ]
+            );
+
+            if (
+                !isset($requiredPackageComposerJson['autoload'])
+                && empty($requiredPackageComposerJson['require'])
+                && (!isset($requiredPackageComposerJson['type']) || $requiredPackageComposerJson['type'] != 'metapackage')
+                && ! $this->filesystem->directoryExists(dirname($packageComposerFile))
+            ) {
+                // e.g. symfony/polyfill-php72 when installed on PHP 7.2 or later.
+                $this->logger->info('Skipping ' . $requiredPackageName . ' as it is has no autoload key (possibly a polyfill unnecessary for this version of PHP).');
+                return null;
+            }
+
+            $projectVendorAbsoluteDir = $this->config->getAbsoluteVendorDirectory();
+
+            $requiredComposerPackage = ComposerPackage::fromComposerJsonArray($requiredPackageComposerJson, $overrideAutoload);
+        }
+
+        if (
+            isset($installedJsonPackages[$requiredPackageName])
+            && is_null($requiredComposerPackage->getRealPath())
+            && $installedJsonPackages[$requiredPackageName]['dist']['type'] === 'path'
+        ) {
+            $installedPackage = $installedJsonPackages[$requiredPackageName];
+            $path = $installedPackage['dist']['url'];
+
+            $packageRealPath = $this->filesystem->normalizePath(
+                Platform::realpath(
+                    $this->filesystem->makeAbsolute(
+                        $this->config->getProjectAbsolutePath() . '/' . $path
+                    )
+                )
+            );
+            $requiredComposerPackage->setRealpath(
+                $packageRealPath
+            );
+        }
+        unset($installedPackage);
+        $requiredComposerPackage->setProjectVendorDirectory(
+            $this->filesystem->normalizePath(
+                $this->config->getAbsoluteVendorDirectory()
+            )
+        );
+
+        return $requiredComposerPackage;
     }
 
     /**
