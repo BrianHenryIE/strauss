@@ -129,18 +129,79 @@ class FileSymbolScanner
     }
 
     /**
+     * Files of packages outside the dependency tree, e.g. those not being prefixed when prefixing in place, are only
+     * scanned to update their uses of the symbols found, so they are scanned after the other files, and only those
+     * which mention one of the symbols found are parsed. The others are left unchanged.
+     *
      * @param DiscoveredFiles $files The project's and dependencies' files; PHP files are parsed and their maps stored.
      *
      * @throws FilesystemException
+     *
+     * @see SymbolMentionFilter
      */
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
+    {
+        $allPackages = $this->config->getAllPackages();
+
+        $filesToScan = [];
+        $filesOnlyToUpdate = [];
+        foreach ($files->getFiles() as $file) {
+            if (
+                !is_null($allPackages)
+                && $file instanceof FileWithDependency
+                && !isset($allPackages[$file->getDependency()->getPackageName()])
+            ) {
+                $filesOnlyToUpdate[] = $file;
+            } else {
+                $filesToScan[] = $file;
+            }
+        }
+
+        $this->scanFiles($filesToScan);
+
+        if (0 === count($filesOnlyToUpdate)) {
+            return $this->discoveredSymbols;
+        }
+
+        $symbolMentionFilter = new SymbolMentionFilter($this->discoveredSymbols);
+
+        $filesMentioningSymbols = [];
+        foreach ($filesOnlyToUpdate as $file) {
+            if ($file->isPhpFile() && $symbolMentionFilter->isMentionedIn($this->filesystem->read($file->getSourcePath()))) {
+                $filesMentioningSymbols[] = $file;
+                continue;
+            }
+            // Otherwise {@see Prefixer} would parse it.
+            $file->setDoPrefix(false);
+            $file->setDoUpdate(false);
+        }
+
+        $this->logger->info(
+            'Scanning {count} of {total} files in packages outside the dependency tree which mention the symbols found.',
+            [
+                'count' => count($filesMentioningSymbols),
+                'total' => count($filesOnlyToUpdate),
+            ]
+        );
+
+        $this->scanFiles($filesMentioningSymbols);
+
+        return $this->discoveredSymbols;
+    }
+
+    /**
+     * @param FileBase[] $files The files to scan; PHP files are parsed and their maps stored.
+     *
+     * @throws FilesystemException
+     */
+    protected function scanFiles(array $files): void
     {
         $packagesToPrefixLookup = array_fill_keys(array_keys($this->config->getPackagesToPrefix()), true);
         $projectDirectory = $this->config->getProjectAbsolutePath();
 
         $this->analyzeInParallel($files);
 
-        foreach ($files->getFiles() as $file) {
+        foreach ($files as $file) {
             if (
                 $file instanceof FileWithDependency
                 && !isset($packagesToPrefixLookup[$file->getDependency()->getPackageName()])
@@ -195,8 +256,6 @@ class FileSymbolScanner
                 $package
             );
         }
-
-        return $this->discoveredSymbols;
     }
 
     /**
@@ -205,9 +264,9 @@ class FileSymbolScanner
      *
      * If the workers cannot be run, the files are parsed in this process as before.
      *
-     * @param DiscoveredFiles $files The files to scan; only PHP files are analysed.
+     * @param FileBase[] $files The files to scan; only PHP files are analysed.
      */
-    protected function analyzeInParallel(DiscoveredFiles $files): void
+    protected function analyzeInParallel(array $files): void
     {
         if (is_null($this->workerPool)) {
             return;
@@ -217,7 +276,7 @@ class FileSymbolScanner
  * @var array<string, string> $absolutePaths Keyed by source path.
 */
         $absolutePaths = [];
-        foreach ($files->getFiles() as $file) {
+        foreach ($files as $file) {
             if (!$file->isPhpFile() || !($file instanceof File)) {
                 continue;
             }

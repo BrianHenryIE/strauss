@@ -10,6 +10,7 @@
 namespace BrianHenryIE\Strauss\Config;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 
 /**
  * Consumed by {@see \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner}, which uses the {@see ComposerPackage} list to
@@ -21,6 +22,14 @@ interface FileSymbolScannerConfigInterface
      * @return string[]
      */
     public function getExcludeNamespacesFromPrefixing(): array;
+
+    /**
+     * The packages in the dependency tree. Files of other packages, e.g. those not being prefixed when prefixing in
+     * place, are only scanned if they mention a symbol found in these.
+     *
+     * @return ?DependenciesCollection Null when not known, so every file is scanned.
+     */
+    public function getAllPackages(): ?DependenciesCollection;
 
     /**
      * @return array<string,ComposerPackage>

@@ -15,7 +15,6 @@ use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
@@ -27,10 +26,8 @@ use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
-use BrianHenryIE\Strauss\Pipeline\FileSymbolScanner;
 use BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
-use BrianHenryIE\Strauss\Pipeline\SymbolMentionFilter;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -242,6 +239,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 
+        $this->config->setAllPackages(
+            $this->flatDependencyTree
+        );
+
         $this->config->setPackagesToCopy(
             array_filter(
                 $this->flatDependencyTree->toArray(),
@@ -337,74 +338,6 @@ class DependenciesCommand extends AbstractRenamespacerCommand
                 new DependenciesCollection($unprefixedPackagesOutsideTree)
             );
         }
-    }
-
-    /**
-     * When prefixing in place, the packages not being prefixed are only scanned to update their uses of the prefixed
-     * symbols, so after scanning the other files, only their files which mention one of the symbols found are parsed.
-     * The others are left unchanged.
-     *
-     * @see SymbolMentionFilter
-     */
-    protected function scanFilesForSymbols(): void
-    {
-        $packagesOnlyToUpdate = array_diff_key(
-            $this->config->getUnprefixedPackages(),
-            $this->flatDependencyTree->toArray()
-        );
-
-        if (empty($packagesOnlyToUpdate)) {
-            parent::scanFilesForSymbols();
-            return;
-        }
-
-        $this->logger->notice('Scanning files for defined symbols...');
-
-        $filesToScan = [];
-        $filesOnlyToUpdate = [];
-        foreach ($this->discoveredFiles->getFiles() as $file) {
-            if (
-                $file instanceof FileWithDependency
-                && isset($packagesOnlyToUpdate[$file->getDependency()->getPackageName()])
-            ) {
-                $filesOnlyToUpdate[] = $file;
-            } else {
-                $filesToScan[] = $file;
-            }
-        }
-
-        $fileSymbolScanner = new FileSymbolScanner(
-            $this->config,
-            $this->discoveredSymbols,
-            $this->filesystem,
-            $this->logger
-        );
-        $fileSymbolScanner->setWorkerPool($this->getWorkerPool());
-
-        $fileSymbolScanner->findInFiles(new DiscoveredFiles($filesToScan));
-
-        $symbolMentionFilter = new SymbolMentionFilter($this->discoveredSymbols);
-
-        $filesMentioningSymbols = [];
-        foreach ($filesOnlyToUpdate as $file) {
-            if ($file->isPhpFile() && $symbolMentionFilter->isMentionedIn($this->filesystem->read($file->getSourcePath()))) {
-                $filesMentioningSymbols[] = $file;
-                continue;
-            }
-            // Otherwise {@see Prefixer} would parse it.
-            $file->setDoPrefix(false);
-            $file->setDoUpdate(false);
-        }
-
-        $this->logger->info(
-            'Scanning {count} of {total} files in packages not being prefixed which mention the symbols found.',
-            [
-                'count' => count($filesMentioningSymbols),
-                'total' => count($filesOnlyToUpdate),
-            ]
-        );
-
-        $fileSymbolScanner->findInFiles(new DiscoveredFiles($filesMentioningSymbols));
     }
 
     protected function enumeratePsrNamespaces(): void

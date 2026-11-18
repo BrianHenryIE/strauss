@@ -9,6 +9,7 @@
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
@@ -126,6 +127,11 @@ class StraussConfig implements
      * @var string[]
      */
     protected array $packageNames = [];
+
+    /**
+     * The packages in the dependency tree, i.e. those to copy, prefix, or otherwise process. Null until resolved.
+     */
+    protected ?DependenciesCollection $allPackages = null;
 
     /**
      * @var array<string,ComposerPackage>
@@ -312,6 +318,8 @@ class StraussConfig implements
             $rename->addMapping(StraussConfig::class, 'target_directory', 'targetVendorRelativePath');
             $rename->addMapping(StraussConfig::class, 'dep_directory', 'targetVendorRelativePath');
             $rename->addMapping(StraussConfig::class, 'dep_namespace', 'namespacePrefix');
+
+            $rename->addMapping(StraussConfig::class, 'packages', 'packageNames');
 
             $rename->addMapping(StraussConfig::class, 'exclude_packages', 'excludePackages');
             $rename->addMapping(StraussConfig::class, 'delete_vendor_files', 'deleteVendorFiles');
@@ -1172,5 +1180,18 @@ class StraussConfig implements
     public function setProjectAbsolutePath(string $projectAbsolutePath): void
     {
         $this->projectAbsolutePath = $projectAbsolutePath;
+    }
+
+    /**
+     * @param DependenciesCollection $allPackages The packages in the dependency tree.
+     */
+    public function setAllPackages(DependenciesCollection $allPackages): void
+    {
+        $this->allPackages = $allPackages;
+    }
+
+    public function getAllPackages(): ?DependenciesCollection
+    {
+        return $this->allPackages;
     }
 }
