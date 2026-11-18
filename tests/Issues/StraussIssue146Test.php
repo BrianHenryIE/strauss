@@ -179,6 +179,38 @@ class StraussIssue146Test extends IntegrationTestCase
         $this->assertStringContainsString('use BrianHenryIE\TestStrauss\Composer\IO\IOInterface;', $autoloadGeneratorPhpString);
 
         $this->assertStringContainsString('\\0BrianHenryIE\\TestStrauss\\Composer\\Autoload\\ClassLoader\\0', $autoloadGeneratorPhpString);
+
+        /**
+         * The prefix is never added after another namespace part, e.g. Strauss's own doc comment example
+         * `'BrianHenryIE\Strauss\Composer\InstalledVersions'` must not become
+         * `'BrianHenryIE\Strauss\BrianHenryIE\TestStrauss\Composer\InstalledVersions'`.
+         */
+        $this->assertSame([], $this->findPrefixAfterNamespacePart(['src', 'vendor']));
+    }
+
+    /**
+     * @param string[] $directories Relative to the tests working directory.
+     *
+     * @return array<string, string[]> The PHP files where `BrianHenryIE\TestStrauss\` follows another namespace part,
+     *                                 with the matches, written with single or doubled backslashes.
+     */
+    protected function findPrefixAfterNamespacePart(array $directories): array
+    {
+        $found = [];
+        foreach ($directories as $directory) {
+            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->testsWorkingDir . '/' . $directory));
+            /** @var \SplFileInfo $fileInfo */
+            foreach ($iterator as $fileInfo) {
+                if (!$fileInfo->isFile() || 'php' !== $fileInfo->getExtension()) {
+                    continue;
+                }
+                $contents = (string) file_get_contents($fileInfo->getPathname());
+                if (preg_match_all('/[A-Za-z0-9_\x7f-\xff](\\\\{1,2})BrianHenryIE\1TestStrauss\1\S*/', $contents, $matches)) {
+                    $found[str_replace($this->testsWorkingDir . '/', '', $fileInfo->getPathname())] = array_values(array_unique($matches[0]));
+                }
+            }
+        }
+        return $found;
     }
 
     public function test_prefix_own_classes_for_test(): void

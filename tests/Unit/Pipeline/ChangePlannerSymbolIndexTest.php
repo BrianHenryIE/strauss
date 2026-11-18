@@ -114,6 +114,44 @@ class ChangePlannerSymbolIndexTest extends TestCase
     }
 
     /**
+     * A name is only replaced where it is the whole name, not the end of a longer one, e.g. `Acme\Lib\Widget` within
+     * the already prefixed `\Prefix\Acme\Lib\Widget` or another package's `\Other\Acme\Lib\Widget`.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/343
+     *
+     * @covers ::findDocCommentPositions
+     */
+    public function test_doc_comment_names_within_longer_names_are_not_replaced(): void
+    {
+        $contents = <<<'EOD'
+            <?php
+            namespace Consumer;
+
+            /**
+             * @param \Acme\Lib\Widget $widget
+             * @throws \Prefix\Acme\Lib\Widget
+             * @return Other\Acme\Lib\Widget
+             */
+            function make($widget) {
+            }
+            EOD;
+        $expected = <<<'EOD'
+            <?php
+            namespace Consumer;
+
+            /**
+             * @param \Prefix\Acme\Lib\Widget $widget
+             * @throws \Prefix\Acme\Lib\Widget
+             * @return Other\Acme\Lib\Widget
+             */
+            function make($widget) {
+            }
+            EOD;
+
+        self::assertSame($expected, $this->prefix($contents, $this->getSymbols()));
+    }
+
+    /**
      * A function's name is only replaced where it is clearly a reference to the function, not where it is a word.
      *
      * @covers ::findDocCommentPositions

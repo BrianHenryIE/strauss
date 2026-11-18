@@ -1279,7 +1279,10 @@ class ChangePlanner
                 $offset = 0;
                 while (($pos = strpos($text, $docSearchStr, $offset)) !== false) {
                     $after = $pos + $docSearchLen;
-                    $beforeOk = $pos === 0 || !preg_match($beforePattern, $text[$pos - 1]);
+                    $beforeOk = ($pos === 0 || !preg_match($beforePattern, $text[$pos - 1]))
+                        // A namespaced name may follow the `\` of a fully qualified name, but not one which separates
+                        // it from a namespace before it, e.g. `Psr\Log\X` in the already prefixed `\Prefix\Psr\Log\X`.
+                        && !($pos >= 2 && '\\' === $text[$pos - 1] && preg_match('/[a-zA-Z0-9_\x7f-\xff]/', $text[$pos - 2]));
                     $afterOk  = $after >= strlen($text) || !preg_match('/[a-zA-Z0-9_\x7f-\xff]/', $text[$after]);
                     if ($beforeOk && $afterOk) {
                         $positions[] = [
