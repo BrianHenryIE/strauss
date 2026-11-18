@@ -9,20 +9,15 @@
 
 namespace BrianHenryIE\Strauss\Config;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 
 /**
- * Consumed by {@see \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner}, which uses the {@see ComposerPackage} list to
- * decide which packages' files are scanned and the project path to shorten paths in log messages.
+ * Consumed by {@see \BrianHenryIE\Strauss\Pipeline\FileSymbolScanner}, which uses the dependency tree to decide which
+ * packages' files are parsed, and the project path to shorten paths in log messages. Which symbols are renamed is
+ * decided later, by {@see \BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming}.
  */
 interface FileSymbolScannerConfigInterface
 {
-    /**
-     * @return string[]
-     */
-    public function getExcludeNamespacesFromPrefixing(): array;
-
     /**
      * The packages in the dependency tree. Files of other packages, e.g. those not being prefixed when prefixing in
      * place, are only scanned if they mention a symbol found in these.
@@ -30,11 +25,6 @@ interface FileSymbolScannerConfigInterface
      * @return ?DependenciesCollection Null when not known, so every file is scanned.
      */
     public function getAllPackages(): ?DependenciesCollection;
-
-    /**
-     * @return array<string,ComposerPackage>
-     */
-    public function getPackagesToPrefix(): array;
 
     /**
      * Just for shortening paths to relative paths for logging.

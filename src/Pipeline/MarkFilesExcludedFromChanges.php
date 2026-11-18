@@ -41,6 +41,13 @@ class MarkFilesExcludedFromChanges
     public function scanDiscoveredFiles(DiscoveredFiles $discoveredFiles): void
     {
         foreach ($discoveredFiles->getFiles() as $file) {
+            if ($this->isUnparsedFileOutsideDependencyTree($file)) {
+                // Otherwise {@see Prefixer} would parse it.
+                $file->setDoPrefix(false);
+                $file->setDoUpdate(false);
+                continue;
+            }
+
             if (
                 $this->fileMatchesFilePattern($file)
                 || $this->fileMatchesNamespace($file)
@@ -49,6 +56,22 @@ class MarkFilesExcludedFromChanges
                 $file->setDoUpdate(false);
             }
         }
+    }
+
+    /**
+     * A file of a package outside the dependency tree, e.g. one not being prefixed when prefixing in place, which
+     * {@see FileSymbolScanner} did not parse because it mentions none of the symbols found, or is not PHP.
+     *
+     * @param FileBase $file The file to check.
+     */
+    protected function isUnparsedFileOutsideDependencyTree(FileBase $file): bool
+    {
+        $allPackages = $this->config->getAllPackages();
+
+        return !is_null($allPackages)
+            && $file instanceof FileWithDependency
+            && !isset($allPackages[$file->getDependency()->getPackageName()])
+            && is_null($file->getCodeMap());
     }
 
     protected function fileMatchesFilePattern(FileBase $file): bool

@@ -129,9 +129,12 @@ class FileSymbolScanner
     }
 
     /**
-     * Files of packages outside the dependency tree, e.g. those not being prefixed when prefixing in place, are only
-     * scanned to update their uses of the symbols found, so they are scanned after the other files, and only those
-     * which mention one of the symbols found are parsed. The others are left unchanged.
+     * Files of packages outside the dependency tree, e.g. those not being prefixed when prefixing in place, only
+     * matter for their uses of the symbols found, so they are scanned after the other files, and only those which
+     * mention one of the symbols found are parsed. Those not parsed are left unchanged:
+     * {@see MarkFilesExcludedFromChanges}.
+     *
+     * Which symbols are renamed is decided later: {@see MarkSymbolsForRenaming}.
      *
      * @param DiscoveredFiles $files The project's and dependencies' files; PHP files are parsed and their maps stored.
      *
@@ -169,11 +172,7 @@ class FileSymbolScanner
         foreach ($filesOnlyToUpdate as $file) {
             if ($file->isPhpFile() && $symbolMentionFilter->isMentionedIn($this->filesystem->read($file->getSourcePath()))) {
                 $filesMentioningSymbols[] = $file;
-                continue;
             }
-            // Otherwise {@see Prefixer} would parse it.
-            $file->setDoPrefix(false);
-            $file->setDoUpdate(false);
         }
 
         $this->logger->info(
@@ -196,31 +195,17 @@ class FileSymbolScanner
      */
     protected function scanFiles(array $files): void
     {
-        $packagesToPrefixLookup = array_fill_keys(array_keys($this->config->getPackagesToPrefix()), true);
         $projectDirectory = $this->config->getProjectAbsolutePath();
 
         $this->analyzeInParallel($files);
 
         foreach ($files as $file) {
-            if (
-                $file instanceof FileWithDependency
-                && !isset($packagesToPrefixLookup[$file->getDependency()->getPackageName()])
-            ) {
-                /**
-                 * We will not prefix symbols found in this file because it is not in a default or listed package.
-                 *
-                 * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
-                 */
-                $file->setDoPrefix(false);
-            }
-
             $relativeFilePath
                 = $file instanceof FileWithDependency
                     ? $file->getVendorRelativePath()
                     : $this->filesystem->getRelativePath($projectDirectory, $file->getSourcePath());
 
             if (!$file->isPhpFile()) {
-                $file->setDoPrefix(false);
                 $this->logger->debug("Skipping non-PHP file:::" . $relativeFilePath);
                 continue;
             }
@@ -391,7 +376,7 @@ class FileSymbolScanner
 
         switch ($definition->getType()) {
             case SymbolDefinition::TYPE_CLASS:
-                $classSymbol = $this->addDiscoveredClassChange(
+                $this->addDiscoveredClassChange(
                     $name,
                     $definition->isAbstract(),
                     $file,
@@ -399,9 +384,6 @@ class FileSymbolScanner
                     $namespaceSymbol,
                     $definition->getInterfaces()
                 );
-                if ($classSymbol) {
-                    $classSymbol->setDoRename($file->isDoPrefix());
-                }
                 return;
 
             case SymbolDefinition::TYPE_FUNCTION:
@@ -414,7 +396,6 @@ class FileSymbolScanner
                     $this->add($functionSymbol);
                 }
                 $functionSymbol->addSourceFile($file);
-                $functionSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             case SymbolDefinition::TYPE_CONSTANT:
@@ -425,7 +406,6 @@ class FileSymbolScanner
                     $this->add($constantSymbol, $file);
                 }
                 $constantSymbol->addSourceFile($file);
-                $constantSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             case SymbolDefinition::TYPE_INTERFACE:
@@ -435,7 +415,6 @@ class FileSymbolScanner
                     $this->add($interfaceSymbol);
                 }
                 $interfaceSymbol->addSourceFile($file);
-                $interfaceSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             case SymbolDefinition::TYPE_TRAIT:
@@ -445,7 +424,6 @@ class FileSymbolScanner
                     $this->add($traitSymbol);
                 }
                 $traitSymbol->addSourceFile($file);
-                $traitSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             case SymbolDefinition::TYPE_ENUM:
@@ -464,7 +442,6 @@ class FileSymbolScanner
                     $this->add($enumSymbol, $file);
                 }
                 $enumSymbol->addSourceFile($file);
-                $enumSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             default:

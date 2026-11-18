@@ -1191,7 +1191,6 @@ class FileSymbolScannerTest extends TestCase
         $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
-        $config->method('getPackagesToPrefix')->willReturn([]);
 
         $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
 
@@ -1223,7 +1222,6 @@ class FileSymbolScannerTest extends TestCase
         $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
-        $config->method('getPackagesToPrefix')->willReturn([]);
 
         $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
 
@@ -1252,7 +1250,6 @@ class FileSymbolScannerTest extends TestCase
         $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
-        $config->method('getPackagesToPrefix')->willReturn([]);
 
         $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
 

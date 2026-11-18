@@ -2,11 +2,9 @@
 
 namespace BrianHenryIE\Strauss\Pipeline;
 
-use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -41,7 +39,6 @@ class FileSymbolScannerPerformanceTest extends TestCase
 
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
         $config->method('getProjectAbsolutePath')->willReturn('project');
-        $config->method('getPackagesToPrefix')->willReturn([]);
         $discoveredSymbols = new DiscoveredSymbols();
         $sut = new FileSymbolScanner($config, $discoveredSymbols, $this->getFileSystem());
 
@@ -184,92 +181,6 @@ class FileSymbolScannerPerformanceTest extends TestCase
         ];
     }
 
-    public function test_dependency_file_outside_packages_to_prefix_sets_do_prefix_false(): void
-    {
-        $contents = <<<'EOD'
-            <?php
-            function scan_me() {
-                return true;
-            }
-            EOD;
-
-        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
-        $config->method('getProjectAbsolutePath')->willReturn('project');
-        $config->method('getPackagesToPrefix')->willReturn([
-            'vendor/vendor-b' => $this->createMock(ComposerPackage::class),
-        ]);
-
-        $discoveredSymbols = new DiscoveredSymbols();
-        $sut = new FileSymbolScanner($config, $discoveredSymbols, $this->getFileSystem());
-
-        /** @var ComposerPackage&\Mockery\MockInterface $dependency */
-        $dependency = Mockery::mock(ComposerPackage::class);
-        $dependency->shouldReceive('getPackageName')->andReturn('vendor/vendor-a');
-        $dependency->shouldReceive('getPackageAbsolutePath')->andReturn('project/vendor/vendor-a');
-        $dependency->shouldReceive('addFile')->once();
-
-        $file = new FileWithDependency(
-            $dependency,
-            'vendor/vendor-a/file.php',
-            'project/vendor/vendor-a/file.php',
-            'vendor-prefixed/vendor-a/file.php'
-        );
-        $file->setDoPrefix(true);
-
-        $this->getFileSystem()->write($file->getSourcePath(), $contents);
-
-        $discoveredFiles = new DiscoveredFiles();
-        $discoveredFiles->add($file);
-
-        $result = $sut->findInFiles($discoveredFiles);
-
-        $this->assertArrayHasKey('scan_me', $result->getDiscoveredFunctions()->toArray());
-        $this->assertFalse($file->isDoPrefix());
-    }
-
-    public function test_dependency_file_inside_packages_to_prefix_does_not_set_do_prefix_false(): void
-    {
-        $contents = <<<'EOD'
-            <?php
-            function scan_me_too() {
-                return true;
-            }
-            EOD;
-
-        /** @var ComposerPackage&\Mockery\MockInterface $dependency */
-        $dependency = Mockery::mock(ComposerPackage::class);
-        $dependency->shouldReceive('getPackageName')->andReturn('vendor/vendor-a');
-        $dependency->shouldReceive('getPackageAbsolutePath')->andReturn('/project/vendor/vendor-a/');
-        $dependency->shouldReceive('addFile')->once();
-
-        $config = $this->createMock(FileSymbolScannerConfigInterface::class);
-        $config->method('getProjectAbsolutePath')->willReturn('/project');
-        $config->method('getPackagesToPrefix')->willReturn([
-            'vendor/vendor-a' => $dependency,
-        ]);
-
-        $discoveredSymbols = new DiscoveredSymbols();
-        $sut = new FileSymbolScanner($config, $discoveredSymbols, $this->getFileSystem());
-
-        $file = new FileWithDependency(
-            $dependency,
-            'vendor/vendor-a/file.php',
-            '/project/vendor/vendor-a/file.php',
-            'vendor-prefixed/vendor-a/file.php'
-        );
-        $file->setDoPrefix(true);
-
-        $this->getFileSystem()->write($file->getSourcePath(), $contents);
-
-        $discoveredFiles = new DiscoveredFiles();
-        $discoveredFiles->add($file);
-
-        $result = $sut->findInFiles($discoveredFiles);
-
-        $this->assertArrayHasKey('scan_me_too', $result->getDiscoveredFunctions()->toArray());
-        $this->assertTrue($file->isDoPrefix());
-    }
-
     private function scanContentForSymbols(string $contents): DiscoveredSymbols
     {
         $filesystemReaderMock = Mockery::mock(FileSystem::class);
@@ -279,7 +190,6 @@ class FileSymbolScannerPerformanceTest extends TestCase
         $discoveredSymbols = new DiscoveredSymbols();
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
         $config->method('getProjectAbsolutePath')->willReturn('/project');
-        $config->method('getPackagesToPrefix')->willReturn([]);
         $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystemReaderMock);
 
         $file = new File(

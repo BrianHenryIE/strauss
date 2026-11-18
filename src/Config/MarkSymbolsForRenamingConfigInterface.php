@@ -9,6 +9,8 @@
 
 namespace BrianHenryIE\Strauss\Config;
 
+use BrianHenryIE\Strauss\Composer\ComposerPackage;
+
 /**
  * Implemented by {@see \BrianHenryIE\Strauss\Composer\Extra\StraussConfig} and consumed by
  * {@see \BrianHenryIE\Strauss\Pipeline\MarkSymbolsForRenaming}. Provides the vendor and target directories, the
@@ -22,6 +24,13 @@ interface MarkSymbolsForRenamingConfigInterface
     public function getAbsoluteTargetDirectory(): string;
 
     public function isTargetDirectoryVendor(): bool;
+
+    /**
+     * The packages whose symbols are prefixed. Files of other packages are marked not to prefix.
+     *
+     * @return array<string,ComposerPackage> Keyed by package name.
+     */
+    public function getPackagesToPrefix(): array;
 
     /**
      * @return string[]
@@ -87,7 +96,7 @@ interface MarkSymbolsForRenamingConfigInterface
     /**
      * The non-dev installed packages which are not being prefixed, when the target directory is `vendor`.
      *
-     * @return array<string,\BrianHenryIE\Strauss\Composer\ComposerPackage> Keyed by package name.
+     * @return array<string,ComposerPackage> Keyed by package name.
      */
     public function getUnprefixedPackages(): array;
 }

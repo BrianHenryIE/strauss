@@ -485,6 +485,7 @@ abstract class AbstractRenamespacerCommand extends Command
             $this->logger
         );
 
+        $markSymbolsForRenaming->scanSetDoPrefix($this->discoveredFiles);
         $markSymbolsForRenaming->scanSetDoRename($this->discoveredSymbols);
     }
 

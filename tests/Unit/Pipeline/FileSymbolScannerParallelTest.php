@@ -81,7 +81,6 @@ class FileSymbolScannerParallelTest extends TestCase
     protected function getSut($filesystem, DiscoveredSymbols $discoveredSymbols): FileSymbolScanner
     {
         $config = $this->createMock(StraussConfig::class);
-        $config->method('getPackagesToPrefix')->willReturn([]);
 
         return new FileSymbolScanner($config, $discoveredSymbols, $filesystem, $this->getLogger());
     }

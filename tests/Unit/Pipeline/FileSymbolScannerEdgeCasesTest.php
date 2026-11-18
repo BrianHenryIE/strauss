@@ -438,7 +438,6 @@ class FileSymbolScannerEdgeCasesTest extends TestCase
     {
         $config = $this->createMock(FileSymbolScannerConfigInterface::class);
         $config->method('getProjectAbsolutePath')->willReturn('project');
-        $config->method('getPackagesToPrefix')->willReturn([]);
 
         $filesystem = Mockery::mock(FileSystem::class);
         $filesystem->expects('read')->once()->andReturn($contents);

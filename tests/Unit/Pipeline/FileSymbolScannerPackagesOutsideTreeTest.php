@@ -1,8 +1,8 @@
 <?php
 
 /**
- * When prefixing in place, packages outside the dependency tree are only scanned to update their uses of the symbols
- * found, so only their files which mention one are parsed.
+ * When prefixing in place, packages outside the dependency tree only matter for their uses of the symbols found, so
+ * only their files which mention one are parsed.
  *
  * @see https://github.com/BrianHenryIE/strauss/issues/343
  * @see https://github.com/BrianHenryIE/strauss/issues/173
@@ -72,12 +72,10 @@ class FileSymbolScannerPackagesOutsideTreeTest extends TestCase
         $psrLog = $this->getPackage('psr/log');
         $monolog = $this->getPackage('monolog/monolog');
 
-        // psr/log is in the dependency tree and being prefixed; monolog/monolog is not in it.
+        // psr/log is in the dependency tree; monolog/monolog is not in it.
         $config = Mockery::mock(FileSymbolScannerConfigInterface::class);
         $config->shouldReceive('getAllPackages')->andReturn($isTreeKnown ? new DependenciesCollection([$psrLog]) : null);
-        $config->shouldReceive('getPackagesToPrefix')->andReturn(['psr/log' => $psrLog]);
         $config->shouldReceive('getProjectAbsolutePath')->andReturn('/project');
-        $config->shouldReceive('getExcludeNamespacesFromPrefixing')->andReturn([]);
 
         $pathsRead = [];
         $filesystem = Mockery::mock(FileSystem::class);
@@ -118,19 +116,22 @@ class FileSymbolScannerPackagesOutsideTreeTest extends TestCase
 
         // Mentions `Psr`.
         self::assertNotNull($discoveredSymbols->getClass('Monolog\Logger'));
-        self::assertTrue($files['Logger']->getDoUpdate());
         self::assertNotNull($files['Logger']->getCodeMap());
 
-        // Read to check for mentions, but not parsed, and left unchanged.
+        // Read to check for mentions, but not parsed, so {@see MarkFilesExcludedFromChanges} leaves it unchanged.
         self::assertNull($discoveredSymbols->getClass('Monolog\Unrelated'));
         self::assertContains('/project/vendor/monolog/monolog/src/Unrelated.php', $pathsRead);
-        self::assertFalse($files['Unrelated']->getDoUpdate());
-        self::assertFalse($files['Unrelated']->isDoPrefix());
         self::assertNull($files['Unrelated']->getCodeMap());
 
         // Not PHP: not even read.
         self::assertNotContains('/project/vendor/monolog/monolog/views/error.blade.txt', $pathsRead);
-        self::assertFalse($files['blade']->getDoUpdate());
+        self::assertNull($files['blade']->getCodeMap());
+
+        // Whether files are changed, or their symbols renamed, is decided later.
+        foreach ($files as $file) {
+            self::assertTrue($file->getDoUpdate());
+            self::assertTrue($file->isDoPrefix());
+        }
 
         // psr/log was scanned before monolog: the files outside the tree are only read afterwards.
         self::assertSame('/project/vendor/psr/log/src/LoggerInterface.php', $pathsRead[0]);
@@ -149,6 +150,6 @@ class FileSymbolScannerPackagesOutsideTreeTest extends TestCase
 
         self::assertNotNull($discoveredSymbols->getClass('Monolog\Logger'));
         self::assertNotNull($discoveredSymbols->getClass('Monolog\Unrelated'));
-        self::assertTrue($files['Unrelated']->getDoUpdate());
+        self::assertNotNull($files['Unrelated']->getCodeMap());
     }
 }
