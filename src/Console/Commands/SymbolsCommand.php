@@ -3,7 +3,31 @@
 /**
  * List the symbols (namespaces, classes, functions, constants, interfaces, traits and enums) defined in PHP files.
  *
- * Usage: `strauss symbols src vendor/psr/log --type=namespace`
+ * Usage:
+ *
+ * ```
+ * # Every symbol defined in the current working directory.
+ * strauss symbols
+ *
+ * # Several files and directories, relative to the working directory or absolute.
+ * strauss symbols src vendor/psr/log my-plugin.php
+ *
+ * # Only the namespaces, one per line, e.g. to choose `namespace_replacement_patterns`.
+ * strauss symbols vendor --type=namespace
+ *
+ * # Several types, comma separated or repeated.
+ * strauss symbols vendor -t class,interface
+ * strauss symbols vendor --type=trait --type=enum
+ *
+ * # Only the symbols in the global namespace, i.e. those that could collide with another plugin's.
+ * strauss symbols vendor --global
+ *
+ * # Global functions, for piping.
+ * strauss symbols vendor --global --type=function | sort | uniq
+ *
+ * # Log each file scanned and symbol found.
+ * strauss symbols vendor --info
+ * ```
  *
  * @package brianhenryie/strauss
  */
@@ -31,6 +55,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * {@see FileSymbolScanner}, and prints each symbol's fully qualified name, sorted, one per line. Nothing is changed.
  *
  * With one `--type`, only the names are printed, for piping; otherwise each line is the type then the name.
+ * With `--global`, only classes, interfaces, traits, enums, functions and constants outside any namespace are listed.
  */
 class SymbolsCommand extends AbstractRenamespacerCommand
 {
@@ -73,6 +98,13 @@ class SymbolsCommand extends AbstractRenamespacerCommand
             'Only list symbols of this type, comma separated or repeated: ' . implode(', ', self::TYPES) . '.'
         );
 
+        $this->addOption(
+            'global',
+            'g',
+            InputOption::VALUE_NONE,
+            'Only list symbols in the global namespace.'
+        );
+
         parent::configure();
     }
 
@@ -103,7 +135,11 @@ class SymbolsCommand extends AbstractRenamespacerCommand
             );
             $fileSymbolScanner->findInFiles($this->discoveredFiles);
 
-            $namesByType = $this->getSymbolNamesByType($this->discoveredSymbols, $types);
+            $namesByType = $this->getSymbolNamesByType(
+                $this->discoveredSymbols,
+                $types,
+                true === $input->getOption('global')
+            );
         } catch (Exception $exception) {
             $this->logger->error($exception->getMessage());
 
@@ -191,10 +227,11 @@ class SymbolsCommand extends AbstractRenamespacerCommand
     /**
      * @param DiscoveredSymbols $discoveredSymbols The symbols found in the files.
      * @param string[]          $types             The types to list.
+     * @param bool              $onlyGlobal        Only list symbols in the global namespace, so no namespaces.
      *
      * @return array<string, string[]> Sorted fully qualified names, keyed by type in the order of {@see self::TYPES}.
      */
-    protected function getSymbolNamesByType(DiscoveredSymbols $discoveredSymbols, array $types): array
+    protected function getSymbolNamesByType(DiscoveredSymbols $discoveredSymbols, array $types, bool $onlyGlobal = false): array
     {
         $symbolsByType = [
             SymbolDefinition::TYPE_NAMESPACE => $discoveredSymbols->getNamespaces(),
@@ -210,8 +247,10 @@ class SymbolsCommand extends AbstractRenamespacerCommand
         foreach ($types as $type) {
             $symbols = array_filter(
                 $symbolsByType[$type]->toArray(),
-                // The global namespace is not defined by any file.
-                fn(DiscoveredSymbol $symbol): bool => !($symbol instanceof NamespaceSymbol && $symbol->isGlobal())
+                fn(DiscoveredSymbol $symbol): bool => $symbol instanceof NamespaceSymbol
+                    // The global namespace is not defined by any file, and any other namespace is not global.
+                    ? false === $onlyGlobal && !$symbol->isGlobal()
+                    : false === $onlyGlobal || $symbol->isGlobal()
             );
             $names = array_map(
                 fn(DiscoveredSymbol $symbol): string => $symbol->getOriginalFqdnName(),

@@ -54,6 +54,9 @@ class SymbolsCommandTest extends TestCase
             <<<'PHP'
                 <?php
                 class Global_Class {}
+                interface Global_Interface {}
+                function global_function() {}
+                const GLOBAL_CONSTANT = 1;
                 PHP
         );
 
@@ -110,11 +113,57 @@ class SymbolsCommandTest extends TestCase
             'class      Company\Project\Thing',
             'class      Global_Class',
             'interface  Company\Project\ThingInterface',
+            'interface  Global_Interface',
             'trait      Company\Project\ThingTrait',
             'function   Company\Project\thing_function',
+            'function   global_function',
             'constant   Company\Project\THING_CONSTANT',
+            'constant   GLOBAL_CONSTANT',
         ];
         self::assertSame($expected, $this->lines($output));
+    }
+
+    /**
+     * @covers ::getSymbolNamesByType
+     */
+    public function test_filter_to_global_namespace(): void
+    {
+        [$exitCode, $output] = $this->runCommand(
+            [
+                'paths' => [$this->fixturesDirectory . '/src'],
+                '--global' => true,
+            ]
+        );
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertSame(
+            [
+                'class      Global_Class',
+                'interface  Global_Interface',
+                'function   global_function',
+                'constant   GLOBAL_CONSTANT',
+            ],
+            $this->lines($output)
+        );
+    }
+
+    /**
+     * `--global` combines with `--type`; namespaces are never global.
+     *
+     * @covers ::getSymbolNamesByType
+     */
+    public function test_filter_to_global_namespace_and_type(): void
+    {
+        [$exitCode, $output] = $this->runCommand(
+            [
+                'paths' => [$this->fixturesDirectory . '/src'],
+                '--global' => true,
+                '--type' => ['namespace,function'],
+            ]
+        );
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertSame(['function   global_function'], $this->lines($output));
     }
 
     /**
@@ -152,6 +201,7 @@ class SymbolsCommandTest extends TestCase
         self::assertSame(
             [
                 'interface  Company\Project\ThingInterface',
+                'interface  Global_Interface',
                 'trait      Company\Project\ThingTrait',
             ],
             $this->lines($output)
