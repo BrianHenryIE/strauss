@@ -1457,4 +1457,67 @@ class StraussConfigTest extends TestCase
 
         $this->assertSame(['monolog/monolog' => $package], $sut->getUnprefixedPackages());
     }
+
+    /**
+     * @covers ::__construct
+     * @covers ::getAutoloaderSuffix
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/362
+     */
+    public function test_autoloader_suffix_from_composer_config(): void
+    {
+        $composerJson = <<<'EOD'
+            {
+             "config": {
+              "autoloader-suffix": "ExamplePlugin"
+             }
+            }
+            EOD;
+
+        $composerJsonPath = 'project/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, $composerJson);
+
+        $composer = (new Factory())->createComposer(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
+
+        $sut = new StraussConfig($composer);
+
+        $this->assertSame('ExamplePlugin', $sut->getAutoloaderSuffix());
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::getAutoloaderSuffix
+     */
+    public function test_autoloader_suffix_null_when_not_configured(): void
+    {
+        $composerJsonPath = 'project/composer.json';
+        $this->getFileSystem()->write($composerJsonPath, '{}');
+
+        $composer = (new Factory())->createComposer(
+            new NullIO(),
+            $this->getFileSystem()->makeAbsolute($composerJsonPath)
+        );
+
+        $sut = new StraussConfig($composer);
+
+        $this->assertNull($sut->getAutoloaderSuffix());
+    }
+
+    /**
+     * @covers ::getAutoloaderSuffix
+     * @covers ::setAutoloaderSuffix
+     */
+    public function test_set_autoloader_suffix(): void
+    {
+        $sut = new StraussConfig();
+
+        $this->assertNull($sut->getAutoloaderSuffix());
+
+        $sut->setAutoloaderSuffix('ExamplePlugin');
+
+        $this->assertSame('ExamplePlugin', $sut->getAutoloaderSuffix());
+    }
 }

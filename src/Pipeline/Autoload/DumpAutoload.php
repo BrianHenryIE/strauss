@@ -275,9 +275,15 @@ class DumpAutoload
     }
 
     /**
-     * If there is an existing autoloader, it will use the same suffix. If there is not, it pulls the suffix from
-     * {Composer::getLocker()} and clashes with the existing autoloader.
+     * The suffix of the `ComposerAutoloaderInit{suffix}` class, which must differ from the project's own.
      *
+     * Given null, Composer uses the project's `config.autoloader-suffix` when set, which clashes with the project's
+     * autoloader (#362). Otherwise it reuses the suffix in an existing `autoload.php`, or pulls it from
+     * {Composer::getLocker()}, which also clashes, so a random one is used for a new autoloader.
+     *
+     * When prefixing in place, this is the project's own autoloader, so Composer's choice is kept.
+     *
+     * @see            https://github.com/BrianHenryIE/strauss/issues/362
      * @see            https://github.com/composer/composer/blob/ae208dc1e182bd45d99fcecb956501da212454a1/src/Composer/Autoload/AutoloadGenerator.php#L429
      * @see            AutoloadGenerator::dump() 412:431
      * @throws         \Random\RandomException in PHP 8.2+
@@ -286,6 +292,15 @@ class DumpAutoload
      */
     protected function getSuffix(): ?string
     {
+        if ($this->config->isTargetDirectoryVendor()) {
+            return null;
+        }
+
+        $autoloaderSuffix = $this->config->getAutoloaderSuffix();
+        if (!is_null($autoloaderSuffix)) {
+            return $autoloaderSuffix . 'Prefixed';
+        }
+
         return !$this->filesystem->fileExists($this->config->getAbsoluteTargetDirectory() . '/autoload.php')
             ? bin2hex(random_bytes(16))
             : null;

@@ -36,7 +36,8 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         $config->expects('getProjectAbsolutePath')->times(2)->andReturn('project');
         $config->expects('getAbsoluteTargetDirectory')->zeroOrMoreTimes()->andReturn('project/vendor-prefixed');
         $config->expects('getRelativeTargetDirectory')->times(1)->andReturn('vendor-prefixed');
-        $config->expects('isTargetDirectoryVendor')->times(2)->andReturnFalse();
+        $config->expects('isTargetDirectoryVendor')->times(3)->andReturnFalse();
+        $config->expects('getAutoloaderSuffix')->once()->andReturnNull();
         $config->expects('getNamespacePrefix')->times(1)->andReturn('BrianHenryIE\\Test\\');
 
         $config->expects('getPackagesToPrefix')->atLeast()->once()->andReturn([]);
@@ -259,5 +260,99 @@ class DumpAutoloadTest extends \BrianHenryIE\Strauss\TestCase
         };
 
         $this->assertFalse($sut->optimizeEnabledForTest());
+    }
+
+    /**
+     * @param AutoloadConfigInterface $config     The config, with the target directory and autoloader suffix stubbed.
+     * @param FileSystem              $filesystem Where the target directory's `autoload.php` may exist.
+     *
+     * @return ?string The result of {@see DumpAutoload::getSuffix()}.
+     */
+    protected function getSuffix(AutoloadConfigInterface $config, FileSystem $filesystem): ?string
+    {
+        $sut = new class (
+            $config,
+            $filesystem,
+            new NullLogger(),
+            Mockery::mock(Prefixer::class),
+            Mockery::mock(FileEnumerator::class),
+            Mockery::mock(ComposerAutoloadGeneratorFactory::class)
+        ) extends DumpAutoload {
+            public function getSuffixForTest(): ?string
+            {
+                return $this->getSuffix();
+            }
+        };
+
+        return $sut->getSuffixForTest();
+    }
+
+    /**
+     * The project's `autoloader-suffix` is used with `Prefixed` appended, even when `autoload.php` already exists,
+     * so the class name never matches the project's own `ComposerAutoloaderInit{suffix}`.
+     *
+     * @covers ::getSuffix
+     * @see https://github.com/BrianHenryIE/strauss/issues/362
+     */
+    public function test_suffix_from_project_autoloader_suffix(): void
+    {
+        $config = Mockery::mock(AutoloadConfigInterface::class);
+        $config->expects('isTargetDirectoryVendor')->once()->andReturnFalse();
+        $config->expects('getAutoloaderSuffix')->once()->andReturn('ExamplePlugin');
+
+        $filesystem = $this->getFileSystem();
+        $filesystem->write('project/vendor-prefixed/autoload.php', '<?php');
+
+        $this->assertSame('ExamplePluginPrefixed', $this->getSuffix($config, $filesystem));
+    }
+
+    /**
+     * Without an `autoloader-suffix`, a new autoloader gets a random suffix.
+     *
+     * @covers ::getSuffix
+     */
+    public function test_suffix_random_for_new_autoloader(): void
+    {
+        $config = Mockery::mock(AutoloadConfigInterface::class);
+        $config->expects('isTargetDirectoryVendor')->once()->andReturnFalse();
+        $config->expects('getAutoloaderSuffix')->once()->andReturnNull();
+        $config->expects('getAbsoluteTargetDirectory')->once()->andReturn('project/vendor-prefixed');
+
+        $result = $this->getSuffix($config, $this->getFileSystem());
+
+        $this->assertIsString($result);
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $result);
+    }
+
+    /**
+     * Without an `autoloader-suffix`, Composer reuses the suffix in the existing `autoload.php`.
+     *
+     * @covers ::getSuffix
+     */
+    public function test_suffix_null_for_existing_autoloader(): void
+    {
+        $config = Mockery::mock(AutoloadConfigInterface::class);
+        $config->expects('isTargetDirectoryVendor')->once()->andReturnFalse();
+        $config->expects('getAutoloaderSuffix')->once()->andReturnNull();
+        $config->expects('getAbsoluteTargetDirectory')->once()->andReturn('project/vendor-prefixed');
+
+        $filesystem = $this->getFileSystem();
+        $filesystem->write('project/vendor-prefixed/autoload.php', '<?php');
+
+        $this->assertNull($this->getSuffix($config, $filesystem));
+    }
+
+    /**
+     * When prefixing in place, the autoloader is the project's own, so Composer chooses its suffix as usual.
+     *
+     * @covers ::getSuffix
+     */
+    public function test_suffix_null_when_target_directory_is_vendor(): void
+    {
+        $config = Mockery::mock(AutoloadConfigInterface::class);
+        $config->expects('isTargetDirectoryVendor')->once()->andReturnTrue();
+        $config->expects('getAutoloaderSuffix')->never();
+
+        $this->assertNull($this->getSuffix($config, $this->getFileSystem()));
     }
 }

@@ -19,6 +19,8 @@ use BrianHenryIE\Strauss\Composer\ComposerPackage;
  */
 interface AutoloadConfigInterface
 {
+    public function getAutoloaderSuffix(): ?string;
+
     /**
      * The directory where the source files are located.
      *
