@@ -62,8 +62,8 @@ class FileSymbolScannerPerformanceTest extends TestCase
 
         $this->assertArrayHasKey('FirstNs', $result->getNamespaces()->toArray());
         $this->assertArrayHasKey('SecondNs', $result->getNamespaces()->toArray());
-        $this->assertContains('FirstGlobal', $result->getDiscoveredClasses()->originalLocalNames());
-        $this->assertContains('SecondGlobal', $result->getDiscoveredClasses()->originalLocalNames());
+        $this->assertContains('FirstGlobal', $result->getGlobalClassesInterfacesTraits()->originalLocalNames());
+        $this->assertContains('SecondGlobal', $result->getGlobalClassesInterfacesTraits()->originalLocalNames());
     }
 
     public function test_string_containing_namespace_keyword_is_ignored(): void

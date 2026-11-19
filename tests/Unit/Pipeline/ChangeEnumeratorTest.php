@@ -350,6 +350,7 @@ class ChangeEnumeratorTest extends TestCase
      * `namespace_prefix`.
      *
      * @covers ::determineReplacements
+     * @covers ::keepAlreadyPrefixedNamespace
      */
     public function testInverseReplacementByRemovingNamespacePrefix(): void
     {
@@ -363,6 +364,7 @@ class ChangeEnumeratorTest extends TestCase
         $this->assertSame('Psr\Log', $namespaces['Prefix\Psr\Log']->getInverseReplacement());
 
         // Only begins with the same characters.
+        $this->assertSame('Prefix\PrefixOther\Package', $namespaces['PrefixOther\Package']->getReplacementFqdnName());
         $this->assertNull($namespaces['PrefixOther\Package']->getInverseReplacement());
 
         // Being renamed now.
@@ -411,6 +413,9 @@ class ChangeEnumeratorTest extends TestCase
         foreach ($namespaces as $namespace) {
             $this->assertNull($namespace->getInverseReplacement(), $namespace->getOriginalFqdnName());
         }
+
+        // Still not prefixed again.
+        $this->assertSame('Prefix\Other', $namespaces['Prefix\Other']->getReplacementFqdnName());
     }
 
     /**

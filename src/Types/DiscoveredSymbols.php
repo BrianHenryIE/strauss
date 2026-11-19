@@ -359,20 +359,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         return new DiscoveredSymbols($this->types[self::CLASS_SYMBOL]);
     }
 
-    public function getDiscoveredClasses(?string $classmapPrefix = ''): DiscoveredSymbols
-    {
-        $discoveredClasses = $this->getGlobalClassesInterfacesTraits()->toArray();
-
-        return new DiscoveredSymbols(
-            array_filter(
-                $discoveredClasses,
-                function ($replacement) use ($classmapPrefix) {
-                    return empty($classmapPrefix) || ! str_starts_with($replacement->getLocalReplacement(), $classmapPrefix);
-                }
-            )
-        );
-    }
-
     /**
      * @deprecated Use ::getConstants()
      */

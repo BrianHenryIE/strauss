@@ -215,22 +215,6 @@ abstract class DiscoveredSymbol
         return $packages[0]->getPackageName();
     }
 
-    /**
-     * @param string $classPrefix The class prefix to repeatedly remove from the start of the original symbol name.
-     *
-     * @deprecated This is only being called in {@see Prefixer::findSymbolPositionsInStrings()}, the actual determination should be made in {@see ChangeEnumerator}.
-     */
-    public function getOriginalSymbolStripPrefix(string $classPrefix): string
-    {
-        $symbolName = $this->fqdnOriginalSymbol;
-
-        while (str_starts_with($symbolName, $classPrefix) && trim($classPrefix, '_') !== trim($symbolName, '_')) {
-            $symbolName = preg_replace('/^' . preg_quote($classPrefix, '/') . '/', '', $symbolName) ?? $symbolName;
-        }
-
-        return trim($symbolName, '_');
-    }
-
     public function __toString(): string
     {
         return $this->getOriginalFqdnName();

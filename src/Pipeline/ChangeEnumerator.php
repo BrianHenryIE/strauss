@@ -21,8 +21,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Sets the local replacement on each {@see DiscoveredSymbols} entry marked for renaming: namespaces via the first
- * matching `namespace_replacement_patterns` regex (with `namespace_prefix` added as a catch-all pattern that avoids
- * double-prefixing); namespaced classes, interfaces, traits and enums by swapping in their namespace's replacement;
+ * matching `namespace_replacement_patterns` regex, else `namespace_prefix`; namespaced classes, interfaces, traits and enums by swapping in their namespace's replacement;
  * global ones with `classmap_prefix`; global functions with `function_prefix` (handling PSR-0 underscored names);
  * and constants with `constant_prefix`, all read from the {@see ChangeEnumeratorConfigInterface}.
  */
@@ -52,7 +51,6 @@ class ChangeEnumerator
             // This line seems redundant.
             if ($symbol instanceof NamespaceSymbol) {
                 $namespaceReplacementPatterns = $this->config->getNamespaceReplacementPatterns();
-                $inverseReplacement = null;
 
                 if (
                     in_array(
@@ -64,8 +62,6 @@ class ChangeEnumerator
                     $symbol->setDoRename(false);
                 }
 
-                // `namespace_prefix` is just a shorthand for a replacement pattern that applies to all namespaces.
-
                 // TODO: Maybe need to preg_quote and add regex delimiters to the patterns here.
                 foreach ($namespaceReplacementPatterns as $pattern => $replacement) {
                     if (substr($pattern, 0, 1) !== substr($pattern, - 1, 1)) {
@@ -74,32 +70,6 @@ class ChangeEnumerator
                         $namespaceReplacementPatterns[ $pattern ] = $replacement;
                     }
                     unset($pattern, $replacement);
-                }
-
-                $namespacePrefix = $this->config->getNamespacePrefix();
-                if (! is_null($namespacePrefix)) {
-                    // This is being done elsewhere but is probably more appropriate here,
-                    // I'm worried if I change it now it will affect the directory structure.
-                    //                    if ($symbol instanceof Psr0NamespaceSymbol) {
-                    //                        $namespacePrefix = str_replace('\\', '_', rtrim($namespacePrefix, '\\')).'_' ;
-                    //                    }
-
-                    $stripPattern   = '~^(' . preg_quote($namespacePrefix, '~') . '\\\\*)*(.*)~';
-                    $strippedSymbol = preg_replace(
-                        $stripPattern,
-                        '$2',
-                        $symbol->getOriginalFqdnName()
-                    ) ?? (function () {
-                        throw new \Exception(preg_last_error_msg(), preg_last_error());
-                    })();
-                    $namespaceReplacementPatterns[ "~(" . preg_quote($namespacePrefix, '~') . '\\\\*)*' . preg_quote($strippedSymbol, '~') . '~' ]
-                        = "{$namespacePrefix}\\{$strippedSymbol}";
-
-                    // Already prefixed, e.g. by an earlier run in place.
-                    if (str_starts_with($symbol->getOriginalFqdnName(), trim($namespacePrefix, '\\') . '\\')) {
-                        $inverseReplacement = $strippedSymbol;
-                    }
-                    unset($stripPattern, $strippedSymbol);
                 }
 
                 // `namespace_replacement_patterns` should be ordered by priority.
@@ -117,12 +87,22 @@ class ChangeEnumerator
                         continue 2;
                     }
                 }
-                $this->logger->debug("Namespace {$symbol->getOriginalFqdnName()} not changed.");
 
-                // When prefixing in place, a namespace renamed by an earlier run and not found in its package's
-                // `autoload` key, e.g. only autoloaded by `classmap`: {@see self::keepAlreadyRenamedNamespaces()}.
-                if (!is_null($inverseReplacement) && $this->config->isTargetDirectoryVendor()) {
-                    $symbol->setInverseReplacement($inverseReplacement);
+                // `namespace_prefix` is a catch-all after the patterns.
+                $namespacePrefix = trim($this->config->getNamespacePrefix() ?? '', '\\');
+                if ('' === $namespacePrefix) {
+                    $this->logger->debug("Namespace {$symbol->getOriginalFqdnName()} not changed.");
+                    continue;
+                }
+
+                // This is being done elsewhere but is probably more appropriate here,
+                // I'm worried if I change it now it will affect the directory structure.
+                //                    if ($symbol instanceof Psr0NamespaceSymbol) {
+                //                        $namespacePrefix = str_replace('\\', '_', rtrim($namespacePrefix, '\\')).'_' ;
+                //                    }
+
+                if (!$this->keepAlreadyPrefixedNamespace($symbol, $namespacePrefix)) {
+                    $symbol->setLocalReplacement($namespacePrefix . '\\' . $symbol->getOriginalFqdnName());
                 }
             }
         }
@@ -216,6 +196,35 @@ class ChangeEnumerator
                 $constantSymbol->setLocalReplacement($constantPrefix . $constantSymbol->getOriginalLocalName());
             }
         }
+    }
+
+    /**
+     * Is the namespace already prefixed, e.g. by an earlier run in place? It then keeps its name, and when prefixing in
+     * place, its name before the earlier run is kept so uses of that name are updated. This covers namespaces not in
+     * their package's `autoload` key, e.g. only autoloaded by `classmap`, which
+     * {@see self::keepAlreadyRenamedNamespaces()} can't find.
+     *
+     * @param NamespaceSymbol $namespace       A namespace not matched by a `namespace_replacement_patterns` pattern.
+     * @param string          $namespacePrefix The `namespace_prefix`, without leading or trailing backslashes.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/34
+     */
+    protected function keepAlreadyPrefixedNamespace(NamespaceSymbol $namespace, string $namespacePrefix): bool
+    {
+        $namespaceName = $namespace->getOriginalFqdnName();
+
+        if (!str_starts_with($namespaceName, $namespacePrefix . '\\')) {
+            return false;
+        }
+
+        $this->logger->debug('Namespace {namespace} is already prefixed, not prefixing again.', ['namespace' => $namespaceName]);
+
+        $namespace->setLocalReplacement($namespaceName);
+        if ($this->config->isTargetDirectoryVendor()) {
+            $namespace->setInverseReplacement(substr($namespaceName, strlen($namespacePrefix) + 1));
+        }
+
+        return true;
     }
 
     /**
