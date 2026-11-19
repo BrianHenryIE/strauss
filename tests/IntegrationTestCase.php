@@ -13,6 +13,7 @@ use BrianHenryIE\Strauss\Console\Commands\DumpAutoloadCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\PrefixComposerAutoloadFilesCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
+use BrianHenryIE\Strauss\Console\Commands\SymbolsCommand;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Helpers\Flysystem\PathPrefixer;
 use BrianHenryIE\Strauss\Helpers\Flysystem\SymlinkProtectFilesystemAdapter;
@@ -141,14 +142,18 @@ class IntegrationTestCase extends TestCase
 
             exec($env . ' php ' . $phpFlags . $this->projectDir . '/strauss.phar ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
             //            exec($env . ' php ' . $phpFlags . $this->projectDir . '/build/bin/strauss ' . $params . ' 2>' . escapeshellarg($stderrFile), $output, $return_var);
-            $allOutput = implode(PHP_EOL, $output);
-            echo $allOutput;
+            $stdout = implode(PHP_EOL, $output);
+            echo $stdout;
 
             $stderr = (string) file_get_contents($stderrFile);
             @unlink($stderrFile);
             if ($stderr !== '') {
                 echo $stderr;
             }
+
+            // Symfony's ConsoleOutput writes errors, e.g. `$logger->error()`, to stderr. In-process, the
+            // BufferedOutput holds both, so include stderr here too, for tests asserting on error messages.
+            $allOutput = $stdout . ($stderr === '' ? '' : PHP_EOL . $stderr);
 
             // strauss legitimately logs to stderr, so only fail on PHP deprecation notices.
             if ($failOnDeprecation && preg_match('/(?:PHP )?Deprecated:/', $stderr)) {
@@ -172,6 +177,10 @@ class IntegrationTestCase extends TestCase
             case 'dump-autoload':
                 $strauss = new DumpAutoloadCommand();
                 unset($paramsSplit[0]);
+                break;
+            case 'list-symbols':
+                // Keep the command name: the Application's definition adds a `command` argument before `paths`.
+                $strauss = new SymbolsCommand();
                 break;
             case 'prefix-vendor-autoload':
                 $strauss = new PrefixComposerAutoloadFilesCommand();
