@@ -190,31 +190,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
-     * The namespaces being renamed, keyed by the name they are renamed to, longest first, so the first match of a
-     * name or its parent namespace is the most specific.
-     *
-     * @return array<string, NamespaceSymbol> Replacement name => the original namespace.
-     */
-    public function getNamespaceRenames(): array
-    {
-        $namespaceRenames = [];
-        foreach ($this->types[self::NAMESPACE_SYMBOL] as $namespace) {
-            if (
-                $namespace->isGlobal()
-                || !$namespace->isDoRename()
-                || $namespace->getReplacementFqdnName() === $namespace->getOriginalFqdnName()
-            ) {
-                continue;
-            }
-            $namespaceRenames[$namespace->getReplacementFqdnName()] = $namespace;
-        }
-
-        uksort($namespaceRenames, fn(string $a, string $b): int => strlen($b) - strlen($a));
-
-        return $namespaceRenames;
-    }
-
-    /**
      * When prefixing in place, a package renamed by an earlier run and not reinstalled since already declares the
      * renamed names, e.g. `Acme\Log\LoggerInterface` or the global `Prefix_Thing`, while packages installed since use the
      * original ones, e.g. `Psr\Log\LoggerInterface` or `Thing`. For each symbol to rename with a name from before it was renamed, a copy with that

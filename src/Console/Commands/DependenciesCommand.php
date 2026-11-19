@@ -436,7 +436,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     }
 
     /**
-     * The original names of the symbols already prefixed by an earlier run, renamed to their current names.
+     * When prefixing in place, the original names of the symbols already prefixed by an earlier run, renamed to their
+     * current names. Otherwise, the files are read afresh from `vendor`, so nothing uses those names.
      *
      * @return DiscoveredSymbol[]
      *
@@ -444,6 +445,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function getInverseReplacementSymbols(): array
     {
+        if (!$this->config->isTargetDirectoryVendor()) {
+            return [];
+        }
+
         return $this->discoveredSymbols->getInverseReplacementSymbols(
             array_keys($this->config->getPackagesToPrefix())
         );

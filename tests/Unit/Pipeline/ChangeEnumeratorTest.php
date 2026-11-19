@@ -156,7 +156,6 @@ class ChangeEnumeratorTest extends TestCase
         $config->allows('getFunctionsPrefix')->andReturnNull();
         $config->allows('getConstantsPrefix')->andReturnNull();
         $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
-        $config->allows('isTargetDirectoryVendor')->andReturnFalse();
 
         $sut = new ChangeEnumerator($config, $this->getTestLogger());
 
@@ -224,7 +223,7 @@ class ChangeEnumeratorTest extends TestCase
      * rename it again.
      *
      * @covers ::determineReplacements
-     * @covers ::keepAlreadyRenamedNamespaces
+     * @covers ::determineNamespaceInverseReplacements
      */
     public function testAlreadyRenamedNamespaceIsNotRenamedAgain(): void
     {
@@ -233,7 +232,6 @@ class ChangeEnumeratorTest extends TestCase
         $config->allows('getNamespacePrefix')->andReturn('Default\Prefix');
         $config->allows('getNamespaceReplacementPatterns')->andReturn(['~Psr\\\\Log~' => 'Acme\\Log']);
         $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
-        $config->allows('isTargetDirectoryVendor')->andReturnTrue();
         $config->allows('getClassmapPrefix')->andReturnNull();
         $config->allows('getFunctionsPrefix')->andReturnNull();
         $config->allows('getConstantsPrefix')->andReturnNull();
@@ -281,15 +279,13 @@ class ChangeEnumeratorTest extends TestCase
      */
     protected function getNamespaceConfig(
         ?string $namespacePrefix,
-        array $namespaceReplacementPatterns = [],
-        bool $isTargetDirectoryVendor = true
+        array $namespaceReplacementPatterns = []
     ): ChangeEnumeratorConfigInterface {
         /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
         $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
         $config->allows('getNamespacePrefix')->andReturn($namespacePrefix);
         $config->allows('getNamespaceReplacementPatterns')->andReturn($namespaceReplacementPatterns);
         $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
-        $config->allows('isTargetDirectoryVendor')->andReturn($isTargetDirectoryVendor);
         $config->allows('getClassmapPrefix')->andReturnNull();
         $config->allows('getFunctionsPrefix')->andReturnNull();
         $config->allows('getConstantsPrefix')->andReturnNull();
@@ -321,7 +317,7 @@ class ChangeEnumeratorTest extends TestCase
      * need not be reversed.
      *
      * @covers ::determineReplacements
-     * @covers ::keepAlreadyRenamedNamespaces
+     * @covers ::determineNamespaceInverseReplacements
      */
     public function testInverseReplacementWithBackReferencePattern(): void
     {
@@ -350,7 +346,7 @@ class ChangeEnumeratorTest extends TestCase
      * `namespace_prefix`.
      *
      * @covers ::determineReplacements
-     * @covers ::keepAlreadyPrefixedNamespace
+     * @covers ::determineNamespaceInverseReplacements
      */
     public function testInverseReplacementByRemovingNamespacePrefix(): void
     {
@@ -393,42 +389,15 @@ class ChangeEnumeratorTest extends TestCase
     }
 
     /**
-     * With another target directory, the packages in `vendor` are never renamed, so a namespace which begins with
-     * the prefix, or with another's replacement, is the package's own.
-     *
-     * @covers ::determineReplacements
-     * @covers ::keepAlreadyRenamedNamespaces
-     */
-    public function testNoInverseReplacementWhenTargetDirectoryIsNotVendor(): void
-    {
-        $sut = new ChangeEnumerator(
-            $this->getNamespaceConfig('Prefix', ['~Psr\\\\Log~' => 'Acme\\Log'], false),
-            $this->getTestLogger()
-        );
-
-        $namespaces = $this->getNamespacesToRename(['Psr\Log', 'Acme\Log', 'Prefix\Other']);
-
-        $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
-
-        foreach ($namespaces as $namespace) {
-            $this->assertNull($namespace->getInverseReplacement(), $namespace->getOriginalFqdnName());
-        }
-
-        // Still not prefixed again.
-        $this->assertSame('Prefix\Other', $namespaces['Prefix\Other']->getReplacementFqdnName());
-    }
-
-    /**
      * @return MockInterface&ChangeEnumeratorConfigInterface
      */
-    protected function getGlobalPrefixesConfig(bool $isTargetDirectoryVendor): ChangeEnumeratorConfigInterface
+    protected function getGlobalPrefixesConfig(): ChangeEnumeratorConfigInterface
     {
         /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
         $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
         $config->allows('getNamespacePrefix')->andReturn('Prefix');
         $config->allows('getNamespaceReplacementPatterns')->andReturn([]);
         $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
-        $config->allows('isTargetDirectoryVendor')->andReturn($isTargetDirectoryVendor);
         $config->allows('getClassmapPrefix')->andReturn('Prefix_');
         $config->allows('getFunctionsPrefix')->andReturn('prefix_');
         $config->allows('getConstantsPrefix')->andReturn('PREFIX_');
@@ -460,14 +429,15 @@ class ChangeEnumeratorTest extends TestCase
     }
 
     /**
-     * When prefixing in place, already-prefixed global symbols keep their names, and their names before the earlier
-     * run are kept so uses of them can be updated.
+     * Already-prefixed global symbols keep their names, and their names before the earlier run are kept so uses of
+     * them can be updated.
      *
      * @covers ::determineReplacements
+     * @covers ::determineGlobalInverseReplacements
      */
     public function testAlreadyPrefixedGlobalSymbolsInverseReplacement(): void
     {
-        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(true), $this->getTestLogger());
+        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(), $this->getTestLogger());
 
         [$classSymbol, $functionSymbol, $constantSymbol] = $this->getAlreadyPrefixedGlobalSymbols();
 
@@ -484,32 +454,13 @@ class ChangeEnumeratorTest extends TestCase
     }
 
     /**
-     * Not in place, the files are read fresh from `vendor` on each run, so no inverse replacement is needed.
-     *
-     * @covers ::determineReplacements
-     */
-    public function testAlreadyPrefixedGlobalSymbolsNoInverseReplacementWhenTargetDirectoryIsNotVendor(): void
-    {
-        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(false), $this->getTestLogger());
-
-        $symbols = $this->getAlreadyPrefixedGlobalSymbols();
-
-        $sut->determineReplacements(new DiscoveredSymbols($symbols));
-
-        foreach ($symbols as $symbol) {
-            $this->assertSame($symbol->getOriginalFqdnName(), $symbol->getReplacementFqdnName());
-            $this->assertNull($symbol->getInverseReplacement(), $symbol->getOriginalFqdnName());
-        }
-    }
-
-    /**
      * Global symbols not already prefixed are prefixed, with no inverse replacement.
      *
      * @covers ::determineReplacements
      */
     public function testGlobalSymbolsPrefixedWithoutInverseReplacement(): void
     {
-        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(true), $this->getTestLogger());
+        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(), $this->getTestLogger());
 
         $file = new File('/path/to/file.php', 'file.php', '/destination-path/to/file.php');
         $globalNamespace = new NamespaceSymbol('\\');

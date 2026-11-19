@@ -159,7 +159,8 @@ abstract class DiscoveredSymbol
     }
 
     /**
-     * @see ChangeEnumerator::keepAlreadyRenamedNamespaces()
+     * @see ChangeEnumerator::determineNamespaceInverseReplacements()
+     * @see ChangeEnumerator::determineGlobalInverseReplacements()
      */
     public function getInverseReplacement(): ?string
     {

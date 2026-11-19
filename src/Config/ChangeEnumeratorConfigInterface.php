@@ -43,11 +43,6 @@ interface ChangeEnumeratorConfigInterface
 
     public function getNamespacePrefix(): ?string;
 
-    /**
-     * When prefixing in place, a package renamed by an earlier run already declares the renamed names.
-     */
-    public function isTargetDirectoryVendor(): bool;
-
     public function getClassmapPrefix(): ?string;
 
     /**
