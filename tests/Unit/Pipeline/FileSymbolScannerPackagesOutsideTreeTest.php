@@ -20,6 +20,7 @@ use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
+use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use Mockery;
 use Mockery\MockInterface;
 
@@ -64,10 +65,14 @@ class FileSymbolScannerPackagesOutsideTreeTest extends TestCase
     }
 
     /**
-     * @return array{0:DiscoveredSymbols, 1:array<string,FileWithDependency>, 2:string[]}
-     *                                    The symbols found, the files by name, and the paths which were read.
+     * @param ?DiscoveredSymbols $symbolsMentioned The symbols to search the files outside the tree for; null for those
+     *                                             found in the tree.
+     *
+     * @return array{0:DiscoveredSymbols, 1:array<string,FileWithDependency>, 2:string[], 3:string[]}
+     *                                    The symbols found, the files by name, the paths which were read, and those
+     *                                    read by `::findInFiles()`.
      */
-    protected function scan(bool $isTreeKnown): array
+    protected function scan(bool $isTreeKnown, ?DiscoveredSymbols $symbolsMentioned = null): array
     {
         $psrLog = $this->getPackage('psr/log');
         $monolog = $this->getPackage('monolog/monolog');
@@ -99,18 +104,31 @@ class FileSymbolScannerPackagesOutsideTreeTest extends TestCase
             $discoveredFiles->add($file);
         }
 
-        $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
+        $discoveredSymbols = new DiscoveredSymbols();
+        $sut = new FileSymbolScanner($config, $discoveredSymbols, $filesystem, $this->getLogger());
 
-        return [$sut->findInFiles($discoveredFiles), $files, $pathsRead];
+        $sut->findInFiles($discoveredFiles);
+
+        // Before the files outside the tree are scanned.
+        $pathsReadByFindInFiles = $pathsRead;
+
+        $sut->findInFilesOutsideDependencyTree($discoveredFiles, $symbolsMentioned ?? clone $discoveredSymbols);
+
+        return [$discoveredSymbols, $files, $pathsRead, $pathsReadByFindInFiles];
     }
 
     /**
      * @covers ::findInFiles
+     * @covers ::findInFilesOutsideDependencyTree
+     * @covers ::isOutsideDependencyTree
      * @covers ::scanFiles
      */
     public function test_only_files_mentioning_the_symbols_found_are_parsed(): void
     {
-        [$discoveredSymbols, $files, $pathsRead] = $this->scan(true);
+        [$discoveredSymbols, $files, $pathsRead, $pathsReadByFindInFiles] = $this->scan(true);
+
+        // `::findInFiles()` only scans the tree.
+        self::assertSame(['/project/vendor/psr/log/src/LoggerInterface.php'], $pathsReadByFindInFiles);
 
         self::assertNotNull($discoveredSymbols->getInterface('Psr\Log\LoggerInterface'));
 
@@ -133,9 +151,6 @@ class FileSymbolScannerPackagesOutsideTreeTest extends TestCase
             self::assertTrue($file->isDoPrefix());
         }
 
-        // psr/log was scanned before monolog: the files outside the tree are only read afterwards.
-        self::assertSame('/project/vendor/psr/log/src/LoggerInterface.php', $pathsRead[0]);
-
         self::assertTrue($this->getTestLogger()->hasInfoThatContains('Scanning 1 of 3 files'));
     }
 
@@ -143,6 +158,7 @@ class FileSymbolScannerPackagesOutsideTreeTest extends TestCase
      * When the dependency tree is not known, e.g. the `replace` command, every file is scanned.
      *
      * @covers ::findInFiles
+     * @covers ::findInFilesOutsideDependencyTree
      */
     public function test_every_file_is_scanned_when_the_tree_is_not_known(): void
     {
@@ -151,5 +167,24 @@ class FileSymbolScannerPackagesOutsideTreeTest extends TestCase
         self::assertNotNull($discoveredSymbols->getClass('Monolog\Logger'));
         self::assertNotNull($discoveredSymbols->getClass('Monolog\Unrelated'));
         self::assertNotNull($files['Unrelated']->getCodeMap());
+    }
+
+    /**
+     * The symbols searched for can include names not found in the tree, e.g. those from before an earlier run renamed
+     * them.
+     *
+     * @covers ::findInFilesOutsideDependencyTree
+     */
+    public function test_files_mentioning_the_given_symbols_are_parsed(): void
+    {
+        $symbolsMentioned = new DiscoveredSymbols([new NamespaceSymbol('Monolog')]);
+
+        [$discoveredSymbols, $files] = $this->scan(true, $symbolsMentioned);
+
+        self::assertNotNull($discoveredSymbols->getClass('Monolog\Logger'));
+        self::assertNotNull($discoveredSymbols->getClass('Monolog\Unrelated'));
+        self::assertNotNull($files['Unrelated']->getCodeMap());
+
+        self::assertTrue($this->getTestLogger()->hasInfoThatContains('Scanning 2 of 3 files'));
     }
 }

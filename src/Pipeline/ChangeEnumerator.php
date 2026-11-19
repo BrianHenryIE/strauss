@@ -169,8 +169,7 @@ class ChangeEnumerator
             }
 
             // If the classname/interfacename/traitname already appears to begin with the prefix, skip.
-            if (str_starts_with($symbol->getOriginalFqdnName(), $classmapPrefix) && $symbol->getOriginalFqdnName() !== $classmapPrefix) {
-                // Already prefixed / second scan.
+            if ($this->keepAlreadyPrefixedGlobalSymbol($symbol, $classmapPrefix)) {
                 continue;
             }
 
@@ -196,7 +195,7 @@ class ChangeEnumerator
                 $symbol->setReplaceInString(false);
             }
             $functionPrefix = $this->config->getFunctionsPrefix();
-            if (empty($functionPrefix) || str_starts_with($symbol->getOriginalFqdnName(), $functionPrefix)) {
+            if (empty($functionPrefix) || $this->keepAlreadyPrefixedGlobalSymbol($symbol, $functionPrefix)) {
                 continue;
             }
             $this->globalOrPsr0($symbol, $functionPrefix, $discoveredSymbols);
@@ -207,10 +206,44 @@ class ChangeEnumerator
 
         if ($this->config->getConstantsPrefix()) {
             $constantPrefix = $this->config->getConstantsPrefix();
+            /**
+ * @var NamespacedSymbol $constantSymbol
+*/
             foreach ($discoveredSymbols->getConstants() as $constantSymbol) {
+                if ($constantSymbol->isGlobal() && $this->keepAlreadyPrefixedGlobalSymbol($constantSymbol, $constantPrefix)) {
+                    continue;
+                }
                 $constantSymbol->setLocalReplacement($constantPrefix . $constantSymbol->getOriginalLocalName());
             }
         }
+    }
+
+    /**
+     * Is the global class, function or constant already prefixed, e.g. by an earlier run in place? It then keeps its
+     * name, and when prefixing in place, its name before the earlier run is kept so uses of that name, e.g. in packages
+     * installed since, are updated. See {@see DiscoveredSymbols::getInverseReplacementSymbols()}.
+     *
+     * @param NamespacedSymbol $symbol A global symbol.
+     * @param string           $prefix The `classmap_prefix`, `functions_prefix` or `constants_prefix`.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/258
+     * @see https://github.com/BrianHenryIE/strauss/issues/343
+     */
+    protected function keepAlreadyPrefixedGlobalSymbol(NamespacedSymbol $symbol, string $prefix): bool
+    {
+        $originalName = $symbol->getOriginalFqdnName();
+
+        if (!str_starts_with($originalName, $prefix) || $originalName === $prefix) {
+            return false;
+        }
+
+        $this->logger->debug('{symbol} is already prefixed, not prefixing again.', ['symbol' => $originalName]);
+
+        if ($this->config->isTargetDirectoryVendor()) {
+            $symbol->setInverseReplacement(substr($originalName, strlen($prefix)));
+        }
+
+        return true;
     }
 
     protected function globalOrPsr0(NamespacedSymbol $symbol, string $globalPrefix, DiscoveredSymbols $discoveredSymbols): void

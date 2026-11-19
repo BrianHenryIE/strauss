@@ -302,4 +302,91 @@ class DiscoveredSymbolsInverseReplacementSymbolsTest extends TestCase
         self::assertSame('Prefix\Psr\Log\Test', $renames[NamespaceSymbol::class . ' Psr\Log\Test']);
         self::assertSame('Prefix\Psr\Log', $renames[NamespaceSymbol::class . ' Psr\Log']);
     }
+
+    /**
+     * A global class, function and constant prefixed by an earlier run, as
+     * {@see \BrianHenryIE\Strauss\Pipeline\ChangeEnumerator} leaves them.
+     *
+     * @return array{0:DiscoveredSymbols, 1:FileWithDependency}
+     */
+    protected function getAlreadyPrefixedGlobalSymbols(string $packageName = 'acme/lib'): array
+    {
+        $file = $this->getFile($this->getPackage($packageName), 'functions.php');
+        $globalNamespace = new NamespaceSymbol('\\');
+
+        $symbols = [
+            new ClassSymbol('Prefix_Thing', $file, $globalNamespace),
+            new FunctionSymbol('prefix_helper', $file, $globalNamespace),
+            new ConstantSymbol('PREFIX_VERSION', $file, $globalNamespace),
+        ];
+        foreach ($symbols as $symbol) {
+            $symbol->setDoRename(true);
+            $symbol->setInverseReplacement(
+                ['Prefix_Thing' => 'Thing', 'prefix_helper' => 'helper', 'PREFIX_VERSION' => 'VERSION'][$symbol->getOriginalFqdnName()]
+            );
+        }
+
+        return [new DiscoveredSymbols($symbols), $file];
+    }
+
+    /**
+     * @covers ::getInverseReplacementSymbols
+     */
+    public function test_global_symbols_are_copied_with_their_names_before_prefixing(): void
+    {
+        [$sut, $file] = $this->getAlreadyPrefixedGlobalSymbols();
+        $symbolsInFile = $file->getDiscoveredSymbols()->toArray();
+
+        $result = $sut->getInverseReplacementSymbols(['acme/lib']);
+
+        self::assertSame(
+            [
+                ClassSymbol::class . ' Thing' => 'Prefix_Thing',
+                ConstantSymbol::class . ' VERSION' => 'PREFIX_VERSION',
+                FunctionSymbol::class . ' helper' => 'prefix_helper',
+            ],
+            $this->getRenames($result)
+        );
+
+        foreach ($result as $symbol) {
+            self::assertTrue($symbol->isDoRename());
+            self::assertTrue($symbol->isGlobal());
+            self::assertSame('acme/lib', $symbol->getPackageName());
+            self::assertNull($symbol->getInverseReplacement());
+        }
+
+        // Only for planning.
+        self::assertSame($symbolsInFile, $file->getDiscoveredSymbols()->toArray());
+        $discoveredNames = array_map(fn(DiscoveredSymbol $symbol) => $symbol->getOriginalFqdnName(), $sut->toArray());
+        sort($discoveredNames);
+        self::assertSame(['PREFIX_VERSION', 'Prefix_Thing', 'prefix_helper'], $discoveredNames);
+    }
+
+    /**
+     * E.g. the package was reinstalled, so the global class's name before prefixing was discovered too.
+     *
+     * @covers ::getInverseReplacementSymbols
+     */
+    public function test_discovered_global_symbol_is_not_copied(): void
+    {
+        [$sut, $file] = $this->getAlreadyPrefixedGlobalSymbols();
+        $thing = new ClassSymbol('Thing', $file, new NamespaceSymbol('\\'));
+        $thing->setDoRename(true);
+        $sut->add($thing);
+
+        $result = $sut->getInverseReplacementSymbols(['acme/lib']);
+
+        self::assertArrayNotHasKey(ClassSymbol::class . ' Thing', $this->getRenames($result));
+        self::assertArrayHasKey(FunctionSymbol::class . ' helper', $this->getRenames($result));
+    }
+
+    /**
+     * @covers ::getInverseReplacementSymbols
+     */
+    public function test_global_symbols_of_packages_not_being_prefixed_are_ignored(): void
+    {
+        [$sut] = $this->getAlreadyPrefixedGlobalSymbols();
+
+        self::assertSame([], $sut->getInverseReplacementSymbols(['other/package']));
+    }
 }

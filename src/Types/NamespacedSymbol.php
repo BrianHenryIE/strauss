@@ -59,12 +59,13 @@ class NamespacedSymbol extends DiscoveredSymbol
     }
 
     /**
-     * In its namespace's name before an earlier run renamed it.
+     * Its name before an earlier run renamed it: for a global symbol, without the prefix; otherwise in its namespace's
+     * name before it was renamed.
      */
     public function getInverseReplacement(): ?string
     {
         if ($this->namespace->isGlobal()) {
-            return null;
+            return $this->inverseReplacement;
         }
 
         $inverseReplacementNamespaceName = $this->namespace->getInverseReplacement();
@@ -92,6 +93,25 @@ class NamespacedSymbol extends DiscoveredSymbol
         $copy = clone $this;
         $copy->namespace = $namespace;
         $copy->fqdnOriginalSymbol = $namespace->getOriginalFqdnName() . '\\' . $this->getOriginalLocalName();
+        $copy->inverseReplacement = null;
+
+        return $copy;
+    }
+
+    /**
+     * A copy of a global symbol with the name it had before an earlier run prefixed it, renamed to its current name,
+     * for planning changes. It is not added to its source files' symbols.
+     *
+     * @param string $originalName The name before it was prefixed, e.g. `Thing` for `Prefix_Thing`.
+     *
+     * @return static
+     */
+    public function withOriginalName(string $originalName): self
+    {
+        $copy = clone $this;
+        $copy->fqdnOriginalSymbol = $originalName;
+        $copy->localOriginalSymbol = $originalName;
+        $copy->localReplacement = $this->getOriginalFqdnName();
         $copy->inverseReplacement = null;
 
         return $copy;

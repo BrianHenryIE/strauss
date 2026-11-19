@@ -40,8 +40,8 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
- * Iterates the {@see DiscoveredFiles}, marking files outside the packages to prefix and non-PHP files not to prefix,
- * then records each PHP file's {@see SymbolDefinition}s as {@see DiscoveredSymbol}s (namespaces, classes, functions,
+ * Iterates the {@see DiscoveredFiles} in the dependency tree, then, once the replacements are determined, those of
+ * packages outside it which mention the symbols, and records each PHP file's {@see SymbolDefinition}s as {@see DiscoveredSymbol}s (namespaces, classes, functions,
  * constants, interfaces, traits and enums) in the shared {@see DiscoveredSymbols}, skipping PHP built-ins listed in
  * `FileSymbol/builtinsymbols.php`. When a {@see WorkerPool} is set, the files are first parsed in worker processes,
  * falling back to parsing in this process if parallelisation fails.
@@ -130,46 +130,59 @@ class FileSymbolScanner
 
     /**
      * Files of packages outside the dependency tree, e.g. those not being prefixed when prefixing in place, only
-     * matter for their uses of the symbols found, so they are scanned after the other files, and only those which
-     * mention one of the symbols found are parsed. Those not parsed are left unchanged:
-     * {@see MarkFilesExcludedFromChanges}.
+     * matter for their uses of the symbols found, so they are not scanned here:
+     * {@see self::findInFilesOutsideDependencyTree()}.
      *
      * Which symbols are renamed is decided later: {@see MarkSymbolsForRenaming}.
      *
      * @param DiscoveredFiles $files The project's and dependencies' files; PHP files are parsed and their maps stored.
      *
      * @throws FilesystemException
-     *
-     * @see SymbolMentionFilter
      */
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
-        $allPackages = $this->config->getAllPackages();
+        $this->scanFiles(
+            array_filter(
+                $files->getFiles(),
+                fn(FileBase $file): bool => !$this->isOutsideDependencyTree($file)
+            )
+        );
 
-        $filesToScan = [];
-        $filesOnlyToUpdate = [];
-        foreach ($files->getFiles() as $file) {
-            if (
-                !is_null($allPackages)
-                && $file instanceof FileWithDependency
-                && !isset($allPackages[$file->getDependency()->getPackageName()])
-            ) {
-                $filesOnlyToUpdate[] = $file;
-            } else {
-                $filesToScan[] = $file;
-            }
-        }
+        return $this->discoveredSymbols;
+    }
 
-        $this->scanFiles($filesToScan);
+    /**
+     * Parses the files of packages outside the dependency tree which mention one of the given symbols. Those not
+     * parsed are left unchanged: {@see MarkFilesExcludedFromChanges}.
+     *
+     * Run once the replacements are determined, so the symbols can include the names, from before an earlier run
+     * renamed them, which those files may use, e.g. `Psr\Log` for the already prefixed `Prefix\Psr\Log`.
+     *
+     * @param DiscoveredFiles   $files            The project's and dependencies' files.
+     * @param DiscoveredSymbols $symbolsMentioned The symbols the files are searched for.
+     *
+     * @throws FilesystemException
+     *
+     * @see SymbolMentionFilter
+     * @see DiscoveredSymbols::getInverseReplacementSymbols()
+     */
+    public function findInFilesOutsideDependencyTree(
+        DiscoveredFiles $files,
+        DiscoveredSymbols $symbolsMentioned
+    ): DiscoveredSymbols {
+        $filesOutsideDependencyTree = array_filter(
+            $files->getFiles(),
+            fn(FileBase $file): bool => $this->isOutsideDependencyTree($file)
+        );
 
-        if (0 === count($filesOnlyToUpdate)) {
+        if (0 === count($filesOutsideDependencyTree)) {
             return $this->discoveredSymbols;
         }
 
-        $symbolMentionFilter = new SymbolMentionFilter($this->discoveredSymbols);
+        $symbolMentionFilter = new SymbolMentionFilter($symbolsMentioned);
 
         $filesMentioningSymbols = [];
-        foreach ($filesOnlyToUpdate as $file) {
+        foreach ($filesOutsideDependencyTree as $file) {
             if ($file->isPhpFile() && $symbolMentionFilter->isMentionedIn($this->filesystem->read($file->getSourcePath()))) {
                 $filesMentioningSymbols[] = $file;
             }
@@ -179,13 +192,27 @@ class FileSymbolScanner
             'Scanning {count} of {total} files in packages outside the dependency tree which mention the symbols found.',
             [
                 'count' => count($filesMentioningSymbols),
-                'total' => count($filesOnlyToUpdate),
+                'total' => count($filesOutsideDependencyTree),
             ]
         );
 
         $this->scanFiles($filesMentioningSymbols);
 
         return $this->discoveredSymbols;
+    }
+
+    /**
+     * Is the file in a package outside the dependency tree? Never when the tree is not known.
+     *
+     * @param FileBase $file A project or dependency file.
+     */
+    protected function isOutsideDependencyTree(FileBase $file): bool
+    {
+        $allPackages = $this->config->getAllPackages();
+
+        return !is_null($allPackages)
+            && $file instanceof FileWithDependency
+            && !isset($allPackages[$file->getDependency()->getPackageName()]);
     }
 
     /**

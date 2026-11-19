@@ -35,14 +35,46 @@ class NamespacedSymbolTest extends TestCase
     }
 
     /**
+     * A global symbol has no namespace to take it from, so its own is used.
+     *
      * @covers ::getInverseReplacement
      */
-    public function test_global_symbol_has_no_inverse_replacement(): void
+    public function test_global_symbol_inverse_replacement(): void
     {
         $sut = new ClassSymbol('Prefix_Logger', $this->getFile(), new NamespaceSymbol('\\'));
-        $sut->setInverseReplacement('Logger');
 
         self::assertNull($sut->getInverseReplacement());
+
+        $sut->setInverseReplacement('Logger');
+
+        self::assertSame('Logger', $sut->getInverseReplacement());
+    }
+
+    /**
+     * @covers ::withOriginalName
+     */
+    public function test_with_original_name(): void
+    {
+        $file = $this->getFile();
+
+        $sut = new FunctionSymbol('prefix_helper', $file, new NamespaceSymbol('\\'));
+        $sut->setDoRename(true);
+        $sut->setInverseReplacement('helper');
+
+        $copy = $sut->withOriginalName('helper');
+
+        self::assertSame('helper', $copy->getOriginalFqdnName());
+        self::assertSame('helper', $copy->getOriginalLocalName());
+        self::assertSame('prefix_helper', $copy->getReplacementFqdnName());
+        self::assertTrue($copy->isDoRename());
+        self::assertNull($copy->getInverseReplacement());
+        self::assertSame($sut->getSourceFiles(), $copy->getSourceFiles());
+
+        // The original is unchanged and the copy is not added to the file's symbols.
+        self::assertSame('prefix_helper', $sut->getOriginalFqdnName());
+        self::assertSame('prefix_helper', $sut->getReplacementFqdnName());
+        self::assertSame('helper', $sut->getInverseReplacement());
+        self::assertSame([$sut], array_values($file->getDiscoveredSymbols()->toArray()));
     }
 
     /**

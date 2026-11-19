@@ -216,8 +216,8 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
 
     /**
      * When prefixing in place, a package renamed by an earlier run and not reinstalled since already declares the
-     * renamed names, e.g. `Acme\Log\LoggerInterface`, while packages installed since use the original ones, e.g.
-     * `Psr\Log\LoggerInterface`. For each symbol to rename with a name from before it was renamed, a copy with that
+     * renamed names, e.g. `Acme\Log\LoggerInterface` or the global `Prefix_Thing`, while packages installed since use the
+     * original ones, e.g. `Psr\Log\LoggerInterface` or `Thing`. For each symbol to rename with a name from before it was renamed, a copy with that
      * name, renamed to its current name, so those uses are updated.
      *
      * Only for planning changes: the copies are not added to their source files' symbols, so no aliases etc. are
@@ -242,11 +242,19 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
         foreach ($this->getNamespacedSymbols()->toArray() as $symbol) {
             if (
                 !($symbol instanceof NamespacedSymbol)
-                || $symbol->isGlobal()
                 || !$symbol->isDoRename()
                 || is_null($symbol->getInverseReplacement())
                 || !in_array($symbol->getPackageName(), $packageNames, true)
             ) {
+                continue;
+            }
+
+            // E.g. `Prefix_Thing`, which was `Thing`.
+            if ($symbol->isGlobal()) {
+                $inverseReplacementSymbol = $symbol->withOriginalName($symbol->getInverseReplacement());
+                if (!$this->has($inverseReplacementSymbol)) {
+                    $inverseReplacementSymbols[] = $inverseReplacementSymbol;
+                }
                 continue;
             }
 

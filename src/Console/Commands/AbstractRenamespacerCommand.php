@@ -433,6 +433,14 @@ abstract class AbstractRenamespacerCommand extends Command
     {
         $this->logger->notice('Scanning files for defined symbols...');
 
+        $this->getFileSymbolScanner()->findInFiles($this->discoveredFiles);
+    }
+
+    /**
+     * Adds the symbols it finds to {@see self::$discoveredSymbols}.
+     */
+    protected function getFileSymbolScanner(): FileSymbolScanner
+    {
         $fileSymbolScanner = new FileSymbolScanner(
             $this->config,
             $this->discoveredSymbols,
@@ -441,7 +449,7 @@ abstract class AbstractRenamespacerCommand extends Command
         );
         $fileSymbolScanner->setWorkerPool($this->getWorkerPool());
 
-        $fileSymbolScanner->findInFiles($this->discoveredFiles);
+        return $fileSymbolScanner;
     }
 
     /**

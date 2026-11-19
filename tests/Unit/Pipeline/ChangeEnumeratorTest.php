@@ -5,6 +5,8 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\TestCase;
+use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\EnumSymbol;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
@@ -154,6 +156,7 @@ class ChangeEnumeratorTest extends TestCase
         $config->allows('getFunctionsPrefix')->andReturnNull();
         $config->allows('getConstantsPrefix')->andReturnNull();
         $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
+        $config->allows('isTargetDirectoryVendor')->andReturnFalse();
 
         $sut = new ChangeEnumerator($config, $this->getTestLogger());
 
@@ -407,6 +410,119 @@ class ChangeEnumeratorTest extends TestCase
 
         foreach ($namespaces as $namespace) {
             $this->assertNull($namespace->getInverseReplacement(), $namespace->getOriginalFqdnName());
+        }
+    }
+
+    /**
+     * @return MockInterface&ChangeEnumeratorConfigInterface
+     */
+    protected function getGlobalPrefixesConfig(bool $isTargetDirectoryVendor): ChangeEnumeratorConfigInterface
+    {
+        /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
+        $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
+        $config->allows('getNamespacePrefix')->andReturn('Prefix');
+        $config->allows('getNamespaceReplacementPatterns')->andReturn([]);
+        $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->allows('isTargetDirectoryVendor')->andReturn($isTargetDirectoryVendor);
+        $config->allows('getClassmapPrefix')->andReturn('Prefix_');
+        $config->allows('getFunctionsPrefix')->andReturn('prefix_');
+        $config->allows('getConstantsPrefix')->andReturn('PREFIX_');
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
+
+        return $config;
+    }
+
+    /**
+     * A global class, function and constant renamed by an earlier run in place.
+     *
+     * @return array{0:ClassSymbol, 1:FunctionSymbol, 2:ConstantSymbol}
+     */
+    protected function getAlreadyPrefixedGlobalSymbols(): array
+    {
+        $file = new File('/path/to/file.php', 'file.php', '/destination-path/to/file.php');
+        $globalNamespace = new NamespaceSymbol('\\');
+
+        $symbols = [
+            new ClassSymbol('Prefix_Thing', $file, $globalNamespace),
+            new FunctionSymbol('prefix_helper', $file, $globalNamespace),
+            new ConstantSymbol('PREFIX_VERSION', $file, $globalNamespace),
+        ];
+        foreach ($symbols as $symbol) {
+            $symbol->setDoRename(true);
+        }
+
+        return $symbols;
+    }
+
+    /**
+     * When prefixing in place, already-prefixed global symbols keep their names, and their names before the earlier
+     * run are kept so uses of them can be updated.
+     *
+     * @covers ::determineReplacements
+     */
+    public function testAlreadyPrefixedGlobalSymbolsInverseReplacement(): void
+    {
+        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(true), $this->getTestLogger());
+
+        [$classSymbol, $functionSymbol, $constantSymbol] = $this->getAlreadyPrefixedGlobalSymbols();
+
+        $sut->determineReplacements(new DiscoveredSymbols([$classSymbol, $functionSymbol, $constantSymbol]));
+
+        $this->assertSame('Prefix_Thing', $classSymbol->getReplacementFqdnName());
+        $this->assertSame('Thing', $classSymbol->getInverseReplacement());
+
+        $this->assertSame('prefix_helper', $functionSymbol->getReplacementFqdnName());
+        $this->assertSame('helper', $functionSymbol->getInverseReplacement());
+
+        $this->assertSame('PREFIX_VERSION', $constantSymbol->getReplacementFqdnName());
+        $this->assertSame('VERSION', $constantSymbol->getInverseReplacement());
+    }
+
+    /**
+     * Not in place, the files are read fresh from `vendor` on each run, so no inverse replacement is needed.
+     *
+     * @covers ::determineReplacements
+     */
+    public function testAlreadyPrefixedGlobalSymbolsNoInverseReplacementWhenTargetDirectoryIsNotVendor(): void
+    {
+        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(false), $this->getTestLogger());
+
+        $symbols = $this->getAlreadyPrefixedGlobalSymbols();
+
+        $sut->determineReplacements(new DiscoveredSymbols($symbols));
+
+        foreach ($symbols as $symbol) {
+            $this->assertSame($symbol->getOriginalFqdnName(), $symbol->getReplacementFqdnName());
+            $this->assertNull($symbol->getInverseReplacement(), $symbol->getOriginalFqdnName());
+        }
+    }
+
+    /**
+     * Global symbols not already prefixed are prefixed, with no inverse replacement.
+     *
+     * @covers ::determineReplacements
+     */
+    public function testGlobalSymbolsPrefixedWithoutInverseReplacement(): void
+    {
+        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(true), $this->getTestLogger());
+
+        $file = new File('/path/to/file.php', 'file.php', '/destination-path/to/file.php');
+        $globalNamespace = new NamespaceSymbol('\\');
+        $classSymbol = new ClassSymbol('Thing', $file, $globalNamespace);
+        $functionSymbol = new FunctionSymbol('helper', $file, $globalNamespace);
+        $constantSymbol = new ConstantSymbol('VERSION', $file, $globalNamespace);
+        foreach ([$classSymbol, $functionSymbol, $constantSymbol] as $symbol) {
+            $symbol->setDoRename(true);
+        }
+
+        $sut->determineReplacements(new DiscoveredSymbols([$classSymbol, $functionSymbol, $constantSymbol]));
+
+        $this->assertSame('Prefix_Thing', $classSymbol->getReplacementFqdnName());
+        $this->assertSame('prefix_helper', $functionSymbol->getReplacementFqdnName());
+        $this->assertSame('PREFIX_VERSION', $constantSymbol->getReplacementFqdnName());
+
+        foreach ([$classSymbol, $functionSymbol, $constantSymbol] as $symbol) {
+            $this->assertNull($symbol->getInverseReplacement(), $symbol->getOriginalFqdnName());
         }
     }
 }

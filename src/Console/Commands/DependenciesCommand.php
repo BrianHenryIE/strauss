@@ -28,6 +28,7 @@ use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
+use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -195,6 +196,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             'analyseFilesToCopy',
             'markSymbolsForRenaming',
             'determineChanges',
+            'scanFilesOutsideDependencyTree',
             'markFilesExcludedFromChanges',
             'planChanges',
             'setPsr0TargetDirectory',
@@ -406,9 +408,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
     {
         $symbols = $this->getDiscoveredSymbolsWithComposerRuntime();
 
-        $inverseReplacementSymbols = $this->discoveredSymbols->getInverseReplacementSymbols(
-            array_keys($this->config->getPackagesToPrefix())
-        );
+        $inverseReplacementSymbols = $this->getInverseReplacementSymbols();
 
         if (0 === count($inverseReplacementSymbols)) {
             return $symbols;
@@ -433,6 +433,41 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         }
 
         return $symbols;
+    }
+
+    /**
+     * The original names of the symbols already prefixed by an earlier run, renamed to their current names.
+     *
+     * @return DiscoveredSymbol[]
+     *
+     * @see DiscoveredSymbols::getInverseReplacementSymbols()
+     */
+    protected function getInverseReplacementSymbols(): array
+    {
+        return $this->discoveredSymbols->getInverseReplacementSymbols(
+            array_keys($this->config->getPackagesToPrefix())
+        );
+    }
+
+    /**
+     * Parse the files of packages outside the dependency tree, e.g. those not being prefixed when prefixing in place,
+     * which mention one of the symbols found, or one of their names before an earlier run prefixed them.
+     *
+     * After {@see self::determineChanges()}, which works out those names, and before
+     * {@see self::markFilesExcludedFromChanges()}, which leaves the files not parsed unchanged.
+     *
+     * @see FileSymbolScanner::findInFilesOutsideDependencyTree()
+     * @see https://github.com/BrianHenryIE/strauss/issues/343
+     */
+    protected function scanFilesOutsideDependencyTree(): void
+    {
+        // A copy, so the names before renaming are only seen by the search.
+        $symbolsMentioned = clone $this->discoveredSymbols;
+        foreach ($this->getInverseReplacementSymbols() as $inverseReplacementSymbol) {
+            $symbolsMentioned->add($inverseReplacementSymbol);
+        }
+
+        $this->getFileSymbolScanner()->findInFilesOutsideDependencyTree($this->discoveredFiles, $symbolsMentioned);
     }
 
     /**
