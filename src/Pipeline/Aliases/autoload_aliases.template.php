@@ -17,8 +17,8 @@ namespace BrianHenryIE\Strauss {
     /**
      * @see AutoloadAliasInterface
      *
-     * @phpstan-type ClassAliasArray array{'type':'class',isabstract:bool,classname:string,namespace?:string,extends:string,implements:array<string>}
-     * @phpstan-type InterfaceAliasArray array{'type':'interface',interfacename:string,namespace?:string,extends:array<string>}
+     * @phpstan-type ClassAliasArray array{'type':'class',classname:string,namespace?:string,concrete:string}
+     * @phpstan-type InterfaceAliasArray array{'type':'interface',interfacename:string,namespace?:string,concrete:string}
      * @phpstan-type TraitAliasArray array{'type':'trait',traitname:string,namespace?:string,use:array<string>}
      * @phpstan-type EnumAliasArray array{'type':'enum',enumname:string,namespace?:string,concrete:string}
      * @phpstan-type AutoloadAliasArray array<string,ClassAliasArray|InterfaceAliasArray|TraitAliasArray|EnumAliasArray>
@@ -32,33 +32,61 @@ namespace BrianHenryIE\Strauss {
          */
         private array $autoloadAliases = [];
 
+        /**
+         * Original names of the classes, interfaces and enums, keyed by their prefixed names.
+         *
+         * @var array<string,string>
+         */
+        private array $originalNames = [];
+
+        /**
+         * Prefixed names this autoloader is loading, so it does not recurse into itself.
+         *
+         * @var array<string,true>
+         */
+        private array $loading = [];
+
         public function __construct()
         {
             $this->includeFilePath = __DIR__ . '/autoload_alias.php';
+
+            foreach ($this->autoloadAliases as $originalName => $alias) {
+                if (isset($alias['concrete'])) {
+                    $this->originalNames[$alias['concrete']] = $originalName;
+                }
+            }
         }
 
         /**
-         * @param string $class The fully qualified name being autoloaded, without leading backslash; only original (unprefixed) names listed in the alias map are handled.
+         * Registered first in the autoloader chain, so it sees both original names and prefixed names.
+         *
+         * Classes, interfaces and enums are aliased with `class_alias()`, so the original name is the same type as the
+         * prefixed one: objects created by either name satisfy type declarations and `instanceof` using either name,
+         * and final classes and enums, which cannot be extended, work too. Type declarations and `instanceof` never
+         * autoload, so the alias is made whenever the prefixed type is loaded, not only when the original name is.
+         *
+         * @param string $class The fully qualified name being autoloaded, without leading backslash; only names in the alias map are handled.
+         *
+         * @see https://github.com/BrianHenryIE/strauss/issues/363
          */
         public function autoload($class): void
         {
+            if (isset($this->originalNames[$class])) {
+                $this->loadPrefixed($class);
+                return;
+            }
             if (!isset($this->autoloadAliases[$class])) {
                 return;
             }
             switch ($this->autoloadAliases[$class]['type']) {
                 case 'class':
-                    $this->load(
-                        $this->classTemplate(
-                            $this->autoloadAliases[$class]
-                        )
-                    );
-                    break;
                 case 'interface':
-                    $this->load(
-                        $this->interfaceTemplate(
-                            $this->autoloadAliases[$class]
-                        )
-                    );
+                case 'enum':
+                    $prefixedName = $this->autoloadAliases[$class]['concrete'];
+                    // When the prefixed name is loaded through this autoloader, that aliases the original names too.
+                    if ($this->exists($prefixedName, true)) {
+                        $this->aliasOriginalNames($prefixedName);
+                    }
                     break;
                 case 'trait':
                     $this->load(
@@ -67,22 +95,78 @@ namespace BrianHenryIE\Strauss {
                         )
                     );
                     break;
-                case 'enum':
-                    // Enums are final so cannot be aliased with an `extends` shim like classes are; `class_alias()`
-                    // makes the original name a true alias of the renamed enum, preserving case identity (`===`),
-                    // `match` arms, `::cases()`, `::from()` and `instanceof` the enum itself. Unlike the class shim,
-                    // the alias does not implement the enum's original interface names, so `instanceof` against an
-                    // original interface name is false. Enums require PHP 8.1, but this only executes when an enum
-                    // is autoloaded by its original name, i.e. on a runtime already using enums.
-                    \class_alias(
-                        $this->autoloadAliases[$class]['concrete'],
-                        $class
-                    );
-                    break;
                 default:
                     // Never.
                     break;
             }
+        }
+
+        /**
+         * Loads a prefixed class, interface or enum with the other autoloaders, then aliases its original name to it.
+         *
+         * @param string $prefixedName The prefixed fully qualified name, without leading backslash.
+         */
+        private function loadPrefixed(string $prefixedName): void
+        {
+            if (isset($this->loading[$prefixedName])) {
+                return;
+            }
+            $this->loading[$prefixedName] = true;
+
+            foreach (spl_autoload_functions() ?: [] as $autoloader) {
+                if (is_array($autoloader) && $autoloader[0] === $this) {
+                    continue;
+                }
+                $autoloader($prefixedName);
+                if ($this->exists($prefixedName, false)) {
+                    break;
+                }
+            }
+
+            unset($this->loading[$prefixedName]);
+
+            if ($this->exists($prefixedName, false)) {
+                $this->aliasOriginalNames($prefixedName);
+            }
+        }
+
+        /**
+         * Aliases the original names of a loaded prefixed type and of its parent classes and interfaces.
+         *
+         * Its parents and interfaces were loaded with it, but not necessarily through this autoloader, e.g. when
+         * prefixing in place, `vendor`'s Composer autoloader is ahead of this one. Without them, an object created by
+         * the original class name would not satisfy type declarations using its original interface names.
+         *
+         * @param string $prefixedName The prefixed fully qualified name of a declared class, interface or enum.
+         */
+        private function aliasOriginalNames(string $prefixedName): void
+        {
+            $prefixedNames = array_merge(
+                [$prefixedName],
+                \class_parents($prefixedName, false) ?: [],
+                \class_implements($prefixedName, false) ?: []
+            );
+
+            foreach ($prefixedNames as $name) {
+                if (!isset($this->originalNames[$name])) {
+                    continue;
+                }
+                $originalName = $this->originalNames[$name];
+                if (!$this->exists($originalName, false)) {
+                    \class_alias($name, $originalName, false);
+                }
+            }
+        }
+
+        /**
+         * Whether a class, interface or enum (enums are classes to `class_exists()`) is declared.
+         *
+         * @param string $name     The fully qualified name, without leading backslash.
+         * @param bool   $autoload Whether to autoload it if not yet declared.
+         */
+        private function exists(string $name, bool $autoload): bool
+        {
+            return \class_exists($name, $autoload) || \interface_exists($name, $autoload);
         }
 
         private function load(string $includeFile): void
@@ -90,49 +174,6 @@ namespace BrianHenryIE\Strauss {
             file_put_contents($this->includeFilePath, $includeFile);
             include $this->includeFilePath;
             file_exists($this->includeFilePath) && unlink($this->includeFilePath);
-        }
-
-        /**
-         * @param ClassAliasArray $class The alias entry: original short class name and namespace, and the prefixed class it extends.
-         */
-        private function classTemplate(array $class): string
-        {
-            $abstract = $class['isabstract'] ? 'abstract ' : '';
-            $classname = $class['classname'];
-            if (isset($class['namespace'])) {
-                $namespace = "namespace {$class['namespace']};";
-                $extends = '\\' . $class['extends'];
-                $implements = empty($class['implements']) ? ''
-                : ' implements \\' . implode(', \\', $class['implements']);
-            } else {
-                $namespace = '';
-                $extends = $class['extends'];
-                $implements = !empty($class['implements']) ? ''
-                : ' implements ' . implode(', ', $class['implements']);
-            }
-            return <<<EOD
-                <?php
-                $namespace
-                $abstract class $classname extends $extends $implements {}
-                EOD;
-        }
-
-        /**
-         * @param InterfaceAliasArray $interface The alias entry: original short interface name and namespace, and the prefixed interface(s) it extends.
-         */
-        private function interfaceTemplate(array $interface): string
-        {
-            $interfacename = $interface['interfacename'];
-            $namespace = isset($interface['namespace'])
-            ? "namespace {$interface['namespace']};" : '';
-            $extends = isset($interface['namespace'])
-            ? '\\' . implode('\\ ,', $interface['extends'])
-            : implode(', ', $interface['extends']);
-            return <<<EOD
-                <?php
-                $namespace
-                interface $interfacename extends $extends {}
-                EOD;
         }
 
         /**
@@ -156,5 +197,5 @@ namespace BrianHenryIE\Strauss {
         }
     }
 
-    spl_autoload_register([ new AliasAutoloader(), 'autoload' ]);
+    spl_autoload_register([ new AliasAutoloader(), 'autoload' ], true, true);
 }

@@ -4,9 +4,10 @@
  * Regression tests for `vendor/composer/autoload_aliases.php`: code still using the original, unprefixed names of a
  * deleted package's classes, interfaces and traits, e.g. dev dependencies, keeps working against the prefixed copies.
  *
- * Classes are aliased by a subclass of the prefixed class which also implements the original interface names, so an
- * object created by its original name satisfies type declarations using either the original or the prefixed names.
- * These pin that behaviour, so it is kept if the aliasing changes, e.g. to `class_alias()`.
+ * Classes and interfaces are aliased with `class_alias()`, so the original and prefixed names are the same class or
+ * interface, and an object created by either name satisfies type declarations using either. These tests were written
+ * against the earlier aliasing, a subclass of the prefixed class implementing the original interface names, and pin
+ * what it supported.
  *
  * @see \BrianHenryIE\Strauss\Pipeline\Aliases\Aliases
  * @see src/Pipeline/Aliases/autoload_aliases.template.php
@@ -26,6 +27,25 @@ use BrianHenryIE\Strauss\IntegrationTestCase;
 class ClassAliasesFeatureTest extends IntegrationTestCase
 {
     /**
+     * @return array<string, mixed> The `extra.strauss` config.
+     */
+    protected function getStraussConfig(): array
+    {
+        return [
+            'namespace_prefix' => 'Strauss\\Aliases\\',
+            'delete_vendor_packages' => true,
+        ];
+    }
+
+    /**
+     * After Strauss has run, the original files no longer declare the original names.
+     */
+    protected function assertOriginalNamesGone(): void
+    {
+        $this->assertFileDoesNotExist($this->testsWorkingDir . '/vendor/acme/greeter/src/Greeting.php');
+    }
+
+    /**
      * `acme/greeter`, prefixed with `Strauss\Aliases\` then deleted from `vendor` (`delete_vendor_packages`).
      */
     protected function setUp(): void
@@ -42,10 +62,7 @@ class ClassAliasesFeatureTest extends IntegrationTestCase
             ],
             'minimum-stability' => 'dev',
             'extra' => [
-                'strauss' => [
-                    'namespace_prefix' => 'Strauss\\Aliases\\',
-                    'delete_vendor_packages' => true,
-                ],
+                'strauss' => $this->getStraussConfig(),
             ],
         ];
 
@@ -115,7 +132,7 @@ class ClassAliasesFeatureTest extends IntegrationTestCase
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
-        $this->assertFileDoesNotExist($this->testsWorkingDir . '/vendor/acme/greeter/src/Greeting.php');
+        $this->assertOriginalNamesGone();
     }
 
     /**
@@ -153,8 +170,8 @@ class ClassAliasesFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * The reason classes are aliased by a subclass rather than `class_alias()`: the subclass also implements the
-     * original interface names, so dev code typed against the original interface accepts it.
+     * Dev code typed against the original interface accepts an object created by the original class name. The earlier
+     * subclass aliases implemented the original interface names for this.
      */
     public function test_class_by_original_name_is_instance_of_original_interface(): void
     {

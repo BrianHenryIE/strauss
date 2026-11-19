@@ -145,7 +145,7 @@ class Aliases
                 continue;
             }
             // E.g. a global symbol when `classmap_prefix` is disabled: aliasing an unchanged name to itself
-            // would recurse into the autoloader (`class_alias()`) or redeclare the symbol (`extends` shim).
+            // would recurse into the autoloader (`class_alias()`) or redeclare the symbol (trait `use` shim).
             if ($originalSymbolFqdn === $symbol->getReplacementFqdnName()) {
                 continue;
             }

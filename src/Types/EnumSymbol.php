@@ -60,12 +60,11 @@ class EnumSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     }
 
     /**
-     * Enums are final and cannot be extended, so the `class OriginalName extends NewName {}` approach used for
-     * classes is impossible. Instead, `autoload_aliases.php` calls `class_alias()` — which works for enums on
+     * As for classes and interfaces, `autoload_aliases.php` calls `class_alias()` — which works for enums on
      * PHP >= 8.1 — making the original name a true alias of the renamed enum: case identity (`===`),
-     * `match` arms, `::cases()`, `::from()`, and `instanceof` the enum itself all behave identically.
-     * Unlike the class shim, the alias cannot re-implement the enum's original interface names, so
-     * `instanceof` against an original (aliased) interface name is false; only the renamed interface matches.
+     * `match` arms, `::cases()`, `::from()`, and `instanceof` the enum and its interfaces, by either name, all behave
+     * identically. Enums require PHP 8.1, but the alias is only made when an enum is autoloaded by its original
+     * name, i.e. on a runtime already using enums.
      *
      * @see AliasAutoloader::autoload()
      *

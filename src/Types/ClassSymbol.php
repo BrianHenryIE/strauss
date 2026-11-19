@@ -66,15 +66,12 @@ class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
     }
 
     /**
-     * In `autoload_aliases.php`, we create aliases for the old class name by creating a class that extends the renamed
-     * class. This makes the original methods available via the original classname to dev dependencies without updating
-     * their call sites.
+     * In `autoload_aliases.php`, the original class name is aliased to the renamed class with `class_alias()`, so dev
+     * dependencies can keep using the original name without updating their call sites. Both names are the same class,
+     * so objects created by either satisfy type declarations using either, and final classes can be aliased.
      *
-     * ```
-     * class OriginalName extends NewName {}
-     * ```
-     *
-     * @see AliasAutoloader::classTemplate()
+     * @see AliasAutoloader::autoload()
+     * @see https://github.com/BrianHenryIE/strauss/issues/363
      *
      * @return ClassAliasArray
      */
@@ -83,10 +80,8 @@ class ClassSymbol extends NamespacedSymbol implements AutoloadAliasInterface
         return  [
             'type' => 'class',
             'classname' => $this->getOriginalLocalName(),
-            'isabstract' => $this->isAbstract,
             'namespace' => $this->namespace->getOriginalFqdnName(),
-            'extends' => $this->getReplacementFqdnName(),
-            'implements' => $this->interfaces,
+            'concrete' => $this->getReplacementFqdnName(),
         ];
     }
 }
