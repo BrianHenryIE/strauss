@@ -7,26 +7,26 @@
  *
  * ```
  * # Every symbol defined in the current working directory.
- * strauss symbols
+ * strauss list-symbols
  *
  * # Several files and directories, relative to the working directory or absolute.
- * strauss symbols src vendor/psr/log my-plugin.php
+ * strauss list-symbols src vendor/psr/log my-plugin.php
  *
  * # Only the namespaces, one per line, e.g. to choose `namespace_replacement_patterns`.
- * strauss symbols vendor --type=namespace
+ * strauss list-symbols vendor --type=namespace
  *
  * # Several types, comma separated or repeated.
- * strauss symbols vendor -t class,interface
- * strauss symbols vendor --type=trait --type=enum
+ * strauss list-symbols vendor -t class,interface
+ * strauss list-symbols vendor --type=trait --type=enum
  *
  * # Only the symbols in the global namespace, i.e. those that could collide with another plugin's.
- * strauss symbols vendor --global
+ * strauss list-symbols vendor --global
  *
  * # Global functions, for piping.
- * strauss symbols vendor --global --type=function | sort | uniq
+ * strauss list-symbols vendor --global --type=function | sort | uniq
  *
  * # Log each file scanned and symbol found.
- * strauss symbols vendor --info
+ * strauss list-symbols vendor --info
  * ```
  *
  * @package brianhenryie/strauss
@@ -51,7 +51,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Registered as `symbols`. Enumerates the files in the given paths with {@see FileEnumerator}, scans them with
+ * Registered as `list-symbols`. Enumerates the files in the given paths with {@see FileEnumerator}, scans them with
  * {@see FileSymbolScanner}, and prints each symbol's fully qualified name, sorted, one per line. Nothing is changed.
  *
  * With one `--type`, only the names are printed, for piping; otherwise each line is the type then the name.
@@ -82,7 +82,7 @@ class SymbolsCommand extends AbstractRenamespacerCommand
      */
     protected function configure()
     {
-        $this->setName('symbols');
+        $this->setName('list-symbols');
         $this->setDescription('List the namespaces, classes, functions etc. defined in the PHP files in a directory.');
 
         $this->addArgument(

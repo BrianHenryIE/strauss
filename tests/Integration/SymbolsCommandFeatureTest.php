@@ -133,11 +133,11 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * `strauss symbols`
+     * `strauss list-symbols`
      */
     public function test_every_symbol_in_the_working_directory(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols');
+        $exitCode = $this->runStrauss($output, 'list-symbols');
 
         self::assertSame(0, $exitCode, $output);
         self::assertSame(
@@ -163,11 +163,11 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * `strauss symbols src vendor/psr/log my-plugin.php`
+     * `strauss list-symbols src vendor/psr/log my-plugin.php`
      */
     public function test_several_files_and_directories(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols src vendor/psr/log my-plugin.php');
+        $exitCode = $this->runStrauss($output, 'list-symbols src vendor/psr/log my-plugin.php');
 
         self::assertSame(0, $exitCode, $output);
         self::assertSame(
@@ -191,7 +191,7 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
      */
     public function test_absolute_path(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols ' . $this->testsWorkingDir . '/src');
+        $exitCode = $this->runStrauss($output, 'list-symbols ' . $this->testsWorkingDir . '/src');
 
         self::assertSame(0, $exitCode, $output);
         self::assertSame(
@@ -206,11 +206,11 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * `strauss symbols vendor --type=namespace`
+     * `strauss list-symbols vendor --type=namespace`
      */
     public function test_only_namespaces(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols vendor --type=namespace');
+        $exitCode = $this->runStrauss($output, 'list-symbols vendor --type=namespace');
 
         self::assertSame(0, $exitCode, $output);
         self::assertSame(
@@ -223,11 +223,11 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * `strauss symbols vendor -t class,interface`
+     * `strauss list-symbols vendor -t class,interface`
      */
     public function test_several_types_comma_separated(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols vendor -t class,interface');
+        $exitCode = $this->runStrauss($output, 'list-symbols vendor -t class,interface');
 
         self::assertSame(0, $exitCode, $output);
         self::assertSame(
@@ -241,11 +241,11 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * `strauss symbols vendor --type=trait --type=enum`
+     * `strauss list-symbols vendor --type=trait --type=enum`
      */
     public function test_several_types_repeated(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols vendor --type=trait --type=enum');
+        $exitCode = $this->runStrauss($output, 'list-symbols vendor --type=trait --type=enum');
 
         self::assertSame(0, $exitCode, $output);
         self::assertSame(
@@ -258,11 +258,11 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * `strauss symbols vendor --global`
+     * `strauss list-symbols vendor --global`
      */
     public function test_only_global_symbols(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols vendor --global');
+        $exitCode = $this->runStrauss($output, 'list-symbols vendor --global');
 
         self::assertSame(0, $exitCode, $output);
         self::assertSame(
@@ -277,13 +277,13 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * `strauss symbols vendor --global --type=function | sort | uniq`
+     * `strauss list-symbols vendor --global --type=function | sort | uniq`
      *
      * One type prints only the names, so they can be piped.
      */
     public function test_global_functions_for_piping(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols vendor --global --type=function');
+        $exitCode = $this->runStrauss($output, 'list-symbols vendor --global --type=function');
 
         self::assertSame(0, $exitCode, $output);
         self::assertSame(
@@ -296,11 +296,11 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * `strauss symbols vendor --info`
+     * `strauss list-symbols vendor --info`
      */
     public function test_info_logs_each_file_and_symbol(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols vendor --info');
+        $exitCode = $this->runStrauss($output, 'list-symbols vendor --info');
 
         self::assertSame(0, $exitCode, $output);
         self::assertStringContainsString('[info]', $output);
@@ -314,7 +314,7 @@ class SymbolsCommandFeatureTest extends IntegrationTestCase
      */
     public function test_unknown_type_fails(): void
     {
-        $exitCode = $this->runStrauss($output, 'symbols vendor --type=namespaces');
+        $exitCode = $this->runStrauss($output, 'list-symbols vendor --type=namespaces');
 
         self::assertSame(1, $exitCode, $output);
         self::assertStringContainsString('Unknown type "namespaces"', $output);
