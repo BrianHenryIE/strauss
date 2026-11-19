@@ -71,6 +71,11 @@ class StraussConfig implements
     protected string $projectAbsolutePath;
 
     /**
+     * The root composer.json autoloader-suffix.
+     */
+    protected ?string $autoloaderSuffix = null;
+
+    /**
      * The output directory.
      */
     protected string $targetVendorRelativePath = 'vendor-prefixed';
@@ -295,6 +300,11 @@ class StraussConfig implements
             $composerDir               = str_ends_with($composerDir, '.json') // TODO: replace with a file exists/dir exists check.
                 ? dirname($composerDir) : $composerDir;
             $this->projectAbsolutePath = $normalizer->normalizePath($composerDir);
+
+            $autoloaderSuffix = $composer->getConfig()->get('autoloader-suffix');
+            $this->autoloaderSuffix = is_string($autoloaderSuffix) && '' !== $autoloaderSuffix
+                ? $autoloaderSuffix
+                : null;
         } else {
             $this->projectAbsolutePath = $normalizer->normalizePath(Platform::getcwd());
         }
@@ -1182,6 +1192,24 @@ class StraussConfig implements
     public function setProjectAbsolutePath(string $projectAbsolutePath): void
     {
         $this->projectAbsolutePath = $projectAbsolutePath;
+    }
+
+    /**
+     * The project's `config.autoloader-suffix`, if set.
+     *
+     * @see https://getcomposer.org/doc/06-config.md#autoloader-suffix
+     */
+    public function getAutoloaderSuffix(): ?string
+    {
+        return $this->autoloaderSuffix;
+    }
+
+    /**
+     * @param ?string $autoloaderSuffix The project's `config.autoloader-suffix`, or null when not set.
+     */
+    public function setAutoloaderSuffix(?string $autoloaderSuffix): void
+    {
+        $this->autoloaderSuffix = $autoloaderSuffix;
     }
 
     /**
