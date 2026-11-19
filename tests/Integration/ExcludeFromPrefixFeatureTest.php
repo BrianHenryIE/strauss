@@ -155,4 +155,65 @@ class ExcludeFromPrefixFeatureTest extends IntegrationTestCase
         $this->assertStringContainsString('namespace BrianHenryIE\\TestStrauss\\Vendor\\Composer\\Autoload;', $phpString);
         $this->assertStringNotContainsString('namespace Composer\\Autoload;', $phpString);
     }
+
+    /**
+     * A copied package excluded from prefixing keeps its own names, but its uses of a prefixed package are updated.
+     *
+     * Unlike prefixing in place, the packages are copied from `vendor`, which is not changed, so psr/log's original
+     * names are discovered on every run.
+     */
+    public function test_excluded_package_uses_prefixed_dependency(): void
+    {
+        // monolog/monolog 3 requires PHP 8.1.
+        $this->markTestSkippedOnPhpVersionBelow('8.1.0');
+
+        $composerJsonString = <<<'EOD'
+            {
+                "name": "strauss/exclude-from-prefix",
+                "require": {
+                    "psr/log": "3.0.2",
+                    "monolog/monolog": "3.9.0"
+                },
+                "extra": {
+                    "strauss": {
+                        "target_directory": "vendor-prefixed",
+                        "namespace_prefix": "Strauss\\ExcludeFromPrefixTest\\",
+                        "packages": [
+                            "psr/log",
+                            "monolog/monolog"
+                        ],
+                        "exclude_from_prefix": {
+                            "packages": [
+                                "monolog/monolog"
+                            ]
+                        }
+                    }
+                }
+            }
+            EOD;
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install 2>&1', $installOutput, $installExitCode);
+        $this->assertEquals(0, $installExitCode, implode(PHP_EOL, $installOutput));
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        // A second run must not prefix again.
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $psrLogPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/psr/log/src/LoggerInterface.php');
+        $this->assertStringContainsString('namespace Strauss\ExcludeFromPrefixTest\Psr\Log;', $psrLogPhpString);
+        $this->assertStringNotContainsString('ExcludeFromPrefixTest\Strauss', $psrLogPhpString);
+
+        $monologPhpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor-prefixed/monolog/monolog/src/Monolog/Logger.php');
+        $this->assertStringContainsString('namespace Monolog;', $monologPhpString);
+        $this->assertStringContainsString('use Strauss\ExcludeFromPrefixTest\Psr\Log\LoggerInterface;', $monologPhpString);
+        $this->assertDoesNotMatchRegularExpression('/(^|[^\\\\A-Za-z])Psr\\\\Log\\\\/m', $monologPhpString);
+        $this->assertStringNotContainsString('ExcludeFromPrefixTest\Strauss', $monologPhpString);
+    }
 }

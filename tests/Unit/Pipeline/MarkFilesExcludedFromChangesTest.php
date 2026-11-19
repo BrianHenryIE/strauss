@@ -3,9 +3,11 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\MarkFilesExcludedFromChangesConfigInterface;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
+use BrianHenryIE\Strauss\Files\FileCodeMap;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -23,13 +25,16 @@ class MarkFilesExcludedFromChangesTest extends TestCase
      * @param string[] $excludeFilePatterns
      * @param string[] $excludeNamespaces
      * @param string[] $excludePackages
+     * @param ?DependenciesCollection $allPackages The dependency tree; null when not known.
      */
     private function createConfigMock(
         array $excludeFilePatterns = [],
         array $excludeNamespaces = [],
-        array $excludePackages = []
+        array $excludePackages = [],
+        ?DependenciesCollection $allPackages = null
     ): MarkFilesExcludedFromChangesConfigInterface {
         $config = Mockery::mock(MarkFilesExcludedFromChangesConfigInterface::class);
+        $config->shouldReceive('getAllPackages')->andReturn($allPackages);
         $config->shouldReceive('getExcludeFilesFromUpdateFilePatterns')->andReturn($excludeFilePatterns);
         $config->shouldReceive('getExcludeFileFromUpdateNamespaces')->andReturn($excludeNamespaces);
         $config->shouldReceive('getExcludeFilesFromUpdatePackages')->andReturn($excludePackages);
@@ -332,5 +337,87 @@ class MarkFilesExcludedFromChangesTest extends TestCase
 
         $this->assertFalse($excludedFile->getDoUpdate(), 'Matching file should be excluded');
         $this->assertTrue($nonExcludedFile->getDoUpdate(), 'Non-matching file should not be excluded');
+    }
+
+    /**
+     * @return ComposerPackage&\Mockery\MockInterface
+     */
+    private function createPackageMock(string $packageName): ComposerPackage
+    {
+        $package = Mockery::mock(ComposerPackage::class);
+        $package->shouldReceive('getPackageName')->andReturn($packageName);
+        $package->shouldReceive('getPackageAbsolutePath')->andReturn('/project/vendor/' . $packageName);
+        $package->shouldReceive('addFile');
+
+        return $package;
+    }
+
+    private function createPackageFile(ComposerPackage $package, string $packageRelativePath): FileWithDependency
+    {
+        $vendorRelativePath = $package->getPackageName() . '/' . $packageRelativePath;
+
+        return new FileWithDependency(
+            $package,
+            $vendorRelativePath,
+            '/project/vendor/' . $vendorRelativePath,
+            '/project/vendor/' . $vendorRelativePath
+        );
+    }
+
+    /**
+     * When prefixing in place, the files of packages outside the dependency tree which were not parsed, because they
+     * mention none of the symbols found or are not PHP, are not changed.
+     *
+     * @covers ::scanDiscoveredFiles
+     * @covers ::isUnparsedFileOutsideDependencyTree
+     */
+    public function testUnparsedFileOutsideDependencyTreeIsExcludedFromChanges(): void
+    {
+        $psrLog = $this->createPackageMock('psr/log');
+        $monolog = $this->createPackageMock('monolog/monolog');
+
+        $sut = new MarkFilesExcludedFromChanges(
+            $this->createConfigMock([], [], [], new DependenciesCollection([$psrLog])),
+            $this->getLogger()
+        );
+
+        $unparsedFile = $this->createPackageFile($monolog, 'src/Unrelated.php');
+        $nonPhpFile = $this->createPackageFile($monolog, 'views/error.blade.txt');
+
+        $parsedFile = $this->createPackageFile($monolog, 'src/Logger.php');
+        $parsedFile->setCodeMap(new FileCodeMap([], '<?php namespace Monolog; use Psr\Log\LoggerInterface;'));
+
+        // E.g. a template in a package in the tree.
+        $treeFile = $this->createPackageFile($psrLog, 'src/template.txt');
+
+        $discoveredFiles = new DiscoveredFiles([$unparsedFile, $nonPhpFile, $parsedFile, $treeFile]);
+
+        $sut->scanDiscoveredFiles($discoveredFiles);
+
+        $this->assertFalse($unparsedFile->getDoUpdate());
+        $this->assertFalse($unparsedFile->isDoPrefix());
+        $this->assertFalse($nonPhpFile->getDoUpdate());
+
+        $this->assertTrue($parsedFile->getDoUpdate());
+        $this->assertTrue($parsedFile->isDoPrefix());
+        $this->assertTrue($treeFile->getDoUpdate());
+    }
+
+    /**
+     * When the dependency tree is not known, e.g. the `replace` command, no file is excluded for it.
+     *
+     * @covers ::scanDiscoveredFiles
+     * @covers ::isUnparsedFileOutsideDependencyTree
+     */
+    public function testNoFileIsExcludedWhenTheDependencyTreeIsNotKnown(): void
+    {
+        $sut = new MarkFilesExcludedFromChanges($this->createConfigMock(), $this->getLogger());
+
+        $file = $this->createPackageFile($this->createPackageMock('monolog/monolog'), 'src/Unrelated.php');
+
+        $sut->scanDiscoveredFiles(new DiscoveredFiles([$file]));
+
+        $this->assertTrue($file->getDoUpdate());
+        $this->assertTrue($file->isDoPrefix());
     }
 }

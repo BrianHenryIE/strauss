@@ -190,6 +190,109 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     }
 
     /**
+     * When prefixing in place, a package renamed by an earlier run and not reinstalled since already declares the
+     * renamed names, e.g. `Acme\Log\LoggerInterface` or the global `Prefix_Thing`, while packages installed since use the
+     * original ones, e.g. `Psr\Log\LoggerInterface` or `Thing`. For each symbol to rename with a name from before it was renamed, a copy with that
+     * name, renamed to its current name, so those uses are updated.
+     *
+     * Only for planning changes: the copies are not added to their source files' symbols, so no aliases etc. are
+     * created for them.
+     *
+     * @param string[] $packageNames The packages being prefixed.
+     *
+     * @return DiscoveredSymbol[] The copies, and the namespaces they are in which were not discovered.
+     *
+     * @see DiscoveredSymbol::getInverseReplacement()
+     * @see https://github.com/BrianHenryIE/strauss/issues/343
+     */
+    public function getInverseReplacementSymbols(array $packageNames): array
+    {
+        $inverseReplacementSymbols = [];
+
+        /**
+ * @var array<string, ?NamespaceSymbol> $inverseReplacementNamespaces By the renamed namespace's name.
+*/
+        $inverseReplacementNamespaces = [];
+
+        foreach ($this->getNamespacedSymbols()->toArray() as $symbol) {
+            if (
+                !($symbol instanceof NamespacedSymbol)
+                || !$symbol->isDoRename()
+                || is_null($symbol->getInverseReplacement())
+                || !in_array($symbol->getPackageName(), $packageNames, true)
+            ) {
+                continue;
+            }
+
+            // E.g. `Prefix_Thing`, which was `Thing`.
+            if ($symbol->isGlobal()) {
+                $inverseReplacementSymbol = $symbol->withOriginalName($symbol->getInverseReplacement());
+                if (!$this->has($inverseReplacementSymbol)) {
+                    $inverseReplacementSymbols[] = $inverseReplacementSymbol;
+                }
+                continue;
+            }
+
+            $namespace = $symbol->getNamespace();
+            $namespaceName = $namespace->getOriginalFqdnName();
+
+            if (!array_key_exists($namespaceName, $inverseReplacementNamespaces)) {
+                $inverseReplacementNamespaces[$namespaceName] = $this->getInverseReplacementNamespace($namespace, $symbol);
+                if (!is_null($inverseReplacementNamespaces[$namespaceName]) && !$this->has($inverseReplacementNamespaces[$namespaceName])) {
+                    $inverseReplacementSymbols[] = $inverseReplacementNamespaces[$namespaceName];
+                }
+            }
+
+            $inverseReplacementNamespace = $inverseReplacementNamespaces[$namespaceName];
+            if (is_null($inverseReplacementNamespace)) {
+                continue;
+            }
+
+            $inverseReplacementSymbol = $symbol->withNamespace($inverseReplacementNamespace);
+
+            // E.g. the package was reinstalled, so its original symbols were discovered too.
+            if ($this->has($inverseReplacementSymbol)) {
+                continue;
+            }
+
+            $inverseReplacementSymbols[] = $inverseReplacementSymbol;
+        }
+
+        return $inverseReplacementSymbols;
+    }
+
+    /**
+     * The namespace a renamed namespace had before it was renamed, renamed to it: the discovered one, e.g. from the
+     * package's `autoload` key, or a new one.
+     *
+     * @param NamespaceSymbol  $namespace The renamed namespace, with its name before renaming.
+     * @param NamespacedSymbol $symbol    A symbol in it, whose source file the new namespace is given.
+     *
+     * @return ?NamespaceSymbol Null when the discovered namespace is renamed to something else.
+     */
+    protected function getInverseReplacementNamespace(NamespaceSymbol $namespace, NamespacedSymbol $symbol): ?NamespaceSymbol
+    {
+        $inverseReplacement = (string) $namespace->getInverseReplacement();
+
+        $discoveredNamespace = $this->getNamespace($inverseReplacement);
+        if (!is_null($discoveredNamespace)) {
+            return $discoveredNamespace->getReplacementFqdnName() === $namespace->getOriginalFqdnName()
+                ? $discoveredNamespace
+                : null;
+        }
+
+        // Not added to the file's symbols.
+        $inverseReplacementNamespace = new NamespaceSymbol($inverseReplacement);
+        foreach ($symbol->getSourceFiles() as $sourceFile) {
+            $inverseReplacementNamespace->addSourceFile($sourceFile);
+        }
+        $inverseReplacementNamespace->setLocalReplacement($namespace->getOriginalFqdnName());
+        $inverseReplacementNamespace->setDoRename(true);
+
+        return $inverseReplacementNamespace;
+    }
+
+    /**
      * Get all symbols that may have a namespace (i.e. no classes, interfaces etc.).
      */
     public function getNamespacedSymbols(): DiscoveredSymbols
@@ -229,20 +332,6 @@ class DiscoveredSymbols implements IteratorAggregate, ArrayAccess, Countable
     public function getAllClasses(): DiscoveredSymbols
     {
         return new DiscoveredSymbols($this->types[self::CLASS_SYMBOL]);
-    }
-
-    public function getDiscoveredClasses(?string $classmapPrefix = ''): DiscoveredSymbols
-    {
-        $discoveredClasses = $this->getGlobalClassesInterfacesTraits()->toArray();
-
-        return new DiscoveredSymbols(
-            array_filter(
-                $discoveredClasses,
-                function ($replacement) use ($classmapPrefix) {
-                    return empty($classmapPrefix) || ! str_starts_with($replacement->getLocalReplacement(), $classmapPrefix);
-                }
-            )
-        );
     }
 
     /**

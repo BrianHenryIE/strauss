@@ -5565,9 +5565,9 @@ class PrefixerTest extends TestCase
                  * Handle special case with null character `\0` in Composer's AutoloadGenerator.
                  *
                  * `$prefix = "\0BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";` must become
-                 * `$prefix = "\0Project\Prefix\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
+                 * `$prefix = "\0Project\Prefix\Composer\Autoload\ClassLoader\0";`, no matter whether it has been prefixed before.
                  *
-                 * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\BrianHenryIE\TestStrauss\Composer\Autoload\ClassLoader\0";`
+                 * I.e. in strauss.phar, AutoloadGenerator should have `$prefix = "\0BRianHenryIE\Strauss\Composer\Autoload\ClassLoader\0";`
                  */
                 protected function findComposerClassLoaderPrefixPositions(): array
                 {

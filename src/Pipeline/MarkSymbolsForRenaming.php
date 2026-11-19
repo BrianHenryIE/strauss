@@ -11,8 +11,10 @@
 namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
+use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
@@ -46,6 +48,29 @@ class MarkSymbolsForRenaming
         $this->setLogger($logger);
     }
 
+
+    /**
+     * Mark the files whose own symbols are not prefixed: those of packages not being prefixed, and those which are not
+     * PHP. Only ever marks files not to prefix, so e.g. {@see FileCopyScanner}'s decisions are kept.
+     *
+     * The packages' symbols are not renamed either: {@see self::isExcludeFromPrefixPackage()}. A file's
+     * `doPrefix` is used when planning its changes, so references to its own symbols are left unchanged.
+     *
+     * @param DiscoveredFiles $files All discovered files.
+     */
+    public function scanSetDoPrefix(DiscoveredFiles $files): void
+    {
+        $packagesToPrefix = $this->config->getPackagesToPrefix();
+
+        foreach ($files->getFiles() as $file) {
+            if (
+                !$file->isPhpFile()
+                || ($file instanceof FileWithDependency && !isset($packagesToPrefix[$file->getDependency()->getPackageName()]))
+            ) {
+                $file->setDoPrefix(false);
+            }
+        }
+    }
 
     /**
      * If a file is autoloaded, mark it to be renamed, except when there is a rule excluding it.
@@ -180,7 +205,8 @@ class MarkSymbolsForRenaming
     }
 
     /**
-     * Config: `extra.strauss.exclude_from_prefix.packages`.
+     * Config: `extra.strauss.exclude_from_prefix.packages`, and the packages in
+     * {@see MarkSymbolsForRenamingConfigInterface::getUnprefixedPackages()}.
      *
      * @param ?string $packageName The symbol's Composer package name, e.g. `vendor/package`; null when not from a package.
      */
@@ -200,7 +226,8 @@ class MarkSymbolsForRenaming
             return true;
         }
 
-        return false;
+        // When prefixing in place, the other installed packages are scanned only so their uses can be updated.
+        return isset($this->config->getUnprefixedPackages()[$packageName]);
     }
 
     /**

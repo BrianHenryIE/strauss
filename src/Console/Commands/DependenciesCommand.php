@@ -15,7 +15,6 @@ use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Files\File;
-use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Pipeline\Aliases\Aliases;
 use BrianHenryIE\Strauss\Pipeline\Autoload;
 use BrianHenryIE\Strauss\Pipeline\Autoload\Psr0;
@@ -27,6 +26,7 @@ use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
+use BrianHenryIE\Strauss\Pipeline\InverseReplacements;
 use BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
@@ -195,6 +195,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             'analyseFilesToCopy',
             'markSymbolsForRenaming',
             'determineChanges',
+            'scanFilesOutsideDependencyTree',
             'markFilesExcludedFromChanges',
             'planChanges',
             'setPsr0TargetDirectory',
@@ -239,6 +240,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
         $this->flatDependencyTree = $this->dependenciesEnumerator->getAllDependencies();
 
+        $this->config->setAllPackages(
+            $this->flatDependencyTree
+        );
+
         $this->config->setPackagesToCopy(
             array_filter(
                 $this->flatDependencyTree->toArray(),
@@ -258,6 +263,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
                 ARRAY_FILTER_USE_KEY
             )
         );
+
+        $this->config->setUnprefixedPackages($this->dependenciesEnumerator->getUnprefixedPackages());
 
         foreach ($this->flatDependencyTree->toArray() as $dependency) {
             // Sort of duplicating the logic above.
@@ -313,6 +320,17 @@ class DependenciesCommand extends AbstractRenamespacerCommand
         );
 
         $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies($this->flatDependencyTree);
+
+        // The packages not already enumerated as part of the dependency tree, e.g. not those excluded from prefixing.
+        $unprefixedPackagesOutsideTree = array_diff_key(
+            $this->config->getUnprefixedPackages(),
+            $this->flatDependencyTree->toArray()
+        );
+        if (!empty($unprefixedPackagesOutsideTree)) {
+            $this->discoveredFiles = $fileEnumerator->compileFileListForDependencies(
+                new DependenciesCollection($unprefixedPackagesOutsideTree)
+            );
+        }
     }
 
     protected function enumeratePsrNamespaces(): void
@@ -359,8 +377,30 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $changePlanner = new ChangePlanner($this->logger);
         $changePlanner->planInFiles(
-            $this->getDiscoveredSymbolsWithComposerRuntime(),
+            (new InverseReplacements($this->config, $this->logger))->withInverseReplacementSymbols(
+                $this->getDiscoveredSymbolsWithComposerRuntime()
+            ),
             $this->discoveredFiles->getFiles()
+        );
+    }
+
+    /**
+     * Parse the files of packages outside the dependency tree, e.g. those not being prefixed when prefixing in place,
+     * which mention one of the symbols found, or one of their names before an earlier run prefixed them.
+     *
+     * After {@see self::determineChanges()}, which works out those names, and before
+     * {@see self::markFilesExcludedFromChanges()}, which leaves the files not parsed unchanged.
+     *
+     * @see FileSymbolScanner::findInFilesOutsideDependencyTree()
+     * @see https://github.com/BrianHenryIE/strauss/issues/343
+     */
+    protected function scanFilesOutsideDependencyTree(): void
+    {
+        $this->logger->notice('Scanning files outside the dependency tree which use the symbols found...');
+
+        $this->getFileSymbolScanner()->findInFilesOutsideDependencyTree(
+            $this->discoveredFiles,
+            (new InverseReplacements($this->config, $this->logger))->withInverseReplacementSymbols($this->discoveredSymbols)
         );
     }
 

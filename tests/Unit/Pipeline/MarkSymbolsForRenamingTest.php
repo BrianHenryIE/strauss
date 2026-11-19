@@ -4,6 +4,7 @@ namespace BrianHenryIE\Strauss\Pipeline;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
+use BrianHenryIE\Strauss\Files\DiscoveredFiles;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileWithDependency;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
@@ -143,6 +144,7 @@ class MarkSymbolsForRenamingTest extends TestCase
         $config->shouldReceive('getExcludeNamespacesFromConstantPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeFilePatternsFromConstantPrefixing')->andReturn([]);
         $config->shouldReceive('getExcludeConstantNames')->andReturn(['WP_PLUGIN_DIR', 'ABSPATH']);
+        $config->shouldReceive('getUnprefixedPackages')->andReturn([]);
         $config->shouldReceive('getAbsoluteVendorDirectory')->andReturn('vendor');
         $config->shouldReceive('getAbsoluteTargetDirectory')->andReturn('vendor');
         $config->shouldReceive('isTargetDirectoryVendor')->andReturnFalse();
@@ -178,5 +180,133 @@ class MarkSymbolsForRenamingTest extends TestCase
         $sut->scanSetDoRename($discoveredSymbols);
 
         $this->assertFalse($symbol->isDoRename(), 'Constant in exclude_constants.constants should have doRename=false');
+    }
+
+    /**
+     * When prefixing in place, the other installed packages are scanned so their uses of the prefixed symbols are
+     * updated, but their own symbols are not renamed, even though they are autoloaded.
+     *
+     * @covers ::scanSetDoRename
+     * @covers ::isExcludeFromPrefixPackage
+     */
+    public function testUnprefixedPackageSymbolsNotMarkedForRenaming(): void
+    {
+        $package = Mockery::mock(ComposerPackage::class);
+        $package->shouldReceive('getPackageName')->andReturn('monolog/monolog');
+        $package->shouldReceive('getPackageAbsolutePath')->andReturn('project/vendor/monolog/monolog');
+        $package->shouldReceive('addFile');
+
+        $config = Mockery::mock(MarkSymbolsForRenamingConfigInterface::class);
+        $config->shouldReceive('getExcludePackagesFromCopy')->andReturn([]);
+        $config->shouldReceive('getExcludePackagesFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getUnprefixedPackages')->andReturn(['monolog/monolog' => $package]);
+        $config->shouldReceive('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeFilePatternsFromPrefixing')->andReturn([]);
+        $config->shouldReceive('getExcludeConstantNames')->andReturn([]);
+        $config->shouldReceive('isTargetDirectoryVendor')->andReturnTrue();
+        $config->shouldReceive('getNamespaceReplacementPatterns')->andReturn([]);
+
+        $sut = new MarkSymbolsForRenaming($config, Mockery::mock(FileSystem::class), $this->getTestLogger());
+
+        $file = new FileWithDependency(
+            $package,
+            'monolog/monolog/src/Monolog/Logger.php',
+            'project/vendor/monolog/monolog/src/Monolog/Logger.php',
+            'project/vendor/monolog/monolog/src/Monolog/Logger.php'
+        );
+        $symbol = new NamespaceSymbol('Monolog', $file);
+        $symbol->setIsAutoloaded(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        $discoveredSymbols->add($symbol);
+
+        $sut->scanSetDoRename($discoveredSymbols);
+
+        $this->assertFalse($symbol->isDoRename());
+    }
+
+    /**
+     * @param array<string,ComposerPackage> $packagesToPrefix
+     */
+    protected function getSutForDoPrefix(array $packagesToPrefix): MarkSymbolsForRenaming
+    {
+        $config = Mockery::mock(MarkSymbolsForRenamingConfigInterface::class);
+        $config->shouldReceive('getPackagesToPrefix')->andReturn($packagesToPrefix);
+
+        return new MarkSymbolsForRenaming($config, Mockery::mock(FileSystem::class), $this->getTestLogger());
+    }
+
+    /**
+     * @return ComposerPackage&\Mockery\MockInterface
+     */
+    protected function getPackageForDoPrefix(string $packageName): ComposerPackage
+    {
+        $package = Mockery::mock(ComposerPackage::class);
+        $package->shouldReceive('getPackageName')->andReturn($packageName);
+        $package->shouldReceive('getPackageAbsolutePath')->andReturn('/project/vendor/' . $packageName);
+        $package->shouldReceive('addFile');
+
+        return $package;
+    }
+
+    protected function getPackageFile(ComposerPackage $package, string $packageRelativePath): FileWithDependency
+    {
+        $vendorRelativePath = $package->getPackageName() . '/' . $packageRelativePath;
+
+        $file = new FileWithDependency(
+            $package,
+            $vendorRelativePath,
+            '/project/vendor/' . $vendorRelativePath,
+            '/project/vendor-prefixed/' . $vendorRelativePath
+        );
+        // As {@see AutoloadedEnumerator} marks autoloaded files.
+        $file->setDoPrefix(true);
+
+        return $file;
+    }
+
+    /**
+     * Files of packages not being prefixed, e.g. `exclude_from_prefix.packages`, even when autoloaded, and files which
+     * are not PHP, are not prefixed.
+     *
+     * @covers ::scanSetDoPrefix
+     */
+    public function test_files_of_packages_not_to_prefix_are_not_prefixed(): void
+    {
+        $vendorA = $this->getPackageForDoPrefix('vendor/vendor-a');
+        $vendorB = $this->getPackageForDoPrefix('vendor/vendor-b');
+
+        $sut = $this->getSutForDoPrefix(['vendor/vendor-b' => $vendorB]);
+
+        $fileOutside = $this->getPackageFile($vendorA, 'src/file.php');
+        $fileInside = $this->getPackageFile($vendorB, 'src/file.php');
+        $nonPhpFileInside = $this->getPackageFile($vendorB, 'README.md');
+        $projectFile = new File('/project/src/file.php', 'src/file.php', '/project/src/file.php');
+
+        $sut->scanSetDoPrefix(new DiscoveredFiles([$fileOutside, $fileInside, $nonPhpFileInside, $projectFile]));
+
+        $this->assertFalse($fileOutside->isDoPrefix());
+        $this->assertTrue($fileInside->isDoPrefix());
+        $this->assertFalse($nonPhpFileInside->isDoPrefix());
+        $this->assertTrue($projectFile->isDoPrefix());
+    }
+
+    /**
+     * A file already marked not to prefix, e.g. by {@see FileCopyScanner} because it is not copied, stays so.
+     *
+     * @covers ::scanSetDoPrefix
+     */
+    public function test_files_marked_not_to_prefix_stay_so(): void
+    {
+        $vendorB = $this->getPackageForDoPrefix('vendor/vendor-b');
+
+        $sut = $this->getSutForDoPrefix(['vendor/vendor-b' => $vendorB]);
+
+        $file = $this->getPackageFile($vendorB, 'src/file.php');
+        $file->setDoPrefix(false);
+
+        $sut->scanSetDoPrefix(new DiscoveredFiles([$file]));
+
+        $this->assertFalse($file->isDoPrefix());
     }
 }

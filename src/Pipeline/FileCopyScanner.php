@@ -103,7 +103,10 @@ class FileCopyScanner
                 $file->setTargetAbsolutePath(FileSystem::normalizeDirSeparator($target));
             }
 
-            $shouldDelete = $this->config->isDeleteVendorFiles() && ! $this->filesystem->isSymlinked($file->getSourcePath());
+            $shouldDelete = $this->config->isDeleteVendorFiles()
+                && ! $this->filesystem->isSymlinked($file->getSourcePath())
+                // Only read so their uses of the prefixed symbols can be updated; never removed.
+                && !($file instanceof FileWithDependency && isset($this->config->getUnprefixedPackages()[$file->getDependency()->getPackageName()]));
             $file->setDoDelete($shouldDelete);
 
             // If a file isn't copied, don't unintentionally edit the source file.

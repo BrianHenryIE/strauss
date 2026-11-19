@@ -40,8 +40,8 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
- * Iterates the {@see DiscoveredFiles}, marking files outside the packages to prefix and non-PHP files not to prefix,
- * then records each PHP file's {@see SymbolDefinition}s as {@see DiscoveredSymbol}s (namespaces, classes, functions,
+ * Iterates the {@see DiscoveredFiles} in the dependency tree, then, once the replacements are determined, those of
+ * packages outside it which mention the symbols, and records each PHP file's {@see SymbolDefinition}s as {@see DiscoveredSymbol}s (namespaces, classes, functions,
  * constants, interfaces, traits and enums) in the shared {@see DiscoveredSymbols}, skipping PHP built-ins listed in
  * `FileSymbol/builtinsymbols.php`. When a {@see WorkerPool} is set, the files are first parsed in worker processes,
  * falling back to parsing in this process if parallelisation fails.
@@ -129,37 +129,110 @@ class FileSymbolScanner
     }
 
     /**
+     * Files of packages outside the dependency tree, e.g. those not being prefixed when prefixing in place, only
+     * matter for their uses of the symbols found, so they are not scanned here:
+     * {@see self::findInFilesOutsideDependencyTree()}.
+     *
+     * Which symbols are renamed is decided later: {@see MarkSymbolsForRenaming}.
+     *
      * @param DiscoveredFiles $files The project's and dependencies' files; PHP files are parsed and their maps stored.
      *
      * @throws FilesystemException
      */
     public function findInFiles(DiscoveredFiles $files): DiscoveredSymbols
     {
-        $packagesToPrefixLookup = array_fill_keys(array_keys($this->config->getPackagesToPrefix()), true);
+        $this->scanFiles(
+            array_filter(
+                $files->getFiles(),
+                fn(FileBase $file): bool => !$this->isOutsideDependencyTree($file)
+            )
+        );
+
+        return $this->discoveredSymbols;
+    }
+
+    /**
+     * Parses the files of packages outside the dependency tree which mention one of the given symbols. Those not
+     * parsed are left unchanged: {@see MarkFilesExcludedFromChanges}.
+     *
+     * Run once the replacements are determined, so the symbols can include the names, from before an earlier run
+     * renamed them, which those files may use, e.g. `Psr\Log` for the already prefixed `Prefix\Psr\Log`.
+     *
+     * @param DiscoveredFiles   $files            The project's and dependencies' files.
+     * @param DiscoveredSymbols $symbolsMentioned The symbols the files are searched for.
+     *
+     * @throws FilesystemException
+     *
+     * @see SymbolMentionFilter
+     * @see DiscoveredSymbols::getInverseReplacementSymbols()
+     */
+    public function findInFilesOutsideDependencyTree(
+        DiscoveredFiles $files,
+        DiscoveredSymbols $symbolsMentioned
+    ): DiscoveredSymbols {
+        $filesOutsideDependencyTree = array_filter(
+            $files->getFiles(),
+            fn(FileBase $file): bool => $this->isOutsideDependencyTree($file)
+        );
+
+        if (0 === count($filesOutsideDependencyTree)) {
+            return $this->discoveredSymbols;
+        }
+
+        $symbolMentionFilter = new SymbolMentionFilter($symbolsMentioned);
+
+        $filesMentioningSymbols = [];
+        foreach ($filesOutsideDependencyTree as $file) {
+            if ($file->isPhpFile() && $symbolMentionFilter->isMentionedIn($this->filesystem->read($file->getSourcePath()))) {
+                $filesMentioningSymbols[] = $file;
+            }
+        }
+
+        $this->logger->info(
+            'Scanning {count} of {total} files in packages outside the dependency tree which mention the symbols found.',
+            [
+                'count' => count($filesMentioningSymbols),
+                'total' => count($filesOutsideDependencyTree),
+            ]
+        );
+
+        $this->scanFiles($filesMentioningSymbols);
+
+        return $this->discoveredSymbols;
+    }
+
+    /**
+     * Is the file in a package outside the dependency tree? Never when the tree is not known.
+     *
+     * @param FileBase $file A project or dependency file.
+     */
+    protected function isOutsideDependencyTree(FileBase $file): bool
+    {
+        $allPackages = $this->config->getAllPackages();
+
+        return !is_null($allPackages)
+            && $file instanceof FileWithDependency
+            && !isset($allPackages[$file->getDependency()->getPackageName()]);
+    }
+
+    /**
+     * @param FileBase[] $files The files to scan; PHP files are parsed and their maps stored.
+     *
+     * @throws FilesystemException
+     */
+    protected function scanFiles(array $files): void
+    {
         $projectDirectory = $this->config->getProjectAbsolutePath();
 
         $this->analyzeInParallel($files);
 
-        foreach ($files->getFiles() as $file) {
-            if (
-                $file instanceof FileWithDependency
-                && !isset($packagesToPrefixLookup[$file->getDependency()->getPackageName()])
-            ) {
-                /**
-                 * We will not prefix symbols found in this file because it is not in a default or listed package.
-                 *
-                 * TODO: Move this logic to {@see MarkSymbolsForRenaming}.
-                 */
-                $file->setDoPrefix(false);
-            }
-
+        foreach ($files as $file) {
             $relativeFilePath
                 = $file instanceof FileWithDependency
                     ? $file->getVendorRelativePath()
                     : $this->filesystem->getRelativePath($projectDirectory, $file->getSourcePath());
 
             if (!$file->isPhpFile()) {
-                $file->setDoPrefix(false);
                 $this->logger->debug("Skipping non-PHP file:::" . $relativeFilePath);
                 continue;
             }
@@ -195,8 +268,6 @@ class FileSymbolScanner
                 $package
             );
         }
-
-        return $this->discoveredSymbols;
     }
 
     /**
@@ -205,9 +276,9 @@ class FileSymbolScanner
      *
      * If the workers cannot be run, the files are parsed in this process as before.
      *
-     * @param DiscoveredFiles $files The files to scan; only PHP files are analysed.
+     * @param FileBase[] $files The files to scan; only PHP files are analysed.
      */
-    protected function analyzeInParallel(DiscoveredFiles $files): void
+    protected function analyzeInParallel(array $files): void
     {
         if (is_null($this->workerPool)) {
             return;
@@ -217,7 +288,7 @@ class FileSymbolScanner
  * @var array<string, string> $absolutePaths Keyed by source path.
 */
         $absolutePaths = [];
-        foreach ($files->getFiles() as $file) {
+        foreach ($files as $file) {
             if (!$file->isPhpFile() || !($file instanceof File)) {
                 continue;
             }
@@ -332,7 +403,7 @@ class FileSymbolScanner
 
         switch ($definition->getType()) {
             case SymbolDefinition::TYPE_CLASS:
-                $classSymbol = $this->addDiscoveredClassChange(
+                $this->addDiscoveredClassChange(
                     $name,
                     $definition->isAbstract(),
                     $file,
@@ -340,9 +411,6 @@ class FileSymbolScanner
                     $namespaceSymbol,
                     $definition->getInterfaces()
                 );
-                if ($classSymbol) {
-                    $classSymbol->setDoRename($file->isDoPrefix());
-                }
                 return;
 
             case SymbolDefinition::TYPE_FUNCTION:
@@ -355,7 +423,6 @@ class FileSymbolScanner
                     $this->add($functionSymbol);
                 }
                 $functionSymbol->addSourceFile($file);
-                $functionSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             case SymbolDefinition::TYPE_CONSTANT:
@@ -366,7 +433,6 @@ class FileSymbolScanner
                     $this->add($constantSymbol, $file);
                 }
                 $constantSymbol->addSourceFile($file);
-                $constantSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             case SymbolDefinition::TYPE_INTERFACE:
@@ -376,7 +442,6 @@ class FileSymbolScanner
                     $this->add($interfaceSymbol);
                 }
                 $interfaceSymbol->addSourceFile($file);
-                $interfaceSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             case SymbolDefinition::TYPE_TRAIT:
@@ -386,7 +451,6 @@ class FileSymbolScanner
                     $this->add($traitSymbol);
                 }
                 $traitSymbol->addSourceFile($file);
-                $traitSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             case SymbolDefinition::TYPE_ENUM:
@@ -405,7 +469,6 @@ class FileSymbolScanner
                     $this->add($enumSymbol, $file);
                 }
                 $enumSymbol->addSourceFile($file);
-                $enumSymbol->setDoRename($file->isDoPrefix());
                 return;
 
             default:

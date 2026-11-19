@@ -8,6 +8,8 @@
 
 namespace BrianHenryIE\Strauss\Config;
 
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
+
 /**
  * Implemented by {@see \BrianHenryIE\Strauss\Composer\Extra\StraussConfig} and consumed by
  * {@see \BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges}, returning the package, namespace and file-pattern
@@ -29,4 +31,11 @@ interface MarkFilesExcludedFromChangesConfigInterface
      * @return string[]
      */
     public function getExcludeFilesFromUpdateFilePatterns(): array;
+
+    /**
+     * The packages in the dependency tree. Files of other packages which were not parsed are not changed.
+     *
+     * @return ?DependenciesCollection Null when not known.
+     */
+    public function getAllPackages(): ?DependenciesCollection;
 }

@@ -58,9 +58,63 @@ class NamespacedSymbol extends DiscoveredSymbol
             : trim($this->namespace->getLocalReplacement() . '\\' . $this->getOriginalLocalName(), '\\');
     }
 
+    /**
+     * Its name before an earlier run renamed it: for a global symbol, without the prefix; otherwise in its namespace's
+     * name before it was renamed.
+     */
+    public function getInverseReplacement(): ?string
+    {
+        if ($this->namespace->isGlobal()) {
+            return $this->inverseReplacement;
+        }
+
+        $inverseReplacementNamespaceName = $this->namespace->getInverseReplacement();
+
+        return is_null($inverseReplacementNamespaceName)
+            ? null
+            : $inverseReplacementNamespaceName . '\\' . $this->getOriginalLocalName();
+    }
+
     public function getNamespace(): NamespaceSymbol
     {
         return $this->namespace;
+    }
+
+    /**
+     * A copy in another namespace, e.g. the one it had before an earlier run renamed it, for planning changes. It is
+     * not added to its source files' symbols.
+     *
+     * @param NamespaceSymbol $namespace The namespace of the copy.
+     *
+     * @return static
+     */
+    public function withNamespace(NamespaceSymbol $namespace): self
+    {
+        $copy = clone $this;
+        $copy->namespace = $namespace;
+        $copy->fqdnOriginalSymbol = $namespace->getOriginalFqdnName() . '\\' . $this->getOriginalLocalName();
+        $copy->inverseReplacement = null;
+
+        return $copy;
+    }
+
+    /**
+     * A copy of a global symbol with the name it had before an earlier run prefixed it, renamed to its current name,
+     * for planning changes. It is not added to its source files' symbols.
+     *
+     * @param string $originalName The name before it was prefixed, e.g. `Thing` for `Prefix_Thing`.
+     *
+     * @return static
+     */
+    public function withOriginalName(string $originalName): self
+    {
+        $copy = clone $this;
+        $copy->fqdnOriginalSymbol = $originalName;
+        $copy->localOriginalSymbol = $originalName;
+        $copy->localReplacement = $this->getOriginalFqdnName();
+        $copy->inverseReplacement = null;
+
+        return $copy;
     }
 
     public function getNamespaceName(): string

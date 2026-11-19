@@ -102,7 +102,7 @@ class FileCopyScannerIntegrationTest extends IntegrationTestCase
 
         $discoveredSymbols = $fileScanner->findInFiles($files);
 
-        $classes = $discoveredSymbols->getDiscoveredClasses();
+        $classes = $discoveredSymbols->getGlobalClassesInterfacesTraits();
 
         $namespaces = $discoveredSymbols->getNamespaces();
 

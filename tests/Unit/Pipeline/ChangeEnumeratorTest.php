@@ -5,6 +5,8 @@ namespace BrianHenryIE\Strauss\Pipeline;
 use BrianHenryIE\Strauss\Config\ChangeEnumeratorConfigInterface;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\TestCase;
+use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\EnumSymbol;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
@@ -213,5 +215,270 @@ class ChangeEnumeratorTest extends TestCase
 
         $this->assertEquals('functions_prefix_other_fn', $otherSymbol->getLocalReplacement());
         $this->assertTrue($otherSymbol->isReplaceInString());
+    }
+
+    /**
+     * Prefixing in place a second time: the package's `autoload` key gives `Psr\Log`, its files already declare
+     * `Acme\Log`. The pattern no longer matches `Acme\Log`, so without the guard the default `namespace_prefix` would
+     * rename it again.
+     *
+     * @covers ::determineReplacements
+     * @covers ::determineNamespaceInverseReplacements
+     */
+    public function testAlreadyRenamedNamespaceIsNotRenamedAgain(): void
+    {
+        /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
+        $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
+        $config->allows('getNamespacePrefix')->andReturn('Default\Prefix');
+        $config->allows('getNamespaceReplacementPatterns')->andReturn(['~Psr\\\\Log~' => 'Acme\\Log']);
+        $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->allows('getClassmapPrefix')->andReturnNull();
+        $config->allows('getFunctionsPrefix')->andReturnNull();
+        $config->allows('getConstantsPrefix')->andReturnNull();
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
+
+        $sut = new ChangeEnumerator($config, $this->getTestLogger());
+
+        $file = new File('/vendor/psr/log/src/LoggerInterface.php', 'psr/log/src/LoggerInterface.php', '/vendor/psr/log/src/LoggerInterface.php');
+
+        $autoloadNamespace = new NamespaceSymbol('Psr\Log');
+        $autoloadNamespace->setDoRename(true);
+
+        $renamedNamespace = new NamespaceSymbol('Acme\Log', $file);
+        $renamedNamespace->setDoRename(true);
+
+        $renamedSubNamespace = new NamespaceSymbol('Acme\Log\Test', $file);
+        $renamedSubNamespace->setDoRename(true);
+
+        $otherNamespace = new NamespaceSymbol('Other\Package', $file);
+        $otherNamespace->setDoRename(true);
+
+        $discoveredSymbols = new DiscoveredSymbols();
+        foreach ([$autoloadNamespace, $renamedNamespace, $renamedSubNamespace, $otherNamespace] as $namespace) {
+            $discoveredSymbols->add($namespace);
+        }
+
+        $sut->determineReplacements($discoveredSymbols);
+
+        $this->assertSame('Acme\Log', $autoloadNamespace->getReplacementFqdnName());
+        $this->assertSame('Acme\Log', $renamedNamespace->getReplacementFqdnName());
+        $this->assertSame('Acme\Log\Test', $renamedSubNamespace->getReplacementFqdnName());
+        $this->assertSame('Default\Prefix\Other\Package', $otherNamespace->getReplacementFqdnName());
+
+        // Their names before renaming, so uses of those are updated.
+        $this->assertNull($autoloadNamespace->getInverseReplacement());
+        $this->assertSame('Psr\Log', $renamedNamespace->getInverseReplacement());
+        $this->assertSame('Psr\Log\Test', $renamedSubNamespace->getInverseReplacement());
+        $this->assertNull($otherNamespace->getInverseReplacement());
+    }
+
+    /**
+     * @param array<string,string> $namespaceReplacementPatterns
+     *
+     * @return MockInterface&ChangeEnumeratorConfigInterface
+     */
+    protected function getNamespaceConfig(
+        ?string $namespacePrefix,
+        array $namespaceReplacementPatterns = []
+    ): ChangeEnumeratorConfigInterface {
+        /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
+        $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
+        $config->allows('getNamespacePrefix')->andReturn($namespacePrefix);
+        $config->allows('getNamespaceReplacementPatterns')->andReturn($namespaceReplacementPatterns);
+        $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->allows('getClassmapPrefix')->andReturnNull();
+        $config->allows('getFunctionsPrefix')->andReturnNull();
+        $config->allows('getConstantsPrefix')->andReturnNull();
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
+
+        return $config;
+    }
+
+    /**
+     * @param string[] $namespaceNames
+     *
+     * @return array<string, NamespaceSymbol>
+     */
+    protected function getNamespacesToRename(array $namespaceNames): array
+    {
+        $file = new File('/vendor/psr/log/src/LoggerInterface.php', 'psr/log/src/LoggerInterface.php', '/vendor/psr/log/src/LoggerInterface.php');
+
+        $namespaces = [];
+        foreach ($namespaceNames as $namespaceName) {
+            $namespaces[$namespaceName] = new NamespaceSymbol($namespaceName, $file);
+            $namespaces[$namespaceName]->setDoRename(true);
+        }
+
+        return $namespaces;
+    }
+
+    /**
+     * Found by renaming the namespace from the package's `autoload` key forwards, so a pattern's back-references
+     * need not be reversed.
+     *
+     * @covers ::determineReplacements
+     * @covers ::determineNamespaceInverseReplacements
+     */
+    public function testInverseReplacementWithBackReferencePattern(): void
+    {
+        $sut = new ChangeEnumerator(
+            $this->getNamespaceConfig('Default\Prefix', ['~Psr\\\\(.*)~' => 'Acme\\Psr\\\\$1']),
+            $this->getTestLogger()
+        );
+
+        $namespaces = $this->getNamespacesToRename(['Psr\Log', 'Acme\Psr\Log', 'Acme\Psr\Log\Test']);
+
+        $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
+
+        $this->assertSame('Acme\Psr\Log', $namespaces['Psr\Log']->getReplacementFqdnName());
+        $this->assertNull($namespaces['Psr\Log']->getInverseReplacement());
+
+        // Not `Acme\Psr\Acme\Psr\Log`.
+        $this->assertSame('Acme\Psr\Log', $namespaces['Acme\Psr\Log']->getReplacementFqdnName());
+        $this->assertSame('Psr\Log', $namespaces['Acme\Psr\Log']->getInverseReplacement());
+
+        $this->assertSame('Acme\Psr\Log\Test', $namespaces['Acme\Psr\Log\Test']->getReplacementFqdnName());
+        $this->assertSame('Psr\Log\Test', $namespaces['Acme\Psr\Log\Test']->getInverseReplacement());
+    }
+
+    /**
+     * A namespace not in its package's `autoload` key, e.g. only autoloaded by `classmap`, which already begins with
+     * `namespace_prefix`.
+     *
+     * @covers ::determineReplacements
+     * @covers ::determineNamespaceInverseReplacements
+     */
+    public function testInverseReplacementByRemovingNamespacePrefix(): void
+    {
+        $sut = new ChangeEnumerator($this->getNamespaceConfig('Prefix\\'), $this->getTestLogger());
+
+        $namespaces = $this->getNamespacesToRename(['Prefix\Psr\Log', 'PrefixOther\Package', 'Other\Package']);
+
+        $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
+
+        $this->assertSame('Prefix\Psr\Log', $namespaces['Prefix\Psr\Log']->getReplacementFqdnName());
+        $this->assertSame('Psr\Log', $namespaces['Prefix\Psr\Log']->getInverseReplacement());
+
+        // Only begins with the same characters.
+        $this->assertSame('Prefix\PrefixOther\Package', $namespaces['PrefixOther\Package']->getReplacementFqdnName());
+        $this->assertNull($namespaces['PrefixOther\Package']->getInverseReplacement());
+
+        // Being renamed now.
+        $this->assertSame('Prefix\Other\Package', $namespaces['Other\Package']->getReplacementFqdnName());
+        $this->assertNull($namespaces['Other\Package']->getInverseReplacement());
+    }
+
+    /**
+     * A namespace which begins with `namespace_prefix` but is renamed now by a pattern was not renamed before.
+     *
+     * @covers ::determineReplacements
+     */
+    public function testNoInverseReplacementWhenRenamedByPattern(): void
+    {
+        $sut = new ChangeEnumerator(
+            $this->getNamespaceConfig('Prefix', ['~Prefix\\\\Psr~' => 'Other\\Psr']),
+            $this->getTestLogger()
+        );
+
+        $namespaces = $this->getNamespacesToRename(['Prefix\Psr\Log']);
+
+        $sut->determineReplacements(new DiscoveredSymbols(array_values($namespaces)));
+
+        $this->assertSame('Other\Psr\Log', $namespaces['Prefix\Psr\Log']->getReplacementFqdnName());
+        $this->assertNull($namespaces['Prefix\Psr\Log']->getInverseReplacement());
+    }
+
+    /**
+     * @return MockInterface&ChangeEnumeratorConfigInterface
+     */
+    protected function getGlobalPrefixesConfig(): ChangeEnumeratorConfigInterface
+    {
+        /** @var MockInterface&ChangeEnumeratorConfigInterface $config */
+        $config = Mockery::mock(ChangeEnumeratorConfigInterface::class);
+        $config->allows('getNamespacePrefix')->andReturn('Prefix');
+        $config->allows('getNamespaceReplacementPatterns')->andReturn([]);
+        $config->allows('getExcludeNamespacesFromPrefixing')->andReturn([]);
+        $config->allows('getClassmapPrefix')->andReturn('Prefix_');
+        $config->allows('getFunctionsPrefix')->andReturn('prefix_');
+        $config->allows('getConstantsPrefix')->andReturn('PREFIX_');
+        $config->allows('getExcludeFunctionsFromStringRenaming')->andReturn([]);
+
+        return $config;
+    }
+
+    /**
+     * A global class, function and constant renamed by an earlier run in place.
+     *
+     * @return array{0:ClassSymbol, 1:FunctionSymbol, 2:ConstantSymbol}
+     */
+    protected function getAlreadyPrefixedGlobalSymbols(): array
+    {
+        $file = new File('/path/to/file.php', 'file.php', '/destination-path/to/file.php');
+        $globalNamespace = new NamespaceSymbol('\\');
+
+        $symbols = [
+            new ClassSymbol('Prefix_Thing', $file, $globalNamespace),
+            new FunctionSymbol('prefix_helper', $file, $globalNamespace),
+            new ConstantSymbol('PREFIX_VERSION', $file, $globalNamespace),
+        ];
+        foreach ($symbols as $symbol) {
+            $symbol->setDoRename(true);
+        }
+
+        return $symbols;
+    }
+
+    /**
+     * Already-prefixed global symbols keep their names, and their names before the earlier run are kept so uses of
+     * them can be updated.
+     *
+     * @covers ::determineReplacements
+     * @covers ::determineGlobalInverseReplacements
+     */
+    public function testAlreadyPrefixedGlobalSymbolsInverseReplacement(): void
+    {
+        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(), $this->getTestLogger());
+
+        [$classSymbol, $functionSymbol, $constantSymbol] = $this->getAlreadyPrefixedGlobalSymbols();
+
+        $sut->determineReplacements(new DiscoveredSymbols([$classSymbol, $functionSymbol, $constantSymbol]));
+
+        $this->assertSame('Prefix_Thing', $classSymbol->getReplacementFqdnName());
+        $this->assertSame('Thing', $classSymbol->getInverseReplacement());
+
+        $this->assertSame('prefix_helper', $functionSymbol->getReplacementFqdnName());
+        $this->assertSame('helper', $functionSymbol->getInverseReplacement());
+
+        $this->assertSame('PREFIX_VERSION', $constantSymbol->getReplacementFqdnName());
+        $this->assertSame('VERSION', $constantSymbol->getInverseReplacement());
+    }
+
+    /**
+     * Global symbols not already prefixed are prefixed, with no inverse replacement.
+     *
+     * @covers ::determineReplacements
+     */
+    public function testGlobalSymbolsPrefixedWithoutInverseReplacement(): void
+    {
+        $sut = new ChangeEnumerator($this->getGlobalPrefixesConfig(), $this->getTestLogger());
+
+        $file = new File('/path/to/file.php', 'file.php', '/destination-path/to/file.php');
+        $globalNamespace = new NamespaceSymbol('\\');
+        $classSymbol = new ClassSymbol('Thing', $file, $globalNamespace);
+        $functionSymbol = new FunctionSymbol('helper', $file, $globalNamespace);
+        $constantSymbol = new ConstantSymbol('VERSION', $file, $globalNamespace);
+        foreach ([$classSymbol, $functionSymbol, $constantSymbol] as $symbol) {
+            $symbol->setDoRename(true);
+        }
+
+        $sut->determineReplacements(new DiscoveredSymbols([$classSymbol, $functionSymbol, $constantSymbol]));
+
+        $this->assertSame('Prefix_Thing', $classSymbol->getReplacementFqdnName());
+        $this->assertSame('prefix_helper', $functionSymbol->getReplacementFqdnName());
+        $this->assertSame('PREFIX_VERSION', $constantSymbol->getReplacementFqdnName());
+
+        foreach ([$classSymbol, $functionSymbol, $constantSymbol] as $symbol) {
+            $this->assertNull($symbol->getInverseReplacement(), $symbol->getOriginalFqdnName());
+        }
     }
 }

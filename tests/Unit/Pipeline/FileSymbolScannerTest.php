@@ -85,7 +85,7 @@ class FileSymbolScannerTest extends TestCase
 
         $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getNamespaces()->toArray());
 
-        $this->assertNotContains('MyClass', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertNotContains('MyClass', $discoveredSymbols->getGlobalClassesInterfacesTraits());
     }
 
     /**
@@ -118,7 +118,7 @@ class FileSymbolScannerTest extends TestCase
         $discoveredFiles->shouldReceive('getFiles')->andReturn([$file]);
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
-        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -157,7 +157,7 @@ class FileSymbolScannerTest extends TestCase
 
         $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getNamespaces()->toArray());
 
-        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -197,8 +197,8 @@ class FileSymbolScannerTest extends TestCase
 
         $this->assertArrayHasKey('MyNamespace', $discoveredSymbols->getNamespaces()->toArray());
 
-        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
-        $this->assertArrayNotHasKey('MyOtherClass', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
+        $this->assertArrayNotHasKey('MyOtherClass', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -291,8 +291,8 @@ class FileSymbolScannerTest extends TestCase
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getDiscoveredClasses());
-        $this->assertArrayHasKey('MyOtherClass', $discoveredSymbols->getDiscoveredClasses());
+        $this->assertArrayHasKey('MyClass', $discoveredSymbols->getGlobalClassesInterfacesTraits());
+        $this->assertArrayHasKey('MyOtherClass', $discoveredSymbols->getGlobalClassesInterfacesTraits());
     }
 
     /**
@@ -324,8 +324,8 @@ class FileSymbolScannerTest extends TestCase
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
-        $this->assertArrayHasKey('Whatever', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
+        $this->assertArrayHasKey('Whatever', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -358,8 +358,8 @@ class FileSymbolScannerTest extends TestCase
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
-        $this->assertArrayHasKey('Whatever', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
+        $this->assertArrayHasKey('Whatever', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -395,8 +395,8 @@ class FileSymbolScannerTest extends TestCase
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
-        $this->assertArrayHasKey('Whatever', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
+        $this->assertArrayHasKey('Whatever', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -426,8 +426,8 @@ class FileSymbolScannerTest extends TestCase
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
-        $this->assertArrayHasKey('Whatever_Trevor', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
+        $this->assertArrayHasKey('Whatever_Trevor', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -460,8 +460,8 @@ class FileSymbolScannerTest extends TestCase
 
         $discoveredSymbols = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayNotHasKey('as', $discoveredSymbols->getDiscoveredClasses()->toArray());
-        $this->assertArrayHasKey('Whatever_Ever', $discoveredSymbols->getDiscoveredClasses()->toArray());
+        $this->assertArrayNotHasKey('as', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
+        $this->assertArrayHasKey('Whatever_Ever', $discoveredSymbols->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -490,7 +490,7 @@ class FileSymbolScannerTest extends TestCase
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('Pear', $result->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('Pear', $result->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -524,7 +524,7 @@ class FileSymbolScannerTest extends TestCase
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertArrayHasKey('WP_Dependency_Installer', $result->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('WP_Dependency_Installer', $result->getGlobalClassesInterfacesTraits()->toArray());
     }
 
 
@@ -564,8 +564,8 @@ class FileSymbolScannerTest extends TestCase
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertNotContains('A_Class', $result->getDiscoveredClasses());
-        $this->assertContains('B_Class', $result->getDiscoveredClasses());
+        $this->assertNotContains('A_Class', $result->getGlobalClassesInterfacesTraits());
+        $this->assertContains('B_Class', $result->getGlobalClassesInterfacesTraits());
     }
 
     /**
@@ -723,7 +723,7 @@ class FileSymbolScannerTest extends TestCase
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertNotContains('object', $result->getDiscoveredClasses());
+        $this->assertNotContains('object', $result->getGlobalClassesInterfacesTraits());
     }
 
     /**
@@ -815,7 +815,7 @@ class FileSymbolScannerTest extends TestCase
         $result = $sut->findInFiles($discoveredFiles);
 
         $this->assertArrayNotHasKey('WPGraphQL', $result->getNamespaces()->toArray());
-        $this->assertArrayHasKey('WPGraphQL', $result->getDiscoveredClasses()->toArray());
+        $this->assertArrayHasKey('WPGraphQL', $result->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -1036,7 +1036,7 @@ class FileSymbolScannerTest extends TestCase
 
         $result = $sut->findInFiles($discoveredFiles);
 
-        $this->assertEmpty($result->getDiscoveredClasses()->toArray());
+        $this->assertEmpty($result->getGlobalClassesInterfacesTraits()->toArray());
     }
 
     /**
@@ -1191,7 +1191,6 @@ class FileSymbolScannerTest extends TestCase
         $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
-        $config->method('getPackagesToPrefix')->willReturn([]);
 
         $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
 
@@ -1223,7 +1222,6 @@ class FileSymbolScannerTest extends TestCase
         $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
-        $config->method('getPackagesToPrefix')->willReturn([]);
 
         $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
 
@@ -1252,7 +1250,6 @@ class FileSymbolScannerTest extends TestCase
         $filesystem->shouldReceive('getRelativePath')->andReturnArg(1);
 
         $config = $this->createMock(StraussConfig::class);
-        $config->method('getPackagesToPrefix')->willReturn([]);
 
         $sut = new FileSymbolScanner($config, new DiscoveredSymbols(), $filesystem, $this->getLogger());
 

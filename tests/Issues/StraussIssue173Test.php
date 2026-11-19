@@ -17,6 +17,7 @@ class StraussIssue173Test extends IntegrationTestCase
 {
     public function test_issue_173(): void
     {
+        // laravel/framework 11 requires PHP 8.2. On PHP 8.6, a dependency's PDF code fails on `MB_ONIGURUMA_VERSION`.
         $this->markTestSkippedOnPhpVersionEqualOrAbove('8.6');
         $this->markTestSkippedOnPhpVersionBelow('8.2.0');
 
@@ -37,7 +38,6 @@ class StraussIssue173Test extends IntegrationTestCase
               },
               "minimum-stability": "dev",
               "prefer-stable": true,
-              "optimize-autoloader": true,
               "config": {
                 "allow-plugins": {
                   "composer/installers": true
@@ -47,10 +47,7 @@ class StraussIssue173Test extends IntegrationTestCase
                 },
                 "classmap-authoritative": true,
                 "optimize-autoloader": true,
-                "sort-packages": true,
-                "audit": {
-                  "block-insecure": false
-                }
+                "sort-packages": true
               },
               "extra": {
                 "strauss": {
@@ -85,20 +82,39 @@ class StraussIssue173Test extends IntegrationTestCase
 
         $this->getFileSystem()->write($this->testsWorkingDir . '/composer.json', $composerJsonString);
 
-        exec('composer install');
+        exec('composer install 2>&1', $installOutput, $installExitCode);
+        $this->assertEquals(0, $installExitCode, implode(PHP_EOL, $installOutput));
+
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
+        // Prefixing in place a second time must not prefix again.
         $exitCode = $this->runStrauss($output);
         $this->assertEquals(0, $exitCode, $output);
 
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/psr/log/src/LoggerInterface.php');
-        $this->assertStringContainsString("WPSoup\\Vendor\\Psr\\Log\\", $php_string);
+        $this->assertStringContainsString('namespace WPSoup\Vendor\Psr\Log;', $php_string);
+        $this->assertStringNotContainsString('WPSoup\Vendor\WPSoup', $php_string);
+
+        // The packages not being prefixed use the prefixed psr/log.
+        $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/laravel/framework/src/Illuminate/Log/Logger.php');
+        $this->assertStringContainsString('use WPSoup\Vendor\Psr\Log\LoggerInterface;', $php_string);
+        $this->assertStringNotContainsString('WPSoup\Vendor\WPSoup', $php_string);
+        $this->assertDoesNotMatchRegularExpression('/(^|[^\\\\A-Za-z])Psr\\\\Log\\\\/m', $php_string);
+
+        // Their files which do not use it are not changed, e.g. Blade templates, which are not PHP.
+        $this->assertFalse($this->getTestLogger()->hasWarningThatContains('blade.php'));
 
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/installed.json');
         $this->assertStringContainsString("WPSoup\\\\Vendor\\\\Psr\\\\Log\\\\", $php_string);
 
         $php_string = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_psr4.php');
         $this->assertStringContainsString("WPSoup\\\\Vendor\\\\Psr\\\\Log\\\\", $php_string);
+
+        // Loading Laravel's logger loads the prefixed interface it implements.
+        $phpCode = 'require "vendor/autoload.php"; new Illuminate\Log\Logger(new Monolog\Logger("x")); echo "OK";';
+        exec(escapeshellarg(PHP_BINARY) . ' -r ' . escapeshellarg($phpCode) . ' 2>&1', $phpOutput, $phpExitCode);
+        $this->assertEquals(0, $phpExitCode, implode(PHP_EOL, $phpOutput));
+        $this->assertEquals('OK', implode(PHP_EOL, $phpOutput));
     }
 }

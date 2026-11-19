@@ -43,6 +43,14 @@ abstract class DiscoveredSymbol
 
     protected bool $doRename = false;
 
+    /**
+     * When prefixing in place, the name the symbol had before an earlier run renamed it, so uses of that name, e.g. in
+     * packages installed since, are updated. Null when it was not already renamed.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/343
+     */
+    protected ?string $inverseReplacement = null;
+
     // Possibly empty.
     protected DependenciesCollection $dependencies;
 
@@ -150,6 +158,23 @@ abstract class DiscoveredSymbol
         return $localSymbol;
     }
 
+    /**
+     * @see ChangeEnumerator::determineNamespaceInverseReplacements()
+     * @see ChangeEnumerator::determineGlobalInverseReplacements()
+     */
+    public function getInverseReplacement(): ?string
+    {
+        return $this->inverseReplacement;
+    }
+
+    /**
+     * @param ?string $inverseReplacement The name before an earlier run renamed it; null when not already renamed.
+     */
+    public function setInverseReplacement(?string $inverseReplacement): void
+    {
+        $this->inverseReplacement = $inverseReplacement;
+    }
+
     public function setDoRename(bool $doRename): void
     {
         $this->doRename = $doRename;
@@ -189,22 +214,6 @@ abstract class DiscoveredSymbol
         }
         // TODO: `if count(packages)>1`, warning.
         return $packages[0]->getPackageName();
-    }
-
-    /**
-     * @param string $classPrefix The class prefix to repeatedly remove from the start of the original symbol name.
-     *
-     * @deprecated This is only being called in {@see Prefixer::findSymbolPositionsInStrings()}, the actual determination should be made in {@see ChangeEnumerator}.
-     */
-    public function getOriginalSymbolStripPrefix(string $classPrefix): string
-    {
-        $symbolName = $this->fqdnOriginalSymbol;
-
-        while (str_starts_with($symbolName, $classPrefix) && trim($classPrefix, '_') !== trim($symbolName, '_')) {
-            $symbolName = preg_replace('/^' . preg_quote($classPrefix, '/') . '/', '', $symbolName) ?? $symbolName;
-        }
-
-        return trim($symbolName, '_');
     }
 
     public function __toString(): string

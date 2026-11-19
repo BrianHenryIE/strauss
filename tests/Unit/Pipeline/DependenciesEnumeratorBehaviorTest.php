@@ -177,7 +177,7 @@ class DependenciesEnumeratorBehaviorTest extends IntegrationTestCase
 
         $config = new StraussConfig();
         $config->setRelativeVendorDirectory('vendor');
-        $config->setPackages($seedPackages);
+        $config->setPackageNames($seedPackages);
 
         $enumerator = new DependenciesEnumerator($config, $this->getFileSystem(), $this->getLogger());
 

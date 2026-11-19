@@ -90,7 +90,7 @@ class StraussConfigTest extends TestCase
 
         $sut = new StraussConfig($composer);
 
-        $this->assertContains('pimple/pimple', $sut->getPackages());
+        $this->assertContains('pimple/pimple', $sut->getPackageNames());
 
         $this->assertEqualsPaths(
             $this->getFileSystem()->normalizePath($this->getFileSystem()->makeAbsolute($projectDir . '/target_directory/')),
@@ -477,7 +477,7 @@ class StraussConfigTest extends TestCase
 
         $sut = new StraussConfig($composer);
 
-        $this->assertContains('pimple/pimple', $sut->getPackages());
+        $this->assertContains('pimple/pimple', $sut->getPackageNames());
     }
 
 
@@ -654,7 +654,7 @@ class StraussConfigTest extends TestCase
 
         $sut = new StraussConfig($composer);
 
-        $this->assertContains('league/container', $sut->getPackages());
+        $this->assertContains('league/container', $sut->getPackageNames());
     }
 
     /**
@@ -700,7 +700,7 @@ class StraussConfigTest extends TestCase
 
         $sut = new StraussConfig($composer);
 
-        $this->assertContains('pimple/pimple', $sut->getPackages());
+        $this->assertContains('pimple/pimple', $sut->getPackageNames());
 
         $this->assertEqualsPaths(
             $this->getFileSystem()->normalizePath($this->getFileSystem()->makeAbsolute($projectDir . '/dep_directory/')),
@@ -1440,5 +1440,21 @@ class StraussConfigTest extends TestCase
         } finally {
             unlink($tmpfname);
         }
+    }
+
+    /**
+     * @covers ::getUnprefixedPackages
+     * @covers ::setUnprefixedPackages
+     */
+    public function testUnprefixedPackages(): void
+    {
+        $sut = new StraussConfig();
+
+        $this->assertSame([], $sut->getUnprefixedPackages());
+
+        $package = \BrianHenryIE\Strauss\Composer\ComposerPackage::fromComposerJsonArray(['name' => 'monolog/monolog']);
+        $sut->setUnprefixedPackages(['monolog/monolog' => $package]);
+
+        $this->assertSame(['monolog/monolog' => $package], $sut->getUnprefixedPackages());
     }
 }

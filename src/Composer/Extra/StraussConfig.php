@@ -9,6 +9,7 @@
 namespace BrianHenryIE\Strauss\Composer\Extra;
 
 use BrianHenryIE\Strauss\Composer\ComposerPackage;
+use BrianHenryIE\Strauss\Composer\DependenciesCollection;
 use BrianHenryIE\Strauss\Config\AliasesConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadConfigInterface;
 use BrianHenryIE\Strauss\Config\AutoloadFilesEnumeratorConfigInterface;
@@ -18,6 +19,7 @@ use BrianHenryIE\Strauss\Config\CopierConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\InverseReplacementsConfigInterface;
 use BrianHenryIE\Strauss\Config\MarkFilesExcludedFromChangesConfigInterface;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
@@ -53,6 +55,7 @@ class StraussConfig implements
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     CopierConfigInterface,
+    InverseReplacementsConfigInterface,
     MarkFilesExcludedFromChangesConfigInterface,
     MarkSymbolsForRenamingConfigInterface,
     FileSymbolScannerConfigInterface,
@@ -125,7 +128,12 @@ class StraussConfig implements
      *
      * @var string[]
      */
-    protected array $packages = [];
+    protected array $packageNames = [];
+
+    /**
+     * The packages in the dependency tree, i.e. those to copy, prefix, or otherwise process. Null until resolved.
+     */
+    protected ?DependenciesCollection $allPackages = null;
 
     /**
      * @var array<string,ComposerPackage>
@@ -137,6 +145,13 @@ class StraussConfig implements
      * @var array<string,ComposerPackage>
      */
     protected array $packagesToPrefix = [];
+
+    /**
+     * The non-dev installed packages which are not being prefixed, set only when the target directory is `vendor`.
+     *
+     * @var array<string,ComposerPackage>
+     */
+    protected array $unprefixedPackages = [];
 
     /**
      * Back-compatibility with Mozart.
@@ -306,6 +321,8 @@ class StraussConfig implements
             $rename->addMapping(StraussConfig::class, 'dep_directory', 'targetVendorRelativePath');
             $rename->addMapping(StraussConfig::class, 'dep_namespace', 'namespacePrefix');
 
+            $rename->addMapping(StraussConfig::class, 'packages', 'packageNames');
+
             $rename->addMapping(StraussConfig::class, 'exclude_packages', 'excludePackages');
             $rename->addMapping(StraussConfig::class, 'delete_vendor_files', 'deleteVendorFiles');
             $rename->addMapping(StraussConfig::class, 'delete_vendor_packages', 'deleteVendorPackages');
@@ -400,8 +417,8 @@ class StraussConfig implements
         //            throw new Exception('Prefix not set. Please set `namespace_prefix`, `classmap_prefix` in composer.json/extra/strauss.');
         //        }
 
-        if (isset($composer) && empty($this->packages)) {
-            $this->packages = array_map(
+        if (isset($composer) && empty($this->packageNames)) {
+            $this->packageNames = array_map(
                 function (Link $element) {
                     return $element->getTarget();
                 },
@@ -879,17 +896,17 @@ class StraussConfig implements
     /**
      * @return string[]
      */
-    public function getPackages(): array
+    public function getPackageNames(): array
     {
-        return $this->packages;
+        return $this->packageNames;
     }
 
     /**
-     * @param string[] $packages Composer package names (`vendor/package`) to copy; empty to use the project's `require` list.
+     * @param string[] $packageNames Composer package names (`vendor/package`) to copy; empty to use the project's `require` list.
      */
-    public function setPackages(array $packages): void
+    public function setPackageNames(array $packageNames): void
     {
-        $this->packages = $packages;
+        $this->packageNames = $packageNames;
     }
 
     /**
@@ -925,6 +942,27 @@ class StraussConfig implements
     public function setPackagesToPrefix(array $packagesToPrefix): void
     {
         $this->packagesToPrefix = $packagesToPrefix;
+    }
+
+    /**
+     * The non-dev installed packages which are not being prefixed. When the target directory is `vendor`, their uses
+     * of the prefixed symbols are updated but their own symbols are not renamed. Empty otherwise.
+     *
+     * @return array<string,ComposerPackage>
+     */
+    public function getUnprefixedPackages(): array
+    {
+        return $this->unprefixedPackages;
+    }
+
+    /**
+     * @param array<string,ComposerPackage> $unprefixedPackages Resolved packages, keyed by package name.
+     *
+     * @used-by DependenciesCommand::buildDependencyList()
+     */
+    public function setUnprefixedPackages(array $unprefixedPackages): void
+    {
+        $this->unprefixedPackages = $unprefixedPackages;
     }
     /**
      * TODO: Can we name this `isClassmapOutputEnabled`?
@@ -1144,5 +1182,18 @@ class StraussConfig implements
     public function setProjectAbsolutePath(string $projectAbsolutePath): void
     {
         $this->projectAbsolutePath = $projectAbsolutePath;
+    }
+
+    /**
+     * @param DependenciesCollection $allPackages The packages in the dependency tree.
+     */
+    public function setAllPackages(DependenciesCollection $allPackages): void
+    {
+        $this->allPackages = $allPackages;
+    }
+
+    public function getAllPackages(): ?DependenciesCollection
+    {
+        return $this->allPackages;
     }
 }
