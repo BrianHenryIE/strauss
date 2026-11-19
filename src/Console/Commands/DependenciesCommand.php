@@ -26,11 +26,10 @@ use BrianHenryIE\Strauss\Pipeline\Copier;
 use BrianHenryIE\Strauss\Pipeline\DependenciesEnumerator;
 use BrianHenryIE\Strauss\Pipeline\FileCopyScanner;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
+use BrianHenryIE\Strauss\Pipeline\InverseReplacements;
 use BrianHenryIE\Strauss\Pipeline\MarkFilesExcludedFromChanges;
 use BrianHenryIE\Strauss\Pipeline\Prefixer;
-use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
-use BrianHenryIE\Strauss\Types\NamespacedSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
 use BrianHenryIE\Strauss\Types\Psr0NamespaceSymbol;
 use Exception;
@@ -265,21 +264,7 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             )
         );
 
-        $unprefixedPackages = array_filter(
-            $this->flatDependencyTree->toArray(),
-            function ($dependency) {
-                return in_array($dependency, $this->config->getExcludePackagesFromPrefixing());
-            },
-            ARRAY_FILTER_USE_KEY
-        );
-
-        // In place, the other non-dev packages in `vendor`, outside the dependency tree, use the prefixed symbols, so
-        // their files must be updated too.
-        if ($this->config->isTargetDirectoryVendor()) {
-            $unprefixedPackages += $this->dependenciesEnumerator->getUnprefixedPackages($this->config->getPackagesToPrefix());
-        }
-
-        $this->config->setUnprefixedPackages($unprefixedPackages);
+        $this->config->setUnprefixedPackages($this->dependenciesEnumerator->getUnprefixedPackages());
 
         foreach ($this->flatDependencyTree->toArray() as $dependency) {
             // Sort of duplicating the logic above.
@@ -392,65 +377,10 @@ class DependenciesCommand extends AbstractRenamespacerCommand
 
         $changePlanner = new ChangePlanner($this->logger);
         $changePlanner->planInFiles(
-            $this->getDiscoveredSymbolsForPlanning(),
+            (new InverseReplacements($this->config, $this->logger))->withInverseReplacementSymbols(
+                $this->getDiscoveredSymbolsWithComposerRuntime()
+            ),
             $this->discoveredFiles->getFiles()
-        );
-    }
-
-    /**
-     * The discovered symbols, plus Composer's runtime classes and the original names of symbols already prefixed by
-     * an earlier run, which are only needed to plan the changes.
-     *
-     * @see self::getDiscoveredSymbolsWithComposerRuntime()
-     * @see DiscoveredSymbols::getInverseReplacementSymbols()
-     */
-    protected function getDiscoveredSymbolsForPlanning(): DiscoveredSymbols
-    {
-        $symbols = $this->getDiscoveredSymbolsWithComposerRuntime();
-
-        $inverseReplacementSymbols = $this->getInverseReplacementSymbols();
-
-        if (0 === count($inverseReplacementSymbols)) {
-            return $symbols;
-        }
-
-        // Only seen by planning: see `::getDiscoveredSymbolsWithComposerRuntime()`.
-        if ($symbols === $this->discoveredSymbols) {
-            $symbols = clone $this->discoveredSymbols;
-        }
-
-        foreach ($inverseReplacementSymbols as $inverseReplacementSymbol) {
-            $symbols->add($inverseReplacementSymbol);
-            if ($inverseReplacementSymbol instanceof NamespacedSymbol) {
-                $this->logger->info(
-                    'Already prefixed: {originalName} will be renamed to {prefixedName}',
-                    [
-                        'originalName' => $inverseReplacementSymbol->getOriginalFqdnName(),
-                        'prefixedName' => $inverseReplacementSymbol->getReplacementFqdnName(),
-                    ]
-                );
-            }
-        }
-
-        return $symbols;
-    }
-
-    /**
-     * When prefixing in place, the original names of the symbols already prefixed by an earlier run, renamed to their
-     * current names. Otherwise, the files are read afresh from `vendor`, so nothing uses those names.
-     *
-     * @return DiscoveredSymbol[]
-     *
-     * @see DiscoveredSymbols::getInverseReplacementSymbols()
-     */
-    protected function getInverseReplacementSymbols(): array
-    {
-        if (!$this->config->isTargetDirectoryVendor()) {
-            return [];
-        }
-
-        return $this->discoveredSymbols->getInverseReplacementSymbols(
-            array_keys($this->config->getPackagesToPrefix())
         );
     }
 
@@ -466,13 +396,12 @@ class DependenciesCommand extends AbstractRenamespacerCommand
      */
     protected function scanFilesOutsideDependencyTree(): void
     {
-        // A copy, so the names before renaming are only seen by the search.
-        $symbolsMentioned = clone $this->discoveredSymbols;
-        foreach ($this->getInverseReplacementSymbols() as $inverseReplacementSymbol) {
-            $symbolsMentioned->add($inverseReplacementSymbol);
-        }
+        $this->logger->notice('Scanning files outside the dependency tree which use the symbols found...');
 
-        $this->getFileSymbolScanner()->findInFilesOutsideDependencyTree($this->discoveredFiles, $symbolsMentioned);
+        $this->getFileSymbolScanner()->findInFilesOutsideDependencyTree(
+            $this->discoveredFiles,
+            (new InverseReplacements($this->config, $this->logger))->withInverseReplacementSymbols($this->discoveredSymbols)
+        );
     }
 
     /**

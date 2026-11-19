@@ -19,6 +19,7 @@ use BrianHenryIE\Strauss\Config\CopierConfigInterface;
 use BrianHenryIE\Strauss\Config\FileCopyScannerConfigInterface;
 use BrianHenryIE\Strauss\Config\FileEnumeratorConfig;
 use BrianHenryIE\Strauss\Config\FileSymbolScannerConfigInterface;
+use BrianHenryIE\Strauss\Config\InverseReplacementsConfigInterface;
 use BrianHenryIE\Strauss\Config\MarkFilesExcludedFromChangesConfigInterface;
 use BrianHenryIE\Strauss\Config\MarkSymbolsForRenamingConfigInterface;
 use BrianHenryIE\Strauss\Config\OptimizeAutoloaderConfigInterface;
@@ -54,6 +55,7 @@ class StraussConfig implements
     ChangeEnumeratorConfigInterface,
     CleanupConfigInterface,
     CopierConfigInterface,
+    InverseReplacementsConfigInterface,
     MarkFilesExcludedFromChangesConfigInterface,
     MarkSymbolsForRenamingConfigInterface,
     FileSymbolScannerConfigInterface,

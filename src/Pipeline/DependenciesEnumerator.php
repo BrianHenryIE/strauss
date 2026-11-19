@@ -188,13 +188,45 @@ class DependenciesEnumerator
     }
 
     /**
-     * The non-dev packages installed in the vendor directory which are not being prefixed, e.g. packages which use the
-     * prefixed packages but are not themselves listed in `packages`, and those in `exclude_from_prefix.packages`.
+     * The packages whose own symbols are not prefixed but whose uses of the prefixed ones are updated:
      *
-     * When the target directory is the vendor directory, these stay where they are, so their uses of the prefixed
-     * symbols must be updated, while their own symbols are not renamed.
+     * * the dependency tree's packages in `exclude_from_prefix.packages`;
+     * * when the target directory is the vendor directory, every other non-dev package installed there, e.g. packages
+     *   which use the prefixed packages but are not themselves listed in `packages`. These stay where they are, so
+     *   their uses of the prefixed symbols must be updated.
      *
-     * Call after {@see self::getAllDependencies()} so the packages already loaded are reused.
+     * Call after {@see self::getAllDependencies()}, so the packages already loaded are reused, and after
+     * {@see StraussConfig::setPackagesToPrefix()}.
+     *
+     * @return array<string, ComposerPackage> Keyed by package name.
+     *
+     * @throws FilesystemException
+     * @throws JsonException
+     */
+    public function getUnprefixedPackages(): array
+    {
+        $unprefixedPackages = array_intersect_key(
+            $this->flatDependencyArray,
+            array_flip($this->config->getExcludePackagesFromPrefixing())
+        );
+
+        if ($this->config->isTargetDirectoryVendor()) {
+            $unprefixedPackages += $this->getInstalledUnprefixedPackages($this->config->getPackagesToPrefix());
+        }
+
+        $this->logger->debug(
+            'Unprefixed packages: {packageNames}',
+            [
+                'packageNames' => implode(', ', array_keys($unprefixedPackages)),
+            ]
+        );
+
+        return $unprefixedPackages;
+    }
+
+    /**
+     * The non-dev packages installed in the vendor directory which are not being prefixed. Dev, platform and
+     * metapackages, and Strauss itself, are not included.
      *
      * @param array<string, ComposerPackage> $packagesToPrefix Keyed by package name.
      *
@@ -203,7 +235,7 @@ class DependenciesEnumerator
      * @throws FilesystemException
      * @throws JsonException
      */
-    public function getUnprefixedPackages(array $packagesToPrefix): array
+    protected function getInstalledUnprefixedPackages(array $packagesToPrefix): array
     {
         $installedJsonPackages = $this->getInstalledJsonPackages();
 
@@ -226,13 +258,6 @@ class DependenciesEnumerator
 
             $unprefixedPackages[$packageName] = $package;
         }
-
-        $this->logger->debug(
-            'Unprefixed packages: {packageNames}',
-            [
-                'packageNames' => implode(', ', array_keys($unprefixedPackages)),
-            ]
-        );
 
         return $unprefixedPackages;
     }

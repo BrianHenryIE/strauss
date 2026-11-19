@@ -70,13 +70,9 @@ class DependenciesEnumeratorTest extends TestCase
     }
 
     /**
-     * Every non-dev installed package not being prefixed: those already loaded as dependencies (e.g. excluded from
-     * prefixing) are reused, others are loaded. Dev, platform and metapackages, and Strauss itself, are not included.
-     *
-     * @covers ::getUnprefixedPackages
-     * @covers ::getNonDevInstalledPackageNames
+     * @return DependenciesEnumerator&object{loaded: string[]}
      */
-    public function testGetUnprefixedPackages(): void
+    protected function getUnprefixedPackagesSut(bool $isTargetDirectoryVendor): DependenciesEnumerator
     {
         $psrLog = ComposerPackage::fromComposerJsonArray(['name' => 'psr/log']);
         $excluded = Mockery::mock(ComposerPackage::class);
@@ -105,8 +101,15 @@ class DependenciesEnumeratorTest extends TestCase
         $config = Mockery::mock(StraussConfig::class);
         $config->shouldReceive('getOverrideAutoload')->andReturn([]);
         $config->shouldReceive('getPackageNames')->andReturn(['psr/log']);
+        $config->shouldReceive('getPackagesToPrefix')->andReturn(['psr/log' => $psrLog]);
+        $config->shouldReceive('getExcludePackagesFromPrefixing')->andReturn(['acme/excluded']);
+        $config->shouldReceive('isTargetDirectoryVendor')->andReturn($isTargetDirectoryVendor);
 
-        $sut = new class ($config, $this->getInMemoryFileSystem(), $installedJson, ['acme/excluded' => $excluded], ['monolog/monolog' => $monolog, 'acme/metapackage' => $metapackage]) extends DependenciesEnumerator {
+        // psr/log and acme/excluded are in the dependency tree.
+        $flatDependencyArray = ['psr/log' => $psrLog, 'acme/excluded' => $excluded];
+        $loadablePackages = ['monolog/monolog' => $monolog, 'acme/metapackage' => $metapackage];
+
+        return new class ($config, $this->getInMemoryFileSystem(), $installedJson, $flatDependencyArray, $loadablePackages) extends DependenciesEnumerator {
             /** @var array<string, mixed> */
             protected array $installedJson;
 
@@ -146,10 +149,40 @@ class DependenciesEnumeratorTest extends TestCase
                 return $this->loadablePackages[$requiredPackageName] ?? null;
             }
         };
+    }
 
-        $result = $sut->getUnprefixedPackages(['psr/log' => $psrLog]);
+    /**
+     * In place, every non-dev installed package not being prefixed: those already loaded as dependencies (e.g.
+     * excluded from prefixing) are reused, others are loaded. Dev, platform and metapackages, and Strauss itself, are
+     * not included.
+     *
+     * @covers ::getUnprefixedPackages
+     * @covers ::getInstalledUnprefixedPackages
+     * @covers ::getNonDevInstalledPackageNames
+     */
+    public function testGetUnprefixedPackages(): void
+    {
+        $sut = $this->getUnprefixedPackagesSut(true);
 
-        self::assertSame(['acme/excluded' => $excluded, 'monolog/monolog' => $monolog], $result);
+        $result = $sut->getUnprefixedPackages();
+
+        self::assertSame(['acme/excluded', 'monolog/monolog'], array_keys($result));
         self::assertSame(['monolog/monolog', 'acme/metapackage', 'acme/not-loadable'], $sut->loaded);
+    }
+
+    /**
+     * With another target directory, only the dependency tree's packages excluded from prefixing: the other installed
+     * packages stay in `vendor`, unchanged.
+     *
+     * @covers ::getUnprefixedPackages
+     */
+    public function testGetUnprefixedPackagesWithAnotherTargetDirectory(): void
+    {
+        $sut = $this->getUnprefixedPackagesSut(false);
+
+        $result = $sut->getUnprefixedPackages();
+
+        self::assertSame(['acme/excluded'], array_keys($result));
+        self::assertSame([], $sut->loaded);
     }
 }
