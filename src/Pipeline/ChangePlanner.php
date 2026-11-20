@@ -1145,7 +1145,8 @@ class ChangePlanner
             if (!in_array($quote, ["'", '"'], true) || strlen($text) < 3 || substr($text, -1) !== $quote) {
                 continue;
             }
-            $value = substr($text, 1, -1);
+            // `substr()` may return `false` on PHP 7.4, but `$text` is at least three characters.
+            $value = (string) substr($text, 1, -1);
 
             $prefix = null;
             if (isset($prefixes[$value])) {
