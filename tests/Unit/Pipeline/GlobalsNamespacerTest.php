@@ -55,6 +55,43 @@ class GlobalsNamespacerTest extends TestCase
     }
 
     /**
+     * @return array<string, array{0:?int, 1:string, 2:string}> Levels, global name, expected replacement.
+     */
+    public static function levelsDataProvider(): array
+    {
+        return [
+            'no limit' => [null, 'SLSWC_License_Post_Type', 'Company\\Project\\License\\Post\\Type'],
+            'one level' => [1, 'SLSWC_License_Post_Type', 'Company\\Project\\License\\Post_Type'],
+            'two levels' => [2, 'SLSWC_License_Post_Type', 'Company\\Project\\License\\Post\\Type'],
+            'no levels' => [0, 'SLSWC_License_Post_Type', 'Company\\Project\\License_Post_Type'],
+            'fewer segments than levels' => [3, 'SLSWC_License', 'Company\\Project\\License'],
+            'one level, short name' => [1, 'SLSWC_License', 'Company\\Project\\License'],
+            'one level, two segments' => [1, 'SLSWC_License_Manager', 'Company\\Project\\License\\Manager'],
+            'reserved short name' => [1, 'SLSWC_REST_List', 'Company\\Project\\REST\\RESTList'],
+            'a short name ending in a reserved word is not reserved' => [1, 'SLSWC_REST_Args_List', 'Company\\Project\\REST\\Args_List'],
+            'reserved short name, no levels' => [0, 'SLSWC_List', 'Company\\Project\\SLSWCList'],
+        ];
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::getReplacement
+     * @covers ::splitName
+     * @dataProvider \BrianHenryIE\Strauss\Pipeline\GlobalsNamespacerTest::levelsDataProvider
+     *
+     * @param ?int   $levels     The most namespace segments to make from a name.
+     * @param string $globalName The global class name.
+     * @param string $expected   The namespaced name.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('levelsDataProvider')]
+    public function test_levels(?int $levels, string $globalName, string $expected): void
+    {
+        $sut = new GlobalsNamespacer('Company\\Project', ['SLSWC_'], ['/project'], new NullLogger(), $levels);
+
+        $this->assertSame($expected, $sut->getReplacement($globalName));
+    }
+
+    /**
      * @param string $path     The file's absolute path.
      * @param string $contents Its PHP.
      */

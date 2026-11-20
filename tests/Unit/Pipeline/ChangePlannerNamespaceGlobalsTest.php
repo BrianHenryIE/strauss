@@ -285,6 +285,38 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
     }
 
     /**
+     * With `--levels`, the rest of a name keeps its `_`: a prefix up to where the namespace ends is still rewritten.
+     *
+     * @covers ::findMovedClassPrefixStringPositions
+     * @covers ::getMovedClassPrefixes
+     */
+    public function test_strings_with_levels(): void
+    {
+        $file = new File('/project/src/file.php', 'src/file.php', '/project/src/file.php');
+        $globalNamespace = new NamespaceSymbol('\\', $file);
+        $postType = new ClassSymbol('Acme_License_Post_Type', $file, $globalNamespace);
+        $postType->setLocalReplacement('Company\\Project\\License\\Post_Type');
+        $postType->setDoRename(true);
+        $symbols = new DiscoveredSymbols([$globalNamespace, $postType]);
+
+        $contents = "<?php\n\$a = 'Acme_License_' . \$type;\n\$b = 'Acme_License_Post_' . \$type;\n\$c = 'Acme_' . \$type;\n\$d = 'Acme_License_Post_Type';\n";
+        $expected = "<?php\n\$a = 'Company\\\\Project\\\\License\\\\' . \$type;\n\$b = 'Acme_License_Post_' . \$type;\n\$c = 'Company\\\\Project\\\\' . \$type;\n\$d = 'Company\\\\Project\\\\License\\\\Post_Type';\n";
+
+        $codeMap = (new PhpFileAnalyzer())->analyze($contents);
+        self::assertNotNull($codeMap);
+        $edits = (new ChangePlanner())->plan($symbols, $codeMap);
+
+        // Whatever order the edits are in, apply from the end.
+        usort($edits, fn(array $a, array $b): int => $b['start'] <=> $a['start']);
+        $result = $contents;
+        foreach ($edits as $edit) {
+            $result = substr_replace($result, $edit['replacement'], $edit['start'], $edit['end'] - $edit['start']);
+        }
+
+        self::assertSame($expected, $result);
+    }
+
+    /**
      * The `namespace` insertion and a name at the same position are one edit.
      *
      * @covers ::plan

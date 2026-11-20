@@ -77,13 +77,28 @@ class GlobalsNamespacer
     protected LoggerInterface $logger;
 
     /**
+     * The most namespace segments to make from a name's `_` separated segments; null for no limit.
+     */
+    protected ?int $levels;
+
+    /**
      * @param string          $namespace     The namespace to move the symbols into, e.g. `Company\Project`.
      * @param string[]        $stripPrefixes Class name prefixes to remove, e.g. `HTMLPurifier_`; longest is tried first.
      * @param string[]        $absolutePaths Files and directories whose global symbols are moved.
      * @param LoggerInterface $logger        For the symbols moved and those which cannot be.
+     * @param ?int            $levels        The most namespace segments to make from a name's `_` separated segments,
+     *                                       the rest keeping their `_`: with 1, `Acme_License_Post_Type` is
+     *                                       `License\Post_Type`. Null for no limit.
      */
-    public function __construct(string $namespace, array $stripPrefixes, array $absolutePaths, LoggerInterface $logger)
-    {
+    public function __construct(
+        string $namespace,
+        array $stripPrefixes,
+        array $absolutePaths,
+        LoggerInterface $logger,
+        ?int $levels = null
+    ) {
+        $this->levels = $levels;
+
         $this->namespace = trim($namespace, '\\');
 
         $this->stripPrefixes = array_values(array_filter($stripPrefixes));
@@ -209,13 +224,21 @@ class GlobalsNamespacer
                 break;
             }
             if (0 === strpos($globalName, $prefix) && strlen($globalName) > strlen($prefix)) {
+                $segments = array_values(
+                    array_filter(
+                        explode('_', substr($globalName, strlen($prefix))),
+                        fn(string $segment): bool => '' !== $segment
+                    )
+                );
+                if (!is_null($this->levels) && count($segments) > $this->levels + 1) {
+                    // The segments after the namespace's are the short name, keeping their `_`.
+                    $segments = array_merge(
+                        array_slice($segments, 0, $this->levels),
+                        [implode('_', array_slice($segments, $this->levels))]
+                    );
+                }
                 return [
-                    'segments' => array_values(
-                        array_filter(
-                            explode('_', substr($globalName, strlen($prefix))),
-                            fn(string $segment): bool => '' !== $segment
-                        )
-                    ),
+                    'segments' => $segments,
                     'libraryName' => rtrim($prefix, '_'),
                 ];
             }

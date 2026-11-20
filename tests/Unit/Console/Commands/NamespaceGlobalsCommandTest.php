@@ -17,7 +17,7 @@ use Symfony\Component\Console\Input\ArrayInput;
 class NamespaceGlobalsCommandTest extends TestCase
 {
     /**
-     * @return NamespaceGlobalsCommand&object{getPipelineSteps(): string[], getWorkerPool(): ?WorkerPool, parse(array<string, mixed>): array{namespace:string, stripPrefixes:string[], symbolPaths:string[], updatePaths:string[]}}
+     * @return NamespaceGlobalsCommand&object{getPipelineSteps(): string[], getWorkerPool(): ?WorkerPool, parse(array<string, mixed>): array{namespace:string, stripPrefixes:string[], symbolPaths:string[], updatePaths:string[], levels:?int}}
      */
     protected function getSut(): NamespaceGlobalsCommand
     {
@@ -35,7 +35,7 @@ class NamespaceGlobalsCommandTest extends TestCase
             /**
              * @param array<string, mixed> $options The command line options.
              *
-             * @return array{namespace:string, stripPrefixes:string[], symbolPaths:string[], updatePaths:string[]}
+             * @return array{namespace:string, stripPrefixes:string[], symbolPaths:string[], updatePaths:string[], levels:?int}
              */
             public function parse(array $options): array
             {
@@ -46,6 +46,7 @@ class NamespaceGlobalsCommandTest extends TestCase
                     'stripPrefixes' => $this->stripPrefixes,
                     'symbolPaths' => $this->symbolPaths,
                     'updatePaths' => $this->updatePaths,
+                    'levels' => $this->levels,
                 ];
             }
         };
@@ -139,5 +140,43 @@ class NamespaceGlobalsCommandTest extends TestCase
         $this->expectExceptionMessage('--rename-files');
 
         $this->getSut()->parse(['--namespace' => 'Company\\Project', '--rename-files' => 'pear']);
+    }
+
+    /**
+     * @covers ::configure
+     * @covers ::updateConfigFromCli
+     */
+    public function test_levels(): void
+    {
+        self::assertNull($this->getSut()->parse(['--namespace' => 'Company\\Project'])['levels']);
+        self::assertSame(1, $this->getSut()->parse(['--namespace' => 'Company\\Project', '--levels' => '1'])['levels']);
+        self::assertSame(0, $this->getSut()->parse(['--namespace' => 'Company\\Project', '--levels' => '0'])['levels']);
+    }
+
+    /**
+     * @return array<string, array{0:string}>
+     */
+    public static function invalidLevelsDataProvider(): array
+    {
+        return [
+            'negative' => ['-1'],
+            'not a number' => ['one'],
+            'not a whole number' => ['1.5'],
+        ];
+    }
+
+    /**
+     * @covers ::updateConfigFromCli
+     * @dataProvider \BrianHenryIE\Strauss\Tests\Unit\Console\Commands\NamespaceGlobalsCommandTest::invalidLevelsDataProvider
+     *
+     * @param string $levels The `--levels` value.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidLevelsDataProvider')]
+    public function test_levels_must_be_a_whole_number(string $levels): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('--levels');
+
+        $this->getSut()->parse(['--namespace' => 'Company\\Project', '--levels' => $levels]);
     }
 }

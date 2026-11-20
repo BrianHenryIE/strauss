@@ -1549,7 +1549,8 @@ class ChangePlanner
      *
      * `Acme_Greeting_Formal` moved to `Company\Project\Greeting\Formal` gives `Acme_Greeting_` → `Company\Project\Greeting\`
      * and `Acme_` → `Company\Project\`. A prefix is only given when the rest of the name became the last namespace
-     * segments, i.e. its `_` were turned into `\`.
+     * segments, i.e. its `_` were turned into `\`, or kept: `Acme_License_Post_Type` moved to
+     * `Company\Project\License\Post_Type` gives `Acme_License_` and `Acme_`, not `Acme_License_Post_`.
      *
      * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
      *
@@ -1565,12 +1566,15 @@ class ChangePlanner
             $originalSegments = explode('_', $symbol->getOriginalFqdnName());
             $replacementSegments = explode('\\', $symbol->getLocalReplacement());
             for ($remaining = 1; $remaining < count($originalSegments); $remaining++) {
-                $rest = array_slice($originalSegments, -$remaining);
-                if (array_slice($replacementSegments, -$remaining) !== $rest || count($replacementSegments) <= $remaining) {
-                    break;
+                $rest = implode('_', array_slice($originalSegments, -$remaining));
+                // The last namespace segments which are the rest of the name, with any of its `_` as `\`.
+                for ($tail = 1; $tail <= $remaining && $tail < count($replacementSegments); $tail++) {
+                    if (str_replace('\\', '_', implode('\\', array_slice($replacementSegments, -$tail))) === $rest) {
+                        $prefix = implode('_', array_slice($originalSegments, 0, -$remaining)) . '_';
+                        $prefixes[$prefix] = implode('\\', array_slice($replacementSegments, 0, -$tail)) . '\\';
+                        break;
+                    }
                 }
-                $prefix = implode('_', array_slice($originalSegments, 0, -$remaining)) . '_';
-                $prefixes[$prefix] = implode('\\', array_slice($replacementSegments, 0, -$remaining)) . '\\';
             }
         }
         return $prefixes;

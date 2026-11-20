@@ -61,6 +61,11 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
     protected array $stripPrefixes = [];
 
     /**
+     * The most namespace segments to make from a class name's `_` separated segments; null for no limit.
+     */
+    protected ?int $levels = null;
+
+    /**
      * One of {@see ClassFileRenamer::CONVENTIONS}, or null to leave the files where they are.
      */
     protected ?string $renameFilesConvention = null;
@@ -91,6 +96,14 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
             null,
             InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
             'A class name prefix to remove, e.g. `Project_`; the rest of the name\'s `_` separated segments become namespace segments. Repeatable.'
+        );
+
+        $this->addOption(
+            'levels',
+            null,
+            InputOption::VALUE_REQUIRED,
+            'The most namespace segments to make from a class name\'s `_` separated segments, after `--strip-prefix`; the rest keep their `_`.'
+            . ' With `--levels=1`, `Project_License_Post_Type` is `License\\Post_Type`. Default is no limit: `License\\Post\\Type`.'
         );
 
         $this->addOption(
@@ -159,10 +172,11 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
     }
 
     /**
-     * @param InputInterface $input The `--namespace`, `--strip-prefix`, `--paths`, `--update-call-sites` and
-     *                              `--rename-files` options.
+     * @param InputInterface $input The `--namespace`, `--strip-prefix`, `--levels`, `--paths`, `--update-call-sites`
+     *                              and `--rename-files` options.
      *
-     * @throws InvalidArgumentException When `--namespace` is missing, or `--rename-files` is not a known convention.
+     * @throws InvalidArgumentException When `--namespace` is missing, `--levels` is not a whole number, or
+     *                                  `--rename-files` is not a known convention.
      */
     protected function updateConfigFromCli(InputInterface $input): void
     {
@@ -181,6 +195,15 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
 */
         $stripPrefixes = $input->getOption('strip-prefix');
         $this->stripPrefixes = $stripPrefixes;
+
+        /**
+ * @var ?string $levels
+*/
+        $levels = $input->getOption('levels');
+        if (!is_null($levels) && 1 !== preg_match('/^\d+$/', $levels)) {
+            throw new InvalidArgumentException('The --levels option must be a whole number, 0 or more, e.g. --levels=1.');
+        }
+        $this->levels = is_null($levels) ? null : (int) $levels;
 
         /**
  * @var ?string $paths
@@ -244,7 +267,7 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
     {
         $this->logger->notice('Determining changes...');
 
-        (new GlobalsNamespacer($this->namespace, $this->stripPrefixes, $this->symbolPaths, $this->logger))
+        (new GlobalsNamespacer($this->namespace, $this->stripPrefixes, $this->symbolPaths, $this->logger, $this->levels))
             ->determineReplacements($this->discoveredSymbols);
     }
 
