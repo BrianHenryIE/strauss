@@ -104,13 +104,15 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
             // A global function moves with the class.
             'src/Acme/Legacy.php' => <<<'EOD'
                 <?php
+                // Always global.
+                define('ACME_LEGACY', 'legacy');
                 function acme_legacy(): Acme_Legacy
                 {
                     return new Acme_Legacy();
                 }
                 class Acme_Legacy {}
                 EOD,
-            // Declares a constant with `const`, which would move too: not moved.
+            // A `const` constant moves with the class.
             'src/Acme/Constants.php' => <<<'EOD'
                 <?php
                 const ACME_VERSION = '1.0';
@@ -154,6 +156,7 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
                 echo get_class(acme_legacy()) . PHP_EOL;
                 echo get_class(new Acme_Mixed()) . ',' . get_class(new Acme_List()) . ',' . get_class(new Acme_Constants()) . PHP_EOL;
                 echo var_export(function_exists('acme_legacy'), true) . PHP_EOL;
+                echo ACME_VERSION . ',' . var_export(defined('ACME_VERSION'), true) . ',' . ACME_LEGACY . PHP_EOL;
                 EOD,
         ];
 
@@ -210,13 +213,18 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
         $this->runNamespaceGlobals();
 
         $legacy = $this->read('src/Acme/Legacy.php');
-        $this->assertStringContainsString("namespace Company\\Project;\n\nfunction acme_legacy(): \\Company\\Project\\Legacy", $legacy);
+        $this->assertStringContainsString("namespace Company\\Project;\n\n// Always global.\ndefine('ACME_LEGACY', 'legacy');\nfunction acme_legacy(): \\Company\\Project\\Legacy", $legacy);
         $this->assertStringContainsString('return new \\Company\\Project\\Legacy();', $legacy);
 
         $this->assertStringContainsString('echo get_class(\\Company\\Project\\acme_legacy())', $this->read('consumer.php'));
         $this->assertStringContainsString("function_exists('Company\\\\Project\\\\acme_legacy')", $this->read('consumer.php'));
 
-        $this->assertStringNotContainsString('namespace Company', $this->read('src/Acme/Constants.php'));
+        $constants = $this->read('src/Acme/Constants.php');
+        $this->assertStringContainsString("namespace Company\\Project;\n\nconst ACME_VERSION = '1.0';\nclass Constants {}", $constants);
+
+        $consumer = $this->read('consumer.php');
+        $this->assertStringContainsString("echo \\Company\\Project\\ACME_VERSION . ',' . var_export(defined('Company\\\\Project\\\\ACME_VERSION'), true) . ',' . ACME_LEGACY", $consumer);
+        $this->assertStringContainsString("define('ACME_LEGACY', 'legacy');", $legacy);
         $this->assertStringContainsString('class Acme_Mixed', $this->read('src/Acme/Mixed.php'));
         $this->assertStringContainsString("namespace Company\\Project;\n\nclass AcmeList", $this->read('src/Acme/List.php'));
     }
@@ -240,8 +248,9 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
                     'Company\\Project\\Greeting\\Formal,Company\\Project\\Base,ArrayObject',
                     'InvalidArgumentException:formal',
                     'Company\\Project\\Legacy',
-                    'Acme_Mixed,Company\\Project\\AcmeList,Acme_Constants',
+                    'Acme_Mixed,Company\\Project\\AcmeList,Company\\Project\\Constants',
                     'true',
+                    '1.0,true,legacy',
                 ]
             ),
             $outputString

@@ -14,6 +14,7 @@ use BrianHenryIE\Strauss\Files\CodeLocation;
 use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\EnumSymbol;
@@ -32,13 +33,13 @@ use Psr\Log\LoggerInterface;
  * `Company\Project\HTMLModule\HTMLPurifierList`. Code which builds such a name at runtime, e.g.
  * `'HTMLPurifier_HTMLModule_' . 'List'`, must be updated by hand.
  *
- * Global functions move with their file, keeping their names: into the namespace of the file's classes, or, in a file
- * with only functions, into the namespace given.
+ * Global functions and constants declared with `const` move with their file, keeping their names: into the namespace
+ * of the file's classes, or, in a file without classes, into the namespace given. Constants declared with `define()`
+ * are always global, so stay.
  *
  * A symbol is only moved when it is declared in one of the given paths, in a file which can gain a single
- * `namespace` declaration: no namespace already, no constants declared with `const` (they would move too; `define()`
- * constants stay global), and every class in it moving to the same namespace. Every other symbol is marked not to
- * rename. The edits are planned by {@see ChangePlanner}.
+ * `namespace` declaration: no namespace already, and every class in it moving to the same namespace. Every other
+ * symbol is marked not to rename. The edits are planned by {@see ChangePlanner}.
  */
 class GlobalsNamespacer
 {
@@ -115,11 +116,17 @@ class GlobalsNamespacer
 */
         $symbolsByFile = [];
         foreach ($discoveredSymbols->toArray() as $symbol) {
-            if (!($this->isClassLike($symbol) || $symbol instanceof FunctionSymbol) || !$symbol->isGlobal()) {
+            if (
+                !($this->isClassLike($symbol) || $symbol instanceof FunctionSymbol || $symbol instanceof ConstantSymbol)
+                || !$symbol->isGlobal()
+            ) {
                 continue;
             }
             foreach ($symbol->getSourceFiles() as $file) {
-                if ($this->isInPaths($file->getSourcePath())) {
+                if (
+                    $this->isInPaths($file->getSourcePath())
+                    && (!($symbol instanceof ConstantSymbol) || $this->isDeclaredWithConst($file, $symbol->getOriginalFqdnName()))
+                ) {
                     $files[$file->getSourcePath()] = $file;
                     $symbolsByFile[$file->getSourcePath()][$symbol->getOriginalFqdnName()] = $symbol;
                 }
@@ -132,9 +139,9 @@ class GlobalsNamespacer
                 continue;
             }
             foreach ($symbols as $symbol) {
-                $replacement = $symbol instanceof FunctionSymbol
-                    ? $fileNamespace . '\\' . $symbol->getOriginalFqdnName()
-                    : $this->getReplacement($symbol->getOriginalFqdnName());
+                $replacement = $this->isClassLike($symbol)
+                    ? $this->getReplacement($symbol->getOriginalFqdnName())
+                    : $fileNamespace . '\\' . $symbol->getOriginalFqdnName();
                 $symbol->setLocalReplacement($replacement);
                 $symbol->setDoRename(true);
                 $this->logger->info(
@@ -222,8 +229,8 @@ class GlobalsNamespacer
      * The namespace the file's symbols move into, or null when they cannot move.
      *
      * @param FileBase                        $file    The file, with its code map.
-     * @param array<string, DiscoveredSymbol> $symbols The global classes, interfaces, traits, enums and functions
-     *                                                 declared in the file.
+     * @param array<string, DiscoveredSymbol> $symbols The global classes, interfaces, traits, enums, functions and
+     *                                                 constants declared in the file.
      */
     protected function getFileNamespace(FileBase $file, array $symbols): ?string
     {
@@ -238,15 +245,6 @@ class GlobalsNamespacer
         if ($codeMap->getNamespaceNames() !== ['\\']) {
             $this->logger->warning(
                 'Not moving the global symbols in {filePath}: it also declares a namespace.',
-                ['filePath' => $filePath]
-            );
-            return null;
-        }
-
-        // `const` only: `define()` constants stay global.
-        if (!empty($codeMap->getLocationsOfType(CodeLocation::CONST_DEFINITION))) {
-            $this->logger->warning(
-                'Not moving the symbols in {filePath}: it also declares constants with `const`, which would move too.',
                 ['filePath' => $filePath]
             );
             return null;
@@ -269,8 +267,28 @@ class GlobalsNamespacer
             return null;
         }
 
-        // A file with only functions: the namespace given.
+        // A file without classes: the namespace given.
         return (string) (array_key_first($namespaces) ?? $this->namespace);
+    }
+
+    /**
+     * Is the constant declared with `const` in the file, rather than `define()`, which always declares a global constant?
+     *
+     * @param FileBase $file The file, with its code map.
+     * @param string   $name The constant's name.
+     */
+    protected function isDeclaredWithConst(FileBase $file, string $name): bool
+    {
+        $codeMap = $file instanceof File ? $file->getCodeMap() : null;
+        if (is_null($codeMap)) {
+            return false;
+        }
+        foreach ($codeMap->getLocationsOfType(CodeLocation::CONST_DEFINITION) as $definition) {
+            if ($definition->getText() === $name) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected function isClassLike(DiscoveredSymbol $symbol): bool

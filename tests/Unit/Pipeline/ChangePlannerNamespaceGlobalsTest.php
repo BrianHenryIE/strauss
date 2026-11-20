@@ -15,6 +15,7 @@ use BrianHenryIE\Strauss\Pipeline\ChangePlanner;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\InterfaceSymbol;
@@ -49,7 +50,11 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
         $helper->setLocalReplacement('Company\\Project\\acme_helper');
         $helper->setDoRename(true);
 
-        return new DiscoveredSymbols([$globalNamespace, $formal, $greeter, $legacy, $helper]);
+        $version = new ConstantSymbol('ACME_VERSION', $file, $globalNamespace);
+        $version->setLocalReplacement('Company\\Project\\ACME_VERSION');
+        $version->setDoRename(true);
+
+        return new DiscoveredSymbols([$globalNamespace, $formal, $greeter, $legacy, $helper, $version]);
     }
 
     /**
@@ -323,6 +328,30 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
 
         $namespaced = "<?php\nnamespace Other;\n\nuse function acme_helper;\n\nacme_helper();\n";
         $namespacedExpected = "<?php\nnamespace Other;\n\nuse function Company\\Project\\acme_helper as acme_helper;\n\n\\Company\\Project\\acme_helper();\n";
+
+        self::assertSame($namespacedExpected, $this->replace($namespaced));
+    }
+
+    /**
+     * A file with only a constant moves too; uses become fully qualified.
+     *
+     * @covers ::findConstantPositions
+     * @covers ::findGlobalsNamespacingPositions
+     */
+    public function test_moved_constant(): void
+    {
+        $contents = "<?php\nconst ACME_VERSION = '1.0';\n";
+        $expected = "<?php\nnamespace Company\\Project;\n\nconst ACME_VERSION = '1.0';\n";
+
+        self::assertSame($expected, $this->replace($contents));
+
+        $callSite = "<?php\nif (defined(\"ACME_VERSION\")) {\n    echo ACME_VERSION . \\ACME_VERSION . PHP_EOL;\n}\n";
+        $callSiteExpected = "<?php\nif (defined(\"Company\\\\Project\\\\ACME_VERSION\")) {\n    echo \\Company\\Project\\ACME_VERSION . \\Company\\Project\\ACME_VERSION . PHP_EOL;\n}\n";
+
+        self::assertSame($callSiteExpected, $this->replace($callSite));
+
+        $namespaced = "<?php\nnamespace Other;\n\nuse const ACME_VERSION;\n";
+        $namespacedExpected = "<?php\nnamespace Other;\n\nuse const Company\\Project\\ACME_VERSION;\n";
 
         self::assertSame($namespacedExpected, $this->replace($namespaced));
     }

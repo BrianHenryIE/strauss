@@ -1030,12 +1030,13 @@ class ChangePlanner
     }
 
     /**
-     * For a file whose global classes, interfaces, traits, enums or functions are moving into a namespace: insert the
+     * For a file whose global classes, interfaces, traits, enums, functions or constants are moving into a namespace: insert the
      * `namespace` declaration, and fully qualify every other class name, which until now resolved in the global
      * namespace, e.g. `Exception` becomes `\Exception`. The moved names themselves are replaced by
-     * {@see self::findGlobalSymbolsPositions()} and {@see self::findFunctionPositions()}.
+     * {@see self::findGlobalSymbolsPositions()}, {@see self::findFunctionPositions()} and
+     * {@see self::findConstantPositions()}.
      *
-     * Calls to functions which are not moved, and constants, are left: unqualified, they fall back to the global
+     * Calls to functions and constants which are not moved are left: unqualified, they fall back to the global
      * namespace.
      *
      * @param FileCodeMap       $codeMap           The locations in the file's contents.
@@ -1075,11 +1076,13 @@ class ChangePlanner
         }
 
         if (is_null($namespace)) {
-            $functionsToRename = $this->getIndex($discoveredSymbols)->getFunctionsToRename();
-            foreach ($codeMap->getLocationsOfType(CodeLocation::FUNCTION_DEFINITION) as $definition) {
-                $functionSymbol = $functionsToRename->getFunction($definition->getText());
-                if ($functionSymbol && $this->isMovedIntoNamespace($functionSymbol)) {
-                    $replacement = $functionSymbol->getLocalReplacement();
+            $index = $this->getIndex($discoveredSymbols);
+            foreach ($codeMap->getLocationsOfType(CodeLocation::FUNCTION_DEFINITION, CodeLocation::CONST_DEFINITION) as $definition) {
+                $symbol = CodeLocation::FUNCTION_DEFINITION === $definition->getType()
+                    ? $index->getFunctionsToRename()->getFunction($definition->getText())
+                    : $index->getConstantsToRename()->getConst($definition->getText());
+                if ($symbol && $this->isMovedIntoNamespace($symbol)) {
+                    $replacement = $symbol->getLocalReplacement();
                     $namespace = substr($replacement, 0, (int) strrpos($replacement, '\\'));
                     break;
                 }
@@ -1246,10 +1249,17 @@ class ChangePlanner
 */
         $constantsToRename = [];
         /**
+ * @var array<string,true> $movedIntoNamespace Constants moving into a namespace, by original name.
+*/
+        $movedIntoNamespace = [];
+        /**
  * @var ConstantSymbol $constant
 */
         foreach ($this->getIndex($discoveredSymbols)->getConstantsToRename() as $constant) {
             $constantsToRename[$constant->getOriginalFqdnName()] = $constant->getReplacementFqdnName();
+            if ($this->isMovedIntoNamespace($constant)) {
+                $movedIntoNamespace[$constant->getOriginalFqdnName()] = true;
+            }
         }
 
         if (empty($constantsToRename)) {
@@ -1276,7 +1286,7 @@ class ChangePlanner
                         $positions[] = [
                             'start' => $location->getStart(),
                             'end' => $location->getEnd(),
-                            'replacement' => $location->isFullyQualified()
+                            'replacement' => $location->isFullyQualified() || isset($movedIntoNamespace[$name])
                                 ? '\\' . $constantsToRename[$name]
                                 : $constantsToRename[$name],
                         ];
@@ -1301,7 +1311,10 @@ class ChangePlanner
                         $positions[] = [
                             'start' => $location->getStart(),
                             'end' => $location->getEnd(),
-                            'replacement' => $constantsToRename[$name],
+                            // Moving into a namespace: the file gains a `namespace` declaration.
+                            'replacement' => isset($movedIntoNamespace[$name])
+                                ? substr((string) strrchr($constantsToRename[$name], '\\'), 1)
+                                : $constantsToRename[$name],
                         ];
                     }
                     break;
@@ -1312,7 +1325,10 @@ class ChangePlanner
                         $positions[] = [
                             'start' => $location->getStart(),
                             'end' => $location->getEnd(),
-                            'replacement' => $constantsToRename[$name],
+                            // Doubled, valid in either quotes.
+                            'replacement' => isset($movedIntoNamespace[$name])
+                                ? str_replace('\\', '\\\\', $constantsToRename[$name])
+                                : $constantsToRename[$name],
                         ];
                     }
                     break;

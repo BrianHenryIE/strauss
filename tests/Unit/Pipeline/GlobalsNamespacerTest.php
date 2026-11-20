@@ -8,6 +8,7 @@ use BrianHenryIE\Strauss\Files\File;
 use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
 use BrianHenryIE\Strauss\TestCase;
 use BrianHenryIE\Strauss\Types\ClassSymbol;
+use BrianHenryIE\Strauss\Types\ConstantSymbol;
 use BrianHenryIE\Strauss\Types\DiscoveredSymbols;
 use BrianHenryIE\Strauss\Types\FunctionSymbol;
 use BrianHenryIE\Strauss\Types\NamespaceSymbol;
@@ -84,8 +85,16 @@ class GlobalsNamespacerTest extends TestCase
         $outside = $add('Acme_Outside', $this->getFile('/project/other/Outside.php', "<?php\nclass Acme_Outside {}\n"));
         $withFunctionFile = $this->getFile('/project/src/WithFunction.php', "<?php\nfunction acme_f() {}\nclass Acme_WithFunction {}\n");
         $withFunction = $add('Acme_WithFunction', $withFunctionFile);
-        $withConst = $add('Acme_WithConst', $this->getFile('/project/src/WithConst.php', "<?php\nconst ACME_C = 1;\nclass Acme_WithConst {}\n"));
-        $withDefine = $add('Acme_WithDefine', $this->getFile('/project/src/WithDefine.php', "<?php\ndefine('ACME_X', 1);\nclass Acme_WithDefine {}\n"));
+        $withConstFile = $this->getFile('/project/src/WithConst.php', "<?php\nconst ACME_C = 1;\nclass Acme_WithConst {}\n");
+        $withConst = $add('Acme_WithConst', $withConstFile);
+        $withDefineFile = $this->getFile('/project/src/WithDefine.php', "<?php\ndefine('ACME_X', 1);\nclass Acme_WithDefine {}\n");
+        $withDefine = $add('Acme_WithDefine', $withDefineFile);
+
+        $constConstant = new ConstantSymbol('ACME_C', $withConstFile, $globalNamespace);
+        $symbols->add($constConstant);
+        $defineConstant = new ConstantSymbol('ACME_X', $withDefineFile, $globalNamespace);
+        $defineConstant->setDoRename(true);
+        $symbols->add($defineConstant);
         $mixed = $add('Acme_Mixed', $this->getFile('/project/src/Mixed.php', "<?php\nnamespace Other { class Thing {} }\nnamespace { class Acme_Mixed {} }\n"));
         $reserved = $add('Acme_List', $this->getFile('/project/src/List.php', "<?php\nclass Acme_List {}\n"));
 
@@ -120,7 +129,10 @@ class GlobalsNamespacerTest extends TestCase
         $this->assertTrue($functionsOnly->isDoRename(), 'A file with only functions moves into the namespace given.');
         $this->assertSame('Company\\Project\\acme_g', $functionsOnly->getLocalReplacement());
         $this->assertFalse($outsideFunction->isDoRename(), 'Not in the paths.');
-        $this->assertFalse($withConst->isDoRename(), '`const` constants would move too.');
+        $this->assertTrue($withConst->isDoRename());
+        $this->assertTrue($constConstant->isDoRename(), '`const` constants move with their file.');
+        $this->assertSame('Company\\Project\\ACME_C', $constConstant->getLocalReplacement());
+        $this->assertFalse($defineConstant->isDoRename(), '`define()` constants are always global.');
         $this->assertFalse($mixed->isDoRename(), 'The file already declares a namespace.');
         $this->assertTrue($reserved->isDoRename());
         $this->assertSame('Company\\Project\\AcmeList', $reserved->getLocalReplacement(), '`List` is a reserved word.');
