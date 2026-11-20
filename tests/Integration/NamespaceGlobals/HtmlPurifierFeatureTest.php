@@ -82,7 +82,7 @@ class HtmlPurifierFeatureTest extends IntegrationTestCase
         return trim($matches[0]);
     }
 
-    public function test_html_purifier_test_results_unchanged_after_namespacing(): void
+    public function test_html_purifier_tests_pass_after_namespacing(): void
     {
         $this->projectDir = $this->testsWorkingDir . '/htmlpurifier';
         $php = escapeshellarg(PHP_BINARY);
