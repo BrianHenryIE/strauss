@@ -1103,6 +1103,17 @@ class ChangePlanner
 
         $positions = array_merge($positions, $this->findImportsCollidingWithMovedSymbols($codeMap, $discoveredSymbols));
 
+        // Imports colliding with moved names are aliased, so uses of imported functions and constants are qualified.
+        foreach ($codeMap->getLocationsOfType(CodeLocation::FUNCTION_CALL, CodeLocation::CONST_FETCH) as $use) {
+            if ($this->isUseOfImport($use)) {
+                $positions[] = [
+                    'start' => $use->getStart(),
+                    'end' => $use->getEnd(),
+                    'replacement' => '\\' . $use->getResolvedName(),
+                ];
+            }
+        }
+
         foreach ($codeMap->getLocationsOfType(CodeLocation::NAME) as $name) {
             if ($name->isFullyQualified() || in_array(strtolower($name->getName()), ['self', 'parent', 'static'], true)) {
                 continue;
@@ -1121,6 +1132,22 @@ class ChangePlanner
         }
 
         return $positions;
+    }
+
+    /**
+     * Is this unqualified function call or constant fetch a use of an imported function or constant, e.g. `foo()`
+     * after `use function Vendor\foo;`, rather than of the global one?
+     *
+     * @param CodeLocation $location A function call or constant fetch.
+     */
+    protected function isUseOfImport(CodeLocation $location): bool
+    {
+        $resolvedName = $location->getResolvedName();
+
+        return !$location->isFullyQualified()
+            && false === strpos($location->getName(), '\\')
+            && !is_null($resolvedName)
+            && 0 !== strcasecmp($resolvedName, $location->getName());
     }
 
     /**
@@ -1352,6 +1379,8 @@ class ChangePlanner
                     if (
                         (!$location->isFullyQualified() || 1 === $location->countNameParts())
                         && isset($constantsToRename[$name])
+                        // `use const Vendor\FOO;` then `FOO` is `Vendor\FOO`, not the global `FOO`.
+                        && !$this->isUseOfImport($location)
                     ) {
                         $positions[] = [
                             'start' => $location->getStart(),
@@ -1495,7 +1524,8 @@ class ChangePlanner
                     break;
                 case CodeLocation::FUNCTION_CALL:
                     $functionSymbol = $discoveredSymbols->getFunction($location->getName());
-                    if ($functionSymbol) {
+                    // `use function Vendor\foo;` then `foo()` calls `Vendor\foo`, not the global `foo`.
+                    if ($functionSymbol && !$this->isUseOfImport($location)) {
                         if (str_contains($location->getName(), '\\') || $this->isMovedIntoNamespace($functionSymbol)) {
                             $replacement = '\\' . $functionSymbol->getReplacementFqdnName();
                         } else {

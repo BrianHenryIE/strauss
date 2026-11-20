@@ -390,4 +390,43 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
 
         self::assertSame($expected, $this->replace($contents));
     }
+
+    /**
+     * An unqualified call or constant fetch which refers to an import, not to the global function or constant being
+     * moved, keeps referring to the import.
+     *
+     * @covers ::findFunctionPositions
+     * @covers ::findConstantPositions
+     * @covers ::findGlobalsNamespacingPositions
+     */
+    public function test_imported_function_and_constant_with_moved_names(): void
+    {
+        // In a moved file, the colliding imports are aliased, so the uses are qualified with the imported names.
+        $contents = <<<'EOD'
+            <?php
+            use function Other\Library\acme_helper;
+            use const Other\Library\ACME_VERSION;
+
+            function acme_helper() { return acme_helper() . ACME_VERSION; }
+            const ACME_VERSION = '1.0';
+            EOD;
+
+        $expected = <<<'EOD'
+            <?php
+            namespace Company\Project;
+
+            use function Other\Library\acme_helper as acme_helperImport;
+            use const Other\Library\ACME_VERSION as ACME_VERSIONImport;
+
+            function acme_helper() { return \Other\Library\acme_helper() . \Other\Library\ACME_VERSION; }
+            const ACME_VERSION = '1.0';
+            EOD;
+
+        self::assertSame($expected, $this->replace($contents));
+
+        // A file which is not moved is unchanged.
+        $callSite = "<?php\nuse function Other\\Library\\acme_helper;\nuse const Other\\Library\\ACME_VERSION;\n\necho acme_helper() . ACME_VERSION;\n";
+
+        self::assertSame($callSite, $this->replace($callSite));
+    }
 }
