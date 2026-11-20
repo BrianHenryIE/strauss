@@ -1,0 +1,456 @@
+<?php
+
+/**
+ * Renames class files to the name their class has under a naming convention, and moves them to the directory their
+ * namespace names.
+ *
+ * @package brianhenryie/strauss
+ */
+
+declare(strict_types=1);
+
+namespace BrianHenryIE\Strauss\Pipeline;
+
+use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzer;
+use BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition;
+use Exception;
+use InvalidArgumentException;
+use League\Flysystem\FilesystemException;
+use Psr\Log\LoggerInterface;
+
+/**
+ * PSR-4: `Company\Project\Admin\Settings_Page` is `Admin/Settings_Page.php`.
+ *
+ * WordPress Coding Standards: `admin/class-settings-page.php`; the file name is the class name in lowercase with
+ * hyphens, prefixed with `class-`, `interface-`, `trait-` or `enum-`, and the directories are in lowercase with
+ * hyphens.
+ *
+ * Only a file which declares exactly one class, interface, trait or enum, and nothing else, in the namespace or below
+ * it, is moved: function files and templates are loaded by path.
+ *
+ * @see \BrianHenryIE\Strauss\Console\Commands\NamespaceGlobalsCommand
+ */
+class ClassFileRenamer
+{
+    public const CONVENTION_PSR4 = 'psr4';
+    public const CONVENTION_WORDPRESS = 'wordpress';
+
+    public const CONVENTIONS = [
+        self::CONVENTION_PSR4,
+        self::CONVENTION_WORDPRESS,
+    ];
+
+    protected const CLASS_LIKE_TYPES = [
+        SymbolDefinition::TYPE_CLASS,
+        SymbolDefinition::TYPE_INTERFACE,
+        SymbolDefinition::TYPE_TRAIT,
+        SymbolDefinition::TYPE_ENUM,
+    ];
+
+    /**
+     * `__DIR__ . '/relative/path'` and `dirname(__FILE__) . '/relative/path'`.
+     */
+    protected const DIRECTORY_RELATIVE_PATH_PATTERN = '#(__DIR__|dirname\(\s*__FILE__\s*\))(\s*\.\s*)(\'|")(/[^\'"$]*)\3#';
+
+    protected string $namespace;
+
+    protected string $convention;
+
+    /**
+     * @var string[]
+     */
+    protected array $absolutePaths;
+
+    protected string $projectDirectory;
+
+    protected FileSystem $filesystem;
+
+    protected LoggerInterface $logger;
+
+    /**
+     * @param string          $namespace        The namespace whose directory each of the paths is, e.g. `Company\Project`.
+     * @param string          $convention       One of {@see self::CONVENTIONS}.
+     * @param string[]        $absolutePaths    The files and directories whose class files are renamed.
+     * @param string          $projectDirectory The directory which paths written in the code may be relative to.
+     * @param FileSystem      $filesystem       To read, write and move the files.
+     * @param LoggerInterface $logger           Logs each file moved and changed.
+     *
+     * @throws InvalidArgumentException When the convention is not one of {@see self::CONVENTIONS}.
+     */
+    public function __construct(
+        string $namespace,
+        string $convention,
+        array $absolutePaths,
+        string $projectDirectory,
+        FileSystem $filesystem,
+        LoggerInterface $logger
+    ) {
+        if (!in_array($convention, self::CONVENTIONS, true)) {
+            throw new InvalidArgumentException(
+                sprintf('Unknown file naming convention "%s": expected one of %s.', $convention, implode(', ', self::CONVENTIONS))
+            );
+        }
+
+        $this->namespace = trim($namespace, '\\');
+        $this->convention = $convention;
+        $this->absolutePaths = array_map(fn(string $path): string => rtrim(str_replace('\\', '/', $path), '/'), $absolutePaths);
+        $this->projectDirectory = rtrim(str_replace('\\', '/', $projectDirectory), '/');
+        $this->filesystem = $filesystem;
+        $this->logger = $logger;
+    }
+
+    /**
+     * Rename and move the class files among the files given, and update the paths written in all of them.
+     *
+     * @param string[] $absoluteFilePaths The project's PHP files: those which may be renamed, and those which may
+     *                                    mention them.
+     *
+     * @return array<string,string> The files moved: old absolute path => new absolute path.
+     *
+     * @throws Exception When two files would get the same path, or a path is taken. Nothing is moved.
+     * @throws FilesystemException
+     */
+    public function rename(array $absoluteFilePaths): array
+    {
+        $absoluteFilePaths = array_map(fn(string $path): string => str_replace('\\', '/', $path), $absoluteFilePaths);
+
+        $moves = $this->findMoves($absoluteFilePaths);
+
+        $collisions = $this->findCollisions($moves);
+        if (!empty($collisions)) {
+            throw new Exception('No files were renamed: ' . implode('; ', $collisions) . '.');
+        }
+
+        if (empty($moves)) {
+            return [];
+        }
+
+        $this->move($moves);
+        $this->rewritePaths($moves, $absoluteFilePaths);
+
+        return $moves;
+    }
+
+    /**
+     * The class files among the files given which are not at the path their class's name asks for.
+     *
+     * @param string[] $absoluteFilePaths The files to consider; only PHP files in the paths are.
+     *
+     * @return array<string,string> Old absolute path => new absolute path.
+     *
+     * @throws FilesystemException
+     */
+    public function findMoves(array $absoluteFilePaths): array
+    {
+        $analyzer = new PhpFileAnalyzer();
+        $analyzer->setLogger($this->logger);
+
+        $moves = [];
+        foreach ($absoluteFilePaths as $filePath) {
+            $filePath = str_replace('\\', '/', $filePath);
+            $root = $this->getRoot($filePath);
+            if (is_null($root) || 'php' !== strtolower(pathinfo($filePath, PATHINFO_EXTENSION))) {
+                continue;
+            }
+
+            $codeMap = $analyzer->analyze($this->filesystem->read($filePath), $filePath);
+            if (is_null($codeMap)) {
+                continue;
+            }
+
+            $definitions = array_values(
+                array_filter(
+                    $codeMap->getDefinitions(),
+                    fn(SymbolDefinition $definition): bool => SymbolDefinition::TYPE_NAMESPACE !== $definition->getType()
+                )
+            );
+            if (1 !== count($definitions) || !in_array($definitions[0]->getType(), self::CLASS_LIKE_TYPES, true)) {
+                continue;
+            }
+
+            $classNamespace = trim($definitions[0]->getNamespace(), '\\');
+            if ($classNamespace !== $this->namespace && 0 !== strpos($classNamespace, $this->namespace . '\\')) {
+                continue;
+            }
+
+            $shortName = substr((string) strrchr('\\' . $definitions[0]->getName(), '\\'), 1);
+            $newPath = $root . '/' . $this->getRelativePath($definitions[0]->getType(), $classNamespace . '\\' . $shortName);
+
+            if ($newPath !== $filePath) {
+                $moves[$filePath] = $newPath;
+            }
+        }
+
+        ksort($moves);
+
+        return $moves;
+    }
+
+    /**
+     * The path of a class's file below the namespace's directory.
+     *
+     * @param string $type               `class`, `interface`, `trait` or `enum`: {@see SymbolDefinition::TYPES}.
+     * @param string $fullyQualifiedName The class's name, in the namespace or below it.
+     *
+     * @return string E.g. `Admin/Settings_Page.php`, `admin/class-settings-page.php`.
+     */
+    public function getRelativePath(string $type, string $fullyQualifiedName): string
+    {
+        $segments = explode('\\', trim(substr(trim($fullyQualifiedName, '\\'), strlen($this->namespace)), '\\'));
+        $shortName = (string) array_pop($segments);
+
+        if (self::CONVENTION_PSR4 === $this->convention) {
+            return implode('/', array_merge($segments, [$shortName . '.php']));
+        }
+
+        $hyphenate = fn(string $name): string => strtolower(str_replace('_', '-', $name));
+
+        return implode('/', array_merge(array_map($hyphenate, $segments), [$type . '-' . $hyphenate($shortName) . '.php']));
+    }
+
+    /**
+     * The directory which is the namespace's, for a file: the path it is in, or the directory of the path it is.
+     *
+     * @param string $absoluteFilePath The file.
+     *
+     * @return ?string Null when the file is not in the paths.
+     */
+    protected function getRoot(string $absoluteFilePath): ?string
+    {
+        $root = null;
+        foreach ($this->absolutePaths as $path) {
+            if ($absoluteFilePath === $path) {
+                return dirname($path);
+            }
+            if (0 === strpos($absoluteFilePath, $path . '/') && strlen($path) > strlen((string) $root)) {
+                $root = $path;
+            }
+        }
+        return $root;
+    }
+
+    /**
+     * What stops the moves: two files wanting one path, or a path which is taken by a file which is not moving.
+     * Compared without case, as on a filesystem which ignores it.
+     *
+     * @param array<string,string> $moves Old absolute path => new absolute path.
+     *
+     * @return string[] One description per problem.
+     *
+     * @throws FilesystemException
+     */
+    public function findCollisions(array $moves): array
+    {
+        $problems = [];
+
+        $wanted = [];
+        foreach ($moves as $old => $new) {
+            $wanted[strtolower($new)][] = $old;
+        }
+        foreach ($wanted as $olds) {
+            if (count($olds) > 1) {
+                $problems[] = sprintf('%s is wanted by %s', $moves[$olds[0]], implode(' and ', $olds));
+            }
+        }
+
+        $moving = array_change_key_case($moves);
+        foreach ($moves as $old => $new) {
+            if (!isset($moving[strtolower($new)]) && $this->filesystem->fileExists($new)) {
+                $problems[] = sprintf('%s already exists, wanted by %s', $new, $old);
+            }
+        }
+
+        return $problems;
+    }
+
+    /**
+     * Move the files, then delete the directories left empty.
+     *
+     * Each file goes to a temporary name first, so two files can swap names, and a name can change only in case.
+     *
+     * @param array<string,string> $moves Old absolute path => new absolute path.
+     *
+     * @throws FilesystemException
+     */
+    protected function move(array $moves): void
+    {
+        foreach ($moves as $old => $new) {
+            $this->filesystem->move($old, $old . '.moving');
+        }
+
+        foreach ($moves as $old => $new) {
+            $this->filesystem->move($old . '.moving', $new);
+            $this->logger->notice('Renamed {oldPath} to {newPath}.', ['oldPath' => $old, 'newPath' => $new]);
+        }
+
+        foreach (array_unique(array_map('dirname', array_keys($moves))) as $directory) {
+            while (
+                !in_array($directory, $this->absolutePaths, true)
+                && 0 === strpos($directory, $this->projectDirectory . '/')
+                && $this->filesystem->directoryExists($directory)
+                && $this->filesystem->isDirectoryEmpty($directory)
+            ) {
+                $this->filesystem->deleteDirectory($directory);
+                $this->logger->info('Deleted empty directory {directory}.', ['directory' => $directory]);
+                $directory = dirname($directory);
+            }
+        }
+    }
+
+    /**
+     * Update the paths written in the files, so they reach what they did before:
+     * * `__DIR__ . '/relative/path'`, in a file which moved, or to a file which moved;
+     * * a moved file's path relative to the project, e.g. `'includes/class-foo.php'`, anywhere.
+     *
+     * Warns about what could not be followed: other uses of `__DIR__` and `__FILE__` in a file which changed
+     * directory, and old file names which are still mentioned.
+     *
+     * @param array<string,string> $moves             Old absolute path => new absolute path, already moved.
+     * @param string[]             $absoluteFilePaths The project's PHP files, by the paths they had before the moves.
+     *
+     * @throws FilesystemException
+     */
+    protected function rewritePaths(array $moves, array $absoluteFilePaths): void
+    {
+        $projectRelativeMoves = [];
+        $oldFileNames = [];
+        foreach ($moves as $old => $new) {
+            if (0 === strpos($old, $this->projectDirectory . '/') && 0 === strpos($new, $this->projectDirectory . '/')) {
+                $projectRelativeMoves[substr($old, strlen($this->projectDirectory) + 1)] = substr($new, strlen($this->projectDirectory) + 1);
+            }
+            if (basename($old) !== basename($new)) {
+                $oldFileNames[basename($old)] = true;
+            }
+        }
+        // The file names which are not also the new name of another file.
+        $oldFileNames = array_diff_key($oldFileNames, array_flip(array_map('basename', $moves)));
+
+        // Longest first, so a path is matched before a shorter path at its end.
+        uksort($projectRelativeMoves, fn(string $a, string $b): int => strlen($b) <=> strlen($a));
+        $projectRelativePattern = empty($projectRelativeMoves)
+            ? null
+            : $this->getMentionPattern(array_keys($projectRelativeMoves));
+        $oldFileNamesPattern = empty($oldFileNames)
+            ? null
+            : $this->getMentionPattern(array_keys($oldFileNames));
+
+        foreach ($absoluteFilePaths as $oldFilePath) {
+            $filePath = $moves[$oldFilePath] ?? $oldFilePath;
+            if ('php' !== strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) || !$this->filesystem->fileExists($filePath)) {
+                continue;
+            }
+
+            $oldDirectory = dirname($oldFilePath);
+            $newDirectory = dirname($filePath);
+
+            $contents = $this->filesystem->read($filePath);
+
+            $updated = (string) preg_replace_callback(
+                self::DIRECTORY_RELATIVE_PATH_PATTERN,
+                function (array $matches) use ($moves, $oldDirectory, $newDirectory): string {
+                    $target = $this->normalize($oldDirectory . $matches[4]);
+                    $relativePath = $this->getRelativePathFrom($newDirectory, $moves[$target] ?? $target)
+                        . ('/' === substr($matches[4], -1) ? '/' : '');
+                    // Only when it changes: the path as written may not be normalized.
+                    return $oldDirectory === $newDirectory && !isset($moves[$target])
+                        ? $matches[0]
+                        : $matches[1] . $matches[2] . $matches[3] . $relativePath . $matches[3];
+                },
+                $contents
+            );
+
+            if (!is_null($projectRelativePattern)) {
+                $updated = (string) preg_replace_callback(
+                    $projectRelativePattern,
+                    fn(array $matches): string => $projectRelativeMoves[$matches[1]],
+                    $updated
+                );
+            }
+
+            if ($updated !== $contents) {
+                $this->filesystem->write($filePath, $updated);
+                $this->logger->info('Updated the paths in {filePath}.', ['filePath' => $filePath]);
+            }
+
+            if (
+                $oldDirectory !== $newDirectory
+                && 1 === preg_match('#__DIR__|__FILE__#', (string) preg_replace(self::DIRECTORY_RELATIVE_PATH_PATTERN, '', $updated))
+            ) {
+                $this->logger->warning(
+                    '{filePath} changed directory and uses __DIR__ or __FILE__ in a way which could not be followed: check it by hand.',
+                    ['filePath' => $filePath]
+                );
+            }
+
+            if (!is_null($oldFileNamesPattern) && preg_match_all($oldFileNamesPattern, $updated, $mentions)) {
+                $this->logger->warning(
+                    '{filePath} still mentions renamed files: {fileNames}. Check it by hand.',
+                    ['filePath' => $filePath, 'fileNames' => implode(', ', array_unique($mentions[1]))]
+                );
+            }
+        }
+    }
+
+    /**
+     * A pattern matching any of the file names or paths, where it is not part of a longer name.
+     *
+     * @param string[] $names File names or paths.
+     */
+    protected function getMentionPattern(array $names): string
+    {
+        return '#(?<![A-Za-z0-9_-])('
+            . implode('|', array_map(fn(string $name): string => preg_quote($name, '#'), $names))
+            . ')(?![A-Za-z0-9_-])#';
+    }
+
+    /**
+     * Resolve the `.` and `..` in an absolute path.
+     *
+     * @param string $path E.g. `/project/src/Acme/../functions.php`.
+     */
+    protected function normalize(string $path): string
+    {
+        $resolved = [];
+        foreach (explode('/', $path) as $index => $segment) {
+            if ('.' === $segment || ('' === $segment && $index > 0 && '' !== end($resolved) && !$this->endsWithScheme($resolved))) {
+                continue;
+            }
+            if ('..' === $segment && count($resolved) > 1) {
+                array_pop($resolved);
+                continue;
+            }
+            $resolved[] = $segment;
+        }
+        return implode('/', $resolved);
+    }
+
+    /**
+     * Is the last segment a stream wrapper's scheme, e.g. `mem:` in `mem://project`, whose `//` is to be kept?
+     *
+     * @param string[] $segments The path's segments so far.
+     */
+    protected function endsWithScheme(array $segments): bool
+    {
+        return 1 === count($segments) && ':' === substr((string) end($segments), -1);
+    }
+
+    /**
+     * The path from a directory to a target, starting with a slash, for use after `__DIR__`.
+     *
+     * @param string $directory The absolute path of the directory.
+     * @param string $target    The absolute path of the file or directory to reach.
+     */
+    protected function getRelativePathFrom(string $directory, string $target): string
+    {
+        $from = explode('/', $directory);
+        $to = explode('/', $target);
+
+        while (!empty($from) && !empty($to) && $from[0] === $to[0]) {
+            array_shift($from);
+            array_shift($to);
+        }
+
+        return '/' . implode('/', array_merge(array_fill(0, count($from), '..'), $to));
+    }
+}

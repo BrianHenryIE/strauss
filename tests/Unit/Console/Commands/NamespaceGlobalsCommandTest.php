@@ -128,4 +128,16 @@ class NamespaceGlobalsCommandTest extends TestCase
 
         self::assertSame('Company\\Project', $result['namespace']);
     }
+
+    /**
+     * @covers ::configure
+     * @covers ::updateConfigFromCli
+     */
+    public function test_rename_files_must_be_a_known_convention(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('--rename-files');
+
+        $this->getSut()->parse(['--namespace' => 'Company\\Project', '--rename-files' => 'pear']);
+    }
 }

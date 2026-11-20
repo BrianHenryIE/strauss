@@ -183,12 +183,15 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
         chdir($this->testsWorkingDir);
     }
 
-    protected function runNamespaceGlobals(): void
+    /**
+     * @param string $options More command line options.
+     */
+    protected function runNamespaceGlobals(string $options = ''): void
     {
         $exitCode = $this->runStrauss(
             $output,
             // Doubled backslashes: when testing the phar, the arguments go through the shell.
-            'namespace-globals --namespace=Company\\\\Project --strip-prefix=Acme_ --paths=src --update-call-sites=consumer.php'
+            'namespace-globals --namespace=Company\\\\Project --strip-prefix=Acme_ --paths=src --update-call-sites=consumer.php ' . $options
         );
         $this->assertEquals(0, $exitCode, $output);
 
@@ -324,5 +327,103 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
         $this->assertEquals(0, $exitCode, $output);
 
         $this->assertSame($before, array_combine($paths, array_map([$this, 'read'], $paths)));
+    }
+
+    /**
+     * @return string[] The PHP files in `src`, relative to the project, sorted.
+     */
+    protected function getSourceFiles(): array
+    {
+        $files = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->testsWorkingDir . '/src', \FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $file) {
+            /** @var \SplFileInfo $file */
+            $files[] = substr(str_replace('\\', '/', $file->getPathname()), strlen($this->testsWorkingDir) + 1);
+        }
+        sort($files);
+        return $files;
+    }
+
+    /**
+     * The consumer's output is the same wherever the class files are.
+     */
+    protected function assertCodeRuns(): void
+    {
+        exec(escapeshellarg(PHP_BINARY) . ' consumer.php 2>&1', $output, $exitCode);
+        $outputString = implode(PHP_EOL, $output);
+
+        $this->assertEquals(0, $exitCode, $outputString);
+        $this->assertStringContainsString('hello sir', $outputString);
+        $this->assertStringContainsString('Company\\Project\\Bracketed:hello bracketed', $outputString);
+    }
+
+    /**
+     * `--rename-files=psr4`: each class file is named for its class, in the directory of its namespace.
+     */
+    public function test_rename_files_psr4(): void
+    {
+        $this->runNamespaceGlobals('--rename-files=psr4');
+
+        $this->assertSame(
+            [
+                // Not moved: a constant too, a function too, and a file with another namespace.
+                'src/Acme/Constants.php',
+                'src/Acme/Legacy.php',
+                'src/Acme/Mixed.php',
+                'src/AcmeList.php',
+                'src/Base.php',
+                'src/Bracketed.php',
+                'src/Factory.php',
+                'src/Greeter.php',
+                'src/Greeting/Formal.php',
+            ],
+            $this->getSourceFiles()
+        );
+
+        $this->assertCodeRuns();
+    }
+
+    /**
+     * `--rename-files=wordpress`: `class-{name}.php`, in lowercase with hyphens.
+     */
+    public function test_rename_files_wordpress(): void
+    {
+        $this->runNamespaceGlobals('--rename-files=wordpress');
+
+        $this->assertSame(
+            [
+                'src/Acme/Constants.php',
+                'src/Acme/Legacy.php',
+                'src/Acme/Mixed.php',
+                'src/class-acmelist.php',
+                'src/class-base.php',
+                'src/class-bracketed.php',
+                'src/class-factory.php',
+                'src/greeting/class-formal.php',
+                'src/interface-greeter.php',
+            ],
+            $this->getSourceFiles()
+        );
+
+        $this->assertCodeRuns();
+    }
+
+    /**
+     * `--dry-run` with `--rename-files` must not move any file.
+     */
+    public function test_rename_files_dry_run_changes_nothing(): void
+    {
+        $before = $this->getSourceFiles();
+
+        $exitCode = $this->runStrauss(
+            $output,
+            'namespace-globals --namespace=Company\\\\Project --strip-prefix=Acme_ --paths=src --update-call-sites=consumer.php --rename-files=psr4 --dry-run'
+        );
+        $this->assertEquals(0, $exitCode, $output);
+
+        $this->assertSame($before, $this->getSourceFiles());
+        $this->assertStringContainsString('class Acme_Base', $this->read('src/Acme/Base.php'));
     }
 }

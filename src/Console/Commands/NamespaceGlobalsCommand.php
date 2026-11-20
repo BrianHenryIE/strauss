@@ -12,7 +12,9 @@ declare(strict_types=1);
 
 namespace BrianHenryIE\Strauss\Console\Commands;
 
+use BrianHenryIE\Strauss\Files\FileBase;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
+use BrianHenryIE\Strauss\Pipeline\ClassFileRenamer;
 use BrianHenryIE\Strauss\Pipeline\FileEnumerator;
 use BrianHenryIE\Strauss\Pipeline\GlobalsNamespacer;
 use BrianHenryIE\Strauss\Pipeline\Parallel\WorkerPool;
@@ -29,8 +31,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Registered as `namespace-globals`. The global classes, interfaces, traits and enums declared in `--paths` are moved
  * into `--namespace` by {@see GlobalsNamespacer}: each file gains a `namespace` declaration, and every use of a moved
- * name, in `--paths` and `--update-call-sites`, becomes fully qualified. Files are not moved, and functions and
- * constants stay global.
+ * name, in `--paths` and `--update-call-sites`, is updated. Functions and `const` constants move with their file.
+ *
+ * Files are not moved, unless `--rename-files` names a convention: then each file which declares one class is renamed
+ * for its class and moved to the directory of its namespace, by {@see ClassFileRenamer}.
  */
 class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
 {
@@ -55,6 +59,11 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
      * @var string[]
      */
     protected array $stripPrefixes = [];
+
+    /**
+     * One of {@see ClassFileRenamer::CONVENTIONS}, or null to leave the files where they are.
+     */
+    protected ?string $renameFilesConvention = null;
 
     /**
      * @used-by \Symfony\Component\Console\Command\Command::__construct
@@ -98,6 +107,14 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
             'Comma separated files and directories which use the moved symbols, to update too.'
         );
 
+        $this->addOption(
+            'rename-files',
+            null,
+            InputOption::VALUE_REQUIRED,
+            'Rename each file in `--paths` which declares one class for its class, and move it to the directory of its namespace:'
+            . ' `psr4`, e.g. `Admin/Settings_Page.php`, or `wordpress`, e.g. `admin/class-settings-page.php`. Default is not to.'
+        );
+
         parent::configure();
     }
 
@@ -136,14 +153,16 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
             'determineChanges',
             'planChanges',
             'performReplacementsInProjectFiles',
+            'renameClassFiles',
             'logAutoloadAdvice',
         ];
     }
 
     /**
-     * @param InputInterface $input The `--namespace`, `--strip-prefix`, `--paths` and `--update-call-sites` options.
+     * @param InputInterface $input The `--namespace`, `--strip-prefix`, `--paths`, `--update-call-sites` and
+     *                              `--rename-files` options.
      *
-     * @throws InvalidArgumentException When `--namespace` is missing.
+     * @throws InvalidArgumentException When `--namespace` is missing, or `--rename-files` is not a known convention.
      */
     protected function updateConfigFromCli(InputInterface $input): void
     {
@@ -169,6 +188,17 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
         $paths = $input->getOption('paths');
         $this->symbolPathsInput = array_values(array_filter(array_map('trim', explode(',', $paths ?: '.'))));
         $this->symbolPaths = $this->toAbsolutePaths($paths ?: '.');
+
+        /**
+ * @var ?string $renameFiles
+*/
+        $renameFiles = $input->getOption('rename-files');
+        if (!is_null($renameFiles) && !in_array($renameFiles, ClassFileRenamer::CONVENTIONS, true)) {
+            throw new InvalidArgumentException(
+                sprintf('The --rename-files option must be one of: %s.', implode(', ', ClassFileRenamer::CONVENTIONS))
+            );
+        }
+        $this->renameFilesConvention = $renameFiles;
 
         /**
  * @var ?string $callSites
@@ -227,11 +257,52 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
     }
 
     /**
+     * With `--rename-files`, rename each class file in `--paths` for its class, and move it to the directory of its
+     * namespace. The paths written in the files, in `--paths` and `--update-call-sites`, are updated.
+     */
+    protected function renameClassFiles(): void
+    {
+        if (is_null($this->renameFilesConvention)) {
+            return;
+        }
+
+        $this->logger->notice('Renaming files...');
+
+        $classFileRenamer = new ClassFileRenamer(
+            $this->namespace,
+            $this->renameFilesConvention,
+            $this->symbolPaths,
+            str_replace('\\', '/', Platform::getcwd()),
+            $this->filesystem,
+            $this->logger
+        );
+
+        $moves = $classFileRenamer->rename(
+            array_map(fn(FileBase $file): string => $file->getSourcePath(), $this->discoveredFiles->getFiles())
+        );
+
+        $this->logger->notice('Renamed {count} files.', ['count' => count($moves)]);
+    }
+
+    /**
      * The moved classes are no longer found by a PSR-0 or `_` to `/` autoloader for their old names.
      */
     protected function logAutoloadAdvice(): void
     {
         $moved = count($this->discoveredSymbols->getToRename());
+
+        if (ClassFileRenamer::CONVENTION_PSR4 === $this->renameFilesConvention) {
+            $this->logger->notice(
+                'Moved {count} symbols into {namespace}. Update the autoloader for their new names, e.g. in composer.json: "autoload": {"psr-4": {"{psr4Namespace}": [{entries}]}}, with "classmap" or "files" entries for the files which were not renamed, then run `composer dump-autoload`.',
+                [
+                    'count' => $moved,
+                    'namespace' => $this->namespace,
+                    'psr4Namespace' => str_replace('\\', '\\\\', $this->namespace) . '\\\\',
+                    'entries' => implode(', ', array_map(fn(string $path): string => '"' . $path . '"', $this->symbolPathsInput)),
+                ]
+            );
+            return;
+        }
 
         $this->logger->notice(
             'Moved {count} symbols into {namespace}. Update the autoloader for their new names, e.g. in composer.json: "autoload": {"classmap": [{classmapEntries}]}, then run `composer dump-autoload`.',
