@@ -126,6 +126,7 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
             InputOption::VALUE_REQUIRED,
             'Rename each file in `--paths` which declares one class for its class, and move it to the directory of its namespace:'
             . ' `psr4`, e.g. `Admin/Settings_Page.php`, or `wordpress`, e.g. `admin/class-settings-page.php`. Default is not to.'
+            . ' The files git tracks are moved with `git mv`.'
             . ' Their paths written in the other files in the current directory, e.g. `phpstan.neon`, are updated.'
         );
 
@@ -299,7 +300,9 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
             $this->symbolPaths,
             str_replace('\\', '/', Platform::getcwd()),
             $this->filesystem,
-            $this->logger
+            $this->logger,
+            // With `git mv`, for the files git tracks; not during `--dry-run`, when nothing is written.
+            !$this->config->isDryRun()
         );
 
         $moves = $classFileRenamer->rename(

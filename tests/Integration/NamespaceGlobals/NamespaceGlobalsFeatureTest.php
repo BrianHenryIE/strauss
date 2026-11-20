@@ -419,6 +419,45 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
     }
 
     /**
+     * In a git repository, the files git tracks are renamed with `git mv`, so the renames are staged; other files are
+     * only moved.
+     */
+    public function test_rename_files_uses_git_mv(): void
+    {
+        $this->getFileSystem()->write(
+            $this->testsWorkingDir . '/src/Acme/Untracked.php',
+            "<?php\nclass Acme_Untracked {}\n"
+        );
+
+        $git = 'git -c user.name=Test -c user.email=test@example.com -c commit.gpgsign=false ';
+        exec(
+            'git init -q 2>&1 && git add composer.json consumer.php phpstan.neon src/Acme/Greeter.php src/Acme/Base.php src/Acme/Greeting 2>&1 && '
+            . $git . 'commit -q -m fixtures 2>&1',
+            $gitOutput,
+            $gitExitCode
+        );
+        $this->assertEquals(0, $gitExitCode, implode(PHP_EOL, $gitOutput));
+
+        $this->runNamespaceGlobals('--rename-files=wordpress');
+
+        exec('git status --porcelain 2>&1', $status);
+        $status = implode(PHP_EOL, $status);
+
+        // Staged renames; the contents changed too, which is not staged.
+        $this->assertMatchesRegularExpression('#^R[ M] src/Acme/Greeter\.php -> src/interface-greeter\.php$#m', $status);
+        $this->assertMatchesRegularExpression('#^R[ M] src/Acme/Base\.php -> src/class-base\.php$#m', $status);
+        $this->assertMatchesRegularExpression('#^R[ M] src/Acme/Greeting/Formal\.php -> src/greeting/class-formal\.php$#m', $status);
+        $this->assertStringNotContainsString('.moving', $status);
+
+        // Not tracked: moved, and still not tracked.
+        $this->assertFileExists($this->testsWorkingDir . '/src/class-untracked.php');
+        $this->assertFileDoesNotExist($this->testsWorkingDir . '/src/Acme/Untracked.php');
+        $this->assertMatchesRegularExpression('#^\?\? src/class-untracked\.php$#m', $status);
+
+        $this->assertCodeRuns();
+    }
+
+    /**
      * `--dry-run` with `--rename-files` must not move any file.
      */
     public function test_rename_files_dry_run_changes_nothing(): void

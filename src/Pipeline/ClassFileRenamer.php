@@ -18,6 +18,7 @@ use Exception;
 use InvalidArgumentException;
 use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Process\Process;
 
 /**
  * PSR-4: `Company\Project\Admin\Settings_Page` is `Admin/Settings_Page.php`.
@@ -30,6 +31,8 @@ use Psr\Log\LoggerInterface;
  * it, is moved: function files and templates are loaded by path.
  *
  * The paths of the moved files written in the project's PHP and text files, e.g. `phpstan.neon`, are updated.
+ *
+ * The files git tracks are moved with `git mv`, so the renames are staged.
  *
  * @see \BrianHenryIE\Strauss\Console\Commands\NamespaceGlobalsCommand
  */
@@ -86,12 +89,19 @@ class ClassFileRenamer
     protected LoggerInterface $logger;
 
     /**
+     * Whether to move the files git tracks with `git mv`.
+     */
+    protected bool $useGit;
+
+    /**
      * @param string          $namespace        The namespace whose directory each of the paths is, e.g. `Company\Project`.
      * @param string          $convention       One of {@see self::CONVENTIONS}.
      * @param string[]        $absolutePaths    The files and directories whose class files are renamed.
      * @param string          $projectDirectory The directory which paths written in the code may be relative to.
      * @param FileSystem      $filesystem       To read, write and move the files.
      * @param LoggerInterface $logger           Logs each file moved and changed.
+     * @param bool            $useGit           Whether to move the files git tracks with `git mv`. Only when the
+     *                                          filesystem is the real one: not during `--dry-run`.
      *
      * @throws InvalidArgumentException When the convention is not one of {@see self::CONVENTIONS}.
      */
@@ -101,8 +111,10 @@ class ClassFileRenamer
         array $absolutePaths,
         string $projectDirectory,
         FileSystem $filesystem,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        bool $useGit = false
     ) {
+        $this->useGit = $useGit;
         if (!in_array($convention, self::CONVENTIONS, true)) {
             throw new InvalidArgumentException(
                 sprintf('Unknown file naming convention "%s": expected one of %s.', $convention, implode(', ', self::CONVENTIONS))
@@ -285,6 +297,7 @@ class ClassFileRenamer
      * Move the files, then delete the directories left empty.
      *
      * Each file goes to a temporary name first, so two files can swap names, and a name can change only in case.
+     * The files git tracks are moved with `git mv`.
      *
      * @param array<string,string> $moves Old absolute path => new absolute path.
      *
@@ -292,12 +305,14 @@ class ClassFileRenamer
      */
     protected function move(array $moves): void
     {
+        $trackedByGit = $this->useGit ? $this->findFilesTrackedByGit(array_keys($moves)) : [];
+
         foreach ($moves as $old => $new) {
-            $this->filesystem->move($old, $old . '.moving');
+            $this->moveFile($old, $old . '.moving', isset($trackedByGit[$old]));
         }
 
         foreach ($moves as $old => $new) {
-            $this->filesystem->move($old . '.moving', $new);
+            $this->moveFile($old . '.moving', $new, isset($trackedByGit[$old]));
             $this->logger->notice('Renamed {oldPath} to {newPath}.', ['oldPath' => $old, 'newPath' => $new]);
         }
 
@@ -313,6 +328,81 @@ class ClassFileRenamer
                 $directory = dirname($directory);
             }
         }
+    }
+
+    /**
+     * Move one file, with `git mv` when git tracks it, so the rename is staged.
+     *
+     * @param string $old          The file's absolute path.
+     * @param string $new          The absolute path to move it to.
+     * @param bool   $trackedByGit Whether git tracks the file.
+     *
+     * @throws FilesystemException
+     */
+    protected function moveFile(string $old, string $new, bool $trackedByGit): void
+    {
+        if ($trackedByGit) {
+            // `git mv` does not create directories.
+            $this->filesystem->createDirectory(dirname($new));
+
+            $process = new Process(['git', 'mv', '--', $old, $new], $this->projectDirectory);
+            if (0 === $process->run()) {
+                return;
+            }
+
+            $this->logger->warning(
+                '`git mv` failed for {oldPath}, moving it without git: {errorMessage}',
+                ['oldPath' => $old, 'errorMessage' => trim($process->getErrorOutput())]
+            );
+        }
+
+        $this->filesystem->move($old, $new);
+    }
+
+    /**
+     * The files among those given which git tracks. None when the project is not in a git repository, or git is not
+     * installed.
+     *
+     * @param string[] $absoluteFilePaths The files to ask about.
+     *
+     * @return array<string,true> Keyed by absolute path.
+     */
+    protected function findFilesTrackedByGit(array $absoluteFilePaths): array
+    {
+        $tracked = [];
+        // In batches, to keep the command line short.
+        foreach (array_chunk($absoluteFilePaths, 100) as $batch) {
+            $process = new Process(array_merge(['git', 'ls-files', '-z', '--full-name', '--'], $batch), $this->projectDirectory);
+            if (0 !== $process->run()) {
+                continue;
+            }
+            $repositoryDirectory = $this->getGitRepositoryDirectory();
+            if (is_null($repositoryDirectory)) {
+                return [];
+            }
+            foreach (array_filter(explode("\0", $process->getOutput())) as $repositoryRelativePath) {
+                $trackedPath = $repositoryDirectory . '/' . $repositoryRelativePath;
+                foreach ($batch as $absoluteFilePath) {
+                    // The repository's path may be written differently, e.g. through a symlink.
+                    if ($absoluteFilePath === $trackedPath || realpath($absoluteFilePath) === realpath($trackedPath)) {
+                        $tracked[$absoluteFilePath] = true;
+                    }
+                }
+            }
+        }
+        return $tracked;
+    }
+
+    /**
+     * The top directory of the git repository the project is in.
+     *
+     * @return ?string Null when it is not in one.
+     */
+    protected function getGitRepositoryDirectory(): ?string
+    {
+        $process = new Process(['git', 'rev-parse', '--show-toplevel'], $this->projectDirectory);
+
+        return 0 === $process->run() ? rtrim(str_replace('\\', '/', trim($process->getOutput())), '/') : null;
     }
 
     /**
