@@ -126,6 +126,7 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
             InputOption::VALUE_REQUIRED,
             'Rename each file in `--paths` which declares one class for its class, and move it to the directory of its namespace:'
             . ' `psr4`, e.g. `Admin/Settings_Page.php`, or `wordpress`, e.g. `admin/class-settings-page.php`. Default is not to.'
+            . ' Their paths written in the other files in the current directory, e.g. `phpstan.neon`, are updated.'
         );
 
         parent::configure();
@@ -281,7 +282,8 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
 
     /**
      * With `--rename-files`, rename each class file in `--paths` for its class, and move it to the directory of its
-     * namespace. The paths written in the files, in `--paths` and `--update-call-sites`, are updated.
+     * namespace. The paths written in the files in `--paths` and `--update-call-sites`, and in the other PHP and text
+     * files in the current directory, e.g. `phpstan.neon`, are updated.
      */
     protected function renameClassFiles(): void
     {

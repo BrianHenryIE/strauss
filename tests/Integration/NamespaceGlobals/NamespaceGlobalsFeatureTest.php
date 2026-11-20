@@ -148,6 +148,8 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
                 <?php
                 class Acme_List {}
                 EOD,
+            // Not in `--paths` or `--update-call-sites`.
+            'phpstan.neon' => "parameters:\n    excludePaths:\n        - src/Acme/Greeting/Formal.php\n        - src/Acme/Legacy.php\n",
             'consumer.php' => <<<'EOD'
                 <?php
                 require __DIR__ . '/vendor/autoload.php';
@@ -407,6 +409,12 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
             $this->getSourceFiles()
         );
 
+        // The project's other files which mention a renamed file are updated.
+        $this->assertSame(
+            "parameters:\n    excludePaths:\n        - src/greeting/class-formal.php\n        - src/Acme/Legacy.php\n",
+            $this->read('phpstan.neon')
+        );
+
         $this->assertCodeRuns();
     }
 
@@ -425,5 +433,6 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
 
         $this->assertSame($before, $this->getSourceFiles());
         $this->assertStringContainsString('class Acme_Base', $this->read('src/Acme/Base.php'));
+        $this->assertStringContainsString('src/Acme/Greeting/Formal.php', $this->read('phpstan.neon'));
     }
 }

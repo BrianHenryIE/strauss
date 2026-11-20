@@ -240,6 +240,53 @@ class ClassFileRenamerTest extends TestCase
     }
 
     /**
+     * The other text files in the project which mention a renamed file by its path are updated too, e.g.
+     * `phpstan.neon`, whether or not they were among the files given.
+     *
+     * @covers ::rename
+     * @covers ::rewritePaths
+     * @covers ::findProjectTextFiles
+     */
+    public function test_rename_updates_other_files_in_the_project(): void
+    {
+        $neon = "parameters:\n    excludePaths:\n        - src/Acme/Greeter.php\n        - %currentWorkingDirectory%/src/Acme/Greeting/Formal.php\n        - src/Acme/Greeter.php.bak\n";
+        $files = [
+            'src/Acme/Greeter.php' => "<?php\nnamespace Company\\Project;\n\ninterface Greeter {}\n",
+            'src/Acme/Greeting/Formal.php' => "<?php\nnamespace Company\\Project\\Greeting;\n\nclass Formal {}\n",
+            'phpstan.neon' => $neon,
+            'config/phpcs.xml.dist' => "<exclude-pattern>../src/Acme/Greeter.php</exclude-pattern>\n",
+            '.distignore' => "/src/Acme/Greeter.php\n",
+            'composer.json' => '{"autoload": {"classmap": ["src/Acme/Greeter.php"]}}',
+            'tests/bootstrap.php' => "<?php\nrequire_once __DIR__ . '/../src/Acme/Greeter.php';\n",
+            // Not text, or not the project's own.
+            'assets/logo.png' => 'src/Acme/Greeter.php',
+            'vendor/package/readme.md' => 'src/Acme/Greeter.php',
+            'node_modules/package/readme.md' => 'src/Acme/Greeter.php',
+            '.git/index' => 'src/Acme/Greeter.php',
+            'composer.lock' => 'src/Acme/Greeter.php',
+        ];
+        $sut = $this->getSut('wordpress', $files, $filesystem);
+
+        // Only the files in the path are given.
+        $sut->rename($this->absolute(['src/Acme/Greeter.php', 'src/Acme/Greeting/Formal.php']));
+
+        $read = fn(string $relativePath): string => $filesystem->read(self::PROJECT . '/' . $relativePath);
+
+        self::assertSame(
+            "parameters:\n    excludePaths:\n        - src/interface-greeter.php\n        - %currentWorkingDirectory%/src/greeting/class-formal.php\n        - src/Acme/Greeter.php.bak\n",
+            $read('phpstan.neon')
+        );
+        self::assertSame("<exclude-pattern>../src/interface-greeter.php</exclude-pattern>\n", $read('config/phpcs.xml.dist'));
+        self::assertSame("/src/interface-greeter.php\n", $read('.distignore'));
+        self::assertSame('{"autoload": {"classmap": ["src/interface-greeter.php"]}}', $read('composer.json'));
+        self::assertSame("<?php\nrequire_once __DIR__ . '/../src/interface-greeter.php';\n", $read('tests/bootstrap.php'));
+
+        foreach (['assets/logo.png', 'vendor/package/readme.md', 'node_modules/package/readme.md', '.git/index', 'composer.lock'] as $untouched) {
+            self::assertSame('src/Acme/Greeter.php', $read($untouched), $untouched);
+        }
+    }
+
+    /**
      * Two files can swap names, and a name can change only in its case.
      *
      * @covers ::move

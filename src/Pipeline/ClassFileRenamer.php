@@ -29,6 +29,8 @@ use Psr\Log\LoggerInterface;
  * Only a file which declares exactly one class, interface, trait or enum, and nothing else, in the namespace or below
  * it, is moved: function files and templates are loaded by path.
  *
+ * The paths of the moved files written in the project's PHP and text files, e.g. `phpstan.neon`, are updated.
+ *
  * @see \BrianHenryIE\Strauss\Console\Commands\NamespaceGlobalsCommand
  */
 class ClassFileRenamer
@@ -47,6 +49,21 @@ class ClassFileRenamer
         SymbolDefinition::TYPE_TRAIT,
         SymbolDefinition::TYPE_ENUM,
     ];
+
+    /**
+     * The extensions of the files, other than PHP files, which may mention a class file by its path.
+     */
+    protected const TEXT_EXTENSIONS = ['md', 'neon', 'xml', 'yml', 'yaml', 'json', 'txt', 'dist', 'sh', 'js', 'ts', 'feature', 'ini', 'toml'];
+
+    /**
+     * Files without an extension which may too.
+     */
+    protected const TEXT_FILE_NAMES = ['.distignore', '.gitattributes', '.gitignore', '.editorconfig', 'Makefile'];
+
+    /**
+     * Directories whose files are not the project's own.
+     */
+    protected const EXCLUDED_DIRECTORIES = ['vendor', 'vendor-prefixed', 'node_modules'];
 
     /**
      * `__DIR__ . '/relative/path'` and `dirname(__FILE__) . '/relative/path'`.
@@ -299,9 +316,10 @@ class ClassFileRenamer
     }
 
     /**
-     * Update the paths written in the files, so they reach what they did before:
-     * * `__DIR__ . '/relative/path'`, in a file which moved, or to a file which moved;
-     * * a moved file's path relative to the project, e.g. `'includes/class-foo.php'`, anywhere.
+     * Update the paths written in the files given, and in the project's other PHP and text files, e.g. `phpstan.neon`,
+     * so they reach what they did before:
+     * * in PHP files, `__DIR__ . '/relative/path'`, in a file which moved, or to a file which moved;
+     * * a moved file's path relative to the project, e.g. `includes/class-foo.php`, anywhere.
      *
      * Warns about what could not be followed: other uses of `__DIR__` and `__FILE__` in a file which changed
      * directory, and old file names which are still mentioned.
@@ -335,9 +353,18 @@ class ClassFileRenamer
             ? null
             : $this->getMentionPattern(array_keys($oldFileNames));
 
-        foreach ($absoluteFilePaths as $oldFilePath) {
+        // The files given, by their old paths, and the project's other files; the moved files are among the first.
+        $allFilePaths = array_unique(
+            array_merge($absoluteFilePaths, array_diff($this->findProjectTextFiles(), array_values($moves)))
+        );
+
+        foreach ($allFilePaths as $oldFilePath) {
             $filePath = $moves[$oldFilePath] ?? $oldFilePath;
-            if ('php' !== strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) || !$this->filesystem->fileExists($filePath)) {
+            if (!$this->filesystem->fileExists($filePath)) {
+                continue;
+            }
+            $isPhp = 'php' === strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            if (!$isPhp && !$this->isTextFile($filePath)) {
                 continue;
             }
 
@@ -346,7 +373,7 @@ class ClassFileRenamer
 
             $contents = $this->filesystem->read($filePath);
 
-            $updated = (string) preg_replace_callback(
+            $updated = !$isPhp ? $contents : (string) preg_replace_callback(
                 self::DIRECTORY_RELATIVE_PATH_PATTERN,
                 function (array $matches) use ($moves, $oldDirectory, $newDirectory): string {
                     $target = $this->normalize($oldDirectory . $matches[4]);
@@ -401,7 +428,53 @@ class ClassFileRenamer
     {
         return '#(?<![A-Za-z0-9_-])('
             . implode('|', array_map(fn(string $name): string => preg_quote($name, '#'), $names))
-            . ')(?![A-Za-z0-9_-])#';
+            . ')(?![A-Za-z0-9_-]|\.[A-Za-z0-9])#';
+    }
+
+    /**
+     * Is this a file, other than a PHP file, which may mention a class file by its path, e.g. `phpstan.neon`?
+     *
+     * @param string $filePath The file's path.
+     */
+    protected function isTextFile(string $filePath): bool
+    {
+        return in_array(strtolower(pathinfo($filePath, PATHINFO_EXTENSION)), self::TEXT_EXTENSIONS, true)
+            || in_array(basename($filePath), self::TEXT_FILE_NAMES, true);
+    }
+
+    /**
+     * The project's own PHP and text files: those in the project directory, outside its dependencies' directories
+     * and its hidden directories, other than `.github`.
+     *
+     * @return string[] Absolute paths.
+     *
+     * @throws FilesystemException
+     */
+    protected function findProjectTextFiles(): array
+    {
+        $files = [];
+        $directories = [$this->projectDirectory];
+        while (!empty($directories)) {
+            $directory = (string) array_shift($directories);
+            foreach ($this->filesystem->listContents($directory, false) as $attributes) {
+                $path = str_replace('\\', '/', $this->filesystem->makeAbsolute($attributes->path()));
+                $name = basename($path);
+                if ($attributes->isDir()) {
+                    if (
+                        !in_array($name, self::EXCLUDED_DIRECTORIES, true)
+                        && ('.' !== $name[0] || '.github' === $name)
+                    ) {
+                        $directories[] = $path;
+                    }
+                    continue;
+                }
+                if ('php' === strtolower(pathinfo($path, PATHINFO_EXTENSION)) || $this->isTextFile($path)) {
+                    $files[] = $path;
+                }
+            }
+        }
+        sort($files);
+        return $files;
     }
 
     /**
