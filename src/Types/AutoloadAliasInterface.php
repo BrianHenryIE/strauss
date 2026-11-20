@@ -11,8 +11,8 @@
 namespace BrianHenryIE\Strauss\Types;
 
 /**
- * @phpstan-type ClassAliasArray array{'type':'class',isabstract:bool,classname:string,namespace?:string|null,extends:string,implements:array<string>}
- * @phpstan-type InterfaceAliasArray array{'type':'interface',interfacename:string,namespace?:string|null,extends:array<string>}
+ * @phpstan-type ClassAliasArray array{'type':'class',classname:string,namespace?:string|null,concrete:string}
+ * @phpstan-type InterfaceAliasArray array{'type':'interface',interfacename:string,namespace?:string|null,concrete:string}
  * @phpstan-type TraitAliasArray array{'type':'trait',traitname:string,namespace?:string|null,use:array<string>}
  * @phpstan-type EnumAliasArray array{'type':'enum',enumname:string,namespace?:string|null,concrete:string}
  */

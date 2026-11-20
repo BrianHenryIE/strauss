@@ -65,12 +65,13 @@ class VendorComposerAutoloadTest extends TestCase
                 trigger_error($err, E_USER_ERROR);
             }
 
-            if (file_exists(__DIR__ . '/composer/autoload_aliases.php')) {
-                require_once __DIR__ . '/composer/autoload_aliases.php';
-            }
-
             require_once __DIR__ . '/composer/autoload_real.php';
-            return ComposerAutoloaderInitb94e268379fc65b46685517f75b1e1ba::getLoader();
+            return call_user_func(static function ($loader) {
+                if (file_exists(__DIR__ . '/composer/autoload_aliases.php')) {
+                    require_once __DIR__ . '/composer/autoload_aliases.php';
+                }
+                return $loader;
+            }, ComposerAutoloaderInitb94e268379fc65b46685517f75b1e1ba::getLoader());
             EOD;
 
         $config = Mockery::mock(AutoloadConfigInterface::class);

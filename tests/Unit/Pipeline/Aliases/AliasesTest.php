@@ -83,12 +83,8 @@ class AliasesTest extends TestCase
             	array (
             		'type' => 'class',
             		'classname' => 'Baz',
-            		'isabstract' => false,
             		'namespace' => 'Foo\\Bar',
-            		'extends' => 'Baz\\Foo\\Bar\\Baz',
-            		'implements' =>
-            			array (
-            			),
+            		'concrete' => 'Baz\\Foo\\Bar\\Baz',
             ),
             EOD;
 
@@ -196,10 +192,7 @@ class AliasesTest extends TestCase
             		'type' => 'interface',
             		'interfacename' => 'Baz',
             		'namespace' => 'Foo\\Bar',
-            		'extends' =>
-            		array (
-            			0 => 'Baz\\Foo\\Bar\\Baz',
-            			),
+            		'concrete' => 'Baz\\Foo\\Bar\\Baz',
             ),
             EOD;
 
@@ -274,8 +267,8 @@ class AliasesTest extends TestCase
     }
 
     /**
-     * Enums cannot be aliased with an `extends` shim (they are final), so the generated array entry carries the
-     * `concrete` replacement FQDN for a `class_alias()` call in the AliasAutoloader.
+     * As for classes and interfaces, the generated array entry carries the `concrete` replacement FQDN for a
+     * `class_alias()` call in the AliasAutoloader.
      *
      * This test only inspects the generated file's contents so runs on all PHP versions.
      */
@@ -389,5 +382,64 @@ class AliasesTest extends TestCase
         $this->assertTrue(\EnumAliasTest\Status::Ready === \EnumAliasTestPrefix\EnumAliasTest\Status::Ready);
         $this->assertSame('done', \EnumAliasTest\Status::from('done')->value);
         $this->assertInstanceOf(\EnumAliasTestPrefix\EnumAliasTest\Status::class, \EnumAliasTest\Status::Ready);
+    }
+
+    /**
+     * Include the generated aliases file and check the original class and interface names are true aliases of the
+     * renamed ones, so a final class loads by its original name and objects satisfy either name.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/363
+     */
+    public function test_class_and_interface_alias_loads(): void
+    {
+        $fileSystem = $this->getFileSystem();
+
+        $prefixedFile = 'vendor-prefixed/class-alias-test/greeting.php';
+        $fileSystem->write(
+            $prefixedFile,
+            '<?php namespace ClassAliasTestPrefix\\ClassAliasTest; interface Greeter {} final class Greeting implements Greeter {}'
+        );
+        include $fileSystem->makeAbsolute($prefixedFile);
+
+        $config = Mockery::mock(AliasesConfigInterface::class);
+        $config->expects('getAbsoluteVendorDirectory')->times(1)->andReturn('vendor');
+        $config->expects('getNamespacePrefix')->times(1)->andReturn('ClassAliasTestPrefix\\');
+
+        $sut = new Aliases(
+            $config,
+            $fileSystem,
+            $this->getLogger()
+        );
+
+        $symbols = new DiscoveredSymbols();
+
+        $file = new File(
+            'vendor/class-alias-test/greeting.php',
+            'class-alias-test/greeting.php',
+            'vendor-prefixed/class-alias-test/greeting.php',
+        );
+
+        $namespaceSymbol = new NamespaceSymbol('ClassAliasTest', $file);
+        $namespaceSymbol->setDoRename(true);
+        $namespaceSymbol->setLocalReplacement('ClassAliasTestPrefix\\ClassAliasTest');
+
+        $interfaceSymbol = new InterfaceSymbol('ClassAliasTest\\Greeter', $file, $namespaceSymbol);
+        $interfaceSymbol->setDoRename(true);
+        $symbols->add($interfaceSymbol);
+
+        $classSymbol = new ClassSymbol('ClassAliasTest\\Greeting', $file, $namespaceSymbol, false, null, ['ClassAliasTest\\Greeter']);
+        $classSymbol->setDoRename(true);
+        $symbols->add($classSymbol);
+
+        $sut->writeAliasesFileForSymbols($symbols);
+
+        include $fileSystem->makeAbsolute('vendor/composer/autoload_aliases.php');
+
+        // Referencing the original names triggers the AliasAutoloader, whose `class_alias()` calls alias them to the
+        // already-loaded renamed class and interface.
+        $greeting = new \ClassAliasTest\Greeting();
+        $this->assertSame(\ClassAliasTestPrefix\ClassAliasTest\Greeting::class, get_class($greeting));
+        $this->assertInstanceOf(\ClassAliasTest\Greeter::class, $greeting);
+        $this->assertInstanceOf(\ClassAliasTest\Greeting::class, new \ClassAliasTestPrefix\ClassAliasTest\Greeting());
     }
 }

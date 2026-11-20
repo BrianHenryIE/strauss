@@ -187,10 +187,8 @@ class EnumsIntegrationTest extends IntegrationTestCase
         exec('composer dump-autoload');
 
         // Case identity, ::from(), instanceof, and match must all work through the aliases at runtime.
-        // The last three entries pin a known limitation: unlike the `extends` shim used for classes, a
-        // `class_alias()`'d enum does not implement its original interface names, so `instanceof` against the
-        // aliased original interface is false — only the renamed interface matches. (`interface_exists()` is
-        // needed first because `instanceof` does not trigger autoloading of the alias.)
+        // Interfaces are aliased with `class_alias()` too, so the enum is `instanceof` its interface by either name.
+        // @see https://github.com/BrianHenryIE/strauss/issues/363
         $testPhpString = implode('', [
             "require_once 'vendor-prefixed/autoload.php';",
             "require_once 'vendor/composer/autoload_aliases.php';",
@@ -211,6 +209,6 @@ class EnumsIntegrationTest extends IntegrationTestCase
         $runtimeOutput = implode(PHP_EOL, $runtimeOutput);
 
         $this->assertEquals(0, $runtimeExitCode, $runtimeOutput);
-        $this->assertEquals('[true,"Done",true,true,"consumer:done",true,false,true]', $runtimeOutput);
+        $this->assertEquals('[true,"Done",true,true,"consumer:done",true,true,true]', $runtimeOutput);
     }
 }

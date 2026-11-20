@@ -78,7 +78,7 @@ class StraussIssue81Test extends IntegrationTestCase
         $this->assertEquals(0, $exitCode, $output);
 
         $phpString = $this->getFileSystem()->read($this->testsWorkingDir . '/vendor/composer/autoload_aliases.php');
-        $this->assertStringContainsString("'extends' => 'Issue\\\\I81\\\\Psr\\\\Log\\\\NullLogger'", $phpString);
+        $this->assertStringContainsString("'concrete' => 'Issue\\\\I81\\\\Psr\\\\Log\\\\NullLogger'", $phpString);
 
         exec('composer dump-autoload');
 
