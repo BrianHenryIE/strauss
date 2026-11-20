@@ -431,7 +431,7 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
         // The item's own type wins over the statement's, e.g. `use Prefix\{function foo}`.
         $location->setUseType(Use_::TYPE_UNKNOWN !== $item->type ? $item->type : $stmtUseType);
         $location->setInGroupUse($inGroupUse);
-        $location->setHasAlias(!is_null($item->alias));
+        $location->setAlias(is_null($item->alias) ? null : $item->alias->toString());
         if (!$inGroupUse) {
             // An import is already fully qualified.
             $location->setResolvedName($item->name->toString());

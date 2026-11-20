@@ -1105,15 +1105,54 @@ class ChangePlanner
             return [];
         }
 
-        $positions = [
-            [
-                'start' => $insertionOffset,
-                'end' => $insertionOffset,
-                'replacement' => is_null($unnamedNamespaceOffset)
-                    ? 'namespace ' . $namespace . ';' . PHP_EOL . PHP_EOL
-                    : ' ' . $namespace,
-            ],
-        ];
+        // Global classes which are not moved are imported, so their names in the code and in doc comments still
+        // refer to them. Null: there is nowhere to add imports.
+        $importInsertionOffset = $codeMap->getNamespaceInsertionOffset();
+        $classesToImport = is_null($importInsertionOffset)
+            ? ['imported' => [], 'toImport' => []]
+            : $this->getGlobalClassesToImport($codeMap, $discoveredSymbols);
+
+        $toImport = array_values($classesToImport['toImport']);
+        usort($toImport, 'strcasecmp');
+
+        if (is_null($unnamedNamespaceOffset)) {
+            $imports = implode('', array_map(fn(string $name): string => 'use ' . $name . ';' . PHP_EOL, $toImport));
+            // No blank line when the imports are followed by the file's own: `use `, `use function `, `use const `.
+            foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+                if ($useItem->getStart() > $insertionOffset && $useItem->getStart() <= $insertionOffset + strlen('use function ')) {
+                    $imports = rtrim($imports, PHP_EOL);
+                    break;
+                }
+            }
+            $positions = [
+                [
+                    'start' => $insertionOffset,
+                    'end' => $insertionOffset,
+                    'replacement' => 'namespace ' . $namespace . ';' . PHP_EOL . PHP_EOL
+                        . ($imports ? $imports . PHP_EOL : ''),
+                ],
+            ];
+        } else {
+            $positions = [
+                [
+                    'start' => $insertionOffset,
+                    'end' => $insertionOffset,
+                    'replacement' => ' ' . $namespace,
+                ],
+            ];
+            if (!empty($toImport) && !is_null($importInsertionOffset)) {
+                // The contents are not known here: the block's statements are assumed to be indented by four spaces.
+                $indent = '    ';
+                $positions[] = [
+                    'start' => $importInsertionOffset,
+                    'end' => $importInsertionOffset,
+                    'replacement' => implode(
+                        PHP_EOL . $indent,
+                        array_map(fn(string $name): string => 'use ' . $name . ';', $toImport)
+                    ) . PHP_EOL . PHP_EOL . $indent,
+                ];
+            }
+        }
 
         $positions = array_merge($positions, $this->findImportsCollidingWithMovedSymbols($codeMap, $discoveredSymbols));
 
@@ -1138,6 +1177,13 @@ class ChangePlanner
                 // Replaced by findGlobalSymbolsPositions().
                 continue;
             }
+            if (
+                0 === strcasecmp($resolvedName, $name->getName())
+                && isset($classesToImport['imported'][strtolower($name->getName())])
+            ) {
+                // Imported: `use Exception;`.
+                continue;
+            }
             $positions[] = [
                 'start' => $name->getStart(),
                 'end' => $name->getEnd(),
@@ -1146,6 +1192,150 @@ class ChangePlanner
         }
 
         return $positions;
+    }
+
+    /**
+     * The global classes used in a file moving into a namespace which are not themselves moved, e.g. `Exception`,
+     * `WP_Post`: they are imported, `use Exception;`, rather than each use being qualified, so the names in doc
+     * comments refer to them too.
+     *
+     * A name which is declared in the file, or which is another import's name, cannot be imported; its uses in the
+     * code are qualified instead.
+     *
+     * @param FileCodeMap       $codeMap           The locations in a file which is moving into a namespace.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     *
+     * @return array{imported:array<string,string>, toImport:array<string,string>} Keyed by lowercase name: every name
+     *                    which will be imported, and those of them which the file does not import already.
+     */
+    protected function getGlobalClassesToImport(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
+    {
+        $globalClassesInterfacesTraitsToRename = $this->getIndex($discoveredSymbols)->getGlobalClassesInterfacesTraitsToRename();
+
+        /**
+         * The names declared in the file, as they will be: lowercase.
+         *
+         * @var array<string, true> $declaredNames
+         */
+        $declaredNames = [];
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::CLASS_DEFINITION,
+                CodeLocation::INTERFACE_DEFINITION,
+                CodeLocation::TRAIT_DEFINITION,
+                CodeLocation::ENUM_DEFINITION
+            ) as $definition
+        ) {
+            $symbol = $this->getGlobalSymbolByName($definition->getText(), $globalClassesInterfacesTraitsToRename);
+            $declaredName = $symbol && $this->isMovedIntoNamespace($symbol)
+                ? substr((string) strrchr($symbol->getLocalReplacement(), '\\'), 1)
+                : $definition->getText();
+            $declaredNames[strtolower($declaredName)] = true;
+        }
+
+        /**
+         * The names the file's imports are used by, lowercase, and what each imports.
+         *
+         * @var array<string, string> $existingImports
+         */
+        $existingImports = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+            if (CodeLocation::USE_TYPE_NORMAL !== ($useItem->getUseType() ?? CodeLocation::USE_TYPE_NORMAL)) {
+                continue;
+            }
+            $localName = $useItem->getAlias()
+                ?? ltrim((string) (strrchr('\\' . $useItem->getName(), '\\') ?: ''), '\\');
+            $existingImports[strtolower($localName)] = $useItem->isInGroupUse() ? '' : $useItem->getName();
+        }
+
+        $canImport = function (string $name) use ($declaredNames, $existingImports, $globalClassesInterfacesTraitsToRename): bool {
+            $key = strtolower($name);
+            return !isset($declaredNames[$key])
+                && !in_array($key, GlobalsNamespacer::RESERVED_NAMES, true)
+                // An import of the same global class, `use Exception;`, is fine: it is kept.
+                && (!isset($existingImports[$key]) || 0 === strcasecmp($existingImports[$key], $name))
+                // Moved classes are fully qualified instead.
+                && is_null($this->getGlobalSymbolByName($name, $globalClassesInterfacesTraitsToRename));
+        };
+
+        /**
+         * @var array<string, string> $imported
+         */
+        $imported = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::NAME) as $name) {
+            $resolvedName = $name->getResolvedName() ?? $name->getName();
+            if (
+                $name->isFullyQualified()
+                || false !== strpos($name->getName(), '\\')
+                || in_array(strtolower($name->getName()), ['self', 'parent', 'static'], true)
+                // Resolved through an import to something else.
+                || 0 !== strcasecmp($resolvedName, $name->getName())
+                || !$canImport($name->getName())
+            ) {
+                continue;
+            }
+            $imported[strtolower($name->getName())] ??= $name->getName();
+        }
+
+        foreach ($this->getClassNamesInDocComments($codeMap) as $name) {
+            // Without an import, a name in a doc comment is not known to be a class: one used as an import's name is.
+            if (!isset($existingImports[strtolower($name)]) && $canImport($name)) {
+                $imported[strtolower($name)] ??= $name;
+            }
+        }
+
+        return [
+            'imported' => $imported,
+            'toImport' => array_diff_key($imported, $existingImports),
+        ];
+    }
+
+    /**
+     * The unqualified, capitalised names written as types in a file's doc comments, e.g. `WP_Post` in
+     * `@param WP_Post|null $post` and `{@see WP_Post::get_instance()}`. Lowercase names are taken to be PHPDoc's own
+     * types, `non-empty-string`, and `@template` names are left out.
+     *
+     * @param FileCodeMap $codeMap The locations in the file's contents.
+     *
+     * @return string[]
+     */
+    protected function getClassNamesInDocComments(FileCodeMap $codeMap): array
+    {
+        $tags = 'param|return|var|throws|property(?:-read|-write)?|method|mixin|extends|implements|use|see|uses';
+        // The type after the tag: up to whitespace, except inside `<>`, `()` and `{}`, e.g. `array<int, WP_Post>`.
+        $typePattern = '/@(?:phpstan-|psalm-)?(?:' . $tags . ')\s+((?:[^\s<({]|<[^>\n]*>|\([^)\n]*\)|\{[^}\n]*\})+)/';
+        // Not part of a longer or qualified name, a variable, a constant, a URL, a string, or an array shape's key.
+        $namePattern = '/(?<![\\\\\w$:\'"\/.-])[A-Z]\w*(?![\w\\\\(\'"\/.-])(?!\??:(?!:))/';
+        $templatePattern = '/@(?:phpstan-|psalm-)?template(?:-covariant|-contravariant)?\s+(\w+)/';
+        // Capitalised spellings of types which are not classes.
+        $notClasses = ['integer', 'boolean', 'double', 'number', 'numeric', 'scalar', 'resource'];
+
+        $names = [];
+        $templates = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::DOC_COMMENT) as $docComment) {
+            $text = $docComment->getText();
+            if (preg_match_all($templatePattern, $text, $templateMatches)) {
+                $templates = array_merge($templates, $templateMatches[1]);
+            }
+            if (!preg_match_all($typePattern, $text, $typeMatches)) {
+                continue;
+            }
+            foreach ($typeMatches[1] as $type) {
+                if (preg_match_all($namePattern, $type, $nameMatches)) {
+                    $names = array_merge($names, $nameMatches[0]);
+                }
+            }
+        }
+
+        return array_values(
+            array_unique(
+                array_filter(
+                    $names,
+                    fn(string $name): bool => !in_array($name, $templates, true)
+                        && !in_array(strtolower($name), $notClasses, true)
+                )
+            )
+        );
     }
 
     /**

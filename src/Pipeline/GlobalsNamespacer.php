@@ -51,7 +51,7 @@ class GlobalsNamespacer
      * @see https://www.php.net/manual/en/reserved.keywords.php
      * @see https://www.php.net/manual/en/reserved.other-reserved-words.php
      */
-    protected const RESERVED_NAMES = [
+    public const RESERVED_NAMES = [
         'abstract', 'and', 'array', 'as', 'bool', 'break', 'callable', 'case', 'catch', 'class', 'clone', 'const',
         'continue', 'declare', 'default', 'do', 'echo', 'else', 'elseif', 'empty', 'enddeclare', 'endfor',
         'endforeach', 'endif', 'endswitch', 'endwhile', 'eval', 'exit', 'extends', 'false', 'final', 'finally',

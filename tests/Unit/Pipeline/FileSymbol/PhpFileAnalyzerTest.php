@@ -371,6 +371,9 @@ class PhpFileAnalyzerTest extends TestCase
             'after declare' => ["<?php\ndeclare(strict_types=1);\n\n// Foo.\nclass Foo {}\n", "// Foo.\nclass Foo {}\n"],
             'inline HTML before the open tag' => ["#!/usr/bin/env php\n<?php\nclass Foo {}\n", "class Foo {}\n"],
             'no statements' => ["<?php\n", null],
+            'inside an unnamed namespace block' => ["<?php\ndeclare(strict_types=1);\nnamespace {\n    // Foo.\n    class Foo {}\n}\n", "// Foo.\n    class Foo {}\n}\n"],
+            'empty unnamed namespace block' => ["<?php\nnamespace {\n}\n", null],
+            'named namespace block' => ["<?php\nnamespace Foo {\n    class Bar {}\n}\n", "namespace Foo {\n    class Bar {}\n}\n"],
         ];
     }
 
@@ -439,5 +442,21 @@ class PhpFileAnalyzerTest extends TestCase
         );
 
         self::assertSame($expected, $actual);
+    }
+
+    /**
+     * @covers ::analyze
+     */
+    public function test_import_alias_is_recorded(): void
+    {
+        $codeMap = (new PhpFileAnalyzer())->analyze("<?php\nuse Foo\\Bar as Baz;\nuse Foo\\Qux;\n");
+        self::assertNotNull($codeMap);
+
+        $imports = $codeMap->getLocationsOfType(CodeLocation::USE_NAME);
+
+        self::assertSame('Baz', $imports[0]->getAlias());
+        self::assertTrue($imports[0]->hasAlias());
+        self::assertNull($imports[1]->getAlias());
+        self::assertFalse($imports[1]->hasAlias());
     }
 }

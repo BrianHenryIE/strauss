@@ -21,6 +21,7 @@ use BrianHenryIE\Strauss\Files\FileCodeMap;
 use PhpParser\Error;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Declare_;
+use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
@@ -161,7 +162,8 @@ class PhpFileAnalyzer
     }
 
     /**
-     * The start of the first top-level statement which is not a `declare`, including its leading comments.
+     * The start of the first top-level statement which is not a `declare`, including its leading comments. When that
+     * is an unnamed block, `namespace { }`, the first statement inside it.
      *
      * @param Node[] $ast    The parsed statements.
      * @param int    $offset The position in the original contents of the first character parsed.
@@ -171,6 +173,9 @@ class PhpFileAnalyzer
         foreach ($ast as $statement) {
             if ($statement instanceof Declare_) {
                 continue;
+            }
+            if ($statement instanceof Namespace_ && is_null($statement->name)) {
+                return $this->getNamespaceInsertionOffset($statement->stmts, $offset);
             }
             $comments = $statement->getComments();
             $start = empty($comments) ? $statement->getStartFilePos() : $comments[0]->getStartFilePos();

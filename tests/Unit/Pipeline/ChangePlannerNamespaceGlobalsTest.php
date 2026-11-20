@@ -118,12 +118,15 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
 
             namespace Company\Project\Greeting;
 
+            use Acme_Legacy;
+            use Countable;
+            use InvalidArgumentException;
             use Other\Library\Helper;
 
             /**
              * Formal.
              */
-            class Formal extends \Acme_Legacy implements \Company\Project\Greeter, \Countable
+            class Formal extends Acme_Legacy implements \Company\Project\Greeter, Countable
             {
                 public static function create(): self
                 {
@@ -134,7 +137,7 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
                 {
                     $helper = new \Other\Library\Helper();
                     if (!($helper instanceof \Other\Library\Helper)) {
-                        throw new \InvalidArgumentException(strtoupper('no'));
+                        throw new InvalidArgumentException(strtoupper('no'));
                     }
                     return parent::count() + PHP_INT_SIZE;
                 }
@@ -245,7 +248,7 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
     {
         $contents = "<?php\nException::class;\nclass Acme_Greeter {}\n";
 
-        $expected = "<?php\nnamespace Company\\Project;\n\n\\Exception::class;\nclass Greeter {}\n";
+        $expected = "<?php\nnamespace Company\\Project;\n\nuse Exception;\n\nException::class;\nclass Greeter {}\n";
 
         self::assertSame($expected, $this->replace($contents));
     }
@@ -270,7 +273,7 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
         return [
             'the unnamed block is named' => [
                 "<?php\nnamespace {\n    class Acme_Greeting_Formal extends Exception implements Acme_Greeter {}\n}\n",
-                "<?php\nnamespace Company\\Project\\Greeting {\n    class Formal extends \\Exception implements \\Company\\Project\\Greeter {}\n}\n",
+                "<?php\nnamespace Company\\Project\\Greeting {\n    use Exception;\n\n    class Formal extends Exception implements \\Company\\Project\\Greeter {}\n}\n",
             ],
             'after a declare' => [
                 "<?php\ndeclare(strict_types=1);\n\nnamespace {\n    class Acme_Greeter {}\n}\n",
@@ -319,6 +322,69 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
     }
 
     /**
+     * @return array<string, array{0:string, 1:string}> Contents, expected.
+     */
+    public static function globalClassImportsDataProvider(): array
+    {
+        return [
+            'used in code and in doc comments, sorted, once each' => [
+                "<?php\n/**\n * @param WP_Post \$post\n * @throws Exception\n */\nfunction acme_helper(WP_Post \$post, ArrayObject \$list): WP_Post { throw new Exception(); }\n",
+                "<?php\nnamespace Company\\Project;\n\nuse ArrayObject;\nuse Exception;\nuse WP_Post;\n\n/**\n * @param WP_Post \$post\n * @throws Exception\n */\nfunction acme_helper(WP_Post \$post, ArrayObject \$list): WP_Post { throw new Exception(); }\n",
+            ],
+            'only in a doc comment' => [
+                "<?php\nclass Acme_Greeter {\n    /**\n     * @var WP_Post|null\n     * @return array<int, WP_Error>|string|Array|T\n     * @template T\n     * @see https://example.org/Docs and {@see WP_Query::get()}\n     */\n    public \$post;\n}\n",
+                "<?php\nnamespace Company\\Project;\n\nuse WP_Error;\nuse WP_Post;\nuse WP_Query;\n\nclass Greeter {\n    /**\n     * @var WP_Post|null\n     * @return array<int, WP_Error>|string|Array|T\n     * @template T\n     * @see https://example.org/Docs and {@see WP_Query::get()}\n     */\n    public \$post;\n}\n",
+            ],
+            'already fully qualified, and names which are not global classes' => [
+                "<?php\nuse Vendor\\Thing;\nclass Acme_Greeter extends \\Exception implements Vendor\\Contract { public function a(Thing \$t, self \$s): static {} }\n",
+                "<?php\nnamespace Company\\Project;\n\nuse Vendor\\Thing;\nclass Greeter extends \\Exception implements \\Vendor\\Contract { public function a(\\Vendor\\Thing \$t, self \$s): static {} }\n",
+            ],
+            'already imported' => [
+                "<?php\nuse Exception;\nclass Acme_Greeter extends Exception {}\n",
+                "<?php\nnamespace Company\\Project;\n\nuse Exception;\nclass Greeter extends Exception {}\n",
+            ],
+            'before the file\'s own imports' => [
+                "<?php\nuse Vendor\\Thing;\n\nclass Acme_Greeter extends Exception {}\n",
+                "<?php\nnamespace Company\\Project;\n\nuse Exception;\nuse Vendor\\Thing;\n\nclass Greeter extends Exception {}\n",
+            ],
+            'the name is declared in the file: qualified instead' => [
+                "<?php\nclass Acme_Greeter extends Greeter {}\n",
+                "<?php\nnamespace Company\\Project;\n\nclass Greeter extends \\Greeter {}\n",
+            ],
+            'the name is another import\'s alias: qualified instead' => [
+                "<?php\nuse Vendor\\Thing as Exception;\nclass Acme_Greeter { /** @throws Exception */ public function a(): Exception {} }\n",
+                "<?php\nnamespace Company\\Project;\n\nuse Vendor\\Thing as Exception;\nclass Greeter { /** @throws Exception */ public function a(): \\Vendor\\Thing {} }\n",
+            ],
+            'a global class which is not moved' => [
+                "<?php\nclass Acme_Greeter extends Acme_Legacy {}\n",
+                "<?php\nnamespace Company\\Project;\n\nuse Acme_Legacy;\n\nclass Greeter extends Acme_Legacy {}\n",
+            ],
+            'in an unnamed namespace block' => [
+                "<?php\nnamespace {\n    class Acme_Greeter extends Exception implements Countable {}\n}\n",
+                "<?php\nnamespace Company\\Project {\n    use Countable;\n    use Exception;\n\n    class Greeter extends Exception implements Countable {}\n}\n",
+            ],
+        ];
+    }
+
+    /**
+     * Global classes which are not moved are imported, `use Exception;`, so the names in the code and in the doc
+     * comments keep referring to them.
+     *
+     * @covers ::findGlobalsNamespacingPositions
+     * @covers ::getGlobalClassesToImport
+     * @covers ::getClassNamesInDocComments
+     * @dataProvider \BrianHenryIE\Strauss\Tests\Unit\Pipeline\ChangePlannerNamespaceGlobalsTest::globalClassImportsDataProvider
+     *
+     * @param string $contents The PHP to update.
+     * @param string $expected The PHP after.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('globalClassImportsDataProvider')]
+    public function test_global_classes_are_imported(string $contents, string $expected): void
+    {
+        self::assertSame($expected, $this->replace($contents));
+    }
+
+    /**
      * A file with only a function moves too.
      *
      * @covers ::findFunctionPositions
@@ -340,10 +406,12 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
             <?php
             namespace Company\Project;
 
+            use ArrayObject;
+
             if (!function_exists('Company\\Project\\acme_helper')) {
-                function acme_helper(): \ArrayObject
+                function acme_helper(): ArrayObject
                 {
-                    return new \ArrayObject([strlen('x')]);
+                    return new ArrayObject([strlen('x')]);
                 }
             }
             EOD;

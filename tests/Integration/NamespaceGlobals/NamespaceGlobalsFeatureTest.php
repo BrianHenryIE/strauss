@@ -212,17 +212,18 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
         $this->assertStringContainsString("<?php\n\nnamespace Company\\Project;\n\n/**\n * Says hello.\n */\ninterface Greeter\n", $greeter);
 
         $base = $this->read('src/Acme/Base.php');
-        $this->assertStringContainsString("declare(strict_types=1);\n\nnamespace Company\\Project;\n\n", $base);
-        $this->assertStringContainsString('abstract class Base implements \\Company\\Project\\Greeter, \\Countable', $base);
+        // Global classes which are not moved are imported.
+        $this->assertStringContainsString("declare(strict_types=1);\n\nnamespace Company\\Project;\n\nuse Countable;\n\n", $base);
+        $this->assertStringContainsString('abstract class Base implements \\Company\\Project\\Greeter, Countable', $base);
 
         $formal = $this->read('src/Acme/Greeting/Formal.php');
-        $this->assertStringContainsString('namespace Company\\Project\\Greeting;', $formal);
+        $this->assertStringContainsString("namespace Company\\Project\\Greeting;\n\nuse ArrayObject;\nuse InvalidArgumentException;\n\n", $formal);
         $this->assertStringContainsString('class Formal extends \\Company\\Project\\Base', $formal);
         $this->assertStringContainsString('public static function create(): self', $formal);
         $this->assertStringContainsString('return new static();', $formal);
         $this->assertStringContainsString('instanceof \\Company\\Project\\Greeter', $formal);
-        $this->assertStringContainsString("[\\Company\\Project\\Greeting\\Formal::class, 'Company\\\\Project\\\\Base', get_class(new \\ArrayObject())]", $formal);
-        $this->assertStringContainsString('throw new \\InvalidArgumentException(', $formal);
+        $this->assertStringContainsString("[\\Company\\Project\\Greeting\\Formal::class, 'Company\\\\Project\\\\Base', get_class(new ArrayObject())]", $formal);
+        $this->assertStringContainsString('throw new InvalidArgumentException(', $formal);
     }
 
     public function test_files_which_cannot_move(): void

@@ -56,7 +56,8 @@ class FileCodeMap
 
     /**
      * Where a `namespace` declaration could be inserted: the start of the first statement which is not a `declare`,
-     * including its leading comments. Null when unknown, e.g. the file has no statements.
+     * including its leading comments. When that is an unnamed block, `namespace { }`, the first statement inside it,
+     * where imports could be inserted. Null when unknown, e.g. the file has no statements.
      */
     protected ?int $namespaceInsertionOffset;
 
@@ -109,7 +110,9 @@ class FileCodeMap
 
     /**
      * Where a `namespace` declaration could be inserted, when moving a file's global symbols into a namespace: the
-     * start of the first statement which is not a `declare`, including its leading comments.
+     * start of the first statement which is not a `declare`, including its leading comments. When that is an unnamed
+     * block, `namespace { }`, which is named instead ({@see self::getUnnamedNamespaceOffsets()}), the first statement
+     * inside it, where imports could be inserted.
      *
      * @see \BrianHenryIE\Strauss\Pipeline\ChangePlanner::findGlobalsNamespacingPositions()
      */
