@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\DumpAutoloadCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
 use BrianHenryIE\Strauss\Console\Commands\PrefixComposerAutoloadFilesCommand;
+use BrianHenryIE\Strauss\Console\Commands\NamespaceGlobalsCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 use BrianHenryIE\Strauss\Console\Commands\SymbolsCommand;
 use BrianHenryIE\Strauss\Console\Commands\WorkerCommand;
@@ -35,6 +36,7 @@ class Application extends BaseApplication
         $this->add($composeCommand);
 
         $this->add(new ReplaceCommand());
+        $this->add(new NamespaceGlobalsCommand());
         $this->add(new DumpAutoloadCommand());
         $this->add(new IncludeAutoloaderCommand());
         $this->add(new PrefixComposerAutoloadFilesCommand());

@@ -359,4 +359,37 @@ class PhpFileAnalyzerTest extends TestCase
         self::assertNotNull($analyzer->analyze('<?php $ok = 1;'));
         self::assertNull($analyzer->getLastErrorMessage());
     }
+
+    /**
+     * @return array<string, array{0:string, 1:?string}> Contents, and the text from the expected offset, or null.
+     */
+    public static function namespaceInsertionOffsetDataProvider(): array
+    {
+        return [
+            'first statement' => ["<?php\nclass Foo {}\n", "class Foo {}\n"],
+            'leading comments' => ["<?php\n\n/**\n * Foo.\n */\nclass Foo {}\n", "/**\n * Foo.\n */\nclass Foo {}\n"],
+            'after declare' => ["<?php\ndeclare(strict_types=1);\n\n// Foo.\nclass Foo {}\n", "// Foo.\nclass Foo {}\n"],
+            'inline HTML before the open tag' => ["#!/usr/bin/env php\n<?php\nclass Foo {}\n", "class Foo {}\n"],
+            'no statements' => ["<?php\n", null],
+        ];
+    }
+
+    /**
+     * @covers ::analyze
+     * @covers ::getNamespaceInsertionOffset
+     * @dataProvider \BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzerTest::namespaceInsertionOffsetDataProvider
+     *
+     * @param string  $contents The PHP.
+     * @param ?string $expected The contents from the offset on; null for no offset.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('namespaceInsertionOffsetDataProvider')]
+    public function test_namespace_insertion_offset(string $contents, ?string $expected): void
+    {
+        $codeMap = (new PhpFileAnalyzer())->analyze($contents);
+        self::assertNotNull($codeMap);
+
+        $offset = $codeMap->getNamespaceInsertionOffset();
+
+        self::assertSame($expected, is_null($offset) ? null : substr($contents, $offset));
+    }
 }

@@ -19,6 +19,8 @@ namespace BrianHenryIE\Strauss\Pipeline\FileSymbol;
 use BrianHenryIE\Strauss\Files\CodeLocation;
 use BrianHenryIE\Strauss\Files\FileCodeMap;
 use PhpParser\Error;
+use PhpParser\Node;
+use PhpParser\Node\Stmt\Declare_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
@@ -145,7 +147,32 @@ class PhpFileAnalyzer
             array_unshift($definitions, new SymbolDefinition(SymbolDefinition::TYPE_NAMESPACE, '\\', '\\'));
         }
 
-        return new FileCodeMap($locations, $contents, $definitions, $namespaceNames);
+        return new FileCodeMap(
+            $locations,
+            $contents,
+            $definitions,
+            $namespaceNames,
+            $this->getNamespaceInsertionOffset($ast, $offset)
+        );
+    }
+
+    /**
+     * The start of the first top-level statement which is not a `declare`, including its leading comments.
+     *
+     * @param Node[] $ast    The parsed statements.
+     * @param int    $offset The position in the original contents of the first character parsed.
+     */
+    protected function getNamespaceInsertionOffset(array $ast, int $offset): ?int
+    {
+        foreach ($ast as $statement) {
+            if ($statement instanceof Declare_) {
+                continue;
+            }
+            $comments = $statement->getComments();
+            $start = empty($comments) ? $statement->getStartFilePos() : $comments[0]->getStartFilePos();
+            return $start < 0 ? null : $start + $offset;
+        }
+        return null;
     }
 
     protected function getParser(): Parser
