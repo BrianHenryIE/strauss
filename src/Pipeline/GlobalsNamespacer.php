@@ -252,6 +252,15 @@ class GlobalsNamespacer
             return null;
         }
 
+        // One unnamed block, `namespace { }`, is given the name; with more, each would need the same name.
+        if (count($codeMap->getUnnamedNamespaceOffsets()) > 1) {
+            $this->logger->warning(
+                'Not moving the global symbols in {filePath}: it declares more than one global namespace block.',
+                ['filePath' => $filePath]
+            );
+            return null;
+        }
+
         $namespaces = [];
         foreach ($symbols as $symbol) {
             if (!$this->isClassLike($symbol)) {

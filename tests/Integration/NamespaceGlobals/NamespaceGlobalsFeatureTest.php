@@ -128,6 +128,21 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
                     class Acme_Mixed {}
                 }
                 EOD,
+            // Only an unnamed `namespace { }` block: the block is named.
+            'src/Acme/Bracketed.php' => <<<'EOD'
+                <?php
+                declare(strict_types=1);
+
+                namespace {
+                    class Acme_Bracketed extends Acme_Base
+                    {
+                        protected function name(): string
+                        {
+                            return 'bracketed';
+                        }
+                    }
+                }
+                EOD,
             // `List` is a reserved word: named `AcmeList`.
             'src/Acme/List.php' => <<<'EOD'
                 <?php
@@ -157,6 +172,7 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
                 echo get_class(new Acme_Mixed()) . ',' . get_class(new Acme_List()) . ',' . get_class(new Acme_Constants()) . PHP_EOL;
                 echo var_export(function_exists('acme_legacy'), true) . PHP_EOL;
                 echo ACME_VERSION . ',' . var_export(defined('ACME_VERSION'), true) . ',' . ACME_LEGACY . PHP_EOL;
+                echo get_class(new Acme_Bracketed()) . ':' . (new Acme_Bracketed())->greet() . PHP_EOL;
                 EOD,
         ];
 
@@ -230,6 +246,18 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
         $this->assertStringContainsString("namespace Company\\Project;\n\nclass AcmeList", $this->read('src/Acme/List.php'));
     }
 
+    /**
+     * A file whose only namespace is an unnamed `namespace { }` block: the block is named.
+     */
+    public function test_bracketed_global_namespace_is_named(): void
+    {
+        $this->runNamespaceGlobals();
+
+        $bracketed = $this->read('src/Acme/Bracketed.php');
+        $this->assertStringContainsString("declare(strict_types=1);\n\nnamespace Company\\Project {\n    class Bracketed extends \\Company\\Project\\Base\n", $bracketed);
+        $this->assertStringNotContainsString('namespace Company\\Project;', $bracketed);
+    }
+
     public function test_code_runs(): void
     {
         $this->runNamespaceGlobals();
@@ -252,6 +280,7 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
                     'Acme_Mixed,Company\\Project\\AcmeList,Company\\Project\\Constants',
                     'true',
                     '1.0,true,legacy',
+                    'Company\\Project\\Bracketed:hello bracketed',
                 ]
             ),
             $outputString

@@ -1031,7 +1031,7 @@ class ChangePlanner
 
     /**
      * For a file whose global classes, interfaces, traits, enums, functions or constants are moving into a namespace: insert the
-     * `namespace` declaration, and fully qualify every other class name, which until now resolved in the global
+     * `namespace` declaration, or name the file's one unnamed `namespace { }` block, and fully qualify every other class name, which until now resolved in the global
      * namespace, e.g. `Exception` becomes `\Exception`. The moved names themselves are replaced by
      * {@see self::findGlobalSymbolsPositions()}, {@see self::findFunctionPositions()} and
      * {@see self::findConstantPositions()}.
@@ -1048,8 +1048,20 @@ class ChangePlanner
      */
     protected function findGlobalsNamespacingPositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
     {
-        $insertionOffset = $codeMap->getNamespaceInsertionOffset();
-        if (is_null($insertionOffset) || $codeMap->getNamespaceNames() !== ['\\']) {
+        if ($codeMap->getNamespaceNames() !== ['\\']) {
+            return [];
+        }
+
+        // A file whose global code is in one unnamed block, `namespace { }`, has the block named instead of a
+        // `namespace` declaration inserted, which PHP does not allow alongside a bracketed one.
+        $unnamedNamespaceOffsets = $codeMap->getUnnamedNamespaceOffsets();
+        if (count($unnamedNamespaceOffsets) > 1) {
+            return [];
+        }
+        $unnamedNamespaceOffset = $unnamedNamespaceOffsets[0] ?? null;
+
+        $insertionOffset = $unnamedNamespaceOffset ?? $codeMap->getNamespaceInsertionOffset();
+        if (is_null($insertionOffset)) {
             return [];
         }
 
@@ -1097,7 +1109,9 @@ class ChangePlanner
             [
                 'start' => $insertionOffset,
                 'end' => $insertionOffset,
-                'replacement' => 'namespace ' . $namespace . ';' . PHP_EOL . PHP_EOL,
+                'replacement' => is_null($unnamedNamespaceOffset)
+                    ? 'namespace ' . $namespace . ';' . PHP_EOL . PHP_EOL
+                    : ' ' . $namespace,
             ],
         ];
 

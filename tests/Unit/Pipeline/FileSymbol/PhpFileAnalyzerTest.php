@@ -392,4 +392,52 @@ class PhpFileAnalyzerTest extends TestCase
 
         self::assertSame($expected, is_null($offset) ? null : substr($contents, $offset));
     }
+
+    /**
+     * @return array<string, array{0:string, 1:string[]}> Contents, and the text from each expected offset on.
+     */
+    public static function unnamedNamespaceOffsetsDataProvider(): array
+    {
+        return [
+            'no namespace statement' => ["<?php\nclass Foo {}\n", []],
+            'unbracketed namespace' => ["<?php\nnamespace Foo;\nclass Bar {}\n", []],
+            'named bracketed namespace' => ["<?php\nnamespace Foo { class Bar {} }\n", []],
+            'unnamed block' => ["<?php\nnamespace { class Foo {} }\n", [" { class Foo {} }\n"]],
+            'unnamed block without a space' => ["<?php\nnamespace{ class Foo {} }\n", ["{ class Foo {} }\n"]],
+            'uppercase keyword, after a declare and a comment' => [
+                "<?php\ndeclare(strict_types=1);\n// Foo.\nNAMESPACE { class Foo {} }\n",
+                [" { class Foo {} }\n"],
+            ],
+            'two unnamed blocks' => [
+                "<?php\nnamespace { class Foo {} }\nnamespace { class Bar {} }\n",
+                [" { class Foo {} }\nnamespace { class Bar {} }\n", " { class Bar {} }\n"],
+            ],
+            'named and unnamed blocks' => [
+                "<?php\nnamespace Other { class Thing {} }\nnamespace { class Foo {} }\n",
+                [" { class Foo {} }\n"],
+            ],
+            'content before the open tag' => ["#!/usr/bin/env php\n<?php\nnamespace { class Foo {} }\n", [" { class Foo {} }\n"]],
+        ];
+    }
+
+    /**
+     * @covers ::analyze
+     * @dataProvider \BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzerTest::unnamedNamespaceOffsetsDataProvider
+     *
+     * @param string   $contents The PHP.
+     * @param string[] $expected The contents from each offset on.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('unnamedNamespaceOffsetsDataProvider')]
+    public function test_unnamed_namespace_offsets(string $contents, array $expected): void
+    {
+        $codeMap = (new PhpFileAnalyzer())->analyze($contents);
+        self::assertNotNull($codeMap);
+
+        $actual = array_map(
+            fn(int $offset): string => substr($contents, $offset),
+            $codeMap->getUnnamedNamespaceOffsets()
+        );
+
+        self::assertSame($expected, $actual);
+    }
 }

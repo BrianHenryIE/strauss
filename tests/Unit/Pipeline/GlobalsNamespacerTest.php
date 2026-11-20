@@ -99,6 +99,8 @@ class GlobalsNamespacerTest extends TestCase
         $defineConstant->setDoRename(true);
         $symbols->add($defineConstant);
         $mixed = $add('Acme_Mixed', $this->getFile('/project/src/Mixed.php', "<?php\nnamespace Other { class Thing {} }\nnamespace { class Acme_Mixed {} }\n"));
+        $bracketed = $add('Acme_Bracketed', $this->getFile('/project/src/Bracketed.php', "<?php\nnamespace { class Acme_Bracketed {} }\n"));
+        $twoBlocks = $add('Acme_TwoBlocks', $this->getFile('/project/src/TwoBlocks.php', "<?php\nnamespace { class Acme_TwoBlocks {} }\nnamespace { echo 1; }\n"));
         $reserved = $add('Acme_List', $this->getFile('/project/src/List.php', "<?php\nclass Acme_List {}\n"));
 
         $twoNamespacesFile = $this->getFile('/project/src/Two.php', "<?php\nclass Acme_One {}\nclass Acme_Sub_Two {}\n");
@@ -137,6 +139,9 @@ class GlobalsNamespacerTest extends TestCase
         $this->assertSame('Company\\Project\\ACME_C', $constConstant->getLocalReplacement());
         $this->assertFalse($defineConstant->isDoRename(), '`define()` constants are always global.');
         $this->assertFalse($mixed->isDoRename(), 'The file already declares a namespace.');
+        $this->assertTrue($bracketed->isDoRename(), 'A single unnamed `namespace { }` block is given the name.');
+        $this->assertSame('Company\\Project\\Bracketed', $bracketed->getLocalReplacement());
+        $this->assertFalse($twoBlocks->isDoRename(), 'More than one unnamed `namespace { }` block.');
         $this->assertTrue($reserved->isDoRename());
         $this->assertSame('Company\\Project\\AcmeList', $reserved->getLocalReplacement(), '`List` is a reserved word.');
         $this->assertFalse($one->isDoRename(), 'The file\'s classes would be in different namespaces.');

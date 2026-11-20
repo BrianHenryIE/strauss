@@ -263,6 +263,62 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
     }
 
     /**
+     * @return array<string, array{0:string, 1:string}> Contents, expected.
+     */
+    public static function bracketedGlobalNamespaceDataProvider(): array
+    {
+        return [
+            'the unnamed block is named' => [
+                "<?php\nnamespace {\n    class Acme_Greeting_Formal extends Exception implements Acme_Greeter {}\n}\n",
+                "<?php\nnamespace Company\\Project\\Greeting {\n    class Formal extends \\Exception implements \\Company\\Project\\Greeter {}\n}\n",
+            ],
+            'after a declare' => [
+                "<?php\ndeclare(strict_types=1);\n\nnamespace {\n    class Acme_Greeter {}\n}\n",
+                "<?php\ndeclare(strict_types=1);\n\nnamespace Company\\Project {\n    class Greeter {}\n}\n",
+            ],
+            'no space before the brace' => [
+                "<?php\nnamespace{ class Acme_Greeter {} }\n",
+                "<?php\nnamespace Company\\Project{ class Greeter {} }\n",
+            ],
+            'only a function' => [
+                "<?php\nnamespace {\n    function acme_helper() {}\n}\n",
+                "<?php\nnamespace Company\\Project {\n    function acme_helper() {}\n}\n",
+            ],
+        ];
+    }
+
+    /**
+     * A file whose only namespace is one unnamed `namespace { }` block: the block is given the name, rather than a
+     * `namespace` declaration being inserted before it, which PHP cannot compile.
+     *
+     * @covers ::findGlobalsNamespacingPositions
+     * @dataProvider \BrianHenryIE\Strauss\Tests\Unit\Pipeline\ChangePlannerNamespaceGlobalsTest::bracketedGlobalNamespaceDataProvider
+     *
+     * @param string $contents The PHP to update.
+     * @param string $expected The PHP after.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('bracketedGlobalNamespaceDataProvider')]
+    public function test_bracketed_global_namespace(string $contents, string $expected): void
+    {
+        self::assertSame($expected, $this->replace($contents));
+    }
+
+    /**
+     * A file with more than one unnamed `namespace { }` block is not given a namespace.
+     *
+     * @covers ::findGlobalsNamespacingPositions
+     */
+    public function test_two_bracketed_global_namespaces_are_not_named(): void
+    {
+        $contents = "<?php\nnamespace { class Acme_Greeter {} }\nnamespace { echo 1; }\n";
+
+        $result = $this->replace($contents);
+
+        self::assertStringNotContainsString('namespace Company', $result);
+        self::assertStringContainsString("namespace { echo 1; }\n", $result);
+    }
+
+    /**
      * A file with only a function moves too.
      *
      * @covers ::findFunctionPositions

@@ -152,7 +152,11 @@ class PhpFileAnalyzer
             $contents,
             $definitions,
             $namespaceNames,
-            $this->getNamespaceInsertionOffset($ast, $offset)
+            $this->getNamespaceInsertionOffset($ast, $offset),
+            array_map(
+                fn(int $unnamedNamespaceOffset): int => $unnamedNamespaceOffset + $offset,
+                $visitor->getUnnamedNamespaceOffsets()
+            )
         );
     }
 
