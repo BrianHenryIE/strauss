@@ -956,7 +956,25 @@ class ChangePlanner
                 $useClassname = array_reverse(explode('\\', $fqdn_name))[0];
 
                 $replacementString = $discoveredSymbol->getLocalReplacement();
-                if ($replacementClassname !== $useClassname && !$useItem->hasAlias()) {
+                $shortName = substr((string) strrchr('\\' . $replacementClassname, '\\'), 1);
+                if (
+                    $this->isMovedIntoNamespace($discoveredSymbol)
+                    && !$useItem->hasAlias()
+                    && !$useItem->isInGroupUse()
+                    && !$this->isNameUsedInFile($codeMap, $shortName, $useItem)
+                ) {
+                    // Moved into a namespace: the import is of the new name, and its uses are updated to match,
+                    // rather than keeping the old name as an alias.
+                    foreach ($codeMap->getLocationsOfType(CodeLocation::NAME) as $name) {
+                        if (!$name->isFullyQualified() && 0 === strcasecmp($name->getName(), $fqdn_name)) {
+                            $positions[] = [
+                                'start' => $name->getStart(),
+                                'end' => $name->getEnd(),
+                                'replacement' => $shortName,
+                            ];
+                        }
+                    }
+                } elseif ($replacementClassname !== $useClassname && !$useItem->hasAlias()) {
                     $replacementString .= ' as ' . $useClassname;
                 }
 
@@ -1013,6 +1031,52 @@ class ChangePlanner
         }
 
         return $positions;
+    }
+
+    /**
+     * Is the name already used in the file for something other than the given import: declared in the file, another
+     * import's name, or the first segment of a name written in the code, e.g. `Greeter` in `new Greeter\Loud()`,
+     * which may be a class in the file's own namespace?
+     *
+     * @param FileCodeMap  $codeMap The locations in the file's contents.
+     * @param string       $name    The name to look for, without a namespace.
+     * @param CodeLocation $import  The import whose own uses do not count.
+     */
+    protected function isNameUsedInFile(FileCodeMap $codeMap, string $name, CodeLocation $import): bool
+    {
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::CLASS_DEFINITION,
+                CodeLocation::INTERFACE_DEFINITION,
+                CodeLocation::TRAIT_DEFINITION,
+                CodeLocation::ENUM_DEFINITION
+            ) as $definition
+        ) {
+            if (0 === strcasecmp($definition->getText(), $name)) {
+                return true;
+            }
+        }
+
+        foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+            if (
+                $useItem === $import
+                || CodeLocation::USE_TYPE_NORMAL !== ($useItem->getUseType() ?? CodeLocation::USE_TYPE_NORMAL)
+            ) {
+                continue;
+            }
+            $localName = $useItem->getAlias() ?? substr((string) strrchr('\\' . $useItem->getName(), '\\'), 1);
+            if (0 === strcasecmp($localName, $name)) {
+                return true;
+            }
+        }
+
+        foreach ($codeMap->getLocationsOfType(CodeLocation::NAME) as $codeName) {
+            if (!$codeName->isFullyQualified() && 0 === strcasecmp($codeName->getNameParts()[0] ?? '', $name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

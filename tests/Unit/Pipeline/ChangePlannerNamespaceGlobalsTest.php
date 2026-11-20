@@ -198,11 +198,57 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
             <?php
             namespace Other;
 
-            use Company\Project\Greeter as Acme_Greeter;
+            use Company\Project\Greeter;
 
-            function consumer(Acme_Greeter $greeter) {}
+            function consumer(Greeter $greeter) {}
             EOD;
 
+        self::assertSame($expected, $this->replace($contents));
+    }
+
+    /**
+     * @return array<string, array{0:string, 1:string}> Contents, expected.
+     */
+    public static function namespacedCallSiteImportDataProvider(): array
+    {
+        return [
+            'every use of the import is updated' => [
+                "<?php\nnamespace Other;\n\nuse Acme_Greeter;\n\nclass Consumer implements Acme_Greeter {\n    /** @return Acme_Greeter */\n    public function a(): Acme_Greeter { return new acme_greeter(Acme_Greeter::class, \\Acme_Greeter::class); }\n}\n",
+                "<?php\nnamespace Other;\n\nuse Company\\Project\\Greeter;\n\nclass Consumer implements Greeter {\n    /** @return \\Company\\Project\\Greeter */\n    public function a(): Greeter { return new Greeter(Greeter::class, \\Company\\Project\\Greeter::class); }\n}\n",
+            ],
+            'an import with an alias keeps it' => [
+                "<?php\nnamespace Other;\n\nuse Acme_Greeter as G;\n\nfunction consumer(G \$greeter) {}\n",
+                "<?php\nnamespace Other;\n\nuse Company\\Project\\Greeter as G;\n\nfunction consumer(G \$greeter) {}\n",
+            ],
+            'the short name is another import: the old name is kept as an alias' => [
+                "<?php\nnamespace Other;\n\nuse Acme_Greeter;\nuse Vendor\\Greeter;\n\nfunction consumer(Acme_Greeter \$a, Greeter \$b) {}\n",
+                "<?php\nnamespace Other;\n\nuse Company\\Project\\Greeter as Acme_Greeter;\nuse Vendor\\Greeter;\n\nfunction consumer(Acme_Greeter \$a, Greeter \$b) {}\n",
+            ],
+            'the short name is declared in the file' => [
+                "<?php\nnamespace Other;\n\nuse Acme_Greeter;\n\nclass Greeter implements Acme_Greeter {}\n",
+                "<?php\nnamespace Other;\n\nuse Company\\Project\\Greeter as Acme_Greeter;\n\nclass Greeter implements Acme_Greeter {}\n",
+            ],
+            'the short name is used for a class in the file\'s namespace' => [
+                "<?php\nnamespace Other;\n\nuse Acme_Greeter;\n\nfunction consumer(Acme_Greeter \$a, Greeter\\Loud \$b) {}\n",
+                "<?php\nnamespace Other;\n\nuse Company\\Project\\Greeter as Acme_Greeter;\n\nfunction consumer(Acme_Greeter \$a, Greeter\\Loud \$b) {}\n",
+            ],
+        ];
+    }
+
+    /**
+     * In a namespaced call site, `use Acme_Greeter;` imports the moved class by its new name, and the uses of the
+     * import are updated to its short name, unless that name is already taken in the file.
+     *
+     * @covers ::findGlobalSymbolsPositions
+     * @covers ::isNameUsedInFile
+     * @dataProvider \BrianHenryIE\Strauss\Tests\Unit\Pipeline\ChangePlannerNamespaceGlobalsTest::namespacedCallSiteImportDataProvider
+     *
+     * @param string $contents The PHP to update.
+     * @param string $expected The PHP after.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('namespacedCallSiteImportDataProvider')]
+    public function test_namespaced_call_site_import(string $contents, string $expected): void
+    {
         self::assertSame($expected, $this->replace($contents));
     }
 
@@ -451,7 +497,7 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
         self::assertSame($expected, $this->replace($contents));
 
         $namespaced = "<?php\nnamespace Other;\n\nuse function acme_helper;\n\nacme_helper();\n";
-        $namespacedExpected = "<?php\nnamespace Other;\n\nuse function Company\\Project\\acme_helper as acme_helper;\n\n\\Company\\Project\\acme_helper();\n";
+        $namespacedExpected = "<?php\nnamespace Other;\n\nuse function Company\\Project\\acme_helper;\n\n\\Company\\Project\\acme_helper();\n";
 
         self::assertSame($namespacedExpected, $this->replace($namespaced));
     }
