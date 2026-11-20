@@ -298,6 +298,7 @@ class FileSystemTest extends TestCase
      * @param string $path     The path, e.g. the working directory.
      * @param string $expected The filesystem root.
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('fsRootDataProvider')]
     public function test_get_fs_root(string $path, string $expected): void
     {
         $this->assertSame($expected, FileSystem::getFsRoot($path));
