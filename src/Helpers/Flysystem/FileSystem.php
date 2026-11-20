@@ -108,9 +108,19 @@ class FileSystem extends LeagueFilesystem implements PathNormalizer, PathPrefixe
         $this->workingDir      = $pathNormalizer->normalizePath($workingDir ?? $localFsLocation);
     }
 
+    /**
+     * The filesystem root of a path: `/`, or a Windows drive with either separator, e.g. `C:\` from `getcwd()`.
+     *
+     * @param string $path An absolute or relative path.
+     *
+     * @return string The root, with the drive letter uppercased; empty for a relative path.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/364
+     */
     public static function getFsRoot(string $path): string
     {
-        if (1 === preg_match('#^([a-zA-Z]+:[\\/]|\/)#', $path, $output_array)) {
+        // `[\\\\/]` in single quotes is the regex character class `[\\/]`: a backslash or a forward slash.
+        if (1 === preg_match('#^([a-zA-Z]+:[\\\\/]|/)#', $path, $output_array)) {
             //        if (1 === preg_match('/^([a-zA-Z]+:[\\\\\/]|\/)/', $path ?: getcwd(), $output_array)) {
             return strtoupper($output_array[1]);
         }
