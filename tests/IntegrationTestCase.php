@@ -11,6 +11,7 @@ namespace BrianHenryIE\Strauss;
 use BrianHenryIE\Strauss\Console\Commands\DependenciesCommand;
 use BrianHenryIE\Strauss\Console\Commands\DumpAutoloadCommand;
 use BrianHenryIE\Strauss\Console\Commands\IncludeAutoloaderCommand;
+use BrianHenryIE\Strauss\Console\Commands\NamespaceGlobalsCommand;
 use BrianHenryIE\Strauss\Console\Commands\PrefixComposerAutoloadFilesCommand;
 use BrianHenryIE\Strauss\Console\Commands\ReplaceCommand;
 use BrianHenryIE\Strauss\Console\Commands\SymbolsCommand;
@@ -176,6 +177,10 @@ class IntegrationTestCase extends TestCase
                 break;
             case 'dump-autoload':
                 $strauss = new DumpAutoloadCommand();
+                unset($paramsSplit[0]);
+                break;
+            case 'namespace-globals':
+                $strauss = new NamespaceGlobalsCommand();
                 unset($paramsSplit[0]);
                 break;
             case 'list-symbols':

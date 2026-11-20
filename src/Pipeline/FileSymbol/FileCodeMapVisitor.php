@@ -86,6 +86,13 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     protected array $namespaceNames = [];
 
     /**
+     * The position just after the `namespace` keyword of each unnamed block, `namespace { }`, in source order.
+     *
+     * @var int[]
+     */
+    protected array $unnamedNamespaceOffsets = [];
+
+    /**
      * @var ?string Current namespace, null when global.
      */
     protected ?string $currentNamespace = null;
@@ -145,6 +152,17 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
     public function getNamespaceNames(): array
     {
         return array_keys($this->namespaceNames);
+    }
+
+    /**
+     * The position just after the `namespace` keyword of each unnamed block, `namespace { }`, in source order: where
+     * a name could be inserted.
+     *
+     * @return int[]
+     */
+    public function getUnnamedNamespaceOffsets(): array
+    {
+        return $this->unnamedNamespaceOffsets;
     }
 
     public function enterNode(Node $node)
@@ -267,6 +285,9 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
         if ($node->name) {
             $this->claimName($node->name);
             $location = $this->addNameLocation(CodeLocation::NAMESPACE_DEFINITION, $node->name);
+        } elseif ($node->getStartFilePos() >= 0) {
+            // `namespace { }`: the statement starts at its keyword.
+            $this->unnamedNamespaceOffsets[] = $node->getStartFilePos() + strlen('namespace');
         }
 
         if (!isset($this->namespaceNames[$namespaceName])) {
@@ -410,7 +431,7 @@ class FileCodeMapVisitor extends NodeVisitorAbstract
         // The item's own type wins over the statement's, e.g. `use Prefix\{function foo}`.
         $location->setUseType(Use_::TYPE_UNKNOWN !== $item->type ? $item->type : $stmtUseType);
         $location->setInGroupUse($inGroupUse);
-        $location->setHasAlias(!is_null($item->alias));
+        $location->setAlias(is_null($item->alias) ? null : $item->alias->toString());
         if (!$inGroupUse) {
             // An import is already fully qualified.
             $location->setResolvedName($item->name->toString());

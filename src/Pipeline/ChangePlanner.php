@@ -134,7 +134,11 @@ class ChangePlanner
             // Last, so its `use const` replacement wins over the aliased one from findGlobalSymbolsPositions().
             $this->findConstantPositions($codeMap, $discoveredSymbols),
             // Symbols inside strings, e.g. `is_a( $recurrence, 'CronExpression' )`.
-            $this->findSymbolsPositionsInStrings($codeMap, $discoveredSymbols, $file)
+            $this->findSymbolsPositionsInStrings($codeMap, $discoveredSymbols, $file),
+            // `namespace X;` for a file whose global classes move into a namespace, and its other class names.
+            $this->findGlobalsNamespacingPositions($codeMap, $discoveredSymbols),
+            // `'Prefix_Dir_' . $name` building the name of a class moved into a namespace.
+            $this->findMovedClassPrefixStringPositions($codeMap, $discoveredSymbols)
         );
 
         // Descending by start; PHP's sort is stable, so for equal starts the later-found position comes later and
@@ -143,6 +147,16 @@ class ChangePlanner
 
         $edits = [];
         foreach ($positions as $position) {
+            $existing = $edits[$position['start']] ?? null;
+            // An insertion (zero length) at the same position as another edit goes before it.
+            if ($existing && ($existing['start'] === $existing['end']) !== ($position['start'] === $position['end'])) {
+                [$insertion, $edit] = $existing['start'] === $existing['end'] ? [$existing, $position] : [$position, $existing];
+                $position = [
+                    'start' => $edit['start'],
+                    'end' => $edit['end'],
+                    'replacement' => $insertion['replacement'] . $edit['replacement'],
+                ];
+            }
             $edits[$position['start']] = $position;
         }
 
@@ -742,7 +756,10 @@ class ChangePlanner
         $alsoSearchForStaticProperty = false;
 
         if ($symbol instanceof NamespacedSymbol && $symbol->getNamespace()->isGlobal()) {
-            $replacementSymbolString = $symbol->getLocalReplacement();
+            // A namespaced replacement for a global name has its backslashes doubled, valid in any string literal.
+            $replacementSymbolString = $this->isMovedIntoNamespace($symbol)
+                ? str_replace('\\', '\\\\', $symbol->getLocalReplacement())
+                : $symbol->getLocalReplacement();
             $originalSymbolString    = $symbol->getOriginalLocalName();
         } elseif ($symbol instanceof NamespaceSymbol) {
             if ($symbol->isGlobal()) {
@@ -928,7 +945,27 @@ class ChangePlanner
 
         // In named namespaces, `use Classname;` must become `use PrefixedClassname as Classname;`
         // so that unqualified references within the namespace continue to resolve correctly.
-        foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+        $useItems = $codeMap->getLocationsOfType(CodeLocation::USE_NAME);
+
+        // How many of the file's imports would be used by each short name, lowercase, were they imported by the new
+        // names of the classes moved into a namespace: `A\Thing` and `B\Thing` cannot both be `Thing`.
+        $shortNameCounts = [];
+        foreach ($useItems as $useItem) {
+            $discoveredSymbol = $globalClassesInterfacesTraitsToRename->get($useItem->getName());
+            if (
+                !$useItem->isInGlobalNamespace()
+                && !$useItem->isFullyQualified()
+                && !$useItem->hasAlias()
+                && $discoveredSymbol
+                && $discoveredSymbol->isDoRename()
+                && $this->isMovedIntoNamespace($discoveredSymbol)
+            ) {
+                $shortName = strtolower(substr((string) strrchr('\\' . $discoveredSymbol->getLocalReplacement(), '\\'), 1));
+                $shortNameCounts[$shortName] = ($shortNameCounts[$shortName] ?? 0) + 1;
+            }
+        }
+
+        foreach ($useItems as $useItem) {
             if ($useItem->isInGlobalNamespace() || $useItem->isFullyQualified()) {
                 continue;
             }
@@ -939,7 +976,26 @@ class ChangePlanner
                 $useClassname = array_reverse(explode('\\', $fqdn_name))[0];
 
                 $replacementString = $discoveredSymbol->getLocalReplacement();
-                if ($replacementClassname !== $useClassname && !$useItem->hasAlias()) {
+                $shortName = substr((string) strrchr('\\' . $replacementClassname, '\\'), 1);
+                if (
+                    $this->isMovedIntoNamespace($discoveredSymbol)
+                    && !$useItem->hasAlias()
+                    && !$useItem->isInGroupUse()
+                    && 1 === ($shortNameCounts[strtolower($shortName)] ?? 0)
+                    && !$this->isNameUsedInFile($codeMap, $shortName, $useItem)
+                ) {
+                    // Moved into a namespace: the import is of the new name, and its uses are updated to match,
+                    // rather than keeping the old name as an alias.
+                    foreach ($codeMap->getLocationsOfType(CodeLocation::NAME) as $name) {
+                        if (!$name->isFullyQualified() && 0 === strcasecmp($name->getName(), $fqdn_name)) {
+                            $positions[] = [
+                                'start' => $name->getStart(),
+                                'end' => $name->getEnd(),
+                                'replacement' => $shortName,
+                            ];
+                        }
+                    }
+                } elseif ($replacementClassname !== $useClassname && !$useItem->hasAlias()) {
                     $replacementString .= ' as ' . $useClassname;
                 }
 
@@ -971,7 +1027,10 @@ class ChangePlanner
             $positions[] = [
                 'start' => $definition->getStart(),
                 'end' => $definition->getEnd(),
-                'replacement' => $globalSymbol->getLocalReplacement(),
+                // Moving into a namespace: the file gains a `namespace` declaration, the class keeps its short name.
+                'replacement' => $this->isMovedIntoNamespace($globalSymbol)
+                    ? substr((string) strrchr($globalSymbol->getLocalReplacement(), '\\'), 1)
+                    : $globalSymbol->getLocalReplacement(),
             ];
         }
 
@@ -986,11 +1045,560 @@ class ChangePlanner
             $positions[] = [
                 'start' => $name->getStart(),
                 'end' => $name->getEnd(),
-                'replacement' => $globalSymbol->getReplacementFqdnName(),
+                // Fully qualified, so it is also correct in a file which gains a namespace.
+                'replacement' => ($this->isMovedIntoNamespace($globalSymbol) ? '\\' : '')
+                    . $globalSymbol->getReplacementFqdnName(),
             ];
         }
 
         return $positions;
+    }
+
+    /**
+     * Is the name already used in the file for something other than the given import: declared in the file, another
+     * import's name, or the first segment of a name written in the code, e.g. `Greeter` in `new Greeter\Loud()`,
+     * which may be a class in the file's own namespace?
+     *
+     * @param FileCodeMap  $codeMap The locations in the file's contents.
+     * @param string       $name    The name to look for, without a namespace.
+     * @param CodeLocation $import  The import whose own uses do not count.
+     */
+    protected function isNameUsedInFile(FileCodeMap $codeMap, string $name, CodeLocation $import): bool
+    {
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::CLASS_DEFINITION,
+                CodeLocation::INTERFACE_DEFINITION,
+                CodeLocation::TRAIT_DEFINITION,
+                CodeLocation::ENUM_DEFINITION
+            ) as $definition
+        ) {
+            if (0 === strcasecmp($definition->getText(), $name)) {
+                return true;
+            }
+        }
+
+        foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+            if (
+                $useItem === $import
+                || CodeLocation::USE_TYPE_NORMAL !== ($useItem->getUseType() ?? CodeLocation::USE_TYPE_NORMAL)
+            ) {
+                continue;
+            }
+            $localName = $useItem->getAlias() ?? substr((string) strrchr('\\' . $useItem->getName(), '\\'), 1);
+            if (0 === strcasecmp($localName, $name)) {
+                return true;
+            }
+        }
+
+        foreach ($codeMap->getLocationsOfType(CodeLocation::NAME) as $codeName) {
+            if (!$codeName->isFullyQualified() && 0 === strcasecmp($codeName->getNameParts()[0] ?? '', $name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Is this a global symbol being moved into a namespace, i.e. its replacement is namespaced?
+     *
+     * @param DiscoveredSymbol $symbol A symbol marked for renaming.
+     *
+     * @see \BrianHenryIE\Strauss\Pipeline\GlobalsNamespacer
+     */
+    protected function isMovedIntoNamespace(DiscoveredSymbol $symbol): bool
+    {
+        return $symbol instanceof NamespacedSymbol
+            && $symbol->isGlobal()
+            && false !== strpos($symbol->getLocalReplacement(), '\\');
+    }
+
+    /**
+     * For a file whose global classes, interfaces, traits, enums, functions or constants are moving into a namespace: insert the
+     * `namespace` declaration, or name the file's one unnamed `namespace { }` block, and fully qualify every other class name, which until now resolved in the global
+     * namespace, e.g. `Exception` becomes `\Exception`. The moved names themselves are replaced by
+     * {@see self::findGlobalSymbolsPositions()}, {@see self::findFunctionPositions()} and
+     * {@see self::findConstantPositions()}.
+     *
+     * Calls to functions and constants which are not moved are left: unqualified, they fall back to the global
+     * namespace.
+     *
+     * @param FileCodeMap       $codeMap           The locations in the file's contents.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     *
+     * @see \BrianHenryIE\Strauss\Pipeline\GlobalsNamespacer for which files can move.
+     *
+     * @return array<array{start:int,end:int,replacement:string}>
+     */
+    protected function findGlobalsNamespacingPositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
+    {
+        if ($codeMap->getNamespaceNames() !== ['\\']) {
+            return [];
+        }
+
+        // A file whose global code is in one unnamed block, `namespace { }`, has the block named instead of a
+        // `namespace` declaration inserted, which PHP does not allow alongside a bracketed one.
+        $unnamedNamespaceOffsets = $codeMap->getUnnamedNamespaceOffsets();
+        if (count($unnamedNamespaceOffsets) > 1) {
+            return [];
+        }
+        $unnamedNamespaceOffset = $unnamedNamespaceOffsets[0] ?? null;
+
+        $insertionOffset = $unnamedNamespaceOffset ?? $codeMap->getNamespaceInsertionOffset();
+        if (is_null($insertionOffset)) {
+            return [];
+        }
+
+        $globalClassesInterfacesTraitsToRename = $this->getIndex($discoveredSymbols)->getGlobalClassesInterfacesTraitsToRename();
+        if (count($globalClassesInterfacesTraitsToRename) === 0) {
+            return [];
+        }
+
+        $namespace = null;
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::CLASS_DEFINITION,
+                CodeLocation::INTERFACE_DEFINITION,
+                CodeLocation::TRAIT_DEFINITION,
+                CodeLocation::ENUM_DEFINITION
+            ) as $definition
+        ) {
+            $globalSymbol = $this->getGlobalSymbolByName($definition->getText(), $globalClassesInterfacesTraitsToRename);
+            if ($globalSymbol && $this->isMovedIntoNamespace($globalSymbol)) {
+                $replacement = $globalSymbol->getLocalReplacement();
+                $namespace = substr($replacement, 0, (int) strrpos($replacement, '\\'));
+                break;
+            }
+        }
+
+        if (is_null($namespace)) {
+            $index = $this->getIndex($discoveredSymbols);
+            foreach ($codeMap->getLocationsOfType(CodeLocation::FUNCTION_DEFINITION, CodeLocation::CONST_DEFINITION) as $definition) {
+                $symbol = CodeLocation::FUNCTION_DEFINITION === $definition->getType()
+                    ? $index->getFunctionsToRename()->getFunction($definition->getText())
+                    : $index->getConstantsToRename()->getConst($definition->getText());
+                if ($symbol && $this->isMovedIntoNamespace($symbol)) {
+                    $replacement = $symbol->getLocalReplacement();
+                    $namespace = substr($replacement, 0, (int) strrpos($replacement, '\\'));
+                    break;
+                }
+            }
+        }
+
+        if (is_null($namespace)) {
+            return [];
+        }
+
+        // Global classes which are not moved are imported, so their names in the code and in doc comments still
+        // refer to them. Null: there is nowhere to add imports.
+        $importInsertionOffset = $codeMap->getNamespaceInsertionOffset();
+        $classesToImport = is_null($importInsertionOffset)
+            ? ['imported' => [], 'toImport' => []]
+            : $this->getGlobalClassesToImport($codeMap, $discoveredSymbols);
+
+        $toImport = array_values($classesToImport['toImport']);
+        usort($toImport, 'strcasecmp');
+
+        if (is_null($unnamedNamespaceOffset)) {
+            $imports = implode('', array_map(fn(string $name): string => 'use ' . $name . ';' . PHP_EOL, $toImport));
+            // No blank line when the imports are followed by the file's own: `use `, `use function `, `use const `.
+            foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+                if ($useItem->getStart() > $insertionOffset && $useItem->getStart() <= $insertionOffset + strlen('use function ')) {
+                    $imports = rtrim($imports, PHP_EOL);
+                    break;
+                }
+            }
+            $positions = [
+                [
+                    'start' => $insertionOffset,
+                    'end' => $insertionOffset,
+                    'replacement' => 'namespace ' . $namespace . ';' . PHP_EOL . PHP_EOL
+                        . ($imports ? $imports . PHP_EOL : ''),
+                ],
+            ];
+        } else {
+            $positions = [
+                [
+                    'start' => $insertionOffset,
+                    'end' => $insertionOffset,
+                    'replacement' => ' ' . $namespace,
+                ],
+            ];
+            if (!empty($toImport) && !is_null($importInsertionOffset)) {
+                // The contents are not known here: the block's statements are assumed to be indented by four spaces.
+                $indent = '    ';
+                $positions[] = [
+                    'start' => $importInsertionOffset,
+                    'end' => $importInsertionOffset,
+                    'replacement' => implode(
+                        PHP_EOL . $indent,
+                        array_map(fn(string $name): string => 'use ' . $name . ';', $toImport)
+                    ) . PHP_EOL . PHP_EOL . $indent,
+                ];
+            }
+        }
+
+        $positions = array_merge($positions, $this->findImportsCollidingWithMovedSymbols($codeMap, $discoveredSymbols));
+
+        // Imports colliding with moved names are aliased, so uses of imported functions and constants are qualified.
+        foreach ($codeMap->getLocationsOfType(CodeLocation::FUNCTION_CALL, CodeLocation::CONST_FETCH) as $use) {
+            if ($this->isUseOfImport($use)) {
+                $positions[] = [
+                    'start' => $use->getStart(),
+                    'end' => $use->getEnd(),
+                    'replacement' => '\\' . $use->getResolvedName(),
+                ];
+            }
+        }
+
+        foreach ($codeMap->getLocationsOfType(CodeLocation::NAME) as $name) {
+            if ($name->isFullyQualified() || in_array(strtolower($name->getName()), ['self', 'parent', 'static'], true)) {
+                continue;
+            }
+            $resolvedName = $name->getResolvedName() ?? $name->getName();
+            $globalSymbol = $this->getGlobalSymbolByName($name->getName(), $globalClassesInterfacesTraitsToRename);
+            if ($globalSymbol) {
+                // Replaced by findGlobalSymbolsPositions().
+                continue;
+            }
+            if (
+                0 === strcasecmp($resolvedName, $name->getName())
+                && isset($classesToImport['imported'][strtolower($name->getName())])
+            ) {
+                // Imported: `use Exception;`.
+                continue;
+            }
+            $positions[] = [
+                'start' => $name->getStart(),
+                'end' => $name->getEnd(),
+                'replacement' => '\\' . $resolvedName,
+            ];
+        }
+
+        return $positions;
+    }
+
+    /**
+     * The global classes used in a file moving into a namespace which are not themselves moved, e.g. `Exception`,
+     * `WP_Post`: they are imported, `use Exception;`, rather than each use being qualified, so the names in doc
+     * comments refer to them too.
+     *
+     * A name which is declared in the file, or which is another import's name, cannot be imported; its uses in the
+     * code are qualified instead.
+     *
+     * @param FileCodeMap       $codeMap           The locations in a file which is moving into a namespace.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     *
+     * @return array{imported:array<string,string>, toImport:array<string,string>} Keyed by lowercase name: every name
+     *                    which will be imported, and those of them which the file does not import already.
+     */
+    protected function getGlobalClassesToImport(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
+    {
+        $globalClassesInterfacesTraitsToRename = $this->getIndex($discoveredSymbols)->getGlobalClassesInterfacesTraitsToRename();
+
+        /**
+         * The names declared in the file, as they will be: lowercase.
+         *
+         * @var array<string, true> $declaredNames
+         */
+        $declaredNames = [];
+        foreach (
+            $codeMap->getLocationsOfType(
+                CodeLocation::CLASS_DEFINITION,
+                CodeLocation::INTERFACE_DEFINITION,
+                CodeLocation::TRAIT_DEFINITION,
+                CodeLocation::ENUM_DEFINITION
+            ) as $definition
+        ) {
+            $symbol = $this->getGlobalSymbolByName($definition->getText(), $globalClassesInterfacesTraitsToRename);
+            $declaredName = $symbol && $this->isMovedIntoNamespace($symbol)
+                ? substr((string) strrchr($symbol->getLocalReplacement(), '\\'), 1)
+                : $definition->getText();
+            $declaredNames[strtolower($declaredName)] = true;
+        }
+
+        /**
+         * The names the file's imports are used by, lowercase, and what each imports.
+         *
+         * @var array<string, string> $existingImports
+         */
+        $existingImports = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+            if (CodeLocation::USE_TYPE_NORMAL !== ($useItem->getUseType() ?? CodeLocation::USE_TYPE_NORMAL)) {
+                continue;
+            }
+            $localName = $useItem->getAlias()
+                ?? ltrim((string) (strrchr('\\' . $useItem->getName(), '\\') ?: ''), '\\');
+            $existingImports[strtolower($localName)] = $useItem->isInGroupUse() ? '' : $useItem->getName();
+        }
+
+        $canImport = function (string $name) use ($declaredNames, $existingImports, $globalClassesInterfacesTraitsToRename): bool {
+            $key = strtolower($name);
+            return !isset($declaredNames[$key])
+                && !in_array($key, GlobalsNamespacer::RESERVED_NAMES, true)
+                // An import of the same global class, `use Exception;`, is fine: it is kept.
+                && (!isset($existingImports[$key]) || 0 === strcasecmp($existingImports[$key], $name))
+                // Moved classes are fully qualified instead.
+                && is_null($this->getGlobalSymbolByName($name, $globalClassesInterfacesTraitsToRename));
+        };
+
+        /**
+         * @var array<string, string> $imported
+         */
+        $imported = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::NAME) as $name) {
+            $resolvedName = $name->getResolvedName() ?? $name->getName();
+            if (
+                $name->isFullyQualified()
+                || false !== strpos($name->getName(), '\\')
+                || in_array(strtolower($name->getName()), ['self', 'parent', 'static'], true)
+                // Resolved through an import to something else.
+                || 0 !== strcasecmp($resolvedName, $name->getName())
+                || !$canImport($name->getName())
+            ) {
+                continue;
+            }
+            $imported[strtolower($name->getName())] ??= $name->getName();
+        }
+
+        foreach ($this->getClassNamesInDocComments($codeMap) as $name) {
+            // Without an import, a name in a doc comment is not known to be a class: one used as an import's name is.
+            if (!isset($existingImports[strtolower($name)]) && $canImport($name)) {
+                $imported[strtolower($name)] ??= $name;
+            }
+        }
+
+        return [
+            'imported' => $imported,
+            'toImport' => array_diff_key($imported, $existingImports),
+        ];
+    }
+
+    /**
+     * The unqualified, capitalised names written as types in a file's doc comments, e.g. `WP_Post` in
+     * `@param WP_Post|null $post` and `{@see WP_Post::get_instance()}`. Lowercase names are taken to be PHPDoc's own
+     * types, `non-empty-string`, and `@template` names are left out.
+     *
+     * @param FileCodeMap $codeMap The locations in the file's contents.
+     *
+     * @return string[]
+     */
+    protected function getClassNamesInDocComments(FileCodeMap $codeMap): array
+    {
+        $tags = 'param|return|var|throws|property(?:-read|-write)?|method|mixin|extends|implements|use|see|uses';
+        // The type after the tag: up to whitespace, except inside `<>`, `()` and `{}`, e.g. `array<int, WP_Post>`.
+        $typePattern = '/@(?:phpstan-|psalm-)?(?:' . $tags . ')\s+((?:[^\s<({]|<[^>\n]*>|\([^)\n]*\)|\{[^}\n]*\})+)/';
+        // Not part of a longer or qualified name, a variable, a constant, a URL, a string, or an array shape's key.
+        $namePattern = '/(?<![\\\\\w$:\'"\/.-])[A-Z]\w*(?![\w\\\\(\'"\/.-])(?!\??:(?!:))/';
+        $templatePattern = '/@(?:phpstan-|psalm-)?template(?:-covariant|-contravariant)?\s+(\w+)/';
+        // Capitalised spellings of types which are not classes.
+        $notClasses = ['integer', 'boolean', 'double', 'number', 'numeric', 'scalar', 'resource'];
+
+        $names = [];
+        $templates = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::DOC_COMMENT) as $docComment) {
+            $text = $docComment->getText();
+            if (preg_match_all($templatePattern, $text, $templateMatches)) {
+                $templates = array_merge($templates, $templateMatches[1]);
+            }
+            if (!preg_match_all($typePattern, $text, $typeMatches)) {
+                continue;
+            }
+            foreach ($typeMatches[1] as $type) {
+                if (preg_match_all($namePattern, $type, $nameMatches)) {
+                    $names = array_merge($names, $nameMatches[0]);
+                }
+            }
+        }
+
+        return array_values(
+            array_unique(
+                array_filter(
+                    $names,
+                    fn(string $name): bool => !in_array($name, $templates, true)
+                        && !in_array(strtolower($name), $notClasses, true)
+                )
+            )
+        );
+    }
+
+    /**
+     * Is this unqualified function call or constant fetch a use of an imported function or constant, e.g. `foo()`
+     * after `use function Vendor\foo;`, rather than of the global one?
+     *
+     * @param CodeLocation $location A function call or constant fetch.
+     */
+    protected function isUseOfImport(CodeLocation $location): bool
+    {
+        $resolvedName = $location->getResolvedName();
+
+        return !$location->isFullyQualified()
+            && false === strpos($location->getName(), '\\')
+            && !is_null($resolvedName)
+            && 0 !== strcasecmp($resolvedName, $location->getName());
+    }
+
+    /**
+     * In a file moving into a namespace, an import with the same name as a class, function or constant declared in the
+     * file, e.g. `use Vendor\Parser;` beside `class SLSWC_Readme_Parser` becoming `class Parser`, would collide with it:
+     * "Cannot redeclare class ... (previously declared as local import)". Every name in the file is fully qualified by
+     * {@see self::findGlobalsNamespacingPositions()}, so the import is no longer used, and is given an alias.
+     *
+     * @param FileCodeMap       $codeMap           The locations in a file which is moving into a namespace.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     *
+     * @return array<array{start:int,end:int,replacement:string}>
+     */
+    protected function findImportsCollidingWithMovedSymbols(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
+    {
+        $index = $this->getIndex($discoveredSymbols);
+        $globalClassesInterfacesTraitsToRename = $index->getGlobalClassesInterfacesTraitsToRename();
+
+        /**
+ * @var array<int, array<string, true>> $declaredNames The short names declared in the file, by use type.
+*/
+        $declaredNames = [
+            CodeLocation::USE_TYPE_NORMAL => [],
+            CodeLocation::USE_TYPE_FUNCTION => [],
+            CodeLocation::USE_TYPE_CONSTANT => [],
+        ];
+        foreach ($codeMap->getLocationsOfType(...CodeLocation::DEFINITION_TYPES) as $definition) {
+            switch ($definition->getType()) {
+                case CodeLocation::FUNCTION_DEFINITION:
+                    $symbol = $index->getFunctionsToRename()->getFunction($definition->getText());
+                    $useType = CodeLocation::USE_TYPE_FUNCTION;
+                    break;
+                case CodeLocation::CONST_DEFINITION:
+                    $symbol = $index->getConstantsToRename()->getConst($definition->getText());
+                    $useType = CodeLocation::USE_TYPE_CONSTANT;
+                    break;
+                case CodeLocation::NAMESPACE_DEFINITION:
+                    continue 2;
+                default:
+                    $symbol = $this->getGlobalSymbolByName($definition->getText(), $globalClassesInterfacesTraitsToRename);
+                    $useType = CodeLocation::USE_TYPE_NORMAL;
+            }
+            if ($symbol && $this->isMovedIntoNamespace($symbol)) {
+                $shortName = substr((string) strrchr($symbol->getLocalReplacement(), '\\'), 1);
+                // Class and function names are case-insensitive; constant names are not.
+                $declaredNames[$useType][CodeLocation::USE_TYPE_CONSTANT === $useType ? $shortName : strtolower($shortName)] = true;
+            }
+        }
+
+        $positions = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+            if ($useItem->isInGroupUse() || $useItem->hasAlias()) {
+                continue;
+            }
+            $useType = $useItem->getUseType() ?? CodeLocation::USE_TYPE_NORMAL;
+            $importedName = ltrim((string) (strrchr('\\' . $useItem->getName(), '\\') ?: ''), '\\');
+            $key = CodeLocation::USE_TYPE_CONSTANT === $useType ? $importedName : strtolower($importedName);
+            if (!isset($declaredNames[$useType][$key])) {
+                continue;
+            }
+            $positions[] = [
+                'start' => $useItem->getStart(),
+                'end' => $useItem->getEnd(),
+                'replacement' => $useItem->getText() . ' as ' . $importedName . 'Import',
+            ];
+        }
+        return $positions;
+    }
+
+    /**
+     * String literals which are the start of the names of classes moved into a namespace, up to a `_`, used to build
+     * class names, e.g. `'HTMLPurifier_HTMLModule_' . $module`, become the namespace: `'Company\\Project\\HTMLModule\\'`.
+     * Only a literal which is entirely such a prefix is replaced.
+     *
+     * @param FileCodeMap       $codeMap           The string locations in the file's contents.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     *
+     * @return array<array{start:int,end:int,replacement:string}>
+     */
+    protected function findMovedClassPrefixStringPositions(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
+    {
+        $prefixes = $this->getMovedClassPrefixes($discoveredSymbols);
+        if (empty($prefixes)) {
+            return [];
+        }
+
+        $positions = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::STRING) as $string) {
+            $text = $string->getText();
+            $quote = $text[0] ?? '';
+            if (!in_array($quote, ["'", '"'], true) || strlen($text) < 3 || substr($text, -1) !== $quote) {
+                continue;
+            }
+            // `substr()` may return `false` on PHP 7.4, but `$text` is at least three characters.
+            $value = (string) substr($text, 1, -1);
+
+            $prefix = null;
+            if (isset($prefixes[$value])) {
+                $prefix = $value;
+            } elseif ('"' === $quote) {
+                // Interpolated, e.g. `"HTMLPurifier_DefinitionCache_Decorator_$decorator"`: the longest prefix which
+                // is followed by the interpolation.
+                foreach ($prefixes as $candidate => $_) {
+                    $candidate = (string) $candidate;
+                    $next = $value[strlen($candidate)] ?? '';
+                    if (
+                        ('$' === $next || '{' === $next)
+                        && 0 === strpos($value, $candidate)
+                        && strlen($candidate) > strlen((string) $prefix)
+                    ) {
+                        $prefix = $candidate;
+                    }
+                }
+            }
+
+            if (is_null($prefix)) {
+                continue;
+            }
+            $positions[] = [
+                'start' => $string->getStart() + 1,
+                'end' => $string->getStart() + 1 + strlen($prefix),
+                // Doubled, so the trailing backslash cannot escape the closing quote or the `$` that follows.
+                'replacement' => str_replace('\\', '\\\\', $prefixes[$prefix]),
+            ];
+        }
+        return $positions;
+    }
+
+    /**
+     * The `_` terminated prefixes of the names of the classes moved into a namespace, and their namespaces.
+     *
+     * `Acme_Greeting_Formal` moved to `Company\Project\Greeting\Formal` gives `Acme_Greeting_` → `Company\Project\Greeting\`
+     * and `Acme_` → `Company\Project\`. A prefix is only given when the rest of the name became the last namespace
+     * segments, i.e. its `_` were turned into `\`, or kept: `Acme_License_Post_Type` moved to
+     * `Company\Project\License\Post_Type` gives `Acme_License_` and `Acme_`, not `Acme_License_Post_`.
+     *
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     *
+     * @return array<string, string> Original prefix => namespace with trailing backslash.
+     */
+    protected function getMovedClassPrefixes(DiscoveredSymbols $discoveredSymbols): array
+    {
+        $prefixes = [];
+        foreach ($this->getIndex($discoveredSymbols)->getGlobalClassesInterfacesTraitsToRename() as $symbol) {
+            if ($symbol instanceof FunctionSymbol || $symbol instanceof ConstantSymbol || !$this->isMovedIntoNamespace($symbol)) {
+                continue;
+            }
+            $originalSegments = explode('_', $symbol->getOriginalFqdnName());
+            $replacementSegments = explode('\\', $symbol->getLocalReplacement());
+            for ($remaining = 1; $remaining < count($originalSegments); $remaining++) {
+                $rest = implode('_', array_slice($originalSegments, -$remaining));
+                // The last namespace segments which are the rest of the name, with any of its `_` as `\`.
+                for ($tail = 1; $tail <= $remaining && $tail < count($replacementSegments); $tail++) {
+                    if (str_replace('\\', '_', implode('\\', array_slice($replacementSegments, -$tail))) === $rest) {
+                        $prefix = implode('_', array_slice($originalSegments, 0, -$remaining)) . '_';
+                        $prefixes[$prefix] = implode('\\', array_slice($replacementSegments, 0, -$tail)) . '\\';
+                        break;
+                    }
+                }
+            }
+        }
+        return $prefixes;
     }
 
     /**
@@ -1031,10 +1639,17 @@ class ChangePlanner
 */
         $constantsToRename = [];
         /**
+ * @var array<string,true> $movedIntoNamespace Constants moving into a namespace, by original name.
+*/
+        $movedIntoNamespace = [];
+        /**
  * @var ConstantSymbol $constant
 */
         foreach ($this->getIndex($discoveredSymbols)->getConstantsToRename() as $constant) {
             $constantsToRename[$constant->getOriginalFqdnName()] = $constant->getReplacementFqdnName();
+            if ($this->isMovedIntoNamespace($constant)) {
+                $movedIntoNamespace[$constant->getOriginalFqdnName()] = true;
+            }
         }
 
         if (empty($constantsToRename)) {
@@ -1057,11 +1672,13 @@ class ChangePlanner
                     if (
                         (!$location->isFullyQualified() || 1 === $location->countNameParts())
                         && isset($constantsToRename[$name])
+                        // `use const Vendor\FOO;` then `FOO` is `Vendor\FOO`, not the global `FOO`.
+                        && !$this->isUseOfImport($location)
                     ) {
                         $positions[] = [
                             'start' => $location->getStart(),
                             'end' => $location->getEnd(),
-                            'replacement' => $location->isFullyQualified()
+                            'replacement' => $location->isFullyQualified() || isset($movedIntoNamespace[$name])
                                 ? '\\' . $constantsToRename[$name]
                                 : $constantsToRename[$name],
                         ];
@@ -1086,7 +1703,10 @@ class ChangePlanner
                         $positions[] = [
                             'start' => $location->getStart(),
                             'end' => $location->getEnd(),
-                            'replacement' => $constantsToRename[$name],
+                            // Moving into a namespace: the file gains a `namespace` declaration.
+                            'replacement' => isset($movedIntoNamespace[$name])
+                                ? substr((string) strrchr($constantsToRename[$name], '\\'), 1)
+                                : $constantsToRename[$name],
                         ];
                     }
                     break;
@@ -1097,7 +1717,10 @@ class ChangePlanner
                         $positions[] = [
                             'start' => $location->getStart(),
                             'end' => $location->getEnd(),
-                            'replacement' => $constantsToRename[$name],
+                            // Doubled, valid in either quotes.
+                            'replacement' => isset($movedIntoNamespace[$name])
+                                ? str_replace('\\', '\\\\', $constantsToRename[$name])
+                                : $constantsToRename[$name],
                         ];
                     }
                     break;
@@ -1144,7 +1767,9 @@ class ChangePlanner
                 $positions[] = [
                     'start' => $doc->getStart() + $offset,
                     'end' => $doc->getStart() + $offset + strlen($match),
-                    'replacement' => str_starts_with($match, '\\') ? '\\' . $replacement : $replacement,
+                    'replacement' => str_starts_with($match, '\\') || $this->isMovedIntoNamespace($symbol)
+                        ? '\\' . $replacement
+                        : $replacement,
                 ];
             }
         }
@@ -1183,14 +1808,18 @@ class ChangePlanner
                         $positions[] = [
                             'start'       => $location->getStart(),
                             'end'         => $location->getEnd(),
-                            'replacement' => $functionSymbol->getReplacementFqdnName(),
+                            // Moving into a namespace: the file gains a `namespace` declaration.
+                            'replacement' => $this->isMovedIntoNamespace($functionSymbol)
+                                ? substr((string) strrchr($functionSymbol->getLocalReplacement(), '\\'), 1)
+                                : $functionSymbol->getReplacementFqdnName(),
                         ];
                     }
                     break;
                 case CodeLocation::FUNCTION_CALL:
                     $functionSymbol = $discoveredSymbols->getFunction($location->getName());
-                    if ($functionSymbol) {
-                        if (str_contains($location->getName(), '\\')) {
+                    // `use function Vendor\foo;` then `foo()` calls `Vendor\foo`, not the global `foo`.
+                    if ($functionSymbol && !$this->isUseOfImport($location)) {
+                        if (str_contains($location->getName(), '\\') || $this->isMovedIntoNamespace($functionSymbol)) {
                             $replacement = '\\' . $functionSymbol->getReplacementFqdnName();
                         } else {
                             $replacement = $functionSymbol->getLocalReplacement();
@@ -1209,7 +1838,10 @@ class ChangePlanner
                         $positions[] = [
                             'start'       => $location->getStart(), // do not change quotes
                             'end'         => $location->getEnd(),
-                            'replacement' => $functionSymbol->getReplacementFqdnName(),
+                            // Doubled, valid in either quotes: in double quotes `\f` would be a form feed.
+                            'replacement' => $this->isMovedIntoNamespace($functionSymbol)
+                                ? str_replace('\\', '\\\\', $functionSymbol->getReplacementFqdnName())
+                                : $functionSymbol->getReplacementFqdnName(),
                         ];
                     }
                     break;
@@ -1268,7 +1900,7 @@ class ChangePlanner
                 if (!$symbol) {
                     continue;
                 }
-                $replacement = $symbol->getReplacementFqdnName();
+                $replacement = ($this->isMovedIntoNamespace($symbol) ? '\\' : '') . $symbol->getReplacementFqdnName();
                 $docSearchStr = $symbol->getOriginalFqdnName();
                 $docSearchLen = strlen($docSearchStr);
                 // For global symbols (no \ in name), also treat \ as a boundary character

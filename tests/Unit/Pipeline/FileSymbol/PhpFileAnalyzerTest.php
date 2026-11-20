@@ -359,4 +359,104 @@ class PhpFileAnalyzerTest extends TestCase
         self::assertNotNull($analyzer->analyze('<?php $ok = 1;'));
         self::assertNull($analyzer->getLastErrorMessage());
     }
+
+    /**
+     * @return array<string, array{0:string, 1:?string}> Contents, and the text from the expected offset, or null.
+     */
+    public static function namespaceInsertionOffsetDataProvider(): array
+    {
+        return [
+            'first statement' => ["<?php\nclass Foo {}\n", "class Foo {}\n"],
+            'leading comments' => ["<?php\n\n/**\n * Foo.\n */\nclass Foo {}\n", "/**\n * Foo.\n */\nclass Foo {}\n"],
+            'after declare' => ["<?php\ndeclare(strict_types=1);\n\n// Foo.\nclass Foo {}\n", "// Foo.\nclass Foo {}\n"],
+            'inline HTML before the open tag' => ["#!/usr/bin/env php\n<?php\nclass Foo {}\n", "class Foo {}\n"],
+            'no statements' => ["<?php\n", null],
+            'inside an unnamed namespace block' => ["<?php\ndeclare(strict_types=1);\nnamespace {\n    // Foo.\n    class Foo {}\n}\n", "// Foo.\n    class Foo {}\n}\n"],
+            'empty unnamed namespace block' => ["<?php\nnamespace {\n}\n", null],
+            'named namespace block' => ["<?php\nnamespace Foo {\n    class Bar {}\n}\n", "namespace Foo {\n    class Bar {}\n}\n"],
+        ];
+    }
+
+    /**
+     * @covers ::analyze
+     * @covers ::getNamespaceInsertionOffset
+     * @dataProvider \BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzerTest::namespaceInsertionOffsetDataProvider
+     *
+     * @param string  $contents The PHP.
+     * @param ?string $expected The contents from the offset on; null for no offset.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('namespaceInsertionOffsetDataProvider')]
+    public function test_namespace_insertion_offset(string $contents, ?string $expected): void
+    {
+        $codeMap = (new PhpFileAnalyzer())->analyze($contents);
+        self::assertNotNull($codeMap);
+
+        $offset = $codeMap->getNamespaceInsertionOffset();
+
+        self::assertSame($expected, is_null($offset) ? null : substr($contents, $offset));
+    }
+
+    /**
+     * @return array<string, array{0:string, 1:string[]}> Contents, and the text from each expected offset on.
+     */
+    public static function unnamedNamespaceOffsetsDataProvider(): array
+    {
+        return [
+            'no namespace statement' => ["<?php\nclass Foo {}\n", []],
+            'unbracketed namespace' => ["<?php\nnamespace Foo;\nclass Bar {}\n", []],
+            'named bracketed namespace' => ["<?php\nnamespace Foo { class Bar {} }\n", []],
+            'unnamed block' => ["<?php\nnamespace { class Foo {} }\n", [" { class Foo {} }\n"]],
+            'unnamed block without a space' => ["<?php\nnamespace{ class Foo {} }\n", ["{ class Foo {} }\n"]],
+            'uppercase keyword, after a declare and a comment' => [
+                "<?php\ndeclare(strict_types=1);\n// Foo.\nNAMESPACE { class Foo {} }\n",
+                [" { class Foo {} }\n"],
+            ],
+            'two unnamed blocks' => [
+                "<?php\nnamespace { class Foo {} }\nnamespace { class Bar {} }\n",
+                [" { class Foo {} }\nnamespace { class Bar {} }\n", " { class Bar {} }\n"],
+            ],
+            'named and unnamed blocks' => [
+                "<?php\nnamespace Other { class Thing {} }\nnamespace { class Foo {} }\n",
+                [" { class Foo {} }\n"],
+            ],
+            'content before the open tag' => ["#!/usr/bin/env php\n<?php\nnamespace { class Foo {} }\n", [" { class Foo {} }\n"]],
+        ];
+    }
+
+    /**
+     * @covers ::analyze
+     * @dataProvider \BrianHenryIE\Strauss\Pipeline\FileSymbol\PhpFileAnalyzerTest::unnamedNamespaceOffsetsDataProvider
+     *
+     * @param string   $contents The PHP.
+     * @param string[] $expected The contents from each offset on.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('unnamedNamespaceOffsetsDataProvider')]
+    public function test_unnamed_namespace_offsets(string $contents, array $expected): void
+    {
+        $codeMap = (new PhpFileAnalyzer())->analyze($contents);
+        self::assertNotNull($codeMap);
+
+        $actual = array_map(
+            fn(int $offset): string => substr($contents, $offset),
+            $codeMap->getUnnamedNamespaceOffsets()
+        );
+
+        self::assertSame($expected, $actual);
+    }
+
+    /**
+     * @covers ::analyze
+     */
+    public function test_import_alias_is_recorded(): void
+    {
+        $codeMap = (new PhpFileAnalyzer())->analyze("<?php\nuse Foo\\Bar as Baz;\nuse Foo\\Qux;\n");
+        self::assertNotNull($codeMap);
+
+        $imports = $codeMap->getLocationsOfType(CodeLocation::USE_NAME);
+
+        self::assertSame('Baz', $imports[0]->getAlias());
+        self::assertTrue($imports[0]->hasAlias());
+        self::assertNull($imports[1]->getAlias());
+        self::assertFalse($imports[1]->hasAlias());
+    }
 }

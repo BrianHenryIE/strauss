@@ -23,6 +23,20 @@ class FileCodeMapTest extends TestCase
     }
 
     /**
+     * @covers ::__construct
+     * @covers ::getUnnamedNamespaceOffsets
+     */
+    public function testGetUnnamedNamespaceOffsets(): void
+    {
+        self::assertSame([], (new FileCodeMap([], '<?php class Foo {}'))->getUnnamedNamespaceOffsets());
+
+        $contents = '<?php namespace { class Foo {} } namespace { class Bar {} }';
+        $map = new FileCodeMap([], $contents, [], ['\\'], null, [42 => 15, 7 => 42]);
+
+        self::assertSame([15, 42], $map->getUnnamedNamespaceOffsets());
+    }
+
+    /**
      * @covers ::getLocationsOfType
      */
     public function testGetLocationsOfType(): void
