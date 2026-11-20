@@ -245,6 +245,29 @@ class ClassAliasesFeatureTest extends IntegrationTestCase
         $this->assertSame('hello dev', $output);
     }
 
+    /**
+     * An object created only by its prefixed name, whose original name was never autoloaded, satisfies type
+     * declarations using the original names: type declarations and `instanceof` do not autoload, so the original names
+     * must be aliased when the prefixed type is loaded.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/363
+     */
+    public function test_prefixed_object_is_instance_of_original_class(): void
+    {
+        $php = <<<'EOD'
+            function original_type(\Acme\Greeter\Greeting $greeting): string { return $greeting->greet(); }
+            $prefixed = new \Strauss\Aliases\Acme\Greeter\Greeting();
+            echo var_export($prefixed instanceof \Acme\Greeter\Greeting, true) . PHP_EOL;
+            echo var_export($prefixed instanceof \Acme\Greeter\Contracts\Greeter, true) . PHP_EOL;
+            echo original_type($prefixed);
+            EOD;
+
+        $output = $this->runDevCode($php, $exitCode);
+
+        $this->assertEquals(0, $exitCode, $output);
+        $this->assertSame('true' . PHP_EOL . 'true' . PHP_EOL . 'hello', $output);
+    }
+
     public function test_trait_by_original_name(): void
     {
         $php = <<<'EOD'

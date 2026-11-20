@@ -647,10 +647,8 @@ class DependenciesCommand extends AbstractRenamespacerCommand
             $this->filesystem,
             $this->logger
         );
-        // Both are inserted before `autoload_real.php`, so the aliases file is required after the target directory's
-        // autoloader, and its autoloader, prepended, sees prefixed names before the prefixed Composer autoloader does.
-        $vendorComposerAutoload->addVendorPrefixedAutoloadToVendorAutoload();
         $vendorComposerAutoload->addAliasesFileToComposer();
+        $vendorComposerAutoload->addVendorPrefixedAutoloadToVendorAutoload();
     }
 
 

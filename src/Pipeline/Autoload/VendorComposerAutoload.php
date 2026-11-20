@@ -180,11 +180,25 @@ class VendorComposerAutoload
     }
 
     /**
-     * This is a very over-engineered way to do a string replace.
+     * Requires `autoload_aliases.php` once Composer's autoloader is registered, so the aliases autoloader, which
+     * prepends itself, is ahead of it:
      *
-     * `require_once __DIR__ . '/composer/autoload_aliases.php';`
+     * ```
+     * return call_user_func(static function ($loader) {
+     *     if (file_exists(__DIR__ . '/composer/autoload_aliases.php')) {
+     *         require_once __DIR__ . '/composer/autoload_aliases.php';
+     *     }
+     *     return $loader;
+     * }, ComposerAutoloaderInit…::getLoader());
+     * ```
+     *
+     * When prefixing in place, `vendor`'s Composer autoloader loads the prefixed types, and the aliases autoloader must
+     * see them load to alias their original names. This is the same order as when Strauss is installed with Composer,
+     * where `bootstrap.php`, a `files` autoload, requires the aliases file.
      *
      * @param string $code The contents of `vendor/autoload.php`.
+     *
+     * @see https://github.com/BrianHenryIE/strauss/issues/363
      */
     protected function addAliasesFileToComposerAutoload(string $code): string
     {
@@ -212,61 +226,64 @@ class VendorComposerAutoload
                  *
                  * @see NodeVisitor::leaveNode()
                  * @see NodeVisitorAbstract::leaveNode()
-                 *
-                 * @return Node|array{0:\PhpParser\Node\Stmt\If_,1:Node}
                  */
-                public function leaveNode(Node $node)
+                public function leaveNode(Node $node): Node
                 {
-                    if (get_class($node) === \PhpParser\Node\Stmt\Expression::class) {
-                        $prettyPrinter = new Standard();
-                        $maybeRequireAutoloadReal = $prettyPrinter->prettyPrintExpr($node->expr);
-
-                        // Every `vendor/autoload.php` should have this line.
-                        $target = "require_once __DIR__ . '/composer/autoload_real.php'";
-
-                        // If this node isn't the one we want to insert before, continue.
-                        if ($maybeRequireAutoloadReal !== $target) {
-                            return $node;
-                        }
-
-                        // __DIR__ . '/composer/autoload_aliases.php'
-                        $path = new \PhpParser\Node\Expr\BinaryOp\Concat(
-                            new \PhpParser\Node\Scalar\MagicConst\Dir(),
-                            new \PhpParser\Node\Scalar\String_('/composer/autoload_aliases.php')
-                        );
-
-                        // require_once
-                        $requireOnceAutoloadAliases = new Node\Stmt\Expression(
-                            new \PhpParser\Node\Expr\Include_(
-                                $path,
-                                \PhpParser\Node\Expr\Include_::TYPE_REQUIRE_ONCE
-                            )
-                        );
-
-                        // if(file_exists()){}
-                        $ifFileExistsRequireOnceAutoloadAliases = new \PhpParser\Node\Stmt\If_(
-                            new \PhpParser\Node\Expr\FuncCall(
-                                new \PhpParser\Node\Name('file_exists'),
-                                [
-                                    new \PhpParser\Node\Arg($path),
-                                ],
-                            ),
-                            [
-                                'stmts' => [
-                                    $requireOnceAutoloadAliases,
-                                ],
-                            ]
-                        );
-
-                        // Add a blank line. Probably not the correct way to do this.
-                        $node->setAttribute('comments', [new \PhpParser\Comment('')]);
-                        $ifFileExistsRequireOnceAutoloadAliases->setAttribute('comments', [new \PhpParser\Comment('')]);
-
-                        return [
-                            $ifFileExistsRequireOnceAutoloadAliases,
-                            $node,
-                        ];
+                    // Every `vendor/autoload.php` ends with `return ComposerAutoloaderInit…::getLoader();`.
+                    if (
+                        !($node instanceof Node\Stmt\Return_)
+                        || !($node->expr instanceof Node\Expr\StaticCall)
+                        || !($node->expr->name instanceof Node\Identifier)
+                        || 'getLoader' !== $node->expr->name->toString()
+                    ) {
+                        return $node;
                     }
+
+                    // __DIR__ . '/composer/autoload_aliases.php'
+                    $path = new Node\Expr\BinaryOp\Concat(
+                        new Node\Scalar\MagicConst\Dir(),
+                        new Node\Scalar\String_('/composer/autoload_aliases.php')
+                    );
+
+                    // if (file_exists(...)) { require_once ...; }
+                    $ifFileExistsRequireOnceAutoloadAliases = new Node\Stmt\If_(
+                        new Node\Expr\FuncCall(
+                            new Node\Name('file_exists'),
+                            [new Node\Arg($path)]
+                        ),
+                        [
+                            'stmts' => [
+                                new Node\Stmt\Expression(
+                                    new Node\Expr\Include_($path, Node\Expr\Include_::TYPE_REQUIRE_ONCE)
+                                ),
+                            ],
+                        ]
+                    );
+
+                    $loader = new Node\Expr\Variable('loader');
+
+                    // static function ($loader) { ...; return $loader; }
+                    $requireAliasesAfterLoader = new Node\Expr\Closure(
+                        [
+                        'static' => true,
+                        'params' => [new Node\Param($loader)],
+                        'stmts' => [
+                            $ifFileExistsRequireOnceAutoloadAliases,
+                            new Node\Stmt\Return_($loader),
+                        ],
+                        ]
+                    );
+
+                    // `call_user_func()` rather than `(...)(...)`, which needs PHP 7, so the PHP version check above
+                    // still parses.
+                    $node->expr = new Node\Expr\FuncCall(
+                        new Node\Name('call_user_func'),
+                        [
+                            new Node\Arg($requireAliasesAfterLoader),
+                            new Node\Arg($node->expr),
+                        ]
+                    );
+
                     return $node;
                 }
             }
