@@ -355,4 +355,39 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
 
         self::assertSame($namespacedExpected, $this->replace($namespaced));
     }
+
+    /**
+     * An import whose name is the same as a moved class's new short name would collide with it. Every reference in
+     * the moved file is fully qualified, so the import is given an alias.
+     *
+     * @covers ::findGlobalsNamespacingPositions
+     */
+    public function test_import_colliding_with_moved_class_is_aliased(): void
+    {
+        $contents = <<<'EOD'
+            <?php
+            use Other\Library\Greeter;
+            use Other\Library\Unrelated;
+            use function Other\Library\acme_helper;
+
+            interface Acme_Greeter extends Greeter {}
+
+            function acme_helper(): Unrelated { return new Unrelated(); }
+            EOD;
+
+        $expected = <<<'EOD'
+            <?php
+            namespace Company\Project;
+
+            use Other\Library\Greeter as GreeterImport;
+            use Other\Library\Unrelated;
+            use function Other\Library\acme_helper as acme_helperImport;
+
+            interface Greeter extends \Other\Library\Greeter {}
+
+            function acme_helper(): \Other\Library\Unrelated { return new \Other\Library\Unrelated(); }
+            EOD;
+
+        self::assertSame($expected, $this->replace($contents));
+    }
 }

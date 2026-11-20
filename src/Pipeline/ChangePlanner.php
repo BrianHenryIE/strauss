@@ -1101,6 +1101,8 @@ class ChangePlanner
             ],
         ];
 
+        $positions = array_merge($positions, $this->findImportsCollidingWithMovedSymbols($codeMap, $discoveredSymbols));
+
         foreach ($codeMap->getLocationsOfType(CodeLocation::NAME) as $name) {
             if ($name->isFullyQualified() || in_array(strtolower($name->getName()), ['self', 'parent', 'static'], true)) {
                 continue;
@@ -1118,6 +1120,73 @@ class ChangePlanner
             ];
         }
 
+        return $positions;
+    }
+
+    /**
+     * In a file moving into a namespace, an import with the same name as a class, function or constant declared in the
+     * file, e.g. `use Vendor\Parser;` beside `class SLSWC_Readme_Parser` becoming `class Parser`, would collide with it:
+     * "Cannot redeclare class ... (previously declared as local import)". Every name in the file is fully qualified by
+     * {@see self::findGlobalsNamespacingPositions()}, so the import is no longer used, and is given an alias.
+     *
+     * @param FileCodeMap       $codeMap           The locations in a file which is moving into a namespace.
+     * @param DiscoveredSymbols $discoveredSymbols All discovered symbols.
+     *
+     * @return array<array{start:int,end:int,replacement:string}>
+     */
+    protected function findImportsCollidingWithMovedSymbols(FileCodeMap $codeMap, DiscoveredSymbols $discoveredSymbols): array
+    {
+        $index = $this->getIndex($discoveredSymbols);
+        $globalClassesInterfacesTraitsToRename = $index->getGlobalClassesInterfacesTraitsToRename();
+
+        /**
+ * @var array<int, array<string, true>> $declaredNames The short names declared in the file, by use type.
+*/
+        $declaredNames = [
+            CodeLocation::USE_TYPE_NORMAL => [],
+            CodeLocation::USE_TYPE_FUNCTION => [],
+            CodeLocation::USE_TYPE_CONSTANT => [],
+        ];
+        foreach ($codeMap->getLocationsOfType(...CodeLocation::DEFINITION_TYPES) as $definition) {
+            switch ($definition->getType()) {
+                case CodeLocation::FUNCTION_DEFINITION:
+                    $symbol = $index->getFunctionsToRename()->getFunction($definition->getText());
+                    $useType = CodeLocation::USE_TYPE_FUNCTION;
+                    break;
+                case CodeLocation::CONST_DEFINITION:
+                    $symbol = $index->getConstantsToRename()->getConst($definition->getText());
+                    $useType = CodeLocation::USE_TYPE_CONSTANT;
+                    break;
+                case CodeLocation::NAMESPACE_DEFINITION:
+                    continue 2;
+                default:
+                    $symbol = $this->getGlobalSymbolByName($definition->getText(), $globalClassesInterfacesTraitsToRename);
+                    $useType = CodeLocation::USE_TYPE_NORMAL;
+            }
+            if ($symbol && $this->isMovedIntoNamespace($symbol)) {
+                $shortName = substr((string) strrchr($symbol->getLocalReplacement(), '\\'), 1);
+                // Class and function names are case-insensitive; constant names are not.
+                $declaredNames[$useType][CodeLocation::USE_TYPE_CONSTANT === $useType ? $shortName : strtolower($shortName)] = true;
+            }
+        }
+
+        $positions = [];
+        foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+            if ($useItem->isInGroupUse() || $useItem->hasAlias()) {
+                continue;
+            }
+            $useType = $useItem->getUseType() ?? CodeLocation::USE_TYPE_NORMAL;
+            $importedName = ltrim((string) (strrchr('\\' . $useItem->getName(), '\\') ?: ''), '\\');
+            $key = CodeLocation::USE_TYPE_CONSTANT === $useType ? $importedName : strtolower($importedName);
+            if (!isset($declaredNames[$useType][$key])) {
+                continue;
+            }
+            $positions[] = [
+                'start' => $useItem->getStart(),
+                'end' => $useItem->getEnd(),
+                'replacement' => $useItem->getText() . ' as ' . $importedName . 'Import',
+            ];
+        }
         return $positions;
     }
 
