@@ -40,7 +40,8 @@ class ParsedownFeatureTest extends IntegrationTestCase
 
         $exitCode = $this->runStrauss(
             $output,
-            'namespace-globals --namespace=Company\\Project --paths=Parsedown.php --update-call-sites=Parsedown.php,test'
+            // Doubled backslashes: when testing the phar, the arguments go through the shell.
+            'namespace-globals --namespace=Company\\\\Project --paths=Parsedown.php --update-call-sites=Parsedown.php,test'
         );
         $this->assertEquals(0, $exitCode, $output);
 

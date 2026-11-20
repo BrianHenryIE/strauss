@@ -171,7 +171,8 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
     {
         $exitCode = $this->runStrauss(
             $output,
-            'namespace-globals --namespace=Company\\Project --strip-prefix=Acme_ --paths=src --update-call-sites=consumer.php'
+            // Doubled backslashes: when testing the phar, the arguments go through the shell.
+            'namespace-globals --namespace=Company\\\\Project --strip-prefix=Acme_ --paths=src --update-call-sites=consumer.php'
         );
         $this->assertEquals(0, $exitCode, $output);
 

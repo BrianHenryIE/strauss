@@ -116,4 +116,16 @@ class NamespaceGlobalsCommandTest extends TestCase
 
         $this->getSut()->parse([]);
     }
+
+    /**
+     * Doubled backslashes, e.g. typed in single quotes, are collapsed.
+     *
+     * @covers ::updateConfigFromCli
+     */
+    public function test_namespace_backslashes_are_collapsed(): void
+    {
+        $result = $this->getSut()->parse(['--namespace' => 'Company\\\\Project\\\\']);
+
+        self::assertSame('Company\\Project', $result['namespace']);
+    }
 }

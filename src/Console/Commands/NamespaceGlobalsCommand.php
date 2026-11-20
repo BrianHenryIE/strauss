@@ -154,7 +154,8 @@ class NamespaceGlobalsCommand extends AbstractRenamespacerCommand
         if (empty($namespace) || empty(trim($namespace, '\\'))) {
             throw new InvalidArgumentException('The --namespace option is required, e.g. --namespace="Company\\Project".');
         }
-        $this->namespace = trim($namespace, '\\');
+        // E.g. `'Company\\Project'` typed in single quotes.
+        $this->namespace = trim((string) preg_replace('/\\\\+/', '\\', $namespace), '\\');
 
         /**
  * @var string[] $stripPrefixes

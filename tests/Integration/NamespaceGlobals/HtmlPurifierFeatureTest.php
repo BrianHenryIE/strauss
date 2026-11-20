@@ -1,7 +1,8 @@
 <?php
 
 /**
- * `strauss namespace-globals` on HTML Purifier, a large PEAR-style library, then its own SimpleTest suite.
+ * `strauss namespace-globals` on HTML Purifier, a large PEAR-style library: its own SimpleTest suite has the same
+ * results afterwards as before.
  *
  * `HTMLPurifier_AttrDef_CSS_Color` in `library/HTMLPurifier/AttrDef/CSS/Color.php` becomes
  * `Company\Project\AttrDef\CSS\Color`. Its tests stay global: `tests/path2class.func.php` derives the test class names
@@ -57,17 +58,31 @@ class HtmlPurifierFeatureTest extends IntegrationTestCase
     }
 
     /**
-     * @param string $command The shell command, run in the project.
+     * @param string $command        The shell command, run in the project.
+     * @param bool   $assertExitCode Fail unless the command exits 0.
      */
-    protected function runInProject(string $command): string
+    protected function runInProject(string $command, bool $assertExitCode = true): string
     {
         exec($command . ' 2>&1', $output, $exitCode);
         $outputString = implode(PHP_EOL, $output);
-        $this->assertEquals(0, $exitCode, $command . PHP_EOL . $outputString);
+        if ($assertExitCode) {
+            $this->assertEquals(0, $exitCode, $command . PHP_EOL . $outputString);
+        }
         return $outputString;
     }
 
-    public function test_html_purifier_tests_pass_after_namespacing(): void
+    /**
+     * @param string $testOutput The output of HTML Purifier's `tests/index.php`.
+     *
+     * @return string E.g. `Test cases run: 226/226, Passes: 2862, Failures: 0, Exceptions: 0`.
+     */
+    protected function getTestSummary(string $testOutput): string
+    {
+        $this->assertSame(1, preg_match('/Test cases run: .*/', $testOutput, $matches), $testOutput);
+        return trim($matches[0]);
+    }
+
+    public function test_html_purifier_test_results_unchanged_after_namespacing(): void
     {
         $this->projectDir = $this->testsWorkingDir . '/htmlpurifier';
         $php = escapeshellarg(PHP_BINARY);
@@ -83,12 +98,21 @@ class HtmlPurifierFeatureTest extends IntegrationTestCase
         $composerJson['require-dev']['simpletest/simpletest'] = 'dev-master#' . self::SIMPLETEST_COMMIT;
         $this->getFileSystem()->write($this->projectDir . '/composer.json', (string) json_encode($composerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-        $this->runInProject('composer install --no-interaction');
+        // Its `composer.json` lists each supported PHP version, e.g. not yet 8.6.
+        $this->runInProject('composer install --no-interaction --ignore-platform-req=php');
         copy($this->projectDir . '/test-settings.sample.php', $this->projectDir . '/test-settings.php');
+
+        // Some results depend on the environment, e.g. `DOMLex` on the libxml version, so the suite is compared with
+        // its results before namespacing.
+        $baselineSummary = $this->getTestSummary($this->runInProject($php . ' tests/index.php', false));
+        $this->assertStringContainsString('Test cases run: 226/226', $baselineSummary);
+        // The baseline run caches definitions, serialized with the original class names.
+        $this->runInProject('git clean -fdxq library/HTMLPurifier/DefinitionCache/Serializer');
 
         $exitCode = $this->runStrauss(
             $output,
-            'namespace-globals --namespace=Company\\Project --strip-prefix=HTMLPurifier_ --paths=library --update-call-sites=tests,extras,maintenance,smoketests'
+            // Doubled backslashes: when testing the phar, the arguments go through the shell.
+            'namespace-globals --namespace=Company\\\\Project --strip-prefix=HTMLPurifier_ --paths=library --update-call-sites=tests,extras,maintenance,smoketests'
         );
         $this->assertEquals(0, $exitCode, $output);
 
@@ -158,9 +182,8 @@ class HtmlPurifierFeatureTest extends IntegrationTestCase
         // The schema is cached serialized, with the class names.
         $this->runInProject($php . ' -d auto_prepend_file=vendor/autoload.php maintenance/generate-schema-cache.php');
 
-        $testOutput = $this->runInProject($php . ' tests/index.php');
+        $testOutput = $this->runInProject($php . ' tests/index.php', false);
 
-        $this->assertStringContainsString('Test cases run: 226/226', $testOutput);
-        $this->assertStringContainsString('Failures: 0, Exceptions: 0', $testOutput);
+        $this->assertSame($baselineSummary, $this->getTestSummary($testOutput), $testOutput);
     }
 }
