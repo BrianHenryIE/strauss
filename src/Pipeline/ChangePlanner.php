@@ -945,7 +945,27 @@ class ChangePlanner
 
         // In named namespaces, `use Classname;` must become `use PrefixedClassname as Classname;`
         // so that unqualified references within the namespace continue to resolve correctly.
-        foreach ($codeMap->getLocationsOfType(CodeLocation::USE_NAME) as $useItem) {
+        $useItems = $codeMap->getLocationsOfType(CodeLocation::USE_NAME);
+
+        // How many of the file's imports would be used by each short name, lowercase, were they imported by the new
+        // names of the classes moved into a namespace: `A\Thing` and `B\Thing` cannot both be `Thing`.
+        $shortNameCounts = [];
+        foreach ($useItems as $useItem) {
+            $discoveredSymbol = $globalClassesInterfacesTraitsToRename->get($useItem->getName());
+            if (
+                !$useItem->isInGlobalNamespace()
+                && !$useItem->isFullyQualified()
+                && !$useItem->hasAlias()
+                && $discoveredSymbol
+                && $discoveredSymbol->isDoRename()
+                && $this->isMovedIntoNamespace($discoveredSymbol)
+            ) {
+                $shortName = strtolower(substr((string) strrchr('\\' . $discoveredSymbol->getLocalReplacement(), '\\'), 1));
+                $shortNameCounts[$shortName] = ($shortNameCounts[$shortName] ?? 0) + 1;
+            }
+        }
+
+        foreach ($useItems as $useItem) {
             if ($useItem->isInGlobalNamespace() || $useItem->isFullyQualified()) {
                 continue;
             }
@@ -961,6 +981,7 @@ class ChangePlanner
                     $this->isMovedIntoNamespace($discoveredSymbol)
                     && !$useItem->hasAlias()
                     && !$useItem->isInGroupUse()
+                    && 1 === ($shortNameCounts[strtolower($shortName)] ?? 0)
                     && !$this->isNameUsedInFile($codeMap, $shortName, $useItem)
                 ) {
                     // Moved into a namespace: the import is of the new name, and its uses are updated to match,

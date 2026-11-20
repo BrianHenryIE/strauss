@@ -236,6 +236,40 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
     }
 
     /**
+     * Two imports whose new names have the same short name, `A\Thing` and `B\Thing`, cannot both be imported by it:
+     * both keep their old names as aliases.
+     *
+     * @covers ::findGlobalSymbolsPositions
+     * @covers ::isNameUsedInFile
+     */
+    public function test_namespaced_call_site_imports_with_the_same_short_name(): void
+    {
+        $file = new File('/project/src/file.php', 'src/file.php', '/project/src/file.php');
+        $globalNamespace = new NamespaceSymbol('\\', $file);
+        $symbols = new DiscoveredSymbols([$globalNamespace]);
+        foreach (['Acme_A_Thing' => 'Company\\Project\\A\\Thing', 'Acme_B_Thing' => 'Company\\Project\\B\\Thing', 'Acme_C_Other' => 'Company\\Project\\C\\Other'] as $name => $replacement) {
+            $symbol = new ClassSymbol($name, $file, $globalNamespace);
+            $symbol->setLocalReplacement($replacement);
+            $symbol->setDoRename(true);
+            $symbols->add($symbol);
+        }
+
+        $contents = "<?php\nnamespace Other;\n\nuse Acme_A_Thing;\nuse Acme_B_Thing;\nuse Acme_C_Other;\n\nfunction consumer(Acme_A_Thing \$a, Acme_B_Thing \$b, Acme_C_Other \$c) {}\n";
+        $expected = "<?php\nnamespace Other;\n\nuse Company\\Project\\A\\Thing as Acme_A_Thing;\nuse Company\\Project\\B\\Thing as Acme_B_Thing;\nuse Company\\Project\\C\\Other;\n\nfunction consumer(Acme_A_Thing \$a, Acme_B_Thing \$b, Other \$c) {}\n";
+
+        $codeMap = (new PhpFileAnalyzer())->analyze($contents);
+        self::assertNotNull($codeMap);
+        $edits = (new ChangePlanner())->plan($symbols, $codeMap);
+        usort($edits, fn(array $a, array $b): int => $b['start'] <=> $a['start']);
+        $result = $contents;
+        foreach ($edits as $edit) {
+            $result = substr_replace($result, $edit['replacement'], $edit['start'], $edit['end'] - $edit['start']);
+        }
+
+        self::assertSame($expected, $result);
+    }
+
+    /**
      * In a namespaced call site, `use Acme_Greeter;` imports the moved class by its new name, and the uses of the
      * import are updated to its short name, unless that name is already taken in the file.
      *
@@ -408,6 +442,14 @@ class ChangePlannerNamespaceGlobalsTest extends TestCase
             'used in code and in doc comments, sorted, once each' => [
                 "<?php\n/**\n * @param WP_Post \$post\n * @throws Exception\n */\nfunction acme_helper(WP_Post \$post, ArrayObject \$list): WP_Post { throw new Exception(); }\n",
                 "<?php\nnamespace Company\\Project;\n\nuse ArrayObject;\nuse Exception;\nuse WP_Post;\n\n/**\n * @param WP_Post \$post\n * @throws Exception\n */\nfunction acme_helper(WP_Post \$post, ArrayObject \$list): WP_Post { throw new Exception(); }\n",
+            ],
+            'the same class written in different cases is imported once' => [
+                "<?php\nclass Acme_Greeter extends Exception { /** @throws EXCEPTION */ public function a(): exception {} }\n",
+                "<?php\nnamespace Company\\Project;\n\nuse Exception;\n\nclass Greeter extends Exception { /** @throws EXCEPTION */ public function a(): exception {} }\n",
+            ],
+            'a global class with the short name of a moved class in another file' => [
+                "<?php\nclass Acme_Greeting_Formal extends Greeter implements Acme_Greeter {}\n",
+                "<?php\nnamespace Company\\Project\\Greeting;\n\nuse Greeter;\n\nclass Formal extends Greeter implements \\Company\\Project\\Greeter {}\n",
             ],
             'only in a doc comment' => [
                 "<?php\nclass Acme_Greeter {\n    /**\n     * @var WP_Post|null\n     * @return array<int, WP_Error>|string|Array|T\n     * @template T\n     * @see https://example.org/Docs and {@see WP_Query::get()}\n     */\n    public \$post;\n}\n",
