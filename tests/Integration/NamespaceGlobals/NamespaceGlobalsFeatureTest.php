@@ -277,4 +277,22 @@ class NamespaceGlobalsFeatureTest extends IntegrationTestCase
         $this->assertEquals(0, $exitCode, $outputString);
         $this->assertSame('Company\\Project\\Greeting\\Formal', $outputString);
     }
+
+    /**
+     * `--dry-run` must not change any file.
+     */
+    public function test_dry_run_changes_nothing(): void
+    {
+        $paths = ['src/Acme/Greeter.php', 'src/Acme/Base.php', 'src/Acme/Greeting/Formal.php', 'src/Acme/Legacy.php', 'consumer.php'];
+        $before = array_combine($paths, array_map([$this, 'read'], $paths));
+
+        $exitCode = $this->runStrauss(
+            $output,
+            // Doubled backslashes: when testing the phar, the arguments go through the shell.
+            'namespace-globals --namespace=Company\\\\Project --strip-prefix=Acme_ --paths=src --update-call-sites=consumer.php --dry-run'
+        );
+        $this->assertEquals(0, $exitCode, $output);
+
+        $this->assertSame($before, array_combine($paths, array_map([$this, 'read'], $paths)));
+    }
 }

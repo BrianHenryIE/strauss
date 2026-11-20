@@ -63,4 +63,35 @@ class ReplaceCommandIntegrationTest extends IntegrationTestCase
 
         self::assertStringContainsString('namespace BrianHenryIE\MyPlugin;', $php_string);
     }
+
+    /**
+     * `--dry-run` must not change any file.
+     */
+    public function test_dry_run_changes_nothing(): void
+    {
+        $myPluginPhpString = <<<'EOD'
+            <?php
+            namespace YourPlugin;
+
+            class YourPluginClass {}
+            EOD;
+
+        chdir($this->testsWorkingDir);
+
+        $this->getFileSystem()->write($this->testsWorkingDir . '/my-plugin.php', $myPluginPhpString);
+
+        $_SERVER['argv'] = [
+            $this->projectDir . '/bin/strauss',
+            'replace',
+            '--from','YourPlugin',
+            '--to','BrianHenryIE\\MyPlugin',
+            '--dry-run',
+        ];
+
+        $app = new \BrianHenryIE\Strauss\Console\Application('0.19.1');
+        $app->setAutoExit(false);
+        $app->run();
+
+        self::assertSame($myPluginPhpString, $this->getFileSystem()->read($this->testsWorkingDir . '/my-plugin.php'));
+    }
 }
