@@ -28,9 +28,11 @@ use Psr\Log\LoggerInterface;
  * prefix removed and their `_` separated segments become namespace segments: `HTMLPurifier_AttrDef_CSS_Color` becomes
  * `Company\Project\AttrDef\CSS\Color`, and `HTMLPurifier` itself becomes `Company\Project\HTMLPurifier`.
  *
- * A short name PHP reserves, e.g. `List`, is prepended with the library name, i.e. the stripped prefix without its `_`
- * (or the last segment of the namespace): `HTMLPurifier_HTMLModule_List` becomes
- * `Company\Project\HTMLModule\HTMLPurifierList`. Code which builds such a name at runtime, e.g.
+ * A short name PHP reserves, e.g. `List` or `Abstract`, is prepended with the segment before it, staying in the same
+ * namespace as its siblings: `HTMLPurifier_HTMLModule_List` becomes `Company\Project\HTMLModule\HTMLModuleList`, and
+ * `SLSWC_Extension_Abstract` becomes `Company\Project\Extension\ExtensionAbstract`. With no segment before it, the
+ * library name is prepended, i.e. the stripped prefix without its `_` (or the last segment of the namespace):
+ * `Acme_List` becomes `Company\Project\AcmeList`. Code which builds such a name at runtime, e.g.
  * `'HTMLPurifier_HTMLModule_' . 'List'`, must be updated by hand.
  *
  * Global functions and constants declared with `const` move with their file, keeping their names: into the namespace
@@ -171,7 +173,7 @@ class GlobalsNamespacer
 
         $shortName = (string) array_pop($segments);
         if ($this->hasReservedShortName($globalName)) {
-            $shortName = $libraryName . $shortName;
+            $shortName = (empty($segments) ? $libraryName : (string) end($segments)) . $shortName;
         }
         $segments[] = $shortName;
 

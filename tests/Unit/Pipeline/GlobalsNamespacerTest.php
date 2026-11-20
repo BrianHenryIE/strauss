@@ -30,7 +30,10 @@ class GlobalsNamespacerTest extends TestCase
             'class named as the prefix' => ['HTMLPurifier', 'Company\\Project\\HTMLPurifier'],
             'longer prefix tried first' => ['HTMLPurifierX_Foo', 'Company\\Project\\Foo'],
             'other names keep their underscores' => ['Other_Name', 'Company\\Project\\Other_Name'],
-            'reserved short name, prefixed with the library name' => ['HTMLPurifier_HTMLModule_List', 'Company\\Project\\HTMLModule\\HTMLPurifierList'],
+            'reserved short name, prefixed with the segment before it' => ['HTMLPurifier_HTMLModule_List', 'Company\\Project\\HTMLModule\\HTMLModuleList'],
+            'reserved suffix' => ['HTMLPurifier_Extension_Abstract', 'Company\\Project\\Extension\\ExtensionAbstract'],
+            'reserved suffix, deeper' => ['HTMLPurifier_REST_Args_Trait', 'Company\\Project\\REST\\Args\\ArgsTrait'],
+            'reserved short name with no segment before it, prefixed with the library name' => ['HTMLPurifier_List', 'Company\\Project\\HTMLPurifierList'],
             'reserved name without a prefix, prefixed with the last namespace segment' => ['Empty', 'Company\\Project\\ProjectEmpty'],
         ];
     }

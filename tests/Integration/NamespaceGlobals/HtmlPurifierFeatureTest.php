@@ -10,7 +10,7 @@
  *
  * What Strauss cannot do, and is done here by hand, as a user would:
  * - code which builds class names at runtime from parts which are not literals: module names containing `_`
- *   (`Tidy_Transitional`) and reserved short names (`List`, named `HTMLPurifierList`);
+ *   (`Tidy_Transitional`) and reserved short names (`List`, named `HTMLModuleList`);
  * - the test suite's conventions which derive class names from strings: mock names, the class tested by
  *   `VarParserHarness`, and `HTMLPurifier_Encoder` in two `.htmlt` fixtures, which are not PHP files;
  * - the test autoloader, which `require`s blindly, so fails when the library checks `class_exists()`;
@@ -121,7 +121,7 @@ class HtmlPurifierFeatureTest extends IntegrationTestCase
         $this->assertStringContainsString('class Color extends \\Company\\Project\\AttrDef', $colorPhp);
 
         $listPhp = $this->getFileSystem()->read($this->projectDir . '/library/HTMLPurifier/HTMLModule/List.php');
-        $this->assertStringContainsString('class HTMLPurifierList extends \\Company\\Project\\HTMLModule', $listPhp);
+        $this->assertStringContainsString('class HTMLModuleList extends \\Company\\Project\\HTMLModule', $listPhp);
 
         // Module names, e.g. `Tidy_Transitional` and `List`, are joined to the namespace at runtime.
         $this->patch(
@@ -139,7 +139,7 @@ class HtmlPurifierFeatureTest extends IntegrationTestCase
                                     $ok = true;
                                     break;
                                 }
-                                $module = $prefix . 'HTMLPurifier' . $original_module;
+                                $module = $prefix . 'HTMLModule' . $original_module;
                                 if (class_exists($module)) {
                                     $ok = true;
                                     break;
