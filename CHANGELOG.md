@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.32.0 November 2026
+
+* Add: `strauss list-symbols` lists the namespaces, classes, interfaces, traits, enums, functions and constants defined in the given paths, with `--type` and `--global` filters (basically do the first couple of steps and display what is learned)
+* Fix: when prefixing in place (`target_directory: vendor`), and updating individual packages, uses of the prefixed symbols in the other installed packages were not updated
+* Fix: when `composer.json`.`config.autoloader-suffix` was set, `vendor-prefixed` got the same `ComposerAutoloaderInit` class as `vendor` on the second run, and PHP fataled because the same classname was declared twice
+* Fix: dev aliases final classes didn't work, now uses `class_alias()`
+* Fix: error on Windows due to regex only matching forward slashes
+
 ## 0.31.1 October 2026
 
 * Fix: class names in strings from packages which `provide` or `replace` another (e.g. `nyholm/psr7`) were not prefixed in packages which do not require them (e.g. php-http/discovery's candidate list), so discovery failed at runtime
