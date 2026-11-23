@@ -38,9 +38,15 @@ class ProjectComposerPackage extends ComposerPackage
      */
     public function __construct(string $absolutePathFile, ?array $overrideAutoload = null)
     {
+        // A partial load, with plugins and scripts disabled: only the package, its config and `extra` are read.
+        // A full load also loads the global composer.json, runs git to guess the root version, and dispatches
+        // Composer's `init` event, which runs a project script of that name.
         $composer = (new Factory())->createComposer(
             new NullIO(),
             $absolutePathFile,
+            true,
+            null,
+            false,
             true
         );
 

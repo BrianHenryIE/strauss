@@ -188,7 +188,7 @@ class ComposerPackage
         /**
  * @var PartialComposer $composer
 */
-        $composer = $factory->createComposer(new NullIO(), $composerInput, true, null, false);
+        $composer = $factory->createComposer(new NullIO(), $composerInput, true, null, false, true);
 
         return $composer;
     }
