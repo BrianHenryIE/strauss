@@ -12,6 +12,7 @@ use BrianHenryIE\Strauss\Composer\Extra\StraussConfig;
 use BrianHenryIE\Strauss\Helpers\Flysystem\FileSystem;
 use Composer\Factory;
 use Composer\IO\NullIO;
+use Composer\PartialComposer;
 
 /**
  * Loads the project's `composer.json` through Composer's {@see Factory} rather than from an already-installed package.
@@ -22,6 +23,11 @@ use Composer\IO\NullIO;
  */
 class ProjectComposerPackage extends ComposerPackage
 {
+    /**
+     * The project's composer.json as parsed by Composer, kept to build the {@see StraussConfig}.
+     */
+    protected PartialComposer $composer;
+
     protected string $author;
 
     protected string $relativeVendorDirectory;
@@ -37,6 +43,8 @@ class ProjectComposerPackage extends ComposerPackage
             $absolutePathFile,
             true
         );
+
+        $this->composer = $composer;
 
         parent::__construct($composer, $overrideAutoload);
 

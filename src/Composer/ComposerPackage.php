@@ -30,15 +30,6 @@ use Exception;
 class ComposerPackage
 {
     /**
-     * The composer.json file as parsed by Composer.
-     *
-     * @see Factory::create
-     *
-     * @var PartialComposer
-     */
-    protected PartialComposer $composer;
-
-    /**
      * The name of the project in composer.json.
      *
      * E.g. `brianhenryie/my-project`.
@@ -150,7 +141,11 @@ class ComposerPackage
      */
     public static function fromFile(string $absolutePath, ?array $overrideAutoload = null): ComposerPackage
     {
-        return new ComposerPackage(self::createPartialComposer($absolutePath), $overrideAutoload);
+        $package = new ComposerPackage(self::createPartialComposer($absolutePath), $overrideAutoload);
+
+        self::releaseComposerObjects();
+
+        return $package;
     }
 
     /**
@@ -163,7 +158,24 @@ class ComposerPackage
      */
     public static function fromComposerJsonArray(array $jsonArray, ?array $overrideAutoload = null): ComposerPackage
     {
-        return new ComposerPackage(self::createPartialComposer($jsonArray), $overrideAutoload);
+        $package = new ComposerPackage(self::createPartialComposer($jsonArray), $overrideAutoload);
+
+        self::releaseComposerObjects();
+
+        return $package;
+    }
+
+    /**
+     * Free the `Composer` objects which are no longer referenced.
+     *
+     * {@see Factory::createComposer()} always creates an `HttpDownloader`, whose cURL multi handle keeps file
+     * descriptors open. The objects reference each other in a cycle, so PHP only frees them when its cycle collector
+     * runs, which is not predictable. Without this, loading the packages of a project with ~60 dependencies exceeded
+     * macOS's default limit of 256 open files: "curl_multi_init(): Could not initialize a new cURL multi handle".
+     */
+    private static function releaseComposerObjects(): void
+    {
+        gc_collect_cycles();
     }
 
     /**
@@ -184,7 +196,7 @@ class ComposerPackage
     /**
      * Create a PHP object to represent a composer package.
      *
-     * @param PartialComposer   $composer         Composer instance loaded from the package's composer.json.
+     * @param PartialComposer   $composer         Composer instance loaded from the package's composer.json. Read here, not kept.
      * @param ?AutoloadKeyArray $overrideAutoload Optional configuration to replace the package's own autoload definition with another which Strauss can use.
      *
      * @throws Exception
@@ -193,8 +205,8 @@ class ComposerPackage
     {
         $this->discoveredSymbols = new DiscoveredSymbols();
 
-        $this->composer = $composer;
-
+        // The `Composer` object is deliberately not kept: each one holds a cURL multi handle's open file descriptors
+        // for as long as it exists, and a project can have more packages than the OS allows open files.
         $this->packageName = $composer->getPackage()->getName();
 
         $fsComposerJsonFileAbsolute = $composer->getConfig()->getConfigSource()->getName();
@@ -210,7 +222,7 @@ class ComposerPackage
         $pathNormalizer = FileSystem::makePathNormalizer(Platform::getcwd());
 
         // This is null for some packages, e.g. `wptrt/admin-notices`
-        $packageVendorDirAbsolute = $this->composer->getConfig()->get('vendor-dir');
+        $packageVendorDirAbsolute = $composer->getConfig()->get('vendor-dir');
         $projectVendorDirAbsolute = null;
         if (1 === preg_match('/(.*vendor)/U', $packageVendorDirAbsolute, $projectVendorDirRegexMatch)) {
             $projectVendorDirAbsolute = $pathNormalizer->normalizePath(
@@ -230,7 +242,7 @@ class ComposerPackage
         /**
  * @var string $packageVendorAbsoluteDirectoryPath
 */
-        $packageVendorAbsoluteDirectoryPath = $this->composer->getConfig()->get('vendor-dir');
+        $packageVendorAbsoluteDirectoryPath = $composer->getConfig()->get('vendor-dir');
         $packageAbsoluteDirectoryPath = dirname($packageVendorAbsoluteDirectoryPath);
         $vendorAbsoluteDirectoryPath = $fsCurrentWorkingDirectory . '/vendor';
         if ('metapackage' !== $composer->getPackage()->getType()) {

@@ -263,4 +263,41 @@ class ComposerPackageTest extends TestCase
 
         $this->assertStringNotContainsString('\\', $absolutePath ?? '');
     }
+    /**
+     * Each `Composer` object opens a cURL multi handle, which holds open file descriptors. When every package kept
+     * its `Composer` object, a project with ~60 dependencies exceeded macOS's default limit of 256 open files and
+     * failed with "curl_multi_init(): Could not initialize a new cURL multi handle".
+     *
+     * @covers ::fromFile
+     * @covers ::__construct
+     */
+    public function testPackagesDoNotHoldOpenFileDescriptors(): void
+    {
+        if (!is_dir('/dev/fd') || !function_exists('curl_multi_init')) {
+            $this->markTestSkipped('Open file descriptors can only be counted via /dev/fd, and are only opened when ext-curl is loaded.');
+        }
+
+        $countOpenFileDescriptors = function (): int {
+            $openFileDescriptors = scandir('/dev/fd');
+            return false === $openFileDescriptors ? 0 : count($openFileDescriptors);
+        };
+
+        $testFile = __DIR__ . '/composerpackage-test-libmergepdf.json';
+
+        $before = $countOpenFileDescriptors();
+
+        $packages = [];
+        for ($packageNumber = 0; $packageNumber < 30; $packageNumber++) {
+            $packages[] = ComposerPackage::fromFile($testFile);
+        }
+
+        $after = $countOpenFileDescriptors();
+
+        $this->assertCount(30, $packages);
+        $this->assertLessThan(
+            30,
+            $after - $before,
+            'Holding 30 packages should not hold open file descriptors for each of them.'
+        );
+    }
 }
