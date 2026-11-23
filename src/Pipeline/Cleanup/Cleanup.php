@@ -155,7 +155,8 @@ class Cleanup
         foreach ($this->config->getExcludePackagesFromCopy() as $packageName) {
             $projectComposerJsonArray['require'][$packageName] ??= '*';
         }
-        $composer = Factory::create(new NullIO(), $projectComposerJsonArray);
+        // Scripts are disabled so creating it does not run a project script named `init`.
+        $composer = Factory::create(new NullIO(), $projectComposerJsonArray, false, true);
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
         $config = $composer->getConfig();
