@@ -159,4 +159,46 @@ class SymbolDefinition
     {
         $this->backingType = $backingType;
     }
+    /**
+     * @return array{0:string, 1:string, 2:string, 3:?CodeLocation, 4:bool, 5:?string, 6:string[], 7:?string}
+     */
+    public function __serialize(): array
+    {
+        return [
+            $this->type,
+            $this->name,
+            $this->namespace,
+            $this->location,
+            $this->isAbstract,
+            $this->extends,
+            $this->interfaces,
+            $this->backingType,
+        ];
+    }
+
+    /**
+     * Assigns the declared properties directly, so no property hash table is left on the object:
+     * {@see CodeLocation::__unserialize()}.
+     *
+     * @param array{0:string, 1:string, 2:string, 3:?CodeLocation, 4:bool, 5:?string, 6:string[], 7:?string} $data As returned by {@see self::__serialize()}.
+     */
+    public function __unserialize(array $data): void
+    {
+        [
+            $type,
+            $name,
+            $namespace,
+            $this->location,
+            $this->isAbstract,
+            $extends,
+            $interfaces,
+            $this->backingType,
+        ] = $data;
+
+        $this->type = CodeLocation::shareString($type);
+        $this->name = CodeLocation::shareString($name);
+        $this->namespace = CodeLocation::shareString($namespace);
+        $this->extends = is_null($extends) ? null : CodeLocation::shareString($extends);
+        $this->interfaces = array_map([CodeLocation::class, 'shareString'], $interfaces);
+    }
 }

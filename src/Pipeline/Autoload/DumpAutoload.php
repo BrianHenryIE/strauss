@@ -126,7 +126,9 @@ class DumpAutoload
             $projectComposerJsonArray['autoload'] = [];
         }
 
-        $composer = (new Factory())->createComposer(new NullIO(), $projectComposerJsonArray);
+        // A full load, with plugins: `getLocker()` is needed, and the plugins' installers know the install paths.
+        // Scripts are disabled so creating it does not run a project script named `init`.
+        $composer = (new Factory())->createComposer(new NullIO(), $projectComposerJsonArray, false, null, true, true);
         $installationManager = $composer->getInstallationManager();
         $package = $composer->getPackage();
 
