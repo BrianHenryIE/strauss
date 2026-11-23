@@ -95,8 +95,11 @@ jobs:
           php -m
           composer --version
 
+      # PHP 8.7 is a nightly build, and some dev dependencies (e.g. php-cs-fixer's ergebnis/agent-detector)
+      # list each PHP minor version they support, so do not yet allow it. `php+` ignores only the upper
+      # bound of the packages' PHP requirements; packages needing a newer PHP are still refused.
       - name: Install dependencies
-        run: composer install --prefer-dist --verbose
+        run: composer install --prefer-dist --verbose ${{ matrix.php == '8.7' && '--ignore-platform-req=php+' || '' }}
 
       # On PHP 8.0 a conflict exists between psr/simple-cache and symfony/cache. Pinning versions or using composer.json's `conflict` key would restrict installs on other PHP versions, so
       # we will be explicit about the version only for CI tests, and if a user were to encounter the error, they can choose which way to address it in their project (use the prefixed phar!).
