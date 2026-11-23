@@ -142,4 +142,42 @@ class ProjectComposerPackageTest extends TestCase
 
         $this->assertFalse($scriptRan, 'The project\'s `init` Composer script was run.');
     }
+    /**
+     * When the vendor directory's name does not contain "vendor", `null` was passed to `str_starts_with()`, which
+     * is deprecated since PHP 8.1.
+     *
+     * @covers \BrianHenryIE\Strauss\Composer\ComposerPackage::__construct
+     */
+    public function testCustomVendorDirDoesNotTriggerDeprecation(): void
+    {
+        $this->getFileSystem()->write(
+            'project/composer.json',
+            (string) json_encode([
+                'name' => 'brianhenryie/strauss-config-test',
+                'config' => [
+                    'vendor-dir' => 'libraries',
+                ],
+            ])
+        );
+
+        $deprecations = [];
+        $previousErrorHandler = set_error_handler(
+            function (int $errorNumber, string $errorMessage) use (&$deprecations): bool {
+                $deprecations[] = $errorMessage;
+                return true;
+            },
+            E_DEPRECATED | E_USER_DEPRECATED
+        );
+
+        try {
+            $sut = new ProjectComposerPackage(
+                $this->getFileSystem()->makeAbsolute('mem://project/composer.json')
+            );
+        } finally {
+            set_error_handler($previousErrorHandler);
+        }
+
+        $this->assertSame([], $deprecations);
+        $this->assertSame('libraries', $sut->getRelativeVendorDirectory());
+    }
 }

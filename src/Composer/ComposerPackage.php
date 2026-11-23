@@ -232,7 +232,9 @@ class ComposerPackage
         $composerJsonFileAbsolute = $pathNormalizer->normalizePath($fsComposerJsonFileAbsolute);
         $fsComposerAbsoluteDirectoryPath = realpath(dirname($fsComposerJsonFileAbsolute));
         if (false !== $fsComposerAbsoluteDirectoryPath) {
-            if (str_starts_with($composerJsonFileAbsolute, $projectVendorDirAbsolute)) {
+            // Null when the vendor directory's name does not contain "vendor"; an empty prefix always matches, as it did when
+            // `null` was passed.
+            if (str_starts_with($composerJsonFileAbsolute, $projectVendorDirAbsolute ?? '')) {
                 $this->packageAbsolutePath = $composerJsonFileAbsolute;
             }
         }
