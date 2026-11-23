@@ -198,4 +198,32 @@ class FileCodeMap
     {
         return crc32($contents) === $this->contentsCrc32;
     }
+    /**
+     * @return array{0:CodeLocation[], 1:SymbolDefinition[], 2:string[], 3:int}
+     */
+    public function __serialize(): array
+    {
+        return [
+            $this->locations,
+            $this->definitions,
+            $this->namespaceNames,
+            $this->contentsCrc32,
+        ];
+    }
+
+    /**
+     * Assigns the declared properties directly, so no property hash table is left on the object:
+     * {@see CodeLocation::__unserialize()}.
+     *
+     * @param array{0:CodeLocation[], 1:SymbolDefinition[], 2:string[], 3:int} $data As returned by {@see self::__serialize()}.
+     */
+    public function __unserialize(array $data): void
+    {
+        [
+            $this->locations,
+            $this->definitions,
+            $this->namespaceNames,
+            $this->contentsCrc32,
+        ] = $data;
+    }
 }

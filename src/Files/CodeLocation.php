@@ -309,4 +309,73 @@ class CodeLocation
     {
         return substr_count($this->getName(), '\\') + 1;
     }
+    /**
+     * A list, not a map of property names: code maps are sent from worker processes one location at a time.
+     *
+     * @return array{0:string, 1:int, 2:int, 3:string, 4:?string, 5:?string, 6:?string, 7:?bool, 8:?int, 9:bool, 10:bool}
+     */
+    public function __serialize(): array
+    {
+        return [
+            $this->type,
+            $this->start,
+            $this->length,
+            $this->text,
+            $this->namespace,
+            $this->resolvedName,
+            $this->matchName,
+            $this->isFullyQualifiedName,
+            $this->useType,
+            $this->inGroupUse,
+            $this->hasAlias,
+        ];
+    }
+
+    /**
+     * Assigns the declared properties directly. PHP's default `unserialize()` builds a property hash table on
+     * every object, which made a location from a worker process ~7 times larger than one created here.
+     *
+     * @param array{0:string, 1:int, 2:int, 3:string, 4:?string, 5:?string, 6:?string, 7:?bool, 8:?int, 9:bool, 10:bool} $data As returned by {@see self::__serialize()}.
+     */
+    public function __unserialize(array $data): void
+    {
+        [
+            $type,
+            $this->start,
+            $this->length,
+            $text,
+            $namespace,
+            $resolvedName,
+            $matchName,
+            $this->isFullyQualifiedName,
+            $this->useType,
+            $this->inGroupUse,
+            $this->hasAlias,
+        ] = $data;
+
+        // Created in this process, the type is a class constant and the names are shared between the locations of
+        // a file. Unserialized, each would be its own copy of the same few strings.
+        $this->type = self::shareString($type);
+        $this->namespace = is_null($namespace) ? null : self::shareString($namespace);
+        $this->resolvedName = is_null($resolvedName) ? null : self::shareString($resolvedName);
+        $this->matchName = is_null($matchName) ? null : self::shareString($matchName);
+        $this->text = in_array($type, self::NAME_TYPES, true) ? self::shareString($text) : $text;
+    }
+
+    /**
+     * Strings already unserialized in this process, keyed by themselves.
+     *
+     * @var array<string,string>
+     */
+    private static array $sharedStrings = [];
+
+    /**
+     * Return one shared copy of a type or name, which are repeated in thousands of locations.
+     *
+     * @param string $string A location type, namespace or symbol name.
+     */
+    public static function shareString(string $string): string
+    {
+        return self::$sharedStrings[$string] ??= $string;
+    }
 }
