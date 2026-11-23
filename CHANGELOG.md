@@ -1,5 +1,22 @@
 # Change Log
 
+## 0.32.1 November 2026
+
+* Fix: too many open files issue when there are too many packages to process, be more efficient; alternative solution would be to use `ulimit`
+* Fix: Disable plugins and scripts when running `Composer\Factory::create()`
+* Fix: parsing in parallel worker processes used about four times the memory of parsing without them (927 MB against 243 MB on a project with 3,400 files), and failed at PHP's default 512M memory limit (Calude explanation)
+* Fix: PHP deprecation notice, `str_starts_with(): Passing null`, when the project's `vendor-dir` is not named "vendor"
+* Performance: the project's `composer.json` is read without loading the global `composer.json` or running git to guess the root version
+* CI: Test on PHP 8.7
+
+## 0.32.0 November 2026
+
+* Add: `strauss list-symbols` lists the namespaces, classes, interfaces, traits, enums, functions and constants defined in the given paths, with `--type` and `--global` filters (basically do the first couple of steps and display what is learned)
+* Fix: when prefixing in place (`target_directory: vendor`), and updating individual packages, uses of the prefixed symbols in the other installed packages were not updated
+* Fix: when `composer.json`.`config.autoloader-suffix` was set, `vendor-prefixed` got the same `ComposerAutoloaderInit` class as `vendor` on the second run, and PHP fataled because the same classname was declared twice
+* Fix: dev aliases final classes didn't work, now uses `class_alias()`
+* Fix: error on Windows due to regex only matching forward slashes
+
 ## 0.31.1 October 2026
 
 * Fix: class names in strings from packages which `provide` or `replace` another (e.g. `nyholm/psr7`) were not prefixed in packages which do not require them (e.g. php-http/discovery's candidate list), so discovery failed at runtime

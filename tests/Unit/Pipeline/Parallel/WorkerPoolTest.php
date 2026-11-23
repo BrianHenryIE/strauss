@@ -355,6 +355,52 @@ class WorkerPoolTest extends TestCase
     }
 
     /**
+     * A map returned by a worker must not need much more memory than one built in this process. PHP's default
+     * `unserialize()` leaves a property hash table on every object, which made each location ~7 times larger and
+     * a project with a few thousand files exhaust a 512M memory limit.
+     *
+     * @covers ::decodeCodeMap
+     * @covers \BrianHenryIE\Strauss\Files\CodeLocation::__unserialize
+     * @covers \BrianHenryIE\Strauss\Files\FileCodeMap::__unserialize
+     * @covers \BrianHenryIE\Strauss\Pipeline\FileSymbol\SymbolDefinition::__unserialize
+     */
+    public function test_decoded_code_map_does_not_need_much_more_memory(): void
+    {
+        $path = dirname(__DIR__, 4) . '/src/Pipeline/Prefixer.php';
+        $contents = (string) file_get_contents($path);
+        $analyzer = new PhpFileAnalyzer();
+
+        $builtHere = $this->analyzeFile($analyzer, $contents, $path);
+        $encoded = WorkerPool::encodeCodeMap($builtHere);
+
+        // Decode once beforehand, so the classes are loaded and the shared strings exist.
+        WorkerPool::decodeCodeMap($encoded);
+
+        gc_collect_cycles();
+        $before = memory_get_usage();
+        $decoded = WorkerPool::decodeCodeMap($encoded);
+        $decodedBytes = memory_get_usage() - $before;
+
+        $locationCount = count($decoded->getLocations());
+
+        self::assertEquals($builtHere, $decoded);
+        self::assertGreaterThan(100, $locationCount);
+        // With a property hash table on each object it was ~1,700 bytes per location; without, a few hundred.
+        self::assertLessThan(
+            800 * $locationCount,
+            $decodedBytes,
+            sprintf('%d locations decoded into %d bytes.', $locationCount, $decodedBytes)
+        );
+    }
+
+    protected function analyzeFile(PhpFileAnalyzer $analyzer, string $contents, string $path): FileCodeMap
+    {
+        $codeMap = $analyzer->analyze($contents, $path);
+        self::assertInstanceOf(FileCodeMap::class, $codeMap);
+        return $codeMap;
+    }
+
+    /**
      * @covers ::__construct
      * @covers ::getConfig
      */

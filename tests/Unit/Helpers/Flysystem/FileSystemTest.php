@@ -270,4 +270,37 @@ class FileSystemTest extends TestCase
             'directoryExists() should return false for non-existent paths even with /../ segments'
         );
     }
+
+    /**
+     * @return array<string, array{0:string, 1:string}> Path, expected filesystem root.
+     */
+    public static function fsRootDataProvider(): array
+    {
+        return [
+            'unix absolute' => ['/Users/dev/project', '/'],
+            'windows backslashes, as from getcwd()' => ['C:\\Users\\dev\\project', 'C:\\'],
+            'windows forward slashes' => ['C:/Users/dev/project', 'C:/'],
+            'windows lowercase drive letter' => ['d:\\Work\\project', 'D:\\'],
+            'windows drive root' => ['C:\\', 'C:\\'],
+            'relative' => ['dev/project', ''],
+            'relative windows' => ['dev\\project', ''],
+        ];
+    }
+
+    /**
+     * On Windows, `getcwd()` returns backslashes. When `C:\` was not matched, the root was an empty string, and
+     * Flysystem's `LocalFilesystemAdapter` failed with "Unable to create a directory at .".
+     *
+     * @covers ::getFsRoot
+     * @dataProvider \BrianHenryIE\Strauss\Helpers\Flysystem\FileSystemTest::fsRootDataProvider
+     * @see https://github.com/BrianHenryIE/strauss/issues/364
+     *
+     * @param string $path     The path, e.g. the working directory.
+     * @param string $expected The filesystem root.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('fsRootDataProvider')]
+    public function test_get_fs_root(string $path, string $expected): void
+    {
+        $this->assertSame($expected, FileSystem::getFsRoot($path));
+    }
 }

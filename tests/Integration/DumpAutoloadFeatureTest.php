@@ -56,4 +56,53 @@ class DumpAutoloadFeatureTest extends IntegrationTestCase
         $this->assertStringContainsString('symfony/polyfill-ctype', $vendorPrefixedAutoloadFilesPhpString);
         //        $this->assertStringNotContainsString('symfony/polyfill-ctype', $vendorAutoloadFilesPhpString);
     }
+    /**
+     * Creating Composer objects to generate the autoloaders dispatches Composer's `init` event, which must not run
+     * the project's script of that name.
+     *
+     * `delete_vendor_packages` means both autoloaders are regenerated.
+     *
+     * @covers \BrianHenryIE\Strauss\Pipeline\Cleanup\Cleanup::rebuildVendorAutoloader
+     */
+    public function testDoesNotRunComposerInitScript(): void
+    {
+        $markerFile = $this->testsWorkingDir . '/init-script-ran.txt';
+
+        $composerJsonArray = [
+            'name' => 'brianhenryie/testdumpautoloadscripts',
+            'require' => [
+                'symfony/polyfill-ctype' => '*',
+            ],
+            'scripts' => [
+                'init' => sprintf('%s -r %s', escapeshellarg(PHP_BINARY), escapeshellarg("touch('{$markerFile}');")),
+            ],
+            'extra' => [
+                'strauss' => [
+                    'namespace_prefix' => 'BrianHenryIE\\Dump_Autoload\\',
+                    'classmap_prefix' => 'Dump_Autoload_',
+                    'delete_vendor_packages' => true,
+                ],
+            ],
+        ];
+
+        $this->getFileSystem()->write(
+            $this->testsWorkingDir . '/composer.json',
+            (string) json_encode($composerJsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+
+        chdir($this->testsWorkingDir);
+
+        exec('composer install', $composerInstallOutput, $composerInstallExitCode);
+        $this->assertEquals(0, $composerInstallExitCode, implode(PHP_EOL, $composerInstallOutput));
+
+        // Composer itself runs the script during `composer install`.
+        if (file_exists($markerFile)) {
+            unlink($markerFile);
+        }
+
+        $exitCode = $this->runStrauss($output);
+        $this->assertEquals(0, $exitCode, $output);
+
+        $this->assertFileDoesNotExist($markerFile, 'Strauss ran the project\'s `init` Composer script.');
+    }
 }

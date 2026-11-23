@@ -302,6 +302,8 @@ I don't have a strong opinion on these. I began using Mozart because it was easy
 * [Interfacelab/namespacer](https://github.com/Interfacelab/namespacer)
 * [PHP-Prefixer](https://github.com/PHP-Prefixer) SaaS!
 * [veronalabs/wp-scoper](https://github.com/veronalabs/wp-scoper)
+* [j7-dev/strauss-rs](https://github.com/j7-dev/strauss-rs) Rust!
+* [evo-mark/strauss-rs](https://github.com/evo-mark/strauss-rs)
 
 ### Interesting
 
