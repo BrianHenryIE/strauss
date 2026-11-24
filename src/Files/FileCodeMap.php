@@ -55,18 +55,70 @@ class FileCodeMap
     protected int $contentsCrc32;
 
     /**
-     * @param CodeLocation[]     $locations      Every definition, usage and text region found in the file, in any order.
-     * @param string             $contents       The file contents the locations were calculated for; only its CRC32 checksum is kept.
-     * @param SymbolDefinition[] $definitions    The symbols the file defines, in declaration order.
-     * @param string[]           $namespaceNames Declared namespace names, in source order; `\` for global. Empty means global.
+     * Where a `namespace` declaration could be inserted: the start of the first statement which is not a `declare`,
+     * including its leading comments. When that is an unnamed block, `namespace { }`, the first statement inside it,
+     * where imports could be inserted. Null when unknown, e.g. the file has no statements.
      */
-    public function __construct(array $locations, string $contents, array $definitions = [], array $namespaceNames = ['\\'])
-    {
+    protected ?int $namespaceInsertionOffset;
+
+    /**
+     * The position just after the `namespace` keyword of each unnamed block, `namespace { }`, in source order.
+     *
+     * @var int[]
+     */
+    protected array $unnamedNamespaceOffsets;
+
+    /**
+     * @param CodeLocation[]     $locations                Every definition, usage and text region found in the file, in any order.
+     * @param string             $contents                 The file contents the locations were calculated for; only its CRC32 checksum is kept.
+     * @param SymbolDefinition[] $definitions              The symbols the file defines, in declaration order.
+     * @param string[]           $namespaceNames           Declared namespace names, in source order; `\` for global. Empty means global.
+     * @param ?int               $namespaceInsertionOffset Where a `namespace` declaration could be inserted: {@see self::getNamespaceInsertionOffset()}.
+     * @param int[]              $unnamedNamespaceOffsets  Where each unnamed `namespace { }` block could be named: {@see self::getUnnamedNamespaceOffsets()}.
+     */
+    public function __construct(
+        array $locations,
+        string $contents,
+        array $definitions = [],
+        array $namespaceNames = ['\\'],
+        ?int $namespaceInsertionOffset = null,
+        array $unnamedNamespaceOffsets = []
+    ) {
         usort($locations, fn(CodeLocation $a, CodeLocation $b) => $a->getStart() <=> $b->getStart());
         $this->locations = $locations;
         $this->definitions = array_values($definitions);
         $this->namespaceNames = empty($namespaceNames) ? ['\\'] : array_values($namespaceNames);
         $this->contentsCrc32 = crc32($contents);
+        $this->namespaceInsertionOffset = $namespaceInsertionOffset;
+        sort($unnamedNamespaceOffsets);
+        $this->unnamedNamespaceOffsets = $unnamedNamespaceOffsets;
+    }
+
+    /**
+     * Where a name could be inserted into each unnamed block, `namespace { }`, when moving a file's global symbols
+     * into a namespace: the position just after the `namespace` keyword, in source order. Empty when the file has
+     * no unnamed block, which is not the same as having no global code: {@see self::getNamespaceNames()}.
+     *
+     * @see \BrianHenryIE\Strauss\Pipeline\ChangePlanner::findGlobalsNamespacingPositions()
+     *
+     * @return int[]
+     */
+    public function getUnnamedNamespaceOffsets(): array
+    {
+        return $this->unnamedNamespaceOffsets;
+    }
+
+    /**
+     * Where a `namespace` declaration could be inserted, when moving a file's global symbols into a namespace: the
+     * start of the first statement which is not a `declare`, including its leading comments. When that is an unnamed
+     * block, `namespace { }`, which is named instead ({@see self::getUnnamedNamespaceOffsets()}), the first statement
+     * inside it, where imports could be inserted.
+     *
+     * @see \BrianHenryIE\Strauss\Pipeline\ChangePlanner::findGlobalsNamespacingPositions()
+     */
+    public function getNamespaceInsertionOffset(): ?int
+    {
+        return $this->namespaceInsertionOffset;
     }
 
     /**
@@ -198,8 +250,11 @@ class FileCodeMap
     {
         return crc32($contents) === $this->contentsCrc32;
     }
+
     /**
-     * @return array{0:CodeLocation[], 1:SymbolDefinition[], 2:string[], 3:int}
+     * Every property, in declaration order: a property left out is uninitialized after {@see self::__unserialize()}.
+     *
+     * @return array{0:CodeLocation[], 1:SymbolDefinition[], 2:string[], 3:int, 4:?int, 5:int[]}
      */
     public function __serialize(): array
     {
@@ -208,6 +263,8 @@ class FileCodeMap
             $this->definitions,
             $this->namespaceNames,
             $this->contentsCrc32,
+            $this->namespaceInsertionOffset,
+            $this->unnamedNamespaceOffsets,
         ];
     }
 
@@ -215,7 +272,7 @@ class FileCodeMap
      * Assigns the declared properties directly, so no property hash table is left on the object:
      * {@see CodeLocation::__unserialize()}.
      *
-     * @param array{0:CodeLocation[], 1:SymbolDefinition[], 2:string[], 3:int} $data As returned by {@see self::__serialize()}.
+     * @param array{0:CodeLocation[], 1:SymbolDefinition[], 2:string[], 3:int, 4:?int, 5:int[]} $data As returned by {@see self::__serialize()}.
      */
     public function __unserialize(array $data): void
     {
@@ -224,6 +281,8 @@ class FileCodeMap
             $this->definitions,
             $this->namespaceNames,
             $this->contentsCrc32,
+            $this->namespaceInsertionOffset,
+            $this->unnamedNamespaceOffsets,
         ] = $data;
     }
 }

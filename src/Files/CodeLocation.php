@@ -140,6 +140,11 @@ class CodeLocation
      */
     protected bool $hasAlias = false;
 
+    /**
+     * The `use` item's `as` alias, e.g. `Bar` in `use Foo as Bar;`. Null when it has none.
+     */
+    protected ?string $alias = null;
+
     public function __construct(
         string $type,
         int $start,
@@ -264,6 +269,20 @@ class CodeLocation
     public function setHasAlias(bool $hasAlias): void
     {
         $this->hasAlias = $hasAlias;
+    }
+
+    /**
+     * The `use` item's `as` alias, e.g. `Bar` in `use Foo as Bar;`. Null when it has none.
+     */
+    public function getAlias(): ?string
+    {
+        return $this->alias;
+    }
+
+    public function setAlias(?string $alias): void
+    {
+        $this->alias = $alias;
+        $this->hasAlias = !is_null($alias);
     }
 
     public function setIsFullyQualifiedName(?bool $isFullyQualifiedName): void

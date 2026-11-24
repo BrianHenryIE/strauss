@@ -319,9 +319,18 @@ abstract class AbstractRenamespacerCommand extends Command
         return new ConsoleLogger($output, $logLevel);
     }
 
+    /**
+     * The config for commands which do not read one from `composer.json` before {@see self::execute()}, e.g. `replace`
+     * and `namespace-globals`. The command line options are read now, so `--dry-run` is known when `execute()` decides
+     * whether to make the filesystem read-only.
+     *
+     * @param InputInterface $input The command-line options, e.g. `--dry-run`.
+     */
     protected function createConfig(InputInterface $input): StraussConfig
     {
-        return new StraussConfig();
+        $config = new StraussConfig();
+        $config->updateFromCli($input);
+        return $config;
     }
 
     /**
